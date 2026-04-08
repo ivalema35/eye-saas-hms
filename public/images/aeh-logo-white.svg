@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="180" viewBox="0 0 600 180" role="img" aria-label="AEH Eye Hospital">
+  <defs>
+    <linearGradient id="aehGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#DDEBFF" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(18,16)">
+    <rect x="0" y="0" width="148" height="148" rx="24" fill="url(#aehGrad)"/>
+    <ellipse cx="74" cy="74" rx="45" ry="30" fill="#0D2137" opacity="0.9"/>
+    <circle cx="74" cy="74" r="17" fill="#27AE60"/>
+    <circle cx="74" cy="74" r="7" fill="#0D2137"/>
+    <path d="M28 74c11-19 27-29 46-29" stroke="#0D2137" stroke-width="6" stroke-linecap="round" fill="none"/>
+    <path d="M120 74c-11 19-27 29-46 29" stroke="#0D2137" stroke-width="6" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <g fill="#FFFFFF" font-family="Inter, Arial, sans-serif">
+    <text x="188" y="78" font-size="58" font-weight="700" letter-spacing="1">AEH</text>
+    <text x="190" y="114" font-size="22" font-weight="500" fill="#BFD8F4">EYE HOSPITAL</text>
+  </g>
+</svg>

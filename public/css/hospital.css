@@ -1,0 +1,211 @@
+/*
+ * ============================================================
+ *  Eye HMS SaaS — Hospital Panel CSS
+ *  Extends design-system.css with hospital app specific styles
+ * ============================================================
+ */
+
+/* ============================================================
+   Hospital Stat Cards
+============================================================ */
+.hms-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+.hms-stat-card {
+    background: #fff;
+    border: 1px solid var(--hms-border);
+    border-radius: var(--hms-radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: var(--hms-shadow);
+    transition: transform .25s ease, box-shadow .25s ease;
+    position: relative;
+    overflow: hidden;
+}
+.hms-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    bottom: 0;
+    background: var(--hms-border);
+    transition: background .25s ease, width .25s ease;
+}
+.hms-stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--hms-shadow-lg);
+}
+.hms-stat-card:hover::before {
+    background: var(--hms-primary);
+    width: 4px;
+}
+
+.hms-stat-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--hms-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.375rem;
+    flex-shrink: 0;
+}
+.hsi-blue   { background: var(--hms-primary-light); color: var(--hms-primary); }
+.hsi-green  { background: var(--hms-success-bg);    color: var(--hms-success); }
+.hsi-orange { background: var(--hms-warning-bg);    color: var(--hms-warning); }
+.hsi-teal   { background: #D1F2EB;                  color: var(--hms-teal); }
+.hsi-red    { background: var(--hms-danger-bg);     color: var(--hms-danger); }
+.hsi-purple { background: #F5F3FF;                  color: #7C3AED; }
+
+.hms-stat-body { min-width: 0; }
+.hms-stat-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--hms-text-muted);
+    margin: 0 0 .25rem;
+}
+.hms-stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--hms-text);
+    line-height: 1;
+    letter-spacing: -.02em;
+}
+.hms-stat-meta {
+    font-size: .72rem;
+    color: var(--hms-text-muted);
+    margin-top: .25rem;
+}
+
+/* ============================================================
+   Dashboard Row (2-col grid)
+============================================================ */
+.hms-dashboard-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* ============================================================
+   Quick Actions Grid
+============================================================ */
+.hms-qa-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .875rem;
+    padding: 1.25rem;
+}
+.hms-qa-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .625rem;
+    text-decoration: none;
+    color: var(--hms-text);
+    padding: 1rem .75rem;
+    border: 1.5px solid var(--hms-border);
+    border-radius: var(--hms-radius-lg);
+    transition: border-color .2s, box-shadow .2s, transform .2s, background .15s;
+    text-align: center;
+    font-size: .8125rem;
+    font-weight: 600;
+}
+.hms-qa-btn:hover {
+    border-color: var(--hms-secondary);
+    box-shadow: 0 4px 16px rgba(41,128,185,.12);
+    transform: translateY(-3px);
+    color: var(--hms-primary);
+    text-decoration: none;
+    background: var(--hms-primary-light);
+}
+.hms-qa-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.125rem;
+    transition: transform .2s;
+}
+.hms-qa-btn:hover .hms-qa-icon { transform: scale(1.1); }
+.qa-blue   { background: var(--hms-primary-light); color: var(--hms-primary); }
+.qa-teal   { background: #D1F2EB; color: var(--hms-teal); }
+.qa-orange { background: var(--hms-warning-bg);    color: var(--hms-warning); }
+.qa-green  { background: var(--hms-success-bg);    color: var(--hms-success); }
+.qa-purple { background: #F5F3FF;                  color: #7C3AED; }
+.qa-gray   { background: var(--hms-bg);            color: var(--hms-text-muted); }
+
+/* ============================================================
+   Welcome Card
+============================================================ */
+.hms-welcome-body {
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+}
+.hms-welcome-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--hms-primary), var(--hms-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(27,79,114,.25);
+}
+.hms-welcome-text h3 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--hms-text);
+    margin: 0 0 .5rem;
+}
+.hms-welcome-text p {
+    font-size: .875rem;
+    color: var(--hms-text-muted);
+    line-height: 1.7;
+    margin: 0;
+}
+.hms-welcome-date {
+    font-size: .8125rem;
+    color: var(--hms-text-muted);
+    display: flex;
+    align-items: center;
+    gap: .375rem;
+    background: var(--hms-bg);
+    padding: .4rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--hms-border);
+}
+.hms-welcome-date i { color: var(--hms-primary); }
+
+/* ============================================================
+   Responsive
+============================================================ */
+@media (max-width: 1200px) {
+    .hms-stats-grid   { grid-template-columns: repeat(2, 1fr); }
+    .hms-dashboard-row { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+    .hms-stats-grid { grid-template-columns: 1fr 1fr; }
+    .hms-qa-grid    { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 480px) {
+    .hms-stats-grid { grid-template-columns: 1fr; }
+    .hms-qa-grid    { grid-template-columns: repeat(2, 1fr); }
+}

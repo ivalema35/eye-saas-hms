@@ -1,0 +1,468 @@
+<?php
+
+namespace App\Jobs;
+
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+/**
+ * SeedTenantDefaultMasters — Queued Job
+ *
+ * Populates all OPD master reference tables for a newly created tenant
+ * so their dropdown fields are not empty on first login.
+ *
+ * Data sourced from a real production tenant and covers all eye-hospital
+ * specific dropdowns: case types, slots, vision values, slit-lamp findings,
+ * diagnoses, advice, and more.
+ *
+ * Uses DB::table() directly to bypass BelongsToTenant global scope, which
+ * requires an active HTTP request context unavailable inside queued jobs.
+ *
+ * Queue: default  |  Retries: 3  |  Timeout: 120 seconds
+ */
+class SeedTenantDefaultMasters implements ShouldQueue
+{
+    use Queueable;
+
+    public int $tries = 3;
+
+    public int $timeout = 120;
+
+    public function __construct(private readonly int $tenantId) {}
+
+    public function handle(): void
+    {
+        Log::info("SeedTenantDefaultMasters: Starting for tenant #{$this->tenantId}");
+
+        $this->seedCaseTypes();
+        $this->seedSlots();
+        $this->seedDurations();
+        $this->seedChiefComplaints();
+        $this->seedKcos();
+        $this->seedVisionMasters();
+        $this->seedSphCyl();
+        $this->seedAxis();
+        $this->seedNct();
+        $this->seedSac();
+        $this->seedLid();
+        $this->seedConj();
+        $this->seedCornea();
+        $this->seedAc();
+        $this->seedIris();
+        $this->seedPupil();
+        $this->seedLens();
+        $this->seedEm();
+        $this->seedCovertest();
+        $this->seedDisc();
+        $this->seedFr();
+        $this->seedAdvice();
+        $this->seedDiagnosis();
+        $this->seedMedicineInstructions();
+
+        Log::info("SeedTenantDefaultMasters: Completed for tenant #{$this->tenantId}");
+    }
+
+    public function failed(\Throwable $exception): void
+    {
+        Log::error(
+            "SeedTenantDefaultMasters FAILED for tenant #{$this->tenantId}: "
+            .$exception->getMessage()
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────────────────────────────
+
+    private function ts(): string
+    {
+        return now()->toDateTimeString();
+    }
+
+    /** Map a flat array of strings to tenant-scoped rows for a given column. */
+    private function valueRows(array $values, string $column = 'value'): array
+    {
+        $ts = $this->ts();
+
+        return array_map(fn ($v) => [
+            'tenant_id' => $this->tenantId,
+            $column => $v,
+            'created_at' => $ts,
+            'updated_at' => $ts,
+        ], $values);
+    }
+
+    private function insert(string $table, array $rows): void
+    {
+        if (empty($rows)) {
+            return;
+        }
+
+        DB::table($table)->insert($rows);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // OPD Basics
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedCaseTypes(): void
+    {
+        $ts = $this->ts();
+
+        $this->insert('tbl_cases', [
+            ['tenant_id' => $this->tenantId, 'case_type' => 'General OPD', 'case_fee' => 300, 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'case_type' => 'Cataract',   'case_fee' => 500, 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'case_type' => 'Glaucoma',   'case_fee' => 500, 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'case_type' => 'Retina',     'case_fee' => 600, 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'case_type' => 'New Case',   'case_fee' => 500, 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'case_type' => 'Old Case',   'case_fee' => 300, 'created_at' => $ts, 'updated_at' => $ts],
+        ]);
+    }
+
+    private function seedSlots(): void
+    {
+        $ts = $this->ts();
+
+        $this->insert('tbl_slots', [
+            ['tenant_id' => $this->tenantId, 'slot_name' => 'Morning Shift', 'start_time' => '09:00:00', 'end_time' => '13:00:00', 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'slot_name' => 'Evening Shift', 'start_time' => '16:00:00', 'end_time' => '20:00:00', 'created_at' => $ts, 'updated_at' => $ts],
+            ['tenant_id' => $this->tenantId, 'slot_name' => 'Full Day',      'start_time' => '09:00:00', 'end_time' => '20:00:00', 'created_at' => $ts, 'updated_at' => $ts],
+        ]);
+    }
+
+    private function seedDurations(): void
+    {
+        $ts = $this->ts();
+        $rows = [];
+
+        foreach (['Days', 'Weeks', 'Months', 'Years'] as $d) {
+            $rows[] = ['tenant_id' => $this->tenantId, 'duration' => $d, 'created_at' => $ts, 'updated_at' => $ts];
+        }
+
+        $this->insert('tbl_durations', $rows);
+    }
+
+    private function seedChiefComplaints(): void
+    {
+        $this->insert('chief_complaints', $this->valueRows([
+            'Black spot',
+            'Cataract check up',
+            'Diplopia',
+            'Discharge',
+            'DmVn ( Distance + Near)',
+            'DmVn ( Distance)',
+            'DmVn ( Near)',
+            'Eyestrain',
+            'Floater',
+            'For Lasik',
+            'Headache',
+            'Itching / Irritation',
+            'Pain in Eye',
+            'Redness of Eye',
+            'Watering / Discharge',
+        ], 'value'));
+    }
+
+    private function seedKcos(): void
+    {
+        $this->insert('kcos', $this->valueRows([
+            'Acidity Problem',
+            'Arthritis',
+            'Asthma',
+            'Blood Thinner',
+            'Brain Problem',
+            'Cancer',
+            'Cholesterol',
+            'D.M',
+            'H.T',
+            'Heart Problem',
+            'Kidney Problem',
+            'Thyroid',
+        ], 'kco'));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Vision Masters
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedVisionMasters(): void
+    {
+        $dvValues = [
+            '6/4', '6/4 P', '6/5', '6/5 P',
+            '6/6', '6/6 P', '6/9', '6/9 P',
+            '6/12', '6/12 P', '6/18', '6/18 P',
+            '6/24', '6/24 P', '6/36', '6/36 P',
+            '6/60', 'CF3M', 'CF2M', 'CF1M', 'CFCF',
+            'HM', 'HM/PL/PR4+', 'HM/PL/PR inacc.', 'NOPL',
+        ];
+
+        $this->insert('tbl_master_vn', $this->valueRows($dvValues));
+        $this->insert('tbl_master_vngl', $this->valueRows($dvValues));
+        $this->insert('tbl_master_vnst', $this->valueRows($dvValues));
+
+        // PnVN starts with NI (not improved)
+        $this->insert('tbl_master_pnvn', $this->valueRows(array_merge(['NI'], $dvValues)));
+
+        // NrVN uses near-vision notation
+        $this->insert('tbl_master_nrvn', $this->valueRows([
+            'NP',
+            'N6', 'N8', 'N10', 'N12', 'N18', 'N24', 'N36',
+            'N6 1FT', 'N8 1FT', 'N10 1FT', 'N12 1FT', 'N18 1FT', 'N24 1FT',
+        ]));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Refraction Masters
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedSphCyl(): void
+    {
+        $ts = $this->ts();
+        $rows = [];
+
+        // Start with zero (type = Positive)
+        $rows[] = ['tenant_id' => $this->tenantId, 'type' => 'Positive', 'value' => '0', 'created_at' => $ts, 'updated_at' => $ts];
+
+        // Interleave Positive / Negative from 0.25 to 10.00
+        for ($i = 25; $i <= 1000; $i += 25) {
+            $val = number_format($i / 100, 2);
+            $rows[] = ['tenant_id' => $this->tenantId, 'type' => 'Positive', 'value' => $val, 'created_at' => $ts, 'updated_at' => $ts];
+            $rows[] = ['tenant_id' => $this->tenantId, 'type' => 'Negative', 'value' => $val, 'created_at' => $ts, 'updated_at' => $ts];
+        }
+
+        $this->insert('tbl_master_sph_cyl', $rows);
+    }
+
+    private function seedAxis(): void
+    {
+        $ts = $this->ts();
+        $rows = [];
+
+        // 5° to 185° in 5° steps (stored with ° suffix to match model mutator output)
+        for ($i = 5; $i <= 185; $i += 5) {
+            $rows[] = ['tenant_id' => $this->tenantId, 'value' => $i.'°', 'created_at' => $ts, 'updated_at' => $ts];
+        }
+
+        $this->insert('tbl_master_axis', $rows);
+    }
+
+    private function seedNct(): void
+    {
+        $ts = $this->ts();
+        $rows = [];
+
+        for ($i = 1; $i <= 60; $i++) {
+            $rows[] = ['tenant_id' => $this->tenantId, 'value' => (string) $i, 'created_at' => $ts, 'updated_at' => $ts];
+        }
+
+        foreach (['Soft', 'High', 'Low'] as $v) {
+            $rows[] = ['tenant_id' => $this->tenantId, 'value' => $v, 'created_at' => $ts, 'updated_at' => $ts];
+        }
+
+        $this->insert('tbl_master_nct', $rows);
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Slit-Lamp / Anterior Segment Masters
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedSac(): void
+    {
+        $this->insert('tbl_master_sac', $this->valueRows([
+            'Acute DC',
+            'Block',
+            'Block with clear fluid',
+            'Block with discharge',
+            'Fistula',
+            'Partially patent',
+            'Patent',
+            'Roplas +',
+        ]));
+    }
+
+    private function seedLid(): void
+    {
+        $this->insert('tbl_master_lid', $this->valueRows([
+            'Blepharitis', 'Chalazion', 'Cyst', 'Dermoid', 'Dystichiasis',
+            'Ectropion', 'Epiblepharon', 'Hemangioma', 'Hordeolum',
+            'L/L Stye', 'Lid Tear', 'Madarosis', 'Mole', 'Poliosis',
+            'Ptosis', 'Stye', 'Swelling', 'Tear', 'Trauma',
+            'Trichiasis', 'U/L Stye', 'Xanthelasma',
+        ]));
+    }
+
+    private function seedConj(): void
+    {
+        $this->insert('tbl_master_conj', $this->valueRows([
+            'Allergic conjunctivitis', 'CCC++', 'Chemosis', 'Concretions',
+            'Conj. Congestion', 'Conj. Growth', 'Conj. suture',
+            'Conjunctival cyst', 'Conjunctivitis (Bac)', 'Conjunctivitis (Viral)',
+            'Cyst', 'Dermoid', 'Dry eye', 'Early n. pterygium',
+            'Episcleritis', 'Follicles', 'Inflammed pinguecula',
+            'Inflammed pterygium', 'Mole', 'N. pterygium scar',
+            'N+T pterygium', 'Nevus', 'Oedema', 'Papillae',
+            'Pinguecula', 'Pterygium', 'Recurrent n. pterygium',
+            'Recurrent t. pterygium', 'Redness', 'Scarring',
+            'SCH mild', 'Symblepharon', 'T. Pterygium', 'T. Ptr scar', 'VKC',
+        ]));
+    }
+
+    private function seedCornea(): void
+    {
+        $this->insert('tbl_master_cornea', $this->valueRows([
+            'Abscess', 'Adherent leucoma', 'Arcus senilis', 'BSK',
+            "Central k' opacity", "CL, k' haze", 'Clear', 'Congestion',
+            'Corneal FB', 'DEG+++', 'Degeneration', 'Descemet folds',
+            'DM detachment', 'Dystrophy', 'Epithelial defect', 'EPK',
+            'Foreign body', "K' vascularization", 'Keratic precipitates (KPs)',
+            'Keratitis', 'Oedema', 'Opacity - nonsignificant',
+            'Opacity - significant', 'Perforation', 'Pig. on endo.',
+            'Scar', 'Shield ulcer', 'SK', 'SPE', 'Spheroidal deg',
+            'SPK', 'Suture opacity', 'Tear', 'Tear sealed', 'Thinning',
+            "Total k' opacity", 'Ulcer', 'Ulcer - bacterial',
+            'Ulcer - fungal', 'Vascularisation',
+        ]));
+    }
+
+    private function seedAc(): void
+    {
+        $this->insert('tbl_master_ac', $this->valueRows([
+            'Cells +1', 'Cells +2', 'Cells +3', 'Cells +4',
+            'Deep AC', 'Flare +1', 'Flare +2', 'Flare +3', 'Flare +4',
+            'Flat', "Fuch's", 'Hyphema', 'Hypopyon',
+            'Inflammatory membrane', 'Lens matter', 'PAS', 'PEX', 'PI',
+            'Pigment', 'Pigments', 'Quiet normal depth', 'Shallow',
+            'Shallow air bubble', 'Silicon oil', 'VIT', 'Vit in AC',
+        ]));
+    }
+
+    private function seedIris(): void
+    {
+        $this->insert('tbl_master_iris', $this->valueRows([
+            'Adherent leucoma', 'Atrophy', 'Coloboma', 'Cyst',
+            'Heterochromia', 'Iridodialysis', 'Irregular', 'Nevus',
+            'Nodule', 'Normal', 'NVI', 'PEX iritis', 'PI', 'Pigment',
+            'Prolapse', 'P. synechia', 'Rubeosis', 'SI', 'Synechia', 'YAG PI',
+        ]));
+    }
+
+    private function seedPupil(): void
+    {
+        $this->insert('tbl_master_pupil', $this->valueRows([
+            'Anterior synechia', 'Atrophy', 'Dilated', 'Fixed', 'Irregular',
+            'Mid dilated', 'Mid dilated (ATRO)', 'Miotic', 'Miotic NR>L',
+            'Mydriasis 3mm', 'Mydriasis 4mm', 'Mydriasis NR>L',
+            'Mydriasis (Full)', 'Mydriasis eccentric', 'Mydriasis SR>L',
+            'Normal', 'Optic capture', 'PEX', 'Post. synechia',
+            'RAPD GR1', 'RAPD GR2', 'RAPD GR3', 'RAPD GR4',
+            'A_RRRL', 'SR>L', 'SR>OVAL', 'Synechia', 'Updrawn pupil',
+        ]));
+    }
+
+    private function seedLens(): void
+    {
+        $this->insert('tbl_master_lens', $this->valueRows([
+            'Absorbed Cataract', 'AC/PC IOL', 'ACIOL', 'Aphakia', 'ASC',
+            'ASC+PSC', 'Blue dot cataract', 'Brown cataract', 'Clear', 'CLO',
+            'Coloboma', 'Complicated pseudophakia', 'Congenital',
+            'Cortical cataract', 'Dense cataract', 'Dense PSC',
+            'Developmental', 'Dot PSC', 'Early PSC', 'Grey Reflex',
+            'Hyper mature cataract', 'Hypermature - Morgagnian',
+            'Hypermature - Sclerotic', 'IMC', 'IMC (NS++)',
+            'IMC + Cortical', 'IMC + PSC', 'IMC + PSC + ASC',
+            'IOL donesis', 'Mature cataract', 'Near mature cataract',
+            'PCO', 'Phacodonesis', 'Phthisis', 'Pigments on IOL',
+            'Pigments on Lens', 'PPC', 'PSC', 'Pseudophakia',
+            'Pseudophakia MF', 'PXF', 'Rosette', 'Subluxated',
+            'Subluxated IOL', 'Traumatic', 'Uveitic cataract', 'Weak Zonules',
+        ]));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Posterior Segment / Motility / Fundus
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedEm(): void
+    {
+        $this->insert('tbl_master_em', $this->valueRows([
+            '3rd nerve palsy', '6th nerve palsy', 'Alt. ESO', 'Alt. EXO',
+            'Esotropia', 'Exotropia', 'Full', 'LR palsy', 'MR palsy',
+            'Nystagmus', 'Restricted', 'SR under action', 'Total ophthalmoplegia',
+        ]));
+    }
+
+    private function seedCovertest(): void
+    {
+        $this->insert('tbl_master_covertest', $this->valueRows([
+            'Orthophoria', 'Esophoria', 'Exophoria', 'Hyperphoria', 'Hypophoria',
+            'Esotropia', 'Exotropia', 'Hypertropia', 'Hypotropia',
+            'Alternating Esotropia', 'Alternating Exotropia',
+        ]));
+    }
+
+    private function seedDisc(): void
+    {
+        $this->insert('tbl_master_disc', $this->valueRows([
+            '0.2 CDR', '0.3 CDR', '0.4 CDR', '0.5 CDR',
+            '0.6 CDR', '0.7 CDR', '0.8 CDR', '0.9 CDR',
+            'Normal', 'Optic atrophy', 'Pale NRR', 'Tilted disc',
+        ]));
+    }
+
+    private function seedFr(): void
+    {
+        $this->insert('tbl_master_fr', $this->valueRows([
+            'ARMD', 'CME', 'CSR', 'DME', 'FR dull', 'Lasered PDR',
+            'Macular scar', 'Mild NPDR', 'Moderate NPDR', 'Myopic fundus',
+            'Normal', 'PDR', 'RP', 'RPE defect', 'Severe NPDR', 'VH',
+        ]));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Prescription Masters (Advice & Diagnosis)
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedAdvice(): void
+    {
+        $this->insert('tbl_master_advice', $this->valueRows([
+            'Avoid dust and smoke', 'Cold compresses', 'Dark goggles',
+            "Don't rub eyes", 'Eye patching', 'Frequent blinking',
+            'Lid hygiene', 'No head bath', 'No heavy lifting',
+            'No swimming', 'Protective glasses', 'Read in good light',
+            'Restrict mobile/TV use', 'Use clean handkerchief',
+        ], 'advice'));
+    }
+
+    private function seedDiagnosis(): void
+    {
+        $this->insert('tbl_master_diagnosis', $this->valueRows([
+            '3rd Nerve Palsy', '6th Nerve Palsy', 'Allergic Conjunctivitis',
+            'ARMD', 'Astigmatism', 'Bacterial Conjunctivitis',
+            'Bilateral Pseudophakia', 'Blepharitis', 'BRVO', 'CRVO',
+            'Chalazion', 'Chronic Simple Glaucoma', 'Color Blindness',
+            'Convergence Insufficiency', 'Corneal Abrasion', 'Corneal Ulcer',
+            'Dacryocystitis', 'Dry Eye Syndrome (DES)', 'Episcleritis',
+            'Esotropia', 'Exotropia', 'Foreign Body', 'Glaucoma',
+            'Hypermetropia', 'Hypermature Cataract', 'IMC with PSC',
+            'Immature Cataract', 'Iritis', 'Keratitis', 'Macular Edema',
+            'Macular Hole', 'Mature Cataract', 'Myopia', 'Myopic Fundus',
+            'NPDR', 'Optic Atrophy', 'PDR', 'Pinguecula', 'Presbyopia',
+            'Pseudophakia', 'Pterygium', 'Retinal Detachment', 'Scleritis',
+            'Stye', 'Uveitis', 'Vitreous Hemorrhage (VH)',
+        ], 'diagnosis'));
+    }
+
+    private function seedMedicineInstructions(): void
+    {
+        $this->insert('tbl_master_medicine_instructions', $this->valueRows([
+            'After meals',
+            'Before meals',
+            'With food',
+            'Empty stomach',
+            'At bedtime',
+            'Shake well before use',
+        ]));
+    }
+}

@@ -1,0 +1,105 @@
+@extends('superadmin.layouts.app')
+@section('title', 'Edit: ' . $tenant->name)
+@section('page-header', 'Edit Hospital')
+
+@section('page-actions')
+    <a href="{{ route('superadmin.hospitals.show', $tenant) }}" class="hms-btn hms-btn-secondary hms-btn-sm">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+@endsection
+
+@section('content')
+<div style="max-width:680px">
+    <div class="hms-card">
+        <div class="hms-card-header">
+            <h3 class="hms-card-title">Edit Hospital: {{ $tenant->name }}</h3>
+        </div>
+
+        @if($errors->any())
+            <div class="hms-alert hms-alert-danger">
+                <ul style="margin:0;padding-left:1.2rem">
+                    @foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('superadmin.hospitals.update', $tenant) }}">
+            @csrf
+            @method('PUT')
+
+            <div class="hms-form-group">
+                <label>Hospital Name <span style="color:var(--hms-danger)">*</span></label>
+                <input type="text" name="name"
+                       class="hms-input @error('name') is-invalid @enderror"
+                       value="{{ old('name', $tenant->name) }}" required>
+                @error('name') <span class="hms-error">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="hms-form-group">
+                <label>Hospital Slug <span style="color:var(--hms-danger)">*</span></label>
+                <div style="display:flex;align-items:center;gap:.5rem">
+                    <span style="font-size:.8rem;color:var(--hms-text-muted);white-space:nowrap">
+                        {{ config('app.url') }}/
+                    </span>
+                    <input type="text" name="slug"
+                           class="hms-input @error('slug') is-invalid @enderror"
+                           value="{{ old('slug', $tenant->slug) }}" required
+                           maxlength="30" pattern="[a-z0-9\-]+">
+                </div>
+                <span style="font-size:.75rem;color:var(--hms-warning)">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Slug change karne se login URL change ho jayega.
+                </span>
+                @error('slug') <span class="hms-error">{{ $message }}</span> @enderror
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-group">
+                    <label>Admin Name <span style="color:var(--hms-danger)">*</span></label>
+                    <input type="text" name="admin_name"
+                           class="hms-input @error('admin_name') is-invalid @enderror"
+                           value="{{ old('admin_name', $tenant->admin_name) }}" required>
+                    @error('admin_name') <span class="hms-error">{{ $message }}</span> @enderror
+                </div>
+                <div class="hms-form-group">
+                    <label>Admin Phone <span style="color:var(--hms-danger)">*</span></label>
+                    <input type="text" name="admin_phone"
+                           class="hms-input @error('admin_phone') is-invalid @enderror"
+                           value="{{ old('admin_phone', $tenant->admin_phone) }}"
+                           maxlength="10" pattern="[0-9]{10}" required>
+                    @error('admin_phone') <span class="hms-error">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-group">
+                    <label>City</label>
+                    <input type="text" name="city" class="hms-input" value="{{ old('city', $tenant->city) }}">
+                </div>
+                <div class="hms-form-group">
+                    <label>State</label>
+                    <input type="text" name="state" class="hms-input" value="{{ old('state', $tenant->state) }}">
+                </div>
+            </div>
+
+            <div class="hms-form-group">
+                <label>Admin Email (read-only)</label>
+                <input type="text" class="hms-input" value="{{ $tenant->admin_email }}" disabled
+                       style="background:var(--hms-bg);cursor:not-allowed">
+                <span style="font-size:.75rem;color:var(--hms-text-muted)">
+                    Email change karne ke liye alag security flow zaroor hoga.
+                </span>
+            </div>
+
+            <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+                <button type="submit" class="hms-btn hms-btn-primary">
+                    <i class="fa-solid fa-save"></i> Save Changes
+                </button>
+                <a href="{{ route('superadmin.hospitals.show', $tenant) }}" class="hms-btn hms-btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

@@ -1,0 +1,544 @@
+/* Import Premium Font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Premium Healthcare Design Tokens */
+:root {
+    --color-primary: #1B4F72;
+    --color-secondary: #2980B9;
+    --color-success: #27AE60;
+    --color-sidebar: #0D2137;
+
+    --text-base: 16px;
+    --label-base: 13px;
+
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --color-surface: #FFFFFF;
+    --border-color: #E2E8F0;
+
+    --font-family-base: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+body {
+    font-family: var(--font-family-base);
+    font-size: var(--text-base);
+    color: #333333;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+label {
+    font-size: var(--label-base);
+    font-weight: var(--font-weight-medium);
+    color: #555;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.25rem rgba(27, 79, 114, 0.1);
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+/* ============================================================
+   Premium Sidebar & Header Overrides
+============================================================ */
+.hms-navbar {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--border-color);
+    color: #333333;
+}
+
+.hms-sidebar {
+    background: var(--color-sidebar);
+}
+
+.premium-sidebar-brand {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.1rem 1rem .9rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: .4rem;
+}
+
+.sidebar-logo {
+    max-height: 62px;
+    width: 100%;
+    max-width: 178px;
+    object-fit: contain;
+    image-rendering: auto;
+}
+
+.hms-nav-item {
+    font-size: 15px;
+}
+
+.hms-nav-item.active {
+    background: #172E46;
+    border-left: 3px solid var(--color-success);
+}
+
+.hms-nav-item i {
+    font-size: 1rem;
+}
+
+.hms-breadcrumb-wrap {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.hms-breadcrumb-link {
+    color: #64748b;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.hms-breadcrumb-link:hover {
+    color: var(--color-primary);
+}
+
+.breadcrumb-item,
+.breadcrumb-item.active {
+    font-size: 0.94rem;
+}
+
+.breadcrumb-item.active {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.wait-queue-badge {
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    padding: 0.42rem 0.95rem;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.wait-queue-badge i {
+    color: #d97706;
+}
+
+.wait-queue-badge span {
+    color: #64748b;
+    font-size: .95rem;
+}
+
+.wait-queue-badge strong {
+    color: var(--color-primary);
+    font-size: 1.3rem;
+    line-height: 1;
+}
+
+.avatar-circle {
+    width: 38px;
+    height: 38px;
+    background-color: #E2E8F0;
+    color: var(--color-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.user-dropdown .dropdown-toggle {
+    color: #1f2937;
+    text-decoration: none;
+    padding: .2rem .1rem;
+}
+
+.user-dropdown .dropdown-toggle::after {
+    display: none;
+}
+
+.user-dropdown .dropdown-menu {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    min-width: 240px;
+    box-shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
+    padding: .35rem;
+}
+
+.user-dropdown .dropdown-item {
+    border-radius: 8px;
+    padding: .5rem .65rem;
+    font-size: .9rem;
+}
+
+.user-name {
+    font-size: .92rem;
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.1;
+}
+
+.user-role {
+    color: #64748b;
+    font-size: .76rem;
+}
+
+@media (max-width: 992px) {
+    .hms-breadcrumb-wrap {
+        display: none;
+    }
+
+    .wait-queue-badge span {
+        display: none;
+    }
+}
+
+/* =========================================
+   PREMIUM TABLES & CARDS
+   ========================================= */
+.premium-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.premium-card .card-header {
+    padding: 1.1rem 1.25rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.premium-table {
+    font-size: 15px;
+    margin-bottom: 0;
+}
+
+.premium-table thead th {
+    background-color: #F8FAFC;
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+    padding: .95rem 1rem;
+    border-bottom: 2px solid var(--border-color);
+    vertical-align: middle;
+}
+
+.premium-table tbody td {
+    padding: .9rem 1rem;
+    color: #333333;
+    border-bottom: 1px solid #F0F4F8;
+    vertical-align: middle;
+}
+
+.premium-table tbody tr:hover {
+    background-color: rgba(27, 79, 114, 0.02);
+}
+
+/* =========================================
+   ACTION BUTTONS & BADGES
+   ========================================= */
+.action-btn-group {
+    gap: .35rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.action-btn-group .btn {
+    padding: .35rem .62rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    justify-content: center;
+    font-size: .84rem;
+    border-radius: 8px;
+    background-color: var(--color-surface);
+}
+
+.action-btn-group .btn i {
+    font-size: .95rem;
+    line-height: 1;
+}
+
+.action-btn-group .btn-outline-success {
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.action-btn-group .btn-outline-success:hover {
+    background-color: var(--color-success);
+    border-color: var(--color-success);
+    color: #fff;
+}
+
+.action-btn-group .custom-edit-btn {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+}
+
+.action-btn-group .custom-edit-btn:hover {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+    color: #fff;
+}
+
+/* =========================================
+   PREMIUM CLINICAL FORMS
+   ========================================= */
+
+/* Section icon box — fixed 40x40 circle housing the section icon */
+.section-icon-box {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.premium-form-card {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.premium-form-card .card-header {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Override Bootstrap's bg-primary-subtle to match our palette */
+.bg-primary-subtle {
+    background-color: rgba(27, 79, 114, 0.1) !important;
+}
+
+/* Clinical Input — larger, cleaner border, slight off-white bg */
+.clinical-input {
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 15px;
+    background-color: #FAFAF9;
+    transition: border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
+    color: #1a1a2e;
+}
+
+.clinical-input:focus {
+    background-color: #FFFFFF;
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 4px rgba(41, 128, 185, 0.12);
+    outline: none;
+}
+
+.clinical-input[readonly] {
+    background-color: #F1F5F9;
+    border-color: #E2E8F0;
+    cursor: not-allowed;
+    color: #94a3b8;
+}
+
+/* Override Bootstrap form-select/form-control styles with clinical-input */
+.form-select.clinical-input,
+.form-control.clinical-input {
+    border: 1.5px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: #FAFAF9;
+}
+
+.form-select.clinical-input:focus,
+.form-control.clinical-input:focus {
+    background-color: #FFFFFF;
+    border-color: var(--color-secondary);
+    box-shadow: 0 0 0 4px rgba(41, 128, 185, 0.12);
+}
+
+/* Compact clinical inputs for grid tables */
+.form-select.clinical-input-sm,
+.form-control.clinical-input-sm,
+.clinical-input.clinical-input-sm {
+    padding: 0.3rem 0.55rem !important;
+    font-size: 0.82rem !important;
+    height: 2.1rem !important;
+    min-height: unset !important;
+    border-radius: 6px;
+}
+
+/* Custom radio within clinical forms */
+.custom-radio .form-check-input {
+    width: 1.25em;
+    height: 1.25em;
+    border-color: #CBD5E1;
+    cursor: pointer;
+}
+
+.custom-radio .form-check-input:checked {
+    background-color: var(--color-secondary);
+    border-color: var(--color-secondary);
+}
+
+.custom-radio .form-check-label {
+    cursor: pointer;
+    margin-top: 0.1rem;
+    font-weight: 500;
+}
+
+/* Premium Rx (medicine) table header */
+.premium-rx-table thead th {
+    background-color: #F8FAFC;
+    color: var(--color-primary);
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 0.6rem 0.75rem;
+    white-space: nowrap;
+    border-color: var(--border-color);
+}
+
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    font-size: 12px;
+}
+
+/* =========================================
+   PREMIUM MODALS
+   ========================================= */
+.premium-modal .modal-content {
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 0.5rem;
+}
+
+/* =========================================
+   PREMIUM VERTICAL TIMELINE
+   ========================================= */
+.timeline {
+    position: relative;
+    padding-left: 2.5rem;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 15px;
+    width: 2px;
+    background-color: #E2E8F0;
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    top: 0;
+    left: -2.5rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    border: 3px solid #fff;
+    font-size: 0.8rem;
+}
+
+.timeline-content {
+    transition: transform 0.2s ease;
+}
+
+.timeline-content:hover {
+    transform: translateX(5px);
+}
+
+.premium-modal .modal-header {
+    padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.premium-modal .modal-body {
+    padding: 1.5rem;
+}
+
+.premium-modal .modal-footer {
+    padding: 0 1.5rem 1.5rem;
+}
+
+/* Keypad buttons for clinical entry (SPH/CYL modal) */
+.keypad-btn {
+    background-color: #F8FAFC;
+    border: 1px solid var(--border-color);
+    color: var(--color-primary);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0.65rem 0;
+    border-radius: 8px;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+    line-height: 1;
+}
+
+.keypad-btn:hover,
+.keypad-btn:active {
+    background-color: rgba(39, 174, 96, 0.1);
+    border-color: var(--color-success);
+    color: var(--color-success);
+    transform: scale(1.03);
+}
+
+/* =========================================
+   PREMIUM DROPDOWNS (Header User Menu)
+   ========================================= */
+.dropdown-menu {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    padding: 0.4rem;
+    border: 1px solid var(--border-color);
+    margin-top: 10px !important;
+}
+
+.dropdown-item {
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    color: #1f2937;
+    transition: background-color 0.15s;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: #F0F4F8;
+    color: var(--color-primary);
+}
+
+.dropdown-item i {
+    width: 1.1rem;
+    text-align: center;
+}
+
+.dropdown-header {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    color: #94a3b8;
+    padding: 0.5rem 1rem 0.25rem;
+}
+
+.dropdown-divider {
+    margin: 0.3rem 0.4rem;
+    border-color: var(--border-color);
+}

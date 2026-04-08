@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPD Bill — {{ $patient->patient_code }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', Arial, sans-serif; color: #111827; background: #F4F6F9; }
+
+        .bill-container {
+            max-width: 600px; margin: 20px auto; background: #fff;
+            border: 1px solid #E5E7EB; border-radius: 8px; padding: 32px;
+        }
+
+        .bill-header { text-align: center; border-bottom: 2px solid #1B4F72; padding-bottom: 16px; margin-bottom: 20px; }
+        .bill-header h1 { font-size: 20px; font-weight: 800; color: #0D2137; margin-bottom: 4px; }
+        .bill-header p { font-size: 12px; color: #64748B; }
+        .bill-logo { font-size: 28px; color: #1B4F72; margin-bottom: 8px; }
+
+        .bill-title { text-align: center; font-size: 16px; font-weight: 700; color: #1B4F72; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .bill-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; }
+        .bill-info-col { flex: 1; }
+        .bill-info-col dt { font-weight: 600; color: #64748B; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+        .bill-info-col dd { margin-bottom: 8px; color: #111827; }
+
+        .bill-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .bill-table th { background: #F1F5F9; color: #374151; font-size: 11px; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 2px solid #E5E7EB; }
+        .bill-table td { padding: 10px 12px; border-bottom: 1px solid #F1F5F9; font-size: 13px; }
+        .bill-table .total-row td { font-weight: 700; font-size: 14px; border-top: 2px solid #1B4F72; background: #F8FAFC; }
+
+        .bill-footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; color: #64748B; }
+        .bill-signature { text-align: right; }
+        .bill-signature-line { width: 160px; border-top: 1px solid #111827; margin-bottom: 4px; margin-left: auto; }
+
+        .bill-actions { text-align: center; margin-top: 20px; }
+        .btn-print {
+            background: #1B4F72; color: #fff; border: none; padding: 10px 24px;
+            border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+            margin: 0 4px;
+        }
+        .btn-print:hover { background: #154360; }
+        .btn-outline {
+            background: #fff; color: #1B4F72; border: 1.5px solid #1B4F72;
+            padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600;
+            cursor: pointer; text-decoration: none; margin: 0 4px;
+        }
+
+        @media print {
+            body { background: #fff; }
+            .bill-container { border: none; box-shadow: none; margin: 0; padding: 20px; max-width: 100%; }
+            .bill-actions { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bill-container">
+    {{-- Hospital Header --}}
+    <div class="bill-header">
+        <div class="bill-logo">👁</div>
+        <h1>{{ $tenant->name }}</h1>
+        @if($tenant->city || $tenant->state)
+            <p>{{ $tenant->city }}{{ $tenant->state ? ', ' . $tenant->state : '' }}</p>
+        @endif
+        <p>Phone: {{ $tenant->admin_phone ?? '—' }} &bull; Email: {{ $tenant->admin_email ?? '—' }}</p>
+    </div>
+
+    <div class="bill-title">OPD Bill / Receipt</div>
+
+    {{-- Patient Info --}}
+    <div class="bill-info">
+        <div class="bill-info-col">
+            <dl>
+                <dt>MRD No.</dt>
+                <dd><strong>{{ $patient->patient_code }}</strong></dd>
+                <dt>Patient Name</dt>
+                <dd>{{ $patient->full_name }}</dd>
+                <dt>Age / Gender</dt>
+                <dd>{{ $patient->age }} yrs / {{ ucfirst($patient->gender) }}</dd>
+                <dt>Contact</dt>
+                <dd>{{ $patient->contact_no }}</dd>
+            </dl>
+        </div>
+        <div class="bill-info-col" style="text-align:right">
+            <dl style="text-align:right">
+                <dt>Date</dt>
+                <dd>{{ $patient->appointment_date?->format('d M Y') }}</dd>
+                <dt>Consultant</dt>
+                <dd>{{ $patient->doctor?->name ?? '—' }}</dd>
+                <dt>Receptionist</dt>
+                <dd>{{ $patient->reception?->name ?? '—' }}</dd>
+                <dt>Type</dt>
+                <dd>{{ ucfirst($patient->type) }}</dd>
+            </dl>
+        </div>
+    </div>
+
+    {{-- Billing Table --}}
+    <table class="bill-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Description</th>
+                <th style="text-align:right">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>OPD Consultation Fee</td>
+                <td style="text-align:right">{{ number_format($patient->case_fee, 2) }}</td>
+            </tr>
+            <tr class="total-row">
+                <td colspan="2" style="text-align:right">Total Payable</td>
+                <td style="text-align:right">₹{{ number_format($patient->case_fee, 2) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {{-- Footer --}}
+    <div class="bill-footer">
+        <div>
+            <p>Generated: {{ now()->format('d M Y, h:i A') }}</p>
+            <p>{{ config('app.name') }}</p>
+        </div>
+        <div class="bill-signature">
+            <div class="bill-signature-line"></div>
+            <p>Authorized Signature</p>
+        </div>
+    </div>
+</div>
+
+{{-- Action Buttons --}}
+<div class="bill-actions">
+    <button class="btn-print" onclick="window.print()">
+        🖨 Print Bill
+    </button>
+    <a href="{{ route('hospital.patients.bill-pdf', ['slug' => $slug, 'patient' => $patient->id]) }}"
+       class="btn-outline">
+        📄 Download PDF
+    </a>
+    <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="btn-outline">
+        ← Back
+    </a>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.has('auto_print') && urlParams.get('auto_print') == '1') {
+            setTimeout(function() {
+                window.print();
+            }, 300);
+
+            window.onafterprint = function() {
+                window.location.href = "{{ route('hospital.patients.create', ['slug' => app('tenant')->slug ?? request()->route('slug')]) }}";
+            };
+        }
+    });
+</script>
+
+</body>
+</html>

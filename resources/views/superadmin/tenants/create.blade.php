@@ -1,0 +1,141 @@
+@extends('superadmin.layouts.app')
+@section('title', 'Add Hospital')
+@section('page-header', 'Add New Hospital')
+
+@section('page-actions')
+    <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-secondary hms-btn-sm">
+        <i class="fa-solid fa-arrow-left"></i> Back
+    </a>
+@endsection
+
+@section('content')
+<div style="max-width:680px">
+    <div class="hms-card">
+        <div class="hms-card-header">
+            <h3 class="hms-card-title">Hospital Details</h3>
+        </div>
+
+        @if($errors->any())
+            <div class="hms-alert hms-alert-danger">
+                <ul style="margin:0;padding-left:1.2rem">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('superadmin.hospitals.store') }}">
+            @csrf
+
+            <div class="hms-form-group">
+                <label>Hospital Name <span style="color:var(--hms-danger)">*</span></label>
+                <input type="text" name="hospital_name" id="hospitalName"
+                       class="hms-input @error('hospital_name') is-invalid @enderror"
+                       value="{{ old('hospital_name') }}" required maxlength="100">
+                @error('hospital_name') <span class="hms-error">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="hms-form-group">
+                <label>Hospital Slug (URL) <span style="color:var(--hms-danger)">*</span></label>
+                <div style="display:flex;align-items:center;gap:.5rem">
+                    <span style="font-size:.8rem;color:var(--hms-text-muted);white-space:nowrap">
+                        {{ config('app.url') }}/
+                    </span>
+                    <input type="text" name="slug" id="slugInput"
+                           class="hms-input @error('slug') is-invalid @enderror"
+                           value="{{ old('slug') }}" required
+                           maxlength="30" pattern="[a-z0-9\-]+">
+                </div>
+                <span id="slugNote" style="font-size:.75rem;color:var(--hms-text-muted)">
+                    Auto-generated from hospital name. Lowercase, letters, numbers, hyphens only.
+                </span>
+                @error('slug') <span class="hms-error">{{ $message }}</span> @enderror
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-group">
+                    <label>Admin Full Name <span style="color:var(--hms-danger)">*</span></label>
+                    <input type="text" name="admin_name"
+                           class="hms-input @error('admin_name') is-invalid @enderror"
+                           value="{{ old('admin_name') }}" required>
+                    @error('admin_name') <span class="hms-error">{{ $message }}</span> @enderror
+                </div>
+                <div class="hms-form-group">
+                    <label>Admin Email <span style="color:var(--hms-danger)">*</span></label>
+                    <input type="email" name="admin_email"
+                           class="hms-input @error('admin_email') is-invalid @enderror"
+                           value="{{ old('admin_email') }}" required>
+                    @error('admin_email') <span class="hms-error">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-group">
+                    <label>Admin Phone <span style="color:var(--hms-danger)">*</span></label>
+                    <input type="text" name="admin_phone"
+                           class="hms-input @error('admin_phone') is-invalid @enderror"
+                           value="{{ old('admin_phone') }}" maxlength="10"
+                           pattern="[0-9]{10}" placeholder="10 digit mobile" required>
+                    @error('admin_phone') <span class="hms-error">{{ $message }}</span> @enderror
+                </div>
+                <div class="hms-form-group">
+                    <label>Password <span style="color:var(--hms-danger)">*</span></label>
+                    <input type="password" name="password"
+                           class="hms-input @error('password') is-invalid @enderror"
+                           minlength="8" placeholder="Minimum 8 characters" required>
+                    @error('password') <span class="hms-error">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-group">
+                    <label>City</label>
+                    <input type="text" name="city" class="hms-input" value="{{ old('city') }}">
+                </div>
+                <div class="hms-form-group">
+                    <label>State</label>
+                    <input type="text" name="state" class="hms-input" value="{{ old('state') }}">
+                </div>
+            </div>
+
+            <div class="hms-form-group">
+                <label>Plan (for reference)</label>
+                <select name="plan" class="hms-select">
+                    <option value="monthly" {{ old('plan','monthly')=='monthly' ? 'selected':'' }}>Monthly</option>
+                    <option value="quarterly" {{ old('plan')=='quarterly' ? 'selected':'' }}>Quarterly</option>
+                    <option value="yearly" {{ old('plan')=='yearly' ? 'selected':'' }}>Yearly</option>
+                </select>
+                <span style="font-size:.75rem;color:var(--hms-text-muted)">
+                    Hospital will start on 14-day free trial regardless.
+                </span>
+            </div>
+
+            <input type="hidden" name="start_trial" value="1">
+
+            <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+                <button type="submit" class="hms-btn hms-btn-primary">
+                    <i class="fa-solid fa-hospital-user"></i> Create Hospital
+                </button>
+                <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.getElementById('hospitalName').addEventListener('input', function () {
+    var slug = this.value
+        .toLowerCase().trim()
+        .replace(/[^a-z0-9\s\-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .substring(0, 30);
+    document.getElementById('slugInput').value = slug;
+});
+</script>
+@endpush
+@endsection
