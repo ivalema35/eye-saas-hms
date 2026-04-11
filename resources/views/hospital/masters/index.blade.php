@@ -41,6 +41,43 @@
 
 <hr class="my-4">
 
+{{-- ── OT Masters ─────────────────────────────────────────────────── --}}
+<div class="mb-4">
+    <h6 class="text-uppercase fw-bold mb-3"
+        style="color: var(--color-primary); font-size: .72rem; letter-spacing: .08em;">
+        <i class="bi bi-hospital me-1"></i> OT Masters
+    </h6>
+
+    <div class="row g-3">
+        @php
+        $otMasters = [
+            ['route' => 'hospital.masters.ot.lens-options.index', 'label' => 'Lens Options', 'icon' => 'bi-eyeglasses', 'color' => 'dark'],
+            ['route' => 'hospital.masters.ot.slots.index', 'label' => 'OT Slots', 'icon' => 'bi-clock-history', 'color' => 'primary'],
+            ['route' => 'hospital.masters.ot.types.index', 'label' => 'OT Types', 'icon' => 'bi-tags-fill', 'color' => 'success'],
+            ['route' => 'hospital.masters.ot.surgery-types.index', 'label' => 'Surgery Types', 'icon' => 'bi-scissors', 'color' => 'warning'],
+            ['route' => 'hospital.masters.ot.charge-heads.index', 'label' => 'Charge Heads', 'icon' => 'bi-cash-stack', 'color' => 'info'],
+        ];
+        @endphp
+
+        @foreach($otMasters as $m)
+        <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+            <a href="{{ route($m['route'], ['slug' => $slug]) }}" class="text-decoration-none">
+                <div class="card border-0 shadow-sm h-100 master-nav-card">
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3 gap-2">
+                        <div class="master-icon-box bg-{{ $m['color'] }}-subtle text-{{ $m['color'] }}">
+                            <i class="bi {{ $m['icon'] }} fs-5"></i>
+                        </div>
+                        <span class="fw-semibold small" style="color: var(--color-primary);">{{ $m['label'] }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        @endforeach
+    </div>
+</div>
+
+<hr class="my-4">
+
 {{-- ── Eye Exam Masters ────────────────────────────────────────────── --}}
 <div>
     <h6 class="text-uppercase fw-bold mb-3"

@@ -29,12 +29,16 @@ class OtSurgery extends Model
         'operated_by',
         'surgery_name',
         'eye_operated',
+        'complication_status',
+        'complication_notes',
+        'ward_medicines',
         'surgery_status',
         'complication',
         'surgery_at',
     ];
 
     protected $casts = [
+        'ward_medicines' => 'array',
         'surgery_at' => 'datetime',
     ];
 

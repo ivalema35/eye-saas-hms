@@ -38,6 +38,9 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
         $this->seedCaseTypes();
         $this->seedSlots();
+        $this->seedOtTypes();
+        $this->seedOtSurgeryTypes();
+        $this->seedLensOptions();
         $this->seedDurations();
         $this->seedChiefComplaints();
         $this->seedKcos();
@@ -60,6 +63,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
         $this->seedAdvice();
         $this->seedDiagnosis();
         $this->seedMedicineInstructions();
+        $this->seedOtChargeHeads();
 
         Log::info("SeedTenantDefaultMasters: Completed for tenant #{$this->tenantId}");
     }
@@ -123,13 +127,145 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedSlots(): void
     {
-        $ts = $this->ts();
+        $defaults = [
+            ['slot_name' => 'Slot 9to12', 'start_time' => '09:00:00', 'end_time' => '12:00:00'],
+            ['slot_name' => 'Slot 12to1', 'start_time' => '12:00:00', 'end_time' => '13:00:00'],
+            ['slot_name' => 'Slot 1to3', 'start_time' => '13:00:00', 'end_time' => '15:00:00'],
+            ['slot_name' => 'Slot 3to4', 'start_time' => '15:00:00', 'end_time' => '16:00:00'],
+        ];
 
-        $this->insert('tbl_slots', [
-            ['tenant_id' => $this->tenantId, 'slot_name' => 'Morning Shift', 'start_time' => '09:00:00', 'end_time' => '13:00:00', 'created_at' => $ts, 'updated_at' => $ts],
-            ['tenant_id' => $this->tenantId, 'slot_name' => 'Evening Shift', 'start_time' => '16:00:00', 'end_time' => '20:00:00', 'created_at' => $ts, 'updated_at' => $ts],
-            ['tenant_id' => $this->tenantId, 'slot_name' => 'Full Day',      'start_time' => '09:00:00', 'end_time' => '20:00:00', 'created_at' => $ts, 'updated_at' => $ts],
-        ]);
+        foreach ($defaults as $row) {
+            $existing = DB::table('tbl_ot_slots')
+                ->where('tenant_id', $this->tenantId)
+                ->where('slot_name', $row['slot_name'])
+                ->first();
+
+            $payload = [
+                'start_time' => $row['start_time'],
+                'end_time' => $row['end_time'],
+                'deleted_at' => null,
+                'updated_at' => $this->ts(),
+            ];
+
+            if ($existing) {
+                DB::table('tbl_ot_slots')->where('id', $existing->id)->update($payload);
+
+                continue;
+            }
+
+            DB::table('tbl_ot_slots')->insert([
+                'tenant_id' => $this->tenantId,
+                'slot_name' => $row['slot_name'],
+                'start_time' => $row['start_time'],
+                'end_time' => $row['end_time'],
+                'created_at' => $this->ts(),
+                'updated_at' => $this->ts(),
+            ]);
+        }
+    }
+
+    private function seedOtTypes(): void
+    {
+        foreach (['Cataract', 'LASIK', 'Other'] as $name) {
+            $existing = DB::table('ot_types')
+                ->where('tenant_id', $this->tenantId)
+                ->where('name', $name)
+                ->first();
+
+            $payload = [
+                'deleted_at' => null,
+                'updated_at' => $this->ts(),
+            ];
+
+            if ($existing) {
+                DB::table('ot_types')->where('id', $existing->id)->update($payload);
+
+                continue;
+            }
+
+            DB::table('ot_types')->insert([
+                'tenant_id' => $this->tenantId,
+                'name' => $name,
+                'created_at' => $this->ts(),
+                'updated_at' => $this->ts(),
+            ]);
+        }
+    }
+
+    private function seedLensOptions(): void
+    {
+        foreach (['Monofocal', 'Multifocal', 'Toric'] as $name) {
+            $existing = DB::table('ot_lens_options')
+                ->where('tenant_id', $this->tenantId)
+                ->where('name', $name)
+                ->first();
+
+            $payload = [
+                'is_active' => true,
+                'deleted_at' => null,
+                'updated_at' => $this->ts(),
+            ];
+
+            if ($existing) {
+                DB::table('ot_lens_options')->where('id', $existing->id)->update($payload);
+
+                continue;
+            }
+
+            DB::table('ot_lens_options')->insert([
+                'tenant_id' => $this->tenantId,
+                'name' => $name,
+                'is_active' => true,
+                'created_at' => $this->ts(),
+                'updated_at' => $this->ts(),
+            ]);
+        }
+    }
+
+    private function seedOtSurgeryTypes(): void
+    {
+        $parentMap = [
+            'Cataract' => [
+                'Phacoemulsification',
+                'SICS (Small Incision Cataract Surgery)',
+            ],
+            'LASIK' => [
+                'Standard LASIK',
+                'Custom LASIK',
+            ],
+            'Other' => [
+                'Minor Procedure',
+            ],
+        ];
+
+        foreach ($parentMap as $parentName => $surgeryNames) {
+            $parentId = DB::table('ot_types')
+                ->where('tenant_id', $this->tenantId)
+                ->where('name', $parentName)
+                ->whereNull('deleted_at')
+                ->value('id');
+
+            if (! $parentId) {
+                Log::warning("SeedTenantDefaultMasters: OT type '{$parentName}' missing for tenant #{$this->tenantId}");
+
+                continue;
+            }
+
+            foreach ($surgeryNames as $surgeryName) {
+                DB::table('ot_surgery_types')->updateOrInsert(
+                    [
+                        'tenant_id' => $this->tenantId,
+                        'ot_type_id' => $parentId,
+                        'surgery_name' => $surgeryName,
+                    ],
+                    [
+                        'deleted_at' => null,
+                        'created_at' => $this->ts(),
+                        'updated_at' => $this->ts(),
+                    ]
+                );
+            }
+        }
     }
 
     private function seedDurations(): void
@@ -464,5 +600,45 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'At bedtime',
             'Shake well before use',
         ]));
+    }
+
+    private function seedOtChargeHeads(): void
+    {
+        $defaults = [
+            ['charge_name' => 'Surgeon Fee', 'percentage' => 50.00],
+            ['charge_name' => 'Anesthesia', 'percentage' => 15.00],
+            ['charge_name' => 'OT Charges', 'percentage' => 20.00],
+            ['charge_name' => 'Nursing and Staff', 'percentage' => 10.00],
+            ['charge_name' => 'Consumables', 'percentage' => 5.00],
+        ];
+
+        foreach ($defaults as $row) {
+            $existing = DB::table('ot_charge_heads')
+                ->where('tenant_id', $this->tenantId)
+                ->where('charge_name', $row['charge_name'])
+                ->first();
+
+            $payload = [
+                'percentage' => $row['percentage'],
+                'is_active' => true,
+                'deleted_at' => null,
+                'updated_at' => $this->ts(),
+            ];
+
+            if ($existing) {
+                DB::table('ot_charge_heads')->where('id', $existing->id)->update($payload);
+
+                continue;
+            }
+
+            DB::table('ot_charge_heads')->insert([
+                'tenant_id' => $this->tenantId,
+                'charge_name' => $row['charge_name'],
+                'percentage' => $row['percentage'],
+                'is_active' => true,
+                'created_at' => $this->ts(),
+                'updated_at' => $this->ts(),
+            ]);
+        }
     }
 }

@@ -279,7 +279,12 @@
                      Visible if user can view OT bookings or surgery.
                 ── --}}
                 @php
-                    $showOt = $permSvc->can('ot.patient.list');
+                    $showOt = $permSvc->can('ot.patient.list')
+                        || $permSvc->can('ot.payment.record')
+                        || $permSvc->can('ot.ward.entry')
+                        || $permSvc->can('ot.surgery.record')
+                        || $permSvc->can('ot.lens.record')
+                        || $permSvc->can('ot.billing.manage');
                 @endphp
 
                 @if($showOt)
@@ -291,9 +296,49 @@
                 <div class="hms-nav-group-items" id="nav-ot">
                     @haspermission('ot.patient.list')
                         <a href="{{ route('hospital.ot.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.*') ? 'active' : '' }}">
+                           class="hms-nav-item {{ request()->routeIs('hospital.ot.dashboard') || request()->routeIs('hospital.ot.bookings.*') || request()->routeIs('hospital.ot.index') ? 'active' : '' }}">
                             <i class="bi bi-heart-pulse-fill"></i>
                             <span>OT Bookings</span>
+                        </a>
+                    @endhaspermission
+
+                    @haspermission('ot.payment.record')
+                        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.ot.accountant.dashboard') || request()->routeIs('hospital.ot.payments.*') ? 'active' : '' }}">
+                            <i class="bi bi-cash-coin"></i>
+                            <span>OT Accountant / Billing</span>
+                        </a>
+                    @endhaspermission
+
+                    @haspermission('ot.ward.entry')
+                        <a href="{{ route('hospital.ot.ward.index', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.ot.ward.index') ? 'active' : '' }}">
+                            <i class="bi bi-hospital"></i>
+                            <span>Ward Management</span>
+                        </a>
+                    @endhaspermission
+
+                    @haspermission('ot.surgery.record')
+                        <a href="{{ route('hospital.ot.doctor.dashboard', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.ot.doctor.dashboard') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
+                            <i class="bi bi-heart-pulse"></i>
+                            <span>OT Doctor Dashboard</span>
+                        </a>
+                    @endhaspermission
+
+                    @haspermission('ot.lens.record')
+                        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') ? 'active' : '' }}">
+                            <i class="bi bi-eyeglasses"></i>
+                            <span>OT Assistant Dashboard</span>
+                        </a>
+                    @endhaspermission
+
+                    @haspermission('ot.billing.manage')
+                        <a href="{{ route('hospital.ot.billing.index', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.ot.billing.index') || request()->routeIs('hospital.ot.invoice.*') || request()->routeIs('hospital.ot.discharge.*') || request()->routeIs('hospital.ot.summary-bill.*') || request()->routeIs('hospital.ot.certificate.*') || request()->routeIs('hospital.ot.medicine-slip.*') ? 'active' : '' }}">
+                            <i class="bi bi-receipt-cutoff"></i>
+                            <span>Discharge & Invoices</span>
                         </a>
                     @endhaspermission
                 </div>

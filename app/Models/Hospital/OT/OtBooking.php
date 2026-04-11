@@ -24,6 +24,20 @@ class OtBooking extends Model
 {
     use BelongsToTenant, SoftDeletes;
 
+    public const STATUS_BOOKED = 'booked';
+
+    public const STATUS_PAID = 'paid';
+
+    public const STATUS_IN_WARD = 'in_ward';
+
+    public const STATUS_DILATED = 'dilated';
+
+    public const STATUS_READY = 'ready';
+
+    public const STATUS_OPERATED = 'operated';
+
+    public const STATUS_DISCHARGED = 'discharged';
+
     protected $table = 'ot_bookings';
 
     protected $fillable = [

@@ -14,6 +14,10 @@ class SystemRolesSeeder extends Seeder
         ['name' => 'Hospital Admin', 'slug' => 'hospital_admin', 'color' => '#1B4F72', 'is_super' => true,  'is_system' => true],
         ['name' => 'Doctor',         'slug' => 'doctor',         'color' => '#2980B9', 'is_super' => false, 'is_system' => false],
         ['name' => 'Receptionist',   'slug' => 'receptionist',   'color' => '#27AE60', 'is_super' => false, 'is_system' => false],
+        ['name' => 'OT Receptionist', 'slug' => 'ot_receptionist', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
+        ['name' => 'Accountant',     'slug' => 'accountant',     'color' => '#117A65', 'is_super' => false, 'is_system' => true],
+        ['name' => 'OT Doctor',      'slug' => 'ot_doctor',      'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
+        ['name' => 'OT Assistant',   'slug' => 'ot_assistant',   'color' => '#CA6F1E', 'is_super' => false, 'is_system' => true],
     ];
 
     private array $defaultPermissions = [
@@ -37,7 +41,7 @@ class SystemRolesSeeder extends Seeder
 
     public static function seedForTenant(int $tenantId, ?int $adminId = null): void
     {
-        (new self())->runForTenant($tenantId, $adminId);
+        (new self)->runForTenant($tenantId, $adminId);
     }
 
     public function run(): void
@@ -50,7 +54,8 @@ class SystemRolesSeeder extends Seeder
         $allPermissions = Permission::all()->keyBy('action');
 
         if ($allPermissions->isEmpty()) {
-            Log::error("SystemRolesSeeder: permissions table is empty! Run PermissionsSeeder first.");
+            Log::error('SystemRolesSeeder: permissions table is empty! Run PermissionsSeeder first.');
+
             return;
         }
 
@@ -61,10 +66,10 @@ class SystemRolesSeeder extends Seeder
             $role = Role::withoutTenantScope()->firstOrCreate(
                 ['tenant_id' => $tenantId, 'slug' => $roleData['slug']],
                 [
-                    'name'       => $roleData['name'],
-                    'color'      => $roleData['color'],
-                    'is_system'  => $roleData['is_system'],
-                    'is_super'   => $roleData['is_super'],
+                    'name' => $roleData['name'],
+                    'color' => $roleData['color'],
+                    'is_system' => $roleData['is_system'],
+                    'is_super' => $roleData['is_super'],
                     'created_by' => $adminId,
                 ]
             );
@@ -80,6 +85,7 @@ class SystemRolesSeeder extends Seeder
             $this->applyPermissions($role, $allPermissions,
                 array_fill_keys($allPermissions->keys()->toArray(), true)
             );
+
             return;
         }
 

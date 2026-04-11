@@ -1,5 +1,14 @@
 <?php
 
+use App\Http\Middleware\CheckGracePeriod;
+use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\CheckSubscriptionActive;
+use App\Http\Middleware\HospitalAuth;
+use App\Http\Middleware\IdentifyTenant;
+use App\Http\Middleware\RedirectIfInactive;
+use App\Http\Middleware\SetTenantScope;
+use App\Http\Middleware\SuperAdminAuth;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,14 +23,15 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Middleware aliases — route me naam se use karo
         $middleware->alias([
-            'identify.tenant'      => \App\Http\Middleware\IdentifyTenant::class,
-            'set.tenant.scope'     => \App\Http\Middleware\SetTenantScope::class,
-            'auth.hospital'        => \App\Http\Middleware\HospitalAuth::class,
-            'auth.superadmin'      => \App\Http\Middleware\SuperAdminAuth::class,
-            'subscription.active'  => \App\Http\Middleware\CheckSubscriptionActive::class,
-            'grace.check'          => \App\Http\Middleware\CheckGracePeriod::class,
-            'redirect.inactive'    => \App\Http\Middleware\RedirectIfInactive::class,
-            'permission'           => \App\Http\Middleware\CheckPermission::class,
+            'identify.tenant' => IdentifyTenant::class,
+            'set.tenant.scope' => SetTenantScope::class,
+            'auth.hospital' => HospitalAuth::class,
+            'auth.superadmin' => SuperAdminAuth::class,
+            'subscription.active' => CheckSubscriptionActive::class,
+            'grace.check' => CheckGracePeriod::class,
+            'redirect.inactive' => RedirectIfInactive::class,
+            'permission' => CheckPermission::class,
+            'role' => CheckRole::class,
         ]);
 
         // Razorpay webhook ko CSRF se exempt karo
