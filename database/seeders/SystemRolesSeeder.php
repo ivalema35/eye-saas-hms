@@ -1,13 +1,13 @@
 <?php
-
+ 
 namespace Database\Seeders;
-
+ 
 use App\Models\Role\Permission;
 use App\Models\Role\Role;
 use App\Models\Role\RolePermission;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
-
+ 
 class SystemRolesSeeder extends Seeder
 {
     private array $systemRoles = [
@@ -22,43 +22,47 @@ class SystemRolesSeeder extends Seeder
 
     private array $defaultPermissions = [
         'doctor' => [
-            'patient.view', 'patient.print',
-            'exam.primary.view', 'exam.primary.write',
-            'exam.secondary.view', 'exam.secondary.write',
-            'foc.view', 'foc.create',
-            'medicine.view', 'medicine.create', 'medicine.edit',
-            'report.patient.daily',
+            'opd.patient.view',
+            'opd.exam.primary',
+            'opd.exam.secondary',
+            'opd.exam.history',
+            'opd.prescription.print',
+            'opd.foc.create',
+            'reports.view',
         ],
         'receptionist' => [
-            'patient.view', 'patient.create', 'patient.edit', 'patient.delete', 'patient.print',
-            'exam.primary.view',
-            'foc.view', 'foc.approve',
-            'medicine.view',
-            'report.patient.daily',
-            'master.view', 'master.write',
+            'opd.patient.register',
+            'opd.patient.register_phone',
+            'opd.patient.view',
+            'opd.patient.edit',
+            'opd.patient.delete',
+            'opd.bill.print',
+            'opd.foc.accept',
+            'reports.view',
+            'master.receptions',
         ],
     ];
-
+ 
     public static function seedForTenant(int $tenantId, ?int $adminId = null): void
     {
         (new self)->runForTenant($tenantId, $adminId);
     }
-
+ 
     public function run(): void
     {
         $this->command->warn('Direct run not supported. Use SystemRolesSeeder::seedForTenant($tenantId).');
     }
-
+ 
     private function runForTenant(int $tenantId, ?int $adminId): void
     {
         $allPermissions = Permission::all()->keyBy('action');
-
+ 
         if ($allPermissions->isEmpty()) {
             Log::error('SystemRolesSeeder: permissions table is empty! Run PermissionsSeeder first.');
-
+ 
             return;
         }
-
+ 
         foreach ($this->systemRoles as $roleData) {
             // FIX: withoutTenantScope() use karo —
             // Public context (registration) mein config('app.tenant_id') = 0 hota hai.
@@ -73,11 +77,11 @@ class SystemRolesSeeder extends Seeder
                     'created_by' => $adminId,
                 ]
             );
-
+ 
             $this->assignDefaultPermissions($role, $allPermissions);
         }
     }
-
+ 
     private function assignDefaultPermissions(Role $role, $allPermissions): void
     {
         if ($role->is_super) {
@@ -85,18 +89,24 @@ class SystemRolesSeeder extends Seeder
             $this->applyPermissions($role, $allPermissions,
                 array_fill_keys($allPermissions->keys()->toArray(), true)
             );
-
+ 
             return;
         }
-
+ 
         $grantedActions = $this->defaultPermissions[$role->slug] ?? [];
+        foreach ($grantedActions as $action) {
+            if (! $allPermissions->has($action)) {
+                Log::warning("SystemRolesSeeder: unknown permission action [{$action}] for role [{$role->slug}].");
+            }
+        }
+ 
         $permMap = [];
         foreach ($allPermissions->keys() as $action) {
-            $permMap[$action] = in_array($action, $grantedActions);
+            $permMap[$action] = in_array($action, $grantedActions, true);
         }
         $this->applyPermissions($role, $allPermissions, $permMap);
     }
-
+ 
     private function applyPermissions(Role $role, $allPermissions, array $permissionMap): void
     {
         foreach ($permissionMap as $action => $isGranted) {
@@ -110,3 +120,5 @@ class SystemRolesSeeder extends Seeder
         }
     }
 }
+ 
+ 

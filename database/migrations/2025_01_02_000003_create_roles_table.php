@@ -31,8 +31,8 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('tenant_id')
-                  ->constrained('tenants')
-                  ->onDelete('cascade');
+                ->constrained('tenants')
+                ->onDelete('cascade');
 
             $table->string('name');
             $table->string('slug');

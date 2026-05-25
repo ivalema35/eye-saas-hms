@@ -111,17 +111,17 @@ class PermissionsSeeder extends Seeder
             Permission::firstOrCreate(
                 ['action' => $permData['action']],
                 [
-                    'label'       => $permData['label'],
-                    'module'      => $permData['module'],
+                    'label' => $permData['label'],
+                    'module' => $permData['module'],
                     'description' => $permData['description'] ?? '',
-                    'sort_order'  => 0,
+                    'sort_order' => 0,
                 ]
             );
         }
 
         $this->syncSuperRolesWithAllPermissions();
 
-        $this->command->info('Permissions seeded: ' . count($this->permissions) . ' total.');
+        $this->command->info('Permissions seeded: '.count($this->permissions).' total.');
     }
 
     private function syncSuperRolesWithAllPermissions(): void
@@ -170,6 +170,6 @@ class PermissionsSeeder extends Seeder
             DB::table('role_permissions')->insert($rowsToInsert);
         }
 
-        $this->command->info('Super role permission sync completed. Added: ' . count($rowsToInsert));
+        $this->command->info('Super role permission sync completed. Added: '.count($rowsToInsert));
     }
 }

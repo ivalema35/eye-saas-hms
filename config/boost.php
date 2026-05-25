@@ -62,7 +62,7 @@ return [
     'agents' => [
         'copilot' => [
             'guidelines_path' => '.github/copilot-instructions.md',
-            'skills_path'     => '.github/skills',
+            'skills_path' => '.github/skills',
         ],
     ],
 

@@ -19,8 +19,8 @@ class HospitalUserUpdateRequest extends FormRequest
         $userId = (int) $this->route('id');
 
         return [
-            'name'           => ['required', 'string', 'max:255'],
-            'email'          => [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => [
                 'required',
                 'email',
                 'max:255',
@@ -28,8 +28,8 @@ class HospitalUserUpdateRequest extends FormRequest
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id')))
                     ->ignore($userId),
             ],
-            'contact'        => ['nullable', 'string', 'max:15'],
-            'role_id'        => [
+            'contact' => ['nullable', 'string', 'max:15'],
+            'role_id' => [
                 'required',
                 'integer',
                 Rule::exists('roles', 'id')
@@ -37,9 +37,9 @@ class HospitalUserUpdateRequest extends FormRequest
                         ->where('tenant_id', config('app.tenant_id'))
                         ->whereNull('deleted_at')),
             ],
-            'password'       => ['nullable', 'string', 'min:8', 'confirmed'],
-            'status'         => ['required', 'in:active,inactive'],
-            'doctor_type'    => ['nullable', 'in:primary,secondary'],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+            'status' => ['required', 'in:active,inactive'],
+            'doctor_type' => ['nullable', 'in:primary,secondary'],
             'foc_permission' => ['nullable', 'boolean'],
         ];
     }
@@ -48,7 +48,7 @@ class HospitalUserUpdateRequest extends FormRequest
     {
         return [
             'role_id.required' => 'Please select a role.',
-            'role_id.exists'   => 'Selected role is invalid for this hospital.',
+            'role_id.exists' => 'Selected role is invalid for this hospital.',
         ];
     }
 }

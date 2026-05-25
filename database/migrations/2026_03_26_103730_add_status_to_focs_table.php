@@ -19,8 +19,8 @@ return new class extends Migration
     {
         Schema::table('focs', function (Blueprint $table) {
             $table->enum('status', ['pending', 'accepted', 'rejected'])
-                  ->default('pending')
-                  ->after('accepted_at');
+                ->default('pending')
+                ->after('accepted_at');
             $table->text('reason')->nullable()->after('status');        // Why FOC requested
             $table->text('rejected_reason')->nullable()->after('reason'); // Why rejected
         });

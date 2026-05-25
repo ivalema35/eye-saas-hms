@@ -19,38 +19,40 @@ return new class extends Migration
 
         $now = now();
 
-        $legacyAdmins = DB::table('hospital_admins')
-            ->select('id', 'tenant_id', 'name', 'email', 'password', 'contact', 'status', 'last_login_at', 'remember_token', 'created_at', 'updated_at', 'deleted_at')
-            ->get();
+        if (Schema::hasTable('hospital_admins')) {
+            $legacyAdmins = DB::table('hospital_admins')
+                ->select('id', 'tenant_id', 'name', 'email', 'password', 'contact', 'status', 'last_login_at', 'remember_token', 'created_at', 'updated_at', 'deleted_at')
+                ->get();
 
-        foreach ($legacyAdmins as $admin) {
-            $exists = DB::table('hospital_users')
-                ->where('tenant_id', $admin->tenant_id)
-                ->where('email', $admin->email)
-                ->exists();
+            foreach ($legacyAdmins as $admin) {
+                $exists = DB::table('hospital_users')
+                    ->where('tenant_id', $admin->tenant_id)
+                    ->where('email', $admin->email)
+                    ->exists();
 
-            if ($exists) {
-                continue;
+                if ($exists) {
+                    continue;
+                }
+
+                $roleId = optional($roleMap->get($admin->tenant_id))->firstWhere('slug', 'hospital_admin')->id ?? null;
+
+                DB::table('hospital_users')->insert([
+                    'tenant_id' => $admin->tenant_id,
+                    'role_id' => $roleId,
+                    'name' => $admin->name,
+                    'email' => $admin->email,
+                    'password' => $admin->password,
+                    'contact' => $admin->contact,
+                    'status' => $admin->status ?? 'active',
+                    'doctor_type' => null,
+                    'foc_permission' => false,
+                    'last_login_at' => $admin->last_login_at,
+                    'remember_token' => $admin->remember_token,
+                    'created_at' => $admin->created_at ?? $now,
+                    'updated_at' => $admin->updated_at ?? $now,
+                    'deleted_at' => $admin->deleted_at,
+                ]);
             }
-
-            $roleId = optional($roleMap->get($admin->tenant_id))->firstWhere('slug', 'hospital_admin')->id ?? null;
-
-            DB::table('hospital_users')->insert([
-                'tenant_id' => $admin->tenant_id,
-                'role_id' => $roleId,
-                'name' => $admin->name,
-                'email' => $admin->email,
-                'password' => $admin->password,
-                'contact' => $admin->contact,
-                'status' => $admin->status ?? 'active',
-                'doctor_type' => null,
-                'foc_permission' => false,
-                'last_login_at' => $admin->last_login_at,
-                'remember_token' => $admin->remember_token,
-                'created_at' => $admin->created_at ?? $now,
-                'updated_at' => $admin->updated_at ?? $now,
-                'deleted_at' => $admin->deleted_at,
-            ]);
         }
 
         if (Schema::hasTable('doctors')) {

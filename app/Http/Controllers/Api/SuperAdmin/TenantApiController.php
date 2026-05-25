@@ -16,12 +16,14 @@ class TenantApiController extends Controller
     public function index(): JsonResponse
     {
         $tenants = Tenant::latest()->paginate(25);
+
         return response()->json(['success' => true, 'data' => $tenants]);
     }
 
     public function show(int $id): JsonResponse
     {
         $tenant = Tenant::with('subscriptions')->findOrFail($id);
+
         return response()->json(['success' => true, 'data' => $tenant]);
     }
 }

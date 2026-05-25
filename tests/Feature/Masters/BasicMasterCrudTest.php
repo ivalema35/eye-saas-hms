@@ -13,17 +13,19 @@ class BasicMasterCrudTest extends TestCase
     use RefreshDatabase;
 
     private Hospital $hospital;
+
     private HospitalUser $user;
+
     private string $slug;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create a hospital
         $this->hospital = Hospital::factory()->create();
         $this->slug = $this->hospital->slug;
-        
+
         // Create a hospital user
         $this->user = HospitalUser::factory()->create([
             'hospital_id' => $this->hospital->id,
@@ -91,7 +93,7 @@ class BasicMasterCrudTest extends TestCase
             ->delete("/hospitals/{$this->slug}/masters/basic/cases/{$case->id}");
 
         $this->assertSoftDeleted('tbl_cases', ['id' => $case->id]);
-        
+
         $response->assertRedirect();
         $response->assertSessionHas('success');
     }

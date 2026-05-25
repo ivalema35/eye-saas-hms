@@ -24,7 +24,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email'    => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
     }
@@ -38,7 +38,7 @@ class LoginRequest extends FormRequest
         $slug = $this->route('slug') ?? 'superadmin';
 
         return Str::transliterate(
-            Str::lower($this->string('email')) . '|' . $slug . '|' . $this->ip()
+            Str::lower($this->string('email')).'|'.$slug.'|'.$this->ip()
         );
     }
 

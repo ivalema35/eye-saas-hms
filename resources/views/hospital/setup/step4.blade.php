@@ -66,6 +66,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const tbody = document.getElementById('cases-body');
     const addBtn = document.getElementById('add-row-btn');
 
+    // Defaults preferrably loaded from existing tenant cases, then old input, then fallback defaults
     const defaults = [
         { name: 'General OPD', fee: '300' },
         { name: 'Cataract', fee: '500' },
@@ -75,13 +76,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     @if(old('cases'))
         const oldCases = @json(old('cases'));
-        oldCases.forEach(function (c) {
-            addRow(c.name || '', c.fee || '');
-        });
+        oldCases.forEach(function (c) { addRow(c.name || '', c.fee || ''); });
+    @elseif(! empty($existingCases ?? []))
+        const existingCases = @json($existingCases);
+        existingCases.forEach(function (c) { addRow(c.name || '', c.fee || ''); });
     @else
-        defaults.forEach(function (d) {
-            addRow(d.name, d.fee);
-        });
+        defaults.forEach(function (d) { addRow(d.name, d.fee); });
     @endif
 
     addBtn.addEventListener('click', function () {

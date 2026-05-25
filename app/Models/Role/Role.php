@@ -45,7 +45,7 @@ class Role extends Model
 
     protected $casts = [
         'is_system' => 'boolean',
-        'is_super'  => 'boolean',
+        'is_super' => 'boolean',
     ];
 
     // ── Relationships ─────────────────────────────────────────────────────
@@ -62,9 +62,9 @@ class Role extends Model
             'role_id',
             'permission_id'
         )
-        ->wherePivot('is_granted', true)
-        ->withPivot('is_granted', 'updated_by')
-        ->withTimestamps();
+            ->wherePivot('is_granted', true)
+            ->withPivot('is_granted', 'updated_by')
+            ->withTimestamps();
     }
 
     /**

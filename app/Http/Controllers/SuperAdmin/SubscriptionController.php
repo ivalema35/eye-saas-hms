@@ -21,6 +21,7 @@ class SubscriptionController extends Controller
     public function index(): View
     {
         $subscriptions = Subscription::with('tenant')->latest()->paginate(25);
+
         return view('superadmin.subscriptions.index', compact('subscriptions'));
     }
 }

@@ -113,6 +113,12 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedCaseTypes(): void
     {
+        // If tenant already has case rows (e.g. added during setup), skip inserting defaults.
+        $existing = DB::table('tbl_cases')->where('tenant_id', $this->tenantId)->count();
+        if ($existing > 0) {
+            return;
+        }
+
         $ts = $this->ts();
 
         $this->insert('tbl_cases', [
@@ -316,7 +322,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'Heart Problem',
             'Kidney Problem',
             'Thyroid',
-        ], 'kco'));
+        ], 'value'));
     }
 
     // ─────────────────────────────────────────────────────────────────
@@ -568,7 +574,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'Lid hygiene', 'No head bath', 'No heavy lifting',
             'No swimming', 'Protective glasses', 'Read in good light',
             'Restrict mobile/TV use', 'Use clean handkerchief',
-        ], 'advice'));
+        ], 'value'));
     }
 
     private function seedDiagnosis(): void
@@ -587,7 +593,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'NPDR', 'Optic Atrophy', 'PDR', 'Pinguecula', 'Presbyopia',
             'Pseudophakia', 'Pterygium', 'Retinal Detachment', 'Scleritis',
             'Stye', 'Uveitis', 'Vitreous Hemorrhage (VH)',
-        ], 'diagnosis'));
+        ], 'value'));
     }
 
     private function seedMedicineInstructions(): void

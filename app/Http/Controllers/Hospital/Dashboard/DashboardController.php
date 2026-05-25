@@ -29,10 +29,13 @@ class DashboardController extends Controller
 
     public function index(): View|RedirectResponse
     {
-        $slug   = request()->route('slug');
+        $slug = request()->route('slug');
         $tenant = app('tenant');
-        $user   = Auth::guard('hospital_user')->user();
-        $today  = now()->toDateString();
+        $user = Auth::guard('hospital_user')->user();
+        $today = now()->toDateString();
+
+
+        $isReceptionistUser = in_array($user?->role?->slug, ['receptionist', 'receptionist_opd'], true);
 
         // Setup wizard redirect — admin, first login only
         if ($user?->role?->is_super && $tenant && ! $tenant->is_setup_done) {
@@ -52,49 +55,58 @@ class DashboardController extends Controller
 
         // ── Clinical Data (exam.primary.view) ────────────────────────────────
         // Today's patients and pending exam queue.
-        $todayPatients  = null;
-        $pendingExams   = null;
-        $todayPrimary   = null;
+        $todayPatients = null;
+        $pendingExams = null;
+        $todayPrimary = null;
         $todaySecondary = null;
-        $primaryQueue   = null;
+        $primaryQueue = null;
 
-        if ($this->perm->can('opd.exam.primary')) {
-            $todayPatients  = Patient::whereDate('appointment_date', $today)->count();
-            $pendingExams   = Patient::whereDate('appointment_date', $today)
+        if ($this->perm->can('opd.exam.primary') || $this->perm->can('opd.exam.secondary')) {
+            $todayPatients = Patient::whereDate('appointment_date', $today)->count();
+            $pendingExams = Patient::whereDate('appointment_date', $today)
                 ->whereNull('primary_done_at')
                 ->count();
-            $todayPrimary   = Patient::whereDate('appointment_date', $today)
+            $todayPrimary = Patient::whereDate('appointment_date', $today)
                 ->whereNotNull('primary_done_at')
                 ->count();
             $todaySecondary = Patient::whereDate('appointment_date', $today)
                 ->whereNotNull('secondary_done_at')
                 ->count();
 
-            // Show the personal exam queue when the user is assigned as a doctor
-            if ($user?->doctor_id || $user?->id) {
-                $primaryQueue = Patient::where('doctor_id', $user->id)
-                    ->whereDate('appointment_date', $today)
-                    ->whereNull('primary_done_at')
-                    ->orderBy('created_at')
-                    ->limit(20)
-                    ->get();
+            $selectedDoctorId = null;
+            if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
+                $selectedDoctorId = $user->id;
             }
+
+            $primaryQueueQuery = Patient::with(['doctor', 'caseType', 'primaryExamination'])
+                ->whereDate('appointment_date', $today);
+
+            if ($selectedDoctorId) {
+                $primaryQueueQuery->where('doctor_id', $selectedDoctorId);
+            }
+
+            $primaryQueue = $primaryQueueQuery
+                ->latest()
+                ->get()
+                ->filter(fn (Patient $patient): bool => $patient->primary_done_at === null)
+                ->take(20)
+                ->values();
         }
 
         // ── Reception Data (opd.patient.register / opd.patient.register_phone) ────────────
         // Today's registrations and outstanding FOC requests.
         $todayRegistrations = null;
-        $focPending         = null;
-        $todayWalkin        = null;
-        $todayPhone         = null;
+        $focPending = null;
+        $todayWalkin = null;
+        $todayPhone = null;
 
         if ($this->perm->can('opd.patient.register')) {
             $todayRegistrations = Patient::whereDate('appointment_date', $today)->count();
-            $focPending         = Foc::where('accepted', false)->count();
-            $todayWalkin        = Patient::whereDate('appointment_date', $today)
+            $focPending = Foc::where('accepted', false)->count();
+            $todayWalkin = Patient::whereDate('appointment_date', $today)
                 ->where('type', 'walkin')
                 ->count();
-            $todayPhone         = Patient::whereDate('appointment_date', $today)
+            $todayPhone = Patient::whereDate('appointment_date', $today)
                 ->where('type', 'phone')
                 ->count();
         }
@@ -103,7 +115,7 @@ class DashboardController extends Controller
         // Revenue aggregates across today / month / year.
         $revenueToday = null;
         $revenueMonth = null;
-        $revenueYear  = null;
+        $revenueYear = null;
 
         if ($this->perm->can('opd.reports.view')) {
             $revenueToday = (float) Patient::whereDate('appointment_date', $today)
@@ -111,22 +123,22 @@ class DashboardController extends Controller
             $revenueMonth = (float) Patient::whereMonth('appointment_date', now()->month)
                 ->whereYear('appointment_date', now()->year)
                 ->sum('case_fee');
-            $revenueYear  = (float) Patient::whereYear('appointment_date', now()->year)
+            $revenueYear = (float) Patient::whereYear('appointment_date', now()->year)
                 ->sum('case_fee');
         }
 
         // ── OT Data (ot.booking.view) ───────────────────────────────────────────
         // Today's OT surgery schedule overview.
-        $otToday    = null;
+        $otToday = null;
         $otOperated = null;
-        $otPending  = null;
+        $otPending = null;
 
         if ($this->perm->can('ot.patient.list')) {
-            $otToday    = OtBooking::whereDate('surgery_date', $today)->count();
+            $otToday = OtBooking::whereDate('surgery_date', $today)->count();
             $otOperated = OtBooking::whereDate('surgery_date', $today)
                 ->where('ot_status', 'operated')
                 ->count();
-            $otPending  = OtBooking::whereDate('surgery_date', $today)
+            $otPending = OtBooking::whereDate('surgery_date', $today)
                 ->whereNotIn('ot_status', ['operated', 'discharged'])
                 ->count();
         }
@@ -140,7 +152,10 @@ class DashboardController extends Controller
         if ($this->perm->can('opd.foc.accept')) {
             $focAlerts = Foc::where('accepted', false)->count();
 
-            $pendingFocRequests = Foc::with(['patient', 'doctor'])
+            $pendingFocRequests = Foc::with([
+                'patient' => fn ($q) => $q->withTrashed(),
+                'doctor',
+            ])
                 ->where('status', 'pending')
                 ->latest()
                 ->limit(20)
@@ -156,33 +171,88 @@ class DashboardController extends Controller
 
         // ── Staff Overview (master.doctors / master.receptions) ───────────────────────────
         // Reception performance table — only for users who can see master data.
-        $receptionists    = null;
-        $totalDoctors     = null;
-        $totalReceptions  = null;
+        $receptionists = null;
+        $totalDoctors = null;
+        $totalReceptions = null;
 
         if ($this->perm->can('master.doctors') || $this->perm->can('master.case_types')) {
-            $totalDoctors    = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
+            $totalDoctors = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
             $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))->count();
 
             $receptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
                 ->get()
                 ->map(function (HospitalUser $rec) use ($today): HospitalUser {
-                    $base              = Patient::where('reception_id', $rec->id)->whereDate('appointment_date', $today);
-                    $rec->today_count  = $base->count();
-                    $rec->today_gross  = (float) $base->sum('case_fee');
-                    $rec->today_foc    = (float) Foc::where('reception_id', $rec->id)
+                    $base = Patient::where('reception_id', $rec->id)->whereDate('appointment_date', $today);
+                    $rec->today_count = $base->count();
+                    $rec->today_gross = (float) $base->sum('case_fee');
+                    $rec->today_foc = (float) Foc::where('reception_id', $rec->id)
                         ->whereHas('patient', fn ($q) => $q->whereDate('appointment_date', $today))
                         ->where('accepted', true)
                         ->sum('foc_fee');
-                    $rec->today_net    = $rec->today_gross - $rec->today_foc;
+                    $rec->today_net = $rec->today_gross - $rec->today_foc;
 
                     return $rec;
                 });
         }
 
+        
+
+        // Receptionist-only doctor strip (all doctors + per-doctor assigned today)
+        $doctorCards = collect();
+        $doctorCardSummary = [
+            'all' => 0,
+            'primary' => 0,
+            'secondary' => 0,
+        ];
+        $receptionistTodayPatients = collect();
+
+        if ($isReceptionistUser && $this->perm->can('opd.patient.register')) {
+            $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+                ->active()
+                ->orderBy('name')
+                ->get(['id', 'name', 'doctor_type'])
+                ->map(function (HospitalUser $doctor) use ($today): HospitalUser {
+                    $assignedToday = Patient::where('doctor_id', $doctor->id)
+                        ->whereDate('appointment_date', $today)
+                        ->count();
+
+                    $doctor->assigned_today = $assignedToday;
+                    $doctor->primary_count = $doctor->doctor_type === 'primary' ? $assignedToday : 0;
+                    $doctor->secondary_count = $doctor->doctor_type === 'secondary' ? $assignedToday : 0;
+
+                    return $doctor;
+                });
+
+            $doctorCardSummary = [
+                'all' => $doctorCards->count(),
+                'primary' => $doctorCards->where('doctor_type', 'primary')->count(),
+                'secondary' => $doctorCards->where('doctor_type', 'secondary')->count(),
+            ];
+
+            $receptionistTodayPatients = Patient::with(['doctor:id,name'])
+                ->where('reception_id', $user->id)
+                ->whereDate('appointment_date', $today)
+                ->latest('created_at')
+                ->get([
+                    'id',
+                    'patient_code',
+                    'first_name',
+                    'middle_name',
+                    'last_name',
+                    'age',
+                    'gender',
+                    'contact_no',
+                    'doctor_id',
+                    'case_fee',
+                    'type',
+                    'created_at',
+                ]);
+        }
+
         return view('hospital.dashboard.index', compact(
             'slug',
             'tenant',
+            'isReceptionistUser',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',
@@ -211,6 +281,10 @@ class DashboardController extends Controller
             'totalDoctors',
             'totalReceptions',
             'receptionists',
+            // Receptionist doctor cards
+            'doctorCards',
+            'doctorCardSummary',
+            'receptionistTodayPatients',
         ));
     }
 }

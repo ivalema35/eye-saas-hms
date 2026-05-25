@@ -23,7 +23,7 @@ class PasswordResetController extends Controller
         $tenant = app('tenant');
 
         return view('hospital.auth.forgot-password', [
-            'slug'         => $slug,
+            'slug' => $slug,
             'hospitalName' => $tenant?->name ?? 'Hospital',
         ]);
     }
@@ -48,9 +48,9 @@ class PasswordResetController extends Controller
         $tenant = app('tenant');
 
         return view('hospital.auth.reset-password', [
-            'slug'         => $slug,
-            'token'        => $token,
-            'email'        => request('email', ''),
+            'slug' => $slug,
+            'token' => $token,
+            'email' => request('email', ''),
             'hospitalName' => $tenant?->name ?? 'Hospital',
         ]);
     }
@@ -58,8 +58,8 @@ class PasswordResetController extends Controller
     public function resetPassword(Request $request, string $slug): RedirectResponse
     {
         $request->validate([
-            'token'    => ['required'],
-            'email'    => ['required', 'email'],
+            'token' => ['required'],
+            'email' => ['required', 'email'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -67,7 +67,7 @@ class PasswordResetController extends Controller
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function ($user, string $password) {
                 $user->forceFill([
-                    'password'       => Hash::make($password),
+                    'password' => Hash::make($password),
                     'remember_token' => Str::random(60),
                 ])->save();
             }

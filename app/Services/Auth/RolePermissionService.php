@@ -25,9 +25,8 @@
 
 namespace App\Services\Auth;
 
-use App\Models\Hospital\HospitalUser;
-use App\Models\Role\Role;
 use App\Models\Role\Permission;
+use App\Models\Role\Role;
 use App\Models\Role\RolePermission;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -38,8 +37,7 @@ class RolePermissionService
     /**
      * Check if the current logged-in hospital user has the given permission.
      *
-    * @param  string $permissionKey  e.g. 'opd.patient.register', 'opd.exam.primary'
-     * @return bool
+     * @param  string  $permissionKey  e.g. 'opd.patient.register', 'opd.exam.primary'
      */
     public function can(string $permissionKey): bool
     {
@@ -56,7 +54,7 @@ class RolePermissionService
             return true;
         }
 
-        $roleId   = $user->role_id;
+        $roleId = $user->role_id;
         $tenantId = $user->tenant_id;
 
         if (! $roleId || ! $tenantId) {
@@ -71,7 +69,7 @@ class RolePermissionService
     /**
      * Check if the current logged-in hospital user has any of the given permissions.
      *
-     * @param array<string> $permissionKeys
+     * @param  array<string>  $permissionKeys
      */
     public function canAny(array $permissionKeys): bool
     {
@@ -87,7 +85,7 @@ class RolePermissionService
     /**
      * Get all GRANTED permission keys for a role (cached).
      *
-    * Returns: ['opd.patient.view', 'opd.patient.register', 'opd.exam.primary', ...]
+     * Returns: ['opd.patient.view', 'opd.patient.register', 'opd.exam.primary', ...]
      * Only returns keys where is_granted = true.
      *
      * @return array<string>
@@ -114,12 +112,12 @@ class RolePermissionService
      *
      * Returns:
      * [
-    *   'opd' => [
-    *     ['id' => 1, 'action' => 'opd.patient.view',      'label' => 'View Patients',       'is_granted' => true],
-    *     ['id' => 2, 'action' => 'opd.patient.register',  'label' => 'Register Patient',    'is_granted' => false],
+     *   'opd' => [
+     *     ['id' => 1, 'action' => 'opd.patient.view',      'label' => 'View Patients',       'is_granted' => true],
+     *     ['id' => 2, 'action' => 'opd.patient.register',  'label' => 'Register Patient',    'is_granted' => false],
      *     ...
      *   ],
-    *   'ot' => [...],
+     *   'ot' => [...],
      *   ...
      * ]
      */
@@ -137,11 +135,11 @@ class RolePermissionService
         $grouped = [];
         foreach ($allPermissions as $permission) {
             $grouped[$permission->module][] = [
-                'id'          => $permission->id,
-                'action'      => $permission->action,
-                'label'       => $permission->label,
+                'id' => $permission->id,
+                'action' => $permission->action,
+                'label' => $permission->label,
                 'description' => $permission->description,
-                'is_granted'  => in_array($permission->id, $grantedIds, true),
+                'is_granted' => in_array($permission->id, $grantedIds, true),
             ];
         }
 
@@ -151,9 +149,8 @@ class RolePermissionService
     /**
      * Save permissions for a role from the UI form submission.
      *
-     * @param int   $roleId
-     * @param array $grantedPermissionIds  Array of permission IDs that were checked
-     * @param int   $updatedBy             hospital_users.id who made the change
+     * @param  array  $grantedPermissionIds  Array of permission IDs that were checked
+     * @param  int  $updatedBy  hospital_users.id who made the change
      */
     public function saveRolePermissions(int $roleId, array $grantedPermissionIds, int $updatedBy): void
     {
@@ -167,12 +164,12 @@ class RolePermissionService
 
         foreach ($allPermissions as $permId) {
             $upsertData[] = [
-                'role_id'       => $roleId,
+                'role_id' => $roleId,
                 'permission_id' => $permId,
-                'is_granted'    => in_array($permId, $grantedPermissionIds, true),
-                'updated_by'    => $updatedBy,
-                'updated_at'    => $now,
-                'created_at'    => $now,
+                'is_granted' => in_array($permId, $grantedPermissionIds, true),
+                'updated_by' => $updatedBy,
+                'updated_at' => $now,
+                'created_at' => $now,
             ];
         }
 

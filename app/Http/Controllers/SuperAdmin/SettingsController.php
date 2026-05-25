@@ -31,21 +31,21 @@ class SettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'platform_name'           => ['required', 'string', 'max:100'],
-            'support_email'           => ['required', 'email', 'max:100'],
-            'trial_days'              => ['required', 'integer', 'min:1', 'max:90'],
-            'razorpay_key'            => ['nullable', 'string', 'max:255'],
-            'razorpay_secret'         => ['nullable', 'string', 'max:255'],
+            'platform_name' => ['required', 'string', 'max:100'],
+            'support_email' => ['required', 'email', 'max:100'],
+            'trial_days' => ['required', 'integer', 'min:1', 'max:90'],
+            'razorpay_key' => ['nullable', 'string', 'max:255'],
+            'razorpay_secret' => ['nullable', 'string', 'max:255'],
             'razorpay_webhook_secret' => ['nullable', 'string', 'max:255'],
-            'mail_host'               => ['nullable', 'string', 'max:255'],
-            'mail_port'               => ['nullable', 'integer', 'min:1', 'max:65535'],
-            'mail_username'           => ['nullable', 'string', 'max:255'],
-            'mail_password'           => ['nullable', 'string', 'max:255'],
-            'mail_from_name'          => ['nullable', 'string', 'max:100'],
-            'mail_from_email'         => ['nullable', 'email', 'max:100'],
-            'monthly_price'           => ['nullable', 'integer', 'min:1'],
-            'quarterly_discount'      => ['nullable', 'integer', 'min:0', 'max:50'],
-            'yearly_discount'         => ['nullable', 'integer', 'min:0', 'max:70'],
+            'mail_host' => ['nullable', 'string', 'max:255'],
+            'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'mail_username' => ['nullable', 'string', 'max:255'],
+            'mail_password' => ['nullable', 'string', 'max:255'],
+            'mail_from_name' => ['nullable', 'string', 'max:100'],
+            'mail_from_email' => ['nullable', 'email', 'max:100'],
+            'monthly_price' => ['nullable', 'integer', 'min:1'],
+            'quarterly_discount' => ['nullable', 'integer', 'min:0', 'max:50'],
+            'yearly_discount' => ['nullable', 'integer', 'min:0', 'max:70'],
         ]);
 
         $encryptedKeys = ['razorpay_key', 'razorpay_secret', 'razorpay_webhook_secret', 'mail_password'];
@@ -66,9 +66,9 @@ class SettingsController extends Controller
             PlatformSetting::updateOrCreate(
                 ['key' => $key],
                 [
-                    'value'        => $value,
+                    'value' => $value,
                     'is_encrypted' => $isEncrypted,
-                    'group'        => $group,
+                    'group' => $group,
                 ]
             );
         }

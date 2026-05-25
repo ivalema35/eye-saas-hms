@@ -37,7 +37,7 @@ class CheckSubscriptionExpiry extends Command
         // Step 1: Expire active subscriptions past ends_at
         // ============================================================
         $expiredQuery = Subscription::where('status', 'active')
-                                    ->where('ends_at', '<', $today);
+            ->where('ends_at', '<', $today);
 
         $this->info("Found {$expiredQuery->count()} subscriptions to expire.");
 
@@ -46,28 +46,25 @@ class CheckSubscriptionExpiry extends Command
 
             // Active tenants with an expired subscription that has a grace period → grace
             Tenant::where('status', 'active')
-                  ->whereHas('subscriptions', fn ($q) =>
-                      $q->where('status', 'expired')->whereNotNull('grace_ends_at')
-                  )
-                  ->update(['status' => 'grace']);
+                ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereNotNull('grace_ends_at')
+                )
+                ->update(['status' => 'grace']);
 
             // Active tenants with an expired subscription and no grace period → inactive immediately
             Tenant::where('status', 'active')
-                  ->whereHas('subscriptions', fn ($q) =>
-                      $q->where('status', 'expired')->whereNull('grace_ends_at')
-                  )
-                  ->update(['status' => 'inactive']);
+                ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereNull('grace_ends_at')
+                )
+                ->update(['status' => 'inactive']);
         }
 
         // ============================================================
         // Step 2: Move grace tenants to inactive when grace period ends
         // ============================================================
         $graceExpiredQuery = Tenant::where('status', 'grace')
-                                   ->whereHas('subscriptions', fn ($q) =>
-                                       $q->where('status', 'expired')
-                                         ->whereNotNull('grace_ends_at')
-                                         ->where('grace_ends_at', '<', $today)
-                                   );
+            ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')
+                ->whereNotNull('grace_ends_at')
+                ->where('grace_ends_at', '<', $today)
+            );
 
         $this->info("Found {$graceExpiredQuery->count()} tenants with expired grace period.");
 
@@ -86,6 +83,7 @@ class CheckSubscriptionExpiry extends Command
         }
 
         $this->info('[hms:check-subscription-expiry] Done.');
+
         return self::SUCCESS;
     }
 }

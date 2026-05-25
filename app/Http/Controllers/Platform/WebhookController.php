@@ -30,7 +30,7 @@ class WebhookController extends Controller
     public function handle(Request $request): JsonResponse
     {
         $payload = $request->all();
-        $event   = $payload['event'] ?? 'unknown';
+        $event = $payload['event'] ?? 'unknown';
 
         Log::info("Razorpay webhook received: {$event}", [
             'payload' => $payload,

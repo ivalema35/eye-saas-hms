@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hospital\Medicine;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
+use App\Models\Hospital\MasterMedicineInstruction;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\MedicineGroupItem;
@@ -16,16 +17,22 @@ class MedicineGroupController extends Controller
 {
     public function index(string $slug): View
     {
-        $groups = MedicineGroup::withCount('items')->latest()->paginate((int) config('app.pagination_limit', 25));
+        $groups = MedicineGroup::with(['items'])
+            ->withCount('items')
+            ->latest()
+            ->paginate((int) config('app.pagination_limit', 25));
+        $medicines = Medicine::orderBy('name')->get();
+        $dosages = Dosage::orderBy('dosage')->get();
+        $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.index', compact('slug', 'groups'));
+        return view('hospital.medicine_groups.index', compact('slug', 'groups', 'medicines', 'dosages', 'instructions'));
     }
 
     public function create(string $slug): View
     {
         $medicines = Medicine::orderBy('name')->get();
         $dosages = Dosage::orderBy('dosage')->get();
-        $instructions = \App\Models\Hospital\MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
+        $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
         return view('hospital.medicine_groups.create', compact('slug', 'medicines', 'dosages', 'instructions'));
     }
@@ -72,8 +79,11 @@ class MedicineGroupController extends Controller
     public function show(string $slug, int $id): View
     {
         $group = MedicineGroup::with(['items.medicine', 'items.dosage'])->findOrFail($id);
+        $medicines = Medicine::orderBy('name')->get();
+        $dosages = Dosage::orderBy('dosage')->get();
+        $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.show', compact('slug', 'group'));
+        return view('hospital.medicine_groups.show', compact('slug', 'group', 'medicines', 'dosages', 'instructions'));
     }
 
     public function edit(string $slug, int $id): View
@@ -81,7 +91,7 @@ class MedicineGroupController extends Controller
         $group = MedicineGroup::with('items')->findOrFail($id);
         $medicines = Medicine::orderBy('name')->get();
         $dosages = Dosage::orderBy('dosage')->get();
-        $instructions = \App\Models\Hospital\MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
+        $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
         return view('hospital.medicine_groups.edit', compact('slug', 'group', 'medicines', 'dosages', 'instructions'));
     }

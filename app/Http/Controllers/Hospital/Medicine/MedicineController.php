@@ -13,6 +13,7 @@ class MedicineController extends Controller
 {
     public function index(string $slug): View
     {
+        $medicineTypes = MedicineType::orderBy('name')->get();
         $medicines = Medicine::with('medicineType')
             ->when(request('search'), fn ($q, $s) => $q->where('name', 'like', "%{$s}%")
                 ->orWhere('brand_name', 'like', "%{$s}%"))
@@ -20,7 +21,7 @@ class MedicineController extends Controller
             ->paginate((int) config('app.pagination_limit', 25))
             ->withQueryString();
 
-        return view('hospital.medicines.index', compact('slug', 'medicines'));
+        return view('hospital.medicines.index', compact('slug', 'medicines', 'medicineTypes'));
     }
 
     public function create(string $slug): View
@@ -35,9 +36,9 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name' => ['required', 'string', 'max:255'],
-            'brand_name' => ['nullable', 'string', 'max:255'],            
+            'brand_name' => ['nullable', 'string', 'max:255'],
             'company' => ['nullable', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],        
+            'price' => ['required', 'numeric', 'min:0'],
         ]);
 
         Medicine::create($validated);
@@ -60,9 +61,9 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name' => ['required', 'string', 'max:255'],
-            'brand_name' => ['nullable', 'string', 'max:255'],            
+            'brand_name' => ['nullable', 'string', 'max:255'],
             'company' => ['nullable', 'string', 'max:255'],
-            'price' => ['required', 'numeric', 'min:0'],        
+            'price' => ['required', 'numeric', 'min:0'],
         ]);
 
         $medicine->update($validated);

@@ -2,16 +2,16 @@
 
 namespace App\Services\Platform;
 
-use App\Jobs\SendWelcomeEmail;
 use App\Jobs\SeedTenantDefaultMasters;
+use App\Jobs\SendWelcomeEmail;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use App\Models\Role\Role;
+use Carbon\Carbon;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class TenantService
 {
@@ -19,19 +19,19 @@ class TenantService
     {
         return DB::transaction(function () use ($data) {
 
-            $trialDays   = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
+            $trialDays = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
             $trialEndsAt = Carbon::now()->addDays($trialDays);
 
             // 1. Tenant record create karo
             $tenant = Tenant::create([
-                'name'          => $data['hospital_name'],
-                'slug'          => $data['slug'],
-                'admin_name'    => $data['admin_name'],
-                'admin_email'   => $data['admin_email'],
-                'admin_phone'   => $data['admin_phone'],
-                'city'          => $data['city'] ?? null,
-                'state'         => $data['state'] ?? null,
-                'status'        => 'trial',
+                'name' => $data['hospital_name'],
+                'slug' => $data['slug'],
+                'admin_name' => $data['admin_name'],
+                'admin_email' => $data['admin_email'],
+                'admin_phone' => $data['admin_phone'],
+                'city' => $data['city'] ?? null,
+                'state' => $data['state'] ?? null,
+                'status' => 'trial',
                 'trial_ends_at' => $trialEndsAt,
                 'is_setup_done' => false,
             ]);
@@ -55,12 +55,12 @@ class TenantService
             // 3. Hospital Admin user banao
             HospitalUser::create([
                 'tenant_id' => $tenant->id,
-                'role_id'   => $adminRoleId,  // FIX: Ab null nahi hoga
-                'name'      => $data['admin_name'],
-                'email'     => $data['admin_email'],
-                'password'  => Hash::make($data['password']),
-                'contact'   => $data['admin_phone'] ?? null,
-                'status'    => 'active',
+                'role_id' => $adminRoleId,  // FIX: Ab null nahi hoga
+                'name' => $data['admin_name'],
+                'email' => $data['admin_email'],
+                'password' => Hash::make($data['password']),
+                'contact' => $data['admin_phone'] ?? null,
+                'status' => 'active',
             ]);
 
             // 4. Welcome email

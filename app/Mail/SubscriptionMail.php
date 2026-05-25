@@ -51,17 +51,17 @@ class SubscriptionMail extends Mailable
     private function getSubject(): string
     {
         return match ($this->emailType) {
-            'trial_welcome'   => 'Welcome to Eye HMS — Your 14-Day Free Trial Has Started',
-            'reminder_7d'     => 'Reminder: Your Subscription Expires in 7 Days — Eye HMS',
-            'reminder_3d'     => 'ACTION REQUIRED: Subscription Expires in 3 Days — Eye HMS',
-            'reminder_1d'     => 'FINAL WARNING: Subscription Expires Tomorrow — Eye HMS',
-            'expired'         => 'Subscription Expired — 7-Day Grace Period Has Started — Eye HMS',
-            'grace_day4'      => 'Grace Period Ending in 3 Days — Renew Now — Eye HMS',
-            'grace_ended'     => 'Account Deactivated — Your Data is Safe for 30 Days — Eye HMS',
-            'inactive_30d'    => 'Data Deletion Warning — Renew to Keep Your Hospital Data — Eye HMS',
+            'trial_welcome' => 'Welcome to Eye HMS — Your 14-Day Free Trial Has Started',
+            'reminder_7d' => 'Reminder: Your Subscription Expires in 7 Days — Eye HMS',
+            'reminder_3d' => 'ACTION REQUIRED: Subscription Expires in 3 Days — Eye HMS',
+            'reminder_1d' => 'FINAL WARNING: Subscription Expires Tomorrow — Eye HMS',
+            'expired' => 'Subscription Expired — 7-Day Grace Period Has Started — Eye HMS',
+            'grace_day4' => 'Grace Period Ending in 3 Days — Renew Now — Eye HMS',
+            'grace_ended' => 'Account Deactivated — Your Data is Safe for 30 Days — Eye HMS',
+            'inactive_30d' => 'Data Deletion Warning — Renew to Keep Your Hospital Data — Eye HMS',
             'renewal_success' => 'Subscription Renewed Successfully — Eye HMS',
-            'suspended'       => 'Your Account Has Been Suspended — Contact Support — Eye HMS',
-            default           => 'Eye HMS Platform Notification',
+            'suspended' => 'Your Account Has Been Suspended — Contact Support — Eye HMS',
+            default => 'Eye HMS Platform Notification',
         };
     }
 }

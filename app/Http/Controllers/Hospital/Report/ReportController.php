@@ -8,13 +8,12 @@ use App\Models\Hospital\CaseType;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
-use Barryvdh\DomPDF\Facade\Pdf;
 use App\Services\Auth\RolePermissionService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Hospital Reports Controller
@@ -39,9 +38,17 @@ class ReportController extends Controller
             ->filter(fn (Patient $patient): bool => $this->isWalkInType($patient->type))
             ->sum('case_fee');
 
-        $doctors = HospitalUser::query()
-            ->active()
-            ->whereHas('role', fn (Builder $query) => $query->where('slug', 'doctor'))
+        $doctors = HospitalUser::active()
+            ->where('tenant_id', app('tenant')->id)
+            ->where(function (Builder $query): void {
+                $query->whereNotNull('doctor_type')
+                    ->orWhereHas('role', function (Builder $roleQuery): void {
+                        $roleQuery->where(function (Builder $innerQuery): void {
+                            $innerQuery->whereIn('slug', ['doctor', 'ot_doctor'])
+                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                        });
+                    });
+            })
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -54,7 +61,7 @@ class ReportController extends Controller
         $locations = Location::query()->orderBy('city')->get(['id', 'city as name']);
         $cases = CaseType::query()->orderBy('case_type')->get(['id', 'case_type']);
 
-        return view('hospital.reports.index', compact(
+        return view('hospital.patients.reports.index', compact(
             'patients',
             'totalCollection',
             'doctors',
@@ -91,7 +98,7 @@ class ReportController extends Controller
             ->filter(fn (Patient $patient): bool => $this->isWalkInType($patient->type))
             ->sum('case_fee');
 
-        $pdf = Pdf::loadView('hospital.reports.pdf', [
+        $pdf = Pdf::loadView('hospital.patients.reports.pdf', [
             'patients' => $patients,
             'totalCollection' => $totalCollection,
             'filters' => $request->all(),

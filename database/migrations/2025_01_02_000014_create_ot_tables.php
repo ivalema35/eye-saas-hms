@@ -50,7 +50,7 @@ return new class extends Migration
             // Status progression
             $table->enum('ot_status', [
                 'booked', 'paid', 'in_ward', 'dilated',
-                'ready', 'complicated', 'operated', 'discharged', 'cancelled'
+                'ready', 'complicated', 'operated', 'discharged', 'cancelled',
             ])->default('booked');
             $table->timestamp('attended_at')->nullable();   // Ward entry time
             $table->timestamp('operated_at')->nullable();   // Surgery done time

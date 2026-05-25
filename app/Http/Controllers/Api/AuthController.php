@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -21,7 +21,7 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
+            'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
@@ -41,13 +41,13 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => [
+                'data' => [
                     'token' => $token,
-                    'user'  => [
-                        'id'    => $user->id,
-                        'name'  => $user->name,
+                    'user' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
                         'email' => $user->email,
-                        'role'  => $user->role?->slug,
+                        'role' => $user->role?->slug,
                     ],
                 ],
                 'message' => 'Login successful.',
@@ -74,7 +74,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data'    => $request->user(),
+            'data' => $request->user(),
         ]);
     }
 }

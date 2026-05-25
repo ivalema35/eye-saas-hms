@@ -33,7 +33,8 @@ class SendSubscriptionEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries   = 3;
+    public int $tries = 3;
+
     public int $timeout = 30;
 
     public function __construct(
@@ -47,18 +48,19 @@ class SendSubscriptionEmail implements ShouldQueue
 
         if (! $email) {
             Log::warning("SendSubscriptionEmail: No email for tenant #{$this->tenant->id}");
+
             return;
         }
 
         Mail::to($email)->send(new SubscriptionMail($this->tenant, $this->emailType));
 
         PlatformNotification::create([
-            'tenant_id'       => $this->tenant->id,
-            'type'            => $this->emailType,
-            'subject'         => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
+            'tenant_id' => $this->tenant->id,
+            'type' => $this->emailType,
+            'subject' => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
             'recipient_email' => $email,
-            'status'          => 'sent',
-            'sent_at'         => now(),
+            'status' => 'sent',
+            'sent_at' => now(),
         ]);
     }
 
@@ -66,16 +68,16 @@ class SendSubscriptionEmail implements ShouldQueue
     {
         Log::error(
             "SendSubscriptionEmail FAILED [{$this->emailType}] tenant #{$this->tenant->id}: "
-            . $exception->getMessage()
+            .$exception->getMessage()
         );
 
         PlatformNotification::create([
-            'tenant_id'       => $this->tenant->id,
-            'type'            => $this->emailType,
-            'subject'         => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
+            'tenant_id' => $this->tenant->id,
+            'type' => $this->emailType,
+            'subject' => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
             'recipient_email' => $this->tenant->admin_email ?? '',
-            'status'          => 'failed',
-            'error_message'   => $exception->getMessage(),
+            'status' => 'failed',
+            'error_message' => $exception->getMessage(),
         ]);
     }
 }

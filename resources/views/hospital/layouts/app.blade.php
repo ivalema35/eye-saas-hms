@@ -32,6 +32,300 @@
     {{-- Flatpickr CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
+    {{-- Hospital Shell (Navbar + Sidebar) Theme Overrides --}}
+    <style>
+        /*
+          Hospital shell redesign
+          - Primary: #ebf5fbeb
+          - Secondary: #1B4F72
+          - Design-only: no logic/functionality changes
+        */
+
+        :root {
+            --shell-primary: #ebf5fbeb;
+            --shell-secondary: #1B4F72;
+            --shell-s2-06: rgba(27, 79, 114, 0.06);
+            --shell-s2-08: rgba(27, 79, 114, 0.08);
+            --shell-s2-10: rgba(27, 79, 114, 0.10);
+            --shell-s2-12: rgba(27, 79, 114, 0.12);
+            --shell-s2-16: rgba(27, 79, 114, 0.16);
+            --shell-s2-22: rgba(27, 79, 114, 0.22);
+            --shell-white-70: rgba(255, 255, 255, 0.70);
+            --shell-white-78: rgba(255, 255, 255, 0.78);
+            --shell-white-86: rgba(255, 255, 255, 0.86);
+        }
+
+        body.hms-body {
+            background: #ffffff !important;
+            color: var(--shell-secondary);
+        }
+
+        /* Keep main content area white too */
+        .hms-main {
+            background: #ffffff;
+        }
+
+        /* ── Navbar ─────────────────────────────────────────────────── */
+        .hms-navbar {
+            background: var(--shell-white-78) !important;
+            color: var(--shell-secondary) !important;
+            border-bottom: 1px solid var(--shell-s2-12) !important;
+            box-shadow: none !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        .hms-navbar * {
+            color: inherit;
+        }
+
+        .hms-sidebar-toggle {
+            color: var(--shell-secondary) !important;
+            background: var(--shell-white-70);
+            border: 1px solid var(--shell-s2-12);
+            border-radius: 14px;
+            padding: .35rem .6rem;
+            line-height: 1;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+        }
+        .hms-sidebar-toggle:hover {
+            transform: translateY(-1px);
+            background: var(--shell-white-86);
+            box-shadow: none;
+        }
+
+        .hms-breadcrumb-link {
+            color: var(--shell-secondary) !important;
+            font-weight: 800;
+            text-decoration: none !important;
+            font-size: 1.06rem;
+        }
+        .hms-breadcrumb-link:hover {
+            opacity: .88;
+            text-decoration: none !important;
+        }
+        .breadcrumb-item,
+        .breadcrumb-item.active {
+            font-size: 1.02rem;
+            font-weight: 650;
+        }
+        .breadcrumb-item.active {
+            opacity: 0.9;
+        }
+
+        .wait-queue-badge {
+            background: var(--shell-white-70) !important;
+            border: 1px solid var(--shell-s2-12) !important;
+            box-shadow: none;
+            padding: 0.46rem 1.05rem;
+        }
+        .wait-queue-badge i {
+            color: var(--shell-secondary) !important;
+            opacity: .95;
+        }
+        .wait-queue-badge span {
+            color: rgba(27, 79, 114, 0.72) !important;
+            font-weight: 700;
+            font-size: 1.02rem;
+        }
+        .wait-queue-badge strong {
+            color: var(--shell-secondary) !important;
+            font-weight: 900;
+            font-size: 1.45rem;
+        }
+
+        .avatar-circle {
+            background: rgba(27, 79, 114, 0.08) !important;
+            border: 1px solid var(--shell-s2-12);
+            color: var(--shell-secondary) !important;
+            box-shadow: none;
+        }
+        .user-name {
+            font-size: 1.08rem;
+            font-weight: 900;
+        }
+        .user-role {
+            color: rgba(27, 79, 114, 0.72) !important;
+            font-weight: 650;
+            font-size: .86rem;
+        }
+        .user-dropdown .dropdown-menu {
+            border: 1px solid var(--shell-s2-12) !important;
+            border-radius: 16px;
+            box-shadow: none;
+            overflow: hidden;
+        }
+        .user-dropdown .dropdown-item {
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        /* ── Sidebar ────────────────────────────────────────────────── */
+        .hms-sidebar {
+            background: var(--shell-white-78) !important;
+            border-right: none !important;
+            box-shadow: none;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Keep logo readable: brand strip in secondary */
+        .premium-sidebar-brand {
+            background: var(--shell-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+            margin-bottom: .6rem;
+        }
+
+        .premium-sidebar-brand-link {
+            display: block;
+        }
+
+        .hms-sidenav {
+            padding: 1rem .75rem;
+            gap: .25rem;
+        }
+
+        .hms-nav-section-label {
+            color: rgba(27, 79, 114, 0.58) !important;
+            font-weight: 900;
+            font-size: .70rem;
+            letter-spacing: .12em;
+        }
+        .hms-nav-divider {
+            background: var(--shell-s2-12) !important;
+            opacity: 1;
+        }
+
+        .hms-nav-group-toggle {
+            background: rgba(255, 255, 255, 0.65);
+            border: none;
+            border-radius: 8px;
+            margin: .2rem .5rem;
+            padding: .65rem .9rem;
+            transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
+        }
+        .hms-nav-group-toggle:hover {
+            transform: translateX(2px);
+            box-shadow: none;
+            background: var(--shell-secondary);
+            border-color: transparent;
+        }
+        .hms-nav-group-toggle:hover .hms-nav-section-label,
+        .hms-nav-group-toggle:hover .hms-nav-chevron {
+            color: rgba(255, 255, 255, 0.95) !important;
+        }
+        .hms-nav-group-toggle .hms-nav-chevron {
+            color: rgba(27, 79, 114, 0.72) !important;
+            font-size: .75rem;
+        }
+
+        /* Make group header text bigger/bolder */
+        .hms-nav-group-toggle .hms-nav-section-label {
+            font-size: 1.05rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .05em !important;
+            color: rgba(27, 79, 114, 0.78) !important;
+        }
+
+        /* Dropdown items under the section: slightly smaller text */
+        .hms-nav-group-items .hms-nav-item {
+            font-size: .92rem;
+        }
+        .hms-nav-group-items .hms-nav-item i {
+            font-size: .95rem;
+        }
+
+        .hms-nav-item {
+            color: var(--shell-secondary) !important;
+            font-size: 17px;
+            font-weight: 900;
+            border-radius: 18px;
+            padding: .70rem .95rem;
+            background: transparent;
+            border: none;
+            position: relative;
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+        }
+        .hms-nav-item::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            width: 0;
+            height: 18px;
+            transform: translateY(-50%);
+            border-radius: 999px;
+            background: var(--shell-secondary);
+            opacity: 0;
+            transition: width 160ms ease, opacity 160ms ease;
+        }
+        .hms-nav-item i {
+            color: var(--shell-secondary) !important;
+            font-size: 1.05rem;
+            transition: transform 160ms ease;
+        }
+        .hms-nav-item:hover {
+            background: var(--shell-secondary) !important;
+            border-color: transparent !important;
+            box-shadow: none;
+            transform: translateX(2px);
+            color: rgba(255, 255, 255, 0.98) !important;
+            text-decoration: none !important;
+            padding-left: .95rem; /* prevent old left-padding shift feeling */
+        }
+        .hms-nav-item:hover i {
+            color: rgba(255, 255, 255, 0.98) !important;
+        }
+        .hms-nav-item:hover i {
+            transform: translateX(1px);
+        }
+        .hms-nav-item.active {
+            background: rgba(27, 79, 114, 0.12) !important;
+            color: var(--shell-secondary) !important;
+            border-left: none !important;
+            border-color: transparent !important;
+            box-shadow: none;
+            padding-left: .95rem !important;
+        }
+        .hms-nav-item.active::before {
+            width: 4px;
+            opacity: 1;
+        }
+
+        /* Sidebar footer logout: keep it clean in same palette */
+        .hms-sidebar-footer {
+            border-top: none !important;
+        }
+        .hms-sidebar-logout {
+            color: var(--shell-secondary) !important;
+            font-weight: 900;
+            border-radius: 18px;
+            border: none;
+            background: rgba(255, 255, 255, 0.65);
+        }
+        .hms-sidebar-logout:hover {
+            background: var(--shell-secondary) !important;
+            color: rgba(255, 255, 255, 0.98) !important;
+        }
+        .hms-sidebar-logout:hover i {
+            color: rgba(255, 255, 255, 0.98) !important;
+        }
+
+        /* Reduce-motion support */
+        @media (prefers-reduced-motion: reduce) {
+            .hms-nav-item,
+            .hms-nav-group-toggle,
+            .hms-sidebar-toggle {
+                transition: none !important;
+            }
+        }
+
+        /* Mobile: make overlay feel softer */
+        .hms-sidebar-backdrop {
+            background: rgba(27, 79, 114, 0.35) !important;
+        }
+    </style>
+
     @stack('styles')
 </head>
 <body class="hms-body">
@@ -164,11 +458,15 @@
         ============================================ --}}
         <aside class="hms-sidebar" id="hmsSidebar">
             <div class="premium-sidebar-brand">
-                <img src="{{ asset('images/aeh-logo-white.svg') }}"
-                     alt="AEH Logo"
-                     class="sidebar-logo"
-                     loading="lazy"
-                     decoding="async">
+                <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
+                   class="premium-sidebar-brand-link"
+                   aria-label="Go to dashboard">
+                    <img src="{{ asset('images/aeh-logo-white.svg') }}"
+                         alt="AEH Logo"
+                         class="sidebar-logo"
+                         loading="lazy"
+                         decoding="async">
+                </a>
             </div>
             <div class="hms-sidenav-wrap">
             <nav class="hms-sidenav">
@@ -199,7 +497,7 @@
                 <div class="hms-nav-group-items" id="nav-opd">
                     @haspermission('opd.patient.view')
                         <a href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.patients.*') ? 'active' : '' }}">
+                           class="hms-nav-item {{ (request()->routeIs('hospital.patients.*') && ! request()->routeIs('hospital.patients.history')) ? 'active' : '' }}">
                             <i class="bi bi-people-fill"></i>
                             <span>Patients</span>
                         </a>
@@ -227,20 +525,11 @@
                     <i class="bi bi-chevron-down hms-nav-chevron"></i>
                 </div>
                 <div class="hms-nav-group-items" id="nav-clinical">
-                    @haspermission('opd.exam.primary')
-                        <a href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.patients.*') ? 'active' : '' }}">
-                            <i class="bi bi-eye-fill"></i>
-                            <span>Primary Exam</span>
-                        </a>
-                    @endhaspermission
-                    @haspermission('opd.exam.secondary')
-                        <a href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.patients.*') ? 'active' : '' }}">
-                            <i class="bi bi-activity"></i>
-                            <span>Secondary Exam</span>
-                        </a>
-                    @endhaspermission
+                    <a href="{{ route('hospital.clinical.queue', ['slug' => request()->route('slug')]) }}"
+                       class="hms-nav-item {{ request()->routeIs('hospital.clinical.queue') ? 'active' : '' }}">
+                        <i class="bi bi-list-check"></i>
+                        <span>Queue Dashboard</span>
+                    </a>
                 </div>
                 @endif
 
@@ -260,14 +549,14 @@
                 <div class="hms-nav-group-items" id="nav-foc">
                     @haspermission('opd.foc.create')
                         <a href="{{ route('hospital.foc.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.foc.*') ? 'active' : '' }}">
+                           class="hms-nav-item {{ (request()->routeIs('hospital.foc.index') || request()->routeIs('hospital.foc.create') || request()->routeIs('hospital.foc.store') || request()->routeIs('hospital.foc.request') || request()->routeIs('hospital.foc.show')) ? 'active' : '' }}">
                             <i class="bi bi-heart-fill"></i>
                             <span>FOC Requests</span>
                         </a>
                     @endhaspermission
                     @haspermission('opd.foc.accept')
                         <a href="{{ route('hospital.foc.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.foc.*') ? 'active' : '' }}">
+                           class="hms-nav-item {{ (request()->routeIs('hospital.foc.accept') || request()->routeIs('hospital.foc.approve') || request()->routeIs('hospital.foc.reject')) ? 'active' : '' }}">
                             <i class="bi bi-heart-pulse-fill"></i>
                             <span>Approve FOC</span>
                         </a>
@@ -491,6 +780,111 @@
 
             {{-- Main Content --}}
             @yield('content')
+
+            @unless(request()->routeIs('hospital.dashboard'))
+                <style>
+                    /*
+                      Design-only override:
+                      Remove blue premium shadows on all non-main-dashboard pages.
+                      Kept after page content so it wins over page-level inline styles.
+                    */
+                    .hms-main .shadow,
+                    .hms-main .shadow-sm,
+                    .hms-main .shadow-lg,
+                    .hms-main .premium-card,
+                    .hms-main .hms-card,
+                    .hms-main .card,
+                    .hms-main [class*="-hero"],
+                    .hms-main [class*="-card"],
+                    .hms-main [class*="-pill"],
+                    .hms-main [class*="-btn"],
+                    .hms-main [class*="-icon"],
+                    .hms-main [class*="-box"],
+                    .hms-main table tbody tr,
+                    .hms-main table tbody tr:hover,
+                    .hms-main .btn,
+                    .hms-main .btn:hover,
+                    .hms-main .badge {
+                        box-shadow: none !important;
+                    }
+
+                    .hms-main a[title*="Edit"] i,
+                    .hms-main button[title*="Edit"] i,
+                    .hms-main a[aria-label*="Edit"] i,
+                    .hms-main button[aria-label*="Edit"] i,
+                    .hms-main [class*="edit-btn"] i,
+                    .hms-main [class*="edit-action"] i,
+                    .hms-main [class*="edit-type"] i,
+                    .hms-main [class*="edit-dosage"] i,
+                    .hms-main [class*="edit-instruction"] i {
+                        color: #E67E22 !important;
+                    }
+
+                    .hms-main a[title*="Edit"]:hover,
+                    .hms-main button[title*="Edit"]:hover,
+                    .hms-main a[aria-label*="Edit"]:hover,
+                    .hms-main button[aria-label*="Edit"]:hover,
+                    .hms-main [class*="edit-btn"]:hover,
+                    .hms-main [class*="edit-action"]:hover,
+                    .hms-main [class*="edit-type"]:hover,
+                    .hms-main [class*="edit-dosage"]:hover,
+                    .hms-main [class*="edit-instruction"]:hover {
+                        background: #E67E22 !important;
+                        border-color: #E67E22 !important;
+                        color: #ffffff !important;
+                    }
+
+                    .hms-main a[title*="Edit"]:hover i,
+                    .hms-main button[title*="Edit"]:hover i,
+                    .hms-main a[aria-label*="Edit"]:hover i,
+                    .hms-main button[aria-label*="Edit"]:hover i,
+                    .hms-main [class*="edit-btn"]:hover i,
+                    .hms-main [class*="edit-action"]:hover i,
+                    .hms-main [class*="edit-type"]:hover i,
+                    .hms-main [class*="edit-dosage"]:hover i,
+                    .hms-main [class*="edit-instruction"]:hover i {
+                        color: #ffffff !important;
+                    }
+
+                    .hms-main a[title*="Delete"] i,
+                    .hms-main button[title*="Delete"] i,
+                    .hms-main a[aria-label*="Delete"] i,
+                    .hms-main button[aria-label*="Delete"] i,
+                    .hms-main [class*="delete-btn"] i,
+                    .hms-main [class*="delete-action"] i,
+                    .hms-main [class*="delete-type"] i,
+                    .hms-main [class*="delete-dosage"] i,
+                    .hms-main [class*="delete-instruction"] i {
+                        color: #C0392B !important;
+                    }
+
+                    .hms-main a[title*="Delete"]:hover,
+                    .hms-main button[title*="Delete"]:hover,
+                    .hms-main a[aria-label*="Delete"]:hover,
+                    .hms-main button[aria-label*="Delete"]:hover,
+                    .hms-main [class*="delete-btn"]:hover,
+                    .hms-main [class*="delete-action"]:hover,
+                    .hms-main [class*="delete-type"]:hover,
+                    .hms-main [class*="delete-dosage"]:hover,
+                    .hms-main [class*="delete-instruction"]:hover {
+                        background: #C0392B !important;
+                        border-color: #C0392B !important;
+                        color: #ffffff !important;
+                    }
+
+                    .hms-main a[title*="Delete"]:hover i,
+                    .hms-main button[title*="Delete"]:hover i,
+                    .hms-main a[aria-label*="Delete"]:hover i,
+                    .hms-main button[aria-label*="Delete"]:hover i,
+                    .hms-main [class*="delete-btn"]:hover i,
+                    .hms-main [class*="delete-action"]:hover i,
+                    .hms-main [class*="delete-type"]:hover i,
+                    .hms-main [class*="delete-dosage"]:hover i,
+                    .hms-main [class*="delete-instruction"]:hover i {
+                        color: #ffffff !important;
+                    }
+                </style>
+            @endunless
 
         </main>
 

@@ -19,22 +19,22 @@ class PlatformAdminSeeder extends Seeder
 {
     public function run(): void
     {
-        $email    = env('SUPERADMIN_EMAIL', 'superadmin@eyehms.com');
+        $email = env('SUPERADMIN_EMAIL', 'superadmin@eyehms.com');
         $password = env('SUPERADMIN_PASSWORD', 'SuperAdmin@123!');
-        $name     = env('SUPERADMIN_NAME', 'Super Admin');
+        $name = env('SUPERADMIN_NAME', 'Super Admin');
 
         $admin = PlatformAdmin::firstOrCreate(
             ['email' => $email],
             [
-                'name'     => $name,
+                'name' => $name,
                 'password' => Hash::make($password),
-                'role'     => 'super_admin',
+                'role' => 'super_admin',
             ]
         );
 
         if ($admin->wasRecentlyCreated) {
             $this->command->info("SuperAdmin created: {$email}");
-            $this->command->warn("IMPORTANT: Change the default password immediately!");
+            $this->command->warn('IMPORTANT: Change the default password immediately!');
         } else {
             $this->command->info("SuperAdmin already exists: {$email}");
         }

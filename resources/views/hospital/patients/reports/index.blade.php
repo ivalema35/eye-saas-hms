@@ -39,7 +39,7 @@
 
                 <div class="col-md-4">
                     <label class="form-label">Date Range</label>
-                    <input type="text" name="date_range" id="date_range" class="form-control clinical-input" placeholder="Select dates" value="{{ request('date_range') }}">
+                    <input type="text" name="date_range" id="date_range" class="form-control clinical-input flatpickr" placeholder="Select dates" value="{{ request('date_range') }}" autocomplete="off" readonly>
                 </div>
 
                 <div class="col-md-4">
@@ -123,7 +123,7 @@
                         <td>{{ $patient->created_at?->format('d M, Y h:i A') }}</td>
                         <td class="fw-bold text-secondary">{{ $patient->patient_code ?: '-' }}</td>
                         <td>{{ $patient->full_name }}</td>
-                        <td>{{ $patient->location?->name ?: '-' }}</td>
+                        <td>{{ $patient->location?->city ?? $patient->location?->name ?? '-' }}</td>
                         <td>Dr. {{ $patient->doctor?->name ?: '-' }}</td>
                         <td>{{ $patient->reception?->name ?: '-' }}</td>
                         <td>{{ $patient->caseType?->case_type ?: '-' }}</td>
@@ -142,14 +142,14 @@
 </div>
 
 @if($patients->hasPages())
-    <div class="mt-3 d-flex justify-content-center">
-        {{ $patients->links() }}
+    <div class="mt-3">
+        {{ $patients->links('pagination::bootstrap-5') }}
     </div>
 @endif
 
 @endsection
 
-@section('scripts')
+@push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     flatpickr('#date_range', {
@@ -183,4 +183,4 @@ document.addEventListener('DOMContentLoaded', function() {
     receptionSelect.addEventListener('change', toggleFilters);
 });
 </script>
-@endsection
+@endpush

@@ -82,6 +82,28 @@
 </div>
 
 @php
+    // Provide safe defaults to avoid errors when variables aren't passed (e.g., auto-print after registration)
+    $complaintMasters = $complaintMasters ?? collect();
+    $kcoMasters       = $kcoMasters ?? collect();
+    $diagnosisMasters = $diagnosisMasters ?? collect();
+    $adviceMasters    = $adviceMasters ?? collect();
+
+    $patient = $patient ?? (object) [
+        'full_name' => '—',
+        'patient_code' => '—',
+        'age' => '—',
+        'gender' => '—',
+        'contact_no' => null,
+        'appointment_date' => null,
+    ];
+
+    $exam = $exam ?? (object) [
+        'exam_data' => [],
+        'doctor' => null,
+        'prescriptions' => collect(),
+        'examined_at' => null,
+    ];
+
     $ed        = $exam->exam_data ?? [];
     $vision    = $ed['vision']   ?? [];
     $st        = $ed['st']       ?? [];

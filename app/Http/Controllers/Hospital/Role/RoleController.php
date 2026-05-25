@@ -23,7 +23,7 @@ class RoleController extends Controller
 
     public function index(): View
     {
-        $slug  = request()->route('slug');
+        $slug = request()->route('slug');
         $roles = Role::withCount('users')->orderByDesc('is_system')->orderBy('name')->get();
 
         return view('hospital.roles.index', compact('roles', 'slug'));
@@ -31,8 +31,8 @@ class RoleController extends Controller
 
     public function create(): View
     {
-        $slug       = request()->route('slug');
-        $modules    = $this->permService->getPermissionsForRoleUI(0);
+        $slug = request()->route('slug');
+        $modules = $this->permService->getPermissionsForRoleUI(0);
 
         return view('hospital.roles.create', compact('slug', 'modules'));
     }
@@ -42,13 +42,13 @@ class RoleController extends Controller
         $slug = $request->route('slug');
 
         $role = Role::create([
-            'tenant_id'  => app('tenant')->id,
-            'name'       => $request->validated('name'),
-            'slug'       => Str::slug($request->validated('name'), '_'),
-            'description'=> $request->validated('description'),
-            'color'      => $request->validated('color', '#1B4F72'),
-            'is_system'  => false,
-            'is_super'   => false,
+            'tenant_id' => app('tenant')->id,
+            'name' => $request->validated('name'),
+            'slug' => Str::slug($request->validated('name'), '_'),
+            'description' => $request->validated('description'),
+            'color' => $request->validated('color', '#1B4F72'),
+            'is_system' => false,
+            'is_super' => false,
             'created_by' => auth('hospital_user')->id(),
         ]);
 
@@ -59,12 +59,12 @@ class RoleController extends Controller
         );
 
         return redirect()->route('hospital.roles.index', ['slug' => $slug])
-                         ->with('success', 'Role "' . $role->name . '" created successfully.');
+            ->with('success', 'Role "'.$role->name.'" created successfully.');
     }
 
     public function edit(string $slug, string $id): View
     {
-        $role    = Role::withoutGlobalScopes()
+        $role = Role::withoutGlobalScopes()
             ->where('id', $id)
             ->withCount('users')
             ->firstOrFail();
@@ -83,7 +83,7 @@ class RoleController extends Controller
 
         $updateData = [
             'description' => $request->validated('description'),
-            'color'       => $request->validated('color', $role->color),
+            'color' => $request->validated('color', $role->color),
         ];
 
         // System roles (Hospital Admin) — name cannot be changed
@@ -104,7 +104,7 @@ class RoleController extends Controller
         }
 
         return redirect()->route('hospital.roles.edit', ['slug' => $slug, 'id' => $role->id])
-                         ->with('success', 'Role "' . $role->name . '" updated.');
+            ->with('success', 'Role "'.$role->name.'" updated.');
     }
 
     public function destroy(string $slug, string $id): RedirectResponse
@@ -117,13 +117,13 @@ class RoleController extends Controller
         }
 
         if ($role->users_count > 0) {
-            return redirect()->back()->with('error', 'Reassign ' . $role->users_count . ' user(s) to another role before deleting.');
+            return redirect()->back()->with('error', 'Reassign '.$role->users_count.' user(s) to another role before deleting.');
         }
 
         $roleName = $role->name;
         $role->delete();
 
         return redirect()->route('hospital.roles.index', ['slug' => $slug])
-                         ->with('success', 'Role "' . $roleName . '" deleted.');
+            ->with('success', 'Role "'.$roleName.'" deleted.');
     }
 }

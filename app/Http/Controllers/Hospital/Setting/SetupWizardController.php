@@ -32,12 +32,29 @@ class SetupWizardController extends Controller
 
         $step = max(1, min($step, self::MAX_STEPS));
 
-        return view("hospital.setup.step{$step}", [
-            'slug'        => $slug,
-            'step'        => $step,
-            'maxSteps'    => self::MAX_STEPS,
-            'tenant'      => $tenant,
-        ]);
+        $viewData = [
+            'slug' => $slug,
+            'step' => $step,
+            'maxSteps' => self::MAX_STEPS,
+            'tenant' => $tenant,
+        ];
+
+        // If step 4 (cases), preload existing tenant cases so the wizard shows current masters
+        if ($step === 4) {
+            $cases = DB::table('tbl_cases')
+                ->where('tenant_id', $tenant->id)
+                ->whereNull('deleted_at')
+                ->orderBy('id')
+                ->get()
+                ->map(function ($r) {
+                    return ['name' => $r->case_type, 'fee' => (string) $r->case_fee];
+                })
+                ->toArray();
+
+            $viewData['existingCases'] = $cases;
+        }
+
+        return view("hospital.setup.step{$step}", $viewData);
     }
 
     public function store(Request $request, string $slug, int $step): RedirectResponse
@@ -58,7 +75,7 @@ class SetupWizardController extends Controller
         }
 
         return redirect()->route('hospital.setup.show', ['slug' => $slug, 'step' => $step + 1])
-                         ->with('success', 'Step ' . $step . ' saved.');
+            ->with('success', 'Step '.$step.' saved.');
     }
 
     public function skip(string $slug, int $step): RedirectResponse
@@ -75,20 +92,20 @@ class SetupWizardController extends Controller
     private function finishSetup(Tenant $tenant, string $slug): RedirectResponse
     {
         $tenant->update([
-            'is_setup_done'      => true,
+            'is_setup_done' => true,
             'setup_completed_at' => now(),
         ]);
 
         return redirect()->route('hospital.dashboard', ['slug' => $slug])
-                         ->with('success', 'Setup completed! Welcome to your hospital dashboard.');
+            ->with('success', 'Setup completed! Welcome to your hospital dashboard.');
     }
 
     private function saveProfile(Request $request, Tenant $tenant): void
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'city'        => ['nullable', 'string', 'max:100'],
-            'state'       => ['nullable', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'max:100'],
             'admin_phone' => ['nullable', 'string', 'max:15'],
         ]);
 
@@ -98,10 +115,10 @@ class SetupWizardController extends Controller
     private function saveDoctor(Request $request, Tenant $tenant): void
     {
         $data = $request->validate([
-            'name'        => ['required', 'string', 'max:255'],
-            'email'       => ['required', 'email', 'max:255'],
-            'contact'     => ['nullable', 'string', 'max:15'],
-            'password'    => ['required', 'string', 'min:8'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'contact' => ['nullable', 'string', 'max:15'],
+            'password' => ['required', 'string', 'min:8'],
             'doctor_type' => ['required', 'in:primary,secondary'],
         ]);
 
@@ -111,23 +128,23 @@ class SetupWizardController extends Controller
             ->first();
 
         HospitalUser::create([
-            'tenant_id'   => $tenant->id,
-            'role_id'     => $doctorRole?->id,
-            'name'        => $data['name'],
-            'email'       => $data['email'],
-            'contact'     => $data['contact'] ?? null,
-            'password'    => Hash::make($data['password']),
+            'tenant_id' => $tenant->id,
+            'role_id' => $doctorRole?->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact' => $data['contact'] ?? null,
+            'password' => Hash::make($data['password']),
             'doctor_type' => $data['doctor_type'],
-            'status'      => 'active',
+            'status' => 'active',
         ]);
     }
 
     private function saveReceptionist(Request $request, Tenant $tenant): void
     {
         $data = $request->validate([
-            'name'     => ['required', 'string', 'max:255'],
-            'email'    => ['required', 'email', 'max:255'],
-            'contact'  => ['nullable', 'string', 'max:15'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'contact' => ['nullable', 'string', 'max:15'],
             'password' => ['required', 'string', 'min:8'],
         ]);
 
@@ -138,31 +155,40 @@ class SetupWizardController extends Controller
 
         HospitalUser::create([
             'tenant_id' => $tenant->id,
-            'role_id'   => $receptionRole?->id,
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'contact'   => $data['contact'] ?? null,
-            'password'  => Hash::make($data['password']),
-            'status'    => 'active',
+            'role_id' => $receptionRole?->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact' => $data['contact'] ?? null,
+            'password' => Hash::make($data['password']),
+            'status' => 'active',
         ]);
     }
 
     private function saveCases(Request $request, Tenant $tenant): void
     {
         $data = $request->validate([
-            'cases'        => ['required', 'array', 'min:1'],
+            'cases' => ['required', 'array', 'min:1'],
             'cases.*.name' => ['required', 'string', 'max:100'],
-            'cases.*.fee'  => ['required', 'numeric', 'min:0'],
+            'cases.*.fee' => ['required', 'numeric', 'min:0'],
         ]);
 
+        // Replace existing cases for this tenant with the submitted list
+        DB::table('tbl_cases')->where('tenant_id', $tenant->id)->delete();
+
+        $rows = [];
+        $ts = now();
         foreach ($data['cases'] as $case) {
-            DB::table('tbl_cases')->insert([
-                'tenant_id'  => $tenant->id,
-                'case_type'  => $case['name'],
-                'case_fee'   => $case['fee'],
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $rows[] = [
+                'tenant_id' => $tenant->id,
+                'case_type' => $case['name'],
+                'case_fee' => $case['fee'],
+                'created_at' => $ts,
+                'updated_at' => $ts,
+            ];
+        }
+
+        if (! empty($rows)) {
+            DB::table('tbl_cases')->insert($rows);
         }
     }
 }

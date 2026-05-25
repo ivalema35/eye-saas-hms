@@ -3,7 +3,7 @@
 @section('page-header', 'Medicine Master')
 
 @section('page-actions')
-    <button class="btn btn-primary btn-sm"
+    <button class="btn btn-primary btn-sm type-add-btn"
             data-bs-toggle="modal"
             data-bs-target="#typeModal"
             onclick="resetTypeForm()">
@@ -12,6 +12,42 @@
 @endsection
 
 @section('content')
+<div class="medicine-types-page">
+
+<style>
+    .type-nav-tabs {
+        background: var(--card-bg, #f7fbff);
+        padding: 10px;
+        border-radius: 14px;
+        border: none;
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+        box-shadow: none;
+    }
+    .type-nav-tabs .nav-item { margin: 0; }
+    .type-nav-tabs .nav-link {
+        border: none !important;
+        background: transparent;
+        color: var(--muted-color, #1f3560);
+        padding: .5rem .9rem;
+        border-radius: 999px;
+        box-shadow: none;
+        transition: all .15s ease-in-out;
+        display: inline-flex;
+        align-items: center;
+    }
+    .type-nav-tabs .nav-link i { margin-right: .5rem; }
+    .type-nav-tabs .nav-link.active {
+        background: var(--color-primary);
+        color: #ffffff !important;
+        box-shadow: 0 6px 18px rgba(36,85,160,0.12);
+    }
+    .type-nav-tabs .nav-link:hover {
+        background: rgba(36,85,160,0.1);
+        color: var(--muted-color, #1f3560) !important;
+    }
+</style>
 
 @if($errors->any())
     <div class="alert alert-danger d-flex gap-2 mb-4">
@@ -25,11 +61,11 @@
 @endif
 
 {{-- Medicine Module Navigation --}}
-<ul class="nav nav-tabs mb-4">
+<ul class="nav nav-tabs mb-4 type-nav-tabs">
     <li class="nav-item">
         <a class="nav-link"
-           href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
-            <i class="bi bi-capsule me-1"></i> Medicines
+           href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
+            <i class="bi bi-capsule-pill me-1"></i> Dosages
         </a>
     </li>
     <li class="nav-item">
@@ -40,14 +76,14 @@
     </li>
     <li class="nav-item">
         <a class="nav-link"
-           href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
-            <i class="bi bi-collection me-1"></i> Medicine Groups
+           href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
+            <i class="bi bi-capsule me-1"></i> Medicines
         </a>
     </li>
     <li class="nav-item">
         <a class="nav-link"
-           href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
-            <i class="bi bi-capsule-pill me-1"></i> Dosages
+           href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
+            <i class="bi bi-collection me-1"></i> Medicine Groups
         </a>
     </li>
     <li class="nav-item">
@@ -58,10 +94,10 @@
     </li>
 </ul>
 
-<div class="card premium-card border-0 shadow-sm">
+<div class="card type-card border-0">
     <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table premium-table table-hover align-middle mb-0">
+        <div class="type-table-wrap">
+            <table class="table type-table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th style="width:50px">#</th>
@@ -72,15 +108,15 @@
                 <tbody>
                     @forelse($types as $index => $type)
                     <tr>
-                        <td class="text-muted">{{ $index + 1 }}</td>
-                        <td class="fw-semibold">{{ $type->name }}</td>
+                        <td class="type-index-cell">{{ $index + 1 }}</td>
+                        <td class="type-name-cell">{{ $type->name }}</td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-1 action-btn-group">
                                 <button type="button"
-                                        class="btn btn-sm btn-outline-secondary edit-type-btn"
+                                        class="btn btn-sm btn-outline-secondary type-icon-btn type-edit-btn edit-type-btn"
                                         data-record="{{ json_encode($type) }}"
                                         title="Edit">
-                                    <i class="bi bi-pencil-fill" style="color: var(--color-secondary);"></i>
+                                    <i class="bi bi-pencil-fill"></i>
                                 </button>
                                 <form action="{{ route('hospital.medicine-types.destroy', ['slug' => $slug, 'id' => $type->id]) }}"
                                       method="POST"
@@ -88,7 +124,7 @@
                                       onsubmit="return confirm('Delete this medicine type? This cannot be undone.');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger type-icon-btn type-delete-btn" title="Delete">
                                         <i class="bi bi-trash3-fill"></i>
                                     </button>
                                 </form>
@@ -97,8 +133,8 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-5 fst-italic">
-                            <i class="bi bi-tags fs-3 d-block mb-2 opacity-25"></i>
+                        <td colspan="3" class="text-center py-5 type-empty-cell">
+                            <i class="bi bi-tags fs-2 d-block mb-2 opacity-50"></i>
                             No medicine types found. Add one to get started.
                         </td>
                     </tr>
@@ -109,12 +145,14 @@
     </div>
 </div>
 
+</div>
+
 {{-- Add / Edit Modal --}}
-<div class="modal fade premium-modal" id="typeModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade type-modal" id="typeModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="typeModalTitle" style="color: var(--color-primary);">
+                <h5 class="modal-title fw-bold" id="typeModalTitle">
                     Add Medicine Type
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -144,12 +182,12 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                        <i class="bi bi-x me-1"></i> Cancel
+                <div class="modal-footer border-0 gap-2 type-modal-footer">
+                    <button type="button" class="btn type-modal-action-btn type-modal-cancel-btn" data-bs-dismiss="modal">
+                        Cancel
                     </button>
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-check2 me-1"></i> Save
+                    <button type="submit" class="btn type-modal-action-btn type-modal-submit-btn">
+                        Save
                     </button>
                 </div>
             </form>
@@ -175,9 +213,10 @@ window.resetTypeForm = resetTypeForm;
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Edit buttons: read data-record attribute (HTML-entity-safe, no inline JSON quoting)
+    // Edit buttons: read data-record attribute and populate form before modal opens
     document.querySelectorAll('.edit-type-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
             var record = JSON.parse(this.dataset.record);
 
             document.getElementById('typeModalTitle').innerText = 'Edit Medicine Type';
@@ -185,7 +224,9 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('typeForm').action          = updateBase.replace('__ID__', record.id);
             document.getElementById('input-name').value         = record.name ?? '';
 
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('typeModal')).show();
+            // Open modal using Bootstrap
+            var modal = new bootstrap.Modal(document.getElementById('typeModal'), {});
+            modal.show();
         });
     });
 
@@ -200,7 +241,8 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('typeForm').action = storeUrl;
         }
         document.getElementById('input-name').value = @json(old('name', ''));
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('typeModal')).show();
+        var modal = new bootstrap.Modal(document.getElementById('typeModal'), {});
+        modal.show();
     })();
     @endif
 

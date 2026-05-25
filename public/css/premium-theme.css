@@ -478,6 +478,58 @@ label {
     padding: 0 1.5rem 1.5rem;
 }
 
+.type-modal .modal-footer.type-modal-footer {
+    padding: 1.2rem 1.5rem;
+    background: linear-gradient(135deg, rgba(235, 245, 251, .72), rgba(255, 255, 255, .94));
+    border-top: 1px solid rgba(27, 79, 114, .12);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.type-modal .type-modal-action-btn {
+    flex: 1 1 0;
+    border-radius: 12px;
+    font-weight: 850;
+    padding: 0.68rem 1rem;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    transition: all 170ms ease;
+}
+
+.type-modal .type-modal-cancel-btn {
+    border: 1px solid rgba(27, 79, 114, .14);
+    background: rgba(255, 255, 255, .92);
+    color: #1B4F72;
+    box-shadow: none;
+}
+
+.type-modal .type-modal-cancel-btn:hover,
+.type-modal .type-modal-cancel-btn:focus {
+    background: #ffffff;
+    border-color: rgba(27, 79, 114, .26);
+    color: #163d57;
+}
+
+.type-modal .type-modal-submit-btn {
+    border: 1px solid #1B4F72;
+    background: #1B4F72;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(27, 79, 114, .20);
+    font-weight: 900;
+}
+
+.type-modal .type-modal-submit-btn:hover,
+.type-modal .type-modal-submit-btn:focus {
+    background: #163f5a;
+    border-color: #163f5a;
+    color: #ffffff;
+    box-shadow: 0 12px 28px rgba(27, 79, 114, .26);
+}
+
 /* Keypad buttons for clinical entry (SPH/CYL modal) */
 .keypad-btn {
     background-color: #F8FAFC;
@@ -541,4 +593,17 @@ label {
 .dropdown-divider {
     margin: 0.3rem 0.4rem;
     border-color: var(--border-color);
+}
+
+/* Ensure footer inline SVG icons inherit color and size */
+.pub-footer-social svg {
+    width: 18px;
+    height: 18px;
+    display: block;
+    vertical-align: middle;
+    fill: currentColor;
+}
+
+.pub-footer-social a {
+    color: rgba(255,255,255,.45);
 }

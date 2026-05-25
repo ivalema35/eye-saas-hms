@@ -24,11 +24,11 @@ class LoginController extends Controller
 
     public function show(): View
     {
-        $slug   = request()->route('slug');
+        $slug = request()->route('slug');
         $tenant = app('tenant');
 
         return view('hospital.auth.login', [
-            'slug'         => $slug,
+            'slug' => $slug,
             'hospitalName' => $tenant?->name ?? 'Hospital',
             'hospitalLogo' => $tenant?->logo_path ?? null,
         ]);
@@ -38,12 +38,13 @@ class LoginController extends Controller
     {
         $request->ensureIsNotRateLimited();
 
-        $slug        = $request->route('slug');
-        $tenant      = app('tenant');
+        $slug = $request->route('slug');
+        $tenant = app('tenant');
         $credentials = $request->only('email', 'password');
-        $remember    = $request->boolean('remember');
+        $remember = $request->boolean('remember');
 
         if (Auth::guard($this->guard)->attempt($credentials, $remember)) {
+            // dd(Auth::guard($this->guard)->user());
             $user = Auth::guard($this->guard)->user();
 
             if ($user->tenant_id !== $tenant->id || $user->status !== 'active') {

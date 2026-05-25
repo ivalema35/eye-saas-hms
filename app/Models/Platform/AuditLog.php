@@ -20,6 +20,7 @@ class AuditLog extends Model
 
     // Audit logs kabhi update nahi hote — sirf create
     public $timestamps = true;
+
     const UPDATED_AT = null;
 
     protected $fillable = [

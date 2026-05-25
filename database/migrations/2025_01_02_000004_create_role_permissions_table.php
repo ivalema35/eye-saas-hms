@@ -38,12 +38,12 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('role_id')
-                  ->constrained('roles')
-                  ->onDelete('cascade');
+                ->constrained('roles')
+                ->onDelete('cascade');
 
             $table->foreignId('permission_id')
-                  ->constrained('permissions')
-                  ->onDelete('cascade');
+                ->constrained('permissions')
+                ->onDelete('cascade');
 
             // Simple boolean: is this permission granted to this role?
             // Hospital Admin UI: checkbox ON = true, OFF = false

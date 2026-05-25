@@ -149,6 +149,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
+        const returnTo = urlParams.get('return_to');
 
         if (urlParams.has('auto_print') && urlParams.get('auto_print') == '1') {
             setTimeout(function() {
@@ -156,7 +157,11 @@
             }, 300);
 
             window.onafterprint = function() {
-                window.location.href = "{{ route('hospital.patients.create', ['slug' => app('tenant')->slug ?? request()->route('slug')]) }}";
+                if (returnTo === 'create') {
+                    window.location.href = "{{ route('hospital.patients.create', ['slug' => app('tenant')->slug ?? request()->route('slug')]) }}";
+                } else if (returnTo === 'back') {
+                    window.history.back();
+                }
             };
         }
     });

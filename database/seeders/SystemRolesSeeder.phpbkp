@@ -1,0 +1,112 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Role\Permission;
+use App\Models\Role\Role;
+use App\Models\Role\RolePermission;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Log;
+
+class SystemRolesSeeder extends Seeder
+{
+    private array $systemRoles = [
+        ['name' => 'Hospital Admin', 'slug' => 'hospital_admin', 'color' => '#1B4F72', 'is_super' => true,  'is_system' => true],
+        ['name' => 'Doctor',         'slug' => 'doctor',         'color' => '#2980B9', 'is_super' => false, 'is_system' => false],
+        ['name' => 'Receptionist',   'slug' => 'receptionist',   'color' => '#27AE60', 'is_super' => false, 'is_system' => false],
+        ['name' => 'OT Receptionist', 'slug' => 'ot_receptionist', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
+        ['name' => 'Accountant',     'slug' => 'accountant',     'color' => '#117A65', 'is_super' => false, 'is_system' => true],
+        ['name' => 'OT Doctor',      'slug' => 'ot_doctor',      'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
+        ['name' => 'OT Assistant',   'slug' => 'ot_assistant',   'color' => '#CA6F1E', 'is_super' => false, 'is_system' => true],
+    ];
+
+    private array $defaultPermissions = [
+        'doctor' => [
+            'patient.view', 'patient.print',
+            'exam.primary.view', 'exam.primary.write',
+            'exam.secondary.view', 'exam.secondary.write',
+            'foc.view', 'foc.create',
+            'medicine.view', 'medicine.create', 'medicine.edit',
+            'report.patient.daily',
+        ],
+        'receptionist' => [
+            'patient.view', 'patient.create', 'patient.edit', 'patient.delete', 'patient.print',
+            'exam.primary.view',
+            'foc.view', 'foc.approve',
+            'medicine.view',
+            'report.patient.daily',
+            'master.view', 'master.write',
+        ],
+    ];
+
+    public static function seedForTenant(int $tenantId, ?int $adminId = null): void
+    {
+        (new self)->runForTenant($tenantId, $adminId);
+    }
+
+    public function run(): void
+    {
+        $this->command->warn('Direct run not supported. Use SystemRolesSeeder::seedForTenant($tenantId).');
+    }
+
+    private function runForTenant(int $tenantId, ?int $adminId): void
+    {
+        $allPermissions = Permission::all()->keyBy('action');
+
+        if ($allPermissions->isEmpty()) {
+            Log::error('SystemRolesSeeder: permissions table is empty! Run PermissionsSeeder first.');
+
+            return;
+        }
+
+        foreach ($this->systemRoles as $roleData) {
+            // FIX: withoutTenantScope() use karo —
+            // Public context (registration) mein config('app.tenant_id') = 0 hota hai.
+            // Bina scope ke firstOrCreate ka first() part conflict karta tha.
+            $role = Role::withoutTenantScope()->firstOrCreate(
+                ['tenant_id' => $tenantId, 'slug' => $roleData['slug']],
+                [
+                    'name' => $roleData['name'],
+                    'color' => $roleData['color'],
+                    'is_system' => $roleData['is_system'],
+                    'is_super' => $roleData['is_super'],
+                    'created_by' => $adminId,
+                ]
+            );
+
+            $this->assignDefaultPermissions($role, $allPermissions);
+        }
+    }
+
+    private function assignDefaultPermissions(Role $role, $allPermissions): void
+    {
+        if ($role->is_super) {
+            // Hospital Admin — all permissions granted
+            $this->applyPermissions($role, $allPermissions,
+                array_fill_keys($allPermissions->keys()->toArray(), true)
+            );
+
+            return;
+        }
+
+        $grantedActions = $this->defaultPermissions[$role->slug] ?? [];
+        $permMap = [];
+        foreach ($allPermissions->keys() as $action) {
+            $permMap[$action] = in_array($action, $grantedActions);
+        }
+        $this->applyPermissions($role, $allPermissions, $permMap);
+    }
+
+    private function applyPermissions(Role $role, $allPermissions, array $permissionMap): void
+    {
+        foreach ($permissionMap as $action => $isGranted) {
+            if (! $allPermissions->has($action)) {
+                continue;
+            }
+            RolePermission::updateOrCreate(
+                ['role_id' => $role->id, 'permission_id' => $allPermissions[$action]->id],
+                ['is_granted' => (bool) $isGranted]
+            );
+        }
+    }
+}

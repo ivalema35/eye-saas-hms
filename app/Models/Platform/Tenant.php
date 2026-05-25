@@ -13,9 +13,9 @@
 
 namespace App\Models\Platform;
 
+use App\Models\Hospital\HospitalUser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Platform\Subscription;
 
 class Tenant extends Model
 {
@@ -39,17 +39,17 @@ class Tenant extends Model
     ];
 
     protected $casts = [
-        'trial_ends_at'      => 'datetime',
+        'trial_ends_at' => 'datetime',
         'setup_completed_at' => 'datetime',
-        'is_setup_done'      => 'boolean',
+        'is_setup_done' => 'boolean',
     ];
 
     /** Active subscription for this tenant */
     public function activeSubscription()
     {
         return $this->hasOne(Subscription::class)
-                    ->where('status', 'active')
-                    ->latest();
+            ->where('status', 'active')
+            ->latest();
     }
 
     /** All subscriptions */
@@ -67,7 +67,7 @@ class Tenant extends Model
     /** Hospital staff users (all roles) */
     public function hospitalUsers()
     {
-        return $this->hasMany(\App\Models\Hospital\HospitalUser::class);
+        return $this->hasMany(HospitalUser::class);
     }
 
     /** Check if tenant has active/trial access */

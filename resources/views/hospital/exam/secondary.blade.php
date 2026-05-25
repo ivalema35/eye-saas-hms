@@ -3,8 +3,8 @@
 @section('page-header', 'Secondary Eye Examination')
 
 @section('page-actions')
-    <a href="{{ route('hospital.patients.show', ['slug' => $slug, 'patient' => $patient->id]) }}"
-       class="btn btn-outline-secondary btn-sm">
+    <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
+       class="btn secondary-exam-back-btn btn-sm">
         <i class="bi bi-arrow-left"></i> Back to Patient
     </a>
     @if($exam)
@@ -13,7 +13,7 @@
         </button>
     @endif
     @haspermission('opd.foc.create')
-        <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
+        <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
             <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
         </button>
     @endhaspermission
@@ -22,6 +22,44 @@
 @section('content')
 
 <style>
+    .secondary-exam-back-btn {
+        border: 1px solid rgba(27, 79, 114, 0.22);
+        background: rgba(27, 79, 114, 0.06);
+        color: #1B4F72;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(27, 79, 114, 0.08);
+        transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .secondary-exam-back-btn:hover,
+    .secondary-exam-back-btn:focus {
+        background: rgba(27, 79, 114, 0.12);
+        border-color: rgba(27, 79, 114, 0.34);
+        color: #1B4F72;
+        box-shadow: 0 4px 10px rgba(27, 79, 114, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .secondary-exam-foc-btn {
+        background: #1B4F72;
+        border: 1px solid #1B4F72;
+        color: #fff;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: 0 4px 10px rgba(27, 79, 114, 0.18);
+        transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .secondary-exam-foc-btn:hover,
+    .secondary-exam-foc-btn:focus {
+        background: #16405d;
+        border-color: #16405d;
+        color: #fff;
+        box-shadow: 0 6px 14px rgba(27, 79, 114, 0.24);
+        transform: translateY(-1px);
+    }
+
     .step-btn {
         min-width: 118px;
         font-weight: 600;
@@ -348,15 +386,21 @@
                 </span>
             @endif
         </div>
-        <div class="btn-group flex-wrap" role="group">
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-context" data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">A. Clinical</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">B. Vision & PG</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">C. ST & NCT</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-oe" data-bs-toggle="modal" data-bs-target="#modalOE">D. O/E & Fundus</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">E. Rx & Advice</button>
+        <div class="d-flex align-items-center gap-1 flex-wrap">
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O &amp; H/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-nct"       data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
         </div>
-        <button type="submit" class="btn btn-success fw-bold px-4">Save Exam</button>
+        <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
     </div>
 
     <div class="print-header d-none d-print-block mb-3 border-bottom border-dark pb-2">
@@ -499,73 +543,46 @@
         </div>
     </div>
 
+    {{-- MODAL: Vision --}}
     <div class="modal fade" id="modalVision" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">B. Vision (VN) &amp; Present Glasses (PG)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header bg-light"><h5 class="modal-title">Visual Acuity (VN)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <div class="alert alert-info py-2 px-3 mb-3" style="font-size: 0.85rem;">
-                        <i class="bi bi-info-circle"></i> Record the patient's visual acuity (unaided) and current glasses prescription here.
-                    </div>
-                    <h6 class="mb-2">Visual Acuity</h6>
-                    <div class="table-responsive mb-3">
+                    <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead>
-                                <tr><th style="width:120px"></th><th>RE</th><th>LE</th></tr>
-                            </thead>
+                            <thead><tr><th style="width:160px"></th><th>RE</th><th>LE</th></tr></thead>
                             <tbody>
                                 <tr>
                                     <td>Distance Vision (VN)</td>
-                                    @foreach(['re','le'] as $eye)
-                                        <td>
-                                            <select name="exam_data[vision][vn_{{ $eye }}]" class="form-select form-select-sm">
-                                                <option value="">-</option>
-                                                @foreach($masters['vn'] as $opt)
-                                                    <option value="{{ $opt->value }}" {{ ($vision['vn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                    @endforeach
+                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[vision][vn_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['vn'] as $opt)<option value="{{ $opt->value }}" {{ ($vision['vn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
                                 </tr>
                                 <tr>
                                     <td>Pinhole (PH)</td>
-                                    @foreach(['re','le'] as $eye)
-                                        <td>
-                                            <select name="exam_data[vision][pnvn_{{ $eye }}]" class="form-select form-select-sm">
-                                                <option value="">-</option>
-                                                @foreach($masters['pnvn'] as $opt)
-                                                    <option value="{{ $opt->value }}" {{ ($vision['pnvn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                    @endforeach
+                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[vision][pnvn_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['pnvn'] as $opt)<option value="{{ $opt->value }}" {{ ($vision['pnvn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
                                 </tr>
                                 <tr>
                                     <td>Near Vision (NV)</td>
-                                    @foreach(['re','le'] as $eye)
-                                        <td>
-                                            <select name="exam_data[vision][nrvn_{{ $eye }}]" class="form-select form-select-sm">
-                                                <option value="">-</option>
-                                                @foreach($masters['nrvn'] as $opt)
-                                                    <option value="{{ $opt->value }}" {{ ($vision['nrvn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                    @endforeach
+                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[vision][nrvn_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['nrvn'] as $opt)<option value="{{ $opt->value }}" {{ ($vision['nrvn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+            </div>
+        </div>
+    </div>
 
-                    <h6 class="mb-2">Present Glasses (PG)</h6>
+    {{-- MODAL: PG (Present Glasses) --}}
+    <div class="modal fade" id="modalPG" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light"><h5 class="modal-title">Present Glasses (PG)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead>
-                                <tr><th style="width:120px"></th><th>RE</th><th>LE</th></tr>
-                            </thead>
+                            <thead><tr><th style="width:160px"></th><th>RE</th><th>LE</th></tr></thead>
                             <tbody>
                                 @foreach([
                                     'ds'      => ['label' => 'SPH (Sphere)',      'master' => 'sph_cyl', 'col' => 'value', 'bipolar' => true],
@@ -606,48 +623,36 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
-                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
             </div>
         </div>
     </div>
 
+    {{-- MODAL: ST (Subjective Trial) --}}
     <div class="modal fade" id="modalST" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">C. Subjective Trial (ST) &amp; NCT</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header bg-light"><h5 class="modal-title">Subjective Trial (ST — Final Glass)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <div class="alert alert-info py-2 px-3 mb-3" style="font-size: 0.85rem;">
-                        <i class="bi bi-info-circle"></i> Enter the subjective trial refraction results. These become the final glass prescription.
-                    </div>
-                    <h6 class="mb-2">Subjective Trial (ST — Final Glass)</h6>
-                    <div class="table-responsive mb-3">
+                    <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead>
-                                <tr><th style="width:120px"></th><th>RE</th><th>LE</th></tr>
-                            </thead>
+                            <thead><tr><th style="width:160px"></th><th>RE</th><th>LE</th></tr></thead>
                             <tbody>
                                 @foreach([
-                                    'ds' => ['label' => 'SPH (Sphere)', 'list' => 'sph_cyl_list'],
+                                    'ds' => ['label' => 'SPH (Sphere)',   'list' => 'sph_cyl_list'],
                                     'dc' => ['label' => 'CYL (Cylinder)', 'list' => 'sph_cyl_list'],
-                                    'ax' => ['label' => 'AXIS', 'list' => 'axis_list'],
-                                    'ns' => ['label' => 'Near SPH', 'list' => 'sph_cyl_list'],
-                                    'nc' => ['label' => 'Near CYL', 'list' => 'sph_cyl_list'],
-                                    'na' => ['label' => 'Near AXIS', 'list' => 'axis_list'],
+                                    'ax' => ['label' => 'AXIS',           'list' => 'axis_list'],
+                                    'ns' => ['label' => 'Near SPH',       'list' => 'sph_cyl_list'],
+                                    'nc' => ['label' => 'Near CYL',       'list' => 'sph_cyl_list'],
+                                    'na' => ['label' => 'Near AXIS',      'list' => 'axis_list'],
                                 ] as $key => $meta)
                                     <tr>
                                         <td>{{ $meta['label'] }}</td>
                                         @foreach(['re','le'] as $eye)
                                             <td>
-                                                <input type="text"
-                                                       name="exam_data[st][{{ $eye }}][{{ $key }}]"
+                                                <input type="text" name="exam_data[st][{{ $eye }}][{{ $key }}]"
                                                        value="{{ old('exam_data.st.'.$eye.'.'.$key, $st[$eye][$key] ?? '') }}"
-                                                       list="{{ $meta['list'] }}"
-                                                       class="form-control form-control-sm">
+                                                       list="{{ $meta['list'] }}" class="form-control form-control-sm">
                                             </td>
                                         @endforeach
                                     </tr>
@@ -667,8 +672,18 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+            </div>
+        </div>
+    </div>
 
-                    <h6 class="mb-2">NCT (Intraocular Pressure — mmHg)</h6>
+    {{-- MODAL: NCT --}}
+    <div class="modal fade" id="modalNCT" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light"><h5 class="modal-title">NCT (Intraocular Pressure)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
                     <div class="row g-2">
                         @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $label)
                             <div class="col-md-6">
@@ -683,41 +698,31 @@
                         @endforeach
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
-                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
             </div>
         </div>
     </div>
 
+    {{-- MODAL: OE (Ocular Examination) --}}
     <div class="modal fade" id="modalOE" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">D. Ocular Examination (O/E) &amp; Fundus</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header bg-light"><h5 class="modal-title">Ocular Examination (O/E)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <div class="alert alert-info py-2 px-3 mb-3" style="font-size: 0.85rem;">
-                        <i class="bi bi-info-circle"></i> Document anterior and posterior segment findings for both eyes.
-                    </div>
-                    <h6 class="mb-2">Ocular Examination (O/E)</h6>
-                    <div class="table-responsive mb-3">
+                    <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead>
-                                <tr><th style="width:140px"></th><th>RE</th><th>LE</th></tr>
-                            </thead>
+                            <thead><tr><th style="width:140px"></th><th>RE</th><th>LE</th></tr></thead>
                             <tbody>
                                 @foreach([
-                                    'sac' => ['label' => 'SAC', 'master' => 'sac'],
-                                    'lid' => ['label' => 'Lid', 'master' => 'lid'],
-                                    'conj' => ['label' => 'Conj', 'master' => 'conj'],
-                                    'cornea' => ['label' => 'Cornea', 'master' => 'cornea'],
-                                    'ac' => ['label' => 'AC', 'master' => 'ac'],
-                                    'iris' => ['label' => 'Iris', 'master' => 'iris'],
-                                    'pupil' => ['label' => 'Pupil', 'master' => 'pupil'],
-                                    'lens' => ['label' => 'Lens', 'master' => 'lens_master'],
-                                    'em' => ['label' => 'EM', 'master' => 'em'],
+                                    'sac'       => ['label' => 'SAC',       'master' => 'sac'],
+                                    'lid'       => ['label' => 'Lid',       'master' => 'lid'],
+                                    'conj'      => ['label' => 'Conj',      'master' => 'conj'],
+                                    'cornea'    => ['label' => 'Cornea',    'master' => 'cornea'],
+                                    'ac'        => ['label' => 'AC',        'master' => 'ac'],
+                                    'iris'      => ['label' => 'Iris',      'master' => 'iris'],
+                                    'pupil'     => ['label' => 'Pupil',     'master' => 'pupil'],
+                                    'lens'      => ['label' => 'Lens',      'master' => 'lens_master'],
+                                    'em'        => ['label' => 'EM',        'master' => 'em'],
                                     'covertest' => ['label' => 'Covertest', 'master' => 'covertest'],
                                 ] as $key => $meta)
                                     <tr>
@@ -737,13 +742,21 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+            </div>
+        </div>
+    </div>
 
-                    <h6 class="mb-2">Fundus Examination</h6>
+    {{-- MODAL: Fundus --}}
+    <div class="modal fade" id="modalFundus" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light"><h5 class="modal-title">Fundus Examination</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead>
-                                <tr><th style="width:140px"></th><th>RE</th><th>LE</th></tr>
-                            </thead>
+                            <thead><tr><th style="width:140px"></th><th>RE</th><th>LE</th></tr></thead>
                             <tbody>
                                 <tr>
                                     <td>Disc</td>
@@ -775,27 +788,18 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
-                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    {{-- MODAL: Diagnosis --}}
+    <div class="modal fade" id="modalDiagnosis" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">E. Diagnosis &amp; Medicines</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <div class="modal-header bg-light"><h5 class="modal-title">Diagnosis</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
-                    <div class="alert alert-info py-2 px-3 mb-4" style="font-size: 0.85rem;">
-                        <i class="bi bi-info-circle"></i> Select diagnosis, prescribe medicines, and build clinical advice from the master list.
-                    </div>
-
-                    <label class="form-label fw-semibold">Diagnosis</label>
-                    <div class="d-flex flex-wrap gap-2 mb-3" id="diagnosis-tags">
+                    <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
                         @foreach($masters['diagnoses'] as $d)
                             <div>
                                 <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}"
@@ -804,6 +808,51 @@
                             </div>
                         @endforeach
                     </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: Dilate --}}
+    <div class="modal fade" id="modalDilate" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light"><h5 class="modal-title">Dilate Patient?</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exam_data[dilate]" id="dilateYes" value="Yes"
+                                {{ old('exam_data.dilate', $ed['dilate'] ?? 'No') === 'Yes' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="dilateYes">Yes, Dilated</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="exam_data[dilate]" id="dilateNo" value="No"
+                                {{ old('exam_data.dilate', $ed['dilate'] ?? 'No') !== 'Yes' ? 'checked' : '' }}>
+                            <label class="form-check-label" for="dilateNo">No</label>
+                        </div>
+                        <div id="dilationTimeWrap" class="d-flex align-items-center gap-2"
+                             style="{{ old('exam_data.dilate', $ed['dilate'] ?? 'No') === 'Yes' ? '' : 'display:none!important;' }}">
+                            <input type="number" name="dilation_time" id="dilation_time" min="1" max="180"
+                                   class="form-control form-control-sm" style="width:80px;"
+                                   placeholder="Mins" value="{{ old('dilation_time', $exam?->dilation_time ?? '') }}">
+                            <span class="text-muted" style="font-size:0.85rem;">minutes lock</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: Medicine --}}
+    <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light"><h5 class="modal-title">Medicines</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    {{-- diagnosis-tags div kept here for JS compatibility --}}
+                    <div class="d-none" id="diagnosis-tags-rx"></div>
 
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <label class="form-label fw-semibold mb-0">Medicines</label>
@@ -882,25 +931,35 @@
                         </table>
                     </div>
 
-                    <div class="mt-4 border-top pt-3">
-                        <div class="mb-2">
-                            <label class="form-label fw-semibold">Select from Master Advices</label>
-                            <select id="advice_master_select" class="form-select select2">
-                                <option value="">-- Select Advice --</option>
-                                @foreach($masters['advices'] ?? [] as $adv)
-                                    <option value="{{ $adv->value ?? $adv->name }}">{{ $adv->value ?? $adv->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <label class="form-label fw-semibold">Clinical Advice &amp; Instructions</label>
-                        <textarea name="advice" id="advice_textarea" class="form-control" rows="4"
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: Advice --}}
+    <div class="modal fade" id="modalAdvice" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light"><h5 class="modal-title">Clinical Advice &amp; Instructions</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Select from Master Advices</label>
+                        <select id="advice_master_select" class="form-select select2">
+                            <option value="">-- Select Advice --</option>
+                            @foreach($masters['advices'] ?? [] as $adv)
+                                <option value="{{ $adv->value ?? $adv->name }}">{{ $adv->value ?? $adv->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label fw-semibold">Advice Text</label>
+                        <textarea name="advice" id="advice_textarea" class="form-control" rows="6"
                                   placeholder="Enter clinical advice, post-operative care, lifestyle instructions, etc."
                                   maxlength="2000">{{ old('advice', $secondaryExam?->advice ?? '') }}</textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
-                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
             </div>
         </div>
     </div>
@@ -1078,12 +1137,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        setState('btn-context', hasValue('select[name="doctor_id"]'));
-        setState('btn-clinical', hasValue('input[name="exam_data[complaints][]"], input[name="exam_data[kcos][]"], input[name="cc_since_number"]'));
-        setState('btn-vision', hasValue('select[name="exam_data[vision][vn_re]"], select[name="exam_data[pg][re][ds]"]'));
-        setState('btn-st', hasValue('input[name="exam_data[st][re][ds]"], select[name="exam_data[nct][iop_re]"]'));
-        setState('btn-oe', hasValue('select[name="exam_data[oe][lid_re]"], select[name="exam_data[fundus][disc_re]"]'));
-        setState('btn-rx', hasValue('input[name="exam_data[diagnoses][]"], input[name^="medicines["][name$="[name]"]'));
+        setState('btn-context',   hasValue('select[name="doctor_id"]'));
+        setState('btn-clinical',  hasValue('input[name="exam_data[complaints][]"], input[name="exam_data[kcos][]"], input[name="cc_since_number"]'));
+        setState('btn-vision',    hasValue('select[name="exam_data[vision][vn_re]"]'));
+        setState('btn-pg',        hasValue('select[name="exam_data[pg][re][ds]"]'));
+        setState('btn-st',        hasValue('input[name="exam_data[st][re][ds]"]'));
+        setState('btn-nct',       hasValue('select[name="exam_data[nct][iop_re]"]'));
+        setState('btn-oe',        hasValue('select[name="exam_data[oe][lid_re]"]'));
+        setState('btn-fundus',    hasValue('select[name="exam_data[fundus][disc_re]"]'));
+        setState('btn-diagnosis', hasValue('input[name="exam_data[diagnoses][]"]'));
+        setState('btn-dilate',    hasValue('input[name="exam_data[dilate]"]:checked'));
+        setState('btn-rx',        hasValue('input[name^="medicines["][name$="[name]"]'));
+        setState('btn-advice',    hasValue('textarea[name="advice"]'));
     };
 
     window.updateLivePreview = function () {
@@ -1293,6 +1358,17 @@ document.addEventListener('DOMContentLoaded', function () {
         updateLivePreview();
     });
 
+    const dilateYes = document.getElementById('dilateYes');
+    const dilateNo = document.getElementById('dilateNo');
+    const dilationTimeWrap = document.getElementById('dilationTimeWrap');
+    if (dilateYes && dilateNo && dilationTimeWrap) {
+        function toggleDilationTime() {
+            dilationTimeWrap.style.display = dilateYes.checked ? '' : 'none';
+        }
+        dilateYes.addEventListener('change', toggleDilationTime);
+        dilateNo.addEventListener('change', toggleDilationTime);
+    }
+
     document.querySelectorAll('.medicine-search-wrap').forEach(attachMedicineSearch);
 
     syncComplaintDuration();
@@ -1385,3 +1461,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endsection
+

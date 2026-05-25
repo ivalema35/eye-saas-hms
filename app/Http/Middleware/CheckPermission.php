@@ -43,6 +43,7 @@ class CheckPermission
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
+
             return redirect()->route('hospital.login', ['slug' => $request->segment(1)]);
         }
 
@@ -63,7 +64,7 @@ class CheckPermission
         if (! $hasPermission) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'error'      => 'Access denied.',
+                    'error' => 'Access denied.',
                     'permission' => implode('|', $permissionKeys),
                 ], 403);
             }

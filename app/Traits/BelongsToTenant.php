@@ -25,9 +25,9 @@
 
 namespace App\Traits;
 
+use App\Models\Platform\Tenant;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Platform\Tenant;
 
 trait BelongsToTenant
 {
@@ -45,7 +45,7 @@ trait BelongsToTenant
             // to scope mat lagao — warna sab records chup jayenge
             if ($tenantId) {
                 $query->where(
-                    (new static)->getTable() . '.tenant_id',
+                    (new static)->getTable().'.tenant_id',
                     $tenantId
                 );
             }

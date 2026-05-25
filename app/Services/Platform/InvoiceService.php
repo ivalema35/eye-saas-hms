@@ -30,12 +30,12 @@ class InvoiceService
         $invoiceNumber = $this->invoiceNumber($payment);
 
         $pdf = Pdf::loadView('pdfs.invoice', [
-            'payment'       => $payment,
-            'tenant'        => $payment->tenant,
+            'payment' => $payment,
+            'tenant' => $payment->tenant,
             'invoiceNumber' => $invoiceNumber,
         ])->setPaper('a4', 'portrait');
 
-        $path = 'invoices/' . $invoiceNumber . '.pdf';
+        $path = 'invoices/'.$invoiceNumber.'.pdf';
 
         Storage::disk('local')->put($path, $pdf->output());
 

@@ -37,7 +37,7 @@ class UnifiedLoginController extends Controller
     {
         $request->ensureIsNotRateLimited();
 
-        $email    = $request->input('email');
+        $email = $request->input('email');
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 

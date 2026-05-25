@@ -59,7 +59,7 @@
         </tr>
         <tr>
             <td><span class="info-label">Receptionist</span><br><span class="info-value">{{ $patient->reception?->name ?? '—' }}</span></td>
-            <td><span class="info-label">Type</span><br><span class="info-value">{{ ucfirst($patient->type) }}</span></td>
+            <td><span class="info-label">Type</span><br><span class="info-value">@if(str_contains(strtolower($patient->type ?? ''), 'phone')) Phone Call @else {{ ucfirst($patient->type) }} @endif</span></td>
             <td></td>
         </tr>
     </table>

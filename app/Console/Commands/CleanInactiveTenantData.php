@@ -41,19 +41,20 @@ class CleanInactiveTenantData extends Command
 
     public function handle(): int
     {
-        $days    = (int) $this->option('days');
+        $days = (int) $this->option('days');
         $isForce = $this->option('force');
-        $cutoff  = now()->subDays($days);
+        $cutoff = now()->subDays($days);
 
         $this->warn("Looking for tenants inactive for more than {$days} days (before {$cutoff->toDateString()}).");
 
         // Find eligible tenants
         $tenants = Tenant::where('status', 'inactive')
-                         ->where('updated_at', '<=', $cutoff)
-                         ->get();
+            ->where('updated_at', '<=', $cutoff)
+            ->get();
 
         if ($tenants->isEmpty()) {
             $this->info('No eligible tenants found. Exiting.');
+
             return self::SUCCESS;
         }
 
@@ -65,11 +66,13 @@ class CleanInactiveTenantData extends Command
         if (! $isForce) {
             $this->warn('');
             $this->warn('*** Run with --force to actually delete. This is a DRY RUN. ***');
+
             return self::SUCCESS;
         }
 
         if (! $this->confirm("Are you SURE you want to permanently delete data for {$tenants->count()} tenants?")) {
             $this->info('Aborted.');
+
             return self::SUCCESS;
         }
 
@@ -93,6 +96,7 @@ class CleanInactiveTenantData extends Command
         }
 
         $this->info('[hms:clean-inactive-tenants] Cleanup complete.');
+
         return self::SUCCESS;
     }
 }

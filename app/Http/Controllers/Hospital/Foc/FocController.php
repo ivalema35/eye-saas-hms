@@ -26,7 +26,11 @@ class FocController extends Controller
     {
         $slug = request()->route('slug');
         $tenantId = app('tenant')->id;
-        $focs = Foc::with(['patient', 'doctor', 'acceptedByUser'])
+        $focs = Foc::with([
+            'patient' => fn ($q) => $q->withTrashed(),
+            'doctor',
+            'acceptedByUser',
+        ])
             ->where('tenant_id', $tenantId)
             ->latest()
             ->get();

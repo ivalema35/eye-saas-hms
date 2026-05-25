@@ -42,10 +42,10 @@ class NotificationController extends Controller
     public function send(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'subject'      => ['required', 'string', 'max:255'],
-            'message'      => ['required', 'string', 'max:5000'],
-            'recipient'    => ['required', 'in:all,specific'],
-            'tenant_ids'   => ['required_if:recipient,specific', 'array'],
+            'subject' => ['required', 'string', 'max:255'],
+            'message' => ['required', 'string', 'max:5000'],
+            'recipient' => ['required', 'in:all,specific'],
+            'tenant_ids' => ['required_if:recipient,specific', 'array'],
             'tenant_ids.*' => ['exists:tenants,id'],
         ]);
 
@@ -56,7 +56,7 @@ class NotificationController extends Controller
             $query->whereIn('id', $validated['tenant_ids']);
         }
 
-        $tenants   = $query->get();
+        $tenants = $query->get();
         $sentCount = 0;
 
         foreach ($tenants as $tenant) {
@@ -66,23 +66,23 @@ class NotificationController extends Controller
                 );
 
                 PlatformNotification::create([
-                    'tenant_id'       => $tenant->id,
-                    'type'            => 'broadcast',
-                    'subject'         => $validated['subject'],
+                    'tenant_id' => $tenant->id,
+                    'type' => 'broadcast',
+                    'subject' => $validated['subject'],
                     'recipient_email' => $tenant->admin_email,
-                    'status'          => 'sent',
-                    'sent_at'         => now(),
+                    'status' => 'sent',
+                    'sent_at' => now(),
                 ]);
 
                 $sentCount++;
             } catch (\Throwable $e) {
                 PlatformNotification::create([
-                    'tenant_id'       => $tenant->id,
-                    'type'            => 'broadcast',
-                    'subject'         => $validated['subject'],
+                    'tenant_id' => $tenant->id,
+                    'type' => 'broadcast',
+                    'subject' => $validated['subject'],
                     'recipient_email' => $tenant->admin_email,
-                    'status'          => 'failed',
-                    'error_message'   => $e->getMessage(),
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
                 ]);
             }
         }

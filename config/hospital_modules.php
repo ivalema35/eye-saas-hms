@@ -30,7 +30,7 @@ return [
     ['key' => 'ot_ward_entry',      'label' => 'Ward Admission & Pre-Op',    'actions' => ['view', 'create', 'edit']],
     ['key' => 'ot_dilation',        'label' => 'Dilation Tracking',          'actions' => ['view', 'create', 'edit']],
     ['key' => 'ot_surgery',         'label' => 'OT Surgery Recording',       'actions' => ['view', 'create', 'edit']],
-    ['key' => 'ot_lens',            'label' => 'Lens Details (OT Assistant)','actions' => ['view', 'create', 'edit']],
+    ['key' => 'ot_lens',            'label' => 'Lens Details (OT Assistant)', 'actions' => ['view', 'create', 'edit']],
     ['key' => 'ot_invoice',         'label' => 'OT Invoice View & Edit',     'actions' => ['view', 'edit']],
     ['key' => 'ot_discharge',       'label' => 'Discharge Patient',          'actions' => ['view', 'create']],
     ['key' => 'ot_reports',         'label' => 'OT Reports',                 'actions' => ['view', 'create']],
@@ -44,6 +44,6 @@ return [
     // ─── ADMIN ───────────────────────────────────────────────────────
     ['key' => 'manage_users',       'label' => 'Staff Management',           'actions' => ['view', 'create', 'edit', 'delete']],
     ['key' => 'manage_roles',       'label' => 'Roles & Permissions',        'actions' => ['view', 'create', 'edit', 'delete']],
-    ['key' => 'hospital_settings',  'label' => 'Hospital Profile & Settings','actions' => ['view', 'edit']],
+    ['key' => 'hospital_settings',  'label' => 'Hospital Profile & Settings', 'actions' => ['view', 'edit']],
     ['key' => 'billing_info',       'label' => 'Subscription & Billing',     'actions' => ['view']],
 ];

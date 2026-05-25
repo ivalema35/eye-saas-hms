@@ -8,6 +8,9 @@
     $masterPermissionKey = str_contains($routeGroup, '.detail.') ? 'master.eye_exam' : 'master.case_types';
     $canWrite = auth('hospital_user')->user()?->role?->is_super
         || app(\App\Services\Auth\RolePermissionService::class)->can($masterPermissionKey);
+    $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
+    $useModalLayout = in_array($type, $modalMasterTypes, true);
+    $showBackButton = in_array($type, $modalMasterTypes, true);
 @endphp
 
 @if($errors->any())
@@ -21,155 +24,219 @@
     </div>
 @endif
 
-<p class="text-muted small mb-4">Keep your hospital's master data organized and up-to-date.</p>
-
-<div class="row g-4">
-
-    {{-- ── Left: Add / Edit Form ──────────────────────────────────────── --}}
-    @if($canWrite)
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 80px;">
-            <div class="card-body p-4">
-
-                <div class="d-flex align-items-center mb-4">
-                    <div class="rounded-circle p-2 me-3 bg-primary-subtle text-primary" id="formIconBg">
-                        <i class="bi bi-plus-lg fs-5" id="formIcon"></i>
-                    </div>
-                    <h5 class="fw-bold mb-0" id="formTitle" style="color: var(--color-primary);">Add New Record</h5>
-                </div>
-
-                <form id="masterForm"
-                      action="{{ route($routeGroup.'.store', ['slug' => $slug, 'type' => $type]) }}"
-                      method="POST">
-                    @csrf
-                    <input type="hidden" name="_method" id="formMethod" value="POST">
-                    <input type="hidden" name="_edit_id" id="editId" value="{{ old('_edit_id') }}">
-
-                    @foreach($columns as $col)
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold text-uppercase"
-                                   style="letter-spacing: 0.5px;">
-                                {{ Str::headline($col) }} <span class="text-danger">*</span>
-                            </label>
-                            @if($type === 'sph_cyl' && $col === 'type')
-                                <select name="{{ $col }}"
-                                        id="input-{{ $col }}"
-                                        class="form-select form-select-lg bg-light border-0"
-                                        style="font-size: 15px;"
-                                        required>
-                                    <option value="Positive" {{ old($col, 'Positive') === 'Positive' ? 'selected' : '' }}>Positive</option>
-                                    <option value="Negative" {{ old($col) === 'Negative' ? 'selected' : '' }}>Negative</option>
-                                </select>
-                            @else
-                            <input type="text"
-                                   name="{{ $col }}"
-                                   id="input-{{ $col }}"
-                                   class="form-control form-control-lg bg-light border-0"
-                                   style="font-size: 15px;"
-                                   placeholder="Enter {{ strtolower(Str::headline($col)) }}..."
-                                   value="{{ old($col) }}"
-                                   required>
-                            @endif
-                        </div>
-                    @endforeach
-
-                    <div class="mt-4 pt-2">
-                        <button type="submit" id="submitBtn"
-                                class="btn btn-primary w-100 py-2 fw-semibold rounded-3 mb-2">
-                            <i class="bi bi-check2 me-1"></i> Save Record
-                        </button>
-                        <button type="button" id="cancelBtn"
-                                class="btn btn-light w-100 py-2 fw-medium rounded-3 d-none text-muted"
-                                onclick="resetForm()">
-                            <i class="bi bi-x me-1"></i> Cancel Edit
-                        </button>
-                    </div>
-                </form>
-
-            </div>
+<div class="{{ $useModalLayout ? 'case-master-page' : '' }}">
+    <div class="case-master-toolbar">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if($showBackButton)
+                <a href="{{ route('hospital.masters.index', ['slug' => $slug]) }}"
+                   class="btn btn-light case-master-back-btn">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+            @endif
+            <p class="text-muted small mb-0">Keep your hospital's master data organized and up-to-date.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if($canWrite && $useModalLayout)
+                <button type="button"
+                        class="btn btn-primary case-master-add-btn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#masterFormModal"
+                        onclick="resetForm()">
+                    <i class="bi bi-plus-lg me-1"></i> Add {{ Str::singular($title) }}
+                </button>
+            @endif
         </div>
     </div>
-    @endif
 
-    {{-- ── Right: Records Table ────────────────────────────────────────── --}}
-    <div class="{{ $canWrite ? 'col-lg-8' : 'col-12' }}">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th width="8%" class="text-center py-3 text-muted small fw-bold font-monospace">#</th>
-                                @foreach($columns as $col)
-                                    <th class="py-3 text-muted text-uppercase small fw-bold"
-                                        style="letter-spacing: 0.5px;">{{ Str::headline($col) }}</th>
-                                @endforeach
-                                @if($canWrite)
-                                    <th width="15%"
-                                        class="text-end pe-4 py-3 text-muted text-uppercase small fw-bold">
-                                        Actions
-                                    </th>
-                                @endif
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($records as $index => $record)
+    <div class="row g-4">
+        @if($canWrite && ! $useModalLayout)
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 80px;">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-4">
+                            <div class="rounded-circle p-2 me-3 bg-primary-subtle text-primary" id="formIconBg">
+                                <i class="bi bi-plus-lg fs-5" id="formIcon"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0" id="formTitle" style="color: var(--color-primary);">Add New Record</h5>
+                        </div>
+
+                        <form id="masterForm"
+                              action="{{ route($routeGroup.'.store', ['slug' => $slug, 'type' => $type]) }}"
+                              method="POST">
+                            @csrf
+                            <input type="hidden" name="_method" id="formMethod" value="POST">
+                            <input type="hidden" name="_edit_id" id="editId" value="{{ old('_edit_id') }}">
+
+                            @foreach($columns as $col)
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                        {{ Str::headline($col) }} <span class="text-danger">*</span>
+                                    </label>
+                                    @if($type === 'sph_cyl' && $col === 'type')
+                                        <select name="{{ $col }}"
+                                                id="input-{{ $col }}"
+                                                class="form-select form-select-lg bg-light border-0"
+                                                style="font-size: 15px;"
+                                                required>
+                                            <option value="Positive" {{ old($col, 'Positive') === 'Positive' ? 'selected' : '' }}>Positive</option>
+                                            <option value="Negative" {{ old($col) === 'Negative' ? 'selected' : '' }}>Negative</option>
+                                        </select>
+                                    @else
+                                        <input type="text"
+                                               name="{{ $col }}"
+                                               id="input-{{ $col }}"
+                                               class="form-control form-control-lg bg-light border-0"
+                                               style="font-size: 15px;"
+                                               placeholder="Enter {{ strtolower(Str::headline($col)) }}..."
+                                               value="{{ old($col) }}"
+                                               required>
+                                    @endif
+                                </div>
+                            @endforeach
+
+                            <div class="mt-4 pt-2">
+                                <button type="submit" id="submitBtn" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 mb-2">
+                                    <i class="bi bi-check2 me-1"></i> Save Record
+                                </button>
+                                <button type="button" id="cancelBtn"
+                                        class="btn btn-light w-100 py-2 fw-medium rounded-3 d-none text-muted"
+                                        onclick="resetForm()">
+                                    <i class="bi bi-x me-1"></i> Cancel Edit
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <div class="{{ $canWrite && ! $useModalLayout ? 'col-lg-8' : 'col-12' }}">
+            <div class="card border-0 shadow-sm rounded-4 {{ $useModalLayout ? 'case-master-card' : '' }}">
+                <div class="card-body p-0">
+                    <div class="table-responsive {{ $useModalLayout ? 'case-master-table-wrap' : '' }}">
+                        <table class="table table-hover align-middle mb-0 {{ $useModalLayout ? 'case-master-table' : '' }}">
+                            <thead class="bg-light">
                                 <tr>
-                                    <td class="text-center text-muted small font-monospace">{{ $index + 1 }}</td>
+                                    <th width="8%" class="text-center py-3 text-muted small fw-bold font-monospace">#</th>
                                     @foreach($columns as $col)
-                                        <td class="fw-medium text-dark py-3">{{ $record->$col }}</td>
+                                        <th class="py-3 text-muted text-uppercase small fw-bold" style="letter-spacing: 0.5px;">
+                                            {{ Str::headline($col) }}
+                                        </th>
                                     @endforeach
                                     @if($canWrite)
-                                        <td class="text-end pe-4">
-                                            <div class="btn-group shadow-sm rounded-3" role="group">
-                                                <button type="button"
-                                                        class="btn btn-light border-0 text-primary"
-                                                        data-record="{{ json_encode($record) }}"
-                                                        onclick="editRecord(JSON.parse(this.dataset.record))"
-                                                        title="Edit">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <form action="{{ route($routeGroup.'.destroy', ['slug' => $slug, 'type' => $type, 'id' => $record->id]) }}"
-                                                      method="POST"
-                                                      class="d-inline"
-                                                      onsubmit="return confirm('Delete this record? This cannot be undone.');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit"
-                                                            class="btn btn-light border-0 text-danger"
-                                                            title="Delete">
-                                                        <i class="bi bi-trash3-fill"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
+                                        <th width="15%" class="text-end pe-4 py-3 text-muted text-uppercase small fw-bold">Actions</th>
                                     @endif
                                 </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ count($columns) + ($canWrite ? 2 : 1) }}"
-                                        class="text-center py-5">
-                                        <div class="text-muted opacity-50 mb-3">
-                                            <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
-                                        </div>
-                                        <h6 class="fw-bold text-dark">No {{ $title }} Found</h6>
-                                        <p class="text-muted small mb-0">
-                                            @if($canWrite)
-                                                Use the form on the left to add your first record.
-                                            @else
-                                                No records have been added yet.
-                                            @endif
-                                        </p>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                @forelse($records as $index => $record)
+                                    <tr>
+                                        <td class="text-center text-muted small font-monospace">{{ $index + 1 }}</td>
+                                        @foreach($columns as $col)
+                                            <td class="fw-medium text-dark py-3">{{ $record->$col }}</td>
+                                        @endforeach
+                                        @if($canWrite)
+                                            <td class="text-end pe-4">
+                                                <div class="btn-group shadow-sm rounded-3" role="group">
+                                                    <button type="button"
+                                                            class="btn btn-light border-0 text-primary {{ $useModalLayout ? 'case-master-icon-btn' : '' }}"
+                                                            onclick="editRecord(@js($record))"
+                                                            title="Edit">
+                                                        <i class="bi bi-pencil-square"></i>
+                                                    </button>
+                                                    <form action="{{ route($routeGroup.'.destroy', ['slug' => $slug, 'type' => $type, 'id' => $record->id]) }}"
+                                                          method="POST"
+                                                          class="d-inline"
+                                                          onsubmit="return confirm('Delete this record? This cannot be undone.');">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit"
+                                                                class="btn btn-light border-0 text-danger {{ $useModalLayout ? 'case-master-icon-btn' : '' }}"
+                                                                title="Delete">
+                                                            <i class="bi bi-trash3-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        @endif
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="{{ count($columns) + ($canWrite ? 2 : 1) }}" class="text-center py-5">
+                                            <div class="text-muted opacity-50 mb-3">
+                                                <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
+                                            </div>
+                                            <h6 class="fw-bold text-dark">No {{ $title }} Found</h6>
+                                            <p class="text-muted small mb-0">
+                                                @if($canWrite)
+                                                    {{ $useModalLayout ? 'Use the Add button to create your first record.' : 'Use the form on the left to add your first record.' }}
+                                                @else
+                                                    No records have been added yet.
+                                                @endif
+                                            </p>
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    @if($canWrite && $useModalLayout)
+        <div class="modal fade case-master-modal" id="masterFormModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0">
+                    <div class="modal-header border-0 pb-0">
+                        <div class="d-flex align-items-center">
+                            <span class="case-master-modal-icon" id="formIconBg">
+                                <i class="bi bi-plus-lg" id="formIcon"></i>
+                            </span>
+                            <h5 class="modal-title fw-bold mb-0" id="formTitle">Add New Record</h5>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form id="masterForm"
+                          action="{{ route($routeGroup.'.store', ['slug' => $slug, 'type' => $type]) }}"
+                          method="POST">
+                        @csrf
+                        <input type="hidden" name="_method" id="formMethod" value="POST">
+                        <input type="hidden" name="_edit_id" id="editId" value="{{ old('_edit_id') }}">
+
+                        <div class="modal-body">
+                            @foreach($columns as $col)
+                                <div class="mb-3">
+                                    <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                        {{ Str::headline($col) }} <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text"
+                                           name="{{ $col }}"
+                                           id="input-{{ $col }}"
+                                           class="form-control form-control-lg case-master-input"
+                                           style="font-size: 15px;"
+                                           placeholder="Enter {{ strtolower(Str::headline($col)) }}..."
+                                           value="{{ old($col) }}"
+                                           required>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="modal-footer border-0 gap-2">
+                            <button type="button" id="cancelBtn" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">
+                                <i class="bi bi-x me-1"></i> Cancel
+                            </button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary fw-semibold rounded-3">
+                                <i class="bi bi-check2 me-1"></i> Save Record
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>
 @endsection
 
@@ -190,13 +257,13 @@
         submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Save Record';
         submitBtn.classList.replace('btn-success', 'btn-primary');
 
-        document.getElementById('cancelBtn').classList.add('d-none');
+        document.getElementById('cancelBtn')?.classList.add('d-none');
         document.getElementById('formTitle').innerText = 'Add New Record';
 
         const iconBg = document.getElementById('formIconBg');
-        iconBg.classList.replace('bg-success-subtle', 'bg-primary-subtle');
-        iconBg.classList.replace('text-success', 'text-primary');
-        document.getElementById('formIcon').className = 'bi bi-plus-lg fs-5';
+        iconBg?.classList.replace('bg-success-subtle', 'bg-primary-subtle');
+        iconBg?.classList.replace('text-success', 'text-primary');
+        document.getElementById('formIcon').className = 'bi bi-plus-lg{{ $useModalLayout ? '' : ' fs-5' }}';
     }
     window.resetForm = resetForm;
 
@@ -209,20 +276,24 @@
         submitBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Update Record';
         submitBtn.classList.replace('btn-primary', 'btn-success');
 
-        document.getElementById('cancelBtn').classList.remove('d-none');
+        document.getElementById('cancelBtn')?.classList.remove('d-none');
         document.getElementById('formTitle').innerText = 'Edit Record';
 
         const iconBg = document.getElementById('formIconBg');
-        iconBg.classList.replace('bg-primary-subtle', 'bg-success-subtle');
-        iconBg.classList.replace('text-primary', 'text-success');
-        document.getElementById('formIcon').className = 'bi bi-pencil-square fs-5';
+        iconBg?.classList.replace('bg-primary-subtle', 'bg-success-subtle');
+        iconBg?.classList.replace('text-primary', 'text-success');
+        document.getElementById('formIcon').className = 'bi bi-pencil-square{{ $useModalLayout ? '' : ' fs-5' }}';
 
         for (const [key, value] of Object.entries(record)) {
             const field = document.getElementById('input-' + key);
             if (field) { field.value = value ?? ''; }
         }
 
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        @if($useModalLayout)
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
+        @else
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        @endif
     }
     window.editRecord = editRecord;
 
@@ -236,15 +307,171 @@
         submitBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Update Record';
         submitBtn.classList.replace('btn-primary', 'btn-success');
 
-        document.getElementById('cancelBtn').classList.remove('d-none');
+        document.getElementById('cancelBtn')?.classList.remove('d-none');
         document.getElementById('formTitle').innerText = 'Edit Record';
 
         const iconBg = document.getElementById('formIconBg');
-        iconBg.classList.replace('bg-primary-subtle', 'bg-success-subtle');
-        iconBg.classList.replace('text-primary', 'text-success');
-        document.getElementById('formIcon').className = 'bi bi-pencil-square fs-5';
+        iconBg?.classList.replace('bg-primary-subtle', 'bg-success-subtle');
+        iconBg?.classList.replace('text-primary', 'text-success');
+        document.getElementById('formIcon').className = 'bi bi-pencil-square{{ $useModalLayout ? '' : ' fs-5' }}';
+
+        @if($useModalLayout)
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
+        @endif
     });
     @endif
 </script>
+@endpush
+@endif
+
+@if($useModalLayout)
+@push('styles')
+<style>
+    .case-master-page {
+        --case-primary: #1B4F72;
+        --case-soft: #ebf5fbeb;
+        --case-border: rgba(27, 79, 114, .12);
+        --case-border-strong: rgba(27, 79, 114, .22);
+        color: var(--case-primary);
+    }
+
+    .case-master-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .case-master-add-btn {
+        background: var(--case-primary) !important;
+        border-color: var(--case-primary) !important;
+        border-radius: 12px;
+        font-weight: 900;
+        box-shadow: 0 12px 26px rgba(27, 79, 114, .16);
+    }
+
+    .case-master-back-btn {
+        border: 1px solid var(--case-border-strong) !important;
+        border-radius: 12px;
+        color: var(--case-primary) !important;
+        font-weight: 800;
+        background: rgba(255, 255, 255, .92) !important;
+        box-shadow: 0 10px 24px rgba(27, 79, 114, .08);
+    }
+
+    .case-master-back-btn:hover {
+        background: var(--case-soft) !important;
+        border-color: var(--case-primary) !important;
+        color: var(--case-primary) !important;
+    }
+
+    .case-master-card {
+        border: 1px solid var(--case-border) !important;
+        border-radius: 22px !important;
+        box-shadow: 0 18px 48px rgba(27, 79, 114, .10) !important;
+        overflow: hidden;
+    }
+
+    .case-master-table-wrap {
+        padding: .9rem;
+        background: var(--case-soft);
+    }
+
+    .case-master-table {
+        border-collapse: separate;
+        border-spacing: 0 8px;
+        min-width: 720px;
+    }
+
+    .case-master-table thead th {
+        background: var(--case-primary) !important;
+        color: #fff !important;
+        border: 0 !important;
+        padding: .9rem 1rem !important;
+        font-size: .72rem;
+        letter-spacing: .08em;
+    }
+
+    .case-master-table thead th:first-child {
+        border-top-left-radius: 14px;
+        border-bottom-left-radius: 14px;
+    }
+
+    .case-master-table thead th:last-child {
+        border-top-right-radius: 14px;
+        border-bottom-right-radius: 14px;
+    }
+
+    .case-master-table tbody td {
+        background: rgba(255, 255, 255, .94);
+        border-top: 1px solid rgba(27, 79, 114, .08);
+        border-bottom: 1px solid rgba(27, 79, 114, .08);
+        color: var(--case-primary);
+        padding: .9rem 1rem;
+        vertical-align: middle;
+        font-weight: 650;
+    }
+
+    .case-master-table tbody td:first-child {
+        border-left: 1px solid rgba(27, 79, 114, .08);
+        border-top-left-radius: 14px;
+        border-bottom-left-radius: 14px;
+    }
+
+    .case-master-table tbody td:last-child {
+        border-right: 1px solid rgba(27, 79, 114, .08);
+        border-top-right-radius: 14px;
+        border-bottom-right-radius: 14px;
+    }
+
+    .case-master-icon-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50% !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .case-master-modal .modal-content {
+        border: 1px solid var(--case-border) !important;
+        border-radius: 22px;
+        box-shadow: 0 20px 50px rgba(27, 79, 114, .15);
+        overflow: hidden;
+    }
+
+    .case-master-modal .modal-header {
+        background: linear-gradient(135deg, rgba(235, 245, 251, .96), rgba(255, 255, 255, .94));
+        border-bottom: 1px solid var(--case-border) !important;
+        padding: 1.25rem 1.5rem !important;
+    }
+
+    .case-master-modal-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: var(--case-primary);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: .8rem;
+    }
+
+    .case-master-input {
+        border: 1.5px solid var(--case-border) !important;
+        border-radius: 12px;
+        background: rgba(235, 245, 251, .42);
+        color: var(--case-primary);
+        font-weight: 650;
+    }
+
+    .case-master-input:focus {
+        border-color: var(--case-primary) !important;
+        box-shadow: 0 0 0 4px rgba(27, 79, 114, .12);
+    }
+</style>
 @endpush
 @endif

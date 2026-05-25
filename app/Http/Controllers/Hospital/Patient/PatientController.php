@@ -8,12 +8,14 @@ use App\Http\Requests\Hospital\Patient\PatientUpdateRequest;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
+use App\Models\Hospital\Referrer;
 use App\Services\Hospital\PatientService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -73,15 +75,11 @@ class PatientController extends Controller
             return response()->json(['found' => false]);
         }
 
-        $patient = Patient::where('contact_no', $contact)->latest()->first();
-
-        if (! $patient) {
-            return response()->json(['found' => false]);
-        }
+        $patients = Patient::where('contact_no', $contact)->latest()->get();
 
         return response()->json([
-            'found' => true,
-            'patient' => [
+            'found' => $patients->isNotEmpty(),
+            'patients' => $patients->map(fn ($patient) => [
                 'first_name' => $patient->first_name,
                 'middle_name' => $patient->middle_name,
                 'last_name' => $patient->last_name,
@@ -90,7 +88,7 @@ class PatientController extends Controller
                 'whatsapp_no' => $patient->whatsapp_no,
                 'occupation' => $patient->occupation,
                 'location_id' => $patient->location_id,
-            ],
+            ])->toArray(),
         ]);
     }
 
@@ -110,14 +108,15 @@ class PatientController extends Controller
                     });
             })->get();
         $locations = Location::orderBy('city')->get();
+        $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots = DB::table('tbl_slots')->where('tenant_id', app('tenant')->id)->get();
+        $slots = $this->loadPatientSlots($tenantId);
 
-        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots'));
+        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
     }
 
     public function store(PatientStoreRequest $request): RedirectResponse
@@ -130,7 +129,7 @@ class PatientController extends Controller
 
         $patient = $this->patientService->registerWalkIn($data, $tenant->id);
 
-        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1])
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
             ->with('success', 'Patient registered successfully.');
     }
 
@@ -149,14 +148,16 @@ class PatientController extends Controller
                         });
                     });
             })->get();
+            $locations = Location::orderBy('city')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots = DB::table('tbl_slots')->where('tenant_id', app('tenant')->id)->get();
+        $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
+        $slots = $this->loadPatientSlots($tenantId);
 
-        return view('hospital.patients.create-phone', compact('slug', 'doctors', 'cases', 'slots'));
+            return view('hospital.patients.create-phone', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
     }
 
     public function storePhone(PatientStoreRequest $request): RedirectResponse
@@ -167,10 +168,10 @@ class PatientController extends Controller
 
         $data['reception_id'] = Auth::guard('hospital_user')->id();
 
-        $this->patientService->registerPhone($data, $tenant->id);
+        $patient = $this->patientService->registerPhone($data, $tenant->id);
 
-        return redirect()->route('hospital.patients.index', ['slug' => $slug])
-            ->with('success', 'Phone appointment registered successfully.');
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
+            ->with('success', 'Phone appointment registered and ready for printing.');
     }
 
     public function show(string $slug, Patient $patient): View
@@ -195,14 +196,15 @@ class PatientController extends Controller
                     });
             })->get();
         $locations = Location::orderBy('city')->get();
+        $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots = DB::table('tbl_slots')->where('tenant_id', app('tenant')->id)->get();
+        $slots = $this->loadPatientSlots($tenantId);
 
-        return view('hospital.patients.edit', compact('patient', 'slug', 'doctors', 'locations', 'cases', 'slots'));
+        return view('hospital.patients.edit', compact('patient', 'slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
     }
 
     public function update(PatientUpdateRequest $request, string $slug, Patient $patient): RedirectResponse
@@ -238,5 +240,53 @@ class PatientController extends Controller
             ->setPaper('a5', 'portrait');
 
         return $pdf->download("OPD-Bill-{$patient->patient_code}.pdf");
+    }
+
+    private function loadPatientSlots(int $tenantId): Collection
+    {
+        $otSlots = DB::table('tbl_ot_slots')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->orderBy('start_time')
+            ->orderBy('slot_name')
+            ->get(['slot_name', 'start_time', 'end_time']);
+
+        $timestamp = now();
+
+        foreach ($otSlots as $otSlot) {
+            $existingSlot = DB::table('tbl_slots')
+                ->where('tenant_id', $tenantId)
+                ->where('slot_name', $otSlot->slot_name)
+                ->first(['id']);
+
+            if ($existingSlot) {
+                DB::table('tbl_slots')
+                    ->where('id', $existingSlot->id)
+                    ->update([
+                        'start_time' => $otSlot->start_time,
+                        'end_time' => $otSlot->end_time,
+                        'deleted_at' => null,
+                        'updated_at' => $timestamp,
+                    ]);
+
+                continue;
+            }
+
+            DB::table('tbl_slots')->insert([
+                'tenant_id' => $tenantId,
+                'slot_name' => $otSlot->slot_name,
+                'start_time' => $otSlot->start_time,
+                'end_time' => $otSlot->end_time,
+                'created_at' => $timestamp,
+                'updated_at' => $timestamp,
+            ]);
+        }
+
+        return DB::table('tbl_slots')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->orderBy('start_time')
+            ->orderBy('slot_name')
+            ->get();
     }
 }

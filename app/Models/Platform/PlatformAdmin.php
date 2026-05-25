@@ -14,8 +14,8 @@
 
 namespace App\Models\Platform;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class PlatformAdmin extends Authenticatable
@@ -40,6 +40,6 @@ class PlatformAdmin extends Authenticatable
 
     protected $casts = [
         'last_login_at' => 'datetime',
-        'password'      => 'hashed',
+        'password' => 'hashed',
     ];
 }

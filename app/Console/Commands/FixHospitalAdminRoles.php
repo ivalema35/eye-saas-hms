@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Hospital\HospitalUser;
 use App\Models\Role\Role;
+use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 
@@ -62,14 +63,14 @@ class FixHospitalAdminRoles extends Command
                     Config::set('app.tenant_id', $tenantId);
 
                     try {
-                        \Database\Seeders\SystemRolesSeeder::seedForTenant($tenantId);
+                        SystemRolesSeeder::seedForTenant($tenantId);
 
                         $adminRole = Role::withoutTenantScope()
                             ->where('tenant_id', $tenantId)
                             ->where('slug', 'hospital_admin')
                             ->first();
                     } catch (\Exception $e) {
-                        $this->error("  ERROR seeding tenant #{$tenantId}: " . $e->getMessage());
+                        $this->error("  ERROR seeding tenant #{$tenantId}: ".$e->getMessage());
                         $errors++;
 
                         continue;

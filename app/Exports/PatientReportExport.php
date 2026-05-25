@@ -2,17 +2,17 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Illuminate\Support\Collection;
 
 class PatientReportExport implements FromCollection, WithHeadings, WithMapping
 {
     public function __construct(private Collection $patients) {}
 
     /**
-     * @return \Illuminate\Support\Collection<int, mixed>
+     * @return Collection<int, mixed>
      */
     public function collection(): Collection
     {

@@ -4,20 +4,39 @@
 @section('meta_description', 'Transparent pricing for Eye HMS SaaS — cloud-based eye hospital management software. Monthly, quarterly, and yearly plans with 14-day free trial. No credit card required.')
 @section('og_title', 'Eye HMS SaaS Pricing — Start Free for 14 Days')
 
-@section('content')
+@section('content')  
 
 {{-- Hero --}}
-<section class="pub-hero" style="min-height:40vh;padding-bottom:3rem;">
+<section class="pub-hero pricing-page-hero" style="min-height:80vh;padding-bottom:3rem;">
     <div class="pub-hero-inner" style="grid-template-columns:1fr;text-align:center;padding-top:3.5rem;">
+        <!-- Floating Bubbles Background -->
+        <div class="pricing-bubbles" aria-hidden="true">
+            <div class="bubble bubble-1"></div>
+            <div class="bubble bubble-2"></div>
+            <div class="bubble bubble-3"></div>
+            <div class="bubble bubble-4"></div>
+            <div class="bubble bubble-5"></div>
+            <div class="bubble bubble-6"></div>
+            <div class="bubble bubble-7"></div>
+            <div class="bubble bubble-8"></div>
+        </div>
+        
         <div class="pub-hero-content" style="justify-self:center;">
-            <div class="pub-hero-badge">
-                <span class="badge-pulse"></span> Simple &amp; Transparent Pricing
+            <div class="hero-chip">
+                <span class="chip-dot"></span>
+                Simple & Transparent Pricing
             </div>
-            <h1>No Hidden Fees.<br><span class="h1-grad">Just Results.</span></h1>
-            <p class="pub-hero-desc" style="margin:0 auto 2rem;">Start with a 14-day free trial &mdash; all features included. No credit card required. Cancel anytime.</p>
+            <h1 class="pricing-main-title">
+                No Hidden Fees.
+                <span class="title-accent">Just Results.</span>
+            </h1>
+            <p class="pricing-description">
+                Start with a 14-day free trial — all features included. No credit card required. Cancel anytime.
+            </p>
             <div class="hero-cta-row" style="justify-content:center;">
-                <a href="{{ route('register.show') }}" class="btn-hero-primary">
-                    <i class="fa-solid fa-rocket"></i> Start Free Trial
+                <a href="{{ route('register.show') }}" class="pricing-cta-btn-primary">
+                    <i class="fa-solid fa-calendar-week"></i>
+                    <span>Start Free Trial</span>
                 </a>
             </div>
         </div>
@@ -27,9 +46,10 @@
 {{-- Plan Cards --}}
 <section class="pub-section">
     <div class="pub-section-inner">
+        <div class="pricing-section-wrap pub-animate-group">
         <div class="pricing-grid">
             {{-- Monthly --}}
-            <div class="pricing-card">
+            <div class="pricing-card pub-animate">
                 <h3>Monthly</h3>
                 <p class="pricing-desc">Pay as you go, no commitment</p>
                 <div class="pricing-price">Rs.{{ number_format($pricing['monthly']['price']) }}<span>/month</span></div>
@@ -46,7 +66,7 @@
             </div>
 
             {{-- Quarterly --}}
-            <div class="pricing-card popular">
+            <div class="pricing-card popular pub-animate">
                 <div class="popular-ribbon">Most Popular</div>
                 <h3>Quarterly</h3>
                 <p class="pricing-desc">Save 10% — best value for growing clinics</p>
@@ -65,7 +85,7 @@
             </div>
 
             {{-- Yearly --}}
-            <div class="pricing-card">
+            <div class="pricing-card pub-animate">
                 <h3>Yearly</h3>
                 <p class="pricing-desc">Maximum savings — 20% off</p>
                 <div class="pricing-price">Rs.{{ number_format($pricing['yearly']['price']) }}<span>/year</span></div>
@@ -82,18 +102,19 @@
                 <a href="{{ route('register.show', ['plan' => 'yearly']) }}" class="hms-btn hms-btn-secondary hms-btn-block">Choose Yearly</a>
             </div>
         </div>
+        </div>
     </div>
 </section>
 
 {{-- Feature Comparison --}}
 <section class="pub-section pub-section-grey">
     <div class="pub-section-inner">
-        <div class="pub-section-header">
+        <div class="pub-section-header pub-animate">
             <span class="section-eyebrow"><i class="fa-solid fa-table"></i> Compare</span>
             <h2>Feature Comparison</h2>
             <p>All plans include every module. Differences are in users, support, and billing cycle.</p>
         </div>
-        <div class="hms-table-wrap">
+        <div class="hms-table-wrap pub-animate">
             <table class="comparison-table">
                 <thead>
                     <tr>
@@ -146,6 +167,7 @@
 {{-- CTA Banner --}}
 <section class="pub-cta-banner">
     <div class="pub-cta-banner-inner">
+        <div class="cta-deco-cross" aria-hidden="true"><i class="fa-solid fa-plus"></i></div>
         <h2>Ready to Transform Your Practice?</h2>
         <p>Start your 14-day free trial today. All modules included — no credit card required.</p>
         <div class="cta-btns">
@@ -160,3 +182,26 @@
 </section>
 
 @endsection
+
+@push('scripts')
+<script>
+    (function () {
+        var observer = new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    if (entry.target.classList.contains('pub-section-header')) {
+                        var eyebrow = entry.target.querySelector('.section-eyebrow');
+                        if (eyebrow) eyebrow.classList.add('is-visible');
+                    }
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.12 });
+
+        document.querySelectorAll('.pub-animate, .pub-section-header, .pub-trust-strip, .pricing-section-wrap').forEach(function (el) {
+            observer.observe(el);
+        });
+    }());
+</script>
+@endpush

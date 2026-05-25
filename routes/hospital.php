@@ -22,6 +22,7 @@
 use App\Http\Controllers\Hospital\Auth\LoginController;
 use App\Http\Controllers\Hospital\Auth\PasswordResetController;
 use App\Http\Controllers\Hospital\Dashboard\DashboardController;
+use App\Http\Controllers\Hospital\Examination\ClinicalQueueController;
 use App\Http\Controllers\Hospital\Examination\PrimaryExamController;
 use App\Http\Controllers\Hospital\Examination\SecondaryExamController;
 use App\Http\Controllers\Hospital\Foc\FocController;
@@ -108,6 +109,13 @@ Route::prefix('{slug}')
                 });
 
                 Route::get('patient-history', [PatientHistoryController::class, 'index'])->name('patients.history')->middleware('permission:opd.exam.history');
+
+                // ============================================================
+                // Clinical Queue Dashboard
+                // ============================================================
+                Route::get('clinical-queue', [ClinicalQueueController::class, 'index'])
+                    ->name('clinical.queue')
+                    ->middleware('permission:opd.exam.primary|opd.exam.secondary');
 
                 // ============================================================
                 // Eye Examination — Phase 5 Clinical Module
@@ -217,6 +225,10 @@ Route::prefix('{slug}')
                         ->group(function () {
                             Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
                             Route::post('{type}', [BasicMasterController::class, 'store'])->middleware('permission:master.case_types')->name('store');
+                            // AJAX create for masters from forms (e.g. add city inline)
+                            Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
+                                ->withoutMiddleware('permission:master.case_types')
+                                ->name('ajax.store');
                             Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->middleware('permission:master.case_types')->name('update')->whereNumber('id');
                             Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->middleware('permission:master.case_types')->name('destroy')->whereNumber('id');
                         });

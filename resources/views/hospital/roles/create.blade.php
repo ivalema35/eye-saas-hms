@@ -6,42 +6,155 @@
 @section('content')
 
 <style>
-.permission-card { border: 0; border-radius: 15px; overflow: hidden; box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08); background: #fff; }
-.permission-table { width: 100%; border-collapse: collapse; }
-.perm-row { border-bottom: 1px solid #edf2f7; transition: background 0.2s; }
-.perm-row:hover { background: #f8fafc; }
-.perm-row:last-child { border-bottom: none; }
+.role-form-page {
+    --roles-primary: #123C5A;
+    --roles-secondary: #5B6F7B;
+    --roles-accent: #1B4F72;
+    --roles-soft: #F6FAFC;
+    --roles-panel: #FFFFFF;
+    --roles-border: rgba(18, 60, 90, .12);
+    --roles-border-strong: rgba(18, 60, 90, .22);
+    --roles-muted: rgba(18, 60, 90, .62);
+    color: var(--roles-primary);
+    animation: role-form-in 420ms ease both;
+}
+.role-form-card,
+.permission-card {
+    border: 1px solid var(--roles-border) !important;
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow: 0 14px 36px rgba(38, 50, 56, .08) !important;
+    background: var(--roles-panel);
+}
+.role-form-card .hms-card-header,
+.permission-header {
+    background: linear-gradient(135deg, #F7FAFA, #FFFFFF);
+    border-bottom: 1px solid var(--roles-border) !important;
+    padding: 1.15rem 1.25rem;
+}
+.role-title-wrap,
+.permission-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+}
+.role-title-icon,
+.permission-title-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 15px;
+    background: #FFFFFF;
+    border: 1px solid var(--roles-border-strong);
+    color: var(--roles-accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: none;
+    font-size: 1.15rem;
+}
+.role-title,
+.permission-title {
+    color: var(--roles-primary) !important;
+    font-weight: 900;
+    letter-spacing: -.2px;
+}
+.role-subtitle,
+.permission-subtitle {
+    color: var(--roles-muted);
+    font-size: .84rem;
+    font-weight: 650;
+    margin-top: .12rem;
+}
+.role-form-card .hms-card-body {
+    background: #FCFEFF;
+    padding: 1.25rem;
+}
+.role-form-card label {
+    color: var(--roles-primary);
+    font-weight: 850;
+}
+.role-form-card .hms-input {
+    border: 1.5px solid var(--roles-border) !important;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--roles-primary);
+    font-weight: 650;
+}
+.role-form-card .hms-input:focus {
+    border-color: var(--roles-accent) !important;
+    box-shadow: 0 0 0 4px rgba(27, 79, 114, .12);
+}
+.permission-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 1.25rem;
+    margin-bottom: .85rem;
+    flex-wrap: wrap;
+}
+.permission-actions {
+    display: flex;
+    gap: .5rem;
+}
+.permission-actions .hms-btn,
+.role-submit-actions .hms-btn {
+    border-radius: 12px;
+    font-weight: 850;
+}
+.permission-table { width: 100%; border-collapse: separate; border-spacing: 0 8px; }
+.perm-row { transition: transform 170ms ease, box-shadow 170ms ease; }
+.perm-row:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(38, 50, 56, .08); }
 .module-label {
-    background: #f1f5f9;
-    color: #475569;
-    font-weight: 700;
+    background: #F1F7FA;
+    color: var(--roles-primary);
+    font-weight: 900;
     width: 200px;
     min-width: 200px;
     padding: 15px 20px;
     text-transform: uppercase;
     font-size: 12px;
     letter-spacing: 0.05em;
-    border-right: 1px solid #e2e8f0;
+    border: 0;
+    border-top-left-radius: 14px;
+    border-bottom-left-radius: 14px;
     vertical-align: top;
 }
-.perm-container { padding: 15px 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+.perm-container {
+    padding: 15px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    background: #fff;
+    border-top: 1px solid var(--roles-border);
+    border-right: 1px solid var(--roles-border);
+    border-bottom: 1px solid var(--roles-border);
+    border-top-right-radius: 14px;
+    border-bottom-right-radius: 14px;
+}
 .perm-badge {
     background: #fff;
-    border: 1px solid #d1d5db;
+    border: 1px solid var(--roles-border);
     padding: 6px 14px;
-    border-radius: 20px;
+    border-radius: 999px;
     font-size: 13px;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
     transition: all 0.2s;
-    color: #334155;
+    color: var(--roles-primary);
+    font-weight: 700;
 }
-.perm-badge:hover { border-color: #3b82f6; color: #3b82f6; }
-.perm-badge input[type="checkbox"] { margin: 0; accent-color: #2563eb; }
-.perm-badge input:checked + span { color: #1e40af; font-weight: 600; }
-.perm-badge:has(input:checked) { background: #eff6ff; border-color: #3b82f6; }
+.perm-badge:hover { border-color: var(--roles-accent); color: var(--roles-primary); transform: translateY(-1px); }
+.perm-badge input[type="checkbox"] { margin: 0; accent-color: var(--roles-accent); }
+.perm-badge input:checked + span { color: var(--roles-primary); font-weight: 900; }
+.perm-badge:has(input:checked) { background: #EAF4FA; border-color: rgba(27, 79, 114, .42); }
+.role-submit-actions { display:flex;gap:.75rem;margin-top:2rem;flex-wrap:wrap; }
+@keyframes role-form-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 @media (max-width: 768px) {
     .module-label,
     .perm-container {
@@ -59,17 +172,29 @@
 
     .module-label {
         border-right: 0;
-        border-bottom: 1px solid #e2e8f0;
+        border-radius: 14px 14px 0 0;
+    }
+
+    .perm-container {
+        border-left: 1px solid var(--roles-border);
+        border-radius: 0 0 14px 14px;
     }
 }
 </style>
 
+<div class="role-form-page">
 <form method="POST" action="{{ route('hospital.roles.store', ['slug' => $slug]) }}">
     @csrf
 
-    <div class="hms-card" style="margin-bottom:1rem">
+    <div class="hms-card role-form-card" style="margin-bottom:1rem">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="fa-solid fa-shield-halved" style="color:var(--hms-primary)"></i> Role Details</h3>
+            <div class="role-title-wrap">
+                <span class="role-title-icon"><i class="bi bi-shield-lock"></i></span>
+                <div>
+                    <h3 class="hms-card-title role-title">Role Details</h3>
+                    <div class="role-subtitle">Create a focused access profile with the right permissions.</div>
+                </div>
+            </div>
         </div>
         <div class="hms-card-body">
             <div class="hms-form-grid-3">
@@ -93,9 +218,15 @@
         </div>
     </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2rem">
-        <h5 style="color:#1A202C;font-weight:600;font-family:'Inter',sans-serif;margin:0">Assign Permissions</h5>
-        <div style="display:flex;gap:.5rem">
+    <div class="permission-toolbar">
+        <div class="permission-title-wrap">
+            <span class="permission-title-icon"><i class="bi bi-key"></i></span>
+            <div>
+                <h5 class="permission-title mb-0">Assign Permissions</h5>
+                <div class="permission-subtitle">Choose the modules and actions available to this role.</div>
+            </div>
+        </div>
+        <div class="permission-actions">
             <button type="button" class="hms-btn hms-btn-outline" id="selectAll"
                     style="font-size:.8rem;padding:.3rem .75rem">
                 <i class="fa-solid fa-check-double"></i> All
@@ -106,7 +237,6 @@
             </button>
         </div>
     </div>
-    <hr style="border-color:#E2E8F0">
 
     <div class="permission-card">
         <div class="table-responsive">
@@ -134,13 +264,14 @@
         </div>
     </div>
 
-    <div style="display:flex;gap:.75rem;margin-top:2rem">
+    <div class="role-submit-actions">
         <button type="submit" class="hms-btn hms-btn-primary">
             <i class="fa-solid fa-check"></i> Create Role
         </button>
         <a href="{{ route('hospital.roles.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">Cancel</a>
     </div>
 </form>
+</div>
 
 @endsection
 

@@ -22,11 +22,11 @@ class SuperAdminDashboardController extends Controller
         $now = Carbon::now();
 
         $totalHospitals = Tenant::count();
-        $activeCount    = Tenant::where('status', 'active')->count();
-        $trialCount     = Tenant::where('status', 'trial')->count();
-        $graceCount     = Tenant::where('status', 'grace')->count();
+        $activeCount = Tenant::where('status', 'active')->count();
+        $trialCount = Tenant::where('status', 'trial')->count();
+        $graceCount = Tenant::where('status', 'grace')->count();
         $suspendedCount = Tenant::where('status', 'suspended')->count();
-        $inactiveCount  = Tenant::where('status', 'inactive')->count();
+        $inactiveCount = Tenant::where('status', 'inactive')->count();
 
         $monthlyRevenue = Payment::where('status', 'success')
             ->whereMonth('paid_at', $now->month)
@@ -46,7 +46,7 @@ class SuperAdminDashboardController extends Controller
 
         for ($i = 5; $i >= 0; $i--) {
             $month = $now->copy()->subMonths($i);
-            $revenueMonths[]  = $month->format('M Y');
+            $revenueMonths[] = $month->format('M Y');
             $revenueAmounts[] = (int) Payment::where('status', 'success')
                 ->whereMonth('paid_at', $month->month)
                 ->whereYear('paid_at', $month->year)

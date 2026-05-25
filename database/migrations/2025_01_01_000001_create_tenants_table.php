@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('logo_path')->nullable();      // Hospital logo path
             // Subscription status
             $table->enum('status', ['trial', 'active', 'grace', 'inactive', 'suspended'])
-                  ->default('trial');
+                ->default('trial');
             $table->timestamp('trial_ends_at')->nullable();        // 14-day trial end
             $table->timestamp('setup_completed_at')->nullable();   // Setup wizard complete
             $table->boolean('is_setup_done')->default(false);      // Wizard skip flag

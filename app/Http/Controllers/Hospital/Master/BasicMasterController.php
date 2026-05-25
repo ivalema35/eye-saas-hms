@@ -9,6 +9,7 @@ use App\Models\Hospital\Location;
 use App\Models\Hospital\MasterAdvice;
 use App\Models\Hospital\MasterMedicineInstruction;
 use App\Models\Hospital\Referrer;
+use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
 
 class BasicMasterController extends Controller
 {
+    public function __construct(private readonly RolePermissionService $perm) {}
+
     /**
      * Maps URL {type} slugs to their Eloquent model classes.
      *
@@ -69,6 +72,48 @@ class BasicMasterController extends Controller
         $modelClass::create($validated);
 
         return redirect()->back()->with('success', Str::headline($type).' added successfully.');
+    }
+
+    /**
+     * AJAX create endpoint. Returns JSON with created record.
+     */
+    public function ajaxStore(Request $request, string $slug, string $type)
+    {
+        $user = auth('hospital_user')->user();
+        $roleSlug = $user?->role?->slug;
+
+        $allowedByRole = in_array($roleSlug, ['hospital_admin', 'reception', 'receptionist', 'receptionist_opd'], true);
+        $allowedByPermission = $this->perm->canAny(['opd.patient.register', 'opd.patient.register_phone', 'master.locations']);
+
+        if (! $allowedByRole && ! $allowedByPermission) {
+            return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
+        }
+
+        $modelClass = $this->resolveModel($type);
+        $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
+
+        // Use relaxed validation: fields required but allow numeric where applicable
+        $rules = [];
+        foreach ($columns as $col) {
+            $rules[$col] = ['required'];
+            // if column name contains 'fee' or 'percentage' allow numeric
+            if (str_contains($col, 'fee') || str_contains($col, 'percentage')) {
+                $rules[$col][] = 'numeric';
+            } else {
+                $rules[$col][] = 'string';
+                $rules[$col][] = 'max:255';
+            }
+        }
+
+        $validated = $request->validate($rules);
+
+        $record = $modelClass::create($validated);
+
+        return response()->json([
+            'success' => true,
+            'id' => $record->id,
+            'data' => $validated,
+        ]);
     }
 
     public function update(Request $request, string $slug, string $type, int $id): RedirectResponse

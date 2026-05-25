@@ -23,7 +23,7 @@ class RedirectIfInactive
 
         if ($tenant && $tenant->status === 'suspended') {
             return redirect()->back()
-                             ->with('error', 'This hospital account has been suspended. Please contact support.');
+                ->with('error', 'This hospital account has been suspended. Please contact support.');
         }
 
         return $next($request);

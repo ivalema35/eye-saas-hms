@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Hospital\Setting;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
 use App\Services\Auth\RolePermissionService;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
@@ -25,7 +25,7 @@ class HospitalSettingController extends Controller
     {
         $this->authorizePermission('settings.hospital');
 
-        $slug     = request()->route('slug');
+        $slug = request()->route('slug');
         $settings = HospitalSetting::all()->pluck('value', 'key');
 
         return view('hospital.settings.index', compact('settings', 'slug'));
@@ -76,7 +76,7 @@ class HospitalSettingController extends Controller
         });
 
         return redirect()->route('hospital.settings.index', ['slug' => $slug])
-                         ->with('success', 'Settings updated successfully.');
+            ->with('success', 'Settings updated successfully.');
     }
 
     private function authorizePermission(string $permissionKey): void

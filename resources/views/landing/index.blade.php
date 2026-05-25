@@ -11,125 +11,8 @@
 {{-- ============================================================
      Hero Section
 ============================================================ --}}
-<section class="pub-hero" aria-label="Hero">
-    <div class="pub-hero-inner">
-
-        {{-- Left: Content --}}
-        <div class="pub-hero-content">
-            <div class="pub-hero-badge">
-                <span class="badge-pulse"></span>
-                &#x1F1EE;&#x1F1F3; Trusted by Indian Eye Hospitals
-            </div>
-            <h1>Run Your Eye Hospital<br><span class="h1-grad">Smarter &amp; Faster</span></h1>
-            <p class="pub-hero-desc">
-                Complete cloud-based Hospital Management System built specifically for ophthalmology clinics.
-                Patient records, OPD scheduling, surgery, billing &amp; analytics — all in one platform.
-            </p>
-            <div class="hero-cta-row">
-                <a href="{{ route('register.show') }}" class="btn-hero-primary">
-                    <i class="fa-solid fa-rocket"></i> Start 14-Day Free Trial
-                </a>
-                <a href="#features" class="btn-hero-outline">
-                    <i class="fa-solid fa-play-circle"></i> See Features
-                </a>
-            </div>
-            <div class="hero-trust-row">
-                <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> No credit card</span>
-                <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> Free 14-day trial</span>
-                <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> &#x20B9;0 setup cost</span>
-                <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> Cancel anytime</span>
-            </div>
-        </div>
-
-        {{-- Right: Dashboard Mockup --}}
-        <div class="pub-hero-mockup">
-            <div class="mockup-glow"></div>
-            <div class="mockup-browser" role="img" aria-label="Eye HMS dashboard preview">
-                {{-- Tab bar --}}
-                <div class="mockup-chrome">
-                    <div class="mockup-dots">
-                        <span class="md-red"></span>
-                        <span class="md-amber"></span>
-                        <span class="md-green"></span>
-                    </div>
-                    <div class="mockup-urlbar">app.eyehms.com/dashboard</div>
-                </div>
-                {{-- App layout --}}
-                <div class="mockup-app">
-                    {{-- Sidebar --}}
-                    <div class="mockup-sidebar">
-                        <div class="mock-nav-item active">
-                            <div class="mock-nav-dot"></div><div class="mock-nav-bar"></div>
-                        </div>
-                        <div class="mock-nav-item"><div class="mock-nav-dot"></div><div class="mock-nav-bar"></div></div>
-                        <div class="mock-nav-item"><div class="mock-nav-dot"></div><div class="mock-nav-bar"></div></div>
-                        <div class="mock-nav-item"><div class="mock-nav-dot"></div><div class="mock-nav-bar"></div></div>
-                        <div class="mock-nav-item"><div class="mock-nav-dot"></div><div class="mock-nav-bar"></div></div>
-                        <div class="mock-nav-item"><div class="mock-nav-dot"></div><div class="mock-nav-bar"></div></div>
-                    </div>
-                    {{-- Content --}}
-                    <div class="mockup-content">
-                        <div class="mock-page-title"></div>
-                        {{-- Stat cards --}}
-                        <div class="mock-stats-row">
-                            <div class="mock-stat-card">
-                                <div class="mock-stat-top"></div>
-                                <div class="mock-stat-val"></div>
-                                <div class="mock-stat-lbl"></div>
-                            </div>
-                            <div class="mock-stat-card">
-                                <div class="mock-stat-top g"></div>
-                                <div class="mock-stat-val g"></div>
-                                <div class="mock-stat-lbl"></div>
-                            </div>
-                            <div class="mock-stat-card">
-                                <div class="mock-stat-top o"></div>
-                                <div class="mock-stat-val o"></div>
-                                <div class="mock-stat-lbl"></div>
-                            </div>
-                            <div class="mock-stat-card">
-                                <div class="mock-stat-top t"></div>
-                                <div class="mock-stat-val t"></div>
-                                <div class="mock-stat-lbl"></div>
-                            </div>
-                        </div>
-                        {{-- Chart --}}
-                        <div class="mock-chart-card">
-                            <div class="mock-chart-header"></div>
-                            <div class="mock-bars">
-                                <div class="mock-bar" style="height:35%;background:#D6EAF8"></div>
-                                <div class="mock-bar" style="height:60%;background:#2980B9"></div>
-                                <div class="mock-bar" style="height:45%;background:#D6EAF8"></div>
-                                <div class="mock-bar" style="height:80%;background:#1B4F72"></div>
-                                <div class="mock-bar" style="height:55%;background:#2980B9"></div>
-                                <div class="mock-bar" style="height:70%;background:#1ABC9C"></div>
-                                <div class="mock-bar" style="height:90%;background:#27AE60"></div>
-                            </div>
-                        </div>
-                        {{-- Table --}}
-                        <div class="mock-table-card">
-                            <div class="mock-table-head">
-                                <div class="mock-th"></div><div class="mock-th"></div>
-                                <div class="mock-th"></div><div class="mock-th"></div>
-                            </div>
-                            <div class="mock-table-row"><div class="mock-td"></div><div class="mock-td"></div><div class="mock-td"></div><div class="mock-td"></div></div>
-                            <div class="mock-table-row"><div class="mock-td"></div><div class="mock-td"></div><div class="mock-td"></div><div class="mock-td"></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {{-- Floating badges --}}
-            <div class="mockup-float mockup-float-tl">
-                <i class="fa-solid fa-circle-check"></i> 28 patients today
-            </div>
-            <div class="mockup-float mockup-float-br">
-                <i class="fa-solid fa-arrow-trend-up"></i> Revenue +23% this month
-            </div>
-        </div>
-
-    </div>
-</section>
-
+@include('landing.components.hero')
+ 
 {{-- ============================================================
      Trust Strip
 ============================================================ --}}
@@ -448,6 +331,81 @@
 @push('scripts')
 <script>
     (function () {
+        var statStrip = document.querySelector('.pub-trust-strip');
+        var statElements = Array.prototype.slice.call(document.querySelectorAll('.trust-stat-num'));
+        var hasCounted = false;
+
+        function parseStatNumber(node) {
+            var clone = node.cloneNode(true);
+            var spans = clone.querySelectorAll('span');
+            spans.forEach(function (s) { s.remove(); });
+            var raw = (clone.textContent || '').trim();
+            var match = raw.match(/[\d]+(?:\.[\d]+)?/);
+            if (!match) return null;
+            return {
+                value: parseFloat(match[0]),
+                decimals: match[0].indexOf('.') !== -1 ? (match[0].split('.')[1] || '').length : 0
+            };
+        }
+
+        function animateCount(node, target, decimals, duration) {
+            var startTime = null;
+            var endDecor = node.innerHTML.replace(/^[\s\S]*?(?=<span|$)/, '');
+
+            function frame(ts) {
+                if (!startTime) startTime = ts;
+                var progress = Math.min((ts - startTime) / duration, 1);
+                var eased = 1 - Math.pow(1 - progress, 3);
+                var current = target * eased;
+                var display = decimals > 0 ? current.toFixed(decimals) : Math.round(current).toString();
+                node.innerHTML = display + endDecor;
+                if (progress < 1) {
+                    requestAnimationFrame(frame);
+                } else {
+                    var finalVal = decimals > 0 ? target.toFixed(decimals) : Math.round(target).toString();
+                    node.innerHTML = finalVal + endDecor;
+                }
+            }
+
+            requestAnimationFrame(frame);
+        }
+
+        function runCountUp() {
+            if (hasCounted) return;
+            hasCounted = true;
+            statElements.forEach(function (el, idx) {
+                var parsed = parseStatNumber(el);
+                if (!parsed) return;
+                setTimeout(function () {
+                    animateCount(el, parsed.value, parsed.decimals, 1200);
+                }, idx * 80);
+            });
+        }
+
+        var observeTargets = Array.prototype.slice.call(document.querySelectorAll('.pub-animate'));
+        if (statStrip) observeTargets.push(statStrip);
+
+        if ('IntersectionObserver' in window) {
+            var observer = new IntersectionObserver(function (entries, obs) {
+                entries.forEach(function (entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        if (entry.target === statStrip) {
+                            runCountUp();
+                        }
+                        obs.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.15 });
+
+            observeTargets.forEach(function (el) {
+                observer.observe(el);
+            });
+        } else {
+            observeTargets.forEach(function (el) { el.classList.add('is-visible'); });
+            runCountUp();
+        }
+
         document.querySelectorAll('.faq-btn').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var item = btn.closest('.faq-item');

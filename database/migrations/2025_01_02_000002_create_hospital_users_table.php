@@ -37,15 +37,15 @@ return new class extends Migration
 
             // ── Tenant isolation ──────────────────────────────────────
             $table->foreignId('tenant_id')
-                  ->constrained('tenants')
-                  ->onDelete('cascade');
+                ->constrained('tenants')
+                ->onDelete('cascade');
 
             // ── Role assignment (dynamic — Hospital Admin sets this) ──
             // NULL allowed for Hospital Admin (first user, role seeded later)
             $table->foreignId('role_id')
-                  ->nullable()
-                  ->constrained('roles')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('roles')
+                ->nullOnDelete();
 
             // ── Core identity fields ──────────────────────────────────
             $table->string('name');
@@ -59,12 +59,12 @@ return new class extends Migration
             // ── Doctor-specific fields (nullable for all other roles) ──
             // Only populated when user is assigned a Doctor role
             $table->enum('doctor_type', ['primary', 'secondary'])
-                  ->nullable()
-                  ->comment('Only for Doctor role: primary = OPD, secondary = specialist');
+                ->nullable()
+                ->comment('Only for Doctor role: primary = OPD, secondary = specialist');
 
             $table->boolean('foc_permission')
-                  ->default(false)
-                  ->comment('Only for Doctor role: can issue Free Of Charge');
+                ->default(false)
+                ->comment('Only for Doctor role: can issue Free Of Charge');
 
             // ── Auth fields ───────────────────────────────────────────
             $table->timestamp('last_login_at')->nullable();

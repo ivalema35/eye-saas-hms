@@ -36,6 +36,7 @@ class PlatformSetting extends Model
         if ($this->is_encrypted && $value) {
             return Crypt::decryptString($value);
         }
+
         return $value;
     }
 
@@ -53,6 +54,7 @@ class PlatformSetting extends Model
     public static function get(string $key, mixed $default = null): mixed
     {
         $setting = static::where('key', $key)->first();
+
         return $setting ? $setting->value : $default;
     }
 }

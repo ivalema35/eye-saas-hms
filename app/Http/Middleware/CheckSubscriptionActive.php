@@ -24,7 +24,7 @@ class CheckSubscriptionActive
         $tenant = app()->bound('tenant') ? app('tenant') : null;
 
         // Tenant identify nahi hua — IdentifyTenant middleware pehle lagana chahiye tha
-        if (!$tenant) {
+        if (! $tenant) {
             abort(404);
         }
 
@@ -34,7 +34,7 @@ class CheckSubscriptionActive
             // Ajax request ke liye JSON response
             if ($request->expectsJson()) {
                 return response()->json([
-                    'error' => 'Subscription inactive. Please renew to continue.'
+                    'error' => 'Subscription inactive. Please renew to continue.',
                 ], 403);
             }
 

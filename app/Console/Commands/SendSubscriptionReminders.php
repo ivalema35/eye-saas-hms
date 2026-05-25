@@ -34,8 +34,8 @@ class SendSubscriptionReminders extends Command
 
     public function handle(): int
     {
-        $isDryRun  = $this->option('dry-run');
-        $today     = Carbon::today();
+        $isDryRun = $this->option('dry-run');
+        $today = Carbon::today();
         $yesterday = $today->copy()->subDay();
         $totalSent = 0;
 
@@ -48,8 +48,7 @@ class SendSubscriptionReminders extends Command
             $targetDate = $today->copy()->addDays($daysBefore);
 
             $tenants = Tenant::where('status', 'active')
-                ->whereHas('subscriptions', fn ($q) =>
-                    $q->where('status', 'active')->whereDate('ends_at', $targetDate)
+                ->whereHas('subscriptions', fn ($q) => $q->where('status', 'active')->whereDate('ends_at', $targetDate)
                 )
                 ->get();
 
@@ -70,8 +69,7 @@ class SendSubscriptionReminders extends Command
         //    CheckSubscriptionExpiry moved these at 01:00 AM this morning.
         // ================================================================
         $justExpired = Tenant::where('status', 'grace')
-            ->whereHas('subscriptions', fn ($q) =>
-                $q->where('status', 'expired')->whereDate('ends_at', $yesterday)
+            ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereDate('ends_at', $yesterday)
             )
             ->get();
 
@@ -92,8 +90,7 @@ class SendSubscriptionReminders extends Command
         $graceDay4Date = $today->copy()->addDays(3);
 
         $graceDay4 = Tenant::where('status', 'grace')
-            ->whereHas('subscriptions', fn ($q) =>
-                $q->where('status', 'expired')->whereDate('grace_ends_at', $graceDay4Date)
+            ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereDate('grace_ends_at', $graceDay4Date)
             )
             ->get();
 
@@ -113,8 +110,7 @@ class SendSubscriptionReminders extends Command
         //    CheckSubscriptionExpiry moved these at 01:00 AM this morning.
         // ================================================================
         $graceEnded = Tenant::where('status', 'inactive')
-            ->whereHas('subscriptions', fn ($q) =>
-                $q->where('status', 'expired')->whereDate('grace_ends_at', $yesterday)
+            ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereDate('grace_ends_at', $yesterday)
             )
             ->get();
 
@@ -136,8 +132,7 @@ class SendSubscriptionReminders extends Command
         $inactive30Date = $today->copy()->subDays(30);
 
         $inactive30 = Tenant::where('status', 'inactive')
-            ->whereHas('subscriptions', fn ($q) =>
-                $q->where('status', 'expired')->whereDate('grace_ends_at', $inactive30Date)
+            ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereDate('grace_ends_at', $inactive30Date)
             )
             ->get();
 
@@ -165,4 +160,3 @@ class SendSubscriptionReminders extends Command
         return self::SUCCESS;
     }
 }
-

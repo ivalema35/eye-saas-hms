@@ -20,12 +20,13 @@ class SuperAdminAuth
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth('superadmin')->check()) {
+        if (! auth('superadmin')->check()) {
             if ($request->expectsJson()) {
                 return response()->json(['error' => 'Unauthenticated.'], 401);
             }
+
             return redirect()->route('superadmin.login')
-                             ->with('error', 'Please login to access Super Admin panel.');
+                ->with('error', 'Please login to access Super Admin panel.');
         }
 
         return $next($request);

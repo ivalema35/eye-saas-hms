@@ -21,36 +21,36 @@ class PatientStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'         => ['required', 'string', 'max:255'],
-            'phone'        => ['required', 'string', 'max:15', 'regex:/^[6-9]\d{9}$/'],
-            'email'        => ['nullable', 'email', 'max:255'],
-            'dob'          => ['nullable', 'date', 'before:today'],
-            'gender'       => ['required', 'in:male,female,other'],
-            'address'      => ['nullable', 'string', 'max:500'],
-            'referred_by'  => ['nullable', 'string', 'max:255'],
-            'occupation'   => ['nullable', 'string', 'max:100'],
+            'name' => ['required', 'string', 'max:255'],
+            'phone' => ['required', 'string', 'max:15', 'regex:/^[6-9]\d{9}$/'],
+            'email' => ['nullable', 'email', 'max:255'],
+            'dob' => ['nullable', 'date', 'before:today'],
+            'gender' => ['required', 'in:male,female,other'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'referred_by' => ['nullable', 'string', 'max:255'],
+            'occupation' => ['nullable', 'string', 'max:100'],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'name.required'    => 'Patient name is required.',
-            'phone.required'   => 'Mobile number is required.',
-            'phone.regex'      => 'Please enter a valid 10-digit Indian mobile number.',
-            'gender.required'  => 'Please select patient gender.',
-            'gender.in'        => 'Invalid gender value.',
-            'dob.before'       => 'Date of birth must be in the past.',
+            'name.required' => 'Patient name is required.',
+            'phone.required' => 'Mobile number is required.',
+            'phone.regex' => 'Please enter a valid 10-digit Indian mobile number.',
+            'gender.required' => 'Please select patient gender.',
+            'gender.in' => 'Invalid gender value.',
+            'dob.before' => 'Date of birth must be in the past.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'name'        => 'Patient Name',
-            'phone'       => 'Mobile Number',
-            'dob'         => 'Date of Birth',
-            'gender'      => 'Gender',
+            'name' => 'Patient Name',
+            'phone' => 'Mobile Number',
+            'dob' => 'Date of Birth',
+            'gender' => 'Gender',
             'referred_by' => 'Referred By',
         ];
     }

@@ -59,11 +59,11 @@
     --hms-text:           #1A202C;
     --hms-text-muted:     #4A5568;
     --hms-border:         #E2E8F0;
-    --hms-bg:             #F0F4F8;
     --hms-bg-white:       #FFFFFF;
-    --hms-shadow:         0 2px 8px rgba(0,0,0,.08);
-    --hms-shadow-md:      0 4px 16px rgba(0,0,0,.10);
-    --hms-shadow-lg:      0 8px 32px rgba(27,79,114,.12);
+    --hms-bg:             var(--hms-bg-white);
+    --hms-shadow:         none;
+    --hms-shadow-md:      none;
+    --hms-shadow-lg:      none;
 
     /* Sidebar — PRD §2.3 */
     --hms-sidebar-bg:     #0D2137;
@@ -142,7 +142,7 @@ img, svg { vertical-align: middle; }
     justify-content: space-between;
     padding: 0 1.5rem;
     z-index: 1000;
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    box-shadow: none;
 }
 
 .hms-navbar-brand {
@@ -677,7 +677,7 @@ img, svg { vertical-align: middle; }
     border-bottom: 1px solid var(--hms-border);
 }
 .hms-card-title {
-    font-size: 1rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
     color: var(--hms-text);
@@ -1244,4 +1244,654 @@ img, svg { vertical-align: middle; }
 [data-tooltip]:hover::after {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
+}
+
+
+/* ============================================================
+   HERO SECTION OVERRIDE - Clean & Professional Eye Hospital Design
+   FIXED: Text visibility issues
+============================================================ */
+
+/* Main Hero Container - Override existing */
+.hero-section {
+    position: relative;
+    min-height: 80vh;
+    background: linear-gradient(135deg, #F8FAFC 0%, #EBF5FB 100%) !important;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 6rem 0 4rem;
+}
+
+/* Fix: Ensure all text has proper contrast on light background */
+.hero-section .hero-title,
+.hero-section .hero-title * {
+    color: #1E293B !important;
+    -webkit-text-fill-color: #1E293B !important;
+}
+
+.hero-section .hero-subtitle {
+    color: #475569 !important;
+}
+
+.hero-section .hero-badge {
+    color: #1B4F72 !important;
+    background: rgba(27, 79, 114, 0.08) !important;
+}
+
+.hero-section .hero-badge span {
+    color: #1B4F72 !important;
+}
+
+.hero-section .hero-trust-item {
+    color: #475569 !important;
+}
+
+.hero-section .hero-trust-item i {
+    color: #27AE60 !important;
+}
+
+.hero-section .btn-hero-primary {
+    color: white !important;
+    background: #1B4F72 !important;
+}
+
+.hero-section .btn-hero-outline {
+    color: #1B4F72 !important;
+    border-color: rgba(27, 79, 114, 0.25) !important;
+}
+
+/* Text gradient fix */
+.hero-section .text-gradient-primary {
+    background: linear-gradient(120deg, #1B4F72, #2980B9) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* Disable any white text from parent */
+.hero-section * {
+    color: inherit;
+}
+
+/* Keep your existing particles but style them softer */
+.hero-medical-particles {
+    opacity: 0.3 !important;
+}
+
+.hero-medical-particles .hmp-dot {
+    background: #1B4F72 !important;
+    opacity: 0.15 !important;
+    box-shadow: none !important;
+}
+
+.hero-medical-particles .hmp-dot::after {
+    display: none !important;
+}
+
+/* Keep your rings but make them subtle */
+.hmp-ring {
+    border-color: rgba(27, 79, 114, 0.1) !important;
+    opacity: 0.4 !important;
+}
+
+/* Keep eyes but subtle */
+.hmp-eye {
+    opacity: 0.15 !important;
+    color: #1B4F72 !important;
+}
+
+/* Disable heartbeat line (too medical) */
+.hero-heartbeat {
+    display: none !important;
+}
+
+/* Keep grid overlay but softer */
+.hero-grid-overlay {
+    background-image: 
+        linear-gradient(to right, rgba(27, 79, 114, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(27, 79, 114, 0.03) 1px, transparent 1px) !important;
+    background-size: 40px 40px !important;
+    animation: none !important;
+    opacity: 1 !important;
+}
+
+/* Blobs - make them softer medical blue */
+.hero-blob {
+    filter: blur(80px) !important;
+    opacity: 0.12 !important;
+}
+
+.hero-blob-1 {
+    background: radial-gradient(circle, #2980B9, transparent 70%) !important;
+    width: 500px;
+    height: 500px;
+}
+
+.hero-blob-2 {
+    background: radial-gradient(circle, #1B4F72, transparent 70%) !important;
+    width: 450px;
+    height: 450px;
+}
+
+.hero-blob-3 {
+    background: radial-gradient(circle, #27AE60, transparent 70%) !important;
+    width: 350px;
+    height: 350px;
+    opacity: 0.08 !important;
+}
+
+/* Container - preserve your existing structure */
+.hero-section .land-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* ===== Hero Content - Clean & Professional ===== */
+.hero-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    position: relative;
+    z-index: 2;
+}
+
+/* Remove the orb animations from hero-content */
+.hero-content::before,
+.hero-content::after {
+    display: none !important;
+}
+
+/* Badge - Professional */
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(27, 79, 114, 0.08) !important;
+    border: 1px solid rgba(27, 79, 114, 0.15) !important;
+    border-radius: 100px;
+    padding: 0.5rem 1.25rem;
+    width: fit-content;
+    font-size: 0.875rem;
+    font-weight: 500;
+    backdrop-filter: none !important;
+}
+
+.hero-badge::before,
+.hero-badge::after {
+    display: none !important;
+}
+
+.badge-pulse {
+    width: 8px;
+    height: 8px;
+    background: #27AE60;
+    border-radius: 50%;
+    animation: heroPulse 1.8s ease-in-out infinite;
+    box-shadow: none;
+}
+
+@keyframes heroPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* Title */
+.hero-title {
+    font-size: 3.25rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.02em !important;
+    margin: 0 !important;
+    text-shadow: none !important;
+}
+
+/* Remove cursor */
+.hero-cursor {
+    display: none !important;
+}
+
+/* Subtitle */
+.hero-subtitle {
+    font-size: 1.125rem !important;
+    line-height: 1.6 !important;
+    max-width: 90% !important;
+    margin: 0 !important;
+    text-shadow: none !important;
+}
+
+/* CTA Buttons */
+.hero-ctas {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.btn-pulse-ring-wrap {
+    position: relative;
+    display: inline-flex;
+}
+
+.btn-pulse-ring {
+    display: none !important;
+}
+
+.btn-hero-primary {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    background: #1B4F72 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    padding: 0.875rem 2rem !important;
+    border-radius: 9999px !important;
+    text-decoration: none !important;
+    transition: all 0.25s ease !important;
+    border: none !important;
+    cursor: pointer;
+    font-size: 0.9375rem !important;
+    box-shadow: none !important;
+}
+
+.btn-hero-primary:hover {
+    background: #0F3B56 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(27, 79, 114, 0.25) !important;
+    color: white !important;
+    text-decoration: none !important;
+}
+
+.btn-hero-primary::before,
+.btn-hero-primary::after {
+    display: none !important;
+}
+
+.btn-hero-outline {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    background: transparent !important;
+    color: #1B4F72 !important;
+    font-weight: 600 !important;
+    padding: 0.875rem 2rem !important;
+    border-radius: 9999px !important;
+    text-decoration: none !important;
+    border: 2px solid rgba(27, 79, 114, 0.25) !important;
+    transition: all 0.25s ease !important;
+    font-size: 0.9375rem !important;
+}
+
+.btn-hero-outline:hover {
+    background: rgba(27, 79, 114, 0.05) !important;
+    border-color: #1B4F72 !important;
+    transform: translateY(-2px);
+    color: #1B4F72 !important;
+    text-decoration: none !important;
+}
+
+/* Trust Items */
+.hero-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+}
+
+.hero-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.hero-trust-item i {
+    font-size: 0.875rem;
+}
+
+/* ===== Dashboard Mockup - Professional ===== */
+.hero-dashboard-mockup {
+    position: relative;
+}
+
+.hero-dashboard-mockup::before,
+.hero-dashboard-mockup::after {
+    display: none !important;
+}
+
+.mockup-glow {
+    display: none !important;
+}
+
+.mockup-browser {
+    background: #FFFFFF !important;
+    border-radius: 20px !important;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+    border: 1px solid rgba(27, 79, 114, 0.1) !important;
+}
+
+.mockup-chrome {
+    background: #F1F5F9 !important;
+    padding: 0.875rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.mockup-dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.mockup-dots span {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+.mockup-dots .md-red { background: #EF4444; }
+.mockup-dots .md-amber { background: #F59E0B; }
+.mockup-dots .md-green { background: #22C55E; }
+
+.mockup-urlbar {
+    flex: 1;
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.75rem;
+    font-family: monospace;
+    color: #64748B;
+    border: 1px solid #E2E8F0;
+}
+
+.mockup-app {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    background: #F8FAFC;
+}
+
+.mockup-sidebar {
+    background: #FFFFFF;
+    padding: 1rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border-right: 1px solid #E2E8F0;
+}
+
+.mock-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    opacity: 0.6;
+}
+.mock-nav-item.active {
+    background: #EBF5FB !important;
+    opacity: 1;
+}
+.mock-nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: #94A3B8;
+}
+.mock-nav-item.active .mock-nav-dot {
+    background: #1B4F72;
+}
+.mock-nav-bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 4px;
+    background: #E2E8F0;
+}
+.mock-nav-item.active .mock-nav-bar {
+    background: #1B4F72;
+    opacity: 0.2;
+}
+
+.mockup-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.mock-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+}
+
+.mock-stat-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 0.75rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #E2E8F0;
+}
+
+.mock-stat-top {
+    height: 8px;
+    width: 40%;
+    background: #1B4F72;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+}
+.mock-stat-top.g { background: #27AE60; }
+.mock-stat-top.o { background: #F59E0B; }
+.mock-stat-top.t { background: #2980B9; }
+
+.mock-stat-val {
+    height: 16px;
+    width: 60%;
+    background: #E2E8F0;
+    border-radius: 4px;
+    margin-bottom: 0.25rem;
+}
+.mock-stat-lbl {
+    height: 8px;
+    width: 80%;
+    background: #F1F5F9;
+    border-radius: 4px;
+}
+
+.mock-chart-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    padding: 0.75rem;
+    border: 1px solid #E2E8F0;
+}
+
+.mock-chart-header {
+    height: 12px;
+    width: 30%;
+    background: #E2E8F0;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+}
+
+.mock-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    height: 80px;
+}
+
+.mock-bar {
+    flex: 1;
+    background: #D6EAF8;
+    border-radius: 4px 4px 0 0;
+}
+.mock-bar:nth-child(2),
+.mock-bar:nth-child(4),
+.mock-bar:nth-child(6) { background: #2980B9; }
+.mock-bar:nth-child(7) { background: #27AE60; }
+
+.mock-table-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #E2E8F0;
+}
+
+.mock-table-head {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    padding: 0.625rem 0.75rem;
+    background: #F8FAFC;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.mock-th {
+    height: 8px;
+    background: #CBD5E1;
+    border-radius: 4px;
+}
+
+.mock-table-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.mock-td {
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 4px;
+}
+
+/* Floating Elements */
+.mockup-float {
+    position: absolute;
+    background: #FFFFFF;
+    padding: 0.625rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #1E293B;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid rgba(27, 79, 114, 0.1);
+}
+
+.mockup-float i {
+    color: #2980B9;
+    font-size: 0.875rem;
+}
+
+.mockup-float-tl {
+    top: -1rem;
+    left: -1rem;
+}
+
+.mockup-float-br {
+    bottom: -1rem;
+    right: -1rem;
+}
+
+/* Hide health chips and notif ping */
+.mockup-health-chip,
+.mockup-notif-ping,
+.mockup-scan-line,
+.mock-live-indicator {
+    display: none !important;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1024px) {
+    .hero-section .land-container {
+        grid-template-columns: 1fr !important;
+        text-align: center !important;
+        gap: 2rem !important;
+    }
+    
+    .hero-content {
+        align-items: center !important;
+    }
+    
+    .hero-subtitle {
+        max-width: 100% !important;
+    }
+    
+    .hero-ctas,
+    .hero-trust {
+        justify-content: center !important;
+    }
+    
+    .hero-title {
+        font-size: 2.5rem !important;
+    }
+    
+    .hero-dashboard-mockup {
+        max-width: 550px;
+        margin: 0 auto;
+    }
+    
+    .hero-blob {
+        opacity: 0.06 !important;
+    }
+    
+    .hero-medical-particles {
+        opacity: 0.15 !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .hero-section {
+        padding: 5rem 0 3rem !important;
+    }
+    
+    .hero-section .land-container {
+        padding: 0 1rem !important;
+    }
+    
+    .hero-title {
+        font-size: 2rem !important;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem !important;
+    }
+    
+    .btn-hero-primary,
+    .btn-hero-outline {
+        padding: 0.75rem 1.5rem !important;
+        font-size: 0.875rem !important;
+    }
+    
+    .mockup-float {
+        display: none !important;
+    }
+    
+    .hero-blob {
+        display: none !important;
+    }
+    
+    .hero-medical-particles .hmp-dot-4,
+    .hero-medical-particles .hmp-dot-5 {
+        display: none !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .badge-pulse {
+        animation: none !important;
+    }
 }

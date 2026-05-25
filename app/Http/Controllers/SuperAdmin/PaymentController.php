@@ -10,7 +10,6 @@ use App\Services\Platform\InvoiceService;
 use App\Services\Platform\TenantService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -76,20 +75,20 @@ class PaymentController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $tenant  = Tenant::findOrFail($validated['tenant_id']);
+        $tenant = Tenant::findOrFail($validated['tenant_id']);
         $payment = null;
 
         DB::transaction(function () use ($validated, $tenant, &$payment): void {
             $payment = Payment::create([
-                'tenant_id'      => $tenant->id,
-                'amount'         => $validated['amount'],
-                'cycle'          => $validated['cycle'],
-                'method'         => 'offline',
-                'gateway'        => null,
+                'tenant_id' => $tenant->id,
+                'amount' => $validated['amount'],
+                'cycle' => $validated['cycle'],
+                'method' => 'offline',
+                'gateway' => null,
                 'transaction_id' => $validated['transaction_id'] ?? null,
-                'status'         => 'success',
-                'paid_at'        => now(),
-                'notes'          => $validated['notes'] ?? null,
+                'status' => 'success',
+                'paid_at' => now(),
+                'notes' => $validated['notes'] ?? null,
             ]);
 
             $this->tenantService->activate($tenant);
@@ -100,16 +99,16 @@ class PaymentController extends Controller
             $invoicePath = $this->invoiceService->generate($payment);
             $payment->update(['invoice_path' => $invoicePath]);
         } catch (\Throwable $e) {
-            Log::warning("Invoice PDF generation failed for payment #{$payment->id}: " . $e->getMessage());
+            Log::warning("Invoice PDF generation failed for payment #{$payment->id}: ".$e->getMessage());
         }
 
         AuditLog::create([
-            'admin_id'    => auth('superadmin')->id(),
-            'tenant_id'   => $tenant->id,
-            'action'      => 'payment.offline.recorded',
+            'admin_id' => auth('superadmin')->id(),
+            'tenant_id' => $tenant->id,
+            'action' => 'payment.offline.recorded',
             'description' => "Offline payment of ₹{$validated['amount']} recorded for '{$tenant->name}'",
-            'ip_address'  => request()->ip(),
-            'new_values'  => ['amount' => $validated['amount'], 'cycle' => $validated['cycle']],
+            'ip_address' => request()->ip(),
+            'new_values' => ['amount' => $validated['amount'], 'cycle' => $validated['cycle']],
         ]);
 
         return back()->with(
@@ -128,7 +127,7 @@ class PaymentController extends Controller
             $payment->update(['invoice_path' => $path]);
         }
 
-        $filename = 'invoice-' . $this->invoiceService->invoiceNumber($payment) . '.pdf';
+        $filename = 'invoice-'.$this->invoiceService->invoiceNumber($payment).'.pdf';
 
         return Storage::disk('local')->download($payment->invoice_path, $filename);
     }

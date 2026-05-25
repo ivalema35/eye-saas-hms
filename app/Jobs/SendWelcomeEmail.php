@@ -23,8 +23,8 @@ use Illuminate\Support\Facades\Mail;
 class SendWelcomeEmail implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    public int $tries = 3;
 
-    public int $tries   = 3;
     public int $timeout = 30;
 
     public function __construct(
@@ -37,24 +37,32 @@ class SendWelcomeEmail implements ShouldQueue
 
         if (! $email) {
             Log::warning("SendWelcomeEmail: No email for tenant #{$this->tenant->id}");
+
             return;
         }
 
         Log::info("SendWelcomeEmail → {$email} (Tenant: {$this->tenant->slug})");
 
-        Mail::send('emails.welcome', [
-            'tenant' => $this->tenant,
-        ], function ($message) use ($email) {
-            $message->to($email)
+        try {
+            Mail::send('emails.welcome', [
+                'tenant' => $this->tenant,
+            ], function ($message) use ($email) {
+                $message->to($email)
                     ->subject('Welcome to Eye HMS — Your Hospital is Ready!');
-        });
+            });
+        } catch (\Throwable $exception) {
+            Log::error(
+                "SendWelcomeEmail mail send failed for tenant #{$this->tenant->id}: "
+                .$exception->getMessage()
+            );
+        }
     }
 
     public function failed(\Throwable $exception): void
     {
         Log::error(
             "SendWelcomeEmail FAILED for tenant #{$this->tenant->id}: "
-            . $exception->getMessage()
+            .$exception->getMessage()
         );
     }
 }

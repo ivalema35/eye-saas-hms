@@ -20,17 +20,22 @@ class HospitalUserController extends Controller
     {
         $this->authorizeUserManagement();
 
-        $slug  = request()->route('slug');
+        $slug = request()->route('slug');
         $users = HospitalUser::with('role')->latest()->paginate((int) config('app.pagination_limit', 25));
+        $roles = Role::query()
+            ->whereNull('deleted_at')
+            ->where('slug', '!=', 'hospital_admin')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug']);
 
-        return view('hospital.users.index', compact('users', 'slug'));
+        return view('hospital.users.index', compact('users', 'slug', 'roles'));
     }
 
     public function create(): View
     {
         $this->authorizeUserManagement();
 
-        $slug  = request()->route('slug');
+        $slug = request()->route('slug');
         $roles = Role::query()
             ->whereNull('deleted_at')
             ->where('slug', '!=', 'hospital_admin')
@@ -53,15 +58,15 @@ class HospitalUserController extends Controller
             || in_array('opd.exam.secondary', $rolePermissionKeys, true);
 
         HospitalUser::create([
-            'tenant_id'       => app('tenant')->id,
-            'role_id'         => $role->id,
-            'name'            => $data['name'],
-            'email'           => $data['email'],
-            'contact'         => $data['contact'] ?? null,
-            'password'        => $data['password'],
-            'status'          => $data['status'],
-            'doctor_type'     => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
-            'foc_permission'  => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'tenant_id' => app('tenant')->id,
+            'role_id' => $role->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact' => $data['contact'] ?? null,
+            'password' => $data['password'],
+            'status' => $data['status'],
+            'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
         ]);
 
         return redirect()
@@ -115,12 +120,12 @@ class HospitalUserController extends Controller
             || in_array('opd.exam.secondary', $rolePermissionKeys, true);
 
         $updateData = [
-            'role_id'        => $role->id,
-            'name'           => $data['name'],
-            'email'          => $data['email'],
-            'contact'        => $data['contact'] ?? null,
-            'status'         => $data['status'],
-            'doctor_type'    => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'role_id' => $role->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact' => $data['contact'] ?? null,
+            'status' => $data['status'],
+            'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
             'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
         ];
 

@@ -15,18 +15,18 @@
  * RULE: Subdomain routing NAHI — sirf path-based routing.
  */
 
+use App\Http\Controllers\Auth\SuperAdminAuthController;
 use App\Http\Controllers\Platform\LandingController;
 use App\Http\Controllers\Platform\RegisterController;
 use App\Http\Controllers\Platform\UnifiedLoginController;
 use App\Http\Controllers\Platform\WebhookController;
-use App\Http\Controllers\Auth\SuperAdminAuthController;
-use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\AuditLogController;
+use App\Http\Controllers\SuperAdmin\NotificationController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
+use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\TenantController;
-use App\Http\Controllers\SuperAdmin\AuditLogController;
-use App\Http\Controllers\SuperAdmin\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // ====================================================================
@@ -45,16 +45,16 @@ Route::post('/register', [RegisterController::class, 'store'])->name('register.s
 
 // Slug availability check (AJAX, rate limited)
 Route::get('/check-slug', [RegisterController::class, 'checkSlug'])
-     ->name('check-slug')
-     ->middleware('throttle:30,1');
+    ->name('check-slug')
+    ->middleware('throttle:30,1');
 
 // Unified Hospital Login — single page for all staff
-Route::get('/login',  [UnifiedLoginController::class, 'show'])->name('login');
+Route::get('/login', [UnifiedLoginController::class, 'show'])->name('login');
 Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
 
 // Razorpay Webhook (CSRF exempt — added in VerifyCsrfToken)
 Route::post('/webhooks/razorpay', [WebhookController::class, 'handle'])
-     ->name('webhooks.razorpay');
+    ->name('webhooks.razorpay');
 
 // ====================================================================
 // Super Admin Routes (prefix: /superadmin)
@@ -73,46 +73,46 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
         // Dashboard
         Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])
-             ->name('dashboard');
+            ->name('dashboard');
 
         // Hospital (Tenant) Management
         Route::resource('hospitals', TenantController::class);
         Route::post('hospitals/{tenant}/activate', [TenantController::class, 'activate'])
-             ->name('hospitals.activate');
+            ->name('hospitals.activate');
         Route::post('hospitals/{tenant}/suspend', [TenantController::class, 'suspend'])
-             ->name('hospitals.suspend');
+            ->name('hospitals.suspend');
         Route::post('hospitals/{tenant}/extend', [TenantController::class, 'extend'])
-             ->name('hospitals.extend');
+            ->name('hospitals.extend');
         Route::post('hospitals/{tenant}/reactivate', [TenantController::class, 'reactivate'])
-             ->name('hospitals.reactivate');
+            ->name('hospitals.reactivate');
 
         // Payments
         Route::get('/payments', [PaymentController::class, 'index'])
-             ->name('payments.index');
+            ->name('payments.index');
         Route::post('/payments/offline', [PaymentController::class, 'storeOffline'])
-             ->name('payments.offline');
+            ->name('payments.offline');
         Route::get('/payments/{payment}/invoice', [PaymentController::class, 'downloadInvoice'])
-             ->name('payments.invoice');
+            ->name('payments.invoice');
 
         // Audit Logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])
-             ->name('audit-logs.index');
+            ->name('audit-logs.index');
 
         // Notification Center
         Route::get('/notifications', [NotificationController::class, 'index'])
-             ->name('notifications.index');
+            ->name('notifications.index');
         Route::post('/notifications/send', [NotificationController::class, 'send'])
-             ->name('notifications.send');
+            ->name('notifications.send');
 
         // Subscription Management
         Route::get('/subscriptions', [SubscriptionController::class, 'index'])
-             ->name('subscriptions.index');
+            ->name('subscriptions.index');
 
         // Platform Settings
         Route::get('/settings', [SettingsController::class, 'index'])
-             ->name('settings');
+            ->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])
-             ->name('settings.update');
+            ->name('settings.update');
     });
 });
 
