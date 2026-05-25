@@ -23,6 +23,8 @@ use App\Http\Controllers\Platform\WebhookController;
 use App\Http\Controllers\SuperAdmin\AuditLogController;
 use App\Http\Controllers\SuperAdmin\NotificationController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
+use App\Http\Controllers\SuperAdmin\PlanController;
+use App\Http\Controllers\SuperAdmin\ProfileController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
@@ -113,6 +115,18 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])
             ->name('settings.update');
+
+        // SuperAdmin Profile
+        Route::get('/profile', [ProfileController::class, 'show'])
+            ->name('profile');
+        Route::put('/profile', [ProfileController::class, 'update'])
+            ->name('profile.update');
+        Route::put('/profile/password', [ProfileController::class, 'updatePassword'])
+            ->name('profile.password');
+
+        // Plan Management (stub routes — controller built in T2.1)
+        Route::resource('plans', PlanController::class)
+            ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
 });
 

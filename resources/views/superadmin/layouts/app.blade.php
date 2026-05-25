@@ -8,6 +8,8 @@
 
     {{-- Design System CSS --}}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/hospital.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/premium-theme.css') }}">
     <link rel="stylesheet" href="{{ asset('css/superadmin.css') }}">
 
     {{-- Bootstrap 5.3 CSS --}}
@@ -15,16 +17,214 @@
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
           crossorigin="anonymous" />
 
+    {{-- Bootstrap Icons --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    {{-- Font Awesome --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+          integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
+          crossorigin="anonymous" referrerpolicy="no-referrer" />
+
     {{-- Select2 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
 
     {{-- Flatpickr CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
-    {{-- Font Awesome --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {{-- SweetAlert2 --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+    {{-- Hospital-panel visual alignment —  white bg, Inter font, nav items, content area --}}
+    <style>
+        :root {
+            --shell-secondary: #1B4F72;
+            --shell-s2-12: rgba(27,79,114,.12);
+            --shell-white-70: rgba(255,255,255,.70);
+            --shell-white-78: rgba(255,255,255,.78);
+            --shell-white-86: rgba(255,255,255,.86);
+        }
+        body.sa-body {
+            background: #ffffff !important;
+            color: #1B4F72;
+            font-family: 'Inter', sans-serif;
+        }
+        .sa-main {
+            background: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .sa-page-header h1 {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #1A202C;
+            letter-spacing: -.02em;
+        }
+        .sa-main .hms-card,
+        .sa-main [class*="-card"],
+        .sa-main .hms-stat-card,
+        .sa-main .sa-premium-card {
+            box-shadow: none !important;
+        }
+
+        /* ── Stat card horizontal layout fix ─────────────────── */
+        /* design-system.css sets flex-direction:column — force row here */
+        .hms-stat-card {
+            flex-direction: row !important;
+            align-items: center !important;
+        }
+        .hms-stat-body { flex: 1; min-width: 0; }
+        /* Ensure icons in colored icon box use the container color (hsi-* classes) */
+        .hms-stat-icon i,
+        .hms-stat-icon .bi {
+            color: inherit !important;
+            font-size: 1.375rem !important;
+        }
+
+        /* ── Sidebar nav (hospital panel style) ──────────────── */
+        .sa-sidebar {
+            background: #f8fafc !important;
+            border-right: 1px solid rgba(27,79,114,.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hms-sidenav {
+            display: flex;
+            flex-direction: column;
+            padding: 1rem .75rem;
+            gap: .25rem;
+            flex: 1;
+        }
+        .hms-nav-section-label {
+            color: rgba(27,79,114,.58) !important;
+            font-weight: 900;
+            font-size: .70rem;
+            letter-spacing: .12em;
+        }
+        .hms-nav-divider {
+            height: 1px;
+            background: var(--shell-s2-12) !important;
+            border: none;
+            margin: .35rem .5rem;
+            opacity: 1;
+        }
+        .hms-nav-group-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(27,79,114,.06);
+            border: none;
+            border-radius: 8px;
+            margin: .2rem 0;
+            padding: .65rem .9rem;
+            cursor: pointer;
+            transition: transform 160ms ease, background 160ms ease;
+        }
+        .hms-nav-group-toggle:hover {
+            background: var(--shell-secondary);
+            transform: translateX(2px);
+        }
+        .hms-nav-group-toggle:hover .hms-nav-section-label,
+        .hms-nav-group-toggle:hover .hms-nav-chevron {
+            color: rgba(255,255,255,.95) !important;
+        }
+        .hms-nav-group-toggle .hms-nav-section-label {
+            font-size: 1.05rem !important;
+            font-weight: 900 !important;
+            letter-spacing: .05em !important;
+            color: rgba(27,79,114,.78) !important;
+        }
+        .hms-nav-group-toggle .hms-nav-chevron {
+            color: rgba(27,79,114,.72) !important;
+            font-size: .75rem;
+            transition: transform 200ms ease;
+        }
+        .hms-nav-group-toggle.collapsed .hms-nav-chevron {
+            transform: rotate(-90deg);
+        }
+        .hms-nav-group-items {
+            display: flex;
+            flex-direction: column;
+            gap: .15rem;
+            overflow: hidden;
+            transition: max-height 220ms ease;
+        }
+        .hms-nav-group-items.collapsed {
+            max-height: 0 !important;
+        }
+        .hms-nav-group-items .hms-nav-item { font-size: .92rem; }
+        .hms-nav-group-items .hms-nav-item i { font-size: .95rem; }
+
+        .hms-nav-item {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            color: var(--shell-secondary) !important;
+            font-size: 17px;
+            font-weight: 900;
+            border-radius: 18px;
+            padding: .70rem .95rem;
+            background: transparent;
+            border: none;
+            text-decoration: none !important;
+            position: relative;
+            transition: transform 160ms ease, background 160ms ease;
+        }
+        .hms-nav-item i { color: var(--shell-secondary) !important; font-size: 1.05rem; }
+        .hms-nav-item:hover {
+            background: var(--shell-secondary) !important;
+            color: rgba(255,255,255,.98) !important;
+            transform: translateX(2px);
+            text-decoration: none !important;
+        }
+        .hms-nav-item:hover i { color: rgba(255,255,255,.98) !important; }
+        .hms-nav-item.active {
+            background: rgba(27,79,114,.12) !important;
+            color: var(--shell-secondary) !important;
+        }
+        .hms-nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 10px; top: 50%;
+            width: 4px; height: 18px;
+            transform: translateY(-50%);
+            border-radius: 999px;
+            background: var(--shell-secondary);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .hms-nav-item, .hms-nav-group-toggle { transition: none !important; }
+        }
+
+        /* ── Sidebar footer logout ───────────────────────────── */
+        .sa-sidebar-footer {
+            padding: .75rem;
+            border-top: 1px solid rgba(27,79,114,.1);
+            margin-top: auto;
+        }
+        .sa-sidebar-logout {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            width: 100%;
+            padding: .70rem .95rem;
+            border-radius: 18px;
+            border: none;
+            background: rgba(192,57,43,.07);
+            color: #C0392B;
+            font-size: .92rem;
+            font-weight: 900;
+            cursor: pointer;
+            text-align: left;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+        .sa-sidebar-logout i { color: #C0392B; font-size: 1rem; }
+        .sa-sidebar-logout:hover {
+            background: #C0392B;
+            color: #fff;
+            transform: translateX(2px);
+        }
+        .sa-sidebar-logout:hover i { color: #fff; }
+    </style>
+
     @stack('styles')
 </head>
 <body class="sa-body">
@@ -35,26 +235,59 @@
     <nav class="sa-navbar">
         <div style="display:flex;align-items:center;gap:.5rem">
             <button class="hms-sidebar-toggle" id="hmsSidebarToggle" type="button" aria-label="Toggle sidebar">
-                <i class="fa-solid fa-bars"></i>
+                <i class="bi bi-list"></i>
             </button>
             <a href="{{ route('superadmin.dashboard') }}" class="sa-navbar-brand" style="text-decoration:none">
-                <i class="fa-solid fa-eye"></i>
+                <i class="bi bi-eye-fill"></i>
                 <span>Eye HMS</span>
                 <small class="sa-badge-platform">Platform Admin</small>
             </a>
         </div>
 
         <div class="sa-navbar-right">
-            <span class="sa-navbar-user">
-                <i class="fa-solid fa-user-shield"></i>
-                {{ auth('superadmin')->user()?->name ?? 'SuperAdmin' }}
-            </span>
-            <form method="POST" action="{{ route('superadmin.logout') }}" class="d-inline">
-                @csrf
-                <button type="submit" class="sa-btn-logout">
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+            {{-- User Dropdown --}}
+            <div class="sa-user-dropdown dropdown">
+                <button class="sa-user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <span class="sa-user-avatar">
+                        <i class="bi bi-shield-fill-check"></i>
+                    </span>
+                    <span class="sa-user-name d-none d-md-inline">
+                        {{ auth('superadmin')->user()?->name ?? 'SuperAdmin' }}
+                    </span>
+                    <i class="bi bi-chevron-down sa-user-chevron"></i>
                 </button>
-            </form>
+                <ul class="dropdown-menu dropdown-menu-end sa-user-dropdown-menu">
+                    <li class="sa-dropdown-header">
+                        <div class="sa-dropdown-user-info">
+                            <span class="sa-dropdown-avatar"><i class="bi bi-shield-fill-check"></i></span>
+                            <div>
+                                <div class="sa-dropdown-name">{{ auth('superadmin')->user()?->name ?? 'SuperAdmin' }}</div>
+                                <div class="sa-dropdown-email">{{ auth('superadmin')->user()?->email ?? '' }}</div>
+                            </div>
+                        </div>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <a class="dropdown-item sa-dropdown-item" href="{{ route('superadmin.profile') }}">
+                            <i class="bi bi-person-circle"></i> My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item sa-dropdown-item" href="{{ route('superadmin.settings') }}">
+                            <i class="bi bi-sliders"></i> Platform Settings
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider my-1"></li>
+                    <li>
+                        <form method="POST" action="{{ route('superadmin.logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item sa-dropdown-item sa-dropdown-item-danger">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
@@ -67,75 +300,90 @@
              Sidebar
         ============================================ --}}
         <aside class="sa-sidebar" id="hmsSidebar">
-            <nav class="sa-sidenav">
-                <ul>
-                    {{-- OVERVIEW --}}
-                    <li class="sa-nav-group-toggle" data-target="sa-nav-overview">
-                        <span class="sa-nav-section-label" style="padding:0;margin:0">Overview</span>
-                        <i class="fa-solid fa-chevron-down hms-nav-chevron"></i>
-                    </li>
-                    <div class="sa-nav-group-items" id="sa-nav-overview">
-                        <li>
-                            <a href="{{ route('superadmin.dashboard') }}"
-                               class="{{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                                <i class="fa-solid fa-gauge-high"></i> Dashboard
-                            </a>
-                        </li>
-                    </div>
+            <nav class="hms-sidenav">
 
-                    {{-- MANAGEMENT --}}
-                    <li class="sa-nav-group-toggle" data-target="sa-nav-management">
-                        <span class="sa-nav-section-label" style="padding:0;margin:0">Management</span>
-                        <i class="fa-solid fa-chevron-down hms-nav-chevron"></i>
-                    </li>
-                    <div class="sa-nav-group-items" id="sa-nav-management">
-                        <li>
-                            <a href="{{ route('superadmin.hospitals.index') }}"
-                               class="{{ request()->routeIs('superadmin.hospitals.*') ? 'active' : '' }}">
-                                <i class="fa-solid fa-hospital"></i> Hospitals
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('superadmin.subscriptions.index') }}"
-                               class="{{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
-                                <i class="fa-solid fa-credit-card"></i> Subscriptions
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('superadmin.payments.index') }}"
-                               class="{{ request()->routeIs('superadmin.payments.*') ? 'active' : '' }}">
-                                <i class="fa-solid fa-money-bill-wave"></i> Payments
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('superadmin.audit-logs.index') }}"
-                               class="{{ request()->routeIs('superadmin.audit-logs.*') ? 'active' : '' }}">
-                                <i class="fa-solid fa-clipboard-list"></i> Audit Logs
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('superadmin.notifications.index') }}"
-                               class="{{ request()->routeIs('superadmin.notifications.*') ? 'active' : '' }}">
-                                <i class="fa-solid fa-bell"></i> Notifications
-                            </a>
-                        </li>
-                    </div>
+                {{-- Dashboard (always visible) --}}
+                <a href="{{ route('superadmin.dashboard') }}"
+                   class="hms-nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+                    <i class="bi bi-grid-1x2-fill"></i>
+                    <span>Dashboard</span>
+                </a>
 
-                    {{-- SYSTEM --}}
-                    <li class="sa-nav-group-toggle" data-target="sa-nav-system">
-                        <span class="sa-nav-section-label" style="padding:0;margin:0">System</span>
-                        <i class="fa-solid fa-chevron-down hms-nav-chevron"></i>
-                    </li>
-                    <div class="sa-nav-group-items" id="sa-nav-system">
-                        <li>
-                            <a href="{{ route('superadmin.settings') }}"
-                               class="{{ request()->routeIs('superadmin.settings') ? 'active' : '' }}">
-                                <i class="fa-solid fa-sliders"></i> Settings
-                            </a>
-                        </li>
-                    </div>
-                </ul>
+                {{-- MANAGEMENT --}}
+                <div class="hms-nav-divider"></div>
+                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.hospitals.*','superadmin.plans.*','superadmin.subscriptions.*','superadmin.payments.*','superadmin.audit-logs.*','superadmin.notifications.*') ? '' : 'collapsed' }}"
+                     data-target="sa-nav-management">
+                    <span class="hms-nav-section-label" style="padding:0;margin:0">Management</span>
+                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                </div>
+                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.hospitals.*','superadmin.plans.*','superadmin.subscriptions.*','superadmin.payments.*','superadmin.audit-logs.*','superadmin.notifications.*') ? '' : 'collapsed' }}"
+                     id="sa-nav-management">
+                    <a href="{{ route('superadmin.hospitals.index') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.*') ? 'active' : '' }}">
+                        <i class="bi bi-hospital-fill"></i>
+                        <span>Hospitals</span>
+                    </a>
+                    <a href="{{ route('superadmin.plans.index') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
+                        <i class="bi bi-layers-fill"></i>
+                        <span>Plans</span>
+                    </a>
+                    <a href="{{ route('superadmin.subscriptions.index') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
+                        <i class="bi bi-credit-card-2-front-fill"></i>
+                        <span>Subscriptions</span>
+                    </a>
+                    <a href="{{ route('superadmin.payments.index') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.payments.*') ? 'active' : '' }}">
+                        <i class="bi bi-cash-coin"></i>
+                        <span>Payments</span>
+                    </a>
+                    <a href="{{ route('superadmin.audit-logs.index') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.audit-logs.*') ? 'active' : '' }}">
+                        <i class="bi bi-clipboard2-check-fill"></i>
+                        <span>Audit Logs</span>
+                    </a>
+                    <a href="{{ route('superadmin.notifications.index') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.notifications.*') ? 'active' : '' }}">
+                        <i class="bi bi-bell-fill"></i>
+                        <span>Notifications</span>
+                    </a>
+                </div>
+
+                {{-- SYSTEM --}}
+                <div class="hms-nav-divider"></div>
+                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.profile','superadmin.settings') ? '' : 'collapsed' }}"
+                     data-target="sa-nav-system">
+                    <span class="hms-nav-section-label" style="padding:0;margin:0">System</span>
+                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                </div>
+                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.profile','superadmin.settings') ? '' : 'collapsed' }}"
+                     id="sa-nav-system">
+                    <a href="{{ route('superadmin.profile') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.profile') ? 'active' : '' }}">
+                        <i class="bi bi-person-circle"></i>
+                        <span>My Profile</span>
+                    </a>
+                    <a href="{{ route('superadmin.settings') }}"
+                       class="hms-nav-item {{ request()->routeIs('superadmin.settings') ? 'active' : '' }}">
+                        <i class="bi bi-sliders"></i>
+                        <span>Settings</span>
+                    </a>
+                </div>
+
             </nav>
+
+            {{-- Sidebar Footer — Logout --}}
+            <div class="sa-sidebar-footer">
+                <form method="POST" action="{{ route('superadmin.logout') }}">
+                    @csrf
+                    <button type="submit" class="sa-sidebar-logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>Logout</span>
+                    </button>
+                </form>
+            </div>
+
         </aside>
 
         {{-- ============================================
@@ -143,19 +391,7 @@
         ============================================ --}}
         <main class="sa-main">
 
-            {{-- Flash Messages --}}
-            @if(session('success'))
-                <div class="hms-alert hms-alert-success">
-                    <i class="fa-solid fa-circle-check"></i>
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="hms-alert hms-alert-danger">
-                    <i class="fa-solid fa-circle-exclamation"></i>
-                    {{ session('error') }}
-                </div>
-            @endif
+            {{-- Flash messages handled via SweetAlert2 toasts (see bottom JS) --}}
 
             {{-- Page Header --}}
             @hasSection('page-header')
@@ -178,6 +414,9 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
             integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmTE50ZQ1CzAMRQGTMd4U+Nc2bMr"
             crossorigin="anonymous"></script>
+
+    {{-- SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
@@ -211,22 +450,64 @@
             });
         }
 
-        document.querySelectorAll('.sa-nav-group-toggle').forEach(function (el) {
-            var target = document.getElementById(el.getAttribute('data-target'));
+        /* Set initial max-height on open groups so CSS transition works */
+        document.querySelectorAll('.hms-nav-group-items').forEach(function (items) {
+            if (!items.classList.contains('collapsed')) {
+                items.style.maxHeight = items.scrollHeight + 'px';
+            } else {
+                items.style.maxHeight = '0';
+            }
+        });
+
+        document.querySelectorAll('.hms-nav-group-toggle').forEach(function (el) {
+            var targetId = el.getAttribute('data-target');
+            var target   = document.getElementById(targetId);
             if (!target) return;
 
-            if (!target.querySelector('a.active')) {
-                target.classList.add('collapsed');
-                el.classList.add('collapsed');
-            }
-
             el.addEventListener('click', function () {
-                target.classList.toggle('collapsed');
-                el.classList.toggle('collapsed');
+                var isCollapsed = target.classList.contains('collapsed');
+                if (isCollapsed) {
+                    target.classList.remove('collapsed');
+                    target.style.maxHeight = target.scrollHeight + 'px';
+                    el.classList.remove('collapsed');
+                } else {
+                    target.style.maxHeight = '0';
+                    target.classList.add('collapsed');
+                    el.classList.add('collapsed');
+                }
             });
         });
     });
     </script>
+
+    {{-- SweetAlert2 Flash Toast --}}
+    @if(session('success'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success',
+            title: @json(session('success')), showConfirmButton: false, timer: 3500,
+            timerProgressBar: true, customClass: { popup: 'sa-swal-toast' } });
+    });
+    </script>
+    @endif
+    @if(session('error'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error',
+            title: @json(session('error')), showConfirmButton: false, timer: 4500,
+            timerProgressBar: true, customClass: { popup: 'sa-swal-toast' } });
+    });
+    </script>
+    @endif
+    @if(session('warning'))
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'warning',
+            title: @json(session('warning')), showConfirmButton: false, timer: 4000,
+            timerProgressBar: true, customClass: { popup: 'sa-swal-toast' } });
+    });
+    </script>
+    @endif
 
     @stack('scripts')
 </body>

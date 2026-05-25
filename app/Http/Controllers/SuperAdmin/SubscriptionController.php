@@ -22,6 +22,10 @@ class SubscriptionController extends Controller
     {
         $subscriptions = Subscription::with('tenant')->latest()->paginate(25);
 
-        return view('superadmin.subscriptions.index', compact('subscriptions'));
+        $totalCount   = Subscription::count();
+        $activeCount  = Subscription::where('status', 'active')->count();
+        $expiredCount = Subscription::where('status', 'expired')->count();
+
+        return view('superadmin.subscriptions.index', compact('subscriptions', 'totalCount', 'activeCount', 'expiredCount'));
     }
 }

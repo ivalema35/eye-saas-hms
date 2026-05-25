@@ -1,84 +1,73 @@
-﻿@extends('superadmin.layouts.app')
+@extends('superadmin.layouts.app')
 @section('title', 'Dashboard')
 @section('page-header', 'Platform Overview')
 
 @section('content')
 
 {{-- ============================================================
-     8-Card Premium Stats Row
+     Stat Cards Row 1 — Hospital Counts
 ============================================================ --}}
-<div class="sa-stats-grid">
-    {{-- Total Hospitals --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-blue"><i class="fa-solid fa-hospital-user"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#1B4F72"></i> Total Hospitals</div>
-            <div class="sa-stat-value">{{ $totalHospitals }}</div>
+<div class="hms-stats-grid">
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-blue"><i class="bi bi-hospital-fill"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Total Hospitals</div>
+            <div class="hms-stat-value">{{ $totalHospitals }}</div>
         </div>
     </div>
-
-    {{-- Active --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-green"><i class="fa-solid fa-circle-check"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#27AE60"></i> Active</div>
-            <div class="sa-stat-value">{{ $activeCount }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-green"><i class="bi bi-check-circle-fill"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Active</div>
+            <div class="hms-stat-value">{{ $activeCount }}</div>
         </div>
     </div>
-
-    {{-- On Trial --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-orange"><i class="fa-solid fa-flask"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#E67E22"></i> On Trial</div>
-            <div class="sa-stat-value">{{ $trialCount }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-orange"><i class="bi bi-capsule"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">On Trial</div>
+            <div class="hms-stat-value">{{ $trialCount }}</div>
         </div>
     </div>
-
-    {{-- Grace Period --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-amber"><i class="fa-solid fa-hourglass-half"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#D97706"></i> Grace Period</div>
-            <div class="sa-stat-value">{{ $graceCount }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-amber"><i class="bi bi-hourglass-split"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Grace Period</div>
+            <div class="hms-stat-value">{{ $graceCount }}</div>
         </div>
     </div>
+</div>
 
-    {{-- Inactive / Suspended --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-red"><i class="fa-solid fa-ban"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#C0392B"></i> Inactive / Suspended</div>
-            <div class="sa-stat-value">{{ $inactiveCount + $suspendedCount }}</div>
+{{-- Stat Cards Row 2 — Revenue + Alerts --}}
+<div class="hms-stats-grid">
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-red"><i class="bi bi-x-circle-fill"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Inactive / Suspended</div>
+            <div class="hms-stat-value">{{ $inactiveCount + $suspendedCount }}</div>
         </div>
     </div>
-
-    {{-- MRR --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-teal"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#1ABC9C"></i> Monthly Recurring Revenue</div>
-            <div class="sa-stat-value">&#x20B9;{{ number_format($monthlyRevenue) }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-teal"><i class="bi bi-currency-rupee"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Monthly Recurring Revenue</div>
+            <div class="hms-stat-value">&#x20B9;{{ number_format($monthlyRevenue) }}</div>
         </div>
     </div>
-
-    {{-- Revenue This Month --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-purple"><i class="fa-solid fa-coins"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#7C3AED"></i> Revenue This Month</div>
-            <div class="sa-stat-value">&#x20B9;{{ number_format($monthlyRevenue) }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-purple"><i class="bi bi-cash-stack"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Revenue This Month</div>
+            <div class="hms-stat-value">&#x20B9;{{ number_format($monthlyRevenue) }}</div>
         </div>
     </div>
-
-    {{-- Expiring This Week --}}
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-warning"><i class="fa-solid fa-calendar-xmark"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label"><i class="fa-solid fa-circle" style="color:#EA580C"></i> Expiring This Week</div>
-            <div class="sa-stat-value">{{ $expiringThisWeek }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-orange"><i class="bi bi-calendar-x-fill"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Expiring This Week</div>
+            <div class="hms-stat-value">{{ $expiringThisWeek }}</div>
             @if($expiringThisWeek > 0)
-                <div class="sa-stat-sub">Needs attention</div>
+                <div class="hms-stat-meta">Needs attention</div>
             @endif
         </div>
     </div>
@@ -93,8 +82,8 @@
     <div class="sa-premium-card sa-chart-card-lg">
         <div class="sa-premium-card-header">
             <div class="sa-premium-card-header-left">
-                <div class="sa-premium-card-icon" style="background:linear-gradient(135deg,#D6EAF8,#EBF5FB);color:#1B4F72">
-                    <i class="fa-solid fa-chart-bar"></i>
+                <div class="sa-premium-card-icon" style="background:rgba(27,79,114,.08);color:#1B4F72">
+                    <i class="bi bi-bar-chart-fill"></i>
                 </div>
                 <div>
                     <h3 class="sa-premium-card-title">Revenue Trend</h3>
@@ -111,8 +100,8 @@
     <div class="sa-premium-card sa-chart-card-sm">
         <div class="sa-premium-card-header">
             <div class="sa-premium-card-header-left">
-                <div class="sa-premium-card-icon" style="background:linear-gradient(135deg,#D5F5E3,#E8F8F0);color:#27AE60">
-                    <i class="fa-solid fa-chart-pie"></i>
+                <div class="sa-premium-card-icon" style="background:rgba(39,174,96,.08);color:#27AE60">
+                    <i class="bi bi-pie-chart-fill"></i>
                 </div>
                 <div>
                     <h3 class="sa-premium-card-title">Status Distribution</h3>
@@ -123,43 +112,25 @@
         <div class="sa-premium-card-body" style="display:flex;flex-direction:column;align-items:center;gap:1.25rem">
             <canvas id="statusChart" style="max-width:220px;max-height:220px"></canvas>
             <div class="sa-donut-legend">
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#27AE60"></span>
-                    Active ({{ $activeCount }})
-                </span>
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#E67E22"></span>
-                    Trial ({{ $trialCount }})
-                </span>
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#F59E0B"></span>
-                    Grace ({{ $graceCount }})
-                </span>
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#C0392B"></span>
-                    Suspended ({{ $suspendedCount }})
-                </span>
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#94A3B8"></span>
-                    Inactive ({{ $inactiveCount }})
-                </span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#27AE60"></span>Active ({{ $activeCount }})</span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#E67E22"></span>Trial ({{ $trialCount }})</span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#F59E0B"></span>Grace ({{ $graceCount }})</span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#C0392B"></span>Suspended ({{ $suspendedCount }})</span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#94A3B8"></span>Inactive ({{ $inactiveCount }})</span>
             </div>
         </div>
     </div>
 
 </div>
 
-{{-- ============================================================
-     Charts Row 2 — Registrations + Subscription Cycles
-============================================================ --}}
+{{-- Charts Row 2 — Registrations + Subscription Cycles --}}
 <div class="sa-charts-row" style="margin-top:1.5rem">
 
-    {{-- New Registrations (Line Chart) --}}
     <div class="sa-premium-card sa-chart-card-lg">
         <div class="sa-premium-card-header">
             <div class="sa-premium-card-header-left">
-                <div class="sa-premium-card-icon" style="background:linear-gradient(135deg,#D1F2EB,#E8F8F5);color:#1ABC9C">
-                    <i class="fa-solid fa-chart-line"></i>
+                <div class="sa-premium-card-icon" style="background:rgba(26,188,156,.08);color:#1ABC9C">
+                    <i class="bi bi-graph-up"></i>
                 </div>
                 <div>
                     <h3 class="sa-premium-card-title">New Registrations</h3>
@@ -172,12 +143,11 @@
         </div>
     </div>
 
-    {{-- Subscription Cycles (Pie) --}}
     <div class="sa-premium-card sa-chart-card-sm">
         <div class="sa-premium-card-header">
             <div class="sa-premium-card-header-left">
-                <div class="sa-premium-card-icon" style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);color:#7C3AED">
-                    <i class="fa-solid fa-rotate"></i>
+                <div class="sa-premium-card-icon" style="background:rgba(124,58,237,.08);color:#7C3AED">
+                    <i class="bi bi-arrow-repeat"></i>
                 </div>
                 <div>
                     <h3 class="sa-premium-card-title">Subscription Cycles</h3>
@@ -188,18 +158,9 @@
         <div class="sa-premium-card-body" style="display:flex;flex-direction:column;align-items:center;gap:1rem">
             <canvas id="cycleChart" style="max-width:200px;max-height:200px"></canvas>
             <div class="sa-donut-legend">
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#2980B9"></span>
-                    Monthly ({{ $cycleMonthly }})
-                </span>
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#27AE60"></span>
-                    Quarterly ({{ $cycleQuarterly }})
-                </span>
-                <span class="sa-legend-item">
-                    <span class="sa-legend-dot" style="background:#1ABC9C"></span>
-                    Yearly ({{ $cycleYearly }})
-                </span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#2980B9"></span>Monthly ({{ $cycleMonthly }})</span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#27AE60"></span>Quarterly ({{ $cycleQuarterly }})</span>
+                <span class="sa-legend-item"><span class="sa-legend-dot" style="background:#1ABC9C"></span>Yearly ({{ $cycleYearly }})</span>
             </div>
         </div>
     </div>
@@ -207,72 +168,58 @@
 </div>
 
 {{-- ============================================================
-     Recently Registered Hospitals (Premium Table)
+     Recently Registered Hospitals
 ============================================================ --}}
-<div class="sa-premium-card" style="margin-top:1.5rem">
-    <div class="sa-premium-card-header">
-        <div class="sa-premium-card-header-left">
-            <div class="sa-premium-card-icon" style="background:linear-gradient(135deg,#F5F3FF,#EDE9FE);color:#7C3AED">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-            </div>
-            <div>
-                <h3 class="sa-premium-card-title">Recently Registered Hospitals</h3>
-                <div class="sa-premium-card-subtitle">Latest {{ $recentHospitals->count() }} registrations</div>
-            </div>
-        </div>
-        <a href="{{ route('superadmin.hospitals.index') }}" class="sa-premium-btn sa-premium-btn-secondary sa-premium-btn-sm">
-            <i class="fa-solid fa-list"></i> View All
+<div class="hms-card" style="margin-top:1.5rem;padding:0">
+    <div class="hms-card-header">
+        <h3 class="hms-card-title">
+            <i class="bi bi-clock-history" style="color:#7C3AED"></i>
+            Recently Registered Hospitals
+        </h3>
+        <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">
+            <i class="bi bi-list-ul"></i> View All
         </a>
     </div>
 
     @if($recentHospitals->isEmpty())
-        <div class="sa-empty-state">
-            <div class="sa-empty-state-icon">
-                <i class="fa-solid fa-hospital"></i>
-            </div>
-            <h4>No Hospitals Registered</h4>
-            <p>Hospitals will appear here once they register on the platform.</p>
-        </div>
+        <x-empty-state
+            icon="bi bi-hospital-fill"
+            title="No Hospitals Registered"
+            description="Hospitals will appear here once they register on the platform." />
     @else
-        <div class="sa-premium-table-wrap" style="border-radius:0;border-left:none;border-right:none;border-bottom:none;box-shadow:none">
-            <table class="sa-premium-table">
+        <div class="hms-table-wrap" style="border:none">
+            <table class="hms-table">
                 <thead>
                     <tr>
                         <th>Hospital</th>
                         <th>Admin</th>
                         <th>City</th>
-                        <th>Plan</th>
                         <th>Status</th>
                         <th>Registered</th>
-                        <th>Action</th>
+                        <th class="text-right">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($recentHospitals as $hospital)
                         <tr>
                             <td>
-                                <span class="sa-cell-name">{{ $hospital->name }}</span>
-                                <div class="sa-cell-muted">{{ $hospital->slug }}</div>
+                                <span style="font-weight:600;color:#1A202C">{{ $hospital->name }}</span>
+                                <div style="font-size:.75rem;color:#64748B">{{ $hospital->slug }}</div>
                             </td>
                             <td>{{ $hospital->admin_name ?? '—' }}</td>
                             <td>{{ $hospital->city ?? '—' }}</td>
                             <td>
-                                <span style="color:#94A3B8;font-size:.825rem">—</span>
-                            </td>
-                            <td>
-                                <span class="sa-premium-badge sa-premium-badge-{{ strtolower($hospital->status) }}">
-                                    <i class="fa-solid fa-circle"></i>
+                                <span class="hms-badge hms-badge-{{ strtolower($hospital->status) }}">
                                     {{ ucfirst($hospital->status) }}
                                 </span>
                             </td>
                             <td style="white-space:nowrap;font-size:.825rem;color:#64748B">
                                 {{ $hospital->created_at->format('d M Y') }}
                             </td>
-                            <td>
+                            <td style="text-align:right">
                                 <a href="{{ route('superadmin.hospitals.show', $hospital) }}"
-                                   class="sa-premium-btn sa-premium-btn-secondary sa-premium-btn-sm"
-                                   title="View Hospital">
-                                    <i class="fa-solid fa-eye"></i> View
+                                   class="hms-btn-icon" data-tooltip="View Details">
+                                    <i class="bi bi-eye-fill"></i>
                                 </a>
                             </td>
                         </tr>
@@ -293,12 +240,11 @@
 (function () {
     'use strict';
 
-    var months = @json($revenueMonths);
-    var amounts = @json($revenueAmounts);
+    var months    = @json($revenueMonths);
+    var amounts   = @json($revenueAmounts);
     var regMonths = @json($regMonths);
     var regCounts = @json($regCounts);
 
-    /* --- Revenue Bar Chart (Premium) --- */
     var ctx1 = document.getElementById('revenueChart');
     if (ctx1) {
         new Chart(ctx1, {
@@ -308,14 +254,7 @@
                 datasets: [{
                     label: 'Revenue (₹)',
                     data: amounts,
-                    backgroundColor: [
-                        'rgba(27,79,114,.6)',
-                        'rgba(27,79,114,.65)',
-                        'rgba(27,79,114,.7)',
-                        'rgba(27,79,114,.75)',
-                        'rgba(27,79,114,.8)',
-                        'rgba(27,79,114,.85)',
-                    ],
+                    backgroundColor: 'rgba(27,79,114,.7)',
                     borderColor: '#1B4F72',
                     borderWidth: 2,
                     borderRadius: 6,
@@ -332,49 +271,29 @@
                         titleFont: { weight: '700' },
                         padding: 10,
                         cornerRadius: 8,
-                        callbacks: {
-                            label: function (ctx) {
-                                return ' ₹' + ctx.parsed.y.toLocaleString('en-IN');
-                            }
-                        }
+                        callbacks: { label: ctx => ' ₹' + ctx.parsed.y.toLocaleString('en-IN') }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0,0,0,.04)', drawBorder: false },
-                        ticks: {
-                            callback: function (val) {
-                                return '₹' + (val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val);
-                            },
-                            font: { size: 11, family: "'Inter', sans-serif" },
-                            color: '#94A3B8'
-                        }
+                        ticks: { callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v), font: { size: 11 }, color: '#94A3B8' }
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 11, family: "'Inter', sans-serif" }, color: '#94A3B8' }
-                    }
+                    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94A3B8' } }
                 }
             }
         });
     }
 
-    /* --- Status Donut Chart (Premium) --- */
     var ctx2 = document.getElementById('statusChart');
     if (ctx2) {
         new Chart(ctx2, {
             type: 'doughnut',
             data: {
-                labels: ['Active', 'Trial', 'Grace', 'Suspended', 'Inactive'],
+                labels: ['Active','Trial','Grace','Suspended','Inactive'],
                 datasets: [{
-                    data: [
-                        {{ $activeCount }},
-                        {{ $trialCount }},
-                        {{ $graceCount }},
-                        {{ $suspendedCount }},
-                        {{ $inactiveCount }}
-                    ],
+                    data: [{{ $activeCount }},{{ $trialCount }},{{ $graceCount }},{{ $suspendedCount }},{{ $inactiveCount }}],
                     backgroundColor: ['#27AE60','#E67E22','#F59E0B','#C0392B','#94A3B8'],
                     borderWidth: 3,
                     borderColor: '#fff',
@@ -385,17 +304,12 @@
                 cutout: '72%',
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0D2137',
-                        padding: 10,
-                        cornerRadius: 8,
-                    }
+                    tooltip: { backgroundColor: '#0D2137', padding: 10, cornerRadius: 8 }
                 }
             }
         });
     }
 
-    /* --- Registrations Line Chart (Premium) --- */
     var ctx3 = document.getElementById('regChart');
     if (ctx3) {
         new Chart(ctx3, {
@@ -407,13 +321,12 @@
                     data: regCounts,
                     borderColor: '#2980B9',
                     backgroundColor: function(context) {
-                        var chart = context.chart;
-                        var {ctx, chartArea} = chart;
+                        var {ctx, chartArea} = context.chart;
                         if (!chartArea) return 'rgba(41,128,185,.15)';
-                        var gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        gradient.addColorStop(0, 'rgba(41,128,185,.3)');
-                        gradient.addColorStop(1, 'rgba(41,128,185,.02)');
-                        return gradient;
+                        var g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        g.addColorStop(0, 'rgba(41,128,185,.3)');
+                        g.addColorStop(1, 'rgba(41,128,185,.02)');
+                        return g;
                     },
                     borderWidth: 3,
                     pointBackgroundColor: '#2980B9',
@@ -430,41 +343,25 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0D2137',
-                        padding: 10,
-                        cornerRadius: 8,
-                    }
+                    tooltip: { backgroundColor: '#0D2137', padding: 10, cornerRadius: 8 }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: { size: 11, family: "'Inter', sans-serif" },
-                            color: '#94A3B8'
-                        },
-                        grid: { color: 'rgba(0,0,0,.04)', drawBorder: false }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 11, family: "'Inter', sans-serif" }, color: '#94A3B8' }
-                    }
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 }, color: '#94A3B8' }, grid: { color: 'rgba(0,0,0,.04)', drawBorder: false } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94A3B8' } }
                 }
             }
         });
     }
 
-    /* --- Subscription Cycles Pie Chart (Premium) --- */
     var ctx4 = document.getElementById('cycleChart');
     if (ctx4) {
         new Chart(ctx4, {
             type: 'pie',
             data: {
-                labels: ['Monthly', 'Quarterly', 'Yearly'],
+                labels: ['Monthly','Quarterly','Yearly'],
                 datasets: [{
-                    data: [{{ $cycleMonthly }}, {{ $cycleQuarterly }}, {{ $cycleYearly }}],
-                    backgroundColor: ['#2980B9', '#27AE60', '#1ABC9C'],
+                    data: [{{ $cycleMonthly }},{{ $cycleQuarterly }},{{ $cycleYearly }}],
+                    backgroundColor: ['#2980B9','#27AE60','#1ABC9C'],
                     borderWidth: 3,
                     borderColor: '#fff',
                     hoverOffset: 10,
@@ -473,11 +370,7 @@
             options: {
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#0D2137',
-                        padding: 10,
-                        cornerRadius: 8,
-                    }
+                    tooltip: { backgroundColor: '#0D2137', padding: 10, cornerRadius: 8 }
                 }
             }
         });

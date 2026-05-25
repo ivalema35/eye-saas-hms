@@ -1,14 +1,30 @@
 /*
  * ============================================================
- *  Eye HMS SaaS — SuperAdmin Panel CSS (Premium v2)
- *  Extends design-system.css with SA-specific premium styles
- *  Palette aligned with premium-theme.css:
- *    Sidebar:  #0D2137  (Midnight Blue)
+ *  Eye HMS SaaS — SuperAdmin Panel CSS (Premium v3)
+ *  Theme aligned with Hospital Panel — white glassmorphism
+ *    Sidebar:  rgba(255,255,255,0.78) + blur(12px)
+ *    Navbar:   rgba(255,255,255,0.78) + blur(12px)
  *    Primary:  #1B4F72  (Deep Healthcare Blue)
  *    Accent:   #27AE60  (Health Green)
- *    BG:       #F0F4F8  (Cool Gray)
+ *    BG:       #ffffff
  * ============================================================
  */
+
+/* ── SA Shell variables ──────────────────────────────────── */
+:root {
+    --sa-primary:     #1B4F72;
+    --sa-secondary:   #2980B9;
+    --sa-accent:      #27AE60;
+    --sa-danger:      #C0392B;
+    --sa-text:        #1A202C;
+    --sa-text-muted:  #4A5568;
+    --sa-border:      rgba(27,79,114,0.12);
+    --sa-white-78:    rgba(255,255,255,0.78);
+    --sa-white-86:    rgba(255,255,255,0.86);
+    --sa-p06:         rgba(27,79,114,0.06);
+    --sa-p10:         rgba(27,79,114,0.10);
+    --sa-p12:         rgba(27,79,114,0.12);
+}
 
 /* ============================================================
    SuperAdmin Auth Page (Premium)
@@ -84,27 +100,31 @@
 }
 
 /* ============================================================
-   SuperAdmin Layout (Premium)
+   SuperAdmin Layout — White Glassmorphism Theme
 ============================================================ */
 .sa-body {
-    background: #F0F4F8;
+    background: #ffffff !important;
+    color: var(--sa-primary);
 }
 
-/* --- Navbar (Premium) --- */
+/* --- Navbar (White Glass) --- */
 .sa-navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: var(--hms-navbar-h);
-    background: linear-gradient(90deg, #0D2137, #1B4F72);
-    color: #fff;
+    background: var(--sa-white-78);
+    color: var(--sa-primary);
+    border-bottom: 1px solid var(--sa-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 1.5rem;
     z-index: 1000;
-    box-shadow: 0 2px 12px rgba(13,33,55,.3);
+    box-shadow: none;
 }
 
 .sa-navbar-brand {
@@ -113,54 +133,130 @@
     gap: .625rem;
     font-weight: 700;
     font-size: 1.125rem;
-    color: #fff;
+    color: var(--sa-primary);
+    text-decoration: none;
 }
 .sa-navbar-brand i {
-    color: var(--hms-teal);
+    color: var(--sa-accent);
     font-size: 1.25rem;
+}
+.sa-navbar-brand:hover {
+    color: var(--sa-primary);
+    text-decoration: none;
 }
 
 .sa-badge-platform {
     font-size: .7rem;
-    background: rgba(39,174,96,.2);
-    border: 1px solid rgba(39,174,96,.4);
+    background: rgba(27,79,114,.08);
+    border: 1px solid var(--sa-border);
     padding: .125rem .5rem;
     border-radius: 999px;
     margin-left: .25rem;
     letter-spacing: .05em;
     text-transform: uppercase;
     font-weight: 700;
-    color: #7DCEA0;
+    color: var(--sa-primary);
 }
 
 .sa-navbar-right {
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: .75rem;
 }
 
-.sa-navbar-user {
-    font-size: .875rem;
-    opacity: .9;
-    display: flex;
-    align-items: center;
-    gap: .375rem;
-}
-
-.sa-btn-logout {
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.25);
-    color: #fff;
-    padding: .375rem .875rem;
-    border-radius: 8px;
+/* Hamburger toggle */
+.hms-sidebar-toggle {
+    color: var(--sa-primary) !important;
+    background: var(--sa-white-78);
+    border: 1px solid var(--sa-border);
+    border-radius: 10px;
+    padding: .35rem .6rem;
+    line-height: 1;
+    transition: all .16s ease;
     cursor: pointer;
-    font-size: .875rem;
-    transition: all .2s;
 }
-.sa-btn-logout:hover {
-    background: rgba(255,255,255,.22);
+.hms-sidebar-toggle:hover {
+    background: var(--sa-white-86);
     transform: translateY(-1px);
 }
+
+/* --- Navbar User Dropdown --- */
+.sa-user-btn {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: rgba(27,79,114,.06);
+    border: 1px solid var(--sa-border);
+    border-radius: 10px;
+    padding: .35rem .75rem;
+    color: var(--sa-primary);
+    font-size: .875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+}
+.sa-user-btn:hover, .sa-user-btn:focus {
+    background: rgba(27,79,114,.10);
+    border-color: rgba(27,79,114,.2);
+    color: var(--sa-primary);
+    box-shadow: none;
+    outline: none;
+}
+.sa-user-btn::after { display: none; } /* remove BS dropdown arrow */
+.sa-user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(27,79,114,.1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .8rem;
+    color: var(--sa-primary);
+    flex-shrink: 0;
+}
+.sa-user-name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sa-user-chevron { font-size: .6rem; opacity: .6; }
+
+.sa-user-dropdown-menu {
+    border: 1px solid var(--sa-border) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 8px 32px rgba(27,79,114,.12) !important;
+    min-width: 220px;
+    padding: .5rem;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255,255,255,.97) !important;
+}
+.sa-dropdown-header { padding: .5rem .75rem .625rem; }
+.sa-dropdown-user-info { display: flex; align-items: center; gap: .625rem; }
+.sa-dropdown-avatar {
+    width: 36px; height: 36px;
+    background: rgba(27,79,114,.08);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--sa-primary); font-size: .95rem; flex-shrink: 0;
+}
+.sa-dropdown-name { font-size: .875rem; font-weight: 700; color: #0D2137; line-height: 1.3; }
+.sa-dropdown-email { font-size: .72rem; color: #64748B; }
+
+.sa-dropdown-item {
+    display: flex !important;
+    align-items: center;
+    gap: .5rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--sa-text) !important;
+    border-radius: 8px !important;
+    padding: .5rem .75rem !important;
+    transition: all .15s;
+}
+.sa-dropdown-item:hover { background: rgba(27,79,114,.06) !important; color: var(--sa-primary) !important; }
+.sa-dropdown-item i { width: 1rem; text-align: center; color: #64748B; }
+.sa-dropdown-item:hover i { color: var(--sa-primary); }
+.sa-dropdown-item-danger { color: #C0392B !important; background: none; border: none; width: 100%; text-align: left; }
+.sa-dropdown-item-danger:hover { background: rgba(192,57,43,.06) !important; color: #C0392B !important; }
+.sa-dropdown-item-danger i { color: #C0392B !important; }
 
 /* --- Layout --- */
 .sa-layout {
@@ -169,23 +265,43 @@
     min-height: 100vh;
 }
 
-/* --- Sidebar (Premium) --- */
+/* --- Sidebar (White Glassmorphism) --- */
 .sa-sidebar {
     position: fixed;
     top: var(--hms-navbar-h);
     left: 0;
     bottom: 0;
     width: var(--hms-sidebar-w);
-    background: #0D2137;
+    background: var(--sa-white-78);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-right: 1px solid var(--sa-border);
     overflow-y: auto;
     z-index: 900;
-    border-right: 1px solid rgba(255,255,255,.05);
     scrollbar-width: thin;
-    scrollbar-color: rgba(255,255,255,.1) transparent;
+    scrollbar-color: rgba(27,79,114,.12) transparent;
 }
 
+/* Sidebar brand strip — dark like hospital panel */
+.sa-sidebar-brand {
+    background: var(--sa-primary);
+    padding: .875rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    margin-bottom: .375rem;
+}
+.sa-sidebar-brand a {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    text-decoration: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: .9rem;
+}
+.sa-sidebar-brand i { color: var(--sa-accent); font-size: 1.1rem; }
+
 .sa-sidenav {
-    padding: 1rem .5rem;
+    padding: .75rem .5rem;
 }
 .sa-sidenav ul {
     list-style: none;
@@ -199,77 +315,100 @@
     display: flex;
     align-items: center;
     gap: .75rem;
-    padding: .625rem .875rem;
-    border-radius: 8px;
-    color: rgba(168,216,234,.7);
+    padding: .65rem .875rem;
+    border-radius: 12px;
+    color: var(--sa-primary);
     font-size: .875rem;
-    font-weight: 500;
-    transition: all .2s;
+    font-weight: 700;
+    transition: all .16s ease;
     text-decoration: none;
     position: relative;
 }
 .sa-sidenav li a:hover {
-    background: rgba(255,255,255,.08);
+    background: var(--sa-primary) !important;
     color: #fff;
-    padding-left: calc(.875rem + 4px);
+    transform: translateX(2px);
     text-decoration: none;
 }
+.sa-sidenav li a:hover i { color: #fff !important; }
 .sa-sidenav li a.active {
-    background: linear-gradient(90deg, #1B4F72, rgba(27,79,114,.35));
-    color: #fff;
-    border-left: 3px solid #27AE60;
-    padding-left: calc(.875rem - 3px);
-    box-shadow: inset 0 0 20px rgba(39,174,96,.08);
+    background: rgba(27,79,114,.12) !important;
+    color: var(--sa-primary);
+    font-weight: 800;
+}
+.sa-sidenav li a.active::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    width: 4px;
+    height: 18px;
+    transform: translateY(-50%);
+    border-radius: 999px;
+    background: var(--sa-primary);
+    opacity: 1;
 }
 .sa-sidenav li a i {
     width: 1.125rem;
     text-align: center;
     flex-shrink: 0;
-    transition: transform .2s;
+    color: var(--sa-primary);
+    transition: transform .16s;
 }
-.sa-sidenav li a:hover i {
-    transform: scale(1.15);
-}
+.sa-sidenav li a:hover i { transform: translateX(1px); }
 
+/* --- Sidebar Nav Section Labels --- */
 .sa-nav-section-label {
     font-size: .6875rem;
-    font-weight: 700;
+    font-weight: 900;
     text-transform: uppercase;
     letter-spacing: .1em;
-    color: rgba(168,216,234,.35);
+    color: rgba(27,79,114,.55);
     padding: .75rem .875rem .375rem;
     margin-top: .25rem;
     pointer-events: none;
 }
 .sa-nav-divider {
     height: 1px;
-    background: rgba(255,255,255,.08);
+    background: var(--sa-border);
     margin: .5rem .5rem;
 }
 
-/* --- Sidebar Collapsible Groups (Premium) --- */
+/* --- Sidebar Collapsible Groups --- */
 .sa-nav-group-toggle {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .625rem .875rem .375rem;
+    padding: .6rem .875rem .375rem;
     margin-top: .25rem;
     cursor: pointer;
     user-select: none;
-    border-radius: 6px;
-    transition: background .15s;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,.65);
+    margin: .2rem .5rem;
+    transition: all .16s;
 }
 .sa-nav-group-toggle:hover {
-    background: rgba(255,255,255,.06);
+    background: var(--sa-primary);
+    transform: translateX(2px);
+}
+.sa-nav-group-toggle:hover .sa-nav-section-label,
+.sa-nav-group-toggle:hover .hms-nav-chevron {
+    color: rgba(255,255,255,.95) !important;
 }
 .sa-nav-group-toggle .sa-nav-section-label {
+    font-size: 1rem !important;
+    font-weight: 900 !important;
+    letter-spacing: .05em !important;
+    color: rgba(27,79,114,.78) !important;
     padding: 0;
     margin: 0;
     pointer-events: none;
 }
 .sa-nav-group-toggle .hms-nav-chevron {
-    color: rgba(168,216,234,.3);
-    font-size: .625rem;
+    color: rgba(27,79,114,.55);
+    font-size: .75rem;
     transition: transform .25s ease;
 }
 .sa-nav-group-toggle.collapsed .hms-nav-chevron {
@@ -284,12 +423,16 @@
     max-height: 0;
 }
 
+/* SweetAlert2 toast override */
+.sa-swal-toast { font-size: .875rem !important; }
+
 /* --- Main Content --- */
 .sa-main {
     margin-left: var(--hms-sidebar-w);
     flex: 1;
     padding: 1.5rem;
     min-width: 0;
+    background: #ffffff;
     animation: saFadeIn .4s ease-out;
 }
 
@@ -481,6 +624,39 @@
     font-weight: 500;
     margin-top: .125rem;
 }
+
+/* ============================================================
+   hms-card overrides for SuperAdmin panel
+============================================================ */
+.hms-card {
+    border-radius: 14px;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+.hms-card-header {
+    padding: 1rem 1.25rem;
+    margin-bottom: 0;
+    border-bottom: 1px solid rgba(27,79,114,.1);
+}
+.hms-card-title {
+    font-size: .95rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+/* hms-label — form label utility matching hospital panel style */
+.hms-label {
+    display: block;
+    font-size: .75rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: .375rem;
+    letter-spacing: .02em;
+}
+
+/* hsi-amber — extra color not in hospital.css */
+.hsi-amber  { background: rgba(217,119,6,.1);  color: #D97706; }
 
 /* ============================================================
    Charts Row (Premium)
@@ -936,6 +1112,9 @@
     .sa-sidebar {
         transform: translateX(-100%);
         transition: transform .3s ease;
+        background: rgba(255,255,255,.97);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
     }
     .sa-sidebar.open {
         transform: translateX(0);

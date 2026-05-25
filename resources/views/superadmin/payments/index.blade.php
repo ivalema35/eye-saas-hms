@@ -10,43 +10,49 @@
 
 @section('content')
 
-<div class="sa-stats-grid" style="margin-bottom:1.25rem">
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label">Total Revenue</div>
-            <div class="sa-stat-value">₹{{ number_format((float) $totalRevenue) }}</div>
+{{-- Stat Cards --}}
+<div class="hms-stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-green"><i class="bi bi-currency-rupee"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Total Revenue</div>
+            <div class="hms-stat-value">₹{{ number_format((float) $totalRevenue) }}</div>
         </div>
     </div>
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-blue"><i class="fa-solid fa-calendar-check"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label">This Month</div>
-            <div class="sa-stat-value">₹{{ number_format((float) $thisMonth) }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-blue"><i class="bi bi-calendar-check-fill"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">This Month</div>
+            <div class="hms-stat-value">₹{{ number_format((float) $thisMonth) }}</div>
         </div>
     </div>
-    <div class="sa-stat-card">
-        <div class="sa-stat-icon sa-stat-orange"><i class="fa-solid fa-clock"></i></div>
-        <div class="sa-stat-body">
-            <div class="sa-stat-label">Pending</div>
-            <div class="sa-stat-value">{{ $pendingCount }}</div>
+    <div class="hms-stat-card">
+        <div class="hms-stat-icon hsi-orange"><i class="bi bi-clock-fill"></i></div>
+        <div class="hms-stat-body">
+            <div class="hms-stat-label">Pending Payments</div>
+            <div class="hms-stat-value">{{ $pendingCount }}</div>
         </div>
     </div>
 </div>
 
-<div class="hms-card" style="padding:1rem;margin-bottom:1rem">
+{{-- Filter Card --}}
+<div class="hms-card" style="padding:1.25rem;margin-bottom:1.25rem">
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
+        <i class="fa-solid fa-filter" style="color:#1B4F72;font-size:.875rem"></i>
+        <span style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B">Filters</span>
+    </div>
     <form method="GET" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
         <div class="hms-form-group" style="margin-bottom:0;min-width:130px">
-            <label style="font-size:.75rem">Status</label>
+            <label class="hms-label">Status</label>
             <select name="status" class="hms-select">
                 <option value="">All</option>
-                <option value="success"  {{ request('status')=='success'  ? 'selected':'' }}>Success</option>
-                <option value="pending"  {{ request('status')=='pending'  ? 'selected':'' }}>Pending</option>
-                <option value="failed"   {{ request('status')=='failed'   ? 'selected':'' }}>Failed</option>
+                <option value="success" {{ request('status')=='success' ? 'selected':'' }}>Success</option>
+                <option value="pending" {{ request('status')=='pending' ? 'selected':'' }}>Pending</option>
+                <option value="failed"  {{ request('status')=='failed'  ? 'selected':'' }}>Failed</option>
             </select>
         </div>
         <div class="hms-form-group" style="margin-bottom:0;min-width:130px">
-            <label style="font-size:.75rem">Method</label>
+            <label class="hms-label">Method</label>
             <select name="method" class="hms-select">
                 <option value="">All</option>
                 <option value="online"  {{ request('method')=='online'  ? 'selected':'' }}>Online</option>
@@ -54,23 +60,32 @@
             </select>
         </div>
         <div class="hms-form-group" style="margin-bottom:0">
-            <label style="font-size:.75rem">From Date</label>
-            <input type="date" name="from" class="hms-input" value="{{ request('from') }}" style="width:140px">
+            <label class="hms-label">From Date</label>
+            <input type="date" name="from" class="hms-input" value="{{ request('from') }}" style="width:145px">
         </div>
         <div class="hms-form-group" style="margin-bottom:0">
-            <label style="font-size:.75rem">To Date</label>
-            <input type="date" name="to" class="hms-input" value="{{ request('to') }}" style="width:140px">
+            <label class="hms-label">To Date</label>
+            <input type="date" name="to" class="hms-input" value="{{ request('to') }}" style="width:145px">
         </div>
         <div style="display:flex;gap:.5rem">
             <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm">
                 <i class="fa-solid fa-filter"></i> Filter
             </button>
-            <a href="{{ route('superadmin.payments.index') }}" class="hms-btn hms-btn-secondary hms-btn-sm">Clear</a>
+            <a href="{{ route('superadmin.payments.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
         </div>
     </form>
 </div>
 
+{{-- Payments Table --}}
 <div class="hms-card" style="padding:0">
+    <div class="hms-card-header">
+        <h3 class="hms-card-title">
+            <i class="fa-solid fa-receipt" style="color:#1B4F72"></i>
+            Payment Transactions
+        </h3>
+        <span class="hms-badge hms-badge-info">{{ $payments->total() }} total</span>
+    </div>
+
     <div class="hms-table-wrap" style="border:none">
         <table class="hms-table">
             <thead>
@@ -90,24 +105,26 @@
             <tbody>
                 @forelse($payments as $payment)
                 <tr>
-                    <td style="color:var(--hms-text-muted);font-size:.8rem">{{ $payment->id }}</td>
+                    <td style="color:#94A3B8;font-size:.8rem">{{ $payment->id }}</td>
                     <td>
                         @if($payment->tenant)
-                            <a href="{{ route('superadmin.hospitals.show', $payment->tenant) }}" style="font-weight:600">{{ $payment->tenant->name }}</a>
-                            <div style="font-size:.72rem;color:var(--hms-text-muted)">{{ $payment->tenant->slug }}</div>
+                            <a href="{{ route('superadmin.hospitals.show', $payment->tenant) }}"
+                               style="font-weight:600;color:#1A202C">{{ $payment->tenant->name }}</a>
+                            <div style="font-size:.72rem;color:#64748B">{{ $payment->tenant->slug }}</div>
                         @else
-                            <span style="color:var(--hms-text-muted)">Deleted Hospital</span>
+                            <span style="color:#94A3B8">Deleted Hospital</span>
                         @endif
                     </td>
-                    <td style="font-weight:700">₹{{ number_format((float) $payment->amount) }}</td>
-                    <td>{{ ucfirst($payment->cycle ?? '—') }}</td>
+                    <td style="font-weight:700;color:#1A202C">₹{{ number_format((float) $payment->amount) }}</td>
+                    <td style="font-size:.85rem">{{ ucfirst($payment->cycle ?? '—') }}</td>
                     <td>
-                        <span class="hms-badge" style="background:{{ $payment->method === 'online' ? 'var(--hms-info-bg)' : '#FFF3E0' }};color:{{ $payment->method === 'online' ? 'var(--hms-info)' : '#E65100' }}">
-                            <i class="fa-solid fa-{{ $payment->method === 'online' ? 'wifi' : 'money-bill-wave' }}" style="font-size:.6rem"></i>
-                            {{ ucfirst($payment->method ?? '—') }}
-                        </span>
+                        @if($payment->method === 'online')
+                            <span class="hms-badge hms-badge-info"><i class="fa-solid fa-wifi" style="font-size:.6rem"></i> Online</span>
+                        @else
+                            <span class="hms-badge" style="background:#FFF3E0;color:#E65100"><i class="fa-solid fa-money-bill-wave" style="font-size:.6rem"></i> Offline</span>
+                        @endif
                     </td>
-                    <td style="font-family:var(--hms-font-mono);font-size:.8rem">{{ $payment->transaction_id ?? '—' }}</td>
+                    <td style="font-family:monospace;font-size:.8rem;color:#475569">{{ $payment->transaction_id ?? '—' }}</td>
                     <td>
                         @php
                             $badgeClass = match($payment->status) {
@@ -119,24 +136,30 @@
                         @endphp
                         <span class="hms-badge {{ $badgeClass }}">{{ ucfirst($payment->status) }}</span>
                     </td>
-                    <td style="white-space:nowrap;font-size:.82rem">{{ $payment->paid_at?->format('d M Y, h:i A') ?? '—' }}</td>
-                    <td style="font-size:.8rem;color:var(--hms-text-muted);max-width:150px">{{ \Illuminate\Support\Str::limit($payment->notes ?? '', 40) ?: '—' }}</td>
+                    <td style="white-space:nowrap;font-size:.82rem;color:#475569">
+                        {{ $payment->paid_at?->format('d M Y, h:i A') ?? '—' }}
+                    </td>
+                    <td style="font-size:.8rem;color:#64748B;max-width:150px">
+                        {{ \Illuminate\Support\Str::limit($payment->notes ?? '', 40) ?: '—' }}
+                    </td>
                     <td style="text-align:center">
                         @if($payment->status === 'success')
                             <a href="{{ route('superadmin.payments.invoice', $payment) }}"
                                target="_blank"
-                               class="hms-btn hms-btn-outline hms-btn-sm"
-                               title="Download Invoice PDF">
-                                <i class="fa-solid fa-file-pdf"></i>
+                               class="hms-btn-icon" data-tooltip="Download Invoice PDF">
+                                <i class="fa-solid fa-file-pdf" style="color:#C0392B"></i>
                             </a>
                         @else
-                            <span style="color:var(--hms-text-muted);font-size:.75rem">—</span>
+                            <span style="color:#94A3B8;font-size:.75rem">—</span>
                         @endif
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="10" style="text-align:center;padding:2rem;color:var(--hms-text-muted)">No payments found.</td>
+                    <td colspan="10" style="text-align:center;padding:2.5rem;color:#94A3B8">
+                        <i class="fa-solid fa-receipt" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>
+                        No payments found.
+                    </td>
                 </tr>
                 @endforelse
             </tbody>
@@ -144,18 +167,19 @@
     </div>
 
     @if($payments->hasPages())
-    <div style="padding:1rem;border-top:1px solid var(--hms-border)">
+    <div style="padding:1rem;border-top:1px solid rgba(27,79,114,.1)">
         {{ $payments->withQueryString()->links() }}
     </div>
     @endif
 </div>
 
+{{-- Record Offline Payment Modal --}}
 <div class="modal fade" id="offlineModal" tabindex="-1">
     <div class="modal-dialog">
-        <div class="modal-content" style="border-radius:var(--hms-radius-lg)">
-            <div class="modal-header" style="border-bottom:1px solid var(--hms-border)">
-                <h5 class="modal-title" style="font-weight:700">
-                    <i class="fa-solid fa-money-bill-wave" style="color:var(--hms-success)"></i>
+        <div class="modal-content" style="border-radius:14px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
+            <div class="modal-header" style="border-bottom:1px solid rgba(27,79,114,.12);padding:1.25rem 1.5rem">
+                <h5 class="modal-title" style="font-weight:700;font-size:1rem;color:#1B4F72;display:flex;align-items:center;gap:.5rem">
+                    <i class="fa-solid fa-money-bill-wave"></i>
                     Record Offline Payment
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -164,7 +188,7 @@
                 @csrf
                 <div class="modal-body" style="padding:1.5rem">
                     <div class="hms-form-group">
-                        <label>Hospital <span style="color:var(--hms-danger)">*</span></label>
+                        <label class="hms-label">Hospital <span style="color:#C0392B">*</span></label>
                         <select name="tenant_id" class="hms-select" required>
                             <option value="">Select hospital...</option>
                             @foreach($tenants as $tenant)
@@ -174,11 +198,11 @@
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                         <div class="hms-form-group">
-                            <label>Amount (₹) <span style="color:var(--hms-danger)">*</span></label>
+                            <label class="hms-label">Amount (₹) <span style="color:#C0392B">*</span></label>
                             <input type="number" name="amount" class="hms-input" min="1" step="1" placeholder="e.g. 999" required>
                         </div>
                         <div class="hms-form-group">
-                            <label>Billing Cycle <span style="color:var(--hms-danger)">*</span></label>
+                            <label class="hms-label">Billing Cycle <span style="color:#C0392B">*</span></label>
                             <select name="cycle" class="hms-select" required>
                                 <option value="monthly">Monthly (₹999)</option>
                                 <option value="quarterly">Quarterly (₹2,427)</option>
@@ -187,17 +211,17 @@
                         </div>
                     </div>
                     <div class="hms-form-group">
-                        <label>Transaction / Cheque Number</label>
+                        <label class="hms-label">Transaction / Cheque Number</label>
                         <input type="text" name="transaction_id" class="hms-input" placeholder="e.g. CHQ-12345 or UTR-XXXXX">
                     </div>
                     <div class="hms-form-group" style="margin-bottom:0">
-                        <label>Notes (optional)</label>
+                        <label class="hms-label">Notes (optional)</label>
                         <input type="text" name="notes" class="hms-input" placeholder="e.g. Cash received by X on dd/mm/yyyy">
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid var(--hms-border)">
-                    <button type="button" class="hms-btn hms-btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="hms-btn hms-btn-success">
+                <div class="modal-footer" style="border-top:1px solid rgba(27,79,114,.12);padding:1rem 1.5rem">
+                    <button type="button" class="hms-btn hms-btn-outline" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="hms-btn hms-btn-primary">
                         <i class="fa-solid fa-check"></i> Record & Activate
                     </button>
                 </div>
