@@ -41,6 +41,53 @@ class SystemRolesSeeder extends Seeder
             'reports.view',
             'master.receptions',
         ],
+
+        // ── OT Roles ──────────────────────────────────────────────────
+        'ot_receptionist' => [
+            'ot.booking.create',
+            'ot.booking.modify',
+            'ot.booking.cancel',
+            'ot.counselling.fill',
+            'ot.patient.list',
+            'ot.package.set',
+            'ot.payment.record',
+            'ot.payment.export',
+            'ot.invoice.view',
+            'ot.bill.print',
+            'reports.view',
+        ],
+        'accountant' => [
+            'ot.patient.list',
+            'ot.payment.record',
+            'ot.payment.export',
+            'ot.invoice.view',
+            'ot.invoice.edit',
+            'ot.bill.print',
+            'reports.view',
+            'reports.export',
+        ],
+        'ot_doctor' => [
+            'ot.patient.list',
+            'ot.surgery.ready',
+            'ot.surgery.record',
+            'ot.lens.record',
+            'ot.lens.implant',
+            'ot.meds.takehome',
+            'ot.invoice.view',
+            'ot.discharge.generate',
+            'ot.discharge.patient',
+            'ot.certificate.print',
+            'reports.view',
+        ],
+        'ot_assistant' => [
+            'ot.patient.list',
+            'ot.ward.entry',
+            'ot.preop.entry',
+            'ot.dilation.track',
+            'ot.surgery.ready',
+            'ot.lens.record',
+            'ot.meds.takehome',
+        ],
     ];
  
     public static function seedForTenant(int $tenantId, ?int $adminId = null): void

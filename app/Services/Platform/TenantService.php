@@ -17,7 +17,12 @@ class TenantService
 {
     public function createTenant(array $data): Tenant
     {
-        return DB::transaction(function () use ($data) {
+        // Dispatch master seeder AFTER transaction commits so:
+        // 1. Tenant data is visible to queue workers (async drivers)
+        // 2. A job failure doesn't roll back hospital creation (sync driver)
+        $tenantId = null;
+
+        $tenant = DB::transaction(function () use ($data, &$tenantId) {
 
             $trialDays = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
             $trialEndsAt = Carbon::now()->addDays($trialDays);
@@ -36,7 +41,7 @@ class TenantService
                 'is_setup_done' => false,
             ]);
 
-            // 2. System roles seed karo (hospital_admin, doctor, receptionist)
+            // 2. System roles + permissions seed karo (all 7 roles including OT)
             SystemRolesSeeder::seedForTenant($tenant->id);
 
             // FIX: withoutTenantScope() use karo —
@@ -55,7 +60,7 @@ class TenantService
             // 3. Hospital Admin user banao
             HospitalUser::create([
                 'tenant_id' => $tenant->id,
-                'role_id' => $adminRoleId,  // FIX: Ab null nahi hoga
+                'role_id' => $adminRoleId,
                 'name' => $data['admin_name'],
                 'email' => $data['admin_email'],
                 'password' => Hash::make($data['password']),
@@ -63,16 +68,18 @@ class TenantService
                 'status' => 'active',
             ]);
 
-            // 4. Welcome email
-            SendWelcomeEmail::dispatch($tenant);
-
-            // 5. Seed default OPD master data (case types, slots, complaints, vision values, etc.)
-            SeedTenantDefaultMasters::dispatch($tenant->id);
+            $tenantId = $tenant->id;
 
             Log::info("New tenant created: #{$tenant->id} ({$tenant->slug}) — trial until {$trialEndsAt->toDateString()}");
 
             return $tenant;
         });
+
+        // Dispatch OUTSIDE transaction — tenant is committed and visible to job
+        SendWelcomeEmail::dispatch($tenant);
+        SeedTenantDefaultMasters::dispatch($tenantId);
+
+        return $tenant;
     }
 
     public function activate(Tenant $tenant): void
