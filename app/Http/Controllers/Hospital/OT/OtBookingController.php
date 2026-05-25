@@ -15,17 +15,34 @@ use Illuminate\View\View;
 
 class OtBookingController extends Controller
 {
-    public function index(string $slug): View
+    public function index(Request $request, string $slug): View
     {
-        $bookings = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name', 'otDoctor:id,name'])
+        $filter = strtolower((string) $request->query('filter', 'all'));
+        if (! in_array($filter, ['all', 'today'], true)) {
+            $filter = 'all';
+        }
+
+        $bookingsQuery = OtBooking::query()
+            ->with([
+                'patient:id,first_name,middle_name,last_name,patient_code,contact_no',
+                'otDoctor:id,name',
+                'bookedBy:id,name',
+            ]);
+
+        if ($filter === 'today') {
+            $bookingsQuery->whereDate('surgery_date', today());
+        }
+
+        $bookings = $bookingsQuery
             ->orderByDesc('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25));
+            ->paginate((int) config('app.pagination_limit', 25))
+            ->appends($request->query());
 
         return view('hospital.ot.bookings.index', [
             'slug' => $slug,
             'bookings' => $bookings,
+            'activeFilter' => $filter,
         ]);
     }
 

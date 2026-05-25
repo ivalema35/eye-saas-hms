@@ -113,7 +113,7 @@
             @endif
 
             <div class="row g-4">
-                <div class="col-lg-4">
+                <!-- <div class="col-lg-4">
                     <div class="card ot-basic-card shadow-sm h-100">
                         <div class="card-header bg-white">
                             <strong class="ot-section-title">Patient Details</strong>
@@ -140,9 +140,9 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
-                <div class="col-lg-8">
+                <div class="col-lg-12">
                     <div class="card ot-basic-card shadow-sm">
                         <div class="card-header bg-white">
                             <strong class="ot-section-title">Payment Form</strong>
