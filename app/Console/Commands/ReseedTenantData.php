@@ -93,9 +93,23 @@ class ReseedTenantData extends Command
     private function countEmptyMasters(int $tenantId): int
     {
         $tables = [
-            'tbl_cases', 'chief_complaints', 'kcos',
-            'tbl_master_vn', 'tbl_master_sac', 'tbl_master_advice',
-            'tbl_master_diagnosis', 'tbl_master_sph_cyl',
+            // OPD basics
+            'tbl_cases', 'chief_complaints', 'kcos', 'tbl_durations',
+            // Vision
+            'tbl_master_vn', 'tbl_master_vngl', 'tbl_master_vnst',
+            'tbl_master_pnvn', 'tbl_master_nrvn',
+            // Refraction
+            'tbl_master_sph_cyl', 'tbl_master_axis', 'tbl_master_nct',
+            // Slit-lamp / anterior segment
+            'tbl_master_sac', 'tbl_master_lid', 'tbl_master_conj',
+            'tbl_master_cornea', 'tbl_master_ac', 'tbl_master_iris',
+            'tbl_master_pupil', 'tbl_master_lens',
+            // Posterior / motility / fundus
+            'tbl_master_em', 'tbl_master_covertest', 'tbl_master_disc', 'tbl_master_fr',
+            // Prescription
+            'tbl_master_advice', 'tbl_master_diagnosis', 'tbl_master_medicine_instructions',
+            // OT masters
+            'ot_types', 'ot_lens_options', 'ot_charge_heads', 'tbl_ot_slots',
         ];
 
         $empty = 0;
