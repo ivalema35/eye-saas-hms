@@ -29,18 +29,31 @@ class OtAccountantController extends Controller
         ]);
     }
 
-    public function dashboard(string $slug): View
+    public function dashboard(Request $request, string $slug): View
     {
-        $bookings = OtBooking::query()
+        $filter = strtolower((string) $request->query('filter', 'all'));
+        if (! in_array($filter, ['all', 'today'], true)) {
+            $filter = 'all';
+        }
+
+        $bookingsQuery = OtBooking::query()
             ->with(['patient:id,first_name,middle_name,last_name,contact_no'])
-            ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_PAID])
+            ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_PAID]);
+
+        if ($filter === 'today') {
+            $bookingsQuery->whereDate('surgery_date', today());
+        }
+
+        $bookings = $bookingsQuery
             ->orderBy('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25));
+            ->paginate((int) config('app.pagination_limit', 25))
+            ->appends($request->query());
 
         return view('hospital.ot.accountant.dashboard', [
             'slug' => $slug,
             'bookings' => $bookings,
+            'activeFilter' => $filter,
         ]);
     }
 
@@ -104,6 +117,15 @@ class OtAccountantController extends Controller
             }
 
             OtPayment::query()->create($payload);
+            
+            // Ensure counselling record (if exists) reflects the latest package amount
+            DB::table('ot_counselling')
+                ->where('tenant_id', app('tenant')->id)
+                ->where('ot_booking_id', $booking->id)
+                ->update([
+                    'package_amount' => $validated['package_amount'],
+                    'updated_at' => now(),
+                ]);
 
             $booking->update([
                 'ot_status' => OtBooking::STATUS_PAID,

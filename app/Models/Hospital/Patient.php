@@ -14,6 +14,7 @@
 
 namespace App\Models\Hospital;
 
+use App\Models\Hospital\OT\OtBooking;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -92,5 +93,10 @@ class Patient extends Model
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
+    }
+
+    public function otBookings()
+    {
+        return $this->hasMany(OtBooking::class, 'patient_id');
     }
 }

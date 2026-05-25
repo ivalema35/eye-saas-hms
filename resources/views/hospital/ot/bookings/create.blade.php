@@ -176,7 +176,7 @@
                             </div>
                         </div>
 
-                        <div class="col-md-4">
+                        <!-- <div class="col-md-4">
                             <label class="form-label">Payment Mode</label>
                             <select name="payment_mode" class="form-select">
                                 <option value="">Select payment mode...</option>
@@ -186,14 +186,14 @@
                                     </option>
                                 @endforeach
                             </select>
-                        </div>
+                        </div> -->
 
-                        <div class="col-md-4 d-flex align-items-end">
+                        <!-- <div class="col-md-4 d-flex align-items-end">
                             <div class="form-check mt-2">
                                 <input class="form-check-input" type="checkbox" name="report_ok" id="report_ok" value="1" {{ old('report_ok') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="report_ok">Pre-Report OK?</label>
                             </div>
-                        </div>
+                        </div> -->
 
                         <div class="col-md-12">
                             <label class="form-label">Notes</label>

@@ -110,6 +110,42 @@
         font-size: .92rem;
     }
 
+    .ot-filter-wrap {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid var(--ot-s2-12);
+        border-radius: 999px;
+        padding: .25rem;
+        box-shadow: 0 8px 18px rgba(27, 79, 114, 0.08);
+    }
+
+    .ot-filter-btn {
+        text-decoration: none;
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: .38rem .75rem;
+        font-weight: 900;
+        font-size: .75rem;
+        letter-spacing: .04em;
+        color: rgba(27, 79, 114, 0.72);
+        transition: all 160ms ease;
+    }
+
+    .ot-filter-btn:hover {
+        color: var(--ot-secondary);
+        background: rgba(27, 79, 114, 0.08);
+        border-color: rgba(27, 79, 114, 0.14);
+    }
+
+    .ot-filter-btn.active {
+        background: var(--ot-secondary);
+        border-color: var(--ot-secondary);
+        color: #fff;
+        box-shadow: 0 8px 16px rgba(27, 79, 114, 0.20);
+    }
+
     .ot-table-wrap {
         padding: .9rem !important;
         overflow-x: auto;
@@ -147,6 +183,11 @@
     .ot-premium-table thead th:last-child {
         border-top-right-radius: 14px;
         border-bottom-right-radius: 14px;
+    }
+
+    .ot-premium-table thead th.ot-actions-col,
+    .ot-premium-table tbody td.ot-actions-cell {
+        text-align: center;
     }
 
     .ot-premium-table tbody td {
@@ -217,6 +258,97 @@
         box-shadow: 0 10px 22px rgba(27, 79, 114, 0.10);
     }
 
+    .ot-view-btn {
+        border-radius: 12px;
+        border: 1px solid rgba(27, 79, 114, 0.18);
+        background: rgba(27, 79, 114, 0.06);
+        color: var(--ot-secondary);
+        font-weight: 900;
+        padding: .45rem .8rem;
+        transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
+    }
+
+    .ot-view-btn:hover,
+    .ot-view-btn:focus {
+        background: rgba(27, 79, 114, 0.12);
+        border-color: rgba(27, 79, 114, 0.28);
+        color: var(--ot-secondary);
+        box-shadow: 0 10px 20px rgba(27, 79, 114, 0.12);
+    }
+
+    .ot-booking-modal .modal-content {
+        border: 0;
+        border-radius: 22px;
+        overflow: hidden;
+        box-shadow: 0 24px 70px rgba(27, 79, 114, 0.22);
+    }
+
+    .ot-booking-modal .modal-header {
+        background: linear-gradient(135deg, #1B4F72, #245f86);
+        color: #fff;
+        border-bottom: 0;
+        padding: 1rem 1.15rem;
+    }
+
+    .ot-booking-modal .modal-title {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        font-weight: 900;
+        letter-spacing: -.02em;
+        color: #ffffff;
+    }
+
+    .ot-modal-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        flex: 0 0 auto;
+    }
+
+    .ot-booking-modal .modal-body {
+        padding: 1.15rem;
+        background: #f7fbfe;
+    }
+
+    .ot-modal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .85rem;
+    }
+
+    .ot-modal-field {
+        background: #fff;
+        border: 1px solid rgba(27, 79, 114, 0.10);
+        border-radius: 16px;
+        padding: .9rem .95rem;
+        box-shadow: 0 8px 20px rgba(27, 79, 114, 0.06);
+    }
+
+    .ot-modal-field-label {
+        font-size: .72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: rgba(27, 79, 114, 0.62);
+        margin-bottom: .35rem;
+    }
+
+    .ot-modal-field-value {
+        font-weight: 800;
+        color: var(--ot-secondary);
+        word-break: break-word;
+    }
+
+    .ot-modal-wide {
+        grid-column: 1 / -1;
+    }
+
     .ot-empty {
         padding: 2.25rem 1rem !important;
         color: rgba(27, 79, 114, 0.72) !important;
@@ -256,6 +388,12 @@
                 </div>
             </div>
             <div class="d-none d-md-flex align-items-center gap-2">
+                <div class="ot-filter-wrap" role="group" aria-label="OT booking filter">
+                    <a href="{{ route('hospital.ot.bookings.index', ['slug' => $slug, 'filter' => 'all']) }}"
+                       class="ot-filter-btn {{ ($activeFilter ?? 'all') === 'all' ? 'active' : '' }}">All</a>
+                    <a href="{{ route('hospital.ot.bookings.index', ['slug' => $slug, 'filter' => 'today']) }}"
+                       class="ot-filter-btn {{ ($activeFilter ?? 'all') === 'today' ? 'active' : '' }}">Today</a>
+                </div>
                 <span class="badge" style="background: rgba(255,255,255,.78); color: var(--ot-secondary); border: 1px solid var(--ot-s2-12); border-radius: 999px; padding: .55rem .85rem; font-weight: 900; box-shadow: 0 10px 22px rgba(27,79,114,.08);">
                     <i class="bi bi-info-circle me-1"></i> List
                 </span>
@@ -274,6 +412,7 @@
                             <th><i class="bi bi-eye me-1"></i> Eye</th>
                             <th><i class="bi bi-activity me-1"></i> Type</th>
                             <th><i class="bi bi-flag me-1"></i> Status</th>
+                            <th class="ot-actions-col"><i class="bi bi-three-dots me-1"></i> Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -286,10 +425,15 @@
                                 <td>{{ $booking->eye }}</td>
                                 <td>{{ $booking->ot_type }}</td>
                                 <td><span class="badge text-bg-secondary ot-status-badge">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span></td>
+                                <td class="ot-actions-cell">
+                                    <button type="button" class="btn btn-sm ot-view-btn" data-bs-toggle="modal" data-bs-target="#otBookingViewModal{{ $booking->id }}">
+                                        <i class="bi bi-eye-fill me-1"></i> View
+                                    </button>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="7" class="text-center ot-empty">
+                                <td colspan="8" class="text-center ot-empty">
                                     <i class="bi bi-inbox me-1"></i> No OT bookings found.
                                 </td>
                             </tr>
@@ -300,6 +444,74 @@
         </div>
     </div>
 </div>
+
+@foreach($bookings as $booking)
+    <div class="modal fade ot-booking-modal" id="otBookingViewModal{{ $booking->id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title mb-0">
+                        <span class="ot-modal-icon" aria-hidden="true">
+                            <i class="bi bi-calendar2-check"></i>
+                        </span>
+                        OT Booking Details
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="ot-modal-grid">
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-hash me-1"></i> Booking ID</div>
+                            <div class="ot-modal-field-value">#{{ $booking->id }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-flag me-1"></i> Status</div>
+                            <div class="ot-modal-field-value">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-person-badge me-1"></i> Patient</div>
+                            <div class="ot-modal-field-value">{{ $booking->patient?->full_name ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-upc-scan me-1"></i> Patient Code</div>
+                            <div class="ot-modal-field-value">{{ $booking->patient?->patient_code ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-telephone me-1"></i> Contact</div>
+                            <div class="ot-modal-field-value">{{ $booking->patient?->contact_no ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-person-vcard me-1"></i> OT Doctor</div>
+                            <div class="ot-modal-field-value">{{ $booking->otDoctor?->name ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-person-check me-1"></i> Booked By</div>
+                            <div class="ot-modal-field-value">{{ $booking->bookedBy?->name ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-calendar-event me-1"></i> Surgery Date</div>
+                            <div class="ot-modal-field-value">{{ optional($booking->surgery_date)->format('d M Y') ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-eye me-1"></i> Eye</div>
+                            <div class="ot-modal-field-value">{{ $booking->eye ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field">
+                            <div class="ot-modal-field-label"><i class="bi bi-activity me-1"></i> OT Type</div>
+                            <div class="ot-modal-field-value">{{ $booking->ot_type ?? '-' }}</div>
+                        </div>
+                        <div class="ot-modal-field ot-modal-wide">
+                            <div class="ot-modal-field-label"><i class="bi bi-person-circle me-1"></i> Assigned Summary</div>
+                            <div class="ot-modal-field-value">
+                                Patient {{ $booking->patient?->full_name ?? '-' }} is assigned to {{ $booking->otDoctor?->name ?? '-' }}.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endforeach
 
 @if($bookings->hasPages())
     <div class="mt-3 d-flex justify-content-center">
