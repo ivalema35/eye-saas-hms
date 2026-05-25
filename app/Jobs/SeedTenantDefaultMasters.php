@@ -36,43 +36,38 @@ class SeedTenantDefaultMasters implements ShouldQueue
     {
         Log::info("SeedTenantDefaultMasters: Starting for tenant #{$this->tenantId}");
 
-        $this->seedCaseTypes();
-        $this->seedSlots();
-        $this->seedOtTypes();
-        $this->seedOtSurgeryTypes();
-        $this->seedLensOptions();
-        $this->seedDurations();
-        $this->seedChiefComplaints();
-        $this->seedKcos();
-        $this->seedVisionMasters();
-        $this->seedSphCyl();
-        $this->seedAxis();
-        $this->seedNct();
-        $this->seedSac();
-        $this->seedLid();
-        $this->seedConj();
-        $this->seedCornea();
-        $this->seedAc();
-        $this->seedIris();
-        $this->seedPupil();
-        $this->seedLens();
-        $this->seedEm();
-        $this->seedCovertest();
-        $this->seedDisc();
-        $this->seedFr();
-        $this->seedAdvice();
-        $this->seedDiagnosis();
-        $this->seedMedicineInstructions();
-        $this->seedOtChargeHeads();
+        $methods = [
+            'seedCaseTypes', 'seedSlots', 'seedOtTypes', 'seedOtSurgeryTypes',
+            'seedLensOptions', 'seedDurations', 'seedChiefComplaints', 'seedKcos',
+            'seedVisionMasters', 'seedSphCyl', 'seedAxis', 'seedNct',
+            'seedSac', 'seedLid', 'seedConj', 'seedCornea',
+            'seedAc', 'seedIris', 'seedPupil', 'seedLens',
+            'seedEm', 'seedCovertest', 'seedDisc', 'seedFr',
+            'seedAdvice', 'seedDiagnosis', 'seedMedicineInstructions', 'seedOtChargeHeads',
+        ];
 
-        Log::info("SeedTenantDefaultMasters: Completed for tenant #{$this->tenantId}");
+        $errors = [];
+        foreach ($methods as $method) {
+            try {
+                $this->$method();
+            } catch (\Throwable $e) {
+                $errors[] = "{$method}: {$e->getMessage()}";
+                Log::error("SeedTenantDefaultMasters [{$method}] failed for tenant #{$this->tenantId}: {$e->getMessage()}");
+            }
+        }
+
+        if (! empty($errors)) {
+            Log::warning("SeedTenantDefaultMasters: Completed with " . count($errors) . " error(s) for tenant #{$this->tenantId}.", $errors);
+        } else {
+            Log::info("SeedTenantDefaultMasters: Completed successfully for tenant #{$this->tenantId}");
+        }
     }
 
     public function failed(\Throwable $exception): void
     {
         Log::error(
             "SeedTenantDefaultMasters FAILED for tenant #{$this->tenantId}: "
-            .$exception->getMessage()
+            .$exception->getMessage()."\n".$exception->getTraceAsString()
         );
     }
 
