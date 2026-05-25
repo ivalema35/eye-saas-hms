@@ -102,6 +102,16 @@ class SeedTenantDefaultMasters implements ShouldQueue
         DB::table($table)->insert($rows);
     }
 
+    /** Insert only if the table has NO existing rows for this tenant. */
+    private function insertIfEmpty(string $table, array $rows): void
+    {
+        if (DB::table($table)->where('tenant_id', $this->tenantId)->exists()) {
+            return;
+        }
+
+        $this->insert($table, $rows);
+    }
+
     // ─────────────────────────────────────────────────────────────────
     // OPD Basics
     // ─────────────────────────────────────────────────────────────────
@@ -278,12 +288,12 @@ class SeedTenantDefaultMasters implements ShouldQueue
             $rows[] = ['tenant_id' => $this->tenantId, 'duration' => $d, 'created_at' => $ts, 'updated_at' => $ts];
         }
 
-        $this->insert('tbl_durations', $rows);
+        $this->insertIfEmpty('tbl_durations', $rows);
     }
 
     private function seedChiefComplaints(): void
     {
-        $this->insert('chief_complaints', $this->valueRows([
+        $this->insertIfEmpty('chief_complaints', $this->valueRows([
             'Black spot',
             'Cataract check up',
             'Diplopia',
@@ -304,7 +314,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedKcos(): void
     {
-        $this->insert('kcos', $this->valueRows([
+        $this->insertIfEmpty('kcos', $this->valueRows([
             'Acidity Problem',
             'Arthritis',
             'Asthma',
@@ -335,15 +345,15 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'HM', 'HM/PL/PR4+', 'HM/PL/PR inacc.', 'NOPL',
         ];
 
-        $this->insert('tbl_master_vn', $this->valueRows($dvValues));
-        $this->insert('tbl_master_vngl', $this->valueRows($dvValues));
-        $this->insert('tbl_master_vnst', $this->valueRows($dvValues));
+        $this->insertIfEmpty('tbl_master_vn', $this->valueRows($dvValues));
+        $this->insertIfEmpty('tbl_master_vngl', $this->valueRows($dvValues));
+        $this->insertIfEmpty('tbl_master_vnst', $this->valueRows($dvValues));
 
         // PnVN starts with NI (not improved)
-        $this->insert('tbl_master_pnvn', $this->valueRows(array_merge(['NI'], $dvValues)));
+        $this->insertIfEmpty('tbl_master_pnvn', $this->valueRows(array_merge(['NI'], $dvValues)));
 
         // NrVN uses near-vision notation
-        $this->insert('tbl_master_nrvn', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_nrvn', $this->valueRows([
             'NP',
             'N6', 'N8', 'N10', 'N12', 'N18', 'N24', 'N36',
             'N6 1FT', 'N8 1FT', 'N10 1FT', 'N12 1FT', 'N18 1FT', 'N24 1FT',
@@ -356,6 +366,10 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedSphCyl(): void
     {
+        if (DB::table('tbl_master_sph_cyl')->where('tenant_id', $this->tenantId)->exists()) {
+            return;
+        }
+
         $ts = $this->ts();
         $rows = [];
 
@@ -374,6 +388,10 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedAxis(): void
     {
+        if (DB::table('tbl_master_axis')->where('tenant_id', $this->tenantId)->exists()) {
+            return;
+        }
+
         $ts = $this->ts();
         $rows = [];
 
@@ -387,6 +405,10 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedNct(): void
     {
+        if (DB::table('tbl_master_nct')->where('tenant_id', $this->tenantId)->exists()) {
+            return;
+        }
+
         $ts = $this->ts();
         $rows = [];
 
@@ -407,7 +429,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedSac(): void
     {
-        $this->insert('tbl_master_sac', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_sac', $this->valueRows([
             'Acute DC',
             'Block',
             'Block with clear fluid',
@@ -421,7 +443,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedLid(): void
     {
-        $this->insert('tbl_master_lid', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_lid', $this->valueRows([
             'Blepharitis', 'Chalazion', 'Cyst', 'Dermoid', 'Dystichiasis',
             'Ectropion', 'Epiblepharon', 'Hemangioma', 'Hordeolum',
             'L/L Stye', 'Lid Tear', 'Madarosis', 'Mole', 'Poliosis',
@@ -432,7 +454,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedConj(): void
     {
-        $this->insert('tbl_master_conj', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_conj', $this->valueRows([
             'Allergic conjunctivitis', 'CCC++', 'Chemosis', 'Concretions',
             'Conj. Congestion', 'Conj. Growth', 'Conj. suture',
             'Conjunctival cyst', 'Conjunctivitis (Bac)', 'Conjunctivitis (Viral)',
@@ -448,7 +470,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedCornea(): void
     {
-        $this->insert('tbl_master_cornea', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_cornea', $this->valueRows([
             'Abscess', 'Adherent leucoma', 'Arcus senilis', 'BSK',
             "Central k' opacity", "CL, k' haze", 'Clear', 'Congestion',
             'Corneal FB', 'DEG+++', 'Degeneration', 'Descemet folds',
@@ -465,7 +487,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedAc(): void
     {
-        $this->insert('tbl_master_ac', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_ac', $this->valueRows([
             'Cells +1', 'Cells +2', 'Cells +3', 'Cells +4',
             'Deep AC', 'Flare +1', 'Flare +2', 'Flare +3', 'Flare +4',
             'Flat', "Fuch's", 'Hyphema', 'Hypopyon',
@@ -477,7 +499,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedIris(): void
     {
-        $this->insert('tbl_master_iris', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_iris', $this->valueRows([
             'Adherent leucoma', 'Atrophy', 'Coloboma', 'Cyst',
             'Heterochromia', 'Iridodialysis', 'Irregular', 'Nevus',
             'Nodule', 'Normal', 'NVI', 'PEX iritis', 'PI', 'Pigment',
@@ -487,7 +509,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedPupil(): void
     {
-        $this->insert('tbl_master_pupil', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_pupil', $this->valueRows([
             'Anterior synechia', 'Atrophy', 'Dilated', 'Fixed', 'Irregular',
             'Mid dilated', 'Mid dilated (ATRO)', 'Miotic', 'Miotic NR>L',
             'Mydriasis 3mm', 'Mydriasis 4mm', 'Mydriasis NR>L',
@@ -500,7 +522,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedLens(): void
     {
-        $this->insert('tbl_master_lens', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_lens', $this->valueRows([
             'Absorbed Cataract', 'AC/PC IOL', 'ACIOL', 'Aphakia', 'ASC',
             'ASC+PSC', 'Blue dot cataract', 'Brown cataract', 'Clear', 'CLO',
             'Coloboma', 'Complicated pseudophakia', 'Congenital',
@@ -523,7 +545,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedEm(): void
     {
-        $this->insert('tbl_master_em', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_em', $this->valueRows([
             '3rd nerve palsy', '6th nerve palsy', 'Alt. ESO', 'Alt. EXO',
             'Esotropia', 'Exotropia', 'Full', 'LR palsy', 'MR palsy',
             'Nystagmus', 'Restricted', 'SR under action', 'Total ophthalmoplegia',
@@ -532,7 +554,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedCovertest(): void
     {
-        $this->insert('tbl_master_covertest', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_covertest', $this->valueRows([
             'Orthophoria', 'Esophoria', 'Exophoria', 'Hyperphoria', 'Hypophoria',
             'Esotropia', 'Exotropia', 'Hypertropia', 'Hypotropia',
             'Alternating Esotropia', 'Alternating Exotropia',
@@ -541,7 +563,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedDisc(): void
     {
-        $this->insert('tbl_master_disc', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_disc', $this->valueRows([
             '0.2 CDR', '0.3 CDR', '0.4 CDR', '0.5 CDR',
             '0.6 CDR', '0.7 CDR', '0.8 CDR', '0.9 CDR',
             'Normal', 'Optic atrophy', 'Pale NRR', 'Tilted disc',
@@ -550,7 +572,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedFr(): void
     {
-        $this->insert('tbl_master_fr', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_fr', $this->valueRows([
             'ARMD', 'CME', 'CSR', 'DME', 'FR dull', 'Lasered PDR',
             'Macular scar', 'Mild NPDR', 'Moderate NPDR', 'Myopic fundus',
             'Normal', 'PDR', 'RP', 'RPE defect', 'Severe NPDR', 'VH',
@@ -563,7 +585,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedAdvice(): void
     {
-        $this->insert('tbl_master_advice', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_advice', $this->valueRows([
             'Avoid dust and smoke', 'Cold compresses', 'Dark goggles',
             "Don't rub eyes", 'Eye patching', 'Frequent blinking',
             'Lid hygiene', 'No head bath', 'No heavy lifting',
@@ -574,7 +596,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedDiagnosis(): void
     {
-        $this->insert('tbl_master_diagnosis', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_diagnosis', $this->valueRows([
             '3rd Nerve Palsy', '6th Nerve Palsy', 'Allergic Conjunctivitis',
             'ARMD', 'Astigmatism', 'Bacterial Conjunctivitis',
             'Bilateral Pseudophakia', 'Blepharitis', 'BRVO', 'CRVO',
@@ -593,7 +615,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
 
     private function seedMedicineInstructions(): void
     {
-        $this->insert('tbl_master_medicine_instructions', $this->valueRows([
+        $this->insertIfEmpty('tbl_master_medicine_instructions', $this->valueRows([
             'After meals',
             'Before meals',
             'With food',
