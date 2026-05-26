@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Platform Admin &mdash; Eye HMS SaaS</title>
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
@@ -14,7 +14,7 @@
             min-height: 100%;
             margin: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #EBF5FB 0%, #fff 60%, #EBF5FB 100%);
+            background: #F0F4F8;
         }
 
         .split-layout {
@@ -577,41 +577,41 @@
 <body>
 
 <div class="split-layout">
-    <div class="page-bubble b1"><i class="fa-solid fa-circle"></i></div>
-    <div class="page-bubble b2"><i class="fa-solid fa-circle"></i></div>
-    <div class="page-bubble b3"><i class="fa-solid fa-shield-halved"></i></div>
-    <div class="page-bubble b4"><i class="fa-solid fa-lock"></i></div>
-    <div class="page-bubble b5"><i class="fa-solid fa-key"></i></div>
-    <div class="page-bubble b6"><i class="fa-solid fa-user-shield"></i></div>
-    <div class="page-bubble b7"><i class="fa-solid fa-circle"></i></div>
-    <div class="page-bubble b8"><i class="fa-solid fa-shield-heart"></i></div>
-    <div class="page-bubble b9"><i class="fa-solid fa-screwdriver-wrench"></i></div>
-    <div class="page-bubble b10"><i class="fa-solid fa-briefcase"></i></div>
-    <div class="page-bubble b11"><i class="fa-solid fa-plus"></i></div>
-    <div class="page-bubble b12"><i class="fa-solid fa-circle-check"></i></div>
+    <div class="page-bubble b1"><i class="bi bi-circle-fill"></i></div>
+    <div class="page-bubble b2"><i class="bi bi-circle-fill"></i></div>
+    <div class="page-bubble b3"><i class="bi bi-shield-fill"></i></div>
+    <div class="page-bubble b4"><i class="bi bi-lock-fill"></i></div>
+    <div class="page-bubble b5"><i class="bi bi-key-fill"></i></div>
+    <div class="page-bubble b6"><i class="bi bi-person-fill-shield"></i></div>
+    <div class="page-bubble b7"><i class="bi bi-circle-fill"></i></div>
+    <div class="page-bubble b8"><i class="bi bi-heart-fill"></i></div>
+    <div class="page-bubble b9"><i class="bi bi-tools"></i></div>
+    <div class="page-bubble b10"><i class="bi bi-briefcase-fill"></i></div>
+    <div class="page-bubble b11"><i class="bi bi-plus-lg"></i></div>
+    <div class="page-bubble b12"><i class="bi bi-check-circle-fill"></i></div>
 
     <div class="auth-shell">
 
         <div class="auth-banner">
-            <div class="floating-chip chip-1"><i class="fa-solid fa-shield-halved"></i></div>
-            <div class="floating-chip chip-2"><i class="fa-solid fa-lock"></i></div>
-            <div class="floating-chip chip-3"><i class="fa-solid fa-user-shield"></i></div>
-            <div class="floating-chip chip-4"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+            <div class="floating-chip chip-1"><i class="bi bi-shield-fill"></i></div>
+            <div class="floating-chip chip-2"><i class="bi bi-lock-fill"></i></div>
+            <div class="floating-chip chip-3"><i class="bi bi-person-fill-shield"></i></div>
+            <div class="floating-chip chip-4"><i class="bi bi-tools"></i></div>
 
             <div class="banner-content">
                 <div class="banner-logo">
-                    <i class="fa-solid fa-shield-halved"></i>
+                    <i class="bi bi-shield-fill"></i>
                 </div>
                 <div class="hero-pet">
-                    <i class="fa-solid fa-user-shield"></i>
+                    <i class="bi bi-person-fill-shield"></i>
                 </div>
                 <h1>Master Control Panel</h1>
                 <p>System administration and tenant management.</p>
                 <ul class="banner-features">
-                    <li><i class="fa-solid fa-circle-check"></i> Tenant Management</li>
-                    <li><i class="fa-solid fa-circle-check"></i> Subscription Control</li>
-                    <li><i class="fa-solid fa-circle-check"></i> Platform Monitoring</li>
-                    <li><i class="fa-solid fa-circle-check"></i> System Configuration</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Tenant Management</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Subscription Control</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Platform Monitoring</li>
+                    <li><i class="bi bi-check-circle-fill"></i> System Configuration</li>
                 </ul>
             </div>
         </div>
@@ -619,14 +619,14 @@
         <div class="auth-form-side">
             <div class="auth-form-box">
 
-                <a href="{{ route('home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Eye HMS</a>
+                <a href="{{ route('home') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Eye HMS</a>
 
                 <div class="form-header">
                     <h2>Platform Admin</h2>
                     <p>Super Admin access only.</p>
                 </div>
 
-                <div class="role-badge"><i class="fa-solid fa-lock"></i> Restricted Area &mdash; Authorized Personnel Only</div>
+                <div class="role-badge"><i class="bi bi-lock-fill"></i> Restricted Area &mdash; Authorized Personnel Only</div>
 
                 <form method="POST" action="{{ route('superadmin.login.post') }}">
                     @csrf
@@ -634,25 +634,25 @@
                     <div class="form-group">
                         <label class="form-label" for="email">Email Address</label>
                         <div class="input-wrap">
-                            <i class="fa-solid fa-envelope input-icon"></i>
-                            <input type="email" id="email" name="email" class="form-input @error('email') is-error @enderror" value="{{ old('email') }}" placeholder="admin@eyehms.com" required autofocus autocomplete="email">
+                            <i class="bi bi-envelope-fill input-icon"></i>
+                            <input type="email" id="email" name="email" class="hms-input form-input @error('email') is-error @enderror" value="{{ old('email') }}" placeholder="admin@eyehms.com" required autofocus autocomplete="email">
                         </div>
-                        @error('email')<div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>@enderror
+                        @error('email')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i> {{ $message }}</div>@enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="password">Password</label>
                         <div class="input-wrap">
-                            <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="password" name="password" class="form-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
+                            <i class="bi bi-lock-fill input-icon"></i>
+                            <input type="password" id="password" name="password" class="hms-input form-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
                         </div>
-                        @error('password')<div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>@enderror
+                        @error('password')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i> {{ $message }}</div>@enderror
                     </div>
 
-                    <button type="submit" class="btn-login"><i class="fa-solid fa-right-to-bracket"></i> Sign In to Platform</button>
+                    <button type="submit" class="btn-login hms-btn hms-btn-primary"><i class="bi bi-box-arrow-in-right"></i> Sign In to Platform</button>
                 </form>
 
-                <div class="form-footer"><a href="{{ route('home') }}"><i class="fa-solid fa-arrow-left"></i> Back to Eye HMS</a></div>
+                <div class="form-footer"><a href="{{ route('home') }}"><i class="bi bi-arrow-left"></i> Back to Eye HMS</a></div>
 
             </div>
         </div>

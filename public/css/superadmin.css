@@ -1,12 +1,12 @@
 /*
  * ============================================================
- *  Eye HMS SaaS — SuperAdmin Panel CSS (Premium v3)
- *  Theme aligned with Hospital Panel — white glassmorphism
- *    Sidebar:  rgba(255,255,255,0.78) + blur(12px)
- *    Navbar:   rgba(255,255,255,0.78) + blur(12px)
+ *  Eye HMS SaaS — SuperAdmin Panel CSS
+ *  Theme: Dark-navy sidebar + clean white navbar
+ *    Sidebar:  #0F172A (slate-900) — set in layout inline style
+ *    Navbar:   #ffffff solid
  *    Primary:  #1B4F72  (Deep Healthcare Blue)
  *    Accent:   #27AE60  (Health Green)
- *    BG:       #ffffff
+ *    BG:       #F8FAFC
  * ============================================================
  */
 
@@ -27,7 +27,7 @@
 }
 
 /* ============================================================
-   SuperAdmin Auth Page (Premium)
+   SuperAdmin Auth Page (login.blade.php — standalone)
 ============================================================ */
 .sa-auth-body {
     min-height: 100vh;
@@ -100,31 +100,29 @@
 }
 
 /* ============================================================
-   SuperAdmin Layout — White Glassmorphism Theme
+   SuperAdmin Layout Shell
 ============================================================ */
 .sa-body {
-    background: #ffffff !important;
+    background: #F8FAFC !important;
     color: var(--sa-primary);
 }
 
-/* --- Navbar (White Glass) --- */
+/* --- Navbar (solid white) --- */
 .sa-navbar {
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     height: var(--hms-navbar-h);
-    background: var(--sa-white-78);
+    background: #fff;
     color: var(--sa-primary);
-    border-bottom: 1px solid var(--sa-border);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid #E2E8F0;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 1.5rem;
     z-index: 1000;
-    box-shadow: none;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
 }
 
 .sa-navbar-brand {
@@ -167,7 +165,7 @@
 /* Hamburger toggle */
 .hms-sidebar-toggle {
     color: var(--sa-primary) !important;
-    background: var(--sa-white-78);
+    background: rgba(27,79,114,.06);
     border: 1px solid var(--sa-border);
     border-radius: 10px;
     padding: .35rem .6rem;
@@ -176,7 +174,7 @@
     cursor: pointer;
 }
 .hms-sidebar-toggle:hover {
-    background: var(--sa-white-86);
+    background: rgba(27,79,114,.10);
     transform: translateY(-1px);
 }
 
@@ -202,7 +200,7 @@
     box-shadow: none;
     outline: none;
 }
-.sa-user-btn::after { display: none; } /* remove BS dropdown arrow */
+.sa-user-btn::after { display: none; }
 .sa-user-avatar {
     width: 28px;
     height: 28px;
@@ -224,8 +222,6 @@
     box-shadow: 0 8px 32px rgba(27,79,114,.12) !important;
     min-width: 220px;
     padding: .5rem;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     background: rgba(255,255,255,.97) !important;
 }
 .sa-dropdown-header { padding: .5rem .75rem .625rem; }
@@ -265,162 +261,17 @@
     min-height: 100vh;
 }
 
-/* --- Sidebar (White Glassmorphism) --- */
+/* --- Sidebar container (colours controlled by layout inline style) --- */
 .sa-sidebar {
     position: fixed;
     top: var(--hms-navbar-h);
     left: 0;
     bottom: 0;
     width: var(--hms-sidebar-w);
-    background: var(--sa-white-78);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-right: 1px solid var(--sa-border);
     overflow-y: auto;
     z-index: 900;
     scrollbar-width: thin;
-    scrollbar-color: rgba(27,79,114,.12) transparent;
-}
-
-/* Sidebar brand strip — dark like hospital panel */
-.sa-sidebar-brand {
-    background: var(--sa-primary);
-    padding: .875rem 1rem;
-    border-bottom: 1px solid rgba(255,255,255,.12);
-    margin-bottom: .375rem;
-}
-.sa-sidebar-brand a {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    text-decoration: none;
-    color: #fff;
-    font-weight: 700;
-    font-size: .9rem;
-}
-.sa-sidebar-brand i { color: var(--sa-accent); font-size: 1.1rem; }
-
-.sa-sidenav {
-    padding: .75rem .5rem;
-}
-.sa-sidenav ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: .125rem;
-}
-.sa-sidenav li a {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    padding: .65rem .875rem;
-    border-radius: 12px;
-    color: var(--sa-primary);
-    font-size: .875rem;
-    font-weight: 700;
-    transition: all .16s ease;
-    text-decoration: none;
-    position: relative;
-}
-.sa-sidenav li a:hover {
-    background: var(--sa-primary) !important;
-    color: #fff;
-    transform: translateX(2px);
-    text-decoration: none;
-}
-.sa-sidenav li a:hover i { color: #fff !important; }
-.sa-sidenav li a.active {
-    background: rgba(27,79,114,.12) !important;
-    color: var(--sa-primary);
-    font-weight: 800;
-}
-.sa-sidenav li a.active::before {
-    content: '';
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    width: 4px;
-    height: 18px;
-    transform: translateY(-50%);
-    border-radius: 999px;
-    background: var(--sa-primary);
-    opacity: 1;
-}
-.sa-sidenav li a i {
-    width: 1.125rem;
-    text-align: center;
-    flex-shrink: 0;
-    color: var(--sa-primary);
-    transition: transform .16s;
-}
-.sa-sidenav li a:hover i { transform: translateX(1px); }
-
-/* --- Sidebar Nav Section Labels --- */
-.sa-nav-section-label {
-    font-size: .6875rem;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: .1em;
-    color: rgba(27,79,114,.55);
-    padding: .75rem .875rem .375rem;
-    margin-top: .25rem;
-    pointer-events: none;
-}
-.sa-nav-divider {
-    height: 1px;
-    background: var(--sa-border);
-    margin: .5rem .5rem;
-}
-
-/* --- Sidebar Collapsible Groups --- */
-.sa-nav-group-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: .6rem .875rem .375rem;
-    margin-top: .25rem;
-    cursor: pointer;
-    user-select: none;
-    border-radius: 10px;
-    border: none;
-    background: rgba(255,255,255,.65);
-    margin: .2rem .5rem;
-    transition: all .16s;
-}
-.sa-nav-group-toggle:hover {
-    background: var(--sa-primary);
-    transform: translateX(2px);
-}
-.sa-nav-group-toggle:hover .sa-nav-section-label,
-.sa-nav-group-toggle:hover .hms-nav-chevron {
-    color: rgba(255,255,255,.95) !important;
-}
-.sa-nav-group-toggle .sa-nav-section-label {
-    font-size: 1rem !important;
-    font-weight: 900 !important;
-    letter-spacing: .05em !important;
-    color: rgba(27,79,114,.78) !important;
-    padding: 0;
-    margin: 0;
-    pointer-events: none;
-}
-.sa-nav-group-toggle .hms-nav-chevron {
-    color: rgba(27,79,114,.55);
-    font-size: .75rem;
-    transition: transform .25s ease;
-}
-.sa-nav-group-toggle.collapsed .hms-nav-chevron {
-    transform: rotate(-90deg);
-}
-.sa-nav-group-items {
-    overflow: hidden;
-    max-height: 600px;
-    transition: max-height .3s ease;
-}
-.sa-nav-group-items.collapsed {
-    max-height: 0;
+    scrollbar-color: rgba(255,255,255,.08) transparent;
 }
 
 /* SweetAlert2 toast override */
@@ -432,7 +283,7 @@
     flex: 1;
     padding: 1.5rem;
     min-width: 0;
-    background: #ffffff;
+    background: #F8FAFC;
     animation: saFadeIn .4s ease-out;
 }
 
@@ -441,7 +292,7 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 
-/* --- Page Header (Premium) --- */
+/* --- Page Header --- */
 .sa-page-header {
     display: flex;
     align-items: center;
@@ -460,169 +311,6 @@
 .sa-page-actions {
     display: flex;
     gap: .5rem;
-}
-
-/* ============================================================
-   SuperAdmin Stats Grid (Premium)
-============================================================ */
-.sa-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 1.75rem;
-}
-
-@media (min-width: 1440px) {
-    .sa-stats-grid { grid-template-columns: repeat(8, 1fr); }
-}
-@media (max-width: 1200px) {
-    .sa-stats-grid { grid-template-columns: repeat(4, 1fr); }
-}
-@media (max-width: 768px) {
-    .sa-stats-grid { grid-template-columns: 1fr 1fr; gap: .875rem; }
-}
-@media (max-width: 480px) {
-    .sa-stats-grid { grid-template-columns: 1fr; }
-}
-
-/* Premium Stat Card — glassmorphism + gradient accent */
-.sa-stat-card {
-    background: #fff;
-    border-radius: 14px;
-    padding: 1.25rem 1.25rem 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-    border: 1px solid rgba(226,232,240,.8);
-    transition: all .3s cubic-bezier(.4,0,.2,1);
-    position: relative;
-    overflow: hidden;
-    cursor: default;
-}
-
-/* Gradient top border accent */
-.sa-stat-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #E2E8F0, #E2E8F0);
-    transition: all .3s ease;
-}
-
-/* Decorative corner glow */
-.sa-stat-card::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -50%;
-    width: 100%;
-    height: 100%;
-    background: radial-gradient(circle, rgba(27,79,114,.03) 0%, transparent 70%);
-    pointer-events: none;
-    transition: all .4s ease;
-}
-
-.sa-stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(13,33,55,.12), 0 0 0 1px rgba(27,79,114,.08);
-}
-.sa-stat-card:hover::before {
-    background: linear-gradient(90deg, #1B4F72, #27AE60, #2980B9);
-    height: 3px;
-}
-.sa-stat-card:hover::after {
-    transform: scale(1.5);
-    opacity: .6;
-}
-
-/* Stat Icon — gradient circular container */
-.sa-stat-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    flex-shrink: 0;
-    position: relative;
-    transition: all .3s ease;
-}
-
-.sa-stat-card:hover .sa-stat-icon {
-    transform: scale(1.08) rotate(-3deg);
-}
-
-/* Specific stat colors with gradient backgrounds */
-.sa-stat-blue {
-    background: linear-gradient(135deg, #D6EAF8, #EBF5FB);
-    color: #1B4F72;
-}
-.sa-stat-green {
-    background: linear-gradient(135deg, #D5F5E3, #E8F8F0);
-    color: #27AE60;
-}
-.sa-stat-orange {
-    background: linear-gradient(135deg, #FDEBD0, #FEF5E7);
-    color: #E67E22;
-}
-.sa-stat-purple {
-    background: linear-gradient(135deg, #F5F3FF, #EDE9FE);
-    color: #7C3AED;
-}
-.sa-stat-teal {
-    background: linear-gradient(135deg, #D1F2EB, #E8F8F5);
-    color: #1ABC9C;
-}
-.sa-stat-red {
-    background: linear-gradient(135deg, #FADBD8, #FDEDEC);
-    color: #C0392B;
-}
-.sa-stat-amber {
-    background: linear-gradient(135deg, #FEF3C7, #FEF9E7);
-    color: #D97706;
-}
-.sa-stat-warning {
-    background: linear-gradient(135deg, #FFF7ED, #FFF3E0);
-    color: #EA580C;
-}
-
-/* Stat body */
-.sa-stat-body {
-    flex: 1;
-    min-width: 0;
-}
-.sa-stat-body .sa-stat-label {
-    font-size: .68rem;
-    text-transform: uppercase;
-    letter-spacing: .06em;
-    color: #64748B;
-    font-weight: 700;
-    margin: 0 0 .2rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.sa-stat-body .sa-stat-label i {
-    margin-right: .25rem;
-    font-size: .65rem;
-}
-.sa-stat-value {
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: #0D2137;
-    line-height: 1.1;
-    letter-spacing: -.02em;
-}
-.sa-stat-sub {
-    font-size: .72rem;
-    color: #94A3B8;
-    font-weight: 500;
-    margin-top: .125rem;
 }
 
 /* ============================================================
@@ -645,7 +333,7 @@
     gap: .5rem;
 }
 
-/* hms-label — form label utility matching hospital panel style */
+/* hms-label — form label utility */
 .hms-label {
     display: block;
     font-size: .75rem;
@@ -656,10 +344,11 @@
 }
 
 /* hsi-amber — extra color not in hospital.css */
-.hsi-amber  { background: rgba(217,119,6,.1);  color: #D97706; }
+.hsi-amber { background: rgba(217,119,6,.1); color: #D97706; }
 
 /* ============================================================
-   Charts Row (Premium)
+   Dashboard Charts Row + Premium Cards (chart containers)
+   Used by: dashboard.blade.php
 ============================================================ */
 .sa-charts-row {
     display: grid;
@@ -677,7 +366,7 @@
     min-width: 0;
 }
 
-/* Premium Card Base */
+/* Premium Card Base — used for chart cards on dashboard */
 .sa-premium-card {
     background: #fff;
     border: 1px solid rgba(226,232,240,.8);
@@ -733,7 +422,7 @@
     padding: 1.25rem 1.375rem;
 }
 
-/* Donut legend */
+/* Donut chart legend */
 .sa-donut-legend {
     display: flex;
     flex-direction: column;
@@ -749,9 +438,7 @@
     color: #475569;
     font-weight: 500;
 }
-.sa-legend-item:hover {
-    color: #1B4F72;
-}
+.sa-legend-item:hover { color: #1B4F72; }
 .sa-legend-dot {
     width: 10px;
     height: 10px;
@@ -761,348 +448,9 @@
     box-shadow: 0 1px 3px rgba(0,0,0,.1);
 }
 
-/* ============================================================
-   Premium Table
-============================================================ */
-.sa-premium-table-wrap {
-    overflow-x: auto;
-    border-radius: 14px;
-    border: 1px solid rgba(226,232,240,.8);
-    background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05);
-}
-
-.sa-premium-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: .875rem;
-}
-
-.sa-premium-table thead {
-    position: sticky;
-    top: 0;
-    z-index: 5;
-}
-.sa-premium-table thead th {
-    background: linear-gradient(135deg, #F8FAFC, #F0F4F8);
-    color: #1B4F72;
-    font-weight: 700;
-    font-size: .75rem;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    padding: .75rem 1rem;
-    border-bottom: 2px solid #E2E8F0;
-    text-align: left;
-    white-space: nowrap;
-}
-
-.sa-premium-table tbody td {
-    padding: .875rem 1rem;
-    color: #334155;
-    border-bottom: 1px solid #F0F4F8;
-    vertical-align: middle;
-}
-
-.sa-premium-table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.sa-premium-table tbody tr {
-    transition: background .2s ease;
-}
-.sa-premium-table tbody tr:hover {
-    background: rgba(27,79,114,.03);
-}
-
-.sa-premium-table .sa-cell-name {
-    font-weight: 600;
-    color: #0D2137;
-}
-.sa-premium-table .sa-cell-muted {
-    font-size: .75rem;
-    color: #94A3B8;
-    font-family: var(--hms-font-mono);
-}
-
-/* ============================================================
-   Premium Badges (for table)
-============================================================ */
-.sa-premium-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    padding: .25rem .75rem;
-    border-radius: 999px;
-    font-size: .7rem;
-    font-weight: 700;
-    letter-spacing: .03em;
-    text-transform: uppercase;
-    white-space: nowrap;
-    border: 1px solid transparent;
-}
-.sa-premium-badge i {
-    font-size: .45rem;
-}
-
-.sa-premium-badge-active {
-    background: linear-gradient(135deg, #D5F5E3, #E8F8F0);
-    color: #1A6F5B;
-    border-color: rgba(39,174,96,.15);
-}
-.sa-premium-badge-trial {
-    background: linear-gradient(135deg, #D6EAF8, #EBF5FB);
-    color: #154360;
-    border-color: rgba(27,79,114,.12);
-}
-.sa-premium-badge-grace {
-    background: linear-gradient(135deg, #FDEBD0, #FEF5E7);
-    color: #784212;
-    border-color: rgba(230,126,34,.12);
-}
-.sa-premium-badge-suspended {
-    background: linear-gradient(135deg, #FADBD8, #FDEDEC);
-    color: #641E16;
-    border-color: rgba(192,57,43,.12);
-}
-.sa-premium-badge-inactive {
-    background: linear-gradient(135deg, #F4F6F7, #F8F9FA);
-    color: #475569;
-    border-color: rgba(71,85,105,.12);
-}
-
-/* ============================================================
-   Premium Buttons
-============================================================ */
-.sa-premium-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: .4rem;
-    padding: .5rem 1rem;
-    border-radius: 8px;
-    font-size: .85rem;
-    font-weight: 600;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: all .2s ease;
-    text-decoration: none;
-    line-height: 1.4;
-}
-.sa-premium-btn:hover {
-    transform: translateY(-1px);
-    text-decoration: none;
-}
-
-.sa-premium-btn-primary {
-    background: linear-gradient(135deg, #1B4F72, #2980B9);
-    color: #fff;
-    border-color: transparent;
-    box-shadow: 0 2px 8px rgba(27,79,114,.25);
-}
-.sa-premium-btn-primary:hover {
-    background: linear-gradient(135deg, #154160, #1F6391);
-    color: #fff;
-    box-shadow: 0 4px 16px rgba(27,79,114,.35);
-    transform: translateY(-2px);
-}
-
-.sa-premium-btn-secondary {
-    background: #fff;
-    color: #475569;
-    border-color: #E2E8F0;
-}
-.sa-premium-btn-secondary:hover {
-    background: #F8FAFC;
-    color: #1B4F72;
-    border-color: #CBD5E1;
-    box-shadow: 0 2px 8px rgba(0,0,0,.06);
-}
-
-.sa-premium-btn-sm {
-    padding: .35rem .75rem;
-    font-size: .8rem;
-}
-
-/* ============================================================
-   SuperAdmin Table Enhancements (legacy)
-============================================================ */
-.sa-table-wrap {
-    background: #fff;
-    border: 1px solid rgba(226,232,240,.8);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05);
-}
-.sa-table-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid #F0F4F8;
-    background: #fff;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-.sa-table-title {
-    font-size: .9rem;
-    font-weight: 700;
-    color: #1B4F72;
-    margin: 0;
-}
-.sa-table-actions {
-    display: flex;
-    gap: .5rem;
-    align-items: center;
-}
-
-/* ============================================================
-   SuperAdmin Filter Row
-============================================================ */
-.sa-filter-row {
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    flex-wrap: wrap;
-    padding: .875rem 1.25rem;
-    background: #F8FAFC;
-    border-bottom: 1px solid #E2E8F0;
-}
-.sa-filter-row .hms-input,
-.sa-filter-row .hms-select {
-    font-size: .825rem;
-    padding: .4rem .75rem;
-}
-.sa-filter-row .search-input {
-    min-width: 220px;
-}
-
-/* ============================================================
-   SuperAdmin Info Grid (tenant show)
-============================================================ */
-.sa-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-.sa-info-card {
-    background: #fff;
-    border: 1px solid rgba(226,232,240,.8);
-    border-radius: 14px;
-    padding: 1.25rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05);
-    transition: box-shadow .25s ease, transform .25s ease;
-}
-.sa-info-card:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,.08);
-    transform: translateY(-2px);
-}
-.sa-info-card h4 {
-    font-size: .7rem;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: #64748B;
-    font-weight: 700;
-    margin: 0 0 .875rem;
-    padding-bottom: .625rem;
-    border-bottom: 1px solid #E2E8F0;
-    display: flex;
-    align-items: center;
-    gap: .375rem;
-}
-.sa-info-card h4 i {
-    color: #1B4F72;
-}
-.sa-info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: .35rem 0;
-    font-size: .835rem;
-    border-bottom: 1px solid #F8FAFD;
-}
-.sa-info-row:last-child {
-    border-bottom: none;
-}
-.sa-info-label {
-    color: #64748B;
-    flex-shrink: 0;
-    margin-right: 1rem;
-}
-.sa-info-value {
-    color: #0D2137;
-    font-weight: 500;
-    text-align: right;
-    word-break: break-all;
-}
-
-/* ============================================================
-   SuperAdmin Quick Actions
-============================================================ */
-.sa-quick-actions {
-    display: flex;
-    gap: .5rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-}
-
-/* ============================================================
-   SuperAdmin Settings Form
-============================================================ */
-.sa-settings-card {
-    background: #fff;
-    border: 1px solid rgba(226,232,240,.8);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,.05);
-    margin-bottom: 1.5rem;
-}
-.sa-settings-card-header {
-    padding: 1rem 1.375rem;
-    border-bottom: 1px solid #E2E8F0;
-    background: #F8FAFC;
-    display: flex;
-    align-items: center;
-    gap: .625rem;
-}
-.sa-settings-card-header h3 {
-    font-size: .9rem;
-    font-weight: 700;
-    margin: 0;
-    color: #1B4F72;
-}
-.sa-settings-card-header i {
-    color: #1B4F72;
-}
-.sa-settings-card-body {
-    padding: 1.375rem;
-}
-.sa-settings-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-/* ============================================================
-   SuperAdmin Breadcrumb (Premium)
-============================================================ */
-.sa-breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: .375rem;
-    font-size: .775rem;
-    color: #64748B;
-    margin-bottom: .375rem;
-}
-.sa-breadcrumb a {
-    color: #64748B;
-    text-decoration: none;
-}
-.sa-breadcrumb a:hover {
-    color: #1B4F72;
-}
-.sa-breadcrumb i {
-    font-size: .65rem;
+/* Chart canvas */
+.sa-chart-canvas {
+    width: 100% !important;
 }
 
 /* ============================================================
@@ -1112,9 +460,6 @@
     .sa-sidebar {
         transform: translateX(-100%);
         transition: transform .3s ease;
-        background: rgba(255,255,255,.97);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
     }
     .sa-sidebar.open {
         transform: translateX(0);
@@ -1122,12 +467,6 @@
     .sa-main {
         margin-left: 0;
         padding: 1rem;
-    }
-    .sa-settings-grid {
-        grid-template-columns: 1fr;
-    }
-    .sa-info-grid {
-        grid-template-columns: 1fr;
     }
     .sa-charts-row {
         gap: 1rem;
@@ -1138,18 +477,6 @@
     .sa-premium-card-body {
         padding: 1rem;
     }
-    .sa-stat-card {
-        padding: 1rem;
-    }
-    .sa-stat-icon {
-        width: 44px;
-        height: 44px;
-        font-size: 1.1rem;
-        border-radius: 12px;
-    }
-    .sa-stat-value {
-        font-size: 1.25rem;
-    }
     .sa-page-header h1 {
         font-size: 1.25rem;
     }
@@ -1159,49 +486,7 @@
     .sa-navbar {
         padding: 0 1rem;
     }
-    .sa-navbar-user {
-        display: none;
-    }
     .sa-main {
         padding: .75rem;
     }
-}
-
-/* ============================================================
-   Chart Canvas Enhancements
-============================================================ */
-.sa-chart-canvas {
-    width: 100% !important;
-}
-
-/* ============================================================
-   Loading / Empty State (Premium)
-============================================================ */
-.sa-empty-state {
-    text-align: center;
-    padding: 3rem 2rem;
-}
-.sa-empty-state-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: #F0F4F8;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: #94A3B8;
-    margin-bottom: 1rem;
-    border: 2px dashed #E2E8F0;
-}
-.sa-empty-state h4 {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #0D2137;
-    margin: 0 0 .375rem;
-}
-.sa-empty-state p {
-    font-size: .875rem;
-    color: #64748B;
-    margin: 0 0 1rem;
 }

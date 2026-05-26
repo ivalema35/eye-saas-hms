@@ -1,4 +1,4 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 
 @section('title', 'My Profile')
 @section('page-header', 'My Profile')
@@ -11,7 +11,7 @@
     <div class="hms-card" style="padding:0;margin-bottom:1.25rem">
         <div class="hms-card-header">
             <h3 class="hms-card-title">
-                <i class="fa-solid fa-circle-user" style="color:#1B4F72"></i>
+                <i class="bi bi-person-circle" style="color:#1B4F72"></i>
                 Account Information
             </h3>
         </div>
@@ -53,7 +53,7 @@
 
                 <div style="display:flex;align-items:center;gap:.75rem;margin-top:1.25rem">
                     <button type="submit" class="hms-btn hms-btn-primary">
-                        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+                        <i class="bi bi-floppy-fill"></i> Save Changes
                     </button>
                     @if(isset($admin->last_login_at) && $admin->last_login_at)
                         <span style="font-size:.78rem;color:#94A3B8">
@@ -72,7 +72,7 @@
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
             <h3 class="hms-card-title">
-                <i class="fa-solid fa-lock" style="color:#1B4F72"></i>
+                <i class="bi bi-lock-fill" style="color:#1B4F72"></i>
                 Change Password
             </h3>
         </div>
@@ -88,7 +88,7 @@
                                class="hms-input @error('current_password') is-invalid @enderror"
                                placeholder="Enter current password">
                         <button type="button" class="sa-pwd-toggle" onclick="togglePwd('currentPwd', this)">
-                            <i class="fa-solid fa-eye"></i>
+                            <i class="bi bi-eye-fill"></i>
                         </button>
                     </div>
                     @error('current_password')
@@ -104,7 +104,7 @@
                                    class="hms-input @error('password') is-invalid @enderror"
                                    placeholder="Min 8 chars, mixed case + number">
                             <button type="button" class="sa-pwd-toggle" onclick="togglePwd('newPwd', this)">
-                                <i class="fa-solid fa-eye"></i>
+                                <i class="bi bi-eye-fill"></i>
                             </button>
                         </div>
                         @error('password')
@@ -119,14 +119,14 @@
                                    class="hms-input"
                                    placeholder="Repeat new password">
                             <button type="button" class="sa-pwd-toggle" onclick="togglePwd('confirmPwd', this)">
-                                <i class="fa-solid fa-eye"></i>
+                                <i class="bi bi-eye-fill"></i>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 <button type="submit" class="hms-btn hms-btn-primary" style="margin-top:1.25rem">
-                    <i class="fa-solid fa-key"></i> Change Password
+                    <i class="bi bi-key-fill"></i> Change Password
                 </button>
             </form>
         </div>
@@ -162,10 +162,10 @@ function togglePwd(id, btn) {
     var icon  = btn.querySelector('i');
     if (input.type === 'password') {
         input.type = 'text';
-        icon.classList.replace('fa-eye', 'fa-eye-slash');
+        icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
     } else {
         input.type = 'password';
-        icon.classList.replace('fa-eye-slash', 'fa-eye');
+        icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
     }
 }
 </script>

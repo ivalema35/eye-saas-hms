@@ -1,4 +1,4 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 @section('title', 'Notification Center')
 @section('page-header', 'Notification Center')
 
@@ -10,7 +10,7 @@
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
             <h3 class="hms-card-title">
-                <i class="fa-solid fa-paper-plane" style="color:#1B4F72"></i>
+                <i class="bi bi-send-fill" style="color:#1B4F72"></i>
                 Compose Notification
             </h3>
         </div>
@@ -73,13 +73,13 @@
 
                 <div id="recipientPreview"
                      style="font-size:.8rem;color:#64748B;margin-bottom:1rem;padding:.6rem .75rem;background:rgba(27,79,114,.04);border-radius:10px;border:1px solid rgba(27,79,114,.1)">
-                    <i class="fa-solid fa-users" style="color:#1B4F72"></i>
+                    <i class="bi bi-people-fill" style="color:#1B4F72"></i>
                     Sending to: <strong>All {{ $tenants->count() }} hospitals</strong>
                 </div>
 
                 <button type="submit" class="hms-btn hms-btn-primary" style="width:100%" id="sendBtn"
                         onclick="return confirm('Send this notification to the selected hospitals?')">
-                    <i class="fa-solid fa-paper-plane"></i> Send Notification
+                    <i class="bi bi-send-fill"></i> Send Notification
                 </button>
             </form>
         </div>
@@ -90,7 +90,7 @@
         <div class="hms-card" style="padding:0">
             <div class="hms-card-header">
                 <h3 class="hms-card-title">
-                    <i class="fa-solid fa-clock-rotate-left" style="color:#1B4F72"></i>
+                    <i class="bi bi-clock-history" style="color:#1B4F72"></i>
                     Sent Notifications
                 </h3>
                 <span class="hms-badge hms-badge-info">last 50</span>
@@ -141,7 +141,7 @@
                         @empty
                         <tr>
                             <td colspan="5" style="text-align:center;padding:2.5rem;color:#94A3B8">
-                                <i class="fa-solid fa-bell-slash" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>
+                                <i class="bi bi-bell-slash-fill" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>
                                 No notifications sent yet.
                             </td>
                         </tr>
@@ -165,10 +165,10 @@ function updateUI() {
     if (recipientSelect.value === 'specific') {
         specificGroup.style.display = 'block';
         const selected = document.getElementById('tenantSelect').selectedOptions.length;
-        preview.innerHTML = `<i class="fa-solid fa-user-check" style="color:#1B4F72"></i> Sending to: <strong>${selected} selected hospital(s)</strong>`;
+        preview.innerHTML = `<i class="bi bi-person-check-fill" style="color:#1B4F72"></i> Sending to: <strong>${selected} selected hospital(s)</strong>`;
     } else {
         specificGroup.style.display = 'none';
-        preview.innerHTML = `<i class="fa-solid fa-users" style="color:#1B4F72"></i> Sending to: <strong>All ${totalCount} hospitals</strong>`;
+        preview.innerHTML = `<i class="bi bi-people-fill" style="color:#1B4F72"></i> Sending to: <strong>All ${totalCount} hospitals</strong>`;
     }
 }
 
@@ -176,7 +176,7 @@ recipientSelect.addEventListener('change', updateUI);
 
 document.getElementById('tenantSelect')?.addEventListener('change', function () {
     const selected = this.selectedOptions.length;
-    preview.innerHTML = `<i class="fa-solid fa-user-check" style="color:#1B4F72"></i> Sending to: <strong>${selected} selected hospital(s)</strong>`;
+    preview.innerHTML = `<i class="bi bi-person-check-fill" style="color:#1B4F72"></i> Sending to: <strong>${selected} selected hospital(s)</strong>`;
 });
 
 $(document).ready(function () {

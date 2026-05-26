@@ -1,11 +1,11 @@
 {{--
     Empty State Component (for tables/lists with no data)
-    Usage: <x-empty-state icon="fa-solid fa-users" title="No Users Found" description="Add a user to get started.">
+    Usage: <x-empty-state icon="bi bi-people-fill" title="No Users Found" description="Add a user to get started.">
                <a href="/users/create" class="hms-btn hms-btn-primary">Add User</a>
            </x-empty-state>
 --}}
 @props([
-    'icon'        => 'fa-solid fa-inbox',
+    'icon'        => 'bi bi-inbox',
     'title'       => 'No Data Found',
     'description' => '',
 ])

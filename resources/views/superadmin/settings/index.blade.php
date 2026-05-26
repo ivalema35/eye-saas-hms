@@ -1,4 +1,4 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 
 @section('title', 'Settings')
 @section('page-header', 'Platform Settings')
@@ -13,7 +13,7 @@
         <div class="hms-card" style="margin-bottom:1.25rem">
             <div class="hms-card-header">
                 <h3 class="hms-card-title">
-                    <i class="fa-solid fa-gear" style="color:#1B4F72"></i>
+                    <i class="bi bi-gear-fill" style="color:#1B4F72"></i>
                     General Settings
                 </h3>
             </div>
@@ -48,13 +48,13 @@
         <div class="hms-card" style="margin-bottom:1.25rem">
             <div class="hms-card-header">
                 <h3 class="hms-card-title">
-                    <i class="fa-solid fa-credit-card" style="color:#1B4F72"></i>
+                    <i class="bi bi-credit-card-fill" style="color:#1B4F72"></i>
                     Razorpay Configuration
                 </h3>
             </div>
             <div style="padding:1.25rem">
                 <div class="hms-alert hms-alert-warning" style="margin-bottom:1rem">
-                    <i class="fa-solid fa-shield-halved"></i>
+                    <i class="bi bi-shield-fill"></i>
                     <span>Razorpay keys are stored encrypted. Leave blank to keep existing values.</span>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
@@ -84,13 +84,13 @@
         <div class="hms-card" style="margin-bottom:1.25rem">
             <div class="hms-card-header">
                 <h3 class="hms-card-title">
-                    <i class="fa-solid fa-envelope" style="color:#1B4F72"></i>
+                    <i class="bi bi-envelope-fill" style="color:#1B4F72"></i>
                     Email / SMTP Configuration
                 </h3>
             </div>
             <div style="padding:1.25rem">
                 <div class="hms-alert hms-alert-info" style="margin-bottom:1rem">
-                    <i class="fa-solid fa-circle-info"></i>
+                    <i class="bi bi-info-circle-fill"></i>
                     Subscription reminder emails isi SMTP se jayenge. Local dev me MAIL_MAILER=log rakho.
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
@@ -135,11 +135,11 @@
         <div class="hms-card" style="margin-bottom:1.25rem">
             <div class="hms-card-header">
                 <h3 class="hms-card-title">
-                    <i class="fa-solid fa-indian-rupee-sign" style="color:#1B4F72"></i>
+                    <i class="bi bi-currency-rupee" style="color:#1B4F72"></i>
                     Subscription Pricing (₹)
                 </h3>
                 <a href="{{ route('superadmin.plans.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">
-                    <i class="fa-solid fa-layer-group"></i> Manage Plans
+                    <i class="bi bi-layers-fill"></i> Manage Plans
                 </a>
             </div>
             <div style="padding:1.25rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
@@ -168,7 +168,7 @@
         <div style="display:flex;justify-content:flex-end;gap:.75rem">
             <a href="{{ route('superadmin.dashboard') }}" class="hms-btn hms-btn-outline">Cancel</a>
             <button type="submit" class="hms-btn hms-btn-primary">
-                <i class="fa-solid fa-floppy-disk"></i> Save Settings
+                <i class="bi bi-floppy-fill"></i> Save Settings
             </button>
         </div>
     </form>

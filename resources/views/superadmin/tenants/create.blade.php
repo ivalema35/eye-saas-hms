@@ -1,10 +1,10 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 @section('title', 'Add Hospital')
 @section('page-header', 'Add New Hospital')
 
 @section('page-actions')
     <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-secondary hms-btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Back
+        <i class="bi bi-arrow-left"></i> Back
     </a>
 @endsection
 
@@ -115,7 +115,7 @@
 
             <div style="display:flex;gap:.75rem;margin-top:1.5rem">
                 <button type="submit" class="hms-btn hms-btn-primary">
-                    <i class="fa-solid fa-hospital-user"></i> Create Hospital
+                    <i class="bi bi-hospital-fill"></i> Create Hospital
                 </button>
                 <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-secondary">
                     Cancel

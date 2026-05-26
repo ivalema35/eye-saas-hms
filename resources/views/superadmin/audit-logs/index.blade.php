@@ -1,4 +1,4 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 @section('title', 'Audit Logs')
 @section('page-header', 'Audit Logs')
 
@@ -7,7 +7,7 @@
 {{-- Filter Card --}}
 <div class="hms-card" style="padding:1.25rem;margin-bottom:1.25rem">
     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
-        <i class="fa-solid fa-filter" style="color:#1B4F72;font-size:.875rem"></i>
+        <i class="bi bi-funnel-fill" style="color:#1B4F72;font-size:.875rem"></i>
         <span style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B">Filters</span>
     </div>
     <form method="GET" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
@@ -35,7 +35,7 @@
         </div>
         <div style="display:flex;gap:.5rem">
             <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm">
-                <i class="fa-solid fa-filter"></i> Filter
+                <i class="bi bi-funnel-fill"></i> Filter
             </button>
             <a href="{{ route('superadmin.audit-logs.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
         </div>
@@ -46,7 +46,7 @@
 <div class="hms-card" style="padding:0">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="fa-solid fa-shield-halved" style="color:#1B4F72"></i>
+            <i class="bi bi-shield-fill" style="color:#1B4F72"></i>
             Audit Log
         </h3>
         <span class="hms-badge hms-badge-info">{{ $logs->total() }} entries</span>
@@ -101,9 +101,11 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" style="text-align:center;padding:2.5rem;color:#94A3B8">
-                        <i class="fa-solid fa-shield-halved" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>
-                        No audit logs found.
+                    <td colspan="7" class="text-center py-5">
+                        <x-empty-state
+                            icon="bi bi-clock-history"
+                            title="No Audit Logs Found"
+                            description="No system activity has been recorded matching your criteria." />
                     </td>
                 </tr>
                 @endforelse
