@@ -77,7 +77,7 @@
     --hms-sidebar-w:      260px;
     --hms-sidebar-w-collapsed: 72px;
     --hms-radius:         8px;
-    --hms-radius-sm:      6px;
+    --hms-radius-sm:      13px;
     --hms-radius-lg:      12px;
     --hms-radius-xl:      16px;
 
@@ -488,11 +488,11 @@ img, svg { vertical-align: middle; }
     color: #fff;
     text-decoration: none;
 }
-
+/* 
 .hms-btn-sm {
     padding: .25rem .625rem;
     font-size: .8rem;
-}
+} */
 
 .hms-btn-block {
     width: 100%;

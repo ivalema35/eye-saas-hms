@@ -17,7 +17,7 @@ class OtAccountantController extends Controller
     public function wardIndex(string $slug): View
     {
         $bookings = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no'])
+            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state'])
             ->whereIn('ot_status', [OtBooking::STATUS_PAID, OtBooking::STATUS_IN_WARD, OtBooking::STATUS_READY])
             ->orderBy('surgery_date')
             ->orderByDesc('id')
@@ -37,7 +37,7 @@ class OtAccountantController extends Controller
         }
 
         $bookingsQuery = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no'])
+            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state'])
             ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_PAID]);
 
         if ($filter === 'today') {
@@ -60,7 +60,7 @@ class OtAccountantController extends Controller
     public function createPayment(string $slug, int $bookingId): View
     {
         $booking = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no'])
+            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state'])
             ->findOrFail($bookingId);
 
         $counselling = DB::table('ot_counselling')
@@ -117,7 +117,7 @@ class OtAccountantController extends Controller
             }
 
             OtPayment::query()->create($payload);
-            
+
             // Ensure counselling record (if exists) reflects the latest package amount
             DB::table('ot_counselling')
                 ->where('tenant_id', app('tenant')->id)

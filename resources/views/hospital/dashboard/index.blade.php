@@ -1600,9 +1600,9 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">
-                        <span class="modal-title-icon">
+                        <!-- <span class="modal-title-icon">
                             <i class="fa-solid fa-hand-holding-heart"></i>
-                        </span>
+                        </span> -->
                         FOC Request Details
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

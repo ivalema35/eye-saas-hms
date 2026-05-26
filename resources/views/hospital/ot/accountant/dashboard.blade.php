@@ -594,7 +594,7 @@
                                 </div>
                                 <div class="ota-summary-box mb-0">
                                     <div class="ota-summary-label">Location</div>
-                                    <div class="ota-summary-value">{{ $booking->patient?->location?->name ?? '-' }}</div>
+                                    <div class="ota-summary-value">{{ $booking->patient?->location?->name ?: '-' }}</div>
                                 </div>
                             </div>
                         </div>

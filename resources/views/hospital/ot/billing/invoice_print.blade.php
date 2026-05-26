@@ -25,6 +25,20 @@
             padding-bottom: 12px;
             margin-bottom: 18px;
         }
+
+        .print-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 12px;
+            background: #F8FAFC;
+            border: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+        .print-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
         .header h1 {
             margin: 0;
             font-size: 24px;
@@ -123,8 +137,19 @@
 
     <div class="page">
         <div class="header">
-            <h1>{{ config('app.name') }} - OT Invoice</h1>
-            <p>Tenant: {{ $slug }} | Generated: {{ now()->format('d M Y h:i A') }}</p>
+            <div style="display:flex;align-items:center;gap:12px;">
+                <div class="print-logo">
+                    @if(hospital_logo_url())
+                        <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+                    @else
+                        <span>👁</span>
+                    @endif
+                </div>
+                <div>
+                    <h1 style="margin:0">{{ hospital_name() }} - OT Invoice</h1>
+                    <p style="margin:4px 0 0;color:#4b5563;font-size:13px;">Tenant: {{ $slug }} | Generated: {{ now()->format('d M Y h:i A') }}</p>
+                </div>
+            </div>
         </div>
 
         <div class="meta">
