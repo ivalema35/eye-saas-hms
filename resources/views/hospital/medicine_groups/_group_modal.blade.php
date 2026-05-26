@@ -213,7 +213,7 @@
                 </div>
 
                 <div class="modal-footer border-0 gap-2">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-dismiss="modal">
                          Cancel
                     </button>
                     <button type="submit" class="btn btn-primary px-4" id="groupFormSubmitBtn">

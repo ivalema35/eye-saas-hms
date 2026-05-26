@@ -403,8 +403,31 @@
         <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
     </div>
 
+    <style>
+        .print-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 12px;
+            background: #F8FAFC;
+            border: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .print-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+        .print-logo span { font-size: 28px; color: #1B4F72; }
+    </style>
+
     <div class="print-header d-none d-print-block mb-3 border-bottom border-dark pb-2">
         <div class="text-center mb-2">
+            <div class="print-logo" style="margin:0 auto 8px;">
+                @if(hospital_logo_url())
+                    <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+                @else
+                    <span>👁</span>
+                @endif
+            </div>
             <h4 class="mb-0 fw-bold" style="color:#1B4F72;">{{ app('tenant')->name ?? 'Eye Hospital' }}</h4>
             <p class="mb-0" style="font-size:12px;">Complete Eye Care Center</p>
         </div>

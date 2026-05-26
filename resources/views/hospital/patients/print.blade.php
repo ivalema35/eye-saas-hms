@@ -16,7 +16,30 @@
         .bill-header { text-align: center; border-bottom: 2px solid #1B4F72; padding-bottom: 16px; margin-bottom: 20px; }
         .bill-header h1 { font-size: 20px; font-weight: 800; color: #0D2137; margin-bottom: 4px; }
         .bill-header p { font-size: 12px; color: #64748B; }
-        .bill-logo { font-size: 28px; color: #1B4F72; margin-bottom: 8px; }
+        .bill-logo {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 8px;
+            border-radius: 18px;
+            background: #F8FAFC;
+            border: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .bill-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 8px;
+        }
+
+        .bill-logo span {
+            font-size: 28px;
+            color: #1B4F72;
+        }
 
         .bill-title { text-align: center; font-size: 16px; font-weight: 700; color: #1B4F72; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
 
@@ -59,12 +82,18 @@
 <div class="bill-container">
     {{-- Hospital Header --}}
     <div class="bill-header">
-        <div class="bill-logo">👁</div>
-        <h1>{{ $tenant->name }}</h1>
-        @if($tenant->city || $tenant->state)
-            <p>{{ $tenant->city }}{{ $tenant->state ? ', ' . $tenant->state : '' }}</p>
+        <div class="bill-logo">
+            @if(hospital_logo_url())
+                <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+            @else
+                <span>👁</span>
+            @endif
+        </div>
+        <h1>{{ hospital_name() }}</h1>
+        @if(hospital_full_address())
+            <p>{{ hospital_full_address() }}</p>
         @endif
-        <p>Phone: {{ $tenant->admin_phone ?? '—' }} &bull; Email: {{ $tenant->admin_email ?? '—' }}</p>
+        <p>Phone: {{ hospital_contact_number() ?: '—' }} &bull; Email: {{ hospital_official_email() ?: '—' }}</p>
     </div>
 
     <div class="bill-title">OPD Bill / Receipt</div>
@@ -123,7 +152,7 @@
     <div class="bill-footer">
         <div>
             <p>Generated: {{ now()->format('d M Y, h:i A') }}</p>
-            <p>{{ config('app.name') }}</p>
+            <p>{{ hospital_name() }}</p>
         </div>
         <div class="bill-signature">
             <div class="bill-signature-line"></div>

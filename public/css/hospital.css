@@ -1404,7 +1404,7 @@
 .medicine-modal .btn-outline-secondary {
     border-color: var(--med-secondary-18) !important;
     border-radius: 12px;
-    color: var(--med-secondary) !important;
+    /* color: var(--med-secondary) !important; */
     font-weight: 850;
 }
 

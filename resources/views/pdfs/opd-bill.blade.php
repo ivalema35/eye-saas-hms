@@ -36,11 +36,11 @@
 <div class="bill-container">
     {{-- Header --}}
     <div class="header">
-        <h1>{{ $tenant->name }}</h1>
-        @if($tenant->city || $tenant->state)
-            <p>{{ $tenant->city }}{{ $tenant->state ? ', ' . $tenant->state : '' }}</p>
+        <h1>{{ hospital_name() }}</h1>
+        @if(hospital_full_address())
+            <p>{{ hospital_full_address() }}</p>
         @endif
-        <p>Phone: {{ $tenant->admin_phone ?? '—' }} &bull; Email: {{ $tenant->admin_email ?? '—' }}</p>
+        <p>Phone: {{ hospital_contact_number() ?: '—' }} &bull; Email: {{ hospital_official_email() ?: '—' }}</p>
     </div>
 
     <div class="bill-title">OPD Bill / Receipt</div>
@@ -90,7 +90,7 @@
     <div class="footer">
         <div class="footer-left">
             <p>Generated: {{ now()->format('d M Y, h:i A') }}</p>
-            <p>{{ config('app.name') }}</p>
+            <p>{{ hospital_name() }}</p>
         </div>
         <div class="footer-right">
             <div class="signature-line"></div>

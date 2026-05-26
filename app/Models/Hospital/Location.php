@@ -13,4 +13,9 @@ class Location extends Model
     protected $table = 'tbl_locations';
 
     protected $fillable = ['city', 'district', 'state'];
+
+    public function getNameAttribute(): string
+    {
+        return trim(implode(', ', array_filter([$this->city, $this->district, $this->state])));
+    }
 }

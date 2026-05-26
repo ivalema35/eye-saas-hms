@@ -342,6 +342,23 @@
     </span>
 </div>
 
+{{-- Print header with logo (print only) --}}
+<div class="print-header d-none d-print-block" style="padding:12px 24px;border-bottom:2px solid #1B4F72;margin-bottom:8px;">
+    <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+            @if(hospital_logo_url())
+                <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo" style="width:100%;height:100%;object-fit:contain;padding:8px;">
+            @else
+                <span style="font-size:28px;color:#1B4F72">👁</span>
+            @endif
+        </div>
+        <div style="flex:1;text-align:left">
+            <div style="font-weight:800;color:#1B4F72;font-size:18px">{{ hospital_name() }}</div>
+            <div style="font-size:12px;color:#6b7280">{{ hospital_full_address() ?? '' }}</div>
+        </div>
+    </div>
+</div>
+
 {{-- ── Patient Header ── --}}
 <div class="pt-header">
     <span class="pt-name">{{ $patient->full_name }}</span>

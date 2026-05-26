@@ -18,8 +18,19 @@
 </head>
 <body>
 <button class="print-btn" onclick="window.print()">Print</button>
-<h1>Bill of Summary</h1>
-<div>Invoice: {{ $invoice->invoice_number ?? '-' }} | Patient: {{ $booking->patient?->full_name ?? '-' }}</div>
+<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+    <div style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        @if(hospital_logo_url())
+            <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo" style="width:100%;height:100%;object-fit:contain;padding:8px;">
+        @else
+            <span style="font-size:28px;color:#0f4c81">👁</span>
+        @endif
+    </div>
+    <div>
+        <h1 style="margin:0 0 6px">Bill of Summary</h1>
+        <div>Invoice: {{ $invoice->invoice_number ?? '-' }} | Patient: {{ $booking->patient?->full_name ?? '-' }}</div>
+    </div>
+</div>
 <table>
     <thead>
         <tr>

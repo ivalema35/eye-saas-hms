@@ -13,6 +13,23 @@
         /* ── Header ── */
         .rx-header { display: flex; align-items: flex-start; justify-content: space-between;
             border-bottom: 2px solid #1a56a0; padding-bottom: 8px; margin-bottom: 10px; }
+
+        .rx-logo {
+            width: 72px;
+            height: 72px;
+            border-radius: 12px;
+            background: #F8FAFC;
+            border: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-right: 12px;
+        }
+
+        .rx-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+
+        .rx-logo span { font-size: 28px; color: #1a56a0; }
         .rx-header-hospital h1 { font-size: 20px; font-weight: 700; color: #1a56a0; letter-spacing: .02em; }
         .rx-header-hospital p  { font-size: 11px; color: #555; margin-top: 2px; }
         .rx-header-doctor { text-align: right; font-size: 11px; color: #444; }
@@ -120,13 +137,22 @@
 
     {{-- ── Header ── --}}
     <div class="rx-header">
-        <div class="rx-header-hospital">
-            <h1>{{ $tenant->name ?? config('app.name') }}</h1>
-            <p>
-                @if($tenant->address ?? null) {{ $tenant->address }} @endif
-                @if($tenant->phone ?? null) &nbsp;|&nbsp; {{ $tenant->phone }} @endif
-                @if($tenant->email ?? null) &nbsp;|&nbsp; {{ $tenant->email }} @endif
-            </p>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <div class="rx-logo">
+                @if(hospital_logo_url())
+                    <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+                @else
+                    <span>👁</span>
+                @endif
+            </div>
+            <div class="rx-header-hospital">
+                <h1>{{ hospital_name() }}</h1>
+                <p>
+                    @if(hospital_full_address()) {{ hospital_full_address() }} @endif
+                    @if(hospital_contact_number()) &nbsp;|&nbsp; {{ hospital_contact_number() }} @endif
+                    @if(hospital_official_email()) &nbsp;|&nbsp; {{ hospital_official_email() }} @endif
+                </p>
+            </div>
         </div>
         <div class="rx-header-doctor">
             <strong>{{ $exam->doctor?->name ?? '—' }}</strong>

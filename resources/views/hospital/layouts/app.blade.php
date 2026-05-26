@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Hospital') — {{ config('app.name') }}</title>
+    <title>@yield('title', 'Hospital') — {{ hospital_name() }}</title>
 
     {{-- Design System CSS --}}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
@@ -177,7 +177,56 @@
         }
 
         .premium-sidebar-brand-link {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .95rem 1rem;
+            text-decoration: none;
+        }
+
+        .sidebar-brand-mark {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.12);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-logo {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: block;
+        }
+
+        .sidebar-brand-copy {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            line-height: 1.1;
+        }
+
+        .sidebar-brand-name {
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: -.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-brand-tag {
+            color: rgba(255, 255, 255, 0.74);
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .hms-sidenav {
@@ -461,11 +510,17 @@
                 <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
                    class="premium-sidebar-brand-link"
                    aria-label="Go to dashboard">
-                    <img src="{{ asset('images/aeh-logo-white.svg') }}"
-                         alt="AEH Logo"
-                         class="sidebar-logo"
-                         loading="lazy"
-                         decoding="async">
+                    <span class="sidebar-brand-mark">
+                        <img src="{{ $hospitalLogoUrl }}"
+                             alt="{{ $hospitalName }} Logo"
+                             class="sidebar-logo"
+                             loading="lazy"
+                             decoding="async">
+                    </span>
+                    <span class="sidebar-brand-copy">
+                        <span class="sidebar-brand-name">{{ $hospitalName }}</span>
+                        <span class="sidebar-brand-tag">Hospital Workspace</span>
+                    </span>
                 </a>
             </div>
             <div class="hms-sidenav-wrap">

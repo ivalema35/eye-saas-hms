@@ -65,7 +65,7 @@ class OtDischargeController extends Controller
         $tenantId = (int) app('tenant')->id;
 
         $booking = OtBooking::query()
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name'])
+            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'otDoctor:id,name'])
             ->findOrFail($bookingId);
 
         $surgery = DB::table('ot_surgeries')
