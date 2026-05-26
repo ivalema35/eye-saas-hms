@@ -1,10 +1,10 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 @section('title', 'Edit: ' . $tenant->name)
 @section('page-header', 'Edit Hospital')
 
 @section('page-actions')
     <a href="{{ route('superadmin.hospitals.show', $tenant) }}" class="hms-btn hms-btn-secondary hms-btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Back
+        <i class="bi bi-arrow-left"></i> Back
     </a>
 @endsection
 
@@ -47,7 +47,7 @@
                            maxlength="30" pattern="[a-z0-9\-]+">
                 </div>
                 <span style="font-size:.75rem;color:var(--hms-warning)">
-                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <i class="bi bi-exclamation-triangle-fill"></i>
                     Slug change karne se login URL change ho jayega.
                 </span>
                 @error('slug') <span class="hms-error">{{ $message }}</span> @enderror
@@ -93,7 +93,7 @@
 
             <div style="display:flex;gap:.75rem;margin-top:1.5rem">
                 <button type="submit" class="hms-btn hms-btn-primary">
-                    <i class="fa-solid fa-save"></i> Save Changes
+                    <i class="bi bi-floppy-fill"></i> Save Changes
                 </button>
                 <a href="{{ route('superadmin.hospitals.show', $tenant) }}" class="hms-btn hms-btn-secondary">
                     Cancel

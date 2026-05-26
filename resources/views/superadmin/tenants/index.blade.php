@@ -1,11 +1,11 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 
 @section('title', 'Hospitals')
 @section('page-header', 'Hospitals')
 
 @section('page-actions')
     <a href="{{ route('superadmin.hospitals.create') }}" class="hms-btn hms-btn-primary hms-btn-sm">
-        <i class="fa-solid fa-plus"></i> Add Hospital
+        <i class="bi bi-plus-lg"></i> Add Hospital
     </a>
 @endsection
 
@@ -14,7 +14,7 @@
 {{-- Filter Card --}}
 <div class="hms-card" style="margin-bottom:1.25rem;padding:1.25rem">
     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
-        <i class="fa-solid fa-filter" style="color:#1B4F72;font-size:.875rem"></i>
+        <i class="bi bi-funnel-fill" style="color:#1B4F72;font-size:.875rem"></i>
         <span style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B">Filters</span>
     </div>
     <form method="GET" action="{{ route('superadmin.hospitals.index') }}"
@@ -38,7 +38,7 @@
         </div>
         <div style="display:flex;gap:.5rem">
             <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm">
-                <i class="fa-solid fa-search"></i> Filter
+                <i class="bi bi-search"></i> Filter
             </button>
             <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">
                 Clear
@@ -51,7 +51,7 @@
 <div class="hms-card" style="padding:0">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="fa-solid fa-hospital-user" style="color:#1B4F72"></i>
+            <i class="bi bi-hospital-fill" style="color:#1B4F72"></i>
             Hospital List
         </h3>
         <span class="hms-badge hms-badge-info">{{ $tenants->total() }} total</span>
@@ -59,7 +59,7 @@
 
     @if($tenants->count() === 0)
         <x-empty-state
-            icon="fa-solid fa-hospital"
+            icon="bi bi-hospital-fill"
             title="No hospitals found"
             description="No hospitals match your search or filter criteria. Try adjusting the filters above." />
     @else
@@ -105,17 +105,17 @@
                                 <div style="display:flex;gap:.25rem;justify-content:flex-end;align-items:center">
                                     <a href="{{ route('superadmin.hospitals.show', $tenant) }}"
                                        class="hms-btn-icon" data-tooltip="View Details">
-                                        <i class="fa-solid fa-eye"></i>
+                                        <i class="bi bi-eye-fill"></i>
                                     </a>
                                     <a href="{{ route('superadmin.hospitals.edit', $tenant) }}"
                                        class="hms-btn-icon" data-tooltip="Edit Hospital">
-                                        <i class="fa-solid fa-pen-to-square"></i>
+                                        <i class="bi bi-pencil-fill"></i>
                                     </a>
                                     @if(in_array($tenant->status, ['suspended','inactive','grace'], true))
                                         <form method="POST" action="{{ route('superadmin.hospitals.activate', $tenant) }}" style="margin:0">
                                             @csrf
                                             <button type="submit" class="hms-btn-icon hms-btn-icon-success" data-tooltip="Activate Hospital">
-                                                <i class="fa-solid fa-check"></i>
+                                                <i class="bi bi-check-lg"></i>
                                             </button>
                                         </form>
                                     @endif
@@ -124,7 +124,7 @@
                                               onsubmit="return confirm('Suspend this hospital?')">
                                             @csrf
                                             <button type="submit" class="hms-btn-icon hms-btn-icon-danger" data-tooltip="Suspend Hospital">
-                                                <i class="fa-solid fa-ban"></i>
+                                                <i class="bi bi-ban"></i>
                                             </button>
                                         </form>
                                     @endif

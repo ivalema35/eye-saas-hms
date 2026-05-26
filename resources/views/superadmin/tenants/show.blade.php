@@ -1,17 +1,17 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 
 @section('title', $tenant->name)
 @section('page-header', $tenant->name)
 
 @section('page-actions')
     <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">
-        <i class="fa-solid fa-arrow-left"></i> Back
+        <i class="bi bi-arrow-left"></i> Back
     </a>
     <a href="{{ route('superadmin.hospitals.edit', $tenant) }}" class="hms-btn hms-btn-primary hms-btn-sm">
-        <i class="fa-solid fa-pen-to-square"></i> Edit
+        <i class="bi bi-pencil-fill"></i> Edit
     </a>
     <a href="{{ url($tenant->slug . '/login') }}" target="_blank" class="hms-btn hms-btn-outline hms-btn-sm">
-        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Portal
+        <i class="bi bi-box-arrow-up-right"></i> Open Portal
     </a>
 @endsection
 
@@ -64,7 +64,7 @@
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
             <h3 class="hms-card-title">
-                <i class="fa-solid fa-hospital" style="color:#1B4F72"></i>
+                <i class="bi bi-hospital-fill" style="color:#1B4F72"></i>
                 Hospital Information
             </h3>
         </div>
@@ -95,7 +95,7 @@
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
             <h3 class="hms-card-title">
-                <i class="fa-solid fa-bolt" style="color:#E67E22"></i>
+                <i class="bi bi-lightning-fill" style="color:#E67E22"></i>
                 Quick Actions
             </h3>
         </div>
@@ -104,7 +104,7 @@
                 <form method="POST" action="{{ route('superadmin.hospitals.activate', $tenant) }}">
                     @csrf
                     <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="width:100%">
-                        <i class="fa-solid fa-check"></i> Activate Hospital
+                        <i class="bi bi-check-lg"></i> Activate Hospital
                     </button>
                 </form>
             @endif
@@ -114,7 +114,7 @@
                       onsubmit="return confirm('Are you sure you want to suspend this hospital?')">
                     @csrf
                     <button type="submit" class="hms-btn hms-btn-danger hms-btn-sm" style="width:100%">
-                        <i class="fa-solid fa-ban"></i> Suspend Hospital
+                        <i class="bi bi-ban"></i> Suspend Hospital
                     </button>
                 </form>
             @endif
@@ -123,7 +123,7 @@
                 <form method="POST" action="{{ route('superadmin.hospitals.reactivate', $tenant) }}">
                     @csrf
                     <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="width:100%">
-                        <i class="fa-solid fa-rotate-right"></i> Reactivate
+                        <i class="bi bi-arrow-clockwise"></i> Reactivate
                     </button>
                 </form>
             @endif
@@ -134,7 +134,7 @@
                 <input type="number" name="days" class="hms-input" style="width:70px;padding:.35rem .5rem;text-align:center"
                        min="1" max="90" value="7">
                 <button type="submit" class="hms-btn hms-btn-outline hms-btn-sm" style="flex:1">
-                    <i class="fa-solid fa-clock-rotate-left"></i> Extend Grace
+                    <i class="bi bi-clock-history"></i> Extend Grace
                 </button>
             </form>
 
@@ -145,7 +145,7 @@
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="hms-btn hms-btn-danger hms-btn-sm" style="width:100%">
-                        <i class="fa-solid fa-archive"></i> Archive Hospital
+                        <i class="bi bi-archive-fill"></i> Archive Hospital
                     </button>
                 </form>
             @endif
@@ -158,7 +158,7 @@
 <div class="hms-card" style="padding:0;margin-bottom:1.25rem">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="fa-solid fa-calendar-check" style="color:#1B4F72"></i>
+            <i class="bi bi-calendar-check-fill" style="color:#1B4F72"></i>
             Subscription History
         </h3>
         @if($tenant->subscriptions->isNotEmpty())
@@ -167,7 +167,7 @@
     </div>
     @if($tenant->subscriptions->isEmpty())
         <x-empty-state
-            icon="fa-solid fa-calendar-xmark"
+            icon="bi bi-calendar-x-fill"
             title="No subscriptions yet"
             description="This hospital is currently on trial. Subscriptions will appear here after payment." />
     @else
@@ -208,7 +208,7 @@
 <div class="hms-card" style="padding:0">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="fa-solid fa-indian-rupee-sign" style="color:#27AE60"></i>
+            <i class="bi bi-currency-rupee" style="color:#27AE60"></i>
             Payment History
         </h3>
         @if($tenant->payments->isNotEmpty())
@@ -217,7 +217,7 @@
     </div>
     @if($tenant->payments->isEmpty())
         <x-empty-state
-            icon="fa-solid fa-receipt"
+            icon="bi bi-receipt-cutoff"
             title="No payments recorded"
             description="Payment transactions for this hospital will appear here once received." />
     @else

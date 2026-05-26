@@ -1,10 +1,10 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 @section('title', 'Payments')
 @section('page-header', 'Payment Transactions')
 
 @section('page-actions')
     <button class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#offlineModal">
-        <i class="fa-solid fa-plus"></i> Record Offline Payment
+        <i class="bi bi-plus-lg"></i> Record Offline Payment
     </button>
 @endsection
 
@@ -38,7 +38,7 @@
 {{-- Filter Card --}}
 <div class="hms-card" style="padding:1.25rem;margin-bottom:1.25rem">
     <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
-        <i class="fa-solid fa-filter" style="color:#1B4F72;font-size:.875rem"></i>
+        <i class="bi bi-funnel-fill" style="color:#1B4F72;font-size:.875rem"></i>
         <span style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B">Filters</span>
     </div>
     <form method="GET" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
@@ -69,7 +69,7 @@
         </div>
         <div style="display:flex;gap:.5rem">
             <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm">
-                <i class="fa-solid fa-filter"></i> Filter
+                <i class="bi bi-funnel-fill"></i> Filter
             </button>
             <a href="{{ route('superadmin.payments.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
         </div>
@@ -80,7 +80,7 @@
 <div class="hms-card" style="padding:0">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="fa-solid fa-receipt" style="color:#1B4F72"></i>
+            <i class="bi bi-receipt-cutoff" style="color:#1B4F72"></i>
             Payment Transactions
         </h3>
         <span class="hms-badge hms-badge-info">{{ $payments->total() }} total</span>
@@ -119,9 +119,9 @@
                     <td style="font-size:.85rem">{{ ucfirst($payment->cycle ?? '—') }}</td>
                     <td>
                         @if($payment->method === 'online')
-                            <span class="hms-badge hms-badge-info"><i class="fa-solid fa-wifi" style="font-size:.6rem"></i> Online</span>
+                            <span class="hms-badge hms-badge-info"><i class="bi bi-wifi" style="font-size:.6rem"></i> Online</span>
                         @else
-                            <span class="hms-badge" style="background:#FFF3E0;color:#E65100"><i class="fa-solid fa-money-bill-wave" style="font-size:.6rem"></i> Offline</span>
+                            <span class="hms-badge" style="background:#FFF3E0;color:#E65100"><i class="bi bi-cash-stack" style="font-size:.6rem"></i> Offline</span>
                         @endif
                     </td>
                     <td style="font-family:monospace;font-size:.8rem;color:#475569">{{ $payment->transaction_id ?? '—' }}</td>
@@ -147,7 +147,7 @@
                             <a href="{{ route('superadmin.payments.invoice', $payment) }}"
                                target="_blank"
                                class="hms-btn-icon" data-tooltip="Download Invoice PDF">
-                                <i class="fa-solid fa-file-pdf" style="color:#C0392B"></i>
+                                <i class="bi bi-file-pdf-fill" style="color:#C0392B"></i>
                             </a>
                         @else
                             <span style="color:#94A3B8;font-size:.75rem">—</span>
@@ -157,7 +157,7 @@
                 @empty
                 <tr>
                     <td colspan="10" style="text-align:center;padding:2.5rem;color:#94A3B8">
-                        <i class="fa-solid fa-receipt" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>
+                        <i class="bi bi-receipt-cutoff" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem"></i>
                         No payments found.
                     </td>
                 </tr>
@@ -179,7 +179,7 @@
         <div class="modal-content" style="border-radius:14px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
             <div class="modal-header" style="border-bottom:1px solid rgba(27,79,114,.12);padding:1.25rem 1.5rem">
                 <h5 class="modal-title" style="font-weight:700;font-size:1rem;color:#1B4F72;display:flex;align-items:center;gap:.5rem">
-                    <i class="fa-solid fa-money-bill-wave"></i>
+                    <i class="bi bi-cash-stack"></i>
                     Record Offline Payment
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -222,7 +222,7 @@
                 <div class="modal-footer" style="border-top:1px solid rgba(27,79,114,.12);padding:1rem 1.5rem">
                     <button type="button" class="hms-btn hms-btn-outline" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="hms-btn hms-btn-primary">
-                        <i class="fa-solid fa-check"></i> Record & Activate
+                        <i class="bi bi-check-lg"></i> Record & Activate
                     </button>
                 </div>
             </form>

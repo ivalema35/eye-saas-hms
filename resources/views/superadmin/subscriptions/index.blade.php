@@ -1,4 +1,4 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 
 @section('title', 'Subscriptions')
 @section('page-header', 'Subscriptions')
@@ -34,7 +34,7 @@
 <div class="hms-card" style="padding:0">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="fa-solid fa-calendar-check" style="color:#1B4F72"></i>
+            <i class="bi bi-calendar-check-fill" style="color:#1B4F72"></i>
             All Subscriptions
         </h3>
         <span class="hms-badge hms-badge-info">{{ $subscriptions->total() }} total</span>
@@ -42,7 +42,7 @@
 
     @if($subscriptions->count() === 0)
         <x-empty-state
-            icon="fa-solid fa-calendar-xmark"
+            icon="bi bi-calendar-x-fill"
             title="No subscriptions yet"
             description="Hospital subscriptions will appear here once hospitals upgrade from trial." />
     @else
@@ -98,7 +98,7 @@
                                 @if($subscription->tenant)
                                     <a href="{{ route('superadmin.hospitals.show', $subscription->tenant) }}"
                                        class="hms-btn-icon" data-tooltip="View Hospital">
-                                        <i class="fa-solid fa-eye"></i>
+                                        <i class="bi bi-eye-fill"></i>
                                     </a>
                                 @endif
                             </td>

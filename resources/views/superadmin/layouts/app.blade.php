@@ -20,10 +20,6 @@
     {{-- Bootstrap Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
-    {{-- Font Awesome --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-          integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
-          crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     {{-- Select2 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
@@ -34,22 +30,25 @@
     {{-- SweetAlert2 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-    {{-- Hospital-panel visual alignment —  white bg, Inter font, nav items, content area --}}
+    {{-- SuperAdmin shell: dark-navy sidebar + clean white navbar --}}
     <style>
         :root {
             --shell-secondary: #1B4F72;
-            --shell-s2-12: rgba(27,79,114,.12);
-            --shell-white-70: rgba(255,255,255,.70);
-            --shell-white-78: rgba(255,255,255,.78);
-            --shell-white-86: rgba(255,255,255,.86);
+            /* Dark sidebar palette */
+            --sa-dark-900:    #0F172A;
+            --sa-dark-800:    #1E293B;
+            --sa-dark-muted:  #94A3B8;
+            --sa-dark-subtle: #64748B;
+            --sa-dark-border: rgba(255,255,255,.08);
         }
+
         body.sa-body {
-            background: #ffffff !important;
+            background: #F8FAFC !important;
             color: #1B4F72;
             font-family: 'Inter', sans-serif;
         }
         .sa-main {
-            background: #ffffff;
+            background: #F8FAFC;
             font-family: 'Inter', sans-serif;
         }
         .sa-page-header h1 {
@@ -65,26 +64,35 @@
             box-shadow: none !important;
         }
 
-        /* ── Stat card horizontal layout fix ─────────────────── */
-        /* design-system.css sets flex-direction:column — force row here */
-        .hms-stat-card {
-            flex-direction: row !important;
-            align-items: center !important;
-        }
+        /* ── Stat card horizontal layout ─────────────────────── */
+        .hms-stat-card { flex-direction: row !important; align-items: center !important; }
         .hms-stat-body { flex: 1; min-width: 0; }
-        /* Ensure icons in colored icon box use the container color (hsi-* classes) */
-        .hms-stat-icon i,
-        .hms-stat-icon .bi {
-            color: inherit !important;
-            font-size: 1.375rem !important;
+        .hms-stat-icon i, .hms-stat-icon .bi { color: inherit !important; font-size: 1.375rem !important; }
+
+        /* ══════════════════════════════════════════════════════
+           TOP NAVBAR — solid white, clean shadow
+        ══════════════════════════════════════════════════════ */
+        .sa-navbar {
+            background: #fff !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border-bottom: 1px solid #E2E8F0 !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05) !important;
         }
 
-        /* ── Sidebar nav (hospital panel style) ──────────────── */
+        /* ══════════════════════════════════════════════════════
+           DARK NAVY SIDEBAR
+        ══════════════════════════════════════════════════════ */
         .sa-sidebar {
-            background: #f8fafc !important;
-            border-right: 1px solid rgba(27,79,114,.1);
+            background: var(--sa-dark-900) !important;
+            border-right: 1px solid var(--sa-dark-border) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
             display: flex;
             flex-direction: column;
+        }
+        @media (max-width: 768px) {
+            .sa-sidebar { background: var(--sa-dark-900) !important; }
         }
 
         .hms-sidenav {
@@ -94,24 +102,30 @@
             gap: .25rem;
             flex: 1;
         }
+
+        /* Section label text inside collapsible group toggles */
         .hms-nav-section-label {
-            color: rgba(27,79,114,.58) !important;
-            font-weight: 900;
+            color: var(--sa-dark-subtle) !important;
+            font-weight: 700;
             font-size: .70rem;
             letter-spacing: .12em;
+            text-transform: uppercase;
         }
+
         .hms-nav-divider {
             height: 1px;
-            background: var(--shell-s2-12) !important;
+            background: var(--sa-dark-border) !important;
             border: none;
             margin: .35rem .5rem;
             opacity: 1;
         }
+
+        /* Collapsible group toggle rows (Management / System) */
         .hms-nav-group-toggle {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            background: rgba(27,79,114,.06);
+            background: rgba(255,255,255,.04);
             border: none;
             border-radius: 8px;
             margin: .2rem 0;
@@ -120,27 +134,28 @@
             transition: transform 160ms ease, background 160ms ease;
         }
         .hms-nav-group-toggle:hover {
-            background: var(--shell-secondary);
+            background: rgba(255,255,255,.08);
             transform: translateX(2px);
         }
         .hms-nav-group-toggle:hover .hms-nav-section-label,
         .hms-nav-group-toggle:hover .hms-nav-chevron {
-            color: rgba(255,255,255,.95) !important;
+            color: #fff !important;
         }
         .hms-nav-group-toggle .hms-nav-section-label {
             font-size: 1.05rem !important;
-            font-weight: 900 !important;
+            font-weight: 700 !important;
             letter-spacing: .05em !important;
-            color: rgba(27,79,114,.78) !important;
+            color: var(--sa-dark-muted) !important;
         }
         .hms-nav-group-toggle .hms-nav-chevron {
-            color: rgba(27,79,114,.72) !important;
+            color: var(--sa-dark-subtle) !important;
             font-size: .75rem;
             transition: transform 200ms ease;
         }
         .hms-nav-group-toggle.collapsed .hms-nav-chevron {
             transform: rotate(-90deg);
         }
+
         .hms-nav-group-items {
             display: flex;
             flex-direction: column;
@@ -148,56 +163,67 @@
             overflow: hidden;
             transition: max-height 220ms ease;
         }
-        .hms-nav-group-items.collapsed {
-            max-height: 0 !important;
-        }
+        .hms-nav-group-items.collapsed { max-height: 0 !important; }
         .hms-nav-group-items .hms-nav-item { font-size: .92rem; }
         .hms-nav-group-items .hms-nav-item i { font-size: .95rem; }
 
+        /* ── Nav items — dark theme ──────────────────────────── */
         .hms-nav-item {
             display: flex;
             align-items: center;
             gap: .55rem;
-            color: var(--shell-secondary) !important;
-            font-size: 17px;
-            font-weight: 900;
-            border-radius: 18px;
+            color: var(--sa-dark-muted) !important;
+            font-size: .9rem;
+            font-weight: 600;
+            border-radius: 10px;
             padding: .70rem .95rem;
             background: transparent;
             border: none;
             text-decoration: none !important;
             position: relative;
-            transition: transform 160ms ease, background 160ms ease;
+            transition: transform 160ms ease, background 160ms ease, color 160ms ease;
         }
-        .hms-nav-item i { color: var(--shell-secondary) !important; font-size: 1.05rem; }
+        .hms-nav-item i {
+            color: var(--sa-dark-subtle) !important;
+            font-size: 1.05rem;
+            transition: color 160ms ease;
+        }
         .hms-nav-item:hover {
-            background: var(--shell-secondary) !important;
-            color: rgba(255,255,255,.98) !important;
+            background: var(--sa-dark-800) !important;
+            color: #fff !important;
             transform: translateX(2px);
             text-decoration: none !important;
         }
-        .hms-nav-item:hover i { color: rgba(255,255,255,.98) !important; }
+        .hms-nav-item:hover i { color: #fff !important; }
+
+        /* Active: slate-800 bg + white text + blue left accent bar */
         .hms-nav-item.active {
-            background: rgba(27,79,114,.12) !important;
-            color: var(--shell-secondary) !important;
+            background: var(--sa-dark-800) !important;
+            color: #fff !important;
+            font-weight: 700;
         }
+        .hms-nav-item.active i { color: #fff !important; }
         .hms-nav-item.active::before {
             content: '';
             position: absolute;
-            left: 10px; top: 50%;
-            width: 4px; height: 18px;
+            left: 0;
+            top: 50%;
             transform: translateY(-50%);
-            border-radius: 999px;
+            width: 3px;
+            height: 60%;
+            min-height: 1.125rem;
+            border-radius: 0 3px 3px 0;
             background: var(--shell-secondary);
         }
+
         @media (prefers-reduced-motion: reduce) {
             .hms-nav-item, .hms-nav-group-toggle { transition: none !important; }
         }
 
-        /* ── Sidebar footer logout ───────────────────────────── */
+        /* ── Sidebar footer / logout ─────────────────────────── */
         .sa-sidebar-footer {
             padding: .75rem;
-            border-top: 1px solid rgba(27,79,114,.1);
+            border-top: 1px solid var(--sa-dark-border);
             margin-top: auto;
         }
         .sa-sidebar-logout {
@@ -206,17 +232,17 @@
             gap: .55rem;
             width: 100%;
             padding: .70rem .95rem;
-            border-radius: 18px;
+            border-radius: 10px;
             border: none;
-            background: rgba(192,57,43,.07);
-            color: #C0392B;
-            font-size: .92rem;
-            font-weight: 900;
+            background: rgba(192,57,43,.15);
+            color: #FCA5A5;
+            font-size: .875rem;
+            font-weight: 600;
             cursor: pointer;
             text-align: left;
             transition: background 160ms ease, transform 160ms ease;
         }
-        .sa-sidebar-logout i { color: #C0392B; font-size: 1rem; }
+        .sa-sidebar-logout i { color: #FCA5A5; font-size: 1rem; }
         .sa-sidebar-logout:hover {
             background: #C0392B;
             color: #fff;
