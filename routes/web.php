@@ -78,7 +78,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('dashboard');
 
         // Hospital (Tenant) Management
-        Route::resource('hospitals', TenantController::class);
+        Route::resource('hospitals', TenantController::class)
+            ->parameters(['hospitals' => 'tenant']);
         Route::post('hospitals/{tenant}/activate', [TenantController::class, 'activate'])
             ->name('hospitals.activate');
         Route::post('hospitals/{tenant}/suspend', [TenantController::class, 'suspend'])
@@ -87,6 +88,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('hospitals.extend');
         Route::post('hospitals/{tenant}/reactivate', [TenantController::class, 'reactivate'])
             ->name('hospitals.reactivate');
+        
 
         // Payments
         Route::get('/payments', [PaymentController::class, 'index'])

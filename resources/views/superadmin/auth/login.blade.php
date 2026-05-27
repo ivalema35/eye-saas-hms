@@ -572,6 +572,22 @@
             .page-bubble.b7,
             .page-bubble.b9 { --drift-x: -6vw; }
         }
+
+        .eye-toggle {
+            position: absolute;
+            right: .875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: .875rem;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            line-height: 1;
+            transition: color .2s;
+        }
+        .eye-toggle:hover { color: #1B4F72; }
     </style>
 </head>
 <body>
@@ -644,7 +660,10 @@
                         <label class="form-label" for="password">Password</label>
                         <div class="input-wrap">
                             <i class="bi bi-lock-fill input-icon"></i>
-                            <input type="password" id="password" name="password" class="hms-input form-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
+                            <input type="password" id="password" name="password" class="hms-input form-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password" style="padding-right:2.5rem">
+                            <button type="button" class="eye-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                                <i class="bi bi-eye-fill" id="eyeIcon"></i>
+                            </button>
                         </div>
                         @error('password')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i> {{ $message }}</div>@enderror
                     </div>
@@ -665,6 +684,18 @@
         const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
         @if(session('error')) Toast.fire({ icon: 'error', title: @json(session('error')) }); @endif
         @if(session('success')) Toast.fire({ icon: 'success', title: @json(session('success')) }); @endif
+
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput  = document.getElementById('password');
+        const eyeIcon        = document.getElementById('eyeIcon');
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                eyeIcon.classList.toggle('bi-eye-fill');
+                eyeIcon.classList.toggle('bi-eye-slash-fill');
+            });
+        }
     });
 </script>
 

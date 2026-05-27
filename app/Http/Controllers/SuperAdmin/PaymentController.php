@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PaymentController extends Controller
 {
@@ -120,7 +120,7 @@ class PaymentController extends Controller
     /**
      * Download or regenerate the PDF invoice for a payment.
      */
-    public function downloadInvoice(Payment $payment): BinaryFileResponse
+    public function downloadInvoice(Payment $payment): StreamedResponse
     {
         if (! $payment->invoice_path || ! Storage::disk('local')->exists($payment->invoice_path)) {
             $path = $this->invoiceService->generate($payment);

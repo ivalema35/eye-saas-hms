@@ -4,213 +4,211 @@
 <meta charset="UTF-8">
 <style>
     @page {
-        margin: 35px 40px;
+        margin: 40px 45px;
         size: A4 portrait;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: 'DejaVu Sans', sans-serif;
         font-size: 12px;
         color: #1A202C;
         line-height: 1.5;
         background: #FFFFFF;
     }
     table { border-collapse: collapse; }
-    .w-full { width: 100%; }
 
-    /* Header */
-    .brand-name  { font-size: 22px; font-weight: bold; color: #1B4F72; }
-    .brand-sub   { font-size: 11px; color: #4A5568; margin-top: 2px; }
-    .brand-url   { font-size: 10px; color: #4A5568; margin-top: 5px; }
-    .inv-label   { font-size: 28px; font-weight: bold; color: #1B4F72; text-align: right; letter-spacing: 1px; }
-    .inv-meta    { text-align: right; font-size: 11px; color: #4A5568; margin-top: 4px; }
+    /* ── Header ── */
+    .brand-name { font-size: 20px; font-weight: bold; color: #1B4F72; }
+    .brand-sub  { font-size: 10px; color: #4A5568; margin-top: 3px; }
+    .brand-url  { font-size: 10px; color: #4A5568; margin-top: 4px; }
+    .inv-label  { font-size: 26px; font-weight: bold; color: #1B4F72; letter-spacing: 1px; }
+    .inv-num    { font-size: 13px; font-weight: bold; color: #1A202C; }
+    .inv-meta   { font-size: 10px; color: #4A5568; margin-top: 3px; }
 
-    /* Dividers */
-    .divider-thick { border-top: 2.5px solid #1B4F72; margin: 16px 0; }
-    .divider-thin  { border-top: 1px solid #E2E8F0; margin: 14px 0; }
+    /* ── Dividers ── */
+    .rule-thick { border: none; border-top: 2.5px solid #1B4F72; margin: 14px 0; }
+    .rule-thin  { border: none; border-top: 1px solid #E2E8F0; margin: 12px 0; }
 
-    /* Section headers */
+    /* ── Section labels ── */
     .sec-label {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 0.8px;
-        color: #4A5568;
+        letter-spacing: 1px;
+        color: #718096;
         margin-bottom: 6px;
     }
+    .hosp-name { font-size: 14px; font-weight: bold; color: #1A202C; }
+    .hosp-sub  { font-size: 10px; color: #4A5568; margin-top: 2px; }
 
-    /* Hospital name */
-    .hospital-name { font-size: 15px; font-weight: bold; color: #1A202C; }
-    .hospital-sub  { font-size: 11px; color: #4A5568; margin-top: 2px; }
+    /* ── Payment info key/val ── */
+    .ikey { font-size: 10px; color: #718096; padding-right: 12px; padding-bottom: 5px; vertical-align: top; white-space: nowrap; }
+    .ival { font-size: 11px; font-weight: bold; color: #1A202C; padding-bottom: 5px; vertical-align: top; }
 
-    /* Info key-value pairs */
-    .info-key { font-size: 10px; color: #4A5568; text-transform: uppercase; letter-spacing: 0.4px; padding-right: 10px; width: 120px; padding-bottom: 5px; vertical-align: top; }
-    .info-val { font-size: 12px; font-weight: 600; color: #1A202C; padding-bottom: 5px; vertical-align: top; }
-
-    /* Line-items table */
-    .items-table { width: 100%; margin: 18px 0; }
-    .items-table thead tr td {
-        background-color: #1B4F72;
-        color: #FFFFFF;
-        padding: 9px 12px;
-        font-size: 11px;
+    /* ── Status badge — table-based to avoid inline-block issues ── */
+    .badge-cell {
+        font-size: 9px;
         font-weight: bold;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.6px;
+        text-transform: uppercase;
+        padding: 3px 10px;
+        border: 1px solid #27AE60;
+        color: #1A6F5B;
+        background-color: #D5F5E3;
     }
-    .items-table tbody tr td {
-        padding: 10px 12px;
-        font-size: 12px;
-        border-bottom: 1px solid #E2E8F0;
+    .badge-cell-pending { border-color: #E67E22; color: #784212; background-color: #FDEBD0; }
+    .badge-cell-failed  { border-color: #C0392B; color: #641E16; background-color: #FADBD8; }
+
+    /* ── Line items table ── */
+    .items-thead td {
+        background-color: #F8FAFC;
+        color: #4A5568;
+        padding: 8px 10px;
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        border-top: 1px solid #CBD5E0;
+        border-bottom: 1px solid #CBD5E0;
+    }
+    .items-tbody td {
+        padding: 10px 10px;
+        font-size: 11px;
+        border-bottom: 1px solid #EDF2F7;
         vertical-align: top;
     }
-    .items-table tbody tr:nth-child(even) td { background-color: #F8FAFB; }
-    .item-desc-main { font-weight: 600; font-size: 12px; color: #1A202C; }
-    .item-desc-sub  { font-size: 10px; color: #4A5568; margin-top: 3px; }
-    .amount-col     { text-align: right; font-size: 14px; font-weight: bold; color: #1B4F72; }
+    .item-main { font-weight: bold; font-size: 12px; color: #1A202C; }
+    .item-sub  { font-size: 10px; color: #718096; margin-top: 3px; }
+    .amount-col { text-align: right; font-size: 13px; font-weight: bold; color: #1B4F72; }
 
-    /* Total block */
-    .total-row td { padding: 6px 12px; border-bottom: 1px solid #E2E8F0; font-size: 12px; }
-    .total-row .lbl { color: #4A5568; }
-    .total-row .val { text-align: right; font-weight: 600; }
-    .total-final {
-        background-color: #1B4F72;
-        border-radius: 6px;
-        padding: 14px 18px;
-        text-align: right;
-    }
-    .total-final-label  { font-size: 12px; color: #A8D8EA; }
-    .total-final-amount { font-size: 24px; font-weight: bold; color: #FFFFFF; margin-top: 3px; }
+    /* ── Totals ── */
+    .tot-lbl { font-size: 11px; color: #4A5568; padding: 5px 12px 5px 0; }
+    .tot-val { font-size: 11px; font-weight: bold; color: #1A202C; text-align: right; padding: 5px 0; }
+    .tot-sep { border-top: 1px solid #E2E8F0; }
 
-    /* Status badge */
-    .badge {
-        display: inline-block;
-        padding: 3px 12px;
-        border-radius: 20px;
-        font-size: 10px;
-        font-weight: bold;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-    .badge-success { background: #D5F5E3; color: #1A6F5B; }
-    .badge-pending { background: #FDEBD0; color: #784212; }
-    .badge-failed  { background: #FADBD8; color: #641E16; }
+    /* ── Grand total box — solid background, no border-radius ── */
+    .grand-box { background-color: #1B4F72; padding: 12px 16px; }
+    .grand-lbl { font-size: 10px; color: #A8D8EA; }
+    .grand-amt { font-size: 22px; font-weight: bold; color: #FFFFFF; margin-top: 4px; }
 
-    /* Notes */
+    /* ── Notes ── */
     .note-box {
-        background: #F0F4F8;
+        background: #F7FAFC;
         border-left: 3px solid #2980B9;
-        padding: 10px 14px;
+        padding: 9px 12px;
         margin-top: 14px;
-        font-size: 11px;
+        font-size: 10px;
         color: #4A5568;
-        border-radius: 0 4px 4px 0;
     }
 
-    /* Footer */
-    .footer-box {
-        margin-top: 36px;
-        padding-top: 14px;
+    /* ── Footer ── */
+    .footer {
+        margin-top: 30px;
+        padding-top: 12px;
         border-top: 1px solid #E2E8F0;
         text-align: center;
-        font-size: 10px;
-        color: #4A5568;
+        font-size: 9px;
+        color: #718096;
     }
-    .txn-id { font-family: "Courier New", Courier, monospace; font-size: 10px; color: #2980B9; }
+    .txn { font-family: 'DejaVu Sans Mono', monospace; font-size: 10px; color: #2980B9; }
 </style>
 </head>
 <body>
 
-{{-- ===== PAGE HEADER ===== --}}
-<table class="w-full" style="margin-bottom:14px">
+{{-- ═══════════════ HEADER ═══════════════ --}}
+<table width="100%">
     <tr>
-        <td style="vertical-align:top;width:55%">
-            <div class="brand-name">&#128065; Eye HMS SaaS</div>
+        <td width="55%" style="vertical-align: top;">
+            <div class="brand-name">Eye HMS SaaS</div>
             <div class="brand-sub">Multi-Tenant Hospital Management Platform</div>
             <div class="brand-url">hmssaas.com &nbsp;|&nbsp; support@hmssaas.com</div>
         </td>
-        <td style="vertical-align:top;width:45%;text-align:right">
+        <td width="45%" style="vertical-align: top; text-align: right;">
             <div class="inv-label">INVOICE</div>
-            <div class="inv-meta" style="margin-top:6px">
-                <strong style="font-size:13px;color:#1A202C">{{ $invoiceNumber }}</strong>
-            </div>
+            <div class="inv-num" style="margin-top: 5px;">{{ $invoiceNumber }}</div>
             <div class="inv-meta">Date: {{ ($payment->paid_at ?? $payment->created_at ?? now())->format('d F Y') }}</div>
-            <div style="margin-top:8px">
+            <div style="margin-top: 8px; text-align: right;">
                 @php
-                    $statusClass = match($payment->status) {
-                        'success' => 'badge-success',
-                        'pending' => 'badge-pending',
-                        default   => 'badge-failed',
+                    $badgeClass = match($payment->status) {
+                        'pending' => 'badge-cell badge-cell-pending',
+                        'failed'  => 'badge-cell badge-cell-failed',
+                        default   => 'badge-cell',
                     };
                 @endphp
-                <span class="badge {{ $statusClass }}">{{ $payment->status }}</span>
+                <table style="display: inline-table; margin-left: auto;">
+                    <tr><td class="{{ $badgeClass }}">{{ strtoupper($payment->status) }}</td></tr>
+                </table>
             </div>
         </td>
     </tr>
 </table>
 
-<div class="divider-thick"></div>
+<hr class="rule-thick">
 
-{{-- ===== BILLED TO + INVOICE DETAILS ===== --}}
-<table class="w-full" style="margin-bottom:4px">
+{{-- ═══════════════ BILLED TO + PAYMENT INFO ═══════════════ --}}
+<table width="100%">
     <tr>
-        <td style="vertical-align:top;width:50%;padding-right:20px">
+        <td width="50%" style="vertical-align: top; padding-right: 20px;">
             <div class="sec-label">Billed To</div>
-            <div class="hospital-name">{{ $tenant->name ?? 'Hospital' }}</div>
-            @if($tenant->admin_name)
-                <div class="hospital-sub">{{ $tenant->admin_name }}</div>
+            <div class="hosp-name">{{ $tenant->name ?? 'Hospital' }}</div>
+            @if(!empty($tenant->admin_name))
+                <div class="hosp-sub">{{ $tenant->admin_name }}</div>
             @endif
-            @if($tenant->admin_email)
-                <div class="hospital-sub">{{ $tenant->admin_email }}</div>
+            @if(!empty($tenant->admin_email))
+                <div class="hosp-sub">{{ $tenant->admin_email }}</div>
             @endif
-            @if($tenant->city || $tenant->state)
-                <div class="hospital-sub">{{ implode(', ', array_filter([$tenant->city, $tenant->state])) }}</div>
+            @if(!empty($tenant->city) || !empty($tenant->state))
+                <div class="hosp-sub">{{ implode(', ', array_filter([$tenant->city ?? null, $tenant->state ?? null])) }}</div>
             @endif
-            <div class="hospital-sub" style="margin-top:4px;color:#2980B9">
+            <div class="hosp-sub" style="margin-top: 4px; color: #2980B9;">
                 hmssaas.com/{{ $tenant->slug }}
             </div>
         </td>
-        <td style="vertical-align:top;width:50%;padding-left:20px;border-left:1px solid #E2E8F0">
+        <td width="1" style="border-left: 1px solid #E2E8F0;">&nbsp;</td>
+        <td width="49%" style="vertical-align: top; padding-left: 20px;">
             <div class="sec-label">Payment Info</div>
             <table>
                 <tr>
-                    <td class="info-key">Method</td>
-                    <td class="info-val">{{ ucfirst($payment->method ?? '—') }}</td>
+                    <td class="ikey">Method</td>
+                    <td class="ival">{{ ucfirst($payment->method ?? '—') }}</td>
                 </tr>
-                @if($payment->transaction_id)
                 <tr>
-                    <td class="info-key">Transaction ID</td>
-                    <td class="info-val"><span class="txn-id">{{ $payment->transaction_id }}</span></td>
+                    <td class="ikey">Gateway</td>
+                    <td class="ival">{{ ucfirst($payment->gateway ?? 'Manual') }}</td>
+                </tr>
+                @if(!empty($payment->transaction_id))
+                <tr>
+                    <td class="ikey">Transaction ID</td>
+                    <td class="ival"><span class="txn">{{ $payment->transaction_id }}</span></td>
                 </tr>
                 @endif
                 <tr>
-                    <td class="info-key">Paid On</td>
-                    <td class="info-val">{{ ($payment->paid_at ?? now())->format('d M Y, h:i A') }}</td>
-                </tr>
-                <tr>
-                    <td class="info-key">Gateway</td>
-                    <td class="info-val">{{ ucfirst($payment->gateway ?? 'Manual') }}</td>
+                    <td class="ikey">Paid On</td>
+                    <td class="ival">{{ ($payment->paid_at ?? now())->format('d M Y, h:i A') }}</td>
                 </tr>
             </table>
         </td>
     </tr>
 </table>
 
-{{-- ===== LINE ITEMS ===== --}}
-<table class="items-table">
+<hr class="rule-thin">
+
+{{-- ═══════════════ LINE ITEMS ═══════════════ --}}
+<table width="100%" style="margin-top: 6px;">
     <thead>
-        <tr>
-            <td style="width:36px">#</td>
+        <tr class="items-thead">
+            <td width="30">#</td>
             <td>Description</td>
-            <td style="width:100px;text-align:center">Billing Cycle</td>
-            <td style="width:120px;text-align:right">Amount (₹)</td>
+            <td width="100" style="text-align: center;">Billing Cycle</td>
+            <td width="120" style="text-align: right;">Amount (&#8377;)</td>
         </tr>
     </thead>
     <tbody>
-        <tr>
+        <tr class="items-tbody">
             <td>1</td>
             <td>
-                <div class="item-desc-main">Eye HMS SaaS — Subscription Plan</div>
-                <div class="item-desc-sub">All features included — {{ ucfirst($payment->cycle ?? 'Monthly') }} billing</div>
+                <div class="item-main">Eye HMS SaaS — Subscription Plan</div>
+                <div class="item-sub">All features included &mdash; {{ ucfirst($payment->cycle ?? 'Monthly') }} billing</div>
                 @if($payment->paid_at)
                     @php
                         $periodEnd = match($payment->cycle) {
@@ -219,38 +217,38 @@
                             default     => $payment->paid_at->copy()->addDays(30),
                         };
                     @endphp
-                    <div class="item-desc-sub" style="margin-top:3px">
-                        Validity: {{ $payment->paid_at->format('d M Y') }} — {{ $periodEnd->format('d M Y') }}
+                    <div class="item-sub" style="margin-top: 3px;">
+                        Validity: {{ $payment->paid_at->format('d M Y') }} &mdash; {{ $periodEnd->format('d M Y') }}
                     </div>
                 @endif
             </td>
-            <td style="text-align:center;vertical-align:middle">{{ ucfirst($payment->cycle ?? 'Monthly') }}</td>
-            <td class="amount-col" style="vertical-align:middle">
+            <td style="text-align: center; vertical-align: middle;">{{ ucfirst($payment->cycle ?? 'Monthly') }}</td>
+            <td class="amount-col" style="vertical-align: middle;">
                 &#8377;{{ number_format((float) $payment->amount, 2) }}
             </td>
         </tr>
     </tbody>
 </table>
 
-{{-- ===== TOTAL SECTION ===== --}}
-<table class="w-full">
+{{-- ═══════════════ TOTALS ═══════════════ --}}
+<table width="100%" style="margin-top: 10px;">
     <tr>
-        <td style="width:55%"></td>
-        <td style="width:45%">
-            <table class="w-full">
-                <tr class="total-row">
-                    <td class="lbl">Subtotal</td>
-                    <td class="val">&#8377;{{ number_format((float) $payment->amount, 2) }}</td>
-                </tr>
-                <tr class="total-row">
-                    <td class="lbl">GST / Tax</td>
-                    <td class="val">Included</td>
+        <td width="55%">&nbsp;</td>
+        <td width="45%">
+            <table width="100%">
+                <tr>
+                    <td class="tot-lbl">Subtotal</td>
+                    <td class="tot-val">&#8377;{{ number_format((float) $payment->amount, 2) }}</td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="padding-top:10px">
-                        <div class="total-final">
-                            <div class="total-final-label">Total Amount Paid</div>
-                            <div class="total-final-amount">&#8377;{{ number_format((float) $payment->amount, 2) }}</div>
+                    <td class="tot-lbl">GST / Tax</td>
+                    <td class="tot-val">Included</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="padding-top: 8px;">
+                        <div class="grand-box">
+                            <div class="grand-lbl">Total Amount Paid</div>
+                            <div class="grand-amt">&#8377;{{ number_format((float) $payment->amount, 2) }}</div>
                         </div>
                     </td>
                 </tr>
@@ -259,21 +257,22 @@
     </tr>
 </table>
 
-@if($payment->notes)
+{{-- ═══════════════ NOTES ═══════════════ --}}
+@if(!empty($payment->notes))
 <div class="note-box">
     <strong>Notes:</strong> {{ $payment->notes }}
 </div>
 @endif
 
-{{-- ===== FOOTER ===== --}}
-<div class="footer-box">
-    <p>This is a computer-generated invoice and does not require a physical signature.</p>
-    <p style="margin-top:5px">
-        For support: support@hmssaas.com &nbsp;|&nbsp; Eye HMS SaaS — Made with &#10084; in India
-    </p>
-    <p style="margin-top:5px;color:#BDC3C7">
-        Generated: {{ now()->format('d M Y, h:i A') }} &nbsp;|&nbsp; Invoice No: {{ $invoiceNumber }}
-    </p>
+{{-- ═══════════════ FOOTER ═══════════════ --}}
+<div class="footer">
+    <div>This is a computer-generated invoice and does not require a physical signature.</div>
+    <div style="margin-top: 4px;">
+        For support: support@hmssaas.com &nbsp;|&nbsp; Eye HMS SaaS &mdash; Made with &#10084; in India
+    </div>
+    <div style="margin-top: 4px; color: #A0AEC0;">
+        Generated: {{ now()->format('d M Y, h:i A') }} &nbsp;|&nbsp; {{ $invoiceNumber }}
+    </div>
 </div>
 
 </body>
