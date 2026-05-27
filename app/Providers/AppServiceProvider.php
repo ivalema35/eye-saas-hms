@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Services\Auth\RolePermissionService;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -31,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
             return auth('hospital_user')->user()?->role?->is_super
                 || app(RolePermissionService::class)->can($permissionKey);
         });
+
+        Paginator::defaultView('vendor.pagination.hms');
 
         View::composer('hospital.*', function ($view): void {
             $hospitalSettings = hospital_settings();

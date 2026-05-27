@@ -573,6 +573,22 @@
             .page-bubble.b7,
             .page-bubble.b9 { --drift-x: -6vw; }
         }
+
+        .eye-toggle {
+            position: absolute;
+            right: .875rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9CA3AF;
+            font-size: .875rem;
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            line-height: 1;
+            transition: color .2s;
+        }
+        .eye-toggle:hover { color: #1B4F72; }
     </style>
 </head>
 <body>
@@ -666,7 +682,10 @@
                             <input type="password" id="password" name="password"
                                    class="form-input @error('password') is-error @enderror"
                                    placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;"
-                                   required autocomplete="current-password">
+                                   required autocomplete="current-password" style="padding-right:2.5rem">
+                            <button type="button" class="eye-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                                <i class="fa-solid fa-eye" id="eyeIcon"></i>
+                            </button>
                         </div>
                         @error('password')
                             <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>
@@ -708,6 +727,18 @@
         @if(session('warning'))
             Toast.fire({ icon: 'warning', title: @json(session('warning')) });
         @endif
+
+        const togglePassword = document.getElementById('togglePassword');
+        const passwordInput  = document.getElementById('password');
+        const eyeIcon        = document.getElementById('eyeIcon');
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                const isPassword = passwordInput.getAttribute('type') === 'password';
+                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                eyeIcon.classList.toggle('fa-eye');
+                eyeIcon.classList.toggle('fa-eye-slash');
+            });
+        }
     });
 </script>
 

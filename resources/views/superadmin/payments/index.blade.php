@@ -3,7 +3,7 @@
 @section('page-header', 'Payment Transactions')
 
 @section('page-actions')
-    <button class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#offlineModal">
+    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#offlineModal">
         <i class="bi bi-plus-lg"></i> Record Offline Payment
     </button>
 @endsection
@@ -173,7 +173,10 @@
     @endif
 </div>
 
-{{-- Record Offline Payment Modal --}}
+@endsection
+
+@push('modals')
+{{-- Record Offline Payment Modal — rendered at <body> level to avoid .sa-main transform stacking context --}}
 <div class="modal fade" id="offlineModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content" style="border-radius:14px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
@@ -229,5 +232,4 @@
         </div>
     </div>
 </div>
-
-@endsection
+@endpush
