@@ -99,14 +99,54 @@
     }
 
     .settings-logo-box {
-        width: 120px !important; height: 120px !important;
+        width: 110px !important; height: 110px !important;
         border: 1px solid var(--settings-border) !important;
-        border-radius: 20px !important;
+        border-radius: 18px !important;
         background: linear-gradient(135deg, #fff, rgba(235,245,251,.72)) !important;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 12px 28px rgba(27,79,114,.08);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 8px 20px rgba(27,79,114,.08);
         overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
-    .settings-upload-panel { min-width: min(100%, 360px); }
+    /* Dark preview box — sidebar pe kaisa dikhega */
+    .settings-logo-box-dark {
+        width: 110px !important; height: 110px !important;
+        border: 1px solid rgba(27,79,114,.3) !important;
+        border-radius: 18px !important;
+        background: #1B4F72 !important;
+        box-shadow: 0 8px 20px rgba(27,79,114,.18);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        position: relative;
+    }
+    .settings-logo-box-dark::after {
+        content: 'Sidebar Preview';
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        font-size: .60rem;
+        font-weight: 700;
+        text-align: center;
+        color: rgba(255,255,255,.55);
+        background: rgba(0,0,0,.18);
+        padding: 3px 0;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
+    .logo-preview-label {
+        font-size: .70rem;
+        font-weight: 700;
+        text-align: center;
+        color: var(--settings-muted);
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        margin-top: .4rem;
+    }
+    .settings-upload-panel { min-width: min(100%, 340px); }
 
     .hospital-settings-page .form-label {
         color: var(--settings-primary);
@@ -270,24 +310,62 @@
 
                         {{-- Logo --}}
                         <div class="col-12">
-                            <div class="d-flex align-items-center gap-4 flex-wrap">
-                                <div class="d-flex align-items-center justify-content-center settings-logo-box">
-                                    @if(!empty($settings['hospital_logo']))
-                                        <img src="{{ \Illuminate\Support\Facades\Storage::url($settings['hospital_logo']) }}"
-                                             alt="Hospital Logo" class="img-fluid" style="max-height:100%;object-fit:contain">
-                                    @else
-                                        <i class="bi bi-image text-muted" style="font-size:2.5rem;opacity:.4"></i>
-                                    @endif
+                            <div class="d-flex align-items-start gap-4 flex-wrap">
+
+                                {{-- Preview 1: Original Logo (light background) --}}
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="settings-logo-box">
+                                        @if(!empty($settings['hospital_logo']))
+                                            <img id="logoPreviewOriginal"
+                                                 src="{{ asset('storage/' . $settings['hospital_logo']) }}"
+                                                 alt="Hospital Logo"
+                                                 style="max-width:88%;max-height:88%;object-fit:contain;"
+                                                 onerror="this.style.display='none';document.getElementById('logoPlaceholder1').style.display='block'">
+                                            <i id="logoPlaceholder1" class="bi bi-image text-muted" style="font-size:2.2rem;opacity:.35;display:none"></i>
+                                        @else
+                                            <img id="logoPreviewOriginal" src="" alt="" style="max-width:88%;max-height:88%;object-fit:contain;display:none;">
+                                            <i id="logoPlaceholder1" class="bi bi-image text-muted" style="font-size:2.2rem;opacity:.35"></i>
+                                        @endif
+                                    </div>
+                                    <div class="logo-preview-label">Original</div>
                                 </div>
+
+                                {{-- Preview 2: Sidebar Preview (dark background, white logo) --}}
+                                <div class="d-flex flex-column align-items-center">
+                                    <div class="settings-logo-box-dark">
+                                        @if(!empty($settings['hospital_logo']))
+                                            <img id="logoPreviewDark"
+                                                 src="{{ asset('storage/' . $settings['hospital_logo']) }}"
+                                                 alt="Sidebar Preview"
+                                                 style="max-width:72%;max-height:72%;object-fit:contain;filter:brightness(0) invert(1);margin-bottom:14px;"
+                                                 onerror="this.style.display='none';document.getElementById('logoPlaceholder2').style.display='block'">
+                                            <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);display:none;margin-bottom:14px"></i>
+                                        @else
+                                            <img id="logoPreviewDark" src="" alt="" style="max-width:72%;max-height:72%;object-fit:contain;filter:brightness(0) invert(1);margin-bottom:14px;display:none;">
+                                            <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);margin-bottom:14px"></i>
+                                        @endif
+                                    </div>
+                                    <div class="logo-preview-label">Sidebar View</div>
+                                </div>
+
+                                {{-- Upload Panel --}}
                                 <div class="settings-upload-panel">
-                                    <label class="form-label">Hospital Logo</label>
+                                    <label class="form-label">
+                                        Hospital Logo
+                                        <small class="fw-normal ms-1" style="color:var(--settings-muted)">(JPG, PNG, SVG or WebP — max 2 MB)</small>
+                                    </label>
                                     <input type="file" name="hospital_logo" accept="image/*"
+                                           id="logoFileInput"
                                            class="form-control clinical-input @error('hospital_logo') is-invalid @enderror">
-                                    <div class="form-text" style="font-size:.75rem;color:var(--settings-muted)">JPG, PNG, SVG or WebP — max 2 MB</div>
                                     @error('hospital_logo')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
+                                    <div class="mt-2 d-flex align-items-center gap-2" style="font-size:.76rem;color:var(--settings-muted)">
+                                        <i class="bi bi-info-circle"></i>
+                                        Transparent PNG sabse acha — sidebar pe white dikhega, yahan original colors mein.
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
 
@@ -473,4 +551,40 @@
     </div>{{-- /.card-body --}}
 </div>{{-- /.settings-card --}}
 </div>{{-- /.hospital-settings-page --}}
+
+@push('scripts')
+<script>
+// File select hone par existing preview boxes ka src update karo (koi duplicate nahi)
+(function () {
+    var input    = document.getElementById('logoFileInput');
+    var imgOrig  = document.getElementById('logoPreviewOriginal');
+    var imgDark  = document.getElementById('logoPreviewDark');
+    var ph1      = document.getElementById('logoPlaceholder1');
+    var ph2      = document.getElementById('logoPlaceholder2');
+
+    if (!input) return;
+
+    input.addEventListener('change', function () {
+        var file = this.files && this.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            var src = e.target.result;
+
+            // Original box update
+            imgOrig.src = src;
+            imgOrig.style.display = 'block';
+            if (ph1) ph1.style.display = 'none';
+
+            // Sidebar (dark) box update
+            imgDark.src = src;
+            imgDark.style.display = 'block';
+            if (ph2) ph2.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    });
+})();
+</script>
+@endpush
 @endsection
