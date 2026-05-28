@@ -26,7 +26,25 @@ class HospitalSettingController extends Controller
         $this->authorizePermission('settings.hospital');
 
         $slug = request()->route('slug');
-        $settings = hospital_settings();
+
+        // Resolve tenant so defaults can be seeded from registration data
+        $tenant = app()->bound('tenant') ? app('tenant') : null;
+
+        $defaults = [
+            'hospital_name'     => $tenant?->name ?? '',
+            'hospital_email'    => $tenant?->admin_email ?? '',
+            'hospital_phone'    => $tenant?->admin_phone ?? '',
+            'hospital_address'  => '',
+            'invoice_prefix'    => 'INV-',
+            'tax_percentage'    => '0',
+            'print_header_note' => '',
+            'print_footer_note' => '',
+            'pagination_limit'  => '25',
+            'hospital_logo'     => '',
+        ];
+
+        // Saved settings override defaults; new hospitals see sensible pre-fills
+        $settings = array_merge($defaults, hospital_settings());
 
         return view('hospital.settings.index', compact('settings', 'slug'));
     }
