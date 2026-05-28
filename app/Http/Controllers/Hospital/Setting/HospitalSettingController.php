@@ -26,7 +26,7 @@ class HospitalSettingController extends Controller
         $this->authorizePermission('settings.hospital');
 
         $slug = request()->route('slug');
-        $settings = HospitalSetting::all()->pluck('value', 'key');
+        $settings = hospital_settings();
 
         return view('hospital.settings.index', compact('settings', 'slug'));
     }
