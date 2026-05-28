@@ -185,22 +185,12 @@
         }
 
         .sidebar-brand-mark {
-            width: 46px;
-            height: 46px;
-            border-radius: 14px;
-            background: rgba(255, 255, 255, 0.12);
+            background: transparent;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            overflow: hidden;
-        }
-
-        .sidebar-logo {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
+            overflow: visible;
         }
 
         .sidebar-brand-copy {
