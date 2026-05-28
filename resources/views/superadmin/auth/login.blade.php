@@ -261,10 +261,49 @@
             animation: breathe 5s ease-in-out infinite;
         }
 
-        .hero-pet i {
-            font-size: 6.2rem;
+        /* Layered Shield + Gear icon for Master Control Panel */
+        .admin-hero-icon {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 130px;
+            height: 130px;
+        }
+
+        .admin-hero-icon .hero-shield {
+            font-size: 7.6rem;
             color: #1B4F72;
-            opacity: .9;
+            opacity: .92;
+            line-height: 1;
+        }
+
+        .admin-hero-icon .hero-gear {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -48%);
+            font-size: 2.6rem;
+            color: #ffffff;
+            filter: drop-shadow(0 1px 3px rgba(13,33,55,.22));
+            animation: spinSlow 14s linear infinite;
+        }
+
+        .admin-hero-icon .hero-dot {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #27AE60;
+            border: 3px solid #fff;
+            box-shadow: 0 2px 6px rgba(39,174,96,.4);
+        }
+
+        @keyframes spinSlow {
+            from { transform: translate(-50%, -48%) rotate(0deg); }
+            to   { transform: translate(-50%, -48%) rotate(360deg); }
         }
 
         .banner-content h1 {
@@ -598,7 +637,7 @@
     <div class="page-bubble b3"><i class="bi bi-shield-fill"></i></div>
     <div class="page-bubble b4"><i class="bi bi-lock-fill"></i></div>
     <div class="page-bubble b5"><i class="bi bi-key-fill"></i></div>
-    <div class="page-bubble b6"><i class="bi bi-person-fill-shield"></i></div>
+    <div class="page-bubble b6"><i class="bi bi-diagram-3-fill"></i></div>
     <div class="page-bubble b7"><i class="bi bi-circle-fill"></i></div>
     <div class="page-bubble b8"><i class="bi bi-heart-fill"></i></div>
     <div class="page-bubble b9"><i class="bi bi-tools"></i></div>
@@ -611,15 +650,19 @@
         <div class="auth-banner">
             <div class="floating-chip chip-1"><i class="bi bi-shield-fill"></i></div>
             <div class="floating-chip chip-2"><i class="bi bi-lock-fill"></i></div>
-            <div class="floating-chip chip-3"><i class="bi bi-person-fill-shield"></i></div>
-            <div class="floating-chip chip-4"><i class="bi bi-tools"></i></div>
+            <div class="floating-chip chip-3"><i class="bi bi-diagram-3-fill"></i></div>
+            <div class="floating-chip chip-4"><i class="bi bi-gear-wide-connected"></i></div>
 
             <div class="banner-content">
                 <div class="banner-logo">
                     <i class="bi bi-shield-fill"></i>
                 </div>
                 <div class="hero-pet">
-                    <i class="bi bi-person-fill-shield"></i>
+                    <span class="admin-hero-icon">
+                        <i class="bi bi-shield-fill hero-shield"></i>
+                        <i class="bi bi-gear-fill hero-gear"></i>
+                        <span class="hero-dot" title="System Online"></span>
+                    </span>
                 </div>
                 <h1>Master Control Panel</h1>
                 <p>System administration and tenant management.</p>
