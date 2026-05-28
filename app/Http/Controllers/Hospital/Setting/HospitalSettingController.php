@@ -8,6 +8,7 @@ use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -57,16 +58,18 @@ class HospitalSettingController extends Controller
         $tenantId = (int) config('app.tenant_id');
 
         $validated = $request->validate([
-            'hospital_name' => ['required', 'string', 'max:255'],
-            'hospital_email' => ['required', 'email', 'max:255'],
-            'hospital_phone' => ['required', 'string', 'max:20'],
-            'hospital_address' => ['required', 'string'],
-            'invoice_prefix' => ['required', 'string', 'max:10'],
-            'tax_percentage' => ['required', 'numeric', 'min:0', 'max:100'],
+            'hospital_name'     => ['required', 'string', 'max:255'],
+            'hospital_email'    => ['required', 'email', 'max:255'],
+            'hospital_phone'    => ['required', 'string', 'max:20'],
+            'hospital_address'  => ['required', 'string'],
+            'invoice_prefix'    => ['required', 'string', 'max:10'],
+            'tax_percentage'    => ['required', 'numeric', 'min:0', 'max:100'],
             'print_header_note' => ['nullable', 'string', 'max:255'],
             'print_footer_note' => ['nullable', 'string', 'max:255'],
-            'pagination_limit' => ['required', 'integer', 'in:10,25,50,100'],
-            'hospital_logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,svg,webp', 'max:2048'],
+            'pagination_limit'  => ['required', 'integer', 'in:10,25,50,100'],
+            'hospital_logo'     => ['nullable', 'image', 'mimes:jpg,jpeg,png,svg,webp', 'max:2048'],
+            'current_password'  => ['nullable', 'string', 'required_with:new_password'],
+            'new_password'      => ['nullable', 'string', 'min:8', 'confirmed'],
         ]);
 
         DB::transaction(function () use ($request, $validated, $tenantId): void {
@@ -93,8 +96,20 @@ class HospitalSettingController extends Controller
             }
         });
 
+        // Password change — only if new_password is provided
+        if ($request->filled('new_password')) {
+            $user = auth('hospital_user')->user();
+            if (! Hash::check($request->current_password, $user->password)) {
+                return back()
+                    ->withErrors(['current_password' => 'The current password is incorrect.'])
+                    ->withInput();
+            }
+            $user->password = $request->new_password;
+            $user->save();
+        }
+
         return redirect()->route('hospital.settings.index', ['slug' => $slug])
-            ->with('success', 'Settings updated successfully.');
+            ->with('success', 'Settings saved successfully.');
     }
 
     private function authorizePermission(string $permissionKey): void
