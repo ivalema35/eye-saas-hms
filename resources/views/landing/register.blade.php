@@ -3,6 +3,64 @@
 @section('title', 'Register Your Hospital — Eye HMS SaaS')
 @section('meta_description', 'Start your free 14-day trial of Eye HMS — complete hospital management software for eye clinics. No credit card required.')
 
+@push('styles')
+<style>
+    .password-field-wrap {
+        position: relative !important;
+    }
+
+    .password-field-input {
+        padding-right: 3rem !important;
+    }
+
+    .password-field-toggle {
+        position: absolute !important;
+        right: .7rem;
+        top: 50%;
+        transform: translateY(-50%) !important;
+        border: 1px solid rgba(0, 0, 0, .08) !important;
+        background: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #000 !important;
+        width: 2rem !important;
+        height: 2rem !important;
+        border-radius: 999px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        cursor: pointer !important;
+        line-height: 1 !important;
+        z-index: 3 !important;
+        overflow: hidden !important;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .04);
+        transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+    }
+
+    .password-field-toggle:hover {
+        color: #000 !important;
+        border-color: rgba(0, 0, 0, .16) !important;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, .08) !important;
+        transform: translateY(-50%) scale(1.02) !important;
+    }
+
+    .password-field-toggle:focus-visible {
+        outline: 2px solid rgba(0, 0, 0, .22) !important;
+        outline-offset: 2px !important;
+    }
+
+    .password-field-toggle svg {
+        width: 1rem !important;
+        height: 1rem !important;
+        display: block !important;
+        stroke: currentColor !important;
+        fill: none !important;
+        color: #000 !important;
+        pointer-events: none !important;
+    }
+</style>
+@endpush
+
 @section('content')
 
 <div class="reg-page-body">
@@ -182,17 +240,35 @@
                         <div class="form-row-2">
                             <div class="hms-form-group">
                                 <label>Password *</label>
-                                <input type="password" name="password"
-                                       class="hms-input @error('password') is-invalid @enderror"
-                                       placeholder="Min 8 characters" required minlength="8">
+                                <div class="password-field-wrap">
+                                    <input type="password" name="password" id="registerPassword"
+                                           class="hms-input password-field-input @error('password') is-invalid @enderror"
+                                           placeholder="Min 8 characters" required minlength="8"
+                                           >
+                                    <button type="button" id="toggleRegisterPassword" class="password-field-toggle" aria-label="Toggle password visibility">
+                                        <svg id="regPassEye" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
                                 @error('password')
                                     <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
                                 @enderror
                             </div>
                             <div class="hms-form-group">
                                 <label>Confirm Password *</label>
-                                <input type="password" name="password_confirmation" class="hms-input"
-                                       placeholder="Repeat password" required minlength="8">
+                                <div class="password-field-wrap">
+                                    <input type="password" name="password_confirmation" id="registerPasswordConfirm" class="hms-input password-field-input"
+                                           placeholder="Repeat password" required minlength="8"
+                                           >
+                                    <button type="button" id="toggleRegisterPasswordConfirm" class="password-field-toggle" aria-label="Toggle confirm password visibility">
+                                        <svg id="regPassConfirmEye" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -307,5 +383,36 @@
         }, 400);
     }
 }());
+</script>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var pass = document.getElementById('registerPassword');
+    var passConfirm = document.getElementById('registerPasswordConfirm');
+    var togglePass = document.getElementById('toggleRegisterPassword');
+    var togglePassConfirm = document.getElementById('toggleRegisterPasswordConfirm');
+    var eye = document.getElementById('regPassEye');
+    var eyeConfirm = document.getElementById('regPassConfirmEye');
+    var eyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
+    var eyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+    if (togglePass && pass && eye) {
+        togglePass.addEventListener('click', function () {
+            var isPwd = pass.getAttribute('type') === 'password';
+            pass.setAttribute('type', isPwd ? 'text' : 'password');
+            eye.innerHTML = isPwd ? eyeSlashSvg : eyeSvg;
+        });
+    }
+
+    if (togglePassConfirm && passConfirm && eyeConfirm) {
+        togglePassConfirm.addEventListener('click', function () {
+            var isPwd = passConfirm.getAttribute('type') === 'password';
+            passConfirm.setAttribute('type', isPwd ? 'text' : 'password');
+            eyeConfirm.innerHTML = isPwd ? eyeSlashSvg : eyeSvg;
+        });
+    }
+});
 </script>
 @endpush

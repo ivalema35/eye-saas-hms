@@ -75,7 +75,7 @@
                     </select>
                     @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
-
+<!-- 
                 <div class="hms-form-group doctor-only" style="display:none">
                     <label>&nbsp;</label>
                     <label class="hms-checkbox-label" style="padding:.5rem 0">
@@ -83,7 +83,7 @@
                                name="foc_permission" @checked(old('foc_permission', $user->foc_permission))>
                         <span>Allow FOC Permission</span>
                     </label>
-                </div>
+                </div> -->
 
                 <div class="hms-form-group">
                     <label>New Password <span style="color:var(--hms-text-muted);font-size:.8rem">(leave blank to keep current)</span></label>

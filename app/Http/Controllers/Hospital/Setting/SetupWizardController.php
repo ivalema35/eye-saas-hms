@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -116,10 +117,25 @@ class SetupWizardController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'contact' => ['nullable', 'string', 'max:15'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('hospital_users', 'email')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+            ],
+            'contact' => [
+                'nullable',
+                'regex:/^\d{10}$/',
+                Rule::unique('hospital_users', 'contact')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+            ],
             'password' => ['required', 'string', 'min:8'],
             'doctor_type' => ['required', 'in:primary,secondary'],
+        ], [
+            'contact.regex' => 'Contact number must be exactly 10 digits.',
+            'email.unique' => 'This email is already registered.',
+            'contact.unique' => 'This phone number is already registered.',
         ]);
 
         $doctorRole = DB::table('roles')
@@ -143,9 +159,24 @@ class SetupWizardController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255'],
-            'contact' => ['nullable', 'string', 'max:15'],
+            'email' => [
+                'required',
+                'email',
+                'max:255',
+                Rule::unique('hospital_users', 'email')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+            ],
+            'contact' => [
+                'nullable',
+                'regex:/^\d{10}$/',
+                Rule::unique('hospital_users', 'contact')
+                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+            ],
             'password' => ['required', 'string', 'min:8'],
+        ], [
+            'contact.regex' => 'Contact number must be exactly 10 digits.',
+            'email.unique' => 'This email is already registered.',
+            'contact.unique' => 'This phone number is already registered.',
         ]);
 
         $receptionRole = DB::table('roles')

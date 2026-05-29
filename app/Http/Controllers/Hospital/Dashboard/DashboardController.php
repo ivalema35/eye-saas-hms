@@ -34,8 +34,8 @@ class DashboardController extends Controller
         $user = Auth::guard('hospital_user')->user();
         $today = now()->toDateString();
 
-
         $isReceptionistUser = in_array($user?->role?->slug, ['receptionist', 'receptionist_opd'], true);
+        $isDoctorUser = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true);
 
         // Setup wizard redirect — admin, first login only
         if ($user?->role?->is_super && $tenant && ! $tenant->is_setup_done) {
@@ -60,6 +60,10 @@ class DashboardController extends Controller
         $todayPrimary = null;
         $todaySecondary = null;
         $primaryQueue = null;
+        $doctorName = null;
+        $doctorAssignedPatients = null;
+        $doctorPrimaryDone = null;
+        $doctorSecondaryDone = null;
 
         if ($this->perm->can('opd.exam.primary') || $this->perm->can('opd.exam.secondary')) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
@@ -91,6 +95,21 @@ class DashboardController extends Controller
                 ->filter(fn (Patient $patient): bool => $patient->primary_done_at === null)
                 ->take(20)
                 ->values();
+
+            if ($isDoctorUser && $user) {
+                $doctorName = $user->name;
+                $doctorAssignedPatients = Patient::where('doctor_id', $user->id)
+                    ->whereDate('appointment_date', $today)
+                    ->count();
+                $doctorPrimaryDone = Patient::where('doctor_id', $user->id)
+                    ->whereDate('appointment_date', $today)
+                    ->whereNotNull('primary_done_at')
+                    ->count();
+                $doctorSecondaryDone = Patient::where('doctor_id', $user->id)
+                    ->whereDate('appointment_date', $today)
+                    ->whereNotNull('secondary_done_at')
+                    ->count();
+            }
         }
 
         // ── Reception Data (opd.patient.register / opd.patient.register_phone) ────────────
@@ -107,6 +126,29 @@ class DashboardController extends Controller
                 ->where('type', 'walkin')
                 ->count();
             $todayPhone = Patient::whereDate('appointment_date', $today)
+                ->where('type', 'phone')
+                ->count();
+        }
+
+        $receptionistTotalPatients = null;
+        $receptionistPhoneAppointments = null;
+        $receptionistMyPatients = null;
+        $receptionistMyWalkin = null;
+        $receptionistMyPhone = null;
+
+        if ($isReceptionistUser && ($this->perm->can('opd.patient.register') || $this->perm->can('opd.patient.register_phone'))) {
+            $receptionistBasePatients = Patient::whereHas('reception.role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
+            $myPatientsQuery = Patient::where('reception_id', $user?->id);
+
+            $receptionistTotalPatients = (clone $receptionistBasePatients)->count();
+            $receptionistPhoneAppointments = (clone $receptionistBasePatients)
+                ->where('type', 'phone')
+                ->count();
+            $receptionistMyPatients = (clone $myPatientsQuery)->count();
+            $receptionistMyWalkin = (clone $myPatientsQuery)
+                ->where('type', 'walkin')
+                ->count();
+            $receptionistMyPhone = (clone $myPatientsQuery)
                 ->where('type', 'phone')
                 ->count();
         }
@@ -195,8 +237,6 @@ class DashboardController extends Controller
                 });
         }
 
-        
-
         // Receptionist-only doctor strip (all doctors + per-doctor assigned today)
         $doctorCards = collect();
         $doctorCardSummary = [
@@ -206,7 +246,11 @@ class DashboardController extends Controller
         ];
         $receptionistTodayPatients = collect();
 
-        if ($isReceptionistUser && $this->perm->can('opd.patient.register')) {
+        if (($isReceptionistUser || $isDoctorUser) && (
+            $this->perm->can('opd.patient.register')
+            || $this->perm->can('opd.exam.primary')
+            || $this->perm->can('opd.exam.secondary')
+        )) {
             $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->active()
                 ->orderBy('name')
@@ -229,23 +273,28 @@ class DashboardController extends Controller
                 'secondary' => $doctorCards->where('doctor_type', 'secondary')->count(),
             ];
 
-            $receptionistTodayPatients = Patient::with(['doctor:id,name'])
+            $receptionistTodayPatients = Patient::with(['doctor:id,name', 'location:id,city'])
+                ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)
                 ->whereDate('appointment_date', $today)
-                ->latest('created_at')
+                ->latest('patients.created_at')
                 ->get([
-                    'id',
-                    'patient_code',
-                    'first_name',
-                    'middle_name',
-                    'last_name',
-                    'age',
-                    'gender',
-                    'contact_no',
-                    'doctor_id',
-                    'case_fee',
-                    'type',
-                    'created_at',
+                    'patients.id',
+                    'patients.patient_code',
+                    'patients.first_name',
+                    'patients.middle_name',
+                    'patients.last_name',
+                    'patients.age',
+                    'patients.gender',
+                    'patients.contact_no',
+                    'patients.location_id',
+                    'patients.slot_id',
+                    'patients.doctor_id',
+                    'patients.case_fee',
+                    'patients.type',
+                    'patients.primary_done_at',
+                    'patients.created_at',
+                    'tbl_slots.slot_name as slot_name',
                 ]);
         }
 
@@ -253,6 +302,7 @@ class DashboardController extends Controller
             'slug',
             'tenant',
             'isReceptionistUser',
+            'isDoctorUser',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',
@@ -260,11 +310,20 @@ class DashboardController extends Controller
             'todayPrimary',
             'todaySecondary',
             'primaryQueue',
+            'doctorName',
+            'doctorAssignedPatients',
+            'doctorPrimaryDone',
+            'doctorSecondaryDone',
             // Reception
             'todayRegistrations',
             'focPending',
             'todayWalkin',
             'todayPhone',
+            'receptionistTotalPatients',
+            'receptionistPhoneAppointments',
+            'receptionistMyPatients',
+            'receptionistMyWalkin',
+            'receptionistMyPhone',
             // Financial
             'revenueToday',
             'revenueMonth',

@@ -90,7 +90,24 @@ class TenantController extends Controller
                     }
                 },
             ],
-            'admin_phone' => ['required', 'string', 'regex:/^[0-9]{10}$/'],
+            'admin_phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{10}$/',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $existsInTenants = Tenant::where('admin_phone', $value)->exists();
+                    if ($existsInTenants) {
+                        $fail('This phone number is already registered to another hospital account.');
+                    }
+
+                    $existsInUsers = DB::table('hospital_users')
+                        ->where('contact', $value)
+                        ->exists();
+                    if ($existsInUsers) {
+                        $fail('This phone number is already registered to a staff account on the platform.');
+                    }
+                },
+            ],
             'password' => ['required', 'string', 'min:8'],
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],

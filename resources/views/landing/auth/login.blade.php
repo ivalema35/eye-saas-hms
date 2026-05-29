@@ -632,10 +632,10 @@
                     @csrf
 
                     <div class="form-group">
-                        <label class="form-label" for="email">Email Address</label>
+                        <label class="form-label" for="email">Email or Phone Number</label>
                         <div class="input-wrap">
                             <i class="fa-solid fa-envelope input-icon"></i>
-                            <input type="email" id="email" name="email" class="form-input @error('email') is-error @enderror" value="{{ old('email') }}" placeholder="yourname@hospital.com" required autofocus autocomplete="email">
+                            <input type="text" id="email" name="email" class="form-input @error('email') is-error @enderror" value="{{ old('email') }}" placeholder="yourname@hospital.com or 9876543210" required autofocus autocomplete="username">
                         </div>
                         @error('email')<div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>@enderror
                     </div>

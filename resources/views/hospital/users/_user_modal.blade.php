@@ -155,14 +155,14 @@
                             @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="hms-form-group user-doctor-only" style="display:none">
+                        <!-- <div class="hms-form-group user-doctor-only" style="display:none">
                             <label>&nbsp;</label>
                             <label class="hms-checkbox-label" style="padding:.5rem 0">
                                 <input class="hms-checkbox" type="checkbox" value="1" id="user-foc-permission"
                                        name="foc_permission" @checked(old('foc_permission'))>
                                 <span>Allow FOC Permission</span>
                             </label>
-                        </div>
+                        </div> -->
 
                         <div class="hms-form-group">
                             <label id="user-password-label">Password <span class="hms-required">*</span></label>

@@ -479,6 +479,28 @@
     color: var(--dash-white) !important;
 }
 
+.hms-btn-print {
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px !important;
+    background: #EAF3FF !important;
+    border-color: #D6E8FF !important;
+    color: #4E79B8 !important;
+}
+.hms-btn-print i {
+    color: inherit !important;
+    font-size: 1rem;
+}
+.hms-btn-print:hover {
+    background: #DDEBFF !important;
+    border-color: #BFD6FF !important;
+    color: #ffffff !important;
+}
+
 /* Keep premium FOC section consistent */
 .foc-premium-card {
     border-radius: 18px !important;
@@ -1066,6 +1088,7 @@
 @php
     $hasClinical  = $todayPatients      !== null;
     $hasReception = $todayRegistrations !== null;
+    $hasReceptionistSummary = $receptionistTotalPatients !== null;
     $hasRevenue   = $revenueToday       !== null;
     $hasStaff     = $totalDoctors       !== null;
     $hasQueue     = $primaryQueue       !== null;
@@ -1074,10 +1097,19 @@
     $hasFocAlert  = $focAlerts          !== null;
     $focReceptionists = $focReceptionists ?? collect();
     $pendingFocRequests = $pendingFocRequests ?? collect();
+    $doctorName = $doctorName ?? auth('hospital_user')->user()?->name;
+    $doctorAssignedPatients = $doctorAssignedPatients ?? null;
+    $doctorPrimaryDone = $doctorPrimaryDone ?? null;
+    $doctorSecondaryDone = $doctorSecondaryDone ?? null;
 
 
     $doctorCards = $doctorCards ?? collect();
+    $doctorStripCards = $doctorCards;
     $receptionistTodayPatients = $receptionistTodayPatients ?? collect();
+
+    if ($isDoctorUser) {
+        $doctorStripCards = $doctorCards->reject(fn ($doctor) => (int) $doctor->id === (int) auth('hospital_user')->id())->values();
+    }
 
     $hasAnyData   = $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert;
 @endphp
@@ -1123,6 +1155,26 @@
 ════════════════════════════════════════════════════════════════════════════ --}}
 <div class="bento-dashboard mb-4">
 
+    {{-- Doctor Summary (doctor / ot_doctor) --}}
+    @if($isDoctorUser && $doctorAssignedPatients !== null)
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon ig-cobalt">
+                    <i data-lucide="user-round-check" style="width:22px;height:22px;color:#2980B9;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Doctor Dashboard</p>
+                    <div class="metric-value" style="font-size:20px">{{ $doctorName }}</div>
+                    <p class="metric-meta">
+                        Assigned: {{ $doctorAssignedPatients }} &bull;
+                        Primary: {{ $doctorPrimaryDone }} &bull;
+                        Secondary: {{ $doctorSecondaryDone }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Today's Patients (exam.primary.view) --}}
     @if($hasClinical)
         <div class="bento-card span-3">
@@ -1167,6 +1219,36 @@
         </div>
     @endif
 
+    @if($isReceptionistUser && $hasReceptionistSummary)
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon ig-blue">
+                    <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Total Patients</p>
+                    <div class="metric-value">{{ $receptionistTotalPatients }}</div>
+                    <p class="metric-meta">Added by Receptionist / Admin</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-card span-3">
+            <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="text-decoration-none" style="color:inherit;display:block;height:100%">
+                <div class="bento-stat">
+                    <div class="bento-icon ig-teal">
+                        <i data-lucide="phone" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">Phone Appointment</p>
+                        <div class="metric-value">{{ $receptionistPhoneAppointments }}</div>
+                        <p class="metric-meta">Click to view date-wise history</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    @endif
+
     {{-- Today's Registrations (opd.patient.register / opd.patient.register_phone) --}}
     @if($hasReception)
         <div class="bento-card span-3">
@@ -1175,9 +1257,13 @@
                     <i data-lucide="clipboard-list" style="width:22px;height:22px;color:#34495E;stroke-width:1.75"></i>
                 </div>
                 <div>
-                    <p class="metric-label">Registrations</p>
-                    <div class="metric-value">{{ $todayRegistrations }}</div>
-                    <p class="metric-meta">Walk-in: {{ $todayWalkin }} &bull; Phone: {{ $todayPhone }}</p>
+                    <p class="metric-label">{{ $isReceptionistUser ? 'My Patient' : 'Registrations' }}</p>
+                    <div class="metric-value">{{ $isReceptionistUser ? $receptionistMyPatients : $todayRegistrations }}</div>
+                    <p class="metric-meta">
+                        Walk-in: {{ $isReceptionistUser ? $receptionistMyWalkin : $todayWalkin }}
+                        &bull;
+                        Phone: {{ $isReceptionistUser ? $receptionistMyPhone : $todayPhone }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -1216,7 +1302,7 @@
     @endif
 
     {{-- FOC Approval Alert (opd.foc.accept) --}}
-    @if($hasFocAlert)
+    <!-- @if($hasFocAlert)
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-red">
@@ -1232,7 +1318,7 @@
                 </div>
             </div>
         </div>
-    @endif
+    @endif -->
 
     {{-- Staff Counts (master.doctors / master.receptions) --}}
     @if($hasStaff)
@@ -1254,10 +1340,13 @@
 
 
 
-@if($isReceptionistUser && $hasReception)
+@if(($isReceptionistUser || $isDoctorUser) && $doctorStripCards->isNotEmpty())
+<div class="mb-3 fw-bold" style="color:#1B4F72;font-size:1.05rem;letter-spacing:.02em">
+    All Doctors
+</div>
 <div class="doctor-strip-wrap">
     <div class="doctor-strip-grid">
-        @foreach($doctorCards as $doctor)
+        @foreach($doctorStripCards as $doctor)
             @php
                 $nameParts = preg_split('/\s+/', trim($doctor->name));
                 $firstInitial = isset($nameParts[0]) ? substr($nameParts[0], 0, 1) : '';
@@ -1276,7 +1365,7 @@
                             <span class="doctor-strip-pill {{ $isPrimaryDoctor ? 'is-primary' : 'is-muted' }}">Primary {{ $doctor->primary_count }}</span>
                             <span class="doctor-strip-pill {{ $isSecondaryDoctor ? 'is-secondary' : 'is-muted' }}">Secondary {{ $doctor->secondary_count }}</span>
                         </div>
-                        <div class="doctor-strip-status">All Clear</div>
+                        <!-- <div class="doctor-strip-status">All Clear</div> -->
                     </div>
                 </div>
             </div>
@@ -1329,14 +1418,14 @@
                                            class="hms-btn hms-btn-sm hms-btn-primary">
                                             <i class="fa-solid fa-stethoscope"></i> Examine
                                         </a>
-                                        @haspermission('opd.foc.create')
+                                        <!-- @haspermission('opd.foc.create')
                                             <button type="button"
                                                     class="hms-btn hms-btn-sm hms-btn-outline"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#focRequestModal{{ $patient->id }}">
                                                 <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
                                             </button>
-                                        @endhaspermission
+                                        @endhaspermission -->
                                     </td>
                                 </tr>
                             @empty
@@ -1503,26 +1592,45 @@
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">#</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">MRD</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">PATIENT NAME</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">AGE / GENDER</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">CONTACT</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">DOCTOR</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">FEE</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">TYPE</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">TIME</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none;">CITY / AGE</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none;">TIME SLOT</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none;">DOCTOR NAME</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none;">DR INDEX NO.</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none;">WAITING STATUS</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none; text-align:center;">ACTION</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($receptionistTodayPatients as $index => $patient)
+                            @php
+                                $waitingStatus = $patient->primary_done_at ? 'Completed' : 'Waiting';
+                            @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td><strong>{{ $patient->patient_code }}</strong></td>
                                 <td>{{ $patient->full_name }}</td>
-                                <td>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</td>
-                                <td>{{ $patient->contact_no }}</td>
+                                <td>{{ $patient->location?->city ?? '—' }} / {{ $patient->age }}y</td>
+                                <td>{{ $patient->slot_name ?? '—' }}</td>
                                 <td>{{ $patient->doctor?->name ?? '—' }}</td>
-                                <td>₹{{ number_format((float) $patient->case_fee, 2) }}</td>
-                                <td>{{ ucfirst($patient->type) }}</td>
-                                <td>{{ $patient->created_at?->format('h:i A') }}</td>
+                                <td>#{{ $patient->doctor_id ?? '—' }}</td>
+                                <td>
+                                    <span class="b-badge {{ $waitingStatus === 'Waiting' ? 'b-badge-warn' : 'b-badge-green' }}">
+                                        {{ $waitingStatus }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <!-- <a href="{{ route('hospital.patients.bill-pdf', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                                       class="hms-btn hms-btn-sm hms-btn-print"
+                                       title="Print"
+                                       aria-label="Print patient bill">
+                                        <i class="fa-solid fa-print"></i> -->
+                                        
+                                    <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                                       class="action-icon print" title="Print">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                    </a>
+                                </td>
                             </tr>
                         @empty
                             <tr>
@@ -1539,7 +1647,7 @@
 
 @endif
 
-@if($pendingFocRequests->isNotEmpty() || $hasFocAlert)
+<!-- @if($pendingFocRequests->isNotEmpty() || $hasFocAlert)
 <div class="row g-4 mb-4">
     <div class="col-12">
         <div class="bento-card foc-premium-card">
@@ -1592,7 +1700,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 @foreach($pendingFocRequests as $foc)
     <div class="modal fade foc-detail-modal" id="focViewModal{{ $foc->id }}" tabindex="-1" aria-hidden="true">
@@ -1639,6 +1747,14 @@
                         <span>Add Patient</span>
                     </a>
                 @endhaspermission
+                @if($isReceptionistUser)
+                    @haspermission('opd.patient.register_phone')
+                        <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}" class="qa-pill">
+                            <i class="fa-solid fa-phone" style="font-size:24px;color:#1ABC9C"></i>
+                            <span>Phone Register</span>
+                        </a>
+                    @endhaspermission
+                @endif
                 @haspermission('opd.patient.view')
                     <a href="{{ route('hospital.patients.index', $slug) }}" class="qa-pill">
                         <i class="fa-solid fa-users" style="font-size:24px;color:#1ABC9C"></i>
@@ -1651,11 +1767,11 @@
                         <span>OT Bookings</span>
                     </a>
                 @endhaspermission
-                @haspermission('opd.foc.create')
+                <!-- @haspermission('opd.foc.create')
                     <a href="{{ route('hospital.foc.index', $slug) }}" class="qa-pill">
                         <i class="fa-solid fa-hand-holding-heart" style="font-size:24px;color:#C0392B"></i>
                         <span>FOC Cases</span>
-                    </a>
+                    </a> -->
                 @endhaspermission
                 @haspermission('opd.reports.view')
                     <a href="{{ route('hospital.reports.index', $slug) }}" class="qa-pill">

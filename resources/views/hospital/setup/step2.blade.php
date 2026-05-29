@@ -1,5 +1,23 @@
 @extends('hospital.setup.layout')
 
+@push('styles')
+    <style>
+        .password-wrap { position: relative; }
+        .password-toggle {
+            position: absolute;
+            top: 50%;
+            right: .7rem;
+            transform: translateY(-50%);
+            border: none;
+            background: transparent;
+            color: #64748B;
+            cursor: pointer;
+            padding: .1rem;
+            line-height: 1;
+        }
+    </style>
+@endpush
+
 @section('wizard-content')
     <div class="wizard-card-header">
         <h2><i class="fa-solid fa-user-doctor" style="color:#1B4F72; margin-right:.3rem"></i> Add Your First Doctor</h2>
@@ -28,15 +46,20 @@
                 <div class="form-group">
                     <label class="form-label" for="contact">Contact Number</label>
                     <input type="text" id="contact" name="contact" class="form-input"
-                           value="{{ old('contact') }}" maxlength="15" placeholder="9876543210">
+                           value="{{ old('contact') }}" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="9876543210">
                     @error('contact') <div class="form-error">{{ $message }}</div> @enderror
                 </div>
             </div>
 
             <div class="form-group">
                 <label class="form-label" for="password">Password <span style="color:#C0392B">*</span></label>
-                <input type="password" id="password" name="password" class="form-input"
-                       required minlength="8" placeholder="Minimum 8 characters">
+                <div class="password-wrap">
+                    <input type="password" id="password" name="password" class="form-input"
+                           required minlength="8" placeholder="Minimum 8 characters" style="padding-right:2.5rem">
+                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                        <i class="fa-solid fa-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
                 @error('password') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
@@ -65,3 +88,24 @@
         @csrf
     </form>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('togglePassword');
+            const toggleIcon = document.getElementById('togglePasswordIcon');
+
+            if (!passwordInput || !toggleButton || !toggleIcon) {
+                return;
+            }
+
+            toggleButton.addEventListener('click', function () {
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                toggleIcon.classList.toggle('fa-eye', !isPassword);
+                toggleIcon.classList.toggle('fa-eye-slash', isPassword);
+            });
+        });
+    </script>
+@endpush
