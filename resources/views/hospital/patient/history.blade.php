@@ -173,6 +173,34 @@
     border-bottom: 1px solid var(--history-secondary-12) !important;
 }
 
+.history-print-btn {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: #EDF4FF !important;
+    border: 1px solid #D9E5F2 !important;
+    color: #5D7FB6 !important;
+    text-decoration: none !important;
+    flex-shrink: 0;
+    box-shadow: none !important;
+    padding: 0 !important;
+    line-height: 1;
+}
+
+.history-print-btn:hover {
+    background: #E6EFFF !important;
+    border-color: #C9D9EE !important;
+    color: #5D7FB6 !important;
+}
+
+.history-print-btn i {
+    font-size: 1.12rem;
+    line-height: 1;
+}
+
 .history-empty {
     background: var(--history-primary);
     border: 1px dashed var(--history-secondary-18);
@@ -433,9 +461,19 @@
         <div class="col-lg-8">
             <div class="card premium-card history-timeline-card border-0 shadow-sm">
                 <div class="card-header history-timeline-header bg-white p-4 border-bottom">
-                    <h5 class="history-timeline-title mb-0 fw-bold" style="color: var(--color-primary);">
-                        <i class="bi bi-clock-history me-2"></i> Clinical Timeline
-                    </h5>
+                    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                        <h5 class="history-timeline-title mb-0 fw-bold" style="color: var(--color-primary);">
+                            <i class="bi bi-clock-history me-2"></i> Clinical Timeline
+                        </h5>
+                        <a href="{{ route('hospital.patients.history.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                           class="history-print-btn"
+                           title="Print patient history"
+                           aria-label="Print patient history"
+                           target="_blank"
+                           rel="noopener">
+                            <i class="bi bi-printer"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="card-body p-4">
 

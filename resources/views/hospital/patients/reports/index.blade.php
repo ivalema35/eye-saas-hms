@@ -106,33 +106,46 @@
             <table class="table premium-table mb-0 align-middle">
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>MRD No</th>
                         <th>Patient Name</th>
-                        <th>City</th>
-                        <th>Doctor</th>
                         <th>Receptionist</th>
-                        <th>Case</th>
+                        <th>Appointment Date / Time</th>
+                        <th>Contact No</th>
+                        <th>City</th>
+                        <th>Age</th>
                         <th>Type</th>
-                        <th>Fee</th>
+                        <th>Doctor</th>
+                        <th>Case Type</th>
+                        <th>Case Fees</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($patients as $patient)
+                    @php
+                        $patientTypeLabel = in_array((string) $patient->type, ['walkin', '0'], true) ? 'Walk-in' : 'Phone';
+                        $caseTypeValue = strtolower(trim((string) ($patient->caseType?->case_type ?? '')));
+                        $caseTypeLabel = match (true) {
+                            str_contains($caseTypeValue, 'general') => 'General',
+                            str_contains($caseTypeValue, 'old') => 'Old',
+                            str_contains($caseTypeValue, 'new') => 'New',
+                            default => $patient->caseType?->case_type ?: '-',
+                        };
+                    @endphp
                     <tr>
-                        <td>{{ $patient->created_at?->format('d M, Y h:i A') }}</td>
-                        <td class="fw-bold text-secondary">{{ $patient->patient_code ?: '-' }}</td>
                         <td>{{ $patient->full_name }}</td>
-                        <td>{{ $patient->location?->city ?? $patient->location?->name ?? '-' }}</td>
-                        <td>Dr. {{ $patient->doctor?->name ?: '-' }}</td>
                         <td>{{ $patient->reception?->name ?: '-' }}</td>
-                        <td>{{ $patient->caseType?->case_type ?: '-' }}</td>
-                        <td>{{ in_array((string) $patient->type, ['walkin', '0'], true) ? 'Walk-in' : 'Phone' }}</td>
+                        <td>{{ $patient->appointment_date?->format('d M, Y h:i A') ?? ($patient->created_at?->format('d M, Y h:i A') ?? '-') }}</td>
+                        <td>{{ $patient->contact_no ?: '-' }}</td>
+                        <td>{{ $patient->location?->city ?? $patient->location?->name ?? '-' }}</td>
+                        <td>{{ $patient->age ?: '-' }}</td>
+                        <td>{{ $patientTypeLabel }}</td>
+                        <td>Dr. {{ $patient->doctor?->name ?: '-' }}</td>
+                        <td>{{ $caseTypeLabel }}</td>
                         <td class="fw-bold">₹{{ number_format((float) $patient->case_fee, 2) }}</td>
+                        
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" class="text-center py-4 text-muted">No records found for the selected filters.</td>
+                        <td colspan="10" class="text-center py-4 text-muted">No records found for the selected filters.</td>
                     </tr>
                     @endforelse
                 </tbody>
@@ -181,6 +194,55 @@ document.addEventListener('DOMContentLoaded', function() {
 
     toggleFilters();
     receptionSelect.addEventListener('change', toggleFilters);
+});
+</script>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+        // Modal iframe for patient history
+        const modalEl = document.createElement('div');
+        modalEl.innerHTML = `
+        <div class="modal fade" id="patientHistoryModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-fullscreen-sm-down">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="patientHistoryModalLabel">Patient History</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0" style="height:75vh;">
+                        <iframe id="historyIframe" src="about:blank" style="width:100%;height:100%;border:0;" title="Patient History"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        document.body.appendChild(modalEl);
+
+        const historyModalEl = document.getElementById('patientHistoryModal');
+        const historyIframe = document.getElementById('historyIframe');
+        const bsModal = new bootstrap.Modal(historyModalEl);
+
+        document.querySelectorAll('.btn-view-history').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                        const code = this.dataset.patientCode;
+                        const name = this.dataset.patientName || 'Patient History';
+                        const url = new URL("{{ route('hospital.patients.history', ['slug' => $slug]) }}", window.location.origin);
+                        url.searchParams.set('search', code);
+                        // Add flag so the history page can adapt (if needed)
+                        url.searchParams.set('embedded', '1');
+
+                        document.getElementById('patientHistoryModalLabel').textContent = name + ' — History';
+                        historyIframe.src = url.toString();
+                        bsModal.show();
+                });
+        });
+
+        // Clear iframe on modal hide
+        historyModalEl.addEventListener('hidden.bs.modal', function () {
+                historyIframe.src = 'about:blank';
+        });
 });
 </script>
 @endpush

@@ -37,12 +37,20 @@ class UnifiedLoginController extends Controller
     {
         $request->ensureIsNotRateLimited();
 
-        $email = $request->input('email');
+        $login = trim((string) $request->input('email'));
+        $normalizedContact = preg_replace('/\D+/', '', $login) ?? '';
         $password = $request->input('password');
         $remember = $request->boolean('remember');
 
         $user = HospitalUser::withoutTenantScope()
-            ->where('email', $email)
+            ->where(function ($query) use ($login, $normalizedContact) {
+                $query->where('email', $login)
+                    ->orWhere('contact', $login);
+
+                if ($normalizedContact !== '' && $normalizedContact !== $login) {
+                    $query->orWhere('contact', $normalizedContact);
+                }
+            })
             ->where('status', 'active')
             ->whereNull('deleted_at')
             ->first();
@@ -55,7 +63,7 @@ class UnifiedLoginController extends Controller
 
                 return back()
                     ->withErrors(['email' => 'Your hospital subscription is inactive. Please contact support.'])
-                    ->withInput(['email' => $email]);
+                    ->withInput(['email' => $login]);
             }
 
             Auth::guard($this->guard)->login($user, $remember);
@@ -69,6 +77,6 @@ class UnifiedLoginController extends Controller
 
         return back()
             ->withErrors(['email' => __('auth.failed')])
-            ->withInput(['email' => $email]);
+            ->withInput(['email' => $login]);
     }
 }

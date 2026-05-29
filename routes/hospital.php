@@ -96,6 +96,7 @@ Route::prefix('{slug}')
                 Route::prefix('patients')->name('patients.')->group(function () {
                     Route::get('/', [PatientController::class, 'index'])->name('index')->middleware('permission:opd.patient.view');
                     Route::get('/create', [PatientController::class, 'create'])->name('create')->middleware('permission:opd.patient.register');
+                    Route::get('/phone-history', [PatientController::class, 'phoneHistory'])->name('phone-history')->middleware('permission:opd.patient.register_phone');
                     Route::get('/search-by-contact', [PatientController::class, 'searchByContact'])->name('search-by-contact')->middleware('permission:opd.patient.register');
                     Route::post('/', [PatientController::class, 'store'])->name('store')->middleware('permission:opd.patient.register');
                     Route::get('/{patient}', [PatientController::class, 'show'])->name('show')->middleware('permission:opd.patient.view');
@@ -109,6 +110,7 @@ Route::prefix('{slug}')
                 });
 
                 Route::get('patient-history', [PatientHistoryController::class, 'index'])->name('patients.history')->middleware('permission:opd.exam.history');
+                Route::get('patient-history/{patient}/print', [PatientHistoryController::class, 'print'])->name('patients.history.print')->middleware('permission:opd.exam.history');
 
                 // ============================================================
                 // Clinical Queue Dashboard

@@ -40,7 +40,7 @@
     .medicine-groups-page .group-nav-tabs .nav-item {
         margin: 0;
     }
-
+    
     .medicine-groups-page .group-nav-tabs .nav-link {
         border: none !important;
         background: transparent;

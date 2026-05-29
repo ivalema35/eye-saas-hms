@@ -148,7 +148,7 @@ class PatientController extends Controller
                         });
                     });
             })->get();
-            $locations = Location::orderBy('city')->get();
+        $locations = Location::orderBy('city')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
@@ -157,7 +157,7 @@ class PatientController extends Controller
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $slots = $this->loadPatientSlots($tenantId);
 
-            return view('hospital.patients.create-phone', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
+        return view('hospital.patients.create-phone', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
     }
 
     public function storePhone(PatientStoreRequest $request): RedirectResponse
@@ -172,6 +172,38 @@ class PatientController extends Controller
 
         return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
             ->with('success', 'Phone appointment registered and ready for printing.');
+    }
+
+    public function phoneHistory(Request $request): View
+    {
+        $slug = $request->route('slug');
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+
+        $query = Patient::with(['doctor:id,name', 'reception:id,name'])
+            ->where('type', 'phone');
+
+        if ($fromDate) {
+            $query->whereDate('appointment_date', '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate('appointment_date', '<=', $toDate);
+        }
+
+        $patients = $query
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('created_at')
+            ->paginate((int) config('app.pagination_limit', 25))
+            ->withQueryString();
+
+        $groupedPatients = $patients->getCollection()->groupBy(
+            fn (Patient $patient): string => $patient->appointment_date
+                ? now()->parse((string) $patient->appointment_date)->format('Y-m-d')
+                : $patient->created_at->format('Y-m-d')
+        );
+
+        return view('hospital.patients.phone-history', compact('slug', 'patients', 'groupedPatients', 'fromDate', 'toDate'));
     }
 
     public function show(string $slug, Patient $patient): View

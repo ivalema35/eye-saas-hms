@@ -134,6 +134,39 @@
             font-size: 1.45rem;
         }
 
+        .reception-register-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            margin-left: .65rem;
+            margin-top: .4rem;
+        }
+        .reception-register-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .42rem .78rem;
+            border-radius: 999px;
+            border: 1px solid transparent;
+            background: var(--shell-secondary);
+            color: #ffffff !important;
+            font-size: .83rem;
+            font-weight: 800;
+            letter-spacing: .02em;
+            text-decoration: none;
+            line-height: 1;
+            transition: background 160ms ease, transform 160ms ease;
+        }
+        .reception-register-btn i,
+        .reception-register-btn span {
+            color: #ffffff !important;
+        }
+        .reception-register-btn:hover {
+            background: #164361;
+            transform: translateY(-1px);
+            text-decoration: none;
+        }
+
         .avatar-circle {
             background: rgba(27, 79, 114, 0.08) !important;
             border: 1px solid var(--shell-s2-12);
@@ -141,7 +174,7 @@
             box-shadow: none;
         }
         .user-name {
-            font-size: 1.08rem;
+            font-size: .92rem;
             font-weight: 900;
         }
         .user-role {
@@ -389,6 +422,9 @@
         @php
             $currentUser = auth('hospital_user')->user();
             $slug = request()->route('slug');
+            $isReceptionistUser = in_array($currentUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
+            $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
+            $permSvcTop = app(\App\Services\Auth\RolePermissionService::class);
 
             $waitQueueCount = 0;
             try {
@@ -438,6 +474,23 @@
                 <span>Wait Queue (OPD):</span>
                 <strong>{{ $waitQueueCount }}</strong>
             </div>
+
+            @if($showReceptionRegisterActions)
+                <div class="reception-register-actions">
+                    @if($permSvcTop->can('opd.patient.register'))
+                        <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}" class="reception-register-btn">
+                            <i class="bi bi-person-plus"></i>
+                            <span>WALK IN</span>
+                        </a>
+                    @endif
+                    @if($permSvcTop->can('opd.patient.register_phone'))
+                        <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}" class="reception-register-btn">
+                            <i class="bi bi-telephone"></i>
+                            <span>PHONE</span>
+                        </a>
+                    @endif
+                </div>
+            @endif
 
             @if($currentUser)
                 <div class="dropdown user-dropdown">
@@ -581,7 +634,7 @@
                 {{-- ── FOC ─────────────────────────────────────────
                      Visible if user can view or approve FOC.
                 ── --}}
-                @php
+                <!-- @php
                     $showFoc = $permSvc->can('opd.foc.create') || $permSvc->can('opd.foc.accept');
                 @endphp
 
@@ -607,7 +660,7 @@
                         </a>
                     @endhaspermission
                 </div>
-                @endif
+                @endif -->
 
                 {{-- ── OT / SURGERY ────────────────────────────────
                      Visible if user can view OT bookings or surgery.

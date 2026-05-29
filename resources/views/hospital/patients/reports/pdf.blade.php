@@ -86,6 +86,7 @@
                 <th>Patient Name</th>
                 <th>Contact</th>
                 <th>City</th>
+                <th>Age</th>
                 <th>Doctor</th>
                 <th>Receptionist</th>
                 <th>Case Type</th>
@@ -95,21 +96,32 @@
         </thead>
         <tbody>
             @forelse($patients as $patient)
+                @php
+                    $patientTypeLabel = in_array((string) $patient->type, ['walkin', '0'], true) ? 'Walk-in' : 'Phone';
+                    $caseTypeValue = strtolower(trim((string) ($patient->caseType?->case_type ?? '')));
+                    $caseTypeLabel = match (true) {
+                        str_contains($caseTypeValue, 'general') => 'General',
+                        str_contains($caseTypeValue, 'old') => 'Old',
+                        str_contains($caseTypeValue, 'new') => 'New',
+                        default => $patient->caseType?->case_type ?: '-',
+                    };
+                @endphp
                 <tr>
                     <td>{{ $patient->created_at?->format('d-m-Y h:i A') }}</td>
                     <td>{{ $patient->patient_code ?: '-' }}</td>
                     <td>{{ $patient->full_name }}</td>
                     <td>{{ $patient->contact_no ?: '-' }}</td>
                     <td>{{ $patient->location?->name ?: '-' }}</td>
+                    <td>{{ $patient->age ?: '-' }}</td>
                     <td>{{ $patient->doctor?->name ?: '-' }}</td>
                     <td>{{ $patient->reception?->name ?: '-' }}</td>
-                    <td>{{ $patient->caseType?->case_type ?: '-' }}</td>
-                    <td>{{ in_array((string) $patient->type, ['walkin', '0'], true) ? 'Walk-in' : 'Phone' }}</td>
+                    <td>{{ $caseTypeLabel }}</td>
+                    <td>{{ $patientTypeLabel }}</td>
                     <td class="text-right">{{ number_format((float) $patient->case_fee, 2) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="10" class="text-center muted">No records found for the selected filters.</td>
+                    <td colspan="11" class="text-center muted">No records found for the selected filters.</td>
                 </tr>
             @endforelse
         </tbody>

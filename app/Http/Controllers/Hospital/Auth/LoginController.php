@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Hospital\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\Hospital\HospitalUser;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 /**
@@ -40,28 +42,38 @@ class LoginController extends Controller
 
         $slug = $request->route('slug');
         $tenant = app('tenant');
-        $credentials = $request->only('email', 'password');
+        $login = trim((string) $request->input('email'));
+        $normalizedContact = preg_replace('/\D+/', '', $login) ?? '';
+        $password = $request->input('password');
         $remember = $request->boolean('remember');
 
-        if (Auth::guard($this->guard)->attempt($credentials, $remember)) {
-            // dd(Auth::guard($this->guard)->user());
-            $user = Auth::guard($this->guard)->user();
+        $user = HospitalUser::query()
+            ->where('tenant_id', $tenant->id)
+            ->where(function ($query) use ($login, $normalizedContact) {
+                $query->where('email', $login)
+                    ->orWhere('contact', $login);
 
-            if ($user->tenant_id !== $tenant->id || $user->status !== 'active') {
-                Auth::guard($this->guard)->logout();
-            } else {
-                $request->clearRateLimiter();
-                $request->session()->regenerate();
+                if ($normalizedContact !== '' && $normalizedContact !== $login) {
+                    $query->orWhere('contact', $normalizedContact);
+                }
+            })
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->first();
 
-                return redirect()->route('hospital.dashboard', ['slug' => $slug]);
-            }
+        if ($user && Hash::check($password, $user->password)) {
+            Auth::guard($this->guard)->login($user, $remember);
+            $request->clearRateLimiter();
+            $request->session()->regenerate();
+
+            return redirect()->route('hospital.dashboard', ['slug' => $slug]);
         }
 
         $request->hitRateLimiter();
 
         return back()
             ->withErrors(['email' => __('auth.failed')])
-            ->withInput($request->only('email'));
+            ->withInput(['email' => $login]);
     }
 
     public function logout(Request $request): RedirectResponse

@@ -170,7 +170,11 @@
        class="btn-outline">
         📄 Download PDF
     </a>
-    <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="btn-outline">
+    <!-- <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
+       class="btn-outline"></a> -->
+    <a href="{{ route('hospital.ot.dashboard', ['slug' => $slug]) }}"
+       onclick="if (window.history.length > 1) { window.history.back(); return false; }"
+       class="btn-outline">
         ← Back
     </a>
 </div>

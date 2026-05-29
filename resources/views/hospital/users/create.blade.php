@@ -83,7 +83,7 @@
                             </select>
                             @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
-
+<!-- 
                         <div class="hms-form-group doctor-only user-create-field user-create-checkbox-wrap" style="display:none">
                             <label>Doctor Access</label>
                             <label class="hms-checkbox-label user-create-checkbox">
@@ -91,7 +91,7 @@
                                        name="foc_permission" @checked(old('foc_permission'))>
                                 <span>Allow FOC Permission</span>
                             </label>
-                        </div>
+                        </div> -->
 
                         <div class="hms-form-group user-create-field">
                             <label>Password <span class="hms-required">*</span></label>
