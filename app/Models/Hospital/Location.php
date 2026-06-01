@@ -16,6 +16,12 @@ class Location extends Model
 
     public function getNameAttribute(): string
     {
-        return trim(implode(', ', array_filter([$this->city, $this->district, $this->state])));
+        $parts = array_filter([
+            $this->city     ? trim($this->city)     : null,
+            $this->district ? trim($this->district) : null,
+            $this->state    ? trim($this->state)    : null,
+        ]);
+
+        return $parts ? implode(', ', $parts) : '';
     }
 }

@@ -90,13 +90,24 @@ class BasicMasterController extends Controller
         }
 
         $modelClass = $this->resolveModel($type);
-        $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
+        $instance   = new $modelClass;
+        $columns    = array_values(array_diff($instance->getFillable(), ['tenant_id']));
 
-        // Use relaxed validation: fields required but allow numeric where applicable
+        // Columns that are nullable on their model (optional in AJAX forms)
+        $nullableCols = method_exists($instance, 'getNullable')
+            ? $instance->getNullable()
+            : [];
+
+        // Locations: district + state are optional
+        if ($type === 'locations') {
+            $nullableCols = array_merge($nullableCols, ['district', 'state']);
+        }
+
         $rules = [];
         foreach ($columns as $col) {
-            $rules[$col] = ['required'];
-            // if column name contains 'fee' or 'percentage' allow numeric
+            $isNullable = in_array($col, $nullableCols, true);
+            $rules[$col] = $isNullable ? ['nullable'] : ['required'];
+
             if (str_contains($col, 'fee') || str_contains($col, 'percentage')) {
                 $rules[$col][] = 'numeric';
             } else {
