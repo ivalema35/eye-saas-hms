@@ -58,7 +58,7 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $locations = Location::query()->orderBy('city')->get(['id', 'city as name']);
+        $locations = Location::query()->orderBy('city')->get(['id', 'city', 'district', 'state']);
         $cases = CaseType::query()->orderBy('case_type')->get(['id', 'case_type']);
 
         return view('hospital.patients.reports.index', compact(

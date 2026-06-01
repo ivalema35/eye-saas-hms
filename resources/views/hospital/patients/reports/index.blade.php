@@ -67,7 +67,8 @@
                     <select name="location_id" id="location_id" class="form-select clinical-input">
                         <option value="">All Cities</option>
                         @foreach($locations as $loc)
-                            <option value="{{ $loc->id }}" {{ (string) request('location_id') === (string) $loc->id ? 'selected' : '' }}>{{ $loc->name }}</option>
+                            @php $locLabel = $loc->name ?: ($loc->city ?: "Location #{$loc->id}"); @endphp
+                            <option value="{{ $loc->id }}" {{ (string) request('location_id') === (string) $loc->id ? 'selected' : '' }}>{{ $locLabel }}</option>
                         @endforeach
                     </select>
                 </div>
