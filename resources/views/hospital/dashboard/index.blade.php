@@ -271,10 +271,23 @@
     background: rgba(27, 79, 114, 0.08);
     color: var(--dash-secondary);
 }
-.b-badge-warn,
-.b-badge-green {
-    background: rgba(27, 79, 114, 0.10) !important;
+.b-badge-warn {
+    /* Pending: red */
+    background: rgba(220, 38, 38, 0.08) !important;
+    color: #DC2626 !important;
+    border-color: rgba(220, 38, 38, 0.12) !important;
+}
+.b-badge-info {
+    /* In Process: blue (theme) */
+    background: rgba(27, 79, 114, 0.12) !important;
     color: var(--dash-secondary) !important;
+    border-color: rgba(27, 79, 114, 0.18) !important;
+}
+.b-badge-green {
+    /* Completed: green */
+    background: rgba(16, 185, 129, 0.08) !important;
+    color: #10B981 !important;
+    border-color: rgba(16, 185, 129, 0.12) !important;
 }
 
 /* ── Tables (premium header + soft rows) ───────────────────────────────── */
@@ -1228,7 +1241,6 @@
                 <div>
                     <p class="metric-label">Total Patients</p>
                     <div class="metric-value">{{ $receptionistTotalPatients }}</div>
-                    <p class="metric-meta">Added by Receptionist / Admin</p>
                 </div>
             </div>
         </div>
@@ -1596,14 +1608,30 @@
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">TIME SLOT</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">DOCTOR NAME</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">DR INDEX NO.</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">WAITING STATUS</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none;">STATUS</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none; text-align:center;">ACTION</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($receptionistTodayPatients as $index => $patient)
                             @php
-                                $waitingStatus = $patient->primary_done_at ? 'Completed' : 'Waiting';
+                                $latestOtStatus = $patient->otBookings->first()?->ot_status;
+                                $hasPrimaryDone = $patient->primary_done_at !== null;
+                                $hasSecondaryDone = $patient->secondary_done_at !== null;
+                                $hasOtBooking = $latestOtStatus !== null;
+
+                                $activeOtStatuses = ['booked', 'paid', 'in_ward', 'dilated', 'ready'];
+                                $completedOtStatuses = ['operated', 'discharged'];
+
+                                if ($latestOtStatus !== null && in_array($latestOtStatus, $activeOtStatuses, true)) {
+                                    $processStatus = 'In Process';
+                                } elseif ($hasPrimaryDone && $hasSecondaryDone && (! $hasOtBooking || in_array($latestOtStatus, $completedOtStatuses, true))) {
+                                    $processStatus = 'Completed';
+                                } elseif ($hasPrimaryDone || $hasSecondaryDone || ($hasOtBooking && in_array($latestOtStatus, $completedOtStatuses, true))) {
+                                    $processStatus = 'In Process';
+                                } else {
+                                    $processStatus = 'Pending';
+                                }
                             @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
@@ -1614,8 +1642,8 @@
                                 <td>{{ $patient->doctor?->name ?? '—' }}</td>
                                 <td>#{{ $patient->doctor_id ?? '—' }}</td>
                                 <td>
-                                    <span class="b-badge {{ $waitingStatus === 'Waiting' ? 'b-badge-warn' : 'b-badge-green' }}">
-                                        {{ $waitingStatus }}
+                                    <span class="b-badge {{ $processStatus === 'Pending' ? 'b-badge-warn' : ($processStatus === 'In Process' ? 'b-badge-info' : 'b-badge-green') }}">
+                                        {{ $processStatus }}
                                     </span>
                                 </td>
                                 <td class="text-center">

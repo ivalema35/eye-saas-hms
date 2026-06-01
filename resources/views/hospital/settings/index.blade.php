@@ -173,6 +173,59 @@
         border-color: #C0392B;
     }
 
+    .hospital-settings-page .password-field-wrap {
+        position: relative;
+    }
+
+    .hospital-settings-page .password-field-input {
+        padding-right: 3rem !important;
+    }
+
+    .hospital-settings-page .password-field-toggle {
+        position: absolute;
+        right: .7rem;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 1px solid rgba(27, 79, 114, .14);
+        background: rgba(255, 255, 255, .98);
+        padding: 0;
+        margin: 0;
+        color: var(--settings-primary);
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        line-height: 1;
+        z-index: 3;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(27, 79, 114, .06);
+        transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+    }
+
+    .hospital-settings-page .password-field-toggle:hover {
+        border-color: rgba(27, 79, 114, .22);
+        box-shadow: 0 4px 10px rgba(27, 79, 114, .10);
+        transform: translateY(-50%) scale(1.02);
+    }
+
+    .hospital-settings-page .password-field-toggle:focus-visible {
+        outline: 2px solid rgba(27, 79, 114, .22);
+        outline-offset: 2px;
+    }
+
+    .hospital-settings-page .password-field-toggle svg {
+        width: 1rem;
+        height: 1rem;
+        display: block;
+        stroke: currentColor;
+        fill: none;
+        color: inherit;
+        pointer-events: none;
+    }
+
     /* Password section divider inside Profile tab */
     .pw-section-divider {
         display: flex;
@@ -429,9 +482,17 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Current Password</label>
-                            <input type="password" name="current_password"
-                                   class="form-control clinical-input @error('current_password') is-invalid @enderror"
-                                   autocomplete="current-password" placeholder="Enter current password">
+                            <div class="password-field-wrap">
+                                <input type="password" name="current_password" id="currentPasswordField"
+                                       class="form-control clinical-input password-field-input @error('current_password') is-invalid @enderror"
+                                       autocomplete="current-password" placeholder="Enter current password">
+                                <button type="button" id="toggleCurrentPasswordField" class="password-field-toggle" aria-label="Toggle current password visibility">
+                                    <svg id="currentPasswordEyeIcon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                             @error('current_password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -439,9 +500,17 @@
 
                         <div class="col-md-4">
                             <label class="form-label">New Password</label>
-                            <input type="password" name="new_password"
-                                   class="form-control clinical-input @error('new_password') is-invalid @enderror"
-                                   autocomplete="new-password" placeholder="Min 8 characters">
+                            <div class="password-field-wrap">
+                                <input type="password" name="new_password" id="newPasswordField"
+                                       class="form-control clinical-input password-field-input @error('new_password') is-invalid @enderror"
+                                       autocomplete="new-password" placeholder="Min 8 characters">
+                                <button type="button" id="toggleNewPasswordField" class="password-field-toggle" aria-label="Toggle new password visibility">
+                                    <svg id="newPasswordEyeIcon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                             @error('new_password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -449,9 +518,17 @@
 
                         <div class="col-md-4">
                             <label class="form-label">Confirm New Password</label>
-                            <input type="password" name="new_password_confirmation"
-                                   class="form-control clinical-input"
-                                   autocomplete="new-password" placeholder="Repeat new password">
+                            <div class="password-field-wrap">
+                                <input type="password" name="new_password_confirmation" id="newPasswordConfirmationField"
+                                       class="form-control clinical-input password-field-input"
+                                       autocomplete="new-password" placeholder="Repeat new password">
+                                <button type="button" id="toggleNewPasswordConfirmationField" class="password-field-toggle" aria-label="Toggle confirm new password visibility">
+                                    <svg id="newPasswordConfirmationEyeIcon" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                     </div>
@@ -554,6 +631,33 @@
 
 @push('scripts')
 <script>
+    (function () {
+        var eyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
+        var eyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+        function bindPasswordToggle(inputId, buttonId, iconId) {
+            var input = document.getElementById(inputId);
+            var button = document.getElementById(buttonId);
+            var icon = document.getElementById(iconId);
+
+            if (!input || !button || !icon) {
+                return;
+            }
+
+            button.addEventListener('click', function () {
+                var isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                icon.innerHTML = isHidden ? eyeSlashSvg : eyeSvg;
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            bindPasswordToggle('currentPasswordField', 'toggleCurrentPasswordField', 'currentPasswordEyeIcon');
+            bindPasswordToggle('newPasswordField', 'toggleNewPasswordField', 'newPasswordEyeIcon');
+            bindPasswordToggle('newPasswordConfirmationField', 'toggleNewPasswordConfirmationField', 'newPasswordConfirmationEyeIcon');
+        });
+    })();
+
 // File select hone par existing preview boxes ka src update karo (koi duplicate nahi)
 (function () {
     var input    = document.getElementById('logoFileInput');

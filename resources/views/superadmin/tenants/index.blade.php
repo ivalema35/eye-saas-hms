@@ -107,10 +107,14 @@
                                        class="hms-btn-icon" data-tooltip="View Details">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    <a href="{{ route('superadmin.hospitals.edit', $tenant) }}"
-                                       class="hms-btn-icon" data-tooltip="Edit Hospital">
+                                    <button type="button"
+                                            class="hms-btn-icon"
+                                            style="background:transparent;border:0;padding:0;cursor:pointer"
+                                            data-tooltip="Edit Hospital"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editHospitalModal-{{ $tenant->id }}">
                                         <i class="bi bi-pencil-fill"></i>
-                                    </a>
+                                    </button>
                                     @if(in_array($tenant->status, ['suspended','inactive','grace'], true))
                                         <form method="POST" action="{{ route('superadmin.hospitals.activate', $tenant) }}" style="margin:0">
                                             @csrf
@@ -145,3 +149,42 @@
 </div>
 
 @endsection
+
+@push('modals')
+    @foreach($tenants as $tenant)
+        <div class="modal fade" id="editHospitalModal-{{ $tenant->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius:14px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
+                    <div class="modal-header" style="border-bottom:1px solid rgba(27,79,114,.12);padding:1.25rem 1.5rem">
+                        <h5 class="modal-title" style="font-weight:700;font-size:1rem;color:#1B4F72;display:flex;align-items:center;gap:.5rem">
+                            <i class="bi bi-pencil-square"></i>
+                            Edit Hospital: {{ $tenant->name }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" style="padding:1.5rem">
+                        @include('superadmin.tenants._form', [
+                            'tenant' => $tenant,
+                            'action' => route('superadmin.hospitals.update', $tenant),
+                            'editTenantId' => $tenant->id,
+                            'submitLabel' => 'Save Changes',
+                        ])
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+@endpush
+
+@push('scripts')
+    @if(old('edit_tenant_id'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = document.getElementById('editHospitalModal-{{ old('edit_tenant_id') }}');
+                if (modal && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(modal).show();
+                }
+            });
+        </script>
+    @endif
+@endpush

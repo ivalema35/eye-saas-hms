@@ -139,7 +139,8 @@
             align-items: center;
             gap: .5rem;
             margin-left: .65rem;
-            margin-top: .4rem;
+            margin-top: .85rem;
+            align-self: flex-end;
         }
         .reception-register-btn {
             display: inline-flex;

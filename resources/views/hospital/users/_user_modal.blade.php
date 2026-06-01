@@ -58,6 +58,59 @@
         box-shadow: 0 0 0 4px rgba(27, 79, 114, .12);
     }
 
+    .user-form-modal .password-field-wrap {
+        position: relative;
+    }
+
+    .user-form-modal .password-field-input {
+        padding-right: 3rem !important;
+    }
+
+    .user-form-modal .password-field-toggle {
+        position: absolute;
+        right: .7rem;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 1px solid rgba(27, 79, 114, .14) !important;
+        background: rgba(255, 255, 255, .98) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #1B4F72 !important;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        line-height: 1;
+        z-index: 3;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(27, 79, 114, .06);
+        transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+    }
+
+    .user-form-modal .password-field-toggle:hover {
+        border-color: rgba(27, 79, 114, .22) !important;
+        box-shadow: 0 4px 10px rgba(27, 79, 114, .10);
+        transform: translateY(-50%) scale(1.02);
+    }
+
+    .user-form-modal .password-field-toggle:focus-visible {
+        outline: 2px solid rgba(27, 79, 114, .22);
+        outline-offset: 2px;
+    }
+
+    .user-form-modal .password-field-toggle svg {
+        width: 1rem;
+        height: 1rem;
+        display: block;
+        stroke: currentColor;
+        fill: none;
+        color: inherit;
+        pointer-events: none;
+    }
+
     .user-form-modal .btn-primary,
     .user-form-modal .hms-btn-primary {
         background: #1B4F72 !important;
@@ -71,7 +124,6 @@
     .user-form-modal .hms-btn-outline {
         border-color: rgba(27, 79, 114, .18) !important;
         border-radius: 12px;
-        color: #1B4F72 !important;
         font-weight: 850;
     }
 </style>
@@ -132,7 +184,7 @@
                         <div class="hms-form-group">
                             <label>Contact</label>
                             <input type="text" name="contact" id="user-contact" value="{{ old('contact') }}"
-                                   class="hms-input @error('contact') is-invalid @enderror" placeholder="Enter contact number" maxlength="15">
+                                   class="hms-input @error('contact') is-invalid @enderror" placeholder="Enter contact number" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
                             @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
@@ -166,13 +218,29 @@
 
                         <div class="hms-form-group">
                             <label id="user-password-label">Password <span class="hms-required">*</span></label>
-                            <input type="password" name="password" id="user-password" class="hms-input @error('password') is-invalid @enderror" placeholder="Create a password" required>
+                            <div class="password-field-wrap">
+                                <input type="password" name="password" id="user-password" class="hms-input password-field-input @error('password') is-invalid @enderror" placeholder="Create a password" required>
+                                <button type="button" id="toggleUserPassword" class="password-field-toggle" aria-label="Toggle password visibility">
+                                    <svg id="userPasswordEye" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                             @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
                             <label id="user-password-confirm-label">Confirm Password <span class="hms-required">*</span></label>
-                            <input type="password" name="password_confirmation" id="user-password-confirmation" class="hms-input" placeholder="Re-enter password" required>
+                            <div class="password-field-wrap">
+                                <input type="password" name="password_confirmation" id="user-password-confirmation" class="hms-input password-field-input" placeholder="Re-enter password" required>
+                                <button type="button" id="toggleUserPasswordConfirmation" class="password-field-toggle" aria-label="Toggle confirm password visibility">
+                                    <svg id="userPasswordConfirmationEye" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -192,6 +260,8 @@
 <script>
 const userStoreUrl = "{{ route('hospital.users.store', ['slug' => $slug]) }}";
 const userUpdateBase = "{{ route('hospital.users.update', ['slug' => $slug, 'id' => '__ID__']) }}";
+const userPasswordEyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
+const userPasswordEyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 
 function toggleUserDoctorFields() {
     const roleSelect = document.getElementById('user-role-id');
@@ -213,6 +283,45 @@ function setUserPasswordRequired(required) {
     document.getElementById('user-password-confirm-label').innerText = required ? 'Confirm Password *' : 'Confirm Password';
 }
 
+function bindUserPasswordToggle(inputId, buttonId, eyeId) {
+    const input = document.getElementById(inputId);
+    const button = document.getElementById(buttonId);
+    const eye = document.getElementById(eyeId);
+
+    if (!input || !button || !eye) {
+        return;
+    }
+
+    button.addEventListener('click', function () {
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        eye.innerHTML = isHidden ? userPasswordEyeSlashSvg : userPasswordEyeSvg;
+    });
+}
+
+function resetUserPasswordToggleState() {
+    const passwordInput = document.getElementById('user-password');
+    const passwordConfirmInput = document.getElementById('user-password-confirmation');
+    const passwordEye = document.getElementById('userPasswordEye');
+    const passwordConfirmEye = document.getElementById('userPasswordConfirmationEye');
+
+    if (passwordInput) {
+        passwordInput.type = 'password';
+    }
+
+    if (passwordConfirmInput) {
+        passwordConfirmInput.type = 'password';
+    }
+
+    if (passwordEye) {
+        passwordEye.innerHTML = userPasswordEyeSvg;
+    }
+
+    if (passwordConfirmEye) {
+        passwordConfirmEye.innerHTML = userPasswordEyeSvg;
+    }
+}
+
 function resetUserForm() {
     document.getElementById('userFormModalTitle').innerText = 'Add User';
     document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
@@ -225,10 +334,14 @@ function resetUserForm() {
     document.getElementById('user-contact').value = '';
     document.getElementById('user-status').value = 'active';
     document.getElementById('user-doctor-type').value = '';
-    document.getElementById('user-foc-permission').checked = false;
+    const userFocPermissionInput = document.getElementById('user-foc-permission');
+    if (userFocPermissionInput) {
+        userFocPermissionInput.checked = false;
+    }
     document.getElementById('user-password').value = '';
     document.getElementById('user-password-confirmation').value = '';
     setUserPasswordRequired(true);
+    resetUserPasswordToggleState();
     toggleUserDoctorFields();
 }
 window.resetUserForm = resetUserForm;
@@ -245,10 +358,14 @@ function openUserEditModal(record) {
     document.getElementById('user-contact').value = record.contact ?? '';
     document.getElementById('user-status').value = record.status ?? 'active';
     document.getElementById('user-doctor-type').value = record.doctor_type ?? '';
-    document.getElementById('user-foc-permission').checked = !!record.foc_permission;
+    const userFocPermissionInput = document.getElementById('user-foc-permission');
+    if (userFocPermissionInput) {
+        userFocPermissionInput.checked = !!record.foc_permission;
+    }
     document.getElementById('user-password').value = '';
     document.getElementById('user-password-confirmation').value = '';
     setUserPasswordRequired(false);
+    resetUserPasswordToggleState();
     toggleUserDoctorFields();
 
     bootstrap.Modal.getOrCreateInstance(document.getElementById('userFormModal')).show();
@@ -260,6 +377,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (userModalEl && userModalEl.parentElement !== document.body) {
         document.body.appendChild(userModalEl);
     }
+
+    bindUserPasswordToggle('user-password', 'toggleUserPassword', 'userPasswordEye');
+    bindUserPasswordToggle('user-password-confirmation', 'toggleUserPasswordConfirmation', 'userPasswordConfirmationEye');
 
     document.getElementById('user-role-id').addEventListener('change', toggleUserDoctorFields);
 
@@ -283,7 +403,10 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('user-contact').value = @json(old('contact', ''));
         document.getElementById('user-status').value = @json(old('status', 'active'));
         document.getElementById('user-doctor-type').value = @json(old('doctor_type', ''));
-        document.getElementById('user-foc-permission').checked = @json((bool) old('foc_permission'));
+        const userFocPermissionInput = document.getElementById('user-foc-permission');
+        if (userFocPermissionInput) {
+            userFocPermissionInput.checked = @json((bool) old('foc_permission'));
+        }
 
         if (oldMethod === 'PUT' && oldUserId) {
             document.getElementById('userFormModalTitle').innerText = 'Edit User';
@@ -297,6 +420,7 @@ document.addEventListener('DOMContentLoaded', function () {
             setUserPasswordRequired(true);
         }
 
+        resetUserPasswordToggleState();
         toggleUserDoctorFields();
         bootstrap.Modal.getOrCreateInstance(document.getElementById('userFormModal')).show();
     })();

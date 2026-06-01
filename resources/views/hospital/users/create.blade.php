@@ -61,7 +61,7 @@
                         <div class="hms-form-group user-create-field">
                             <label>Contact</label>
                             <input type="text" name="contact" value="{{ old('contact') }}"
-                                   class="hms-input @error('contact') is-invalid @enderror" maxlength="15">
+                                   class="hms-input @error('contact') is-invalid @enderror" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
                             @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
@@ -95,13 +95,29 @@
 
                         <div class="hms-form-group user-create-field">
                             <label>Password <span class="hms-required">*</span></label>
-                            <input type="password" name="password" class="hms-input @error('password') is-invalid @enderror" required>
+                            <div class="user-password-field-wrap">
+                                <input type="password" name="password" id="userCreatePassword" class="hms-input user-password-field-input @error('password') is-invalid @enderror" required>
+                                <button type="button" id="toggleUserCreatePassword" class="user-password-field-toggle" aria-label="Toggle password visibility">
+                                    <svg id="userCreatePasswordEye" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                             @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-create-field">
                             <label>Confirm Password <span class="hms-required">*</span></label>
-                            <input type="password" name="password_confirmation" class="hms-input" required>
+                            <div class="user-password-field-wrap">
+                                <input type="password" name="password_confirmation" id="userCreatePasswordConfirm" class="hms-input user-password-field-input" required>
+                                <button type="button" id="toggleUserCreatePasswordConfirm" class="user-password-field-toggle" aria-label="Toggle confirm password visibility">
+                                    <svg id="userCreatePasswordConfirmEye" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -133,8 +149,31 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const roleSelect = document.getElementById('role_id');
+        const passwordInput = document.getElementById('userCreatePassword');
+        const passwordConfirmInput = document.getElementById('userCreatePasswordConfirm');
+        const togglePassword = document.getElementById('toggleUserCreatePassword');
+        const togglePasswordConfirm = document.getElementById('toggleUserCreatePasswordConfirm');
+        const eyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
+        const eyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
         roleSelect.addEventListener('change', toggleDoctorFields);
         toggleDoctorFields();
+
+        if (togglePassword && passwordInput) {
+            togglePassword.addEventListener('click', function () {
+                const isHidden = passwordInput.type === 'password';
+                passwordInput.type = isHidden ? 'text' : 'password';
+                document.getElementById('userCreatePasswordEye').innerHTML = isHidden ? eyeSlashSvg : eyeSvg;
+            });
+        }
+
+        if (togglePasswordConfirm && passwordConfirmInput) {
+            togglePasswordConfirm.addEventListener('click', function () {
+                const isHidden = passwordConfirmInput.type === 'password';
+                passwordConfirmInput.type = isHidden ? 'text' : 'password';
+                document.getElementById('userCreatePasswordConfirmEye').innerHTML = isHidden ? eyeSlashSvg : eyeSvg;
+            });
+        }
     });
 </script>
 @endpush
@@ -257,6 +296,59 @@
     .user-create-field .hms-select:focus {
         border-color: var(--uc-primary) !important;
         box-shadow: 0 0 0 4px rgba(27, 79, 114, .10) !important;
+    }
+
+    .user-password-field-wrap {
+        position: relative;
+    }
+
+    .user-password-field-input {
+        padding-right: 3rem !important;
+    }
+
+    .user-password-field-toggle {
+        position: absolute;
+        right: .7rem;
+        top: 50%;
+        transform: translateY(-50%);
+        border: 1px solid rgba(27, 79, 114, .14) !important;
+        background: rgba(255, 255, 255, .98) !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: var(--uc-primary) !important;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 999px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        line-height: 1;
+        z-index: 3;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(27, 79, 114, .06);
+        transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+    }
+
+    .user-password-field-toggle:hover {
+        border-color: rgba(27, 79, 114, .22) !important;
+        box-shadow: 0 4px 10px rgba(27, 79, 114, .10);
+        transform: translateY(-50%) scale(1.02);
+    }
+
+    .user-password-field-toggle:focus-visible {
+        outline: 2px solid rgba(27, 79, 114, .22);
+        outline-offset: 2px;
+    }
+
+    .user-password-field-toggle svg {
+        width: 1rem;
+        height: 1rem;
+        display: block;
+        stroke: currentColor;
+        fill: none;
+        color: inherit;
+        pointer-events: none;
     }
 
     .user-create-checkbox-wrap {

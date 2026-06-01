@@ -273,7 +273,11 @@ class DashboardController extends Controller
                 'secondary' => $doctorCards->where('doctor_type', 'secondary')->count(),
             ];
 
-            $receptionistTodayPatients = Patient::with(['doctor:id,name', 'location:id,city'])
+            $receptionistTodayPatients = Patient::with([
+                'doctor:id,name',
+                'location:id,city',
+                'otBookings' => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
+            ])
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)
                 ->whereDate('appointment_date', $today)
@@ -293,6 +297,7 @@ class DashboardController extends Controller
                     'patients.case_fee',
                     'patients.type',
                     'patients.primary_done_at',
+                    'patients.secondary_done_at',
                     'patients.created_at',
                     'tbl_slots.slot_name as slot_name',
                 ]);

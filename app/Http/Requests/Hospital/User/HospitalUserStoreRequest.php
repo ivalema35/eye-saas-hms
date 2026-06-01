@@ -25,7 +25,13 @@ class HospitalUserStoreRequest extends FormRequest
                 Rule::unique('hospital_users', 'email')
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id'))),
             ],
-            'contact' => ['nullable', 'string', 'max:15'],
+            'contact' => [
+                'nullable',
+                'string',
+                'regex:/^[0-9]{10}$/',
+                Rule::unique('hospital_users', 'contact')
+                    ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id'))),
+            ],
             'role_id' => [
                 'required',
                 'integer',
@@ -44,6 +50,9 @@ class HospitalUserStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'email.unique' => 'This email is already registered.',
+            'contact.regex' => 'Contact number must be exactly 10 digits.',
+            'contact.unique' => 'This phone number is already registered.',
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'Selected role is invalid for this hospital.',
         ];

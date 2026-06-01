@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Tests\TestCase;
 
 class RegisterValidationTest extends TestCase
@@ -103,6 +104,27 @@ class RegisterValidationTest extends TestCase
         ]));
 
         $response->assertSessionHasErrors(['admin_phone']);
+    }
+
+    public function test_registration_creates_initial_subscription_record(): void
+    {
+        Bus::fake();
+
+        $response = $this->post(route('register.store'), $this->validPayload());
+
+        $response->assertRedirect();
+
+        $tenant = Tenant::where('slug', 'vision-eye-centre')->firstOrFail();
+
+        $this->assertDatabaseHas('subscriptions', [
+            'tenant_id' => $tenant->id,
+            'cycle' => 'monthly',
+            'price' => 0,
+            'original_price' => 0,
+            'status' => 'active',
+        ]);
+
+        $this->assertSame(1, $tenant->subscriptions()->count());
     }
 
     private function validPayload(array $overrides = []): array

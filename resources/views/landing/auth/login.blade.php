@@ -395,6 +395,59 @@
 
         .input-wrap { position: relative; }
 
+        .password-field-wrap {
+            position: relative;
+        }
+
+        .password-field-input {
+            padding-right: 3rem;
+        }
+
+        .password-field-toggle {
+            position: absolute;
+            right: .7rem;
+            top: 50%;
+            transform: translateY(-50%);
+            border: 1px solid rgba(13, 33, 55, .10);
+            background: rgba(255, 255, 255, .98);
+            padding: 0;
+            margin: 0;
+            color: #1B4F72;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            line-height: 1;
+            z-index: 3;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(13, 33, 55, .06);
+            transition: color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .15s ease;
+        }
+
+        .password-field-toggle:hover {
+            border-color: rgba(13, 33, 55, .18);
+            box-shadow: 0 4px 10px rgba(13, 33, 55, .10);
+            transform: translateY(-50%) scale(1.02);
+        }
+
+        .password-field-toggle:focus-visible {
+            outline: 2px solid rgba(27, 79, 114, .22);
+            outline-offset: 2px;
+        }
+
+        .password-field-toggle svg {
+            width: 1rem;
+            height: 1rem;
+            display: block;
+            stroke: currentColor;
+            fill: none;
+            color: inherit;
+            pointer-events: none;
+        }
+
         .input-icon {
             position: absolute;
             left: .875rem;
@@ -649,9 +702,15 @@
                                 <span class="forgot-link" style="font-size:.85rem;color:#64748B;">Forgot Password?</span>
                             @endif
                         </div>
-                        <div class="input-wrap">
+                        <div class="input-wrap password-field-wrap">
                             <i class="fa-solid fa-lock input-icon"></i>
-                            <input type="password" id="password" name="password" class="form-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
+                            <input type="password" id="password" name="password" class="form-input password-field-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password">
+                            <button type="button" id="togglePasswordVisibility" class="password-field-toggle" aria-label="Toggle password visibility">
+                                <svg id="passwordEyeIcon" viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                </svg>
+                            </button>
                         </div>
                         @error('password')<div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>@enderror
                     </div>
@@ -674,6 +733,20 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePasswordVisibility');
+        const passwordEye = document.getElementById('passwordEyeIcon');
+        const passwordEyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
+        const passwordEyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+
+        if (togglePassword && passwordInput && passwordEye) {
+            togglePassword.addEventListener('click', function () {
+                const isHidden = passwordInput.type === 'password';
+                passwordInput.type = isHidden ? 'text' : 'password';
+                passwordEye.innerHTML = isHidden ? passwordEyeSlashSvg : passwordEyeSvg;
+            });
+        }
+
         const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
         @if(session('error')) Toast.fire({ icon: 'error', title: @json(session('error')) }); @endif
         @if(session('success')) Toast.fire({ icon: 'success', title: @json(session('success')) }); @endif
