@@ -133,7 +133,7 @@
                                             data-district="{{ $loc->district }}"
                                             data-state="{{ $loc->state }}"
                                             @selected(old('location_id') == $loc->id)>
-                                        {{ $loc->name ?: ($loc->city ?: "Location #{$loc->id}") }}
+                                        {{ $loc->city ?: "Location #{$loc->id}" }}
                                     </option>
                                 @endforeach
                             </select>

@@ -103,11 +103,12 @@ class DashboardController extends Controller
                     ->count();
                 $doctorPrimaryDone = Patient::where('doctor_id', $user->id)
                     ->whereDate('appointment_date', $today)
-                    ->whereNotNull('primary_done_at')
+                    ->whereNull('primary_done_at')
                     ->count();
                 $doctorSecondaryDone = Patient::where('doctor_id', $user->id)
                     ->whereDate('appointment_date', $today)
-                    ->whereNotNull('secondary_done_at')
+                    ->whereNotNull('primary_done_at')
+                    ->whereNull('secondary_done_at')
                     ->count();
             }
         }
@@ -253,19 +254,29 @@ class DashboardController extends Controller
         )) {
             $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->active()
+                ->with('role:id,slug')
                 ->orderBy('name')
-                ->get(['id', 'name', 'doctor_type'])
-                ->map(function (HospitalUser $doctor) use ($today): HospitalUser {
-                    $assignedToday = Patient::where('doctor_id', $doctor->id)
-                        ->whereDate('appointment_date', $today)
-                        ->count();
+                ->get(['id', 'role_id', 'name', 'doctor_type']);
 
-                    $doctor->assigned_today = $assignedToday;
-                    $doctor->primary_count = $doctor->doctor_type === 'primary' ? $assignedToday : 0;
-                    $doctor->secondary_count = $doctor->doctor_type === 'secondary' ? $assignedToday : 0;
+            $doctorStatsById = Patient::whereDate('appointment_date', $today)
+                ->whereIn('doctor_id', $doctorCards->pluck('id'))
+                ->select('doctor_id')
+                ->selectRaw('COUNT(*) as assigned_today')
+                ->selectRaw('SUM(CASE WHEN primary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
+                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as secondary_count')
+                ->groupBy('doctor_id')
+                ->get()
+                ->keyBy('doctor_id');
 
-                    return $doctor;
-                });
+            $doctorCards = $doctorCards->map(function (HospitalUser $doctor) use ($doctorStatsById): HospitalUser {
+                $doctorStats = $doctorStatsById->get($doctor->id);
+
+                $doctor->assigned_today = (int) ($doctorStats->assigned_today ?? 0);
+                $doctor->primary_count = (int) ($doctorStats->primary_count ?? 0);
+                $doctor->secondary_count = (int) ($doctorStats->secondary_count ?? 0);
+
+                return $doctor;
+            });
 
             $doctorCardSummary = [
                 'all' => $doctorCards->count(),

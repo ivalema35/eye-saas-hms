@@ -6,6 +6,7 @@
 
 @php
     $focReceptionists = $focReceptionists ?? collect();
+    $doctorTodayPatients = $doctorAssignedPatients ?? $todayPatients;
 @endphp
 
 {{-- ============================================================
@@ -15,16 +16,17 @@
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-blue"><i class="fa-solid fa-eye"></i></div>
         <div class="hms-stat-body">
-            <div class="hms-stat-label">Primary Done</div>
-            <div class="hms-stat-value">{{ $todayPrimary }}</div>
+            <div class="hms-stat-label">Today's Patients</div>
+            <div class="hms-stat-value">{{ $doctorTodayPatients }}</div>
             <div class="hms-stat-meta">{{ now()->format('d M Y') }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-green"><i class="fa-solid fa-eye-low-vision"></i></div>
         <div class="hms-stat-body">
-            <div class="hms-stat-label">Secondary Done</div>
-            <div class="hms-stat-value">{{ $todaySecondary }}</div>
+            <div class="hms-stat-label">Primary Queue</div>
+            <div class="hms-stat-value">{{ $doctorPrimaryDone }}</div>
+            <div class="hms-stat-meta">Secondary Queue: {{ $doctorSecondaryDone }}</div>
         </div>
     </div>
     <div class="hms-stat-card">

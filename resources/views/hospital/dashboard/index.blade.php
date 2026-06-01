@@ -1119,6 +1119,7 @@
     $doctorCards = $doctorCards ?? collect();
     $doctorStripCards = $doctorCards;
     $receptionistTodayPatients = $receptionistTodayPatients ?? collect();
+    $doctorTodayPatients = $isDoctorUser && $doctorAssignedPatients !== null ? $doctorAssignedPatients : $todayPatients;
 
     if ($isDoctorUser) {
         $doctorStripCards = $doctorCards->reject(fn ($doctor) => (int) $doctor->id === (int) auth('hospital_user')->id())->values();
@@ -1197,8 +1198,8 @@
                 </div>
                 <div>
                     <p class="metric-label">Today's Patients</p>
-                    <div class="metric-value">{{ $todayPatients }}</div>
-                    <p class="metric-meta">{{ now()->format('d M Y') }}</p>
+                    <div class="metric-value">{{ $doctorTodayPatients }}</div>
+                    <p class="metric-meta">Assigned to you today</p>
                 </div>
             </div>
         </div>
@@ -1224,9 +1225,9 @@
                     <i data-lucide="eye" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
                 </div>
                 <div>
-                    <p class="metric-label">Primary Done</p>
-                    <div class="metric-value">{{ $todayPrimary }}</div>
-                    <p class="metric-meta">Secondary: {{ $todaySecondary }}</p>
+                    <p class="metric-label">Primary Queue</p>
+                    <div class="metric-value">{{ $doctorPrimaryDone }}</div>
+                    <p class="metric-meta">Secondary Queue: {{ $doctorSecondaryDone }}</p>
                 </div>
             </div>
         </div>
@@ -1364,6 +1365,7 @@
                 $firstInitial = isset($nameParts[0]) ? substr($nameParts[0], 0, 1) : '';
                 $secondInitial = isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '';
                 $doctorInitials = strtoupper($firstInitial.$secondInitial);
+                $isOtDoctor = $doctor->role?->slug === 'ot_doctor';
                 $isPrimaryDoctor = $doctor->doctor_type === 'primary';
                 $isSecondaryDoctor = $doctor->doctor_type === 'secondary';
             @endphp
@@ -1372,11 +1374,17 @@
                     <div class="doctor-strip-avatar">{{ $doctorInitials }}</div>
                     <div>
                         <p class="doctor-strip-name">{{ $doctor->name }}</p>
-                        <p class="doctor-strip-sub">{{ $doctor->assigned_today }} Assigned</p>
-                        <div class="doctor-strip-pills">
-                            <span class="doctor-strip-pill {{ $isPrimaryDoctor ? 'is-primary' : 'is-muted' }}">Primary {{ $doctor->primary_count }}</span>
-                            <span class="doctor-strip-pill {{ $isSecondaryDoctor ? 'is-secondary' : 'is-muted' }}">Secondary {{ $doctor->secondary_count }}</span>
-                        </div>
+                        <p class="doctor-strip-sub">{{ $isOtDoctor ? 'OT Doctor' : ($doctor->assigned_today . ' Assigned') }}</p>
+                        @if($isOtDoctor)
+                            <div class="doctor-strip-pills">
+                                <span class="doctor-strip-pill is-muted">Assigned {{ $doctor->assigned_today }}</span>
+                            </div>
+                        @else
+                            <div class="doctor-strip-pills">
+                                <span class="doctor-strip-pill {{ $isPrimaryDoctor ? 'is-primary' : 'is-muted' }}">Primary Exam {{ $doctor->primary_count }}</span>
+                                <span class="doctor-strip-pill {{ $isSecondaryDoctor ? 'is-secondary' : 'is-muted' }}">Secondary Exam {{ $doctor->secondary_count }}</span>
+                            </div>
+                        @endif
                         <!-- <div class="doctor-strip-status">All Clear</div> -->
                     </div>
                 </div>
