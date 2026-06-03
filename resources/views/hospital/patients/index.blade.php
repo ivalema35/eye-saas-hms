@@ -700,7 +700,17 @@
                             <td>{{ $p->created_at->format('h:i A') }}</td>
                             <td>
                                 <div class="action-buttons">
-                                    <a href="{{ route('hospital.patients.history', ['slug' => $slug, 'search' => $p->patient_code]) }}" 
+                                    {{-- Check-in button: phone appointment not yet checked in --}}
+                                    @if($p->type === 'phone' && !$p->case_id)
+                                        <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $p->id]) }}"
+                                           class="action-icon"
+                                           title="Check In"
+                                           style="background:#E8F8F0;color:#27AE60;border-color:#A9DFBF">
+                                            <i class="bi bi-person-check-fill"></i>
+                                        </a>
+                                    @endif
+
+                                    <a href="{{ route('hospital.patients.history', ['slug' => $slug, 'search' => $p->patient_code]) }}"
                                        class="action-icon" title="History">
                                         <i class="bi bi-clock-history"></i>
                                     </a>

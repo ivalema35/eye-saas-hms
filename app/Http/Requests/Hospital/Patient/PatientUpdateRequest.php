@@ -32,8 +32,8 @@ class PatientUpdateRequest extends FormRequest
             'appointment_date' => ['required', 'date'],
             'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
             'doctor_id' => ['required', 'integer', 'exists:hospital_users,id'],
-            'case_id' => ['required', 'integer', 'exists:tbl_cases,id'],
-            'case_fee' => ['required', 'numeric', 'min:0'],
+            'case_id' => ['nullable', 'integer', 'exists:tbl_cases,id'],
+            'case_fee' => ['nullable', 'numeric', 'min:0'],
             'referrer_id' => ['nullable', 'integer', 'exists:tbl_referrers,id'],
             'is_old_patient' => ['nullable', 'boolean'],
         ];

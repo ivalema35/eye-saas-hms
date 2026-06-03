@@ -107,6 +107,8 @@ Route::prefix('{slug}')
                     Route::post('/phone', [PatientController::class, 'storePhone'])->name('store-phone')->middleware('permission:opd.patient.register_phone');
                     Route::get('/{patient}/print', [PatientController::class, 'print'])->name('print')->middleware('permission:opd.bill.print');
                     Route::get('/{patient}/bill-pdf', [PatientController::class, 'downloadBill'])->name('bill-pdf')->middleware('permission:opd.bill.print');
+                    Route::get('/{patient}/checkin', [PatientController::class, 'checkinForm'])->name('checkin')->middleware('permission:opd.patient.register');
+                    Route::post('/{patient}/checkin', [PatientController::class, 'checkin'])->name('checkin.store')->middleware('permission:opd.patient.register');
                 });
 
                 Route::get('patient-history', [PatientHistoryController::class, 'index'])->name('patients.history')->middleware('permission:opd.exam.history');

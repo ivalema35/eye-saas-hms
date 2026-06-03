@@ -38,6 +38,33 @@
                     <h5 style="margin:0;font-weight:700;color:#1B4F72;font-size:1.1rem">Personal Details</h5>
                 </div>
 
+                {{-- Row 0: Phone + WhatsApp at top for existing patient lookup --}}
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+                    <div class="form-group position-relative">
+                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
+                            Contact No <span style="color:#C0392B;font-weight:700">*</span>
+                        </label>
+                        <input type="text" name="contact_no" id="contactNo"
+                               value="{{ old('contact_no') }}" maxlength="15"
+                               class="form-control @error('contact_no') is-invalid @enderror"
+                               placeholder="e.g. 9876543210" autocomplete="off" required
+                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
+                        <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
+                             style="z-index:1050;max-height:250px;overflow-y:auto;border:1px solid #E2E8F0;top:100%;left:0;margin-top:4px"></div>
+                        @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">WhatsApp No</label>
+                        <input type="text" name="whatsapp_no" id="whatsappNo"
+                               value="{{ old('whatsapp_no') }}" maxlength="15"
+                               class="form-control @error('whatsapp_no') is-invalid @enderror"
+                               placeholder="Same if blank"
+                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
+                        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
@@ -161,30 +188,6 @@
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
-                    <div class="form-group position-relative">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Contact No <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="text" name="contact_no" id="contactNo"
-                               value="{{ old('contact_no') }}" maxlength="15"
-                               class="form-control @error('contact_no') is-invalid @enderror"
-                               placeholder="e.g. 9876543210" autocomplete="off" required
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
-                             style="z-index: 1050; max-height: 250px; overflow-y: auto; border: 1px solid var(--color-border-default, #E2E8F0); top: 100%; left: 0; margin-top: 4px;"></div>
-                        @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">WhatsApp No</label>
-                        <input type="text" name="whatsapp_no" id="whatsappNo"
-                               value="{{ old('whatsapp_no') }}" maxlength="15"
-                               class="form-control @error('whatsapp_no') is-invalid @enderror"
-                               placeholder="Same if blank" style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-                </div>
             </div>
 
             {{-- Section 3: Appointment & Case Details --}}
@@ -194,7 +197,7 @@
                     <h5 style="margin:0;font-weight:700;color:#27AE60;font-size:1.1rem">Appointment & Case</h5>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
                             Appointment Date <span style="color:#C0392B;font-weight:700">*</span>
@@ -204,38 +207,6 @@
                                class="form-control flatpickr @error('appointment_date') is-invalid @enderror" required
                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
                         @error('appointment_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Case Type <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <select name="case_id" id="caseSelect"
-                                class="form-control select2 @error('case_id') is-invalid @enderror" required
-                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                            <option value="">Select Case</option>
-                            @foreach($cases as $c)
-                                <option value="{{ $c->id }}" data-fee="{{ $c->fee ?? 0 }}"
-                                        @selected(old('case_id') == $c->id)>
-                                    {{ $c->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('case_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Case Fee (₹) <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <div style="display:flex;align-items:center;background:linear-gradient(135deg, #D5F5E3 0%, #E8F8F5 100%);border:1px solid #A9DFBF;border-radius:8px;padding:0 0.75rem;position:relative">
-                            <span style="color:#27AE60;font-weight:700;font-size:1.1rem">₹</span>
-                            <input type="number" name="case_fee" id="caseFee"
-                                   value="{{ old('case_fee', '0') }}" step="0.01" min="0"
-                                   class="form-control border-0 @error('case_fee') is-invalid @enderror" required
-                                   style="background:transparent;padding:0.75rem 0.75rem 0.75rem 0.5rem;font-weight:600;color:#27AE60">
-                        </div>
-                        @error('case_fee')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
                 </div>
 
