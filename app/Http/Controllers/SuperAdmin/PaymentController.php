@@ -7,9 +7,7 @@ use App\Models\Platform\AuditLog;
 use App\Models\Platform\Payment;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\InvoiceService;
-use App\Services\Platform\SubscriptionService;
 use App\Services\Platform\TenantService;
-use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,8 +20,7 @@ class PaymentController extends Controller
 {
     public function __construct(
         protected TenantService $tenantService,
-        protected InvoiceService $invoiceService,
-        protected SubscriptionService $subscriptionService
+        protected InvoiceService $invoiceService
     ) {}
 
     public function index(): View
@@ -95,15 +92,6 @@ class PaymentController extends Controller
             ]);
 
             $this->tenantService->activate($tenant);
-            $this->subscriptionService->createSubscription(
-                $tenant,
-                $validated['cycle'],
-                now(),
-                $this->subscriptionService->calculateEndDate($validated['cycle']),
-                $validated['amount'],
-                $validated['amount'],
-                'active'
-            );
         });
 
         // Generate PDF invoice outside the transaction so a PDF failure doesn't roll back the payment
@@ -140,9 +128,7 @@ class PaymentController extends Controller
         }
 
         $filename = 'invoice-'.$this->invoiceService->invoiceNumber($payment).'.pdf';
-        /** @var FilesystemAdapter $disk */
-        $disk = Storage::disk('local');
 
-        return $disk->download($payment->invoice_path, $filename);
+        return Storage::disk('local')->download($payment->invoice_path, $filename);
     }
 }

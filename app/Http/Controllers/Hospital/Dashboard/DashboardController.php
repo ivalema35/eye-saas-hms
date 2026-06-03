@@ -314,6 +314,21 @@ class DashboardController extends Controller
                 ]);
         }
 
+       // ── માત્ર ને માત્ર પ્યોર ડૉક્ટર (doctor) માટે જ નવી ફાઈલ લોડ થશે ──
+        if ($user && $user->role?->slug === 'doctor') {
+            return view('hospital.dashboard.doctoredashboard', compact(
+                'slug',
+                'tenant',
+                'subscriptionDaysLeft',
+                'primaryQueue',
+                'doctorName',
+                'doctorAssignedPatients',
+                'doctorPrimaryDone',
+                'doctorSecondaryDone'
+            ));
+        }
+
+        // ── એડમિન, રીસેપ્શનિસ્ટ, એકાઉન્ટન્ટ, આસિસ્ટન્ટ અને OT_DOCTOR માટે જૂનો ઓરિજિનલ વ્યુ લોડ થશે ──
         return view('hospital.dashboard.index', compact(
             'slug',
             'tenant',

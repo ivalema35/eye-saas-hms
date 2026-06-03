@@ -397,6 +397,13 @@
         .hms-sidebar-backdrop {
             background: rgba(27, 79, 114, 0.35) !important;
         }
+        @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+    <style>
+        .hms-layout { display: block !important; }
+        .hms-main { margin-left: 0 !important; width: 100% !important; padding: 1.5rem !important; }
+        #hmsSidebarToggle { display: none !important; }
+    </style>
+@endif
     </style>
 
     @stack('styles')
@@ -549,6 +556,7 @@
         {{-- ============================================
              Sidebar Navigation
         ============================================ --}}
+        @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
         <aside class="hms-sidebar" id="hmsSidebar">
             <div class="premium-sidebar-brand">
                 <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
@@ -850,6 +858,7 @@
                 </form>
             </div>
         </aside>
+        @endif
 
         {{-- ============================================
              Main Content Area
@@ -982,6 +991,7 @@
                     .hms-main [class*="delete-instruction"]:hover i {
                         color: #ffffff !important;
                     }
+                    
                 </style>
             @endunless
 
