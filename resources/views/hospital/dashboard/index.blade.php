@@ -4,6 +4,57 @@
 
 @push('styles')
 <style>
+/* ── Receptionist 5-card row ────────────────────────────────────────────── */
+.rec-5row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
+}
+.rec-5card {
+    background: rgba(255,255,255,.9);
+    border: 1px solid rgba(27,79,114,.12);
+    border-radius: 24px;
+    box-shadow: 0 8px 24px rgba(27,79,114,.09);
+    padding: 1.25rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    transition: transform .18s, box-shadow .18s;
+    text-decoration: none;
+    color: inherit;
+}
+.rec-5card.rec-5link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(27,79,114,.14);
+    color: inherit;
+}
+.rec-5icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
+}
+.rec-5label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #64748B;
+    margin: 0;
+}
+.rec-5value {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #1A202C;
+    line-height: 1;
+}
+@media (max-width: 900px) { .rec-5row { grid-template-columns: repeat(3,1fr); } }
+@media (max-width: 576px) { .rec-5row { grid-template-columns: 1fr 1fr; } }
+
 /*
   Hospital Admin Dashboard Theme
   Requirements:
@@ -1164,6 +1215,62 @@
 @else
 
 {{-- ════════════════════════════════════════════════════════════════════════
+     RECEPTIONIST — 5 stat cards in a single row (own grid, outside bento)
+════════════════════════════════════════════════════════════════════════════ --}}
+@if($isReceptionistUser && $receptionistTodayCollection !== null)
+<div class="rec-5row mb-4">
+
+    {{-- Today Collection --}}
+    <div class="rec-5card">
+        <div class="rec-5icon" style="background:#D5F5E3;color:#27AE60">
+            <i class="bi bi-wallet2"></i>
+        </div>
+        <p class="rec-5label">Today Collection</p>
+        <div class="rec-5value">₹{{ number_format($receptionistTodayCollection, 0) }}</div>
+    </div>
+
+    {{-- Total Patients --}}
+    <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <div class="rec-5icon" style="background:#EBF5FB;color:#1B4F72">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <p class="rec-5label">Total Patients</p>
+        <div class="rec-5value">{{ $todayRegistrations ?? 0 }}</div>
+    </a>
+
+    {{-- My Patients --}}
+    <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <div class="rec-5icon" style="background:#EAF2FF;color:#2C6FAC">
+            <i class="bi bi-person-check-fill"></i>
+        </div>
+        <p class="rec-5label">My Patients</p>
+        <div class="rec-5value">{{ $receptionistMyPatientsToday }}</div>
+    </a>
+
+    {{-- Reports --}}
+    @haspermission('reports.view')
+    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <div class="rec-5icon" style="background:#F5EEF8;color:#8E44AD">
+            <i class="bi bi-bar-chart-line-fill"></i>
+        </div>
+        <p class="rec-5label">Reports</p>
+        <div class="rec-5value" style="font-size:1.3rem">View →</div>
+    </a>
+    @endhaspermission
+
+    {{-- Phone Appointments --}}
+    <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <div class="rec-5icon" style="background:#D1F2EB;color:#1ABC9C">
+            <i class="bi bi-telephone-fill"></i>
+        </div>
+        <p class="rec-5label">Phone Appt</p>
+        <div class="rec-5value">{{ $receptionistTodayPhone }}</div>
+    </a>
+
+</div>
+@endif
+
+{{-- ════════════════════════════════════════════════════════════════════════
      BENTO GRID — ROW 1: Stat Metric Cards
      Each card only renders when its permission gate was satisfied.
 ════════════════════════════════════════════════════════════════════════════ --}}
@@ -1233,57 +1340,24 @@
         </div>
     @endif
 
-    @if($isReceptionistUser && $hasReceptionistSummary)
-        <div class="bento-card span-3">
-            <div class="bento-stat">
-                <div class="bento-icon ig-blue">
-                    <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
-                </div>
-                <div>
-                    <p class="metric-label">Total Patients</p>
-                    <div class="metric-value">{{ $receptionistTotalPatients }}</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bento-card span-3">
-            <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="text-decoration-none" style="color:inherit;display:block;height:100%">
-                <div class="bento-stat">
-                    <div class="bento-icon ig-teal">
-                        <i data-lucide="phone" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
-                    </div>
-                    <div>
-                        <p class="metric-label">Phone Appointment</p>
-                        <div class="metric-value">{{ $receptionistPhoneAppointments }}</div>
-                        <p class="metric-meta">Click to view date-wise history</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    @endif
-
-    {{-- Today's Registrations (opd.patient.register / opd.patient.register_phone) --}}
-    @if($hasReception)
+    {{-- Today's Registrations (opd.patient.register) --}}
+    @if($hasReception && !$isReceptionistUser)
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-indigo">
                     <i data-lucide="clipboard-list" style="width:22px;height:22px;color:#34495E;stroke-width:1.75"></i>
                 </div>
                 <div>
-                    <p class="metric-label">{{ $isReceptionistUser ? 'My Patient' : 'Registrations' }}</p>
-                    <div class="metric-value">{{ $isReceptionistUser ? $receptionistMyPatients : $todayRegistrations }}</div>
-                    <p class="metric-meta">
-                        Walk-in: {{ $isReceptionistUser ? $receptionistMyWalkin : $todayWalkin }}
-                        &bull;
-                        Phone: {{ $isReceptionistUser ? $receptionistMyPhone : $todayPhone }}
-                    </p>
+                    <p class="metric-label">Registrations</p>
+                    <div class="metric-value">{{ $todayRegistrations }}</div>
+                    <p class="metric-meta">Walk-in: {{ $todayWalkin }} &bull; Phone: {{ $todayPhone }}</p>
                 </div>
             </div>
         </div>
     @endif
 
-    {{-- Revenue Today (reports.view / reports.export context) --}}
-    @if($hasRevenue)
+    {{-- Revenue Today --}}
+    @if($hasRevenue && !$isReceptionistUser)
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-green">

@@ -136,6 +136,9 @@ class DashboardController extends Controller
         $receptionistMyPatients = null;
         $receptionistMyWalkin = null;
         $receptionistMyPhone = null;
+        $receptionistTodayCollection = null;
+        $receptionistMyPatientsToday = null;
+        $receptionistTodayPhone = null;
 
         if ($isReceptionistUser && ($this->perm->can('opd.patient.register') || $this->perm->can('opd.patient.register_phone'))) {
             $receptionistBasePatients = Patient::whereHas('reception.role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
@@ -150,6 +153,15 @@ class DashboardController extends Controller
                 ->where('type', 'walkin')
                 ->count();
             $receptionistMyPhone = (clone $myPatientsQuery)
+                ->where('type', 'phone')
+                ->count();
+
+            // Today-specific stats for receptionist dashboard cards
+            $receptionistTodayCollection = (float) Patient::whereDate('appointment_date', $today)->sum('case_fee');
+            $receptionistMyPatientsToday = Patient::where('reception_id', $user?->id)
+                ->whereDate('appointment_date', $today)
+                ->count();
+            $receptionistTodayPhone = Patient::whereDate('appointment_date', $today)
                 ->where('type', 'phone')
                 ->count();
         }
@@ -340,6 +352,9 @@ class DashboardController extends Controller
             'receptionistMyPatients',
             'receptionistMyWalkin',
             'receptionistMyPhone',
+            'receptionistTodayCollection',
+            'receptionistMyPatientsToday',
+            'receptionistTodayPhone',
             // Financial
             'revenueToday',
             'revenueMonth',

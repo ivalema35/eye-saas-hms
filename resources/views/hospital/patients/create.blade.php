@@ -38,6 +38,45 @@
                     <h5 style="margin:0;font-weight:700;color:#1B4F72;font-size:1.1rem">Personal Details</h5>
                 </div>
 
+                {{-- Row 0: MRD + Phone + WhatsApp (top — for existing patient lookup) --}}
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
+                    {{-- MRD preview --}}
+                    <div class="form-group">
+                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">MRD No.</label>
+                        <input type="text" value="{{ $nextMrd }}" readonly
+                               style="background:linear-gradient(135deg,#ebf5fbeb 0%,#D6EAF8 100%);font-weight:700;color:#1B4F72;border:1px solid #D6EAF8;border-radius:8px;padding:0.75rem 1rem"
+                               class="form-control">
+                        <small style="font-size:.72rem;color:#718096">Auto-assigned on save</small>
+                    </div>
+
+                    {{-- Contact No with existing-patient autocomplete --}}
+                    <div class="form-group position-relative">
+                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
+                            Contact No <span style="color:#C0392B;font-weight:700">*</span>
+                        </label>
+                        <input type="text" name="contact_no" id="contactNo"
+                               value="{{ old('contact_no') }}" maxlength="15"
+                               class="form-control @error('contact_no') is-invalid @enderror"
+                               placeholder="e.g. 9876543210" autocomplete="off" required
+                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
+                        <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
+                             style="z-index:1050;max-height:250px;overflow-y:auto;border:1px solid #E2E8F0;top:100%;left:0;margin-top:4px"></div>
+                        @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+
+                    {{-- WhatsApp No --}}
+                    <div class="form-group">
+                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">WhatsApp No</label>
+                        <input type="text" name="whatsapp_no" id="whatsappNo"
+                               value="{{ old('whatsapp_no') }}" maxlength="15"
+                               class="form-control @error('whatsapp_no') is-invalid @enderror"
+                               placeholder="Same if blank"
+                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
+                        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                {{-- Row 1: First Name + Surname + Middle Name --}}
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
@@ -66,12 +105,10 @@
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">Middle Name</label>
                         <input type="text" name="middle_name" id="middleName"
-                               value="{{ old('middle_name') }}" 
+                               value="{{ old('middle_name') }}"
                                placeholder="e.g. Kumar"
                                class="form-control" style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
                     </div>
-
-
                 </div>
 
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-top:1.25rem">
@@ -162,30 +199,6 @@
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
-                    <div class="form-group position-relative">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Contact No <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="text" name="contact_no" id="contactNo"
-                               value="{{ old('contact_no') }}" maxlength="15"
-                               class="form-control @error('contact_no') is-invalid @enderror"
-                               placeholder="e.g. 9876543210" autocomplete="off" required
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
-                             style="z-index: 1050; max-height: 250px; overflow-y: auto; border: 1px solid var(--color-border-default, #E2E8F0); top: 100%; left: 0; margin-top: 4px;"></div>
-                        @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">WhatsApp No</label>
-                        <input type="text" name="whatsapp_no" id="whatsappNo"
-                               value="{{ old('whatsapp_no') }}" maxlength="15"
-                               class="form-control @error('whatsapp_no') is-invalid @enderror"
-                               placeholder="Same if blank" style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-                </div>
             </div>
 
             {{-- Section 3: Appointment & Case Details --}}
@@ -229,12 +242,12 @@
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
                             Case Fee (₹) <span style="color:#C0392B;font-weight:700">*</span>
                         </label>
-                        <div style="display:flex;align-items:center;background:linear-gradient(135deg, #D5F5E3 0%, #E8F8F5 100%);border:1px solid #A9DFBF;border-radius:8px;padding:0 0.75rem;position:relative">
+                        <div style="display:flex;align-items:center;background:linear-gradient(135deg,#D5F5E3,#E8F8F5);border:1px solid #A9DFBF;border-radius:8px;padding:0 0.75rem">
                             <span style="color:#27AE60;font-weight:700;font-size:1.1rem">₹</span>
                             <input type="number" name="case_fee" id="caseFee"
                                    value="{{ old('case_fee', '0') }}" step="0.01" min="0"
                                    class="form-control border-0 @error('case_fee') is-invalid @enderror" required
-                                   style="background:transparent;padding:0.75rem 0.75rem 0.75rem 0.5rem;font-weight:600;color:#27AE60">
+                                   style="background:transparent;padding:0.75rem 0.5rem;font-weight:600;color:#27AE60">
                         </div>
                         @error('case_fee')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>
@@ -281,30 +294,6 @@
                     </div>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">Time Slot</label>
-                        <select name="slot_id" class="form-control select2"
-                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                            <option value="">No Slot</option>
-                            @foreach($slots as $s)
-                                <option value="{{ $s->id }}" @selected(old('slot_id') == $s->id)>
-                                    {{ $s->slot_name ?? $s->label ?? $s->name ?? $s->id }}
-                                    @if(!empty($s->start_time) && !empty($s->end_time))
-                                        ({{ \Illuminate\Support\Carbon::parse($s->start_time)->format('h:i A') }} - {{ \Illuminate\Support\Carbon::parse($s->end_time)->format('h:i A') }})
-                                    @endif
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- <div class="form-group" style="display:flex;align-items:flex-end;gap:0.75rem;padding:1rem;background:#F0F4F8;border-radius:8px;border:1px dashed #2980B9">
-                        <input type="checkbox" name="is_old_patient" value="1" id="isOldPatient"
-                               @checked(old('is_old_patient'))
-                               style="width:20px;height:20px;accent-color:#1B4F72;cursor:pointer;flex-shrink:0">
-                        <label for="isOldPatient" class="form-label fw-600" style="margin:0;cursor:pointer;color:#2C3E50;font-size:0.9rem">Old / Returning Patient</label>
-                    </div> -->
-                </div>
             </div>
 
             {{-- Action Buttons --}}

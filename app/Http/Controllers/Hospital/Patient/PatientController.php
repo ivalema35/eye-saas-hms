@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Patient;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Hospital\Patient\PatientPhoneStoreRequest;
 use App\Http\Requests\Hospital\Patient\PatientStoreRequest;
 use App\Http\Requests\Hospital\Patient\PatientUpdateRequest;
 use App\Models\Hospital\HospitalUser;
@@ -114,9 +115,10 @@ class PatientController extends Controller
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots = $this->loadPatientSlots($tenantId);
+        $slots   = $this->loadPatientSlots($tenantId);
+        $nextMrd = $this->patientService->peekNextMrd($tenantId);
 
-        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
+        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers', 'nextMrd'));
     }
 
     public function store(PatientStoreRequest $request): RedirectResponse
@@ -160,7 +162,7 @@ class PatientController extends Controller
         return view('hospital.patients.create-phone', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
     }
 
-    public function storePhone(PatientStoreRequest $request): RedirectResponse
+    public function storePhone(PatientPhoneStoreRequest $request): RedirectResponse
     {
         $slug = $request->route('slug');
         $tenant = app('tenant');
@@ -170,7 +172,7 @@ class PatientController extends Controller
 
         $patient = $this->patientService->registerPhone($data, $tenant->id);
 
-        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create-phone'])
             ->with('success', 'Phone appointment registered and ready for printing.');
     }
 
@@ -180,7 +182,7 @@ class PatientController extends Controller
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
-        $query = Patient::with(['doctor:id,name', 'reception:id,name'])
+        $query = Patient::with(['doctor:id,name', 'reception:id,name', 'caseType:id,case_type'])
             ->where('type', 'phone');
 
         if ($fromDate) {
@@ -208,7 +210,7 @@ class PatientController extends Controller
 
     public function show(string $slug, Patient $patient): View
     {
-        $patient->load('primaryExamination', 'secondaryExamination', 'doctor', 'reception');
+        $patient->load('doctor', 'reception', 'location', 'caseType');
 
         return view('hospital.patients.show', compact('patient', 'slug'));
     }
@@ -253,6 +255,70 @@ class PatientController extends Controller
 
         return redirect()->route('hospital.patients.index', ['slug' => $slug])
             ->with('success', 'Patient record deleted.');
+    }
+
+    public function checkinForm(string $slug, Patient $patient): View
+    {
+        abort_if($patient->type !== 'phone', 404);
+
+        $patient->load('doctor', 'location', 'caseType');
+        $tenantId = app('tenant')->id;
+
+        $doctors = HospitalUser::active()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($q) {
+                $q->whereNotNull('doctor_type')
+                    ->orWhereHas('role', fn ($r) => $r->where(function ($i) {
+                        $i->whereIn('slug', ['doctor', 'ot_doctor'])
+                            ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                    }));
+            })->get();
+
+        $locations = Location::orderBy('city')->get();
+        $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
+        $cases = DB::table('tbl_cases')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->select('id', 'case_type as name', 'case_fee as fee')
+            ->get();
+        $slots = $this->loadPatientSlots($tenantId);
+
+        return view('hospital.patients.checkin',
+            compact('patient', 'slug', 'doctors', 'locations', 'referrers', 'cases', 'slots'));
+    }
+
+    public function checkin(Request $request, string $slug, Patient $patient): RedirectResponse
+    {
+        abort_if($patient->type !== 'phone', 404);
+
+        $request->validate([
+            'first_name'       => ['required', 'string', 'max:100'],
+            'middle_name'      => ['nullable', 'string', 'max:100'],
+            'last_name'        => ['required', 'string', 'max:100'],
+            'age'              => ['required', 'integer', 'min:0', 'max:150'],
+            'gender'           => ['required', 'in:male,female,other'],
+            'occupation'       => ['nullable', 'string', 'max:100'],
+            'contact_no'       => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
+            'whatsapp_no'      => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
+            'location_id'      => ['required', 'integer', 'exists:tbl_locations,id'],
+            'appointment_date' => ['required', 'date'],
+            'slot_id'          => ['nullable', 'integer', 'exists:tbl_slots,id'],
+            'doctor_id'        => ['required', 'integer', 'exists:hospital_users,id'],
+            'case_id'          => ['required', 'integer', 'exists:tbl_cases,id'],
+            'case_fee'         => ['required', 'numeric', 'min:0'],
+            'referrer_id'      => ['nullable', 'integer', 'exists:tbl_referrers,id'],
+        ]);
+
+        $patient->update($request->only([
+            'first_name', 'middle_name', 'last_name', 'age', 'gender',
+            'occupation', 'contact_no', 'whatsapp_no', 'location_id',
+            'appointment_date', 'slot_id', 'doctor_id', 'case_id',
+            'case_fee', 'referrer_id',
+        ]));
+
+        return redirect()
+            ->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
+            ->with('success', 'Patient checked in successfully.');
     }
 
     public function print(string $slug, Patient $patient): View

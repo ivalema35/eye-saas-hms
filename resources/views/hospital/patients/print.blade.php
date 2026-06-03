@@ -190,7 +190,9 @@
             }, 300);
 
             window.onafterprint = function() {
-                if (returnTo === 'create') {
+                if (returnTo === 'create-phone') {
+                    window.location.href = "{{ route('hospital.patients.create-phone', ['slug' => app('tenant')->slug ?? request()->route('slug')]) }}";
+                } else if (returnTo === 'create') {
                     window.location.href = "{{ route('hospital.patients.create', ['slug' => app('tenant')->slug ?? request()->route('slug')]) }}";
                 } else if (returnTo === 'back') {
                     window.history.back();
