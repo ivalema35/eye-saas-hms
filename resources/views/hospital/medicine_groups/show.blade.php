@@ -255,7 +255,16 @@
             </span>
             <div>
                 <h5 class="mb-0 fw-bold group-show-title" style="color: var(--color-primary);">{{ $group->name }}</h5>
-                <div class="group-show-subtitle">Reusable prescription group for faster medicine entry.</div>
+                @if($group->group_code)
+                    <div class="group-show-subtitle">{{ $group->group_code }}</div>
+                @endif
+                @if($group->diagnosis)
+                    <div class="mt-1">
+                        <span style="font-size:.75rem;font-weight:700;color:#0d6949;background:rgba(13,105,73,.08);border:1px solid rgba(13,105,73,.2);border-radius:999px;padding:.18rem .6rem;">
+                            <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
+                        </span>
+                    </div>
+                @endif
             </div>
         </div>
         <span class="badge text-bg-light border group-show-count-pill">{{ $group->items->count() }} medicines</span>

@@ -12,5 +12,7 @@ class ChiefComplaint extends Model
 
     protected $table = 'chief_complaints';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }

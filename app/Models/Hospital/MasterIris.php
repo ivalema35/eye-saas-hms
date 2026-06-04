@@ -12,5 +12,7 @@ class MasterIris extends Model
 
     protected $table = 'tbl_master_iris';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }

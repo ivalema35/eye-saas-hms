@@ -12,5 +12,7 @@ class MasterSac extends Model
 
     protected $table = 'tbl_master_sac';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }

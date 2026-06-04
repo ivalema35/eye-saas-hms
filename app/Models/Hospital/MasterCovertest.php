@@ -12,7 +12,9 @@ class MasterCovertest extends Model
 
     protected $table = 'tbl_master_covertest';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }
 
 if (! class_exists(__NAMESPACE__.'\\MasterCoverTest', false)) {

@@ -90,144 +90,162 @@
         overflow-x: auto;
     }
 
+    /* ── master table ── */
     .group-table {
-        border-collapse: separate;
-        border-spacing: 0 8px;
-        min-width: 760px;
+        border-collapse: collapse;
+        min-width: 820px;
+        width: 100%;
     }
 
-    .group-table thead tr,
     .group-table thead th {
         background: var(--group-secondary) !important;
-    }
-
-    .group-table thead th {
         color: #fff !important;
-        border: 0 !important;
-        padding: .9rem 1rem;
+        border: 1px solid rgba(255,255,255,.15) !important;
+        padding: .75rem 1rem;
         font-size: .72rem;
         letter-spacing: .08em;
         font-weight: 900;
         text-transform: uppercase;
         white-space: nowrap;
-    }
-
-    .group-table thead th:first-child {
-        border-top-left-radius: 14px;
-        border-bottom-left-radius: 14px;
-    }
-
-    .group-table thead th:last-child {
-        border-top-right-radius: 14px;
-        border-bottom-right-radius: 14px;
-    }
-
-    .group-table tbody tr {
-        animation: med-row-in 460ms ease both;
-        transition: transform 170ms ease, box-shadow 170ms ease;
-    }
-
-    .group-table tbody tr:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 16px 34px rgba(27, 79, 114, .10);
-    }
-
-    .group-table tbody td {
-        background: rgba(255, 255, 255, .92);
-        border-top: 1px solid var(--group-secondary-08);
-        border-bottom: 1px solid var(--group-secondary-08);
-        color: var(--group-secondary);
-        padding: .9rem 1rem;
         vertical-align: middle;
-        font-weight: 650;
     }
 
-    .group-table tbody td:first-child {
-        border-left: 1px solid var(--group-secondary-08);
-        border-top-left-radius: 14px;
-        border-bottom-left-radius: 14px;
+    .group-table td {
+        border: 1px solid var(--group-secondary-12);
+        padding: .6rem .9rem;
+        vertical-align: middle;
+        color: var(--group-secondary);
+        font-weight: 600;
+        font-size: .88rem;
+        background: #fff;
     }
 
-    .group-table tbody td:last-child {
-        border-right: 1px solid var(--group-secondary-08);
-        border-top-right-radius: 14px;
-        border-bottom-right-radius: 14px;
+    /* separator row between groups */
+    .group-table tr.group-separator td {
+        background: var(--group-secondary-08) !important;
+        border: none !important;
+        padding: 3px 0 !important;
     }
 
-    .group-index-cell {
-        color: rgba(27, 79, 114, .58) !important;
-        font-weight: 900;
+    /* action column */
+    .gti-action-cell {
+        text-align: center;
+        white-space: nowrap;
+        background: linear-gradient(160deg, rgba(235,245,251,.9), rgba(255,255,255,.8)) !important;
     }
 
-    .group-name-cell {
+    .gti-view-link {
         display: inline-flex;
         align-items: center;
-        gap: .5rem;
-        color: var(--group-secondary);
-        font-weight: 800;
-        letter-spacing: -.1px;
-    }
-
-    .group-name-cell i {
-        color: var(--group-secondary);
-    }
-
-    .group-count-badge {
-        background: var(--group-primary) !important;
-        border: 1px solid var(--group-secondary-12) !important;
-        color: var(--group-secondary) !important;
-        border-radius: 999px;
-        padding: .36rem .72rem;
+        gap: .35rem;
+        font-size: .75rem;
         font-weight: 900;
+        color: var(--group-secondary) !important;
+        text-decoration: none;
+        border: 1px solid var(--group-secondary-24);
+        border-radius: 999px;
+        padding: .34rem .72rem;
+        background: rgba(255,255,255,.82);
+        transition: background .15s, color .15s;
+        white-space: nowrap;
     }
 
-    .group-date-cell {
-        color: rgba(27, 79, 114, .64) !important;
-        font-size: .9rem;
-        font-weight: 750;
+    .gti-view-link:hover {
+        background: var(--group-secondary) !important;
+        color: #fff !important;
+    }
+
+    /* group name column */
+    .gti-name-cell {
+        background: linear-gradient(160deg, rgba(235,245,251,.85), rgba(255,255,255,.9)) !important;
+        min-width: 160px;
+    }
+
+    .gti-group-name {
+        font-weight: 900;
+        font-size: .92rem;
+        color: var(--group-secondary);
+        display: block;
+        margin-bottom: .2rem;
+    }
+
+    .gti-group-code {
+        font-size: .72rem;
+        font-weight: 700;
+        color: rgba(27,79,114,.55);
+        letter-spacing: .04em;
+    }
+
+    .gti-diagnosis-badge {
+        display: inline-block;
+        margin-top: .25rem;
+        font-size: .72rem;
+        font-weight: 700;
+        color: #0d6949;
+        background: rgba(13,105,73,.08);
+        border: 1px solid rgba(13,105,73,.2);
+        border-radius: 999px;
+        padding: .18rem .55rem;
+        white-space: nowrap;
+    }
+
+    .gti-crud-wrap {
+        display: flex;
+        gap: .3rem;
+        margin-top: .55rem;
+        flex-wrap: wrap;
     }
 
     .group-icon-btn {
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 30px;
         padding: 0 !important;
         border-radius: 50% !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 255, 255, .78) !important;
-        transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, color 170ms ease;
+        font-size: .75rem;
+        background: rgba(255,255,255,.78) !important;
+        transition: transform .15s, box-shadow .15s, background .15s, color .15s;
     }
 
-    .group-icon-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 22px rgba(27, 79, 114, .12);
-    }
+    .group-icon-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(27,79,114,.12); }
 
-    .group-view-btn,
-    .group-edit-btn {
+    .group-view-btn, .group-edit-btn {
         border-color: var(--group-secondary-24) !important;
         color: var(--group-secondary) !important;
     }
 
-    .group-view-btn:hover,
-    .group-edit-btn:hover {
+    .group-view-btn:hover, .group-edit-btn:hover {
         background: var(--group-secondary) !important;
         color: #fff !important;
     }
 
-    .group-edit-btn:hover i {
-        color: #fff !important;
+    .group-delete-btn { border-color: #dc2626 !important; color: #dc2626 !important; }
+    .group-delete-btn:hover { background: #dc2626 !important; color: #fff !important; }
+
+    /* medicine sub-rows */
+    .gti-med-cell   { font-weight: 700; }
+    .gti-soft-cell  { color: rgba(27,79,114,.66) !important; font-weight: 600; }
+    .gti-qty-cell   { text-align: center; }
+    .gti-qty-badge  {
+        background: var(--group-primary) !important;
+        border: 1px solid var(--group-secondary-12) !important;
+        color: var(--group-secondary) !important;
+        border-radius: 999px;
+        padding: .22rem .62rem;
+        font-weight: 900;
+        font-size: .8rem;
     }
 
-    .group-delete-btn {
-        border-color: #dc2626 !important;
-        color: #dc2626 !important;
-    }
+    /* first medicine row — top border slightly heavier */
+    .gti-first-med td { border-top: 2px solid var(--group-secondary-18) !important; }
 
-    .group-delete-btn:hover {
-        background: #dc2626 !important;
-        color: #fff !important;
+    /* empty medicines */
+    .gti-empty-med {
+        color: rgba(27,79,114,.45) !important;
+        font-style: italic;
+        font-size: .84rem;
     }
 
     .group-empty-cell {
@@ -239,7 +257,7 @@
     }
 
     .group-card-footer {
-        background: linear-gradient(135deg, rgba(235, 245, 251, .72), rgba(255, 255, 255, .94)) !important;
+        background: linear-gradient(135deg, rgba(235,245,251,.72), rgba(255,255,255,.94)) !important;
         border-top: 1px solid var(--group-secondary-12) !important;
         color: var(--group-secondary);
     }
@@ -327,53 +345,130 @@
 
     <div class="card-body p-0">
         <div class="table-responsive group-table-wrap">
-            <table class="table premium-table table-hover align-middle mb-0 group-table">
+            <table class="table mb-0 group-table">
                 <thead>
                     <tr>
-                        <th style="width:50px">#</th>
-                        <th>Group Name</th>
-                        <th style="width:120px">Medicines</th>
-                        <th style="width:150px">Created</th>
-                        <th class="text-end" style="width:140px">Actions</th>
+                        <th style="width:110px">View Group</th>
+                        <th style="width:170px">Group</th>
+                        <th>Medicine Name</th>
+                        <th style="width:110px">Dosage</th>
+                        <th style="width:90px">Days</th>
+                        <th style="width:70px">Qty</th>
+                        <th style="width:160px">Route of Administration</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($groups as $i => $group)
-                    <tr>
-                        <td class="text-muted group-index-cell">{{ $groups->firstItem() + $i }}</td>
-                        <td class="fw-semibold">
-                            <span class="group-name-cell">{{ $group->name }}</span>
-                        </td>
-                        <td>
-                            <span class="badge text-bg-primary group-count-badge">{{ $group->items_count }}</span>
-                        </td>
-                        <td class="group-date-cell">{{ $group->created_at->format('d M Y') }}</td>
-                        <td class="text-end">
-                            <div class="d-flex justify-content-end gap-1 action-btn-group">
-                                <a href="{{ route('hospital.medicine-groups.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
-                                   class="btn btn-sm btn-outline-info group-icon-btn group-view-btn" title="View">
-                                    <i class="bi bi-eye-fill"></i>
-                                </a>
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-secondary group-icon-btn group-edit-btn edit-group-modal-btn"
-                                        data-record="{{ json_encode($group) }}"
-                                        title="Edit">
-                                    <i class="bi bi-pencil-fill" style="color: var(--color-secondary);"></i>
-                                </button>
-                                <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
-                                      method="POST"
-                                      onsubmit="return confirm('Delete this medicine group?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger group-icon-btn group-delete-btn" title="Delete">
-                                        <i class="bi bi-trash3-fill"></i>
-                                    </button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
+                        @php
+                            $items   = $group->items;
+                            $rowspan = $items->count() ?: 1;
+                            $groupRecord = [
+                                'id'           => $group->id,
+                                'name'         => $group->name,
+                                'group_code'   => $group->group_code,
+                                'diagnosis_id' => $group->diagnosis_id,
+                                'items'        => $items->map(fn($it) => [
+                                    'medicine_id' => $it->medicine_id,
+                                    'dosage_id'   => $it->dosage_id,
+                                    'route_id'    => $it->route_id,
+                                    'duration'    => $it->duration,
+                                    'quantity'    => $it->quantity,
+                                ])->values()->toArray(),
+                            ];
+                        @endphp
+
+                        @if($items->isNotEmpty())
+                            @foreach($items as $j => $item)
+                            <tr class="{{ $j === 0 ? 'gti-first-med' : '' }}">
+                                @if($j === 0)
+                                <td rowspan="{{ $rowspan }}" class="gti-action-cell text-center align-middle">
+                                    <a href="{{ route('hospital.medicine-groups.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                       class="gti-view-link">
+                                        <i class="bi bi-eye-fill"></i> View
+                                    </a>
+                                </td>
+                                <td rowspan="{{ $rowspan }}" class="gti-name-cell align-top pt-2">
+                                    <span class="gti-group-name">{{ $group->name }}</span>
+                                    @if($group->group_code)
+                                        <span class="gti-group-code">{{ $group->group_code }}</span>
+                                    @endif
+                                    @if($group->diagnosis)
+                                        <span class="gti-diagnosis-badge">
+                                            <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
+                                        </span>
+                                    @endif
+                                    <div class="gti-crud-wrap">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary group-icon-btn group-edit-btn edit-group-modal-btn"
+                                                data-record="{{ json_encode($groupRecord) }}"
+                                                title="Edit">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Delete this medicine group?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger group-icon-btn group-delete-btn" title="Delete">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                                @endif
+                                <td class="gti-med-cell">{{ $item->medicine?->name ?? '—' }}</td>
+                                <td class="gti-soft-cell">{{ $item->dosage?->dosage ?? '—' }}</td>
+                                <td class="gti-soft-cell">{{ $item->duration ?? '—' }}</td>
+                                <td class="gti-qty-cell"><span class="gti-qty-badge">{{ $item->quantity }}</span></td>
+                                <td class="gti-soft-cell">{{ $item->route?->name ?? '—' }}</td>
+                            </tr>
+                            @endforeach
+                        @else
+                            <tr class="gti-first-med">
+                                <td class="gti-action-cell text-center align-middle">
+                                    <a href="{{ route('hospital.medicine-groups.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                       class="gti-view-link">
+                                        <i class="bi bi-eye-fill"></i> View
+                                    </a>
+                                </td>
+                                <td class="gti-name-cell align-top pt-2">
+                                    <span class="gti-group-name">{{ $group->name }}</span>
+                                    @if($group->group_code)
+                                        <span class="gti-group-code">{{ $group->group_code }}</span>
+                                    @endif
+                                    @if($group->diagnosis)
+                                        <span class="gti-diagnosis-badge">
+                                            <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
+                                        </span>
+                                    @endif
+                                    <div class="gti-crud-wrap">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary group-icon-btn group-edit-btn edit-group-modal-btn"
+                                                data-record="{{ json_encode($groupRecord) }}"
+                                                title="Edit">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </button>
+                                        <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Delete this medicine group?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger group-icon-btn group-delete-btn" title="Delete">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                                <td colspan="5" class="gti-empty-med">No medicines added yet.</td>
+                            </tr>
+                        @endif
+
+                        {{-- separator row between groups --}}
+                        @if(!$loop->last)
+                        <tr class="group-separator"><td colspan="7"></td></tr>
+                        @endif
+
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted group-empty-cell">
+                        <td colspan="7" class="text-center py-5 group-empty-cell">
                             No medicine groups yet. Create one to speed up prescriptions.
                         </td>
                     </tr>

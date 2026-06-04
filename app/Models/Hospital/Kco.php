@@ -12,5 +12,7 @@ class Kco extends Model
 
     protected $table = 'kcos';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }
