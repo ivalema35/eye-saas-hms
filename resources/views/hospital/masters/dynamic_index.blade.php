@@ -123,6 +123,16 @@
                                             {{ Str::headline($col) }}
                                         </th>
                                     @endforeach
+                                    @if(in_array($type, ['advice','advices']) && isset($diagnoses) && $diagnoses->isNotEmpty())
+                                        <th class="py-3 text-muted text-uppercase small fw-bold" style="letter-spacing: 0.5px;">
+                                            Diagnosis
+                                        </th>
+                                    @endif
+                                    @if(in_array($type, ['complaints','chief-complaints','kcos','sac','lid','conj','cornea','ac','iris','pupil','lens','em','covertest','disc','fr','diagnosis','diagnoses','advice','advices']))
+                                        <th class="py-3 text-muted text-uppercase small fw-bold text-center" style="letter-spacing:0.5px;width:90px;">
+                                            Favourite
+                                        </th>
+                                    @endif
                                     @if($canWrite)
                                         <th width="15%" class="text-end pe-4 py-3 text-muted text-uppercase small fw-bold">Actions</th>
                                     @endif
@@ -135,6 +145,31 @@
                                         @foreach($columns as $col)
                                             <td class="fw-medium text-dark py-3">{{ $record->$col }}</td>
                                         @endforeach
+                                        @if(in_array($type, ['advice','advices']) && isset($diagnoses) && $diagnoses->isNotEmpty())
+                                            <td class="py-3">
+                                                @if($record->diagnosis)
+                                                    <span style="font-size:.78rem;font-weight:700;color:#0d6949;background:rgba(13,105,73,.08);border:1px solid rgba(13,105,73,.2);border-radius:999px;padding:.2rem .6rem;">
+                                                        <i class="bi bi-clipboard2-pulse me-1"></i>{{ $record->diagnosis->value }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted small">—</span>
+                                                @endif
+                                            </td>
+                                        @endif
+                                        @if(in_array($type, ['complaints','chief-complaints','kcos','sac','lid','conj','cornea','ac','iris','pupil','lens','em','covertest','disc','fr','diagnosis','diagnoses','advice','advices']))
+                                            <td class="py-3 text-center">
+                                                <button type="button"
+                                                        class="btn btn-sm fav-toggle-btn border-0 bg-transparent p-1"
+                                                        data-id="{{ $record->id }}"
+                                                        data-state="{{ $record->is_favourite ? '1' : '0' }}"
+                                                        data-url="{{ route('hospital.masters.detail.toggle-favourite', ['slug' => $slug, 'type' => $type, 'id' => $record->id]) }}"
+                                                        title="{{ $record->is_favourite ? 'Remove favourite' : 'Mark as favourite' }}"
+                                                        style="font-size:1.4rem;line-height:1;transition:transform .15s;">
+                                                    <i class="bi {{ $record->is_favourite ? 'bi-heart-fill' : 'bi-heart' }}"
+                                                       style="color:{{ $record->is_favourite ? '#e11d48' : '#cbd5e1' }};"></i>
+                                                </button>
+                                            </td>
+                                        @endif
                                         @if($canWrite)
                                             <td class="text-end pe-4">
                                                 <div class="btn-group shadow-sm rounded-3" role="group">
@@ -222,6 +257,24 @@
                                            required>
                                 </div>
                             @endforeach
+
+                            @if(in_array($type, ['advice','advices']) && isset($diagnoses) && $diagnoses->isNotEmpty())
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">
+                                    <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosis
+                                </label>
+                                <select name="diagnosis_id"
+                                        id="input-diagnosis_id"
+                                        class="form-select form-select-lg case-master-input"
+                                        style="font-size: 15px;">
+                                    <option value="">— Select diagnosis (optional) —</option>
+                                    @foreach($diagnoses as $diag)
+                                        <option value="{{ $diag->id }}">{{ $diag->value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            @endif
+
                         </div>
 
                         <div class="modal-footer border-0 gap-2">
@@ -289,6 +342,11 @@
             if (field) { field.value = value ?? ''; }
         }
 
+        // Diagnosis dropdown (advice type)
+        const diagSel = document.getElementById('input-diagnosis_id');
+        if (diagSel) { diagSel.value = record.diagnosis_id ?? ''; }
+
+
         @if($useModalLayout)
             bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
         @else
@@ -296,6 +354,43 @@
         @endif
     }
     window.editRecord = editRecord;
+
+    // Heart / favourite toggle
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.fav-toggle-btn');
+        if (!btn) return;
+
+        const icon    = btn.querySelector('i');
+        const current = btn.dataset.state === '1';
+        const newState = !current;
+
+        // Optimistic UI
+        btn.dataset.state = newState ? '1' : '0';
+        icon.className    = 'bi ' + (newState ? 'bi-heart-fill' : 'bi-heart');
+        icon.style.color  = newState ? '#e11d48' : '#cbd5e1';
+        btn.title         = newState ? 'Remove favourite' : 'Mark as favourite';
+        btn.style.transform = 'scale(1.3)';
+        setTimeout(() => btn.style.transform = '', 200);
+
+        fetch(btn.dataset.url, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            },
+        }).then(r => r.json()).then(data => {
+            const confirmed = data.is_favourite;
+            btn.dataset.state = confirmed ? '1' : '0';
+            icon.className    = 'bi ' + (confirmed ? 'bi-heart-fill' : 'bi-heart');
+            icon.style.color  = confirmed ? '#e11d48' : '#cbd5e1';
+            btn.title         = confirmed ? 'Remove favourite' : 'Mark as favourite';
+        }).catch(() => {
+            // revert on error
+            btn.dataset.state = current ? '1' : '0';
+            icon.className    = 'bi ' + (current ? 'bi-heart-fill' : 'bi-heart');
+            icon.style.color  = current ? '#e11d48' : '#cbd5e1';
+        });
+    });
 
     @if($errors->any() && old('_method') === 'PUT' && old('_edit_id'))
     document.addEventListener('DOMContentLoaded', function () {

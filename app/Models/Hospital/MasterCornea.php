@@ -12,5 +12,7 @@ class MasterCornea extends Model
 
     protected $table = 'tbl_master_cornea';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }

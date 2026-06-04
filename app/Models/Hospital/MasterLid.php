@@ -12,5 +12,7 @@ class MasterLid extends Model
 
     protected $table = 'tbl_master_lid';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }

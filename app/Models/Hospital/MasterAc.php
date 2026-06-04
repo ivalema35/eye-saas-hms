@@ -12,5 +12,7 @@ class MasterAc extends Model
 
     protected $table = 'tbl_master_ac';
 
-    protected $fillable = ['value'];
+    protected $fillable = ['value', 'is_favourite'];
+
+    protected $casts = ['is_favourite' => 'boolean'];
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hospital\Medicine;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
+use App\Models\Hospital\MasterDiagnosis;
 use App\Models\Hospital\MasterMedicineInstruction;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
@@ -18,16 +19,17 @@ class MedicineGroupController extends Controller
 {
     public function index(string $slug): View
     {
-        $groups = MedicineGroup::with(['items'])
+        $groups = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route', 'diagnosis'])
             ->withCount('items')
             ->latest()
             ->paginate((int) config('app.pagination_limit', 25));
         $medicines    = Medicine::orderBy('name')->get();
         $dosages      = Dosage::orderBy('dosage')->get();
         $routes       = MedicineRoute::orderBy('name')->get();
+        $diagnoses    = MasterDiagnosis::orderBy('value')->get();
         $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.index', compact('slug', 'groups', 'medicines', 'dosages', 'routes', 'instructions'));
+        return view('hospital.medicine_groups.index', compact('slug', 'groups', 'medicines', 'dosages', 'routes', 'diagnoses', 'instructions'));
     }
 
     public function create(string $slug): View
@@ -35,9 +37,10 @@ class MedicineGroupController extends Controller
         $medicines    = Medicine::orderBy('name')->get();
         $dosages      = Dosage::orderBy('dosage')->get();
         $routes       = MedicineRoute::orderBy('name')->get();
+        $diagnoses    = MasterDiagnosis::orderBy('value')->get();
         $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.create', compact('slug', 'medicines', 'dosages', 'routes', 'instructions'));
+        return view('hospital.medicine_groups.create', compact('slug', 'medicines', 'dosages', 'routes', 'diagnoses', 'instructions'));
     }
 
     public function store(Request $request, string $slug): RedirectResponse
@@ -45,6 +48,7 @@ class MedicineGroupController extends Controller
         $request->validate([
             'name'                   => ['required', 'string', 'max:255'],
             'group_code'             => ['nullable', 'string', 'max:50'],
+            'diagnosis_id'           => ['nullable', 'exists:tbl_master_diagnosis,id'],
             'items'                  => ['required', 'array', 'min:1'],
             'items.*.medicine_id'    => ['required', 'exists:medicines,id'],
             'items.*.dosage_id'      => ['nullable', 'exists:dosages,id'],
@@ -57,25 +61,26 @@ class MedicineGroupController extends Controller
 
         DB::transaction(function () use ($request) {
             $group = MedicineGroup::create([
-                'name'       => $request->name,
-                'group_code' => $request->group_code ?? null,
+                'name'         => $request->name,
+                'group_code'   => $request->group_code ?? null,
+                'diagnosis_id' => $request->diagnosis_id ?: null,
             ]);
 
             $tenantId = config('app.tenant_id');
             $now = now();
 
             $items = collect($request->items)->map(fn ($item) => [
-                'tenant_id' => $tenantId,
+                'tenant_id'        => $tenantId,
                 'medicine_group_id' => $group->id,
-                'medicine_id' => $item['medicine_id'],
-                'dosage_id'    => $item['dosage_id'] ?: null,
-                'route_id'     => $item['route_id'] ?: null,
-                'frequency'    => $item['frequency'] ?? null,
-                'duration'     => $item['duration'] ?? null,
-                'instructions' => $item['instructions'] ?? null,
-                'quantity'     => $item['quantity'],
-                'created_at' => $now,
-                'updated_at' => $now,
+                'medicine_id'      => $item['medicine_id'],
+                'dosage_id'        => $item['dosage_id'] ?: null,
+                'route_id'         => $item['route_id'] ?: null,
+                'frequency'        => $item['frequency'] ?? null,
+                'duration'         => $item['duration'] ?? null,
+                'instructions'     => $item['instructions'] ?? null,
+                'quantity'         => $item['quantity'],
+                'created_at'       => $now,
+                'updated_at'       => $now,
             ])->all();
 
             MedicineGroupItem::insert($items);
@@ -87,13 +92,14 @@ class MedicineGroupController extends Controller
 
     public function show(string $slug, int $id): View
     {
-        $group = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route'])->findOrFail($id);
+        $group = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route', 'diagnosis'])->findOrFail($id);
         $medicines    = Medicine::orderBy('name')->get();
         $dosages      = Dosage::orderBy('dosage')->get();
         $routes       = MedicineRoute::orderBy('name')->get();
+        $diagnoses    = MasterDiagnosis::orderBy('value')->get();
         $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.show', compact('slug', 'group', 'medicines', 'dosages', 'routes', 'instructions'));
+        return view('hospital.medicine_groups.show', compact('slug', 'group', 'medicines', 'dosages', 'routes', 'diagnoses', 'instructions'));
     }
 
     public function edit(string $slug, int $id): View
@@ -102,9 +108,10 @@ class MedicineGroupController extends Controller
         $medicines    = Medicine::orderBy('name')->get();
         $dosages      = Dosage::orderBy('dosage')->get();
         $routes       = MedicineRoute::orderBy('name')->get();
+        $diagnoses    = MasterDiagnosis::orderBy('value')->get();
         $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.edit', compact('slug', 'group', 'medicines', 'dosages', 'routes', 'instructions'));
+        return view('hospital.medicine_groups.edit', compact('slug', 'group', 'medicines', 'dosages', 'routes', 'diagnoses', 'instructions'));
     }
 
     public function update(Request $request, string $slug, int $id): RedirectResponse
@@ -114,6 +121,7 @@ class MedicineGroupController extends Controller
         $request->validate([
             'name'                   => ['required', 'string', 'max:255'],
             'group_code'             => ['nullable', 'string', 'max:50'],
+            'diagnosis_id'           => ['nullable', 'exists:tbl_master_diagnosis,id'],
             'items'                  => ['required', 'array', 'min:1'],
             'items.*.medicine_id'    => ['required', 'exists:medicines,id'],
             'items.*.dosage_id'      => ['nullable', 'exists:dosages,id'],
@@ -126,8 +134,9 @@ class MedicineGroupController extends Controller
 
         DB::transaction(function () use ($request, $group) {
             $group->update([
-                'name'       => $request->name,
-                'group_code' => $request->group_code ?? null,
+                'name'         => $request->name,
+                'group_code'   => $request->group_code ?? null,
+                'diagnosis_id' => $request->diagnosis_id ?: null,
             ]);
 
             $group->items()->delete();
@@ -136,17 +145,17 @@ class MedicineGroupController extends Controller
             $now = now();
 
             $items = collect($request->items)->map(fn ($item) => [
-                'tenant_id' => $tenantId,
+                'tenant_id'        => $tenantId,
                 'medicine_group_id' => $group->id,
-                'medicine_id' => $item['medicine_id'],
-                'dosage_id'    => $item['dosage_id'] ?: null,
-                'route_id'     => $item['route_id'] ?: null,
-                'frequency'    => $item['frequency'] ?? null,
-                'duration'     => $item['duration'] ?? null,
-                'instructions' => $item['instructions'] ?? null,
-                'quantity'     => $item['quantity'],
-                'created_at' => $now,
-                'updated_at' => $now,
+                'medicine_id'      => $item['medicine_id'],
+                'dosage_id'        => $item['dosage_id'] ?: null,
+                'route_id'         => $item['route_id'] ?: null,
+                'frequency'        => $item['frequency'] ?? null,
+                'duration'         => $item['duration'] ?? null,
+                'instructions'     => $item['instructions'] ?? null,
+                'quantity'         => $item['quantity'],
+                'created_at'       => $now,
+                'updated_at'       => $now,
             ])->all();
 
             MedicineGroupItem::insert($items);

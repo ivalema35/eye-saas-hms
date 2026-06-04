@@ -283,7 +283,7 @@
                 <input type="hidden" name="group_id" id="group-id" value="{{ old('group_id') }}">
 
                 <div class="modal-body">
-                    <div class="row mb-4 g-3">
+                    <div class="row mb-3 g-3">
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="group-name"
@@ -299,6 +299,22 @@
                                    class="form-control clinical-input @error('group_code') is-invalid @enderror"
                                    placeholder="e.g. CAT-001">
                             @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    <div class="row mb-4 g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-medium">
+                                <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosis
+                            </label>
+                            <select name="diagnosis_id" id="group-diagnosis"
+                                    class="form-select clinical-input @error('diagnosis_id') is-invalid @enderror">
+                                <option value="">— Select diagnosis —</option>
+                                @foreach($diagnoses as $d)
+                                    <option value="{{ $d->id }}">{{ $d->value }}</option>
+                                @endforeach
+                            </select>
+                            @error('diagnosis_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
@@ -483,6 +499,7 @@ function resetGroupForm() {
     document.getElementById('group-id').value = '';
     document.getElementById('group-name').value = '';
     document.getElementById('group-code').value = '';
+    $('#group-diagnosis').val('').trigger('change.select2');
     $('#groupRepeaterBody .medicine-select, #groupRepeaterBody [data-field="dosage_id"], #groupRepeaterBody [data-field="route_id"]').select2('destroy');
     document.getElementById('groupRepeaterBody').innerHTML = '';
     addGroupRow({}, false);
@@ -498,6 +515,7 @@ function openGroupEditModal(record) {
     document.getElementById('group-id').value   = record.id ?? '';
     document.getElementById('group-name').value  = record.name ?? '';
     document.getElementById('group-code').value  = record.group_code ?? '';
+    $('#group-diagnosis').val(record.diagnosis_id ?? '').trigger('change.select2');
     document.getElementById('groupRepeaterBody').innerHTML = '';
 
     const items = record.items && record.items.length ? record.items : [{}];
@@ -520,6 +538,14 @@ document.addEventListener('DOMContentLoaded', function () {
     if (groupModalEl && groupModalEl.parentElement !== document.body) {
         document.body.appendChild(groupModalEl);
     }
+
+    // Diagnosis Select2
+    $('#group-diagnosis').select2({
+        dropdownParent: $('#groupFormModal'),
+        placeholder: 'Search diagnosis...',
+        allowClear: true,
+        width: '100%',
+    });
 
     document.getElementById('groupAddRowBtn').addEventListener('click', function () {
         addGroupRow({}, true);
@@ -562,6 +588,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('group-id').value = @json(old('group_id', ''));
         document.getElementById('group-name').value = @json(old('name', ''));
         document.getElementById('group-code').value = @json(old('group_code', ''));
+        $('#group-diagnosis').val(@json(old('diagnosis_id', ''))).trigger('change.select2');
         document.getElementById('groupRepeaterBody').innerHTML = '';
 
         if (document.getElementById('groupFormMethod').value === 'PUT' && document.getElementById('group-id').value) {

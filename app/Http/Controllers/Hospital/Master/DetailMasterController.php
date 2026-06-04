@@ -81,24 +81,69 @@ class DetailMasterController extends Controller
         return $map[$type];
     }
 
+    private function isAdviceType(string $type): bool
+    {
+        return in_array($type, ['advice', 'advices'], true);
+    }
+
+    private function isComplaintType(string $type): bool
+    {
+        return in_array($type, ['complaints', 'chief-complaints'], true);
+    }
+
+    private function isKcoType(string $type): bool
+    {
+        return in_array($type, ['kcos'], true);
+    }
+
+    private function hasFavourite(string $type): bool
+    {
+        return $this->isComplaintType($type)
+            || $this->isKcoType($type)
+            || in_array($type, ['sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest'], true)
+            || in_array($type, ['disc', 'fr'], true)
+            || in_array($type, ['diagnosis', 'diagnoses', 'advice', 'advices'], true);
+    }
+
     public function index(string $slug, string $type): View
     {
         $modelClass = $this->resolveModel($type);
-        $instance = new $modelClass;
-        $records = $modelClass::latest()->get();
-        $columns = array_values(array_diff($instance->getFillable(), ['tenant_id']));
-        $title = Str::headline($type);
-        $routeGroup = 'hospital.masters.detail';
+        $instance   = new $modelClass;
+
+        $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
+        $columns     = array_values(array_diff($instance->getFillable(), $excludeCols));
+        $title       = Str::headline($type);
+        $routeGroup  = 'hospital.masters.detail';
+
+        $withRelations = $this->isAdviceType($type) ? ['diagnosis'] : [];
+        $query = $modelClass::with($withRelations);
+        if ($this->hasFavourite($type)) {
+            $query->orderByDesc('is_favourite')->orderBy('value');
+        } else {
+            $query->latest();
+        }
+        $records = $query->get();
+        $diagnoses  = $this->isAdviceType($type) ? MasterDiagnosis::orderBy('value')->get() : collect();
 
         return view('hospital.masters.dynamic_index',
-            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup'));
+            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup', 'diagnoses'));
     }
 
     public function store(Request $request, string $slug, string $type): RedirectResponse
     {
-        $modelClass = $this->resolveModel($type);
-        $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
-        $validated = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+        $modelClass  = $this->resolveModel($type);
+        $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
+        $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
+        $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+
+        if ($this->isAdviceType($type)) {
+            $request->validate(['diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id']]);
+            $validated['diagnosis_id'] = $request->diagnosis_id ?: null;
+        }
+
+        if ($this->hasFavourite($type)) {
+            $validated['is_favourite'] = $request->boolean('is_favourite');
+        }
 
         $modelClass::create($validated);
 
@@ -107,14 +152,34 @@ class DetailMasterController extends Controller
 
     public function update(Request $request, string $slug, string $type, int $id): RedirectResponse
     {
-        $modelClass = $this->resolveModel($type);
-        $record = $modelClass::findOrFail($id);
-        $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
-        $validated = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+        $modelClass  = $this->resolveModel($type);
+        $record      = $modelClass::findOrFail($id);
+        $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
+        $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
+        $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+
+        if ($this->isAdviceType($type)) {
+            $request->validate(['diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id']]);
+            $validated['diagnosis_id'] = $request->diagnosis_id ?: null;
+        }
+
+        if ($this->hasFavourite($type)) {
+            $validated['is_favourite'] = $request->boolean('is_favourite');
+        }
 
         $record->update($validated);
 
         return redirect()->back()->with('success', Str::headline($type).' updated successfully.');
+    }
+
+    public function toggleFavourite(string $slug, string $type, int $id)
+    {
+        abort_unless($this->hasFavourite($type), 404);
+
+        $record = $this->resolveModel($type)::findOrFail($id);
+        $record->update(['is_favourite' => ! $record->is_favourite]);
+
+        return response()->json(['is_favourite' => $record->is_favourite]);
     }
 
     public function destroy(string $slug, string $type, int $id): RedirectResponse
