@@ -92,7 +92,7 @@
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
                             First Name <span style="color:#C0392B;font-weight:700">*</span>
-                        </label 
+                        </label>
                         <input type="text" name="first_name" id="firstName"
                                value="{{ old('first_name') }}"
                                class="form-control @error('first_name') is-invalid @enderror" required
