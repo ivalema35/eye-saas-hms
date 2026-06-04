@@ -134,7 +134,7 @@
 
             <div class="reg-form-body">
 
-                @if($errors->any())
+                <!-- @if($errors->any())
                     <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
                         <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
                         <div style="font-size:.875rem">
@@ -143,7 +143,7 @@
                             @endforeach
                         </div>
                     </div>
-                @endif
+                @endif -->
 
                 <form method="POST" action="{{ route('register.store') }}" id="registerForm">
                     @csrf
@@ -223,10 +223,12 @@
                         <div class="hms-form-group">
                             <label>Phone Number *</label>
                             <input type="tel" name="admin_phone"
-                                   class="hms-input @error('admin_phone') is-invalid @enderror"
-                                   value="{{ old('admin_phone') }}"
-                                   placeholder="9876543210" required
-                                   pattern="[0-9]{10}" maxlength="10">
+                            class="hms-input @error('admin_phone') is-invalid @enderror"
+                            value="{{ old('admin_phone') }}"
+                            placeholder="9876543210"
+                            required
+                            maxlength="10"
+                            oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                             @error('admin_phone')
                                 <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
                             @enderror

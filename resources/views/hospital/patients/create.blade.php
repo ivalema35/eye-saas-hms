@@ -79,10 +79,20 @@
 
                 {{-- Row 1: First Name + Surname + Middle Name --}}
                 <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
+                    <!-- <div class="form-group">
+                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
+                            MRD NO <span style="color:#C0392B;font-weight:700">*</span></label>
+                        <input type="text" name="mrd_no" id="mrdNo"
+                               value="{{ old('mrd_no') }}"
+                               class="form-control @error('mrd_no') is-invalid @enderror" required
+                               placeholder="e.g. MRD12345"
+                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
+                        @error('mrd_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    </div> -->
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
                             First Name <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
+                        </label 
                         <input type="text" name="first_name" id="firstName"
                                value="{{ old('first_name') }}"
                                class="form-control @error('first_name') is-invalid @enderror" required

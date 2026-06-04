@@ -1417,7 +1417,7 @@
                 <div>
                     <p class="metric-label">Staff</p>
                     <div class="metric-value">{{ $totalDoctors + $totalReceptions }}</div>
-                    <p class="metric-meta">Drs: {{ $totalDoctors }} &bull; Rec: {{ $totalReceptions }}</p>
+                    <!-- <p class="metric-meta">Drs: {{ $totalDoctors }} &bull; Rec: {{ $totalReceptions }}</p> -->
                 </div>
             </div>
         </div>
