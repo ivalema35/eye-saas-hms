@@ -64,7 +64,7 @@
 
     .group-form-modal .group-modal-table {
         border-collapse: separate;
-        border-spacing: 0 8px;
+        border-spacing: 0 10px;
         min-width: 900px;
     }
 
@@ -72,7 +72,7 @@
         background: #1B4F72 !important;
         color: #fff !important;
         border: 0 !important;
-        padding: .82rem .9rem;
+        padding: .9rem 1rem;
         font-size: .72rem;
         letter-spacing: .08em;
         font-weight: 900;
@@ -90,24 +90,135 @@
         border-bottom-right-radius: 14px;
     }
 
+    .group-form-modal .group-modal-table tbody tr {
+        box-shadow: 0 2px 12px rgba(27,79,114,.08);
+        transition: box-shadow .2s ease;
+    }
+
+    .group-form-modal .group-modal-table tbody tr:hover {
+        box-shadow: 0 6px 20px rgba(27,79,114,.14);
+    }
+
     .group-form-modal .group-modal-table tbody td {
-        background: rgba(255, 255, 255, .92);
-        border-top: 1px solid rgba(27, 79, 114, .08);
-        border-bottom: 1px solid rgba(27, 79, 114, .08);
-        padding: .65rem;
+        background: #fff;
+        border-top: 1px solid rgba(27, 79, 114, .10);
+        border-bottom: 1px solid rgba(27, 79, 114, .10);
+        padding: .75rem .8rem;
         vertical-align: middle;
     }
 
     .group-form-modal .group-modal-table tbody td:first-child {
-        border-left: 1px solid rgba(27, 79, 114, .08);
+        border-left: 1px solid rgba(27, 79, 114, .10);
         border-top-left-radius: 14px;
         border-bottom-left-radius: 14px;
     }
 
     .group-form-modal .group-modal-table tbody td:last-child {
-        border-right: 1px solid rgba(27, 79, 114, .08);
+        border-right: 1px solid rgba(27, 79, 114, .10);
         border-top-right-radius: 14px;
         border-bottom-right-radius: 14px;
+    }
+
+    /* Styled inputs & selects inside table */
+    .group-form-modal .group-modal-table .form-select,
+    .group-form-modal .group-modal-table .form-control {
+        border: 1.5px solid rgba(27,79,114,.18) !important;
+        border-radius: 10px !important;
+        background: rgba(235,245,251,.35) !important;
+        color: #1B4F72 !important;
+        font-weight: 600;
+        font-size: .85rem;
+        padding: .45rem .8rem;
+        transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+
+    .group-form-modal .group-modal-table .form-select:focus,
+    .group-form-modal .group-modal-table .form-control:focus {
+        border-color: #1B4F72 !important;
+        background: #fff !important;
+        box-shadow: 0 0 0 3px rgba(27,79,114,.12) !important;
+        outline: none;
+    }
+
+    .group-form-modal .group-modal-table .form-select option {
+        color: #1B4F72;
+        font-weight: 500;
+    }
+
+    /* Select2 custom styling */
+    .group-form-modal .select2-container .select2-selection--single {
+        height: 38px !important;
+        border: 1.5px solid rgba(27,79,114,.18) !important;
+        border-radius: 10px !important;
+        background: rgba(235,245,251,.35) !important;
+        display: flex;
+        align-items: center;
+    }
+    .group-form-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
+        color: #1B4F72 !important;
+        font-weight: 600;
+        font-size: .85rem;
+        padding-left: .8rem;
+        line-height: 36px;
+    }
+    .group-form-modal .select2-container--default .select2-selection--single .select2-selection__placeholder {
+        color: rgba(27,79,114,.5) !important;
+    }
+    .group-form-modal .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 36px !important;
+        right: 8px;
+    }
+    .group-form-modal .select2-container--default.select2-container--focus .select2-selection--single,
+    .group-form-modal .select2-container--default.select2-container--open .select2-selection--single {
+        border-color: #1B4F72 !important;
+        background: #fff !important;
+        box-shadow: 0 0 0 3px rgba(27,79,114,.12) !important;
+    }
+    .group-form-modal .select2-dropdown {
+        border: 1.5px solid rgba(27,79,114,.2) !important;
+        border-radius: 12px !important;
+        box-shadow: 0 8px 24px rgba(27,79,114,.15) !important;
+        overflow: hidden;
+    }
+    .group-form-modal .select2-search--dropdown .select2-search__field {
+        border: 1.5px solid rgba(27,79,114,.18) !important;
+        border-radius: 8px !important;
+        padding: .4rem .7rem;
+        color: #1B4F72;
+        font-size: .85rem;
+    }
+    .group-form-modal .select2-results__option {
+        font-size: .85rem;
+        color: #1B4F72;
+        padding: .5rem .8rem;
+    }
+    .group-form-modal .select2-results__option--highlighted {
+        background: #1B4F72 !important;
+        color: #fff !important;
+    }
+    .group-form-modal .select2-results__option[aria-selected=true] {
+        background: rgba(27,79,114,.08) !important;
+        color: #1B4F72 !important;
+        font-weight: 700;
+    }
+
+    .group-form-modal .group-modal-table .btn-outline-danger {
+        border-radius: 50% !important;
+        width: 34px;
+        height: 34px;
+        padding: 0 !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-color: rgba(220,38,38,.3) !important;
+        color: #dc2626 !important;
+        transition: all .15s;
+    }
+
+    .group-form-modal .group-modal-table .btn-outline-danger:hover {
+        background: #dc2626 !important;
+        border-color: #dc2626 !important;
+        color: #fff !important;
     }
 
     .group-form-modal .group-modal-add-row,
@@ -172,18 +283,22 @@
                 <input type="hidden" name="group_id" id="group-id" value="{{ old('group_id') }}">
 
                 <div class="modal-body">
-                    <div class="row mb-4">
+                    <div class="row mb-4 g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">
-                                Group Name <span class="text-danger">*</span>
-                            </label>
+                            <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="group-name"
                                    value="{{ old('name') }}"
                                    class="form-control clinical-input @error('name') is-invalid @enderror"
                                    required placeholder="e.g. Cataract Post-Op Standard">
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Group Code</label>
+                            <input type="text" name="group_code" id="group-code"
+                                   value="{{ old('group_code') }}"
+                                   class="form-control clinical-input @error('group_code') is-invalid @enderror"
+                                   placeholder="e.g. CAT-001">
+                            @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
@@ -195,11 +310,11 @@
                         <table class="table premium-table align-middle group-modal-table">
                             <thead>
                                 <tr>
-                                    <th style="min-width:220px">Medicine</th>
-                                    <th style="min-width:160px">Dose</th>
-                                    <th style="min-width:190px">Instruction</th>
-                                    <th style="min-width:120px">Days</th>
-                                    <th style="width:90px" class="text-center">Qty</th>
+                                    <th style="min-width:200px">Medicine Name</th>
+                                    <th style="min-width:140px">Dosage</th>
+                                    <th style="min-width:100px">Days</th>
+                                    <th style="width:80px" class="text-center">Qty</th>
+                                    <th style="min-width:160px">Route of Administration</th>
                                     <th style="width:60px" class="text-end"></th>
                                 </tr>
                             </thead>
@@ -244,20 +359,18 @@
             </select>
         </td>
         <td>
-            <select class="form-select clinical-input-sm" data-field="instructions">
-                <option value="">Select instruction...</option>
-                @foreach($instructions as $inst)
-                    <option value="{{ $inst->value }}">{{ $inst->value }}</option>
-                @endforeach
-            </select>
-        </td>
-        <td>
-            <input type="text" class="form-control clinical-input-sm" required placeholder="e.g. 7"
-                   style="display:inline-block; width:60px;" data-field="duration"> Days
-            <input type="hidden" data-field="frequency" value="OD">
+            <input type="text" class="form-control clinical-input-sm" placeholder="e.g. 5 days" data-field="duration">
         </td>
         <td>
             <input type="number" class="form-control clinical-input-sm text-center" required min="1" value="1" data-field="quantity">
+        </td>
+        <td>
+            <select class="form-select clinical-input-sm" data-field="route_id">
+                <option value="">Select route...</option>
+                @foreach($routes as $r)
+                    <option value="{{ $r->id }}">{{ $r->name }}</option>
+                @endforeach
+            </select>
         </td>
         <td class="text-end">
             <button type="button" class="btn btn-outline-danger btn-sm remove-row" title="Remove">
@@ -270,9 +383,42 @@
 @push('scripts')
 <script>
 const groupStoreUrl = "{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}";
+
+// Medicine data map for auto-fill
+@php
+$medicineMap = $medicines->keyBy('id')->map(function($m) {
+    return ['dosage_id' => $m->dosage_id, 'duration' => $m->duration, 'qty' => $m->qty];
+});
+@endphp
+const medicineDataMap = @json($medicineMap);
 const groupUpdateBase = "{{ route('hospital.medicine-groups.update', ['slug' => $slug, 'medicine_group' => '__ID__']) }}";
 
 let groupRowIndex = 0;
+
+function initMedicineSelect2(selectEl) {
+    $(selectEl).select2({
+        dropdownParent: $('#groupFormModal'),
+        placeholder: 'Search medicine...',
+        allowClear: true,
+        width: '100%',
+    }).on('change', function () {
+        const row = $(this).closest('tr')[0];
+        const med = medicineDataMap[this.value];
+        if (!med) return;
+
+        // Dosage — use Select2 trigger since it's also Select2
+        const dosageSel = row.querySelector('[data-field="dosage_id"]');
+        if (dosageSel && med.dosage_id) {
+            $(dosageSel).val(med.dosage_id).trigger('change.select2');
+        }
+
+        // Duration & Qty — plain inputs
+        const durInput = row.querySelector('[data-field="duration"]');
+        const qtyInput = row.querySelector('[data-field="quantity"]');
+        if (durInput && med.duration) durInput.value = med.duration;
+        if (qtyInput && med.qty)      qtyInput.value = med.qty;
+    });
+}
 
 function addGroupRow(item = {}, canRemove = true) {
     const template = document.getElementById('groupItemRowTemplate');
@@ -283,16 +429,49 @@ function addGroupRow(item = {}, canRemove = true) {
     row.querySelectorAll('[data-field]').forEach(function (field) {
         const fieldName = field.dataset.field;
         field.name = `items[${index}][${fieldName}]`;
-        field.value = item[fieldName] ?? (fieldName === 'quantity' ? '1' : (fieldName === 'frequency' ? 'OD' : ''));
+        const val = item[fieldName] ?? (fieldName === 'quantity' ? '1' : '');
+        field.value = val;
     });
 
     const removeBtn = row.querySelector('.remove-row');
     removeBtn.disabled = !canRemove;
     removeBtn.addEventListener('click', function () {
+        $(row).find('.medicine-select, [data-field="dosage_id"], [data-field="route_id"]').select2('destroy');
         row.remove();
     });
 
     document.getElementById('groupRepeaterBody').appendChild(row);
+
+    // Init Select2 on medicine select
+    const medicineSel = row.querySelector('.medicine-select');
+    if (medicineSel) {
+        initMedicineSelect2(medicineSel);
+        if (item.medicine_id) $(medicineSel).val(item.medicine_id).trigger('change.select2');
+    }
+
+    // Init Select2 on dosage select
+    const dosageSel = row.querySelector('[data-field="dosage_id"]');
+    if (dosageSel) {
+        $(dosageSel).select2({
+            dropdownParent: $('#groupFormModal'),
+            placeholder: 'Select dosage...',
+            allowClear: true,
+            width: '100%',
+        });
+        if (item.dosage_id) $(dosageSel).val(item.dosage_id).trigger('change.select2');
+    }
+
+    // Init Select2 on route select
+    const routeSel = row.querySelector('[data-field="route_id"]');
+    if (routeSel) {
+        $(routeSel).select2({
+            dropdownParent: $('#groupFormModal'),
+            placeholder: 'Select route...',
+            allowClear: true,
+            width: '100%',
+        });
+        if (item.route_id) $(routeSel).val(item.route_id).trigger('change.select2');
+    }
 }
 
 function resetGroupForm() {
@@ -303,6 +482,8 @@ function resetGroupForm() {
     document.getElementById('groupFormMethod').value = 'POST';
     document.getElementById('group-id').value = '';
     document.getElementById('group-name').value = '';
+    document.getElementById('group-code').value = '';
+    $('#groupRepeaterBody .medicine-select, #groupRepeaterBody [data-field="dosage_id"], #groupRepeaterBody [data-field="route_id"]').select2('destroy');
     document.getElementById('groupRepeaterBody').innerHTML = '';
     addGroupRow({}, false);
 }
@@ -314,19 +495,19 @@ function openGroupEditModal(record) {
     document.getElementById('groupFormSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i> Update Group';
     document.getElementById('groupForm').action = groupUpdateBase.replace('__ID__', record.id);
     document.getElementById('groupFormMethod').value = 'PUT';
-    document.getElementById('group-id').value = record.id ?? '';
-    document.getElementById('group-name').value = record.name ?? '';
+    document.getElementById('group-id').value   = record.id ?? '';
+    document.getElementById('group-name').value  = record.name ?? '';
+    document.getElementById('group-code').value  = record.group_code ?? '';
     document.getElementById('groupRepeaterBody').innerHTML = '';
 
     const items = record.items && record.items.length ? record.items : [{}];
     items.forEach(function (item, index) {
         addGroupRow({
             medicine_id: item.medicine_id ?? '',
-            dosage_id: item.dosage_id ?? '',
-            instructions: item.instructions ?? '',
-            duration: item.duration ?? '',
-            frequency: item.frequency ?? 'OD',
-            quantity: item.quantity ?? '1',
+            dosage_id:   item.dosage_id ?? '',
+            route_id:    item.route_id ?? '',
+            duration:    item.duration ?? '',
+            quantity:    item.quantity ?? '1',
         }, index !== 0);
     });
 
@@ -344,6 +525,28 @@ document.addEventListener('DOMContentLoaded', function () {
         addGroupRow({}, true);
     });
 
+    // Auto-fill row fields when medicine is selected
+    document.getElementById('groupRepeaterBody').addEventListener('change', function (e) {
+        const sel = e.target;
+        if (!sel.classList.contains('medicine-select')) return;
+
+        const row  = sel.closest('tr');
+        const med  = medicineDataMap[sel.value];
+        if (!med) return;
+
+        // dosage_id
+        const dosageSel = row.querySelector('[data-field="dosage_id"], [name$="[dosage_id]"]');
+        if (dosageSel && med.dosage_id) dosageSel.value = med.dosage_id;
+
+        // duration
+        const durInput = row.querySelector('[data-field="duration"], [name$="[duration]"]');
+        if (durInput && med.duration) durInput.value = med.duration;
+
+        // qty
+        const qtyInput = row.querySelector('[data-field="quantity"], [name$="[quantity]"]');
+        if (qtyInput && med.qty) qtyInput.value = med.qty;
+    });
+
     document.querySelectorAll('.edit-group-modal-btn').forEach(function (btn) {
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -358,6 +561,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('groupFormMethod').value = @json(old('_method', 'POST'));
         document.getElementById('group-id').value = @json(old('group_id', ''));
         document.getElementById('group-name').value = @json(old('name', ''));
+        document.getElementById('group-code').value = @json(old('group_code', ''));
         document.getElementById('groupRepeaterBody').innerHTML = '';
 
         if (document.getElementById('groupFormMethod').value === 'PUT' && document.getElementById('group-id').value) {

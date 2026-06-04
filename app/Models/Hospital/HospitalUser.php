@@ -49,6 +49,7 @@ class HospitalUser extends Authenticatable
         'contact',
         'status',
         'doctor_type',       // Only for Doctor role: primary | secondary
+        'doctor_prefix',     // Only for Doctor role: 2-5 char prefix for daily serial (e.g. JP)
         'foc_permission',    // Only for Doctor role: boolean
         'last_login_at',
     ];

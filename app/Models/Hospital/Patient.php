@@ -29,6 +29,7 @@ class Patient extends Model
     protected $fillable = [
         'tenant_id',
         'patient_code',
+        'doctor_patient_no',
         'first_name',
         'middle_name',
         'last_name',

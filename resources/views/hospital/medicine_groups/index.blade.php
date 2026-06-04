@@ -26,42 +26,12 @@
         color: var(--group-secondary);
     }
 
-    .medicine-groups-page .group-nav-tabs {
-        background: var(--card-bg, #f7fbff);
-        padding: 10px;
-        border-radius: 14px;
-        border: none;
-        display: flex;
-        gap: .5rem;
-        align-items: center;
-        box-shadow: none;
-    }
-
-    .medicine-groups-page .group-nav-tabs .nav-item {
-        margin: 0;
-    }
-    
-    .medicine-groups-page .group-nav-tabs .nav-link {
-        border: none !important;
-        background: transparent;
-        color: var(--muted-color, #1f3560);
-        padding: .5rem .9rem;
-        border-radius: 999px;
-        box-shadow: none;
-        transition: all .15s ease-in-out;
-        display: inline-flex;
-        align-items: center;
-    }
-
-    .medicine-groups-page .group-nav-tabs .nav-link i {
-        margin-right: .5rem;
-    }
-
-    .medicine-groups-page .group-nav-tabs .nav-link.active {
-        background: var(--color-primary);
-        color: #ffffff !important;
-        box-shadow: 0 6px 18px rgba(36, 85, 160, .12);
-    }
+    .type-nav-tabs { background: var(--card-bg, #f7fbff); padding: 10px; border-radius: 14px; border: none; display: flex; gap: .5rem; align-items: center; box-shadow: none; }
+    .type-nav-tabs .nav-item { margin: 0; }
+    .type-nav-tabs .nav-link { border: none !important; background: transparent; color: var(--muted-color, #1f3560); padding: .5rem .9rem; border-radius: 999px; box-shadow: none; transition: all .15s ease-in-out; display: inline-flex; align-items: center; }
+    .type-nav-tabs .nav-link i { margin-right: .5rem; }
+    .type-nav-tabs .nav-link.active { background: var(--color-primary) !important; color: #ffffff !important; border-color: transparent !important; box-shadow: 0 6px 18px rgba(36,85,160,0.12); }
+    .type-nav-tabs .nav-link:hover { background: rgba(36,85,160,0.1); color: var(--muted-color, #1f3560) !important; }
 
     .medicine-groups-page .group-nav-tabs .nav-link:hover {
         background: rgba(36, 85, 160, .1);
@@ -298,7 +268,7 @@
     }
 </style>
 
-<ul class="nav nav-tabs mb-4 group-nav-tabs">
+<ul class="nav nav-tabs mb-4 type-nav-tabs">
     <li class="nav-item">
         <a class="nav-link"
            href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
@@ -306,14 +276,22 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
+        <a class="nav-link" href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
             <i class="bi bi-tags me-1"></i> Medicine Types
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
+        <a class="nav-link" href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
+            <i class="bi bi-grid me-1"></i> Medicine Categories
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
+            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
             <i class="bi bi-capsule me-1"></i> Medicines
         </a>
     </li>
@@ -323,12 +301,12 @@
             <i class="bi bi-collection me-1"></i> Medicine Groups
         </a>
     </li>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('hospital.medicine_instructions.*') ? 'active' : '' }}"
            href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
             <i class="bi bi-list-ul me-1"></i> Instructions
         </a>
-    </li>
+    </li> --}}
 </ul>
 
 <div class="card premium-card border-0 shadow-sm med-card group-card">

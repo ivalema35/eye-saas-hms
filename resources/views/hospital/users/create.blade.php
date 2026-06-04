@@ -83,6 +83,16 @@
                             </select>
                             @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
+
+                        <div class="hms-form-group doctor-only user-create-field" style="display:none">
+                            <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters, e.g. JP)</span></label>
+                            <input type="text" name="doctor_prefix" value="{{ strtoupper(old('doctor_prefix', '')) }}"
+                                   maxlength="5" placeholder="e.g. JP"
+                                   style="text-transform:uppercase"
+                                   class="hms-input @error('doctor_prefix') is-invalid @enderror">
+                            <div style="font-size:.73rem;color:#94A3B8;margin-top:.25rem">Used in daily patient serial: <strong>JP-1, JP-2…</strong> (resets each day)</div>
+                            @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
 <!-- 
                         <div class="hms-form-group doctor-only user-create-field user-create-checkbox-wrap" style="display:none">
                             <label>Doctor Access</label>

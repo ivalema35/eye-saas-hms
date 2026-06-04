@@ -267,11 +267,11 @@
                 <thead>
                     <tr>
                         <th style="width:40px">#</th>
-                        <th>Medicine</th>
+                        <th>Medicine Name</th>
                         <th>Dosage</th>
-                        <th>Instruction</th>
-                        <th>Duration</th>
+                        <th>Days</th>
                         <th class="text-center" style="width:80px">Qty</th>
+                        <th>Route of Administration</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -284,11 +284,11 @@
                             </span>
                         </td>
                         <td class="text-muted group-show-soft-cell">{{ $item->dosage?->dosage ?? '—' }}</td>
-                        <td>{{ $item->instructions ?? '—' }}</td>
-                        <td>{{ $item->duration }}</td>
+                        <td class="group-show-soft-cell">{{ $item->duration ?? '—' }}</td>
                         <td class="text-center">
                             <span class="badge text-bg-light border group-show-pill">{{ $item->quantity }}</span>
                         </td>
+                        <td class="group-show-soft-cell">{{ $item->route?->name ?? '—' }}</td>
                     </tr>
                     @endforeach
                 </tbody>

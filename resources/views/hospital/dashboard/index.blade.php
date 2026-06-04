@@ -1722,7 +1722,13 @@
                                 <td>{{ $patient->location?->city ?? '—' }} / {{ $patient->age }}y</td>
                                 <td>{{ $patient->slot_name ?? '—' }}</td>
                                 <td>{{ $patient->doctor?->name ?? '—' }}</td>
-                                <td>#{{ $patient->doctor_id ?? '—' }}</td>
+                                <td>
+                                    @if($patient->doctor_patient_no)
+                                        <strong>{{ ($patient->doctor?->doctor_prefix ?? '') ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) }}</strong>
+                                    @else
+                                        <span style="color:#94A3B8">—</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="b-badge {{ $processStatus === 'Pending' ? 'b-badge-warn' : ($processStatus === 'In Process' ? 'b-badge-info' : 'b-badge-green') }}">
                                         {{ $processStatus }}

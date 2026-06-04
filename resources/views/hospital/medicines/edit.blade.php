@@ -54,53 +54,78 @@
                         @enderror
                     </div>
 
+                    {{-- Medicine Name --}}
                     <div class="mb-3">
-                        <label class="form-label fw-medium">
-                            Medicine Name <span class="text-danger">*</span>
-                        </label>
-                        <input type="text" name="name"
-                               value="{{ old('name', $medicine->name) }}"
-                               class="form-control clinical-input @error('name') is-invalid @enderror"
-                               required>
-                        @error('name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label fw-medium">Medicine Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" value="{{ old('name', $medicine->name) }}"
+                               class="form-control clinical-input @error('name') is-invalid @enderror" required
+                               placeholder="e.g. Moxifloxacin Tab / Vigamox Caps / Oint">
+                        <div class="form-text text-muted" style="font-size:.75rem">Add Tab / Caps / Oint etc. at the end of name</div>
+                        @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label fw-medium">Brand Name</label>
-                        <input type="text" name="brand_name"
-                               value="{{ old('brand_name', $medicine->brand_name) }}"
-                               class="form-control clinical-input @error('brand_name') is-invalid @enderror">
-                        @error('brand_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="row g-3 mb-4">
+                    {{-- Dosage + Duration --}}
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Company / Manufacturer</label>
-                            <input type="text" name="company"
-                                   value="{{ old('company', $medicine->company) }}"
+                            <label class="form-label fw-medium">Medicine Dosage</label>
+                            <select name="dosage_id" class="form-select clinical-input @error('dosage_id') is-invalid @enderror">
+                                <option value="">Select dosage...</option>
+                                @foreach($dosages as $d)
+                                    <option value="{{ $d->id }}" {{ old('dosage_id', $medicine->dosage_id) == $d->id ? 'selected' : '' }}>
+                                        {{ $d->dosage }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('dosage_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Duration</label>
+                            <input type="text" name="duration" value="{{ old('duration', $medicine->duration) }}"
+                                   class="form-control clinical-input @error('duration') is-invalid @enderror"
+                                   placeholder="e.g. 4 days, 1 week">
+                            <div class="form-text text-muted" style="font-size:.75rem">e.g. 4 days</div>
+                            @error('duration')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+
+                    {{-- Qty + Company --}}
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Medicine Qty</label>
+                            <input type="text" name="qty" value="{{ old('qty', $medicine->qty) }}"
+                                   class="form-control clinical-input @error('qty') is-invalid @enderror"
+                                   placeholder="e.g. 10 tablets, 5ml">
+                            @error('qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Company Name</label>
+                            <input type="text" name="company" value="{{ old('company', $medicine->company) }}"
                                    class="form-control clinical-input @error('company') is-invalid @enderror"
                                    placeholder="e.g. Alcon, Sun Pharma">
-                            @error('company')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            @error('company')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Price (₹) <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <span class="input-group-text">₹</span>
-                                <input type="number" name="price" step="0.01" min="0"
-                                       value="{{ old('price', $medicine->price) }}"
-                                       class="form-control clinical-input @error('price') is-invalid @enderror"
-                                       placeholder="0.00" required>
-                            </div>
-                            @error('price')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    </div>
+
+                    {{-- Composition --}}
+                    <div class="mb-3">
+                        <label class="form-label fw-medium">Composition</label>
+                        <textarea name="composition" rows="2"
+                                  class="form-control clinical-input @error('composition') is-invalid @enderror"
+                                  placeholder="e.g. Moxifloxacin 0.5% w/v">{{ old('composition', $medicine->composition) }}</textarea>
+                        @error('composition')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
+                    {{-- Price --}}
+                    <div class="mb-4">
+                        <label class="form-label fw-medium">Price (₹) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">₹</span>
+                            <input type="number" name="price" step="0.01" min="0"
+                                   value="{{ old('price', $medicine->price) }}"
+                                   class="form-control clinical-input @error('price') is-invalid @enderror"
+                                   placeholder="0.00" required>
                         </div>
+                        @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
 
                     <div class="d-flex gap-2 justify-content-end border-top pt-3">

@@ -779,6 +779,16 @@
                             <i class="bi bi-tags"></i>
                             <span>Medicine Types</span>
                         </a>
+                        <a href="{{ route('hospital.medicine-categories.index', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.medicine-categories.*') ? 'active' : '' }}">
+                            <i class="bi bi-grid"></i>
+                            <span>Medicine Categories</span>
+                        </a>
+                        <a href="{{ route('hospital.medicine-routes.index', ['slug' => request()->route('slug')]) }}"
+                           class="hms-nav-item {{ request()->routeIs('hospital.medicine-routes.*') ? 'active' : '' }}">
+                            <i class="bi bi-arrow-right-circle"></i>
+                            <span>Route of Admin.</span>
+                        </a>
                         <a href="{{ route('hospital.medicine-dosages.index', ['slug' => request()->route('slug')]) }}"
                            class="hms-nav-item {{ request()->routeIs('hospital.medicine-dosages.*') ? 'active' : '' }}">
                             <i class="bi bi-eyedropper"></i>
@@ -870,7 +880,7 @@
             {{-- Page Header --}}
             @hasSection('page-header')
                 <div class="hms-page-header">
-                    <h1>@yield('page-header')</h1>
+                    <h1 style="font-weight:900!important;color:#0D2137!important;letter-spacing:-.015em">@yield('page-header')</h1>
                     @hasSection('page-actions')
                         <div class="hms-page-actions">@yield('page-actions')</div>
                     @endif

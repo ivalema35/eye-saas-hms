@@ -37,6 +37,8 @@ use App\Http\Controllers\Hospital\Medicine\MedicineController;
 use App\Http\Controllers\Hospital\Medicine\MedicineDosageController;
 use App\Http\Controllers\Hospital\Medicine\MedicineGroupController;
 use App\Http\Controllers\Hospital\Medicine\MedicineInstructionController;
+use App\Http\Controllers\Hospital\Medicine\MedicineCategoryController;
+use App\Http\Controllers\Hospital\Medicine\MedicineRouteController;
 use App\Http\Controllers\Hospital\Medicine\MedicineTypeController;
 use App\Http\Controllers\Hospital\OT\OtAccountantController;
 use App\Http\Controllers\Hospital\OT\OtAssistantController;
@@ -182,6 +184,16 @@ Route::prefix('{slug}')
                     Route::put('/{medicine}', [MedicineController::class, 'update'])->name('update');
                     Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('destroy');
                 });
+
+                Route::get('medicine-routes', [MedicineRouteController::class, 'index'])->name('medicine-routes.index')->middleware('permission:master.medicines');
+                Route::post('medicine-routes', [MedicineRouteController::class, 'store'])->name('medicine-routes.store')->middleware('permission:master.medicines');
+                Route::put('medicine-routes/{id}', [MedicineRouteController::class, 'update'])->name('medicine-routes.update')->whereNumber('id')->middleware('permission:master.medicines');
+                Route::delete('medicine-routes/{id}', [MedicineRouteController::class, 'destroy'])->name('medicine-routes.destroy')->whereNumber('id')->middleware('permission:master.medicines');
+
+                Route::get('medicine-categories', [MedicineCategoryController::class, 'index'])->name('medicine-categories.index')->middleware('permission:master.medicines');
+                Route::post('medicine-categories', [MedicineCategoryController::class, 'store'])->name('medicine-categories.store')->middleware('permission:master.medicines');
+                Route::put('medicine-categories/{id}', [MedicineCategoryController::class, 'update'])->name('medicine-categories.update')->whereNumber('id')->middleware('permission:master.medicines');
+                Route::delete('medicine-categories/{id}', [MedicineCategoryController::class, 'destroy'])->name('medicine-categories.destroy')->whereNumber('id')->middleware('permission:master.medicines');
 
                 Route::get('medicine-types', [MedicineTypeController::class, 'index'])->name('medicine-types.index')->middleware('permission:master.medicines');
                 Route::post('medicine-types', [MedicineTypeController::class, 'store'])->name('medicine-types.store')->middleware('permission:master.medicines');

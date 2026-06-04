@@ -10,34 +10,56 @@ class PatientService
 {
     /**
      * Register a walk-in patient.
-     * MRD generation and insert happen in ONE transaction so the
-     * lockForUpdate() is held until the row is committed — preventing
-     * two concurrent receptionists from getting the same MRD.
+     * MRD + doctor serial assigned in one locked transaction.
      */
     public function registerWalkIn(array $data, int $tenantId): Patient
     {
         return DB::transaction(function () use ($data, $tenantId) {
-            $data['tenant_id']    = $tenantId;
-            $data['patient_code'] = $this->nextMrdLocked($tenantId);
-            $data['type']         = 'walkin';
+            $data['tenant_id']        = $tenantId;
+            $data['patient_code']     = $this->nextMrdLocked($tenantId);
+            $data['doctor_patient_no'] = $this->nextDoctorSerialLocked(
+                (int) $data['doctor_id'],
+                $data['appointment_date'],
+                $tenantId
+            );
+            $data['type'] = 'walkin';
 
             return Patient::create($data);
         });
     }
 
     /**
-     * Register a phone appointment patient.
-     * Same single-transaction pattern as registerWalkIn.
+     * Register a phone appointment patient (no case assigned yet).
+     * MRD + doctor serial assigned at registration (doctor & date known at this point).
      */
     public function registerPhone(array $data, int $tenantId): Patient
     {
         return DB::transaction(function () use ($data, $tenantId) {
-            $data['tenant_id']    = $tenantId;
-            $data['patient_code'] = $this->nextMrdLocked($tenantId);
-            $data['type']         = 'phone';
+            $data['tenant_id']        = $tenantId;
+            $data['patient_code']     = $this->nextMrdLocked($tenantId);
+            $data['doctor_patient_no'] = $this->nextDoctorSerialLocked(
+                (int) $data['doctor_id'],
+                $data['appointment_date'],
+                $tenantId
+            );
+            $data['type'] = 'phone';
 
             return Patient::create($data);
         });
+    }
+
+    /**
+     * Assign doctor serial to a phone patient at checkin time.
+     * Called from PatientController::checkin() inside its own transaction.
+     */
+    public function assignDoctorSerial(Patient $patient, int $doctorId, string $appointmentDate, int $tenantId): void
+    {
+        if ($patient->doctor_patient_no !== null) {
+            return; // already assigned — idempotent
+        }
+
+        $patient->doctor_patient_no = $this->nextDoctorSerialLocked($doctorId, $appointmentDate, $tenantId);
+        $patient->save();
     }
 
     /**
@@ -80,6 +102,22 @@ class PatientService
         $nextSeq = $lastCode ? ((int) substr($lastCode, strlen($prefix)) + 1) : 1;
 
         return $prefix.str_pad((string) $nextSeq, 4, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Next doctor-wise daily serial with FOR UPDATE lock.
+     * Scoped per doctor + date + tenant.
+     */
+    private function nextDoctorSerialLocked(int $doctorId, string $appointmentDate, int $tenantId): int
+    {
+        $max = Patient::withTrashed()
+            ->where('tenant_id', $tenantId)
+            ->where('doctor_id', $doctorId)
+            ->whereDate('appointment_date', $appointmentDate)
+            ->lockForUpdate()
+            ->max('doctor_patient_no');
+
+        return ($max ?? 0) + 1;
     }
 
     private function prefix(int $tenantId): string

@@ -39,6 +39,14 @@
                        value="{{ old('admin_phone', $tenant->admin_phone) }}" maxlength="15">
                 @error('admin_phone') <div class="form-error">{{ $message }}</div> @enderror
             </div>
+
+            <div class="form-group">
+                <label class="form-label" for="hospital_address">Full Address <span style="color:#C0392B">*</span></label>
+                <textarea id="hospital_address" name="hospital_address" class="form-input"
+                          rows="2" placeholder="Building, Street, City, State, PIN"
+                          style="resize:vertical">{{ old('hospital_address', \App\Models\Hospital\HospitalSetting::get('hospital_address', '')) }}</textarea>
+                @error('hospital_address') <div class="form-error">{{ $message }}</div> @enderror
+            </div>
         </div>
 
         <div class="wizard-actions">
