@@ -373,7 +373,7 @@
         setTimeout(() => btn.style.transform = '', 200);
 
         fetch(btn.dataset.url, {
-            method: 'PATCH',
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                 'Accept': 'application/json',
