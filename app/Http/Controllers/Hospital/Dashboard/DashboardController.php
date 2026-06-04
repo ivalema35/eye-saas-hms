@@ -64,8 +64,9 @@ class DashboardController extends Controller
         $doctorAssignedPatients = null;
         $doctorPrimaryDone = null;
         $doctorSecondaryDone = null;
+        $secondaryQueue = null;
 
-        if ($this->perm->can('opd.exam.primary') || $this->perm->can('opd.exam.secondary')) {
+        if ($this->perm->can('opd.exam.primary') || $this->perm->can('opd.exam.secondary') || $isDoctorUser) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
             $pendingExams = Patient::whereDate('appointment_date', $today)
                 ->whereNull('primary_done_at')
@@ -110,6 +111,15 @@ class DashboardController extends Controller
                     ->whereNotNull('primary_done_at')
                     ->whereNull('secondary_done_at')
                     ->count();
+
+                $secondaryQueue = Patient::with(['doctor', 'caseType'])
+                    ->where('doctor_id', $user->id)
+                    ->whereDate('appointment_date', $today)
+                    ->whereNotNull('primary_done_at')
+                    ->whereNull('secondary_done_at')
+                    ->latest()
+                    ->take(20)
+                    ->get();
             }
         }
 
@@ -327,17 +337,42 @@ class DashboardController extends Controller
                 ]);
         }
 
-       // ── માત્ર ને માત્ર પ્યોર ડૉક્ટર (doctor) માટે જ નવી ફાઈલ લોડ થશે ──
+        // ── માત્ર ને માત્ર પ્યોર ડૉક્ટર (doctor) માટે જ નવી ફાઈલ લોડ થશે ──
+        // if ($user && $user->role?->slug === 'doctor') {
+        //     return view('hospital.dashboard.doctoredashboard', compact(
+        //         'slug',
+        //         'tenant',
+        //         'subscriptionDaysLeft',
+        //         'primaryQueue',
+        //         'secondaryQueue',
+        //         'doctorName',
+        //         'doctorAssignedPatients',
+        //         'doctorPrimaryDone',
+        //         'doctorSecondaryDone',
+        //         'doctorCards'
+        //     ));
+        // }
         if ($user && $user->role?->slug === 'doctor') {
+
+            // જો પરમિશનના કારણે DoctorCards ખાલી હોય, તો ડાયરેક્ટ ફેચ કરો (આ નવો કોડ છે)
+            if ($doctorCards->isEmpty()) {
+                $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+                    ->active()
+                    ->orderBy('name')
+                    ->get(['id', 'name']);
+            }
+            $doctorCards = $doctorCards->where('id', '!=', $user->id);
             return view('hospital.dashboard.doctoredashboard', compact(
                 'slug',
                 'tenant',
                 'subscriptionDaysLeft',
                 'primaryQueue',
+                'secondaryQueue',
                 'doctorName',
                 'doctorAssignedPatients',
                 'doctorPrimaryDone',
-                'doctorSecondaryDone'
+                'doctorSecondaryDone',
+                'doctorCards'
             ));
         }
 

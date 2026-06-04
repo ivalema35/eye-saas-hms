@@ -227,37 +227,53 @@
 <div class="metric-grid">
     {{-- Card 1: TODAY'S PATIENTS --}}
     <div class="metric-card-item">
-        <div class="metric-title">📋 Doctor Profile</div>
-        <div class="metric-number">0</div>
+        <div class="metric-title">📋 Today's Assigned</div>
+        <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
     </div>
 
-    {{-- Card 2: PENDING EXAMS --}}
+    {{-- Card 2: PENDING EXAMS (અથવા Primary Done) --}}
     <div class="metric-card-item">
-        <div class="metric-title">⏳ Primary Checkup</div>
-        <div class="metric-number">0</div>
+        <div class="metric-title">⏳ Primary Done</div>
+        <div class="metric-number">{{ $doctorPrimaryDone ?? 0 }}</div>
     </div>
 
-    {{-- Card 3: TODAY REVENUE --}}
+    {{-- Card 3: SECONDARY --}}
     <div class="metric-card-item">
-        <div class="metric-title">💰 Secondary</div>
-        <div class="metric-number">0</div>
+        <div class="metric-title">💰 Secondary Done</div>
+        <div class="metric-number">{{ $doctorSecondaryDone ?? 0 }}</div>
     </div>
 
-    {{-- Card 4: OT TODAY --}}
+    {{-- Card 4: REPORT (અત્યારે તમારી પાસે રિપોર્ટનો ડેટા નથી, એટલે ગમે તે અન્ય ફિલ્ડ વાપરી શકો) --}}
     <div class="metric-card-item">
         <div class="metric-title">🏥 Report</div>
-        <div class="metric-number">0</div>
+        <div class="metric-number">
+            {{ ($doctorAssignedPatients ?? 0) - (($doctorPrimaryDone ?? 0) + ($doctorSecondaryDone ?? 0)) }}
+        </div>
     </div>
 </div>
     <div class="row g-4 mb-4">
     
 
         {{-- Right Grid Box: Empty Doctors Block --}}
-        <div class="col-lg-12 col-md-7">
+<div class="col-lg-12 col-md-7">
             <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
                 <h6 class="fw-bold mb-2" style="color: #1B4F72;">Doctors</h6>
                 <hr class="my-2" style="border-color: rgba(27, 79, 114, 0.15)">
-                <div class="text-muted small">No other duty records live right now.</div>
+                
+                <div class="d-flex flex-column gap-2 mt-2">
+                    @forelse($doctorCards ?? [] as $doc)
+                        <div class="d-flex justify-content-between align-items-center p-2 bg-white rounded" style="border: 1px solid rgba(27,79,114,0.1);">
+                            <div class="fw-semibold text-dark">
+                                <i class="bi bi-person-badge me-2" style="color: #1B4F72;"></i>{{ $doc->name }}
+                            </div>
+                            <div class="small">
+                                <span class="badge bg-light text-dark border">Assigned: {{ $doc->assigned_today ?? 0 }}</span>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-muted small">No other duty records live right now.</div>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>
@@ -283,34 +299,38 @@
                     </div>
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
-                            <thead class="table-light text-secondary">
-                                <tr>
-                                    <th style="width: 50px;">#</th>
-                                    <th class="text-start">Patient Name</th>
-                                    <th>Reception Time</th>
-                                    <th>Age</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($primaryQueue ?? [] as $i => $patient)
-                                    <tr>
-                                        <td>{{ $i + 1 }}</td>
-                                        <td class="text-start fw-semibold" style="color: #1B4F72;">{{ $patient->full_name }}</td>
-                                        <td>{{ $patient->created_at->format('h:i A') }}</td>
-                                        <td>{{ $patient->age }}</td>
-                                        <td>
-                                            <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}" class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                                                Examine
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="5" class="py-4 text-muted bg-light fw-medium">No Data Found</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
+<thead class="table-light text-secondary">
+    <tr>
+        <th style="width: 50px;">#</th>
+        <th class="text-start">Patient Name</th>
+        <th>Reception Time</th>
+        <th>Primary Time</th>
+        <th>Age</th>
+        <th>Action</th>
+    </tr>
+</thead>
+<tbody>
+    @forelse($primaryQueue ?? [] as $i => $patient)
+        <tr>
+            <td>{{ $i + 1 }}</td>
+            <td class="text-start fw-semibold" style="color: #1B4F72;">
+                {{ $patient->first_name }} {{ $patient->last_name }}
+            </td>
+            <td>{{ $patient->created_at->format('h:i A') }}</td>
+            <td>{{ $patient->primary_done_at ? \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') : '-' }}</td>
+            <td>{{ $patient->age }}</td>
+            <td>
+                <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}" class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                    Examine
+                </a>
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="6" class="py-4 text-muted bg-light fw-medium">No Data Found</td>
+        </tr>
+    @endforelse
+</tbody>
                         </table>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
@@ -353,9 +373,26 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td colspan="6" class="py-4 text-muted bg-light fw-medium">No Data Found</td>
-                                </tr>
+                                @forelse($secondaryQueue ?? [] as $i => $patient)
+                                    <tr>
+                                        <td>{{ $i + 1 }}</td>
+                                        <td class="text-start fw-semibold" style="color: #1B4F72;">
+                                            {{ $patient->first_name }} {{ $patient->last_name }}
+                                        </td>
+                                        <td>{{ $patient->created_at->format('h:i A') }}</td>
+                                        <td>{{ $patient->primary_done_at ? \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') : '-' }}</td>
+                                        <td>{{ $patient->age }}</td>
+                                        <td>
+                                            <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}" class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                                                Examine
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="py-4 text-muted bg-light fw-medium">No Data Found</td>
+                                    </tr>
+                                @endforelse
                             </tbody>
                         </table>
                     </div>
