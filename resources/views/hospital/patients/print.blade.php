@@ -118,6 +118,10 @@
                 <dd>{{ $patient->appointment_date?->format('d M Y') }}</dd>
                 <dt>Consultant</dt>
                 <dd>{{ $patient->doctor?->name ?? '—' }}</dd>
+                @if($patient->doctor_patient_no)
+                <dt>Doctor Serial No.</dt>
+                <dd><strong>{{ ($patient->doctor?->doctor_prefix ?? '') ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) : str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) }}</strong></dd>
+                @endif
                 <dt>Receptionist</dt>
                 <dd>{{ $patient->reception?->name ?? '—' }}</dd>
                 <dt>Type</dt>

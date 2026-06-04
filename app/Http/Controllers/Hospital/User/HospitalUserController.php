@@ -65,7 +65,8 @@ class HospitalUserController extends Controller
             'contact' => $data['contact'] ?? null,
             'password' => $data['password'],
             'status' => $data['status'],
-            'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_type'   => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
             'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
         ]);
 
@@ -125,7 +126,8 @@ class HospitalUserController extends Controller
             'email' => $data['email'],
             'contact' => $data['contact'] ?? null,
             'status' => $data['status'],
-            'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_type'   => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
             'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
         ];
 

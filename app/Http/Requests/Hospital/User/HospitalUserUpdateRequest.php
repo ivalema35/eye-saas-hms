@@ -39,7 +39,8 @@ class HospitalUserUpdateRequest extends FormRequest
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
             'status' => ['required', 'in:active,inactive'],
-            'doctor_type' => ['nullable', 'in:primary,secondary'],
+            'doctor_type'   => ['nullable', 'in:primary,secondary'],
+            'doctor_prefix' => ['nullable', 'string', 'max:5', 'regex:/^[A-Za-z]+$/'],
             'foc_permission' => ['nullable', 'boolean'],
         ];
     }

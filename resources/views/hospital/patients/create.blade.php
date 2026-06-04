@@ -55,9 +55,10 @@
                             Contact No <span style="color:#C0392B;font-weight:700">*</span>
                         </label>
                         <input type="text" name="contact_no" id="contactNo"
-                               value="{{ old('contact_no') }}" maxlength="15"
+                               value="{{ old('contact_no') }}" maxlength="10" pattern="\d{10}"
                                class="form-control @error('contact_no') is-invalid @enderror"
-                               placeholder="e.g. 9876543210" autocomplete="off" required
+                               placeholder="10-digit number" autocomplete="off" required
+                               inputmode="numeric"
                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
                         <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
                              style="z-index:1050;max-height:250px;overflow-y:auto;border:1px solid #E2E8F0;top:100%;left:0;margin-top:4px"></div>
@@ -68,9 +69,9 @@
                     <div class="form-group">
                         <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">WhatsApp No</label>
                         <input type="text" name="whatsapp_no" id="whatsappNo"
-                               value="{{ old('whatsapp_no') }}" maxlength="15"
+                               value="{{ old('whatsapp_no') }}" maxlength="10" pattern="\d{10}"
                                class="form-control @error('whatsapp_no') is-invalid @enderror"
-                               placeholder="Same if blank"
+                               placeholder="Same if blank" inputmode="numeric"
                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
                         @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                     </div>

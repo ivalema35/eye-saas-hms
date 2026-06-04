@@ -1,6 +1,7 @@
 <style>
     .user-form-modal .modal-dialog {
         max-width: min(920px, calc(100vw - 2rem));
+        max-height: calc(100vh - 2rem);
     }
 
     .user-form-modal .modal-content {
@@ -8,7 +9,19 @@
         border-radius: 22px;
         background: rgba(255, 255, 255, .98);
         box-shadow: 0 20px 50px rgba(27, 79, 114, .15);
-        overflow: hidden;
+        max-height: calc(100vh - 3rem);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-form-modal .modal-body {
+        overflow-y: auto !important;
+        flex: 1 1 auto;
+        padding: 1.5rem !important;
+    }
+
+    .user-form-modal .modal-footer {
+        flex-shrink: 0;
     }
 
     .user-form-modal .modal-header {
@@ -23,14 +36,11 @@
         font-weight: 900;
     }
 
-    .user-form-modal .modal-body {
-        padding: 1.5rem !important;
-    }
-
     .user-form-modal .modal-footer {
         background: linear-gradient(135deg, rgba(235, 245, 251, .72), rgba(255, 255, 255, .94));
         border-top: 1px solid rgba(27, 79, 114, .12) !important;
         padding: 1.2rem 1.5rem !important;
+        flex-shrink: 0;
     }
 
     .user-form-modal .btn-close {
@@ -207,6 +217,16 @@
                             @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
+                        <div class="hms-form-group user-doctor-only" style="display:none">
+                            <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters)</span></label>
+                            <input type="text" name="doctor_prefix" id="user-doctor-prefix"
+                                   maxlength="5" placeholder="e.g. JP"
+                                   style="text-transform:uppercase"
+                                   class="hms-input @error('doctor_prefix') is-invalid @enderror">
+                            <div style="font-size:.72rem;color:#94A3B8;margin-top:.2rem">Daily serial format: <strong>JP-001, JP-002…</strong></div>
+                            @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
                         <!-- <div class="hms-form-group user-doctor-only" style="display:none">
                             <label>&nbsp;</label>
                             <label class="hms-checkbox-label" style="padding:.5rem 0">
@@ -334,6 +354,7 @@ function resetUserForm() {
     document.getElementById('user-contact').value = '';
     document.getElementById('user-status').value = 'active';
     document.getElementById('user-doctor-type').value = '';
+    document.getElementById('user-doctor-prefix').value = '';
     const userFocPermissionInput = document.getElementById('user-foc-permission');
     if (userFocPermissionInput) {
         userFocPermissionInput.checked = false;
@@ -358,6 +379,7 @@ function openUserEditModal(record) {
     document.getElementById('user-contact').value = record.contact ?? '';
     document.getElementById('user-status').value = record.status ?? 'active';
     document.getElementById('user-doctor-type').value = record.doctor_type ?? '';
+    document.getElementById('user-doctor-prefix').value = (record.doctor_prefix ?? '').toUpperCase();
     const userFocPermissionInput = document.getElementById('user-foc-permission');
     if (userFocPermissionInput) {
         userFocPermissionInput.checked = !!record.foc_permission;
@@ -403,6 +425,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('user-contact').value = @json(old('contact', ''));
         document.getElementById('user-status').value = @json(old('status', 'active'));
         document.getElementById('user-doctor-type').value = @json(old('doctor_type', ''));
+        document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
         const userFocPermissionInput = document.getElementById('user-foc-permission');
         if (userFocPermissionInput) {
             userFocPermissionInput.checked = @json((bool) old('foc_permission'));

@@ -23,8 +23,8 @@ class PatientStoreRequest extends FormRequest
             'age' => ['required', 'integer', 'min:0', 'max:150'],
             'gender' => ['required', 'in:male,female,other'],
             'occupation' => ['nullable', 'string', 'max:100'],
-            'contact_no' => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
-            'whatsapp_no' => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
+            'contact_no' => ['required', 'string', 'regex:/^\d{10}$/'],
+            'whatsapp_no' => ['nullable', 'string', 'regex:/^\d{10}$/'],
             'location_id' => ['required', 'integer', 'exists:tbl_locations,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
@@ -48,8 +48,8 @@ class PatientStoreRequest extends FormRequest
             'case_id.required' => 'Please select a case type.',
             'case_fee.required' => 'Case fee is required.',
             'contact_no.required' => 'Contact number is required.',
-            'contact_no.regex' => 'Contact number must contain only digits (0-9).',
-            'whatsapp_no.regex' => 'WhatsApp number must contain only digits (0-9).',
+            'contact_no.regex'    => 'Contact number must be exactly 10 digits.',
+            'whatsapp_no.regex'   => 'WhatsApp number must be exactly 10 digits.',
         ];
     }
 }

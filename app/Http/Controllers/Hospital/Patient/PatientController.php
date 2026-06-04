@@ -76,11 +76,14 @@ class PatientController extends Controller
             return response()->json(['found' => false]);
         }
 
-        $patients = Patient::where('contact_no', $contact)->latest()->get();
+        $patients = Patient::where('contact_no', $contact)
+            ->latest()
+            ->get()
+            ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
 
         return response()->json([
             'found' => $patients->isNotEmpty(),
-            'patients' => $patients->map(fn ($patient) => [
+            'patients' => $patients->values()->map(fn ($patient) => [
                 'first_name' => $patient->first_name,
                 'middle_name' => $patient->middle_name,
                 'last_name' => $patient->last_name,
@@ -309,12 +312,21 @@ class PatientController extends Controller
             'referrer_id'      => ['nullable', 'integer', 'exists:tbl_referrers,id'],
         ]);
 
-        $patient->update($request->only([
-            'first_name', 'middle_name', 'last_name', 'age', 'gender',
-            'occupation', 'contact_no', 'whatsapp_no', 'location_id',
-            'appointment_date', 'slot_id', 'doctor_id', 'case_id',
-            'case_fee', 'referrer_id',
-        ]));
+        DB::transaction(function () use ($request, $patient) {
+            $patient->update($request->only([
+                'first_name', 'middle_name', 'last_name', 'age', 'gender',
+                'occupation', 'contact_no', 'whatsapp_no', 'location_id',
+                'appointment_date', 'slot_id', 'doctor_id', 'case_id',
+                'case_fee', 'referrer_id',
+            ]));
+
+            $this->patientService->assignDoctorSerial(
+                $patient->fresh(),
+                (int) $request->doctor_id,
+                $request->appointment_date,
+                app('tenant')->id
+            );
+        });
 
         return redirect()
             ->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])

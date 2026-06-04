@@ -35,19 +35,21 @@
         <form action="{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}" method="POST">
             @csrf
 
-            {{-- Group Name --}}
-            <div class="row mb-4">
+            {{-- Group Name + Group Code --}}
+            <div class="row mb-4 g-3">
                 <div class="col-md-6">
-                    <label class="form-label fw-medium">
-                        Group Name <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" name="name"
-                           value="{{ old('name') }}"
+                    <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" value="{{ old('name') }}"
                            class="form-control clinical-input @error('name') is-invalid @enderror"
                            required placeholder="e.g. Cataract Post-Op Standard">
-                    @error('name')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+                    @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-medium">Group Code</label>
+                    <input type="text" name="group_code" value="{{ old('group_code') }}"
+                           class="form-control clinical-input @error('group_code') is-invalid @enderror"
+                           placeholder="e.g. CAT-001">
+                    @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 
@@ -60,28 +62,26 @@
                 <table class="table premium-table align-middle" id="repeaterTable">
                     <thead>
                         <tr>
-                            <th style="min-width:200px">Medicine</th>
-                            <th style="min-width:140px">Dose</th>
-                            <th style="min-width:180px">Instruction</th>
-                            <th style="min-width:120px">Days</th>
+                            <th style="min-width:200px">Medicine Name</th>
+                            <th style="min-width:140px">Dosage</th>
+                            <th style="min-width:100px">Days</th>
                             <th style="width:80px" class="text-center">Qty</th>
+                            <th style="min-width:160px">Route of Administration</th>
                             <th style="width:60px" class="text-end"></th>
                         </tr>
                     </thead>
                     <tbody id="repeaterBody">
                         <tr class="item-row" data-index="0">
                             <td>
-                                <select name="items[0][medicine_id]"
-                                        class="form-select clinical-input-sm medicine-select" required>
-                                    <option value="" data-price="0">Select medicine...</option>
+                                <select name="items[0][medicine_id]" class="form-select clinical-input-sm medicine-select" required>
+                                    <option value="">Select medicine...</option>
                                     @foreach($medicines as $med)
-                                        <option value="{{ $med->id }}" data-price="{{ $med->price ?? 0 }}">{{ $med->name }}</option>
+                                        <option value="{{ $med->id }}">{{ $med->name }}</option>
                                     @endforeach
                                 </select>
                             </td>
                             <td>
-                                <select name="items[0][dosage_id]"
-                                        class="form-select clinical-input-sm">
+                                <select name="items[0][dosage_id]" class="form-select clinical-input-sm">
                                     <option value="">Select dosage...</option>
                                     @foreach($dosages as $d)
                                         <option value="{{ $d->id }}">{{ $d->dosage }}</option>
@@ -89,24 +89,22 @@
                                 </select>
                             </td>
                             <td>
-                                <select name="items[0][instructions]"
-                                        class="form-select clinical-input-sm">
-                                    <option value="">Select instruction...</option>
-                                    @foreach($instructions as $inst)
-                                        <option value="{{ $inst->value }}">{{ $inst->value }}</option>
-                                    @endforeach
-                                </select>
-                            </td>
-                            <td>
                                 <input type="text" name="items[0][duration]"
-                                       class="form-control clinical-input-sm" required
-                                       placeholder="e.g. 7" style="display:inline-block; width:60px;"> Days
-                                <input type="hidden" name="items[0][frequency]" value="OD"> <!-- hidden to satisfy requirement or we could use another approach -->
+                                       class="form-control clinical-input-sm"
+                                       placeholder="e.g. 5 days">
                             </td>
                             <td>
                                 <input type="number" name="items[0][quantity]"
                                        class="form-control clinical-input-sm text-center row-qty"
                                        required min="1" value="1">
+                            </td>
+                            <td>
+                                <select name="items[0][route_id]" class="form-select clinical-input-sm">
+                                    <option value="">Select route...</option>
+                                    @foreach($routes as $r)
+                                        <option value="{{ $r->id }}">{{ $r->name }}</option>
+                                    @endforeach
+                                </select>
                             </td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-outline-danger btn-sm remove-row" disabled title="Remove">
@@ -137,9 +135,27 @@
 
 @push('scripts')
 <script>
+@php $medicineMap = $medicines->keyBy('id')->map(function($m) { return ['dosage_id' => $m->dosage_id, 'duration' => $m->duration, 'qty' => $m->qty]; }); @endphp
+const medicineDataMap = @json($medicineMap);
+
 document.addEventListener('DOMContentLoaded', function () {
     let rowIndex = 1;
     const tbody    = document.getElementById('repeaterBody');
+
+    // Auto-fill when medicine selected
+    tbody.addEventListener('change', function (e) {
+        const sel = e.target;
+        if (!sel.classList.contains('medicine-select')) return;
+        const row = sel.closest('tr');
+        const med = medicineDataMap[sel.value];
+        if (!med) return;
+        const dosageSel = row.querySelector('select[name$="[dosage_id]"]');
+        const durInput  = row.querySelector('input[name$="[duration]"]');
+        const qtyInput  = row.querySelector('input[name$="[quantity]"]');
+        if (dosageSel && med.dosage_id) dosageSel.value = med.dosage_id;
+        if (durInput  && med.duration)  durInput.value  = med.duration;
+        if (qtyInput  && med.qty)       qtyInput.value  = med.qty;
+    });
     const addBtn   = document.getElementById('addRowBtn');
     // Always reference the very first template row (index 0)
     const firstRow = tbody.querySelector('tr.item-row[data-index="0"]');

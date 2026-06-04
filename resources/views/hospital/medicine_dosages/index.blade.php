@@ -16,6 +16,12 @@
 
 <style>
     .medicine-dosages-page {
+        --type-primary: #ebf5fbeb;
+        --type-secondary: #1B4F72;
+        --type-secondary-08: rgba(27, 79, 114, .08);
+        --type-secondary-12: rgba(27, 79, 114, .12);
+        --type-secondary-18: rgba(27, 79, 114, .18);
+        --type-secondary-24: rgba(27, 79, 114, .24);
         --dosage-primary: #ebf5fbeb;
         --dosage-secondary: #1B4F72;
         --dosage-secondary-08: rgba(27, 79, 114, .08);
@@ -25,38 +31,12 @@
         color: var(--dosage-secondary);
     }
 
-    .nav-tabs {
-        background: var(--card-bg, #f7fbff);
-        padding: 10px;
-        border-radius: 14px;
-        border: none;
-        display: flex;
-        gap: .5rem;
-        align-items: center;
-        box-shadow: none;
-    }
-    .nav-tabs .nav-item { margin: 0; }
-    .nav-tabs .nav-link {
-        border: none !important;
-        background: transparent;
-        color: var(--muted-color, #1f3560);
-        padding: .5rem .9rem;
-        border-radius: 999px;
-        box-shadow: none;
-        transition: all .15s ease-in-out;
-        display: inline-flex;
-        align-items: center;
-    }
-    .nav-tabs .nav-link i { margin-right: .5rem; }
-    .nav-tabs .nav-link.active {
-        background: var(--color-primary);
-        color: #ffffff !important;
-        box-shadow: 0 6px 18px rgba(36,85,160,0.12);
-    }
-    .nav-tabs .nav-link:hover {
-        background: rgba(36,85,160,0.1);
-        color: var(--muted-color, #1f3560) !important;
-    }
+    .type-nav-tabs { background: var(--card-bg, #f7fbff); padding: 10px; border-radius: 14px; border: none; display: flex; gap: .5rem; align-items: center; box-shadow: none; }
+    .type-nav-tabs .nav-item { margin: 0; }
+    .type-nav-tabs .nav-link { border: none !important; background: transparent; color: var(--muted-color, #1f3560); padding: .5rem .9rem; border-radius: 999px; box-shadow: none; transition: all .15s ease-in-out; display: inline-flex; align-items: center; }
+    .type-nav-tabs .nav-link i { margin-right: .5rem; }
+    .type-nav-tabs .nav-link.active { background: var(--color-primary) !important; color: #ffffff !important; border-color: transparent !important; box-shadow: 0 6px 18px rgba(36,85,160,0.12); }
+    .type-nav-tabs .nav-link:hover { background: rgba(36,85,160,0.1); color: var(--muted-color, #1f3560) !important; }
     
     .dosage-card {
         border: 1px solid var(--dosage-secondary-12) !important;
@@ -246,7 +226,7 @@
     </div>
 @endif
 
-<ul class="nav nav-tabs mb-4">
+<ul class="nav nav-tabs mb-4 type-nav-tabs">
     <li class="nav-item">
         <a class="nav-link active"
            href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
@@ -254,49 +234,55 @@
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
+        <a class="nav-link" href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
             <i class="bi bi-tags me-1"></i> Medicine Types
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
+        <a class="nav-link" href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
+            <i class="bi bi-grid me-1"></i> Medicine Categories
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
+            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
             <i class="bi bi-capsule me-1"></i> Medicines
         </a>
     </li>
     <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
+        <a class="nav-link" href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
             <i class="bi bi-collection me-1"></i> Medicine Groups
         </a>
     </li>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a class="nav-link"
            href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
             <i class="bi bi-list-ul me-1"></i> Instructions
         </a>
-    </li>
+    </li> --}}
 </ul>
 
-<div class="card premium-card border-0 shadow-sm dosage-card">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-3 py-3 dosage-card-header">
-        <div class="dosage-title-wrap">
-            <span class="dosage-title-icon">
+<div class="card type-card border-0 dosage-card">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 dosage-card-header">
+        <div class="d-flex align-items-center gap-3">
+            <span class="dosage-title-icon" style="flex-shrink:0">
                 <i class="bi bi-capsule-pill fs-4"></i>
             </span>
             <div>
-                <h5 class="mb-0 fw-bold dosage-title" style="color: var(--color-primary);">
-                    Dosages
-                </h5>
+                <h5 class="mb-0 fw-bold dosage-title" style="color: var(--color-primary);">Dosages</h5>
                 <div class="dosage-subtitle">Manage reusable dosage instructions for prescriptions.</div>
             </div>
         </div>
+        <span class="badge text-bg-light border" style="font-size:.85rem;font-weight:900;padding:.45rem .85rem">{{ $dosages->count() }} total</span>
     </div>
 
     <div class="card-body p-0">
-        <div class="table-responsive dosage-table-wrap">
-            <table class="table premium-table table-hover align-middle mb-0 dosage-table">
+        <div class="type-table-wrap">
+            <table class="table type-table table-hover align-middle mb-0">
                 <thead>
                     <tr>
                         <th style="width:50px">#</th>
@@ -307,10 +293,8 @@
                 <tbody>
                     @forelse($dosages as $index => $dosage)
                     <tr>
-                        <td class="text-muted dosage-index-cell">{{ $index + 1 }}</td>
-                        <td class="fw-semibold">
-                            <span class="dosage-name-cell">{{ $dosage->dosage }}</span>
-                        </td>
+                        <td class="type-index-cell">{{ $index + 1 }}</td>
+                        <td class="type-name-cell">{{ $dosage->dosage }}</td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-1 action-btn-group">
                                 <button type="button"

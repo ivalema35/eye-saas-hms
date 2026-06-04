@@ -26,7 +26,10 @@ class Medicine extends Model
         'tenant_id',
         'medicine_type_id',
         'name',
-        'brand_name',
+        'dosage_id',
+        'duration',
+        'qty',
+        'composition',
         'company',
         'price',
     ];
@@ -34,5 +37,10 @@ class Medicine extends Model
     public function medicineType(): BelongsTo
     {
         return $this->belongsTo(MedicineType::class);
+    }
+
+    public function dosage(): BelongsTo
+    {
+        return $this->belongsTo(Dosage::class);
     }
 }

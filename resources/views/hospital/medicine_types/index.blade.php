@@ -76,6 +76,18 @@
     </li>
     <li class="nav-item">
         <a class="nav-link"
+           href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
+            <i class="bi bi-grid me-1"></i> Medicine Categories
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link"
+           href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
+            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link"
            href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
             <i class="bi bi-capsule me-1"></i> Medicines
         </a>
@@ -86,15 +98,27 @@
             <i class="bi bi-collection me-1"></i> Medicine Groups
         </a>
     </li>
-    <li class="nav-item">
+    {{-- <li class="nav-item">
         <a class="nav-link {{ request()->routeIs('hospital.medicine_instructions.*') ? 'active' : '' }}"
            href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
             <i class="bi bi-list-ul me-1"></i> Instructions
         </a>
-    </li>
+    </li> --}}
 </ul>
 
 <div class="card type-card border-0">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3" style="border-bottom:1px solid rgba(27,79,114,.12)">
+        <div class="d-flex align-items-center gap-3">
+            <span style="width:48px;height:48px;border-radius:16px;background:#1B4F72;color:#fff;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 14px 30px rgba(27,79,114,.22);flex-shrink:0">
+                <i class="bi bi-tags fs-5"></i>
+            </span>
+            <div>
+                <h5 class="mb-0 fw-bold" style="color:#1B4F72">Medicine Types</h5>
+                <div style="color:rgba(27,79,114,.68);font-size:.84rem;font-weight:500;margin-top:.1rem">Manage medicine types e.g. Tablet, Capsule, Eye Drop</div>
+            </div>
+        </div>
+        <span class="badge text-bg-light border" style="font-size:.85rem;font-weight:900;padding:.45rem .85rem">{{ $types->count() }} total</span>
+    </div>
     <div class="card-body p-0">
         <div class="type-table-wrap">
             <table class="table type-table table-hover align-middle mb-0">

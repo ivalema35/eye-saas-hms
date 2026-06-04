@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Setting;
 
 use App\Http\Controllers\Controller;
+use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use Illuminate\Http\RedirectResponse;
@@ -104,13 +105,22 @@ class SetupWizardController extends Controller
     private function saveProfile(Request $request, Tenant $tenant): void
     {
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
-            'state' => ['nullable', 'string', 'max:100'],
-            'admin_phone' => ['nullable', 'string', 'max:15'],
+            'name'             => ['required', 'string', 'max:255'],
+            'city'             => ['nullable', 'string', 'max:100'],
+            'state'            => ['nullable', 'string', 'max:100'],
+            'admin_phone'      => ['nullable', 'string', 'max:15'],
+            'hospital_address' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $tenant->update($data);
+        $tenant->update([
+            'name'        => $data['name'],
+            'city'        => $data['city'] ?? null,
+            'state'       => $data['state'] ?? null,
+            'admin_phone' => $data['admin_phone'] ?? null,
+        ]);
+
+        HospitalSetting::set('hospital_address', $data['hospital_address'] ?? '');
+        HospitalSetting::set('hospital_name', $data['name']);
     }
 
     private function saveDoctor(Request $request, Tenant $tenant): void

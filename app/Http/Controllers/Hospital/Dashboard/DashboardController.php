@@ -274,8 +274,8 @@ class DashboardController extends Controller
                 ->whereIn('doctor_id', $doctorCards->pluck('id'))
                 ->select('doctor_id')
                 ->selectRaw('COUNT(*) as assigned_today')
-                ->selectRaw('SUM(CASE WHEN primary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
-                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as secondary_count')
+                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
+                ->selectRaw('SUM(CASE WHEN secondary_done_at IS NOT NULL THEN 1 ELSE 0 END) as secondary_count')
                 ->groupBy('doctor_id')
                 ->get()
                 ->keyBy('doctor_id');
@@ -297,7 +297,7 @@ class DashboardController extends Controller
             ];
 
             $receptionistTodayPatients = Patient::with([
-                'doctor:id,name',
+                'doctor:id,name,doctor_prefix',
                 'location:id,city',
                 'otBookings' => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
             ])
@@ -317,6 +317,7 @@ class DashboardController extends Controller
                     'patients.location_id',
                     'patients.slot_id',
                     'patients.doctor_id',
+                    'patients.doctor_patient_no',
                     'patients.case_fee',
                     'patients.type',
                     'patients.primary_done_at',
