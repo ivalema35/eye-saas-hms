@@ -65,6 +65,12 @@
             background: #ffffff;
         }
 
+        @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+    .hms-sidebar { display: none !important; }
+    .hms-main { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
+    #hmsSidebarToggle { display: none !important; }
+@endif
+
         /* ── Navbar ─────────────────────────────────────────────────── */
         .hms-navbar {
             background: var(--shell-white-78) !important;
@@ -384,6 +390,92 @@
             color: rgba(255, 255, 255, 0.98) !important;
         }
 
+        /* Black menu dropdown ne proper align karva mate */
+.black-menu-bar .dropdown {
+    position: relative;
+}
+
+/* Default ma menu hide rakhva mate */
+.black-menu-bar .dropdown-menu {
+    display: none; 
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 4px;
+    padding: 5px 0;
+    min-width: 150px;
+}
+
+/* Dropdown hover par show karva mate */
+.black-menu-bar .dropdown:hover > .dropdown-menu {
+    display: block;
+}
+
+/* Dropdown items ni style */
+.black-menu-bar .dropdown-item {
+    color: #333 !important;
+    padding: 8px 15px;
+    display: block;
+}
+.black-menu-bar .dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Submenu ne baaju ma display karva mate */
+.dropdown-menu .dropend {
+    position: relative;
+}
+
+.dropdown-menu .dropend > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -0.25rem;
+    display: none;
+}
+
+.dropdown-menu .dropend:hover > .dropdown-menu,
+.dropdown-menu .dropend.show > .dropdown-menu {
+    display: block;
+}
+
+.black-menu-bar .dropdown-menu .dropdown-menu {
+    display: none;
+}
+
+/* આ ખાસ કોડ ક્લિક પર મેનુ બંધ ન થાય તે માટે */
+.dropdown-menu .dropdown-toggle::after {
+    float: right;
+    margin-top: 0.5em;
+}
+
+
+        @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+        .hms-navbar {
+            display: flex;
+            flex-direction: column;
+            padding: 10px 20px !important;
+        }
+        .top-header {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .black-menu-bar {
+            background: #1a1a1a;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            gap: 20px;
+            color: white;
+        }
+        .black-menu-bar a { color: white; text-decoration: none; }
+        @endif
+
         /* Reduce-motion support */
         @media (prefers-reduced-motion: reduce) {
             .hms-nav-item,
@@ -427,6 +519,96 @@
          Top Navigation Bar
     ================================================ --}}
     <nav class="hms-navbar">
+    @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+        <div class="top-header">
+        <div class="d-flex align-items-center">
+            <img src="{{ $hospitalLogoUrl }}" style="height: 40px; margin-right: 15px;">
+            <div class="fw-bold fs-4">{{ $hospitalName }}</div>
+        </div>
+        <div class="ms-auto">
+            <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
+                @csrf
+                <button type="submit" class="btn btn-outline-dark btn-sm">Log Out</button>
+            </form>
+        </div>
+    </div>
+<div class="black-menu-bar d-flex align-items-center" style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
+    
+    {{-- Dashboard --}}
+    <a href="#" class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
+    
+    {{-- Basic Master Dropdown --}}
+    <div class="dropdown">
+        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-list-task"></i> Basic Master
+        </a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Case Type</a></li>
+            <li><a class="dropdown-item" href="#">Location</a></li>
+            <li><a class="dropdown-item" href="#">Duration</a></li>
+            <li><a class="dropdown-item" href="#">Refered By</a></li>
+        </ul>
+    </div>
+
+    {{-- Diagnosis Master Dropdown --}}
+<div class="dropdown">
+    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-info-circle-fill"></i> Diagnosis Master
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="#">C/O</a></li>
+        <li><a class="dropdown-item" href="#">KCO</a></li>
+        
+        {{-- આ O/E વાળું નવું ડ્રોપડાઉન જે સાઈડમાં ખુલશે --}}
+        <li class="dropend">
+            <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">SAC</a></li>
+                <li><a class="dropdown-item" href="#">LID</a></li>
+                <li><a class="dropdown-item" href="#">CONJ</a></li>
+                <li><a class="dropdown-item" href="#">CORNEA</a></li>
+                <li><a class="dropdown-item" href="#">AC</a></li>
+                <li><a class="dropdown-item" href="#">IRIS</a></li>
+                <li><a class="dropdown-item" href="#">PUPIL</a></li>
+                <li><a class="dropdown-item" href="#">LENS</a></li>
+                <li><a class="dropdown-item" href="#">EM</a></li>
+                <li><a class="dropdown-item" href="#">COVER TEST</a></li>
+            </ul>
+        </li>
+        
+        <li class="dropend">
+            <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#">DISC</a></li>
+                <li><a class="dropdown-item" href="#">FR</a></li>
+            </ul>
+        </li>
+        <li><a class="dropdown-item" href="#">DIAGNOSIS</a></li>
+        <li><a class="dropdown-item" href="#">ADVICE</a></li>
+    </ul>
+</div>
+
+    {{-- Medicine Master Dropdown --}}
+    <div class="dropdown">
+        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+            <i class="bi bi-capsule"></i> Medicine Master
+        </a>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Dosage</a></li>
+            <li><a class="dropdown-item" href="#">Medicine Type</a></li>
+            <li><a class="dropdown-item" href="#">Medicine Category</a></li>
+            <li><a class="dropdown-item" href="#">Root Of Administration</a></li>
+            <li><a class="dropdown-item" href="#">Add Medicine</a></li>
+            <li><a class="dropdown-item" href="#">Add Group</a></li>
+            <li><a class="dropdown-item" href="#">View Group</a></li>
+        </ul>
+    </div>
+
+    {{-- History --}}
+    <a href="#" class="text-white text-decoration-none"><i class="bi bi-clock-history"></i> History</a>
+</div>
+
+    @else
         @php
             $currentUser = auth('hospital_user')->user();
             $slug = request()->route('slug');
@@ -546,6 +728,7 @@
                 </div>
             @endif
         </div>
+        @endif
     </nav>
 
     <div class="hms-layout">
@@ -877,6 +1060,7 @@
             @endif
 
             {{-- Page Header --}}
+             @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
             @hasSection('page-header')
                 <div class="hms-page-header">
                     <h1>@yield('page-header')</h1>
@@ -885,6 +1069,7 @@
                     @endif
                 </div>
             @endif
+                @endif
 
             {{-- Main Content --}}
             @yield('content')
@@ -1010,6 +1195,31 @@
         document.head.appendChild(fallbackScript);
     }
     </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
+            var trigger = item.querySelector(':scope > .dropdown-toggle');
+
+            if (!trigger) {
+                return;
+            }
+
+            item.addEventListener('mouseenter', function () {
+                item.classList.add('show');
+            });
+
+            item.addEventListener('mouseleave', function () {
+                item.classList.remove('show');
+            });
+
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                item.classList.toggle('show');
+            });
+        });
+    });
+</script>
 
     {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
