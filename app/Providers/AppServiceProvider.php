@@ -41,7 +41,14 @@ class AppServiceProvider extends ServiceProvider
             $hospitalFullAddress = $hospitalSettings['hospital_address'] ?? '';
             $hospitalOfficialEmail = $hospitalSettings['hospital_email'] ?? '';
             $hospitalContactNumber = $hospitalSettings['hospital_phone'] ?? '';
-            $hospitalLogoPath = $hospitalSettings['hospital_logo'] ?? null;
+            $hospitalLogoPath       = $hospitalSettings['hospital_logo'] ?? null;
+            $hospitalLogoNobgPath   = $hospitalSettings['hospital_logo_nobg'] ?? null;
+            $logoSidebarStyle       = $hospitalSettings['logo_sidebar_style'] ?? 'white';
+
+            // Sidebar uses bg-removed version when white style + nobg exists
+            $sidebarLogoPath = ($logoSidebarStyle === 'white' && $hospitalLogoNobgPath)
+                ? $hospitalLogoNobgPath
+                : $hospitalLogoPath;
 
             $view->with([
                 'hospitalSettings' => $hospitalSettings,
@@ -50,9 +57,10 @@ class AppServiceProvider extends ServiceProvider
                 'hospitalOfficialEmail' => $hospitalOfficialEmail,
                 'hospitalContactNumber' => $hospitalContactNumber,
                 'hospitalLogo' => $hospitalLogoPath,
-                'hospitalLogoUrl' => $hospitalLogoPath
-                    ? asset('storage/'.$hospitalLogoPath)
+                'hospitalLogoUrl' => $sidebarLogoPath
+                    ? asset('storage/'.$sidebarLogoPath)
                     : asset('images/aeh-logo-white.svg'),
+                'hospitalLogoSidebarStyle' => $logoSidebarStyle,
             ]);
         });
     }

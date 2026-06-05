@@ -750,11 +750,23 @@
                    class="premium-sidebar-brand-link"
                    aria-label="Go to dashboard">
                     <span class="sidebar-brand-mark">
-                        <img src="{{ $hospitalLogoUrl }}"
-                             alt="{{ $hospitalName }} Logo"
-                             class="sidebar-logo"
-                             loading="lazy"
-                             decoding="async">
+                        @if(($hospitalLogoSidebarStyle ?? 'white') === 'original_blur')
+                            <span style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:5px;">
+                                <img src="{{ $hospitalLogoUrl }}"
+                                     alt="{{ $hospitalName }} Logo"
+                                     class="sidebar-logo"
+                                     style="filter:none!important;"
+                                     loading="lazy"
+                                     decoding="async">
+                            </span>
+                        @else
+                            <img src="{{ $hospitalLogoUrl }}"
+                                 alt="{{ $hospitalName }} Logo"
+                                 class="sidebar-logo"
+                                 style="filter:brightness(0) invert(1)!important;"
+                                 loading="lazy"
+                                 decoding="async">
+                        @endif
                     </span>
                     <span class="sidebar-brand-copy">
                         <span class="sidebar-brand-name">{{ $hospitalName }}</span>

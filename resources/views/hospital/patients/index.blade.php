@@ -685,11 +685,11 @@
                             <td>
                                 @if($p->secondary_done_at)
                                     <span class="status-badge completed">
-                                        <i class="bi bi-check2"></i> Completed
+                                        <i class="bi bi-check2"></i> Secondary Done
                                     </span>
                                 @elseif($p->primary_done_at)
                                     <span class="status-badge in-progress">
-                                        <i class="bi bi-arrow-repeat"></i> In Progress
+                                        <i class="bi bi-arrow-repeat"></i> Primary Done
                                     </span>
                                 @else
                                     <span class="status-badge waiting">
