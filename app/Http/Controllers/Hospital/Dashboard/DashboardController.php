@@ -104,12 +104,12 @@ class DashboardController extends Controller
                     ->count();
                 $doctorPrimaryDone = Patient::where('doctor_id', $user->id)
                     ->whereDate('appointment_date', $today)
-                    ->whereNull('primary_done_at')
+                    ->whereNotNull('primary_done_at')
+                    ->whereNull('secondary_done_at')
                     ->count();
                 $doctorSecondaryDone = Patient::where('doctor_id', $user->id)
                     ->whereDate('appointment_date', $today)
-                    ->whereNotNull('primary_done_at')
-                    ->whereNull('secondary_done_at')
+                    ->whereNotNull('secondary_done_at')
                     ->count();
 
                 $secondaryQueue = Patient::with(['doctor', 'caseType'])
@@ -269,7 +269,9 @@ class DashboardController extends Controller
         ];
         $receptionistTodayPatients = collect();
 
-        if (($isReceptionistUser || $isDoctorUser) && (
+        $isPureDoctorUser = $user?->role?->slug === 'doctor';
+
+        if (($isReceptionistUser || $isDoctorUser) && ! $isPureDoctorUser && (
             $this->perm->can('opd.patient.register')
             || $this->perm->can('opd.exam.primary')
             || $this->perm->can('opd.exam.secondary')
@@ -380,25 +382,24 @@ class DashboardController extends Controller
         // ── માત્ર ને માત્ર પ્યોર ડૉક્ટર (doctor) માટે જ નવી ફાઈલ લોડ થશે ──
         if ($user && $user->role?->slug === 'doctor') {
 
-            // ૧. બધા ડૉક્ટર્સ લાવો (પોતાના સિવાય)
+            // ૧. બધા ડૉક્ટર્સ લાવો (પોતે સહિત)
             $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->with('role:id,slug')
                 ->orderBy('name')
-                ->get(['id', 'role_id', 'name', 'doctor_type'])
-                ->where('id', '!=', $user->id);
+                ->get(['id', 'role_id', 'name', 'doctor_type']);
 
-            // ૨. માત્ર ડૉક્ટરના ડેશબોર્ડ માટે જ આ નવું કાઉન્ટ લોજીક
+            // ૨. Stats DB query
             $doctorStatsById = Patient::whereDate('appointment_date', $today)
                 ->whereIn('doctor_id', $doctorCards->pluck('id'))
                 ->select('doctor_id')
                 ->selectRaw('COUNT(*) as assigned_today')
-                ->selectRaw('SUM(CASE WHEN primary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
-                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as secondary_count')
+                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
+                ->selectRaw('SUM(CASE WHEN secondary_done_at IS NOT NULL THEN 1 ELSE 0 END) as secondary_count')
                 ->groupBy('doctor_id')
                 ->get()
                 ->keyBy('doctor_id');
 
-            // ૩. કાર્ડ્સમાં આ નવો ડેટા સેટ કરો
+            // ૩. Stats set karo
             $doctorCards = $doctorCards->map(function ($doc) use ($doctorStatsById) {
                 $stats = $doctorStatsById->get($doc->id);
                 $doc->assigned_today = (int) ($stats->assigned_today ?? 0);
@@ -406,6 +407,11 @@ class DashboardController extends Controller
                 $doc->secondary_count = (int) ($stats->secondary_count ?? 0);
                 return $doc;
             });
+
+            // ૪. ખુદ ને પ્રથમ બતાવો, બાકીના alphabetically
+            $doctorCards = $doctorCards
+                ->sortBy(fn ($doc) => $doc->id === $user->id ? 0 : 1)
+                ->values();
 
             return view('hospital.dashboard.doctoredashboard', compact(
                 'slug',
@@ -472,18 +478,7 @@ class DashboardController extends Controller
             'doctorCardSummary',
             'receptionistTodayPatients',
         ));
-
-
-// ... (તમારો ઉપરનો જૂનો બધો કોડ) ...
-        
-        // ── એડમિન, રીસેપ્શનિસ્ટ, એકાઉન્ટન્ટ, આસિસ્ટન્ટ અને OT_DOCTOR માટે જૂનો ઓરિજિનલ વ્યુ લોડ થશે ──
-        return view('hospital.dashboard.index', compact(
-            'slug',
-            // ... બાકીના બધા વેરીએબલ્સ ...
-            'receptionistTodayPatients',
-        ));
-        
-    } // અહી તમારું index() ફંક્શન પૂરું થાય છે
+    }
 
 
     // ===============================================================

@@ -1,12 +1,11 @@
 @extends('hospital.layouts.app')
 @section('title', 'Doctor Dashboard')
-@section('page-header', 'Dashboard')
 
 @push('styles')
 <style>
 .doctor-page-wrap {
     background: #ffffff;
-    padding: 1.5rem;
+    padding: 0 1.5rem 1.5rem 1.5rem;
     min-height: 100vh;
     font-family: system-ui, -apple-system, sans-serif;
 }
@@ -246,7 +245,7 @@
 
     {{-- Subscription Alert --}}
     @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
-        <div class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm" style="margin-top:25px;">
+        <div class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span>
                 Subscription expires in <strong>{{ $subscriptionDaysLeft }} days</strong>. Please renew soon.
@@ -335,16 +334,20 @@
                 
                 <div class="doctor-cards-container">
                     @forelse($doctorCards ?? [] as $doc)
-                        <div class="doc-profile-card">
-                            {{-- Avatar (નામનો પહેલો અક્ષર) --}}
-                            <div class="doc-avatar">
+                        @php $isSelf = $doc->id === auth('hospital_user')->id(); @endphp
+                        <div class="doc-profile-card" style="{{ $isSelf ? 'border:2px solid #1B4F72; background:#f0f6fb;' : '' }}">
+                            {{-- Avatar --}}
+                            <div class="doc-avatar" style="{{ $isSelf ? 'background:#1B4F72; color:#fff;' : '' }}">
                                 {{ substr($doc->name, 0, 1) }}
                             </div>
-                            
-                            {{-- Details --}}
 
                             <div class="doc-info">
-                                <div class="doc-name">{{ $doc->name }}</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="doc-name">{{ $doc->name }}</div>
+                                    @if($isSelf)
+                                        <span style="font-size:10px;font-weight:700;background:#1B4F72;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
+                                    @endif
+                                </div>
                                 
                                 @if($doc->role?->slug === 'ot_doctor')
                                     <div class="doc-assigned">OT Doctor</div>

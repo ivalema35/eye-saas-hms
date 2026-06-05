@@ -62,8 +62,7 @@
                             </td>
                             
                             <td>{{ $patient->age ?? '-' }}</td>
->
-                            {{-- આ Action બ્લોક રિપ્લેસ કરો --}}
+                            {{-- Action --}}
                             <td>
                                 <a href="{{ url($slug . '/patient-history') }}?search={{ $patient->patient_code }}" 
                                    class="btn btn-sm text-white" 
