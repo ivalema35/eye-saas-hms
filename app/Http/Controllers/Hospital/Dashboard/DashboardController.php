@@ -459,25 +459,8 @@ class DashboardController extends Controller
             'doctorCardSummary',
             'receptionistTodayPatients',
         ));
-<<<<<<< HEAD
     }
-=======
 
-        // ... (તમારો ઉપરનો જૂનો બધો કોડ) ...
-
-        // ── એડમિન, રીસેપ્શનિસ્ટ, એકાઉન્ટન્ટ, આસિસ્ટન્ટ અને OT_DOCTOR માટે જૂનો ઓરિજિનલ વ્યુ લોડ થશે ──
-        return view('hospital.dashboard.index', compact(
-            'slug',
-            // ... બાકીના બધા વેરીએબલ્સ ...
-            'receptionistTodayPatients',
-        ));
-
-    } // અહી તમારું index() ફંક્શન પૂરું થાય છે
->>>>>>> d0412e33696ff2a98f5dddf0d455fe58f456a27d
-
-    // ===============================================================
-    // અહીંથી તમારો નવો History વાળો કોડ ચાલુ થાય છે
-    // ===============================================================
     public function history()
     {
         $slug = request()->route('slug');
