@@ -231,6 +231,24 @@
         width:100%;
     }
 }
+
+/* ── Wait Status Pill ── */
+.wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap;transition:background .4s,box-shadow .4s;vertical-align:middle; }
+.wait-pill.wait-green  { background:rgba(22,163,74,.10);  box-shadow:0 0 0 1px rgba(22,163,74,.25); }
+.wait-pill.wait-orange { background:rgba(234,88,12,.10);  box-shadow:0 0 0 1px rgba(234,88,12,.25); }
+.wait-pill.wait-red    { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.25); }
+.wait-pill.wait-fire   { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.35); animation:fire-glow 1s ease-in-out infinite alternate; }
+@keyframes fire-glow { from{box-shadow:0 0 0 1px rgba(220,38,38,.35),0 0 6px rgba(234,88,12,.4);}to{box-shadow:0 0 0 2px rgba(220,38,38,.55),0 0 12px rgba(234,88,12,.6);} }
+.wp-r { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.65rem;font-weight:900;color:#fff;flex-shrink:0; }
+.wait-green  .wp-r { background:#16a34a; }
+.wait-orange .wp-r { background:#ea580c; }
+.wait-red    .wp-r { background:#dc2626; }
+.wait-fire   .wp-r { background:linear-gradient(135deg,#dc2626,#ea580c); }
+.wp-time { font-size:.72rem;font-weight:700; }
+.wait-green  .wp-time { color:#15803d; }
+.wait-orange .wp-time { color:#c2410c; }
+.wait-red    .wp-time { color:#b91c1c; }
+.wait-fire   .wp-time { color:#dc2626; }
 </style>
 @endpush
 
@@ -238,10 +256,11 @@
 <div class="doctor-page-wrap">
 
     @php
-        $drIndexLabel = $drIndexLabel ?? 'DR Index No';
+        $drIndexLabel    = $drIndexLabel    ?? 'DR Index No';
         $waitStatusLabel = $waitStatusLabel ?? 'Wait Status';
-        $doneLabel = $doneLabel ?? 'Done';
-        $waitingLabel = $waitingLabel ?? 'Waiting';
+        $wGreen          = (int) hospital_setting('wait_green_max',  30);
+        $wOrange         = (int) hospital_setting('wait_orange_max', 60);
+        $wRed            = (int) hospital_setting('wait_red_max',   120);
     @endphp
 
     {{-- Subscription Alert --}}
@@ -331,16 +350,10 @@
                 
                 <div class="doctor-cards-container">
                     @forelse($doctorCards ?? [] as $doc)
-<<<<<<< HEAD
                         @php $isSelf = $doc->id === auth('hospital_user')->id(); @endphp
                         <div class="doc-profile-card" style="{{ $isSelf ? 'border:2px solid #1B4F72; background:#f0f6fb;' : '' }}">
                             {{-- Avatar --}}
                             <div class="doc-avatar" style="{{ $isSelf ? 'background:#1B4F72; color:#fff;' : '' }}">
-=======
-                        <div class="doc-profile-card">
-                            {{-- Avatar--}}
-                            <div class="doc-avatar">
->>>>>>> d0412e33696ff2a98f5dddf0d455fe58f456a27d
                                 {{ substr($doc->name, 0, 1) }}
                             </div>
 
@@ -427,8 +440,14 @@
                 <td>{{ $patient->age }}</td>
                 <td>{{ $patient->location->city ?? '-' }}</td>
                 <td>
-                    <span class="badge {{ $patient->primary_done_at ? 'bg-success' : 'bg-warning text-dark' }}">
-                        {{ $patient->display_wait_status ?? ($patient->primary_done_at ? $doneLabel : $waitingLabel) }}
+                    @php
+                        $wMins = (int) $patient->created_at->diffInMinutes(now());
+                        $wCls  = $wMins < $wGreen ? 'wait-green' : ($wMins < $wOrange ? 'wait-orange' : ($wMins < $wRed ? 'wait-red' : 'wait-fire'));
+                        $wFmt  = $wMins < 60 ? $wMins.'m' : floor($wMins/60).'h'.($wMins%60>0?' '.($wMins%60).'m':'');
+                    @endphp
+                    <span class="wait-pill {{ $wCls }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}">
+                        <span class="wp-r">R</span>
+                        <span class="wp-time">{{ $wFmt }}</span>
                     </span>
                 </td>
                 <td>
@@ -493,8 +512,14 @@
                 <td>{{ $patient->age }}</td>
                 <td>{{ $patient->location->city ?? '-' }}</td>
                 <td>
-                    <span class="badge {{ $patient->secondary_done_at ? 'bg-success' : 'bg-warning text-dark' }}">
-                        {{ $patient->display_wait_status ?? ($patient->secondary_done_at ? $doneLabel : $waitingLabel) }}
+                    @php
+                        $wMins = (int) $patient->created_at->diffInMinutes(now());
+                        $wCls  = $wMins < $wGreen ? 'wait-green' : ($wMins < $wOrange ? 'wait-orange' : ($wMins < $wRed ? 'wait-red' : 'wait-fire'));
+                        $wFmt  = $wMins < 60 ? $wMins.'m' : floor($wMins/60).'h'.($wMins%60>0?' '.($wMins%60).'m':'');
+                    @endphp
+                    <span class="wait-pill {{ $wCls }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}">
+                        <span class="wp-r">R</span>
+                        <span class="wp-time">{{ $wFmt }}</span>
                     </span>
                 </td>
                 <td>
@@ -523,3 +548,28 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+(function () {
+    const W = { green: {{ $wGreen }}, orange: {{ $wOrange }}, red: {{ $wRed }} };
+    function getWaitClass(m) {
+        return m < W.green ? 'wait-green' : m < W.orange ? 'wait-orange' : m < W.red ? 'wait-red' : 'wait-fire';
+    }
+    function fmtTime(m) {
+        return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h' + (m % 60 > 0 ? ' ' + (m % 60) + 'm' : '');
+    }
+    function updateWaitPills() {
+        const now = Date.now();
+        document.querySelectorAll('.wait-pill[data-wait-from]').forEach(function (pill) {
+            const mins = Math.floor((now - new Date(pill.dataset.waitFrom).getTime()) / 60000);
+            pill.className = 'wait-pill ' + getWaitClass(mins);
+            const t = pill.querySelector('.wp-time');
+            if (t) t.textContent = fmtTime(mins);
+        });
+    }
+    updateWaitPills();
+    setInterval(updateWaitPills, 30000);
+})();
+</script>
+@endpush
