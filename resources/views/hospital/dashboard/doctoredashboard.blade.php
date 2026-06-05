@@ -67,12 +67,12 @@
 /* ==================== DOCTOR PROFILE CARDS ==================== */
 .doctor-cards-container {
     display: flex;
-    flex-wrap: nowrap; /* આડા સ્ક્રોલ માટે */
+    flex-wrap: nowrap;
     overflow-x: auto;
     gap: 15px;
     padding-bottom: 10px;
 }
-/* સ્ક્રોલબારની ડિઝાઈન */
+
 .doctor-cards-container::-webkit-scrollbar {
     height: 6px;
 }
@@ -191,18 +191,12 @@
 }
 
 .metric-card-item .doc-badges{
-    margin-top:8px;
     gap:6px;
 }
 
 .metric-card-item .doc-badge{
     font-size:10px;
     padding:2px 8px;
-}
-
-.metric-card-item .doc-badge.active{
-    background:#1B4F72;
-    color:#fff;
 }
 
 .metric-icon{
@@ -243,6 +237,13 @@
 @section('content')
 <div class="doctor-page-wrap">
 
+    @php
+        $drIndexLabel = $drIndexLabel ?? 'DR Index No';
+        $waitStatusLabel = $waitStatusLabel ?? 'Wait Status';
+        $doneLabel = $doneLabel ?? 'Done';
+        $waitingLabel = $waitingLabel ?? 'Waiting';
+    @endphp
+
     {{-- Subscription Alert --}}
     @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
         <div class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm">
@@ -260,7 +261,6 @@
     {{-- Card 1: TODAY'S ASSIGNED --}}
     <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
         <div>
-            {{-- નાનો બ્લુ આઈકોન --}}
 <div class="metric-icon" style="background:#e0f2fe;">
     <i class="bi bi-people-fill" style="color:#0284c7;font-size:14px;"></i>
 </div>
@@ -283,7 +283,6 @@
     {{-- Card 2: PENDING EXAMS (Primary Done) --}}
     <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
         <div>
-            {{-- નાનો ઓરેન્જ આઈકોન --}}
 <div class="metric-icon" style="background:#ffedd5;">
     <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
 </div>
@@ -297,7 +296,6 @@
     {{-- Card 3: SECONDARY DONE --}}
     <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
         <div>
-            {{-- નાનો ગ્રીન આઈકોન --}}
             <div class="metric-icon" style="background:#dcfce7;">
                 <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:14px;"></i>
             </div>
@@ -311,7 +309,6 @@
     {{-- Card 4: REPORT --}}
     <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
         <div>
-            {{-- નાનો પર્પલ આઈકોન --}}
             <div class="metric-icon" style="background:#f8f0fc;">
                 <i class="bi bi-bar-chart-fill" style="color:#7b2cbf;font-size:14px;"></i>
             </div>
@@ -334,10 +331,16 @@
                 
                 <div class="doctor-cards-container">
                     @forelse($doctorCards ?? [] as $doc)
+<<<<<<< HEAD
                         @php $isSelf = $doc->id === auth('hospital_user')->id(); @endphp
                         <div class="doc-profile-card" style="{{ $isSelf ? 'border:2px solid #1B4F72; background:#f0f6fb;' : '' }}">
                             {{-- Avatar --}}
                             <div class="doc-avatar" style="{{ $isSelf ? 'background:#1B4F72; color:#fff;' : '' }}">
+=======
+                        <div class="doc-profile-card">
+                            {{-- Avatar--}}
+                            <div class="doc-avatar">
+>>>>>>> d0412e33696ff2a98f5dddf0d455fe58f456a27d
                                 {{ substr($doc->name, 0, 1) }}
                             </div>
 
@@ -366,7 +369,7 @@
                                         </span>
                                     </div>
                                 @else
-                                    {{-- OT Doctor માટે માત્ર Assigned નો બેઝ --}}
+                                    {{-- OT Doctor Assigned --}}
                                     <div class="doc-badges">
                                         <span class="doc-badge">
                                             Assigned {{ $doc->assigned_today ?? 0 }}
@@ -403,40 +406,43 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
-<thead class="table-light text-secondary">
-    <tr>
-        <th style="width: 50px;">#</th>
-        <th class="text-start">Patient Name</th>
-        <th>Reception Time</th>
-        <th>Primary Time</th>
-        <th>Age</th>
-        <th>Action</th>
-    </tr>
-</thead>
-<tbody>
-    @forelse($primaryQueue ?? [] as $i => $patient)
+  <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
+    <thead class="table-light text-secondary">
         <tr>
-            <td>{{ $i + 1 }}</td>
-            <td class="text-start fw-semibold" style="color: #1B4F72;">
-                {{ $patient->first_name }} {{ $patient->last_name }}
-            </td>
-            <td>{{ $patient->created_at->format('h:i A') }}</td>
-            <td>{{ $patient->primary_done_at ? \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') : '-' }}</td>
-            <td>{{ $patient->age }}</td>
-            <td>
-                <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}" class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                    Examine
-                </a>
-            </td>
+            <th>{{ $drIndexLabel }}</th>
+            <th class="text-start">Patient Name</th>
+            <th>Age</th>
+            <th>City</th>
+            <th>{{ $waitStatusLabel }}</th>
+            <th>Action</th>
         </tr>
-    @empty
-        <tr>
-            <td colspan="6" class="py-4 text-muted bg-light fw-medium">No Data Found</td>
-        </tr>
-    @endforelse
-</tbody>
-                        </table>
+    </thead>
+    <tbody>
+        @forelse($primaryQueue ?? [] as $i => $patient)
+            <tr>
+                <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
+                <td class="text-start fw-semibold" style="color: #1B4F72;">
+                    {{ $patient->first_name }} {{ $patient->last_name }}
+                </td>
+                <td>{{ $patient->age }}</td>
+                <td>{{ $patient->location->city ?? '-' }}</td>
+                <td>
+                    <span class="badge {{ $patient->primary_done_at ? 'bg-success' : 'bg-warning text-dark' }}">
+                        {{ $patient->display_wait_status ?? ($patient->primary_done_at ? $doneLabel : $waitingLabel) }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}" 
+                       class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                        Examine
+                    </a>
+                </td>
+            </tr>
+        @empty
+            <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
+        @endforelse
+    </tbody>
+</table>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
                         <div>Showing 1 to entries of 0 entries</div>
@@ -466,40 +472,43 @@
                         </div>
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
-                            <thead class="table-light text-secondary">
-                                <tr>
-                                    <th style="width: 50px;">#</th>
-                                    <th class="text-start">Patient Name</th>
-                                    <th>Reception Time</th>
-                                    <th>Primary Time</th>
-                                    <th>Age</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($secondaryQueue ?? [] as $i => $patient)
-                                    <tr>
-                                        <td>{{ $i + 1 }}</td>
-                                        <td class="text-start fw-semibold" style="color: #1B4F72;">
-                                            {{ $patient->first_name }} {{ $patient->last_name }}
-                                        </td>
-                                        <td>{{ $patient->created_at->format('h:i A') }}</td>
-                                        <td>{{ $patient->primary_done_at ? \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') : '-' }}</td>
-                                        <td>{{ $patient->age }}</td>
-                                        <td>
-                                            <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}" class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                                                Examine
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="py-4 text-muted bg-light fw-medium">No Data Found</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+<table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
+    <thead class="table-light text-secondary">
+        <tr>
+            <th>{{ $drIndexLabel }}</th>
+            <th class="text-start">Patient Name</th>
+            <th>Age</th>
+            <th>City</th>
+            <th>{{ $waitStatusLabel }}</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($secondaryQueue ?? [] as $i => $patient)
+            <tr>
+                <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
+                <td class="text-start fw-semibold" style="color: #1B4F72;">
+                    {{ $patient->first_name }} {{ $patient->last_name }}
+                </td>
+                <td>{{ $patient->age }}</td>
+                <td>{{ $patient->location->city ?? '-' }}</td>
+                <td>
+                    <span class="badge {{ $patient->secondary_done_at ? 'bg-success' : 'bg-warning text-dark' }}">
+                        {{ $patient->display_wait_status ?? ($patient->secondary_done_at ? $doneLabel : $waitingLabel) }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}" 
+                       class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                        Examine
+                    </a>
+                </td>
+            </tr>
+        @empty
+            <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
+        @endforelse
+    </tbody>
+</table>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
                         <div>Showing 1 to entries of 0 entries</div>
@@ -511,8 +520,6 @@
                 </div>
             </div>
         </div>
-
     </div>
-
 </div>
 @endsection

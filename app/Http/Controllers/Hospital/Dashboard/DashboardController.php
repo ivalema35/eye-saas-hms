@@ -94,6 +94,16 @@ class DashboardController extends Controller
                 ->latest()
                 ->get()
                 ->filter(fn (Patient $patient): bool => $patient->primary_done_at === null)
+                ->map(function (Patient $patient): Patient {
+                    $patient->display_doctor_index = $patient->doctor_patient_no
+                        ? (($patient->doctor?->doctor_prefix ?? '')
+                            ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
+                            : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
+                        : '-';
+                    $patient->display_wait_status = $patient->primary_done_at ? 'Done' : 'Waiting';
+
+                    return $patient;
+                })
                 ->take(20)
                 ->values();
 
@@ -119,7 +129,17 @@ class DashboardController extends Controller
                     ->whereNull('secondary_done_at')
                     ->latest()
                     ->take(20)
-                    ->get();
+                    ->get()
+                    ->map(function (Patient $patient): Patient {
+                        $patient->display_doctor_index = $patient->doctor_patient_no
+                            ? (($patient->doctor?->doctor_prefix ?? '')
+                                ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
+                                : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
+                            : '-';
+                        $patient->display_wait_status = $patient->secondary_done_at ? 'Done' : 'Waiting';
+
+                        return $patient;
+                    });
             }
         }
 
@@ -311,7 +331,7 @@ class DashboardController extends Controller
             $receptionistTodayPatients = Patient::with([
                 'doctor:id,name,doctor_prefix',
                 'location:id,city',
-                'otBookings'         => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
+                'otBookings' => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
                 'primaryExamination' => fn ($query) => $query->select('id', 'patient_id', 'examined_at', 'exam_data', 'dilation_time', 'updated_at'),
             ])
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
@@ -340,46 +360,6 @@ class DashboardController extends Controller
                 ]);
         }
 
-        // ── માત્ર ને માત્ર પ્યોર ડૉક્ટર (doctor) માટે જ નવી ફાઈલ લોડ થશે ──
-        // if ($user && $user->role?->slug === 'doctor') {
-        //     return view('hospital.dashboard.doctoredashboard', compact(
-        //         'slug',
-        //         'tenant',
-        //         'subscriptionDaysLeft',
-        //         'primaryQueue',
-        //         'secondaryQueue',
-        //         'doctorName',
-        //         'doctorAssignedPatients',
-        //         'doctorPrimaryDone',
-        //         'doctorSecondaryDone',
-        //         'doctorCards'
-        //     ));
-        // }
-        // if ($user && $user->role?->slug === 'doctor') {
-
-            // જો પરમિશનના કારણે DoctorCards ખાલી હોય, તો ડાયરેક્ટ ફેચ કરો (આ નવો કોડ છે)
-        //     if ($doctorCards->isEmpty()) {
-        //         $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
-        //             ->active()
-        //             ->orderBy('name')
-        //             ->get(['id', 'name']);
-        //     }
-        //     $doctorCards = $doctorCards->where('id', '!=', $user->id);
-        //     return view('hospital.dashboard.doctoredashboard', compact(
-        //         'slug',
-        //         'tenant',
-        //         'subscriptionDaysLeft',
-        //         'primaryQueue',
-        //         'secondaryQueue',
-        //         'doctorName',
-        //         'doctorAssignedPatients',
-        //         'doctorPrimaryDone',
-        //         'doctorSecondaryDone',
-        //         'doctorCards'
-        //     ));
-        // }
-
-        // ── માત્ર ને માત્ર પ્યોર ડૉક્ટર (doctor) માટે જ નવી ફાઈલ લોડ થશે ──
         if ($user && $user->role?->slug === 'doctor') {
 
             // ૧. બધા ડૉક્ટર્સ લાવો (પોતે સહિત)
@@ -405,6 +385,7 @@ class DashboardController extends Controller
                 $doc->assigned_today = (int) ($stats->assigned_today ?? 0);
                 $doc->primary_count = (int) ($stats->primary_count ?? 0);
                 $doc->secondary_count = (int) ($stats->secondary_count ?? 0);
+
                 return $doc;
             });
 
@@ -478,11 +459,24 @@ class DashboardController extends Controller
             'doctorCardSummary',
             'receptionistTodayPatients',
         ));
+<<<<<<< HEAD
     }
+=======
 
+        // ... (તમારો ઉપરનો જૂનો બધો કોડ) ...
+
+        // ── એડમિન, રીસેપ્શનિસ્ટ, એકાઉન્ટન્ટ, આસિસ્ટન્ટ અને OT_DOCTOR માટે જૂનો ઓરિજિનલ વ્યુ લોડ થશે ──
+        return view('hospital.dashboard.index', compact(
+            'slug',
+            // ... બાકીના બધા વેરીએબલ્સ ...
+            'receptionistTodayPatients',
+        ));
+
+    } // અહી તમારું index() ફંક્શન પૂરું થાય છે
+>>>>>>> d0412e33696ff2a98f5dddf0d455fe58f456a27d
 
     // ===============================================================
-    // અહીંથી તમારો નવો History વાળો કોડ ચાલુ થાય છે 
+    // અહીંથી તમારો નવો History વાળો કોડ ચાલુ થાય છે
     // ===============================================================
     public function history()
     {
@@ -490,7 +484,7 @@ class DashboardController extends Controller
         $user = Auth::guard('hospital_user')->user();
 
         // સુરક્ષા: જો યુઝર ડૉક્ટર અથવા OT ડૉક્ટર ન હોય, તો તેમને પાછા ડેશબોર્ડ પર મોકલી દો
-        if (!$user || !in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
+        if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
             return redirect()->route('hospital.dashboard', ['slug' => $slug]);
         }
 
@@ -500,7 +494,7 @@ class DashboardController extends Controller
             ->where(function ($query) {
                 // શરત: જેનું પ્રાયમરી અથવા સેકન્ડરી થઈ ગયું હોય તેવા જ પેશન્ટ
                 $query->whereNotNull('primary_done_at')
-                      ->orWhereNotNull('secondary_done_at');
+                    ->orWhereNotNull('secondary_done_at');
             })
             ->latest('appointment_date') // નવા પેશન્ટ ઉપર દેખાય તે માટે
             ->paginate(20); // એક પેજ પર ૨૦ પેશન્ટ બતાવશે
@@ -508,7 +502,4 @@ class DashboardController extends Controller
         // ડેટાને વ્યુ (View) ફાઈલમાં મોકલો
         return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
     }
-} 
-        
-    
-
+}
