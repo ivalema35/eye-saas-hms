@@ -62,148 +62,180 @@
 /* These styles are for the 4 cards: Today's Patients, Pending Exams, Today Revenue, OT Today */
 /* No conflict with existing .card or .data-tile styles */
 
-.metric-grid {
+
+
+
+/* ==================== DOCTOR PROFILE CARDS ==================== */
+.doctor-cards-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    flex-wrap: nowrap; /* આડા સ્ક્રોલ માટે */
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 10px;
+}
+/* સ્ક્રોલબારની ડિઝાઈન */
+.doctor-cards-container::-webkit-scrollbar {
+    height: 6px;
+}
+.doctor-cards-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
 }
 
-.metric-card-item {
-    flex: 1;
-    min-width: 180px;
+.doc-profile-card {
+    min-width: 280px;
     background: #ffffff;
-    border-radius: 16px;
-    padding: 1rem 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
-    border: 1px solid #eef2f6;
-    transition: all 0.2s ease;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.metric-card-item:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+.doc-profile-card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(27, 79, 114, 0.08);
+    border-color: #cde5f5;
 }
-
-.metric-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #6c7e8f;
+.doc-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: #eef2f6;
+    color: #1B4F72;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    font-weight: 800;
     text-transform: uppercase;
-    margin-bottom: 8px;
+    flex-shrink: 0;
 }
-
-.metric-number {
-    font-size: 32px;
+.doc-info {
+    flex-grow: 1;
+}
+.doc-name {
+    font-size: 15px;
     font-weight: 800;
     color: #1B4F72;
-    line-height: 1.2;
-    margin-bottom: 6px;
+    margin-bottom: 2px;
+    text-transform: capitalize;
 }
-
-.metric-subtext {
-    font-size: 11px;
-    color: #8a9aa8;
-    font-weight: 500;
+.doc-assigned {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 8px;
 }
-
-.metric-subtext-badge {
-    background: #e9f5ef;
-    color: #2c7a4d;
-    padding: 2px 10px;
-    border-radius: 30px;
-    display: inline-block;
+.doc-badges {
+    display: flex;
+    gap: 8px;
+}
+.doc-badge {
     font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
     font-weight: 600;
 }
-
-.metric-ot-stats {
-    font-size: 11px;
-    color: #5e7e8c;
-    margin-top: 6px;
+.doc-badge.active {
+    background: #1B4F72;
+    color: #ffffff;
+    border-color: #1B4F72;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .metric-card-item {
-        min-width: calc(50% - 0.5rem);
+/* ==================== TOP 4 DASHBOARD CARDS ==================== */
+
+.metric-grid{
+    display:flex;
+    gap:16px;
+    margin-bottom:24px;
+}
+
+.metric-card-item{
+    flex:1;
+    min-width:0;
+    min-height:120px;
+    background:#fff;
+    border:1px solid #cde5f5;
+    border-radius:14px;
+    padding:14px 18px;
+    position:relative;
+    transition:all .3s ease;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+
+.metric-card-item:hover{
+    border-color:#7bb3d9;
+    box-shadow:0 10px 25px rgba(27,79,114,.12);
+    transform:translateY(-2px);
+}
+
+.metric-title{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    color:#64748b;
+    margin-top:8px;
+}
+
+.metric-number{
+    font-size:22px;
+    font-weight:800;
+    color:#1B4F72;
+    line-height:1;
+    margin-bottom:0;
+}
+
+.metric-card-item .doc-badges{
+    margin-top:8px;
+    gap:6px;
+}
+
+.metric-card-item .doc-badge{
+    font-size:10px;
+    padding:2px 8px;
+}
+
+.metric-card-item .doc-badge.active{
+    background:#1B4F72;
+    color:#fff;
+}
+
+.metric-icon{
+    width:32px;
+    height:32px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.metric-link{
+    font-size:15px;
+    font-weight:700;
+    color:#111827;
+    text-decoration:none;
+}
+
+@media(max-width:768px){
+    .metric-grid{
+        flex-wrap:wrap;
     }
-    .metric-number {
-        font-size: 26px;
+
+    .metric-card-item{
+        width:calc(50% - 8px);
+        flex:none;
     }
 }
 
-@media (max-width: 480px) {
-    .metric-card-item {
-        min-width: 100%;
-    }
-}
-
-/* ==================== 4 CARDS - LIGHT BLUE BORDER & HOVER SHADOW ==================== */
-
-.metric-card-item {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 1rem 1rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
-    border: 1.5px solid #cde5f5;  /* Light blue border */
-    transition: all 0.3s ease;
-    cursor: pointer;
-    position: relative;
-}
-
-.metric-card-item:hover {
-    border-color: #7bb3d9;  /* Slightly darker light blue on hover */
-    box-shadow: 0 10px 25px rgba(27, 79, 114, 0.15), 0 4px 8px rgba(27, 79, 114, 0.08);  /* Light blue shadow */
-    transform: translateY(-3px);
-}
-
-/* Optional: Extra light blue glow effect on hover */
-.metric-card-item:hover::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(27, 79, 114, 0.02);
-    border-radius: 16px;
-    pointer-events: none;
-}
-
-/* Title styling - keep as is */
-.metric-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    color: #6c7e8f;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-}
-
-/* Number styling */
-.metric-number {
-    font-size: 32px;
-    font-weight: 800;
-    color: #1B4F72;
-    line-height: 1.2;
-    margin-bottom: 6px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .metric-card-item {
-        min-width: calc(50% - 0.5rem);
-    }
-    .metric-number {
-        font-size: 26px;
-    }
-}
-
-@media (max-width: 480px) {
-    .metric-card-item {
-        min-width: 100%;
+@media(max-width:480px){
+    .metric-card-item{
+        width:100%;
     }
 }
 </style>
@@ -225,53 +257,123 @@
     {{-- Top Section: Today All Data (Left) & Doctors Component (Right) --}}
     {{-- ==================== FIRST IMAGE: 4 METRIC CARDS ==================== --}}
 <div class="metric-grid">
-    {{-- Card 1: TODAY'S PATIENTS --}}
-    <div class="metric-card-item">
-        <div class="metric-title">📋 Today's Assigned</div>
-        <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
+
+    {{-- Card 1: TODAY'S ASSIGNED --}}
+    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+        <div>
+            {{-- નાનો બ્લુ આઈકોન --}}
+<div class="metric-icon" style="background:#e0f2fe;">
+    <i class="bi bi-people-fill" style="color:#0284c7;font-size:14px;"></i>
+</div>
+            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Today's Assigned</div>
+        </div>
+        <div>
+            <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
+            
+            <div class="doc-badges mt-1">
+                <span class="doc-badge {{ ($doctorPrimaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
+                    Primary {{ $doctorPrimaryDone ?? 0 }}
+                </span>
+                <span class="doc-badge {{ ($doctorSecondaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
+                    Secondary {{ $doctorSecondaryDone ?? 0 }}
+                </span>
+            </div>
+        </div>
     </div>
 
-    {{-- Card 2: PENDING EXAMS (અથવા Primary Done) --}}
-    <div class="metric-card-item">
-        <div class="metric-title">⏳ Primary Done</div>
-        <div class="metric-number">{{ $doctorPrimaryDone ?? 0 }}</div>
+    {{-- Card 2: PENDING EXAMS (Primary Done) --}}
+    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+        <div>
+            {{-- નાનો ઓરેન્જ આઈકોન --}}
+<div class="metric-icon" style="background:#ffedd5;">
+    <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
+</div>
+            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Primary Done</div>
+        </div>
+        <div>
+            <div class="metric-number mb-0">{{ $doctorPrimaryDone ?? 0 }}</div>
+        </div>
     </div>
 
-    {{-- Card 3: SECONDARY --}}
-    <div class="metric-card-item">
-        <div class="metric-title">💰 Secondary Done</div>
-        <div class="metric-number">{{ $doctorSecondaryDone ?? 0 }}</div>
+    {{-- Card 3: SECONDARY DONE --}}
+    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+        <div>
+            {{-- નાનો ગ્રીન આઈકોન --}}
+            <div class="metric-icon" style="background:#dcfce7;">
+                <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:14px;"></i>
+            </div>
+            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Secondary Done</div>
+        </div>
+        <div>
+            <div class="metric-number mb-0">{{ $doctorSecondaryDone ?? 0 }}</div>
+        </div>
     </div>
 
-    {{-- Card 4: REPORT (અત્યારે તમારી પાસે રિપોર્ટનો ડેટા નથી, એટલે ગમે તે અન્ય ફિલ્ડ વાપરી શકો) --}}
-    <div class="metric-card-item">
-        <div class="metric-title">🏥 Report</div>
-        <div class="metric-number">
-            {{ ($doctorAssignedPatients ?? 0) - (($doctorPrimaryDone ?? 0) + ($doctorSecondaryDone ?? 0)) }}
+    {{-- Card 4: REPORT --}}
+    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+        <div>
+            {{-- નાનો પર્પલ આઈકોન --}}
+            <div class="metric-icon" style="background:#f8f0fc;">
+                <i class="bi bi-bar-chart-fill" style="color:#7b2cbf;font-size:14px;"></i>
+            </div>
+            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Reports</div>
+        </div>
+        <div class="mt-2">
+            <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="text-decoration-none text-dark d-flex align-items-center fw-bolder" style="font-size: 14px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                View <i class="bi bi-arrow-right ms-1" style="font-size: 14px;"></i>
+            </a>
         </div>
     </div>
 </div>
-    <div class="row g-4 mb-4">
-    
 
-        {{-- Right Grid Box: Empty Doctors Block --}}
-<div class="col-lg-12 col-md-7">
+
+    <div class="row g-4 mb-4">
+    {{-- Right Grid Box: Doctors Block --}}
+        <div class="col-lg-12">
             <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
-                <h6 class="fw-bold mb-2" style="color: #1B4F72;">Doctors</h6>
-                <hr class="my-2" style="border-color: rgba(27, 79, 114, 0.15)">
+                <h6 class="fw-bold mb-3" style="color: #1B4F72;">All Doctors</h6>
                 
-                <div class="d-flex flex-column gap-2 mt-2">
+                <div class="doctor-cards-container">
                     @forelse($doctorCards ?? [] as $doc)
-                        <div class="d-flex justify-content-between align-items-center p-2 bg-white rounded" style="border: 1px solid rgba(27,79,114,0.1);">
-                            <div class="fw-semibold text-dark">
-                                <i class="bi bi-person-badge me-2" style="color: #1B4F72;"></i>{{ $doc->name }}
+                        <div class="doc-profile-card">
+                            {{-- Avatar (નામનો પહેલો અક્ષર) --}}
+                            <div class="doc-avatar">
+                                {{ substr($doc->name, 0, 1) }}
                             </div>
-                            <div class="small">
-                                <span class="badge bg-light text-dark border">Assigned: {{ $doc->assigned_today ?? 0 }}</span>
+                            
+                            {{-- Details --}}
+
+                            <div class="doc-info">
+                                <div class="doc-name">{{ $doc->name }}</div>
+                                
+                                @if($doc->role?->slug === 'ot_doctor')
+                                    <div class="doc-assigned">OT Doctor</div>
+                                @else
+                                    <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
+                                @endif
+                                
+                                {{-- માત્ર રેગ્યુલર ડૉક્ટર માટે જ Primary/Secondary બતાવવા માટેની શરત --}}
+                                @if($doc->role?->slug !== 'ot_doctor')
+                                    <div class="doc-badges">
+                                        <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
+                                            Primary Exam {{ $doc->primary_count ?? 0 }}
+                                        </span>
+                                        <span class="doc-badge {{ ($doc->secondary_count ?? 0) > 0 ? 'active' : '' }}">
+                                            Secondary Exam {{ $doc->secondary_count ?? 0 }}
+                                        </span>
+                                    </div>
+                                @else
+                                    {{-- OT Doctor માટે માત્ર Assigned નો બેઝ --}}
+                                    <div class="doc-badges">
+                                        <span class="doc-badge">
+                                            Assigned {{ $doc->assigned_today ?? 0 }}
+                                        </span>
+                                    </div>
+                                @endif
                             </div>
                         </div>
                     @empty
-                        <div class="text-muted small">No other duty records live right now.</div>
+                        <div class="text-muted small p-2">No other duty records live right now.</div>
                     @endforelse
                 </div>
             </div>

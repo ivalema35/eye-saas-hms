@@ -134,3 +134,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 
 // Hospital routes — path-based slug routing
 require __DIR__.'/hospital.php';
+
+
+// આ રાઉટ ડૉક્ટરની હિસ્ટ્રી બતાવવા માટે છે
+Route::get('/{slug}/doctor-history', [\App\Http\Controllers\Hospital\Dashboard\DashboardController::class, 'history'])
+    ->name('hospital.doctor.history');

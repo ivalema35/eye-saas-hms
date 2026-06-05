@@ -537,18 +537,18 @@
     {{-- Dashboard --}}
     <a href="#" class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
     
-    {{-- Basic Master Dropdown --}}
-    <div class="dropdown">
-        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="bi bi-list-task"></i> Basic Master
-        </a>
-        <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Case Type</a></li>
-            <li><a class="dropdown-item" href="#">Location</a></li>
-            <li><a class="dropdown-item" href="#">Duration</a></li>
-            <li><a class="dropdown-item" href="#">Refered By</a></li>
-        </ul>
-    </div>
+{{-- Basic Master Dropdown --}}
+<!-- <div class="dropdown">
+    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+        <i class="bi bi-list-task"></i> Basic Master
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+<li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+<li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+<li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+    </ul>
+</div> -->
 
     {{-- Diagnosis Master Dropdown --}}
 <div class="dropdown">
@@ -556,56 +556,60 @@
         <i class="bi bi-info-circle-fill"></i> Diagnosis Master
     </a>
     <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="#">C/O</a></li>
-        <li><a class="dropdown-item" href="#">KCO</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/kcos') }}">KCO</a></li>
         
-        {{-- આ O/E વાળું નવું ડ્રોપડાઉન જે સાઈડમાં ખુલશે --}}
+        {{-- O/E ડ્રોપડાઉન --}}
         <li class="dropend">
             <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">SAC</a></li>
-                <li><a class="dropdown-item" href="#">LID</a></li>
-                <li><a class="dropdown-item" href="#">CONJ</a></li>
-                <li><a class="dropdown-item" href="#">CORNEA</a></li>
-                <li><a class="dropdown-item" href="#">AC</a></li>
-                <li><a class="dropdown-item" href="#">IRIS</a></li>
-                <li><a class="dropdown-item" href="#">PUPIL</a></li>
-                <li><a class="dropdown-item" href="#">LENS</a></li>
-                <li><a class="dropdown-item" href="#">EM</a></li>
-                <li><a class="dropdown-item" href="#">COVER TEST</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/sac') }}">SAC</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lid') }}">LID</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/conj') }}">CONJ</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/cornea') }}">CORNEA</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/ac') }}">AC</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/iris') }}">IRIS</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/pupil') }}">PUPIL</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lens') }}">LENS</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/em') }}">EM</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/covertest') }}">COVER TEST</a></li>
             </ul>
         </li>
         
+        {{-- FUNDUS ડ્રોપડાઉન (તમારી જરૂરિયાત મુજબ URL ઉમેરજો) --}}
         <li class="dropend">
             <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
             <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="#">DISC</a></li>
-                <li><a class="dropdown-item" href="#">FR</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/disc') }}">DISC</a></li>
+                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/fr') }}">FR</a></li>
             </ul>
         </li>
-        <li><a class="dropdown-item" href="#">DIAGNOSIS</a></li>
-        <li><a class="dropdown-item" href="#">ADVICE</a></li>
+        
+        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/diagnosis') }}">DIAGNOSIS</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/advice') }}">ADVICE</a></li>
     </ul>
 </div>
 
-    {{-- Medicine Master Dropdown --}}
-    <div class="dropdown">
-        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-            <i class="bi bi-capsule"></i> Medicine Master
-        </a>
-        <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Dosage</a></li>
-            <li><a class="dropdown-item" href="#">Medicine Type</a></li>
-            <li><a class="dropdown-item" href="#">Medicine Category</a></li>
-            <li><a class="dropdown-item" href="#">Root Of Administration</a></li>
-            <li><a class="dropdown-item" href="#">Add Medicine</a></li>
-            <li><a class="dropdown-item" href="#">Add Group</a></li>
-            <li><a class="dropdown-item" href="#">View Group</a></li>
-        </ul>
-    </div>
 
-    {{-- History --}}
-    <a href="#" class="text-white text-decoration-none"><i class="bi bi-clock-history"></i> History</a>
+{{-- Medicine Master Dropdown --}}
+<div class="dropdown">
+    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-capsule"></i> Medicine Master
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-dosages') }}">Dosage</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-types') }}">Medicine Type</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-categories') }}">Medicine Category</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Root Of Administration</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Add Medicine</a></li>
+        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Add Group</a></li>
+    </ul>
+</div>
+
+ {{-- History --}}
+    <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}" class="text-white text-decoration-none">
+        <i class="bi bi-clock-history"></i> History
+    </a>
 </div>
 
     @else
