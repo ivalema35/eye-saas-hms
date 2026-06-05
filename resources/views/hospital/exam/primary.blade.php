@@ -1125,9 +1125,14 @@ document.addEventListener('DOMContentLoaded', function () {
     const dilateNo    = document.getElementById('dilateNo');
     const dilateTimeInput = document.getElementById('dilation_time');
 
+    const defaultDilationTime = {{ (int) hospital_setting('default_dilation_time', 40) }};
+
     function toggleDilationTime() {
         const isDilated = dilateYes?.checked;
         if (dilationWrap) { dilationWrap.style.display = isDilated ? '' : 'none'; }
+        if (isDilated && dilateTimeInput && !dilateTimeInput.value) {
+            dilateTimeInput.value = defaultDilationTime;
+        }
         if (!isDilated && dilateTimeInput) { dilateTimeInput.value = ''; }
     }
 

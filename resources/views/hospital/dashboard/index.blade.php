@@ -1025,8 +1025,9 @@
 }
 
 .doctor-strip-pill.is-secondary {
-    background: var(--dash-s2-12);
-    color: var(--dash-secondary);
+    background: #2563EB;
+    color: #ffffff;
+    border-color: #2563EB;
 }
 
 .doctor-strip-pill.is-muted {
@@ -1140,6 +1141,63 @@
     .bento-table thead th,
     .bento-table tbody td { padding-left: .9rem; padding-right: .9rem; }
 }
+
+/* ── Patient Status Badge (same as patient list page) ───────────────────── */
+.dash-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.dash-status-badge.waiting    { background: rgba(26,188,156,.12); color: #1abc9c; }
+.dash-status-badge.in-progress{ background: rgba(27,79,114,.08);  color: #1B4F72; }
+.dash-status-badge.completed  { background: rgba(27,79,114,.10);  color: #1B4F72; }
+
+/* ── Wait Status Pill ─────────────────────────────────────────────────────── */
+.wait-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 999px;
+    padding: 3px 10px 3px 3px;
+    font-weight: 700;
+    white-space: nowrap;
+    transition: background .4s, box-shadow .4s;
+    vertical-align: middle;
+}
+.wait-pill.wait-green  { background: rgba(22,163,74,.10);  box-shadow: 0 0 0 1px rgba(22,163,74,.25); }
+.wait-pill.wait-orange { background: rgba(234,88,12,.10);  box-shadow: 0 0 0 1px rgba(234,88,12,.25); }
+.wait-pill.wait-red    { background: rgba(220,38,38,.10);  box-shadow: 0 0 0 1px rgba(220,38,38,.25); }
+.wait-pill.wait-fire   { background: rgba(220,38,38,.10);  box-shadow: 0 0 0 1px rgba(220,38,38,.35); animation: fire-glow 1s ease-in-out infinite alternate; }
+@keyframes fire-glow {
+    from { box-shadow: 0 0 0 1px rgba(220,38,38,.35), 0 0 6px rgba(234,88,12,.4); }
+    to   { box-shadow: 0 0 0 2px rgba(220,38,38,.55), 0 0 12px rgba(234,88,12,.6); }
+}
+.wp-r {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: .68rem;
+    font-weight: 900;
+    color: #fff;
+    flex-shrink: 0;
+}
+.wait-green  .wp-r { background: #16a34a; }
+.wait-orange .wp-r { background: #ea580c; }
+.wait-red    .wp-r { background: #dc2626; }
+.wait-fire   .wp-r { background: linear-gradient(135deg,#dc2626,#ea580c); animation: fire-glow 1s ease-in-out infinite alternate; }
+.wp-time { font-size: .75rem; font-weight: 700; }
+.wait-green  .wp-time { color: #15803d; }
+.wait-orange .wp-time { color: #c2410c; }
+.wait-red    .wp-time { color: #b91c1c; }
+.wait-fire   .wp-time { color: #dc2626; }
 </style>
 @endpush
 
@@ -1170,6 +1228,17 @@
     $doctorCards = $doctorCards ?? collect();
     $doctorStripCards = $doctorCards;
     $receptionistTodayPatients = $receptionistTodayPatients ?? collect();
+    $wGreen  = (int) hospital_setting('wait_green_max',  30);
+    $wOrange = (int) hospital_setting('wait_orange_max', 60);
+    $wRed    = (int) hospital_setting('wait_red_max',   120);
+    // D (dilated) thresholds
+    $wDGreen  = (int) hospital_setting('wait_d_green_max',  40);
+    $wDOrange = (int) hospital_setting('wait_d_orange_max', 90);
+    $wDRed    = (int) hospital_setting('wait_d_red_max',   120);
+    // ND (not dilated) thresholds
+    $wNdGreen  = (int) hospital_setting('wait_nd_green_max',  20);
+    $wNdOrange = (int) hospital_setting('wait_nd_orange_max', 60);
+    $wNdRed    = (int) hospital_setting('wait_nd_red_max',   120);
     $doctorTodayPatients = $isDoctorUser && $doctorAssignedPatients !== null ? $doctorAssignedPatients : $todayPatients;
 
     if ($isDoctorUser) {
@@ -1448,20 +1517,22 @@
                     <div class="doctor-strip-avatar">{{ $doctorInitials }}</div>
                     <div>
                         <p class="doctor-strip-name">{{ $doctor->name }}</p>
-                        <p class="doctor-strip-sub">{{ $isOtDoctor ? 'OT Doctor' : ($doctor->assigned_today . ' Assigned') }}</p>
-                        @if($isOtDoctor)
-                            <div class="doctor-strip-pills">
-                                <span class="doctor-strip-pill is-muted">Assigned {{ $doctor->assigned_today }}</span>
-                            </div>
-                        @else
-                            <div class="doctor-strip-pills">
-                                <span class="doctor-strip-pill {{ $isPrimaryDoctor ? 'is-primary' : 'is-muted' }}">Primary Exam {{ $doctor->primary_count }}</span>
-                                <span class="doctor-strip-pill {{ $isSecondaryDoctor ? 'is-secondary' : 'is-muted' }}">Secondary Exam {{ $doctor->secondary_count }}</span>
-                            </div>
+                        <p class="doctor-strip-sub">{{ $doctor->assigned_today }} Assigned</p>
+                        @if(!$isOtDoctor && $doctor->primary_count === 0 && $doctor->secondary_count === 0)
+                            <div class="doctor-strip-status"><i class="bi bi-check-circle-fill me-1"></i>All Clear</div>
                         @endif
-                        <!-- <div class="doctor-strip-status">All Clear</div> -->
                     </div>
                 </div>
+                @if($isOtDoctor)
+                    <div class="doctor-strip-pills">
+                        <span class="doctor-strip-pill is-muted">OT Doctor</span>
+                    </div>
+                @else
+                    <div class="doctor-strip-pills">
+                        <span class="doctor-strip-pill {{ $doctor->primary_count > 0 ? 'is-primary' : 'is-muted' }}">Primary Exam {{ $doctor->primary_count }}</span>
+                        <span class="doctor-strip-pill {{ $doctor->secondary_count > 0 ? 'is-secondary' : 'is-muted' }}">Secondary Exam {{ $doctor->secondary_count }}</span>
+                    </div>
+                @endif
             </div>
         @endforeach
     </div>
@@ -1501,12 +1572,23 @@
                         </thead>
                         <tbody>
                             @forelse($primaryQueue as $i => $patient)
+                                @php
+                                    $qWaitMins  = (int) $patient->created_at->diffInMinutes(now());
+                                    $qWaitClass = $qWaitMins < $wGreen ? 'wait-green' : ($qWaitMins < $wOrange ? 'wait-orange' : ($qWaitMins < $wRed ? 'wait-red' : 'wait-fire'));
+                                    $qWaitFmt   = $qWaitMins < 60 ? $qWaitMins.'m' : floor($qWaitMins/60).'h'.($qWaitMins%60 > 0 ? ' '.($qWaitMins%60).'m' : '');
+                                @endphp
                                 <tr>
                                     <td>{{ $i + 1 }}</td>
                                     <td><strong>{{ $patient->patient_code }}</strong></td>
                                     <td>{{ $patient->full_name }}</td>
                                     <td>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</td>
-                                    <td>{{ $patient->created_at->format('h:i A') }}</td>
+                                    <td>
+                                        {{ $patient->created_at->format('h:i A') }}
+                                        <span class="wait-pill {{ $qWaitClass }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}" style="margin-left:6px">
+                                            <span class="wp-r">R</span>
+                                            <span class="wp-time">{{ $qWaitFmt }}</span>
+                                        </span>
+                                    </td>
                                     <td>
                                         <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
                                            class="hms-btn hms-btn-sm hms-btn-primary">
@@ -1691,29 +1773,29 @@
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">DOCTOR NAME</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">DR INDEX NO.</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none;">STATUS</th>
+                            <th style="color: #ffffff !important; font-weight: 600; border: none; text-align:center;">WAIT</th>
                             <th style="color: #ffffff !important; font-weight: 600; border: none; text-align:center;">ACTION</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($receptionistTodayPatients as $index => $patient)
                             @php
-                                $latestOtStatus = $patient->otBookings->first()?->ot_status;
-                                $hasPrimaryDone = $patient->primary_done_at !== null;
+                                $hasPrimaryDone   = $patient->primary_done_at !== null;
                                 $hasSecondaryDone = $patient->secondary_done_at !== null;
-                                $hasOtBooking = $latestOtStatus !== null;
-
-                                $activeOtStatuses = ['booked', 'paid', 'in_ward', 'dilated', 'ready'];
-                                $completedOtStatuses = ['operated', 'discharged'];
-
-                                if ($latestOtStatus !== null && in_array($latestOtStatus, $activeOtStatuses, true)) {
-                                    $processStatus = 'In Process';
-                                } elseif ($hasPrimaryDone && $hasSecondaryDone && (! $hasOtBooking || in_array($latestOtStatus, $completedOtStatuses, true))) {
-                                    $processStatus = 'Completed';
-                                } elseif ($hasPrimaryDone || $hasSecondaryDone || ($hasOtBooking && in_array($latestOtStatus, $completedOtStatuses, true))) {
-                                    $processStatus = 'In Process';
-                                } else {
-                                    $processStatus = 'Pending';
-                                }
+                            @endphp
+                            @php
+                                // R badge
+                                $waitMins  = (int) $patient->created_at->diffInMinutes(now());
+                                $waitClass = $waitMins < $wGreen ? 'wait-green' : ($waitMins < $wOrange ? 'wait-orange' : ($waitMins < $wRed ? 'wait-red' : 'wait-fire'));
+                                $waitFmt   = $waitMins < 60 ? $waitMins.'m' : floor($waitMins/60).'h'.($waitMins%60 > 0 ? ' '.($waitMins%60).'m' : '');
+                                // D / ND badge
+                                $pExam      = $patient->primaryExamination;
+                                $isDilated  = $pExam && ($pExam->exam_data['dilate'] ?? 'No') === 'Yes';
+                                $isNotDil   = $pExam && ($pExam->exam_data['dilate'] ?? 'No') !== 'Yes';
+                                $primeMins  = $pExam ? (int) \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+                                $primeFmt   = $primeMins < 60 ? $primeMins.'m' : floor($primeMins/60).'h'.($primeMins%60 > 0 ? ' '.($primeMins%60).'m' : '');
+                                $dClass     = $primeMins < $wDGreen  ? 'wait-green' : ($primeMins < $wDOrange  ? 'wait-orange' : ($primeMins < $wDRed  ? 'wait-red' : 'wait-fire'));
+                                $ndClass    = $primeMins < $wNdGreen ? 'wait-green' : ($primeMins < $wNdOrange ? 'wait-orange' : ($primeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
                             @endphp
                             <tr>
                                 <td>{{ $index + 1 }}</td>
@@ -1730,9 +1812,44 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span class="b-badge {{ $processStatus === 'Pending' ? 'b-badge-warn' : ($processStatus === 'In Process' ? 'b-badge-info' : 'b-badge-green') }}">
-                                        {{ $processStatus }}
-                                    </span>
+                                    @if($hasSecondaryDone)
+                                        <span class="dash-status-badge completed">
+                                            <i class="bi bi-check2"></i> Secondary Done
+                                        </span>
+                                    @elseif($hasPrimaryDone)
+                                        <span class="dash-status-badge in-progress">
+                                            <i class="bi bi-arrow-repeat"></i> Primary Done
+                                        </span>
+                                    @else
+                                        <span class="dash-status-badge waiting">
+                                            <i class="bi bi-clock-history"></i> Waiting
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if(!$hasSecondaryDone)
+                                    <div class="d-flex flex-column align-items-center gap-1">
+                                        <span class="wait-pill {{ $waitClass }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}" data-badge="R">
+                                            <span class="wp-r">R</span>
+                                            <span class="wp-time">{{ $waitFmt }}</span>
+                                        </span>
+                                        @if($isDilated)
+                                            <span class="wait-pill {{ $dClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="D" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
+                                                <span class="wp-r">D</span>
+                                                <span class="wp-time">{{ $primeFmt }}</span>
+                                            </span>
+                                        @elseif($isNotDil)
+                                            <span class="wait-pill {{ $ndClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="ND" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
+                                                <span class="wp-r" style="font-size:.58rem;">ND</span>
+                                                <span class="wp-time">{{ $primeFmt }}</span>
+                                            </span>
+                                        @endif
+                                    </div>
+                                    @else
+                                        <span style="color:#16a34a;font-size:.8rem;font-weight:700;">
+                                            <i class="bi bi-check2-circle"></i> Done
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="text-center">
                                     <!-- <a href="{{ route('hospital.patients.bill-pdf', ['slug' => $slug, 'patient' => $patient->id]) }}"
@@ -1921,4 +2038,37 @@
 @endif {{-- /hasAnyData --}}
 
 </div>{{-- /bento-page --}}
+
+@push('scripts')
+<script>
+(function () {
+    const W = { green: {{ $wGreen }}, orange: {{ $wOrange }}, red: {{ $wRed }} };
+    function getWaitClassCustom(m, g, o, r) {
+        return m < g ? 'wait-green' : m < o ? 'wait-orange' : m < r ? 'wait-red' : 'wait-fire';
+    }
+    function getWaitClass(m) { return getWaitClassCustom(m, W.green, W.orange, W.red); }
+    function fmtTime(m) {
+        if (m < 60) return m + 'm';
+        const h = Math.floor(m / 60), r = m % 60;
+        return r > 0 ? h + 'h ' + r + 'm' : h + 'h';
+    }
+    function updateWaitPills() {
+        const now = Date.now();
+        document.querySelectorAll('.wait-pill[data-wait-from]').forEach(function (pill) {
+            const mins = Math.floor((now - new Date(pill.dataset.waitFrom).getTime()) / 60000);
+            const thr  = pill.dataset.thresholds ? pill.dataset.thresholds.split(',').map(Number) : null;
+            const cls  = thr ? getWaitClassCustom(mins, thr[0], thr[1], thr[2]) : getWaitClass(mins);
+            pill.className = 'wait-pill ' + cls;
+            const t = pill.querySelector('.wp-time');
+            if (t) t.textContent = fmtTime(mins);
+        });
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+        updateWaitPills();
+        setInterval(updateWaitPills, 30000);
+    });
+})();
+</script>
+@endpush
+
 @endsection

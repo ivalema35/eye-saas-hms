@@ -100,7 +100,7 @@
 
     .settings-logo-box {
         width: 110px !important; height: 110px !important;
-        border: 1px solid var(--settings-border) !important;
+        border: 3px solid var(--settings-border) !important;
         border-radius: 18px !important;
         background: linear-gradient(135deg, #fff, rgba(235,245,251,.72)) !important;
         box-shadow: inset 0 0 0 1px rgba(255,255,255,.7), 0 8px 20px rgba(27,79,114,.08);
@@ -109,11 +109,12 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
+        transition: border-color .2s, box-shadow .2s;
     }
     /* Dark preview box — sidebar pe kaisa dikhega */
     .settings-logo-box-dark {
         width: 110px !important; height: 110px !important;
-        border: 1px solid rgba(27,79,114,.3) !important;
+        border: 3px solid rgba(27,79,114,.3) !important;
         border-radius: 18px !important;
         background: #1B4F72 !important;
         box-shadow: 0 8px 20px rgba(27,79,114,.18);
@@ -123,6 +124,19 @@
         justify-content: center;
         flex-shrink: 0;
         position: relative;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .logo-style-option.active .settings-logo-box,
+    .logo-style-option.active .settings-logo-box-dark {
+        border-color: #16a34a !important;
+        box-shadow: 0 0 0 5px rgba(22,163,74,.18), 0 8px 20px rgba(22,163,74,.12) !important;
+    }
+    .logo-style-option:hover .settings-logo-box,
+    .logo-style-option:hover .settings-logo-box-dark {
+        border-color: rgba(22,163,74,.5) !important;
+    }
+    .logo-style-option.active .logo-preview-label {
+        color: #16a34a !important;
     }
     .settings-logo-box-dark::after {
         content: 'Sidebar Preview';
@@ -147,6 +161,44 @@
         margin-top: .4rem;
     }
     .settings-upload-panel { min-width: min(100%, 340px); }
+
+    .logo-style-option {
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: .5rem;
+    }
+    .logo-style-preview {
+        width: 100px; height: 100px;
+        border-radius: 18px;
+        border: 3px solid rgba(27,79,114,.12);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .logo-style-option:hover .logo-style-preview {
+        border-color: rgba(27,79,114,.35);
+    }
+    .logo-style-option.active .logo-style-preview {
+        border-color: #1B4F72;
+        box-shadow: 0 0 0 5px rgba(27,79,114,.18);
+    }
+    .logo-style-label {
+        font-size: .72rem;
+        font-weight: 700;
+        color: var(--settings-muted);
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+    .logo-style-option.active .logo-style-label { color: #1B4F72; }
+    .logo-style-hint {
+        font-size: .68rem;
+        color: var(--settings-muted);
+        text-align: center;
+        max-width: 100px;
+        line-height: 1.35;
+    }
 
     .hospital-settings-page .form-label {
         color: var(--settings-primary);
@@ -301,6 +353,20 @@
         .settings-hero-icon { width: 44px; height: 44px; border-radius: 14px; }
         .settings-tabs .nav-link { width: 100%; justify-content: center; }
         .settings-save-wrap { flex-direction: column; align-items: stretch; }
+}
+
+/* Wait Status preview pill (reuse same classes) */
+.wait-dot { display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle; }
+.wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap; }
+.wait-pill.wait-green  { background:rgba(22,163,74,.10); box-shadow:0 0 0 1px rgba(22,163,74,.25); }
+.wait-pill.wait-orange { background:rgba(234,88,12,.10); box-shadow:0 0 0 1px rgba(234,88,12,.25); }
+.wait-pill.wait-red    { background:rgba(220,38,38,.10); box-shadow:0 0 0 1px rgba(220,38,38,.25); }
+.wait-pill.wait-fire   { background:rgba(220,38,38,.10); box-shadow:0 0 0 1px rgba(220,38,38,.35);animation:wfire 1s ease-in-out infinite alternate; }
+@keyframes wfire { from{box-shadow:0 0 0 1px rgba(220,38,38,.35),0 0 6px rgba(234,88,12,.4);}to{box-shadow:0 0 0 2px rgba(220,38,38,.55),0 0 12px rgba(234,88,12,.6);} }
+.wp-r { display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:.68rem;font-weight:900;color:#fff; }
+.wait-green  .wp-r{background:#16a34a;} .wait-orange .wp-r{background:#ea580c;} .wait-red .wp-r{background:#dc2626;} .wait-fire .wp-r{background:linear-gradient(135deg,#dc2626,#ea580c);}
+.wp-time{font-size:.75rem;font-weight:700;}
+.wait-green  .wp-time{color:#15803d;} .wait-orange .wp-time{color:#c2410c;} .wait-red .wp-time{color:#b91c1c;} .wait-fire .wp-time{color:#dc2626;}
         .settings-save-btn { width: 100%; text-align: center; }
     }
 </style>
@@ -345,6 +411,12 @@
                     <i class="bi bi-table me-2"></i> Pagination
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="waitstatus-tab" data-bs-toggle="tab"
+                        data-bs-target="#waitstatus" type="button" role="tab">
+                    <i class="bi bi-hourglass-split me-2"></i> Wait Status
+                </button>
+            </li>
         </ul>
     </div>
 
@@ -362,18 +434,21 @@
                     <div class="row g-4">
 
                         {{-- Logo --}}
+                        @php $currentLogoStyle = old('logo_sidebar_style', $settings['logo_sidebar_style'] ?? 'white'); @endphp
+                        <input type="hidden" name="logo_sidebar_style" id="logoSidebarStyleInput" value="{{ $currentLogoStyle }}">
+
                         <div class="col-12">
                             <div class="d-flex align-items-start gap-4 flex-wrap">
 
-                                {{-- Preview 1: Original Logo (light background) --}}
-                                <div class="d-flex flex-column align-items-center">
-                                    <div class="settings-logo-box">
+                                {{-- Option 1: Original + Blur BG --}}
+                                <label class="logo-style-option {{ $currentLogoStyle === 'original_blur' ? 'active' : '' }}"
+                                       onclick="selectLogoStyle('original_blur')">
+                                    <div class="settings-logo-box" style="cursor:pointer;">
                                         @if(!empty($settings['hospital_logo']))
                                             <img id="logoPreviewOriginal"
                                                  src="{{ asset('storage/' . $settings['hospital_logo']) }}"
                                                  alt="Hospital Logo"
-                                                 style="max-width:88%;max-height:88%;object-fit:contain;"
-                                                 onerror="this.style.display='none';document.getElementById('logoPlaceholder1').style.display='block'">
+                                                 style="max-width:88%;max-height:88%;object-fit:contain;">
                                             <i id="logoPlaceholder1" class="bi bi-image text-muted" style="font-size:2.2rem;opacity:.35;display:none"></i>
                                         @else
                                             <img id="logoPreviewOriginal" src="" alt="" style="max-width:88%;max-height:88%;object-fit:contain;display:none;">
@@ -381,25 +456,33 @@
                                         @endif
                                     </div>
                                     <div class="logo-preview-label">Original</div>
-                                </div>
+                                    <span class="logo-style-hint">Shows original logo colors</span>
+                                </label>
 
-                                {{-- Preview 2: Sidebar Preview (dark background, white logo) --}}
-                                <div class="d-flex flex-column align-items-center">
-                                    <div class="settings-logo-box-dark">
-                                        @if(!empty($settings['hospital_logo']))
+                                {{-- Option 2: Pure White --}}
+                                @php
+                                    $sidebarPreviewSrc = !empty($settings['hospital_logo_nobg'])
+                                        ? asset('storage/' . $settings['hospital_logo_nobg'])
+                                        : (!empty($settings['hospital_logo']) ? asset('storage/' . $settings['hospital_logo']) : null);
+                                    $sidebarPreviewFilter = 'brightness(0) invert(1)';
+                                @endphp
+                                <label class="logo-style-option {{ $currentLogoStyle === 'white' ? 'active' : '' }}"
+                                       onclick="selectLogoStyle('white')">
+                                    <div class="settings-logo-box-dark" style="cursor:pointer;">
+                                        @if($sidebarPreviewSrc)
                                             <img id="logoPreviewDark"
-                                                 src="{{ asset('storage/' . $settings['hospital_logo']) }}"
+                                                 src="{{ $sidebarPreviewSrc }}"
                                                  alt="Sidebar Preview"
-                                                 style="max-width:72%;max-height:72%;object-fit:contain;filter:brightness(0) invert(1);margin-bottom:14px;"
-                                                 onerror="this.style.display='none';document.getElementById('logoPlaceholder2').style.display='block'">
-                                            <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);display:none;margin-bottom:14px"></i>
+                                                 style="max-width:72%;max-height:72%;object-fit:contain;filter:{{ $sidebarPreviewFilter }};margin-bottom:14px;">
+                                            <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);margin-bottom:14px;display:none"></i>
                                         @else
-                                            <img id="logoPreviewDark" src="" alt="" style="max-width:72%;max-height:72%;object-fit:contain;filter:brightness(0) invert(1);margin-bottom:14px;display:none;">
+                                            <img id="logoPreviewDark" src="" alt="" style="max-width:72%;max-height:72%;object-fit:contain;margin-bottom:14px;display:none;">
                                             <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);margin-bottom:14px"></i>
                                         @endif
                                     </div>
                                     <div class="logo-preview-label">Sidebar View</div>
-                                </div>
+                                    <span class="logo-style-hint">Best with transparent PNG — removes background</span>
+                                </label>
 
                                 {{-- Upload Panel --}}
                                 <div class="settings-upload-panel">
@@ -410,12 +493,16 @@
                                     <input type="file" name="hospital_logo" accept="image/*"
                                            id="logoFileInput"
                                            class="form-control clinical-input @error('hospital_logo') is-invalid @enderror">
+                                    <input type="hidden" name="logo_processed_base64" id="logoProcessedBase64">
                                     @error('hospital_logo')
                                         <div class="invalid-feedback d-block">{{ $message }}</div>
                                     @enderror
                                     <div class="mt-2 d-flex align-items-center gap-2" style="font-size:.76rem;color:var(--settings-muted)">
                                         <i class="bi bi-info-circle"></i>
-                                        Transparent PNG sabse acha — sidebar pe white dikhega, yahan original colors mein.
+                                        Click a preview to select sidebar display style.
+                                    </div>
+                                    <div id="bgRemoveNotice" class="mt-1 d-none" style="font-size:.75rem;color:#16a34a;font-weight:600;">
+                                        <i class="bi bi-magic me-1"></i> White background will be auto-removed for sidebar style.
                                     </div>
                                 </div>
 
@@ -611,6 +698,170 @@
                 </div>
                 {{-- END PAGINATION TAB --}}
 
+                {{-- ══════════════ WAIT STATUS TAB ══════════════ --}}
+                <div class="tab-pane fade" id="waitstatus" role="tabpanel" aria-labelledby="waitstatus-tab">
+
+                    <p class="text-muted small mb-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Set the time thresholds (in minutes) for patient wait status colours shown in dashboards and queues.
+                    </p>
+
+                    {{-- Default Dilation Time --}}
+                    <div class="row g-4 mb-4 pb-4" style="border-bottom:1px solid rgba(27,79,114,.1);">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-hourglass-split me-1" style="color:#ea580c;"></i>
+                                Default Dilation Time (minutes)
+                            </label>
+                            <input type="number" name="default_dilation_time" min="1" max="180"
+                                   class="form-control clinical-input @error('default_dilation_time') is-invalid @enderror"
+                                   value="{{ old('default_dilation_time', $settings['default_dilation_time'] ?? 40) }}"
+                                   placeholder="40">
+                            @error('default_dilation_time')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <div class="form-text text-muted">Auto-filled in primary exam when doctor selects "Yes, Dilated". Doctor can still edit it per patient.</div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                <span class="wait-dot" style="background:#16a34a;"></span>
+                                Green — up to (min)
+                            </label>
+                            <input type="number" name="wait_green_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_green_max') is-invalid @enderror"
+                                   value="{{ old('wait_green_max', $settings['wait_green_max'] ?? 30) }}"
+                                   placeholder="30">
+                            @error('wait_green_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                <span class="wait-dot" style="background:#ea580c;"></span>
+                                Orange — up to (min)
+                            </label>
+                            <input type="number" name="wait_orange_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_orange_max') is-invalid @enderror"
+                                   value="{{ old('wait_orange_max', $settings['wait_orange_max'] ?? 60) }}"
+                                   placeholder="60">
+                            @error('wait_orange_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                <span class="wait-dot" style="background:#dc2626;"></span>
+                                Red — up to (min)
+                            </label>
+                            <input type="number" name="wait_red_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_red_max') is-invalid @enderror"
+                                   value="{{ old('wait_red_max', $settings['wait_red_max'] ?? 120) }}"
+                                   placeholder="120">
+                            @error('wait_red_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                <span class="wait-dot" style="background:linear-gradient(135deg,#dc2626,#ea580c);"></span>
+                                Fire — above Red
+                            </label>
+                            <input type="text" class="form-control clinical-input" value="Automatic (above Red limit)" disabled>
+                            <div class="form-text text-muted">Fire triggers automatically when time exceeds Red limit.</div>
+                        </div>
+                    </div>
+
+                    {{-- Live preview R --}}
+                    <div class="mt-4 p-3 rounded-3" style="background:rgba(27,79,114,.04);border:1px solid rgba(27,79,114,.1);">
+                        <p class="mb-2 fw-semibold" style="color:#1B4F72;font-size:.88rem;"><i class="bi bi-circle-fill me-1" style="color:#1B4F72;font-size:.6rem;"></i> R — Reception Entry Preview</p>
+                        <div class="d-flex flex-wrap gap-3 align-items-center">
+                            <span class="wait-pill wait-green"><span class="wp-r">R</span><span class="wp-time" id="prev-green">0 – 30m</span></span>
+                            <span class="wait-pill wait-orange"><span class="wp-r">R</span><span class="wp-time" id="prev-orange">30 – 60m</span></span>
+                            <span class="wait-pill wait-red"><span class="wp-r">R</span><span class="wp-time" id="prev-red">60 – 120m</span></span>
+                            <span class="wait-pill wait-fire"><span class="wp-r">R</span><span class="wp-time" id="prev-fire">120m+</span></span>
+                        </div>
+                    </div>
+
+                    {{-- D badge (Dilated) thresholds --}}
+                    <hr class="my-4">
+                    <h6 class="fw-bold mb-1" style="color:#1B4F72;">
+                        <span class="wait-pill wait-orange" style="font-size:.75rem;"><span class="wp-r" style="width:20px;height:20px;font-size:.6rem;">D</span></span>
+                        Dilated (D) — Primary done with Dilation = Yes
+                    </h6>
+                    <p class="text-muted small mb-3">Time is measured from when primary exam was completed.</p>
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold"><span class="wait-dot" style="background:#16a34a;"></span> Green — up to (min)</label>
+                            <input type="number" name="wait_d_green_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_d_green_max') is-invalid @enderror"
+                                   value="{{ old('wait_d_green_max', $settings['wait_d_green_max'] ?? 40) }}" placeholder="40">
+                            @error('wait_d_green_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold"><span class="wait-dot" style="background:#ea580c;"></span> Orange — up to (min)</label>
+                            <input type="number" name="wait_d_orange_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_d_orange_max') is-invalid @enderror"
+                                   value="{{ old('wait_d_orange_max', $settings['wait_d_orange_max'] ?? 90) }}" placeholder="90">
+                            @error('wait_d_orange_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold"><span class="wait-dot" style="background:#dc2626;"></span> Red — up to (min)</label>
+                            <input type="number" name="wait_d_red_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_d_red_max') is-invalid @enderror"
+                                   value="{{ old('wait_d_red_max', $settings['wait_d_red_max'] ?? 120) }}" placeholder="120">
+                            @error('wait_d_red_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 rounded-3" style="background:rgba(27,79,114,.04);border:1px solid rgba(27,79,114,.1);">
+                        <p class="mb-2 fw-semibold" style="color:#1B4F72;font-size:.88rem;"><i class="bi bi-circle-fill me-1" style="color:#ea580c;font-size:.6rem;"></i> D — Dilated Preview</p>
+                        <div class="d-flex flex-wrap gap-3 align-items-center">
+                            <span class="wait-pill wait-green"><span class="wp-r">D</span><span class="wp-time" id="prev-d-green">0 – 40m</span></span>
+                            <span class="wait-pill wait-orange"><span class="wp-r">D</span><span class="wp-time" id="prev-d-orange">40 – 90m</span></span>
+                            <span class="wait-pill wait-red"><span class="wp-r">D</span><span class="wp-time" id="prev-d-red">90 – 120m</span></span>
+                            <span class="wait-pill wait-fire"><span class="wp-r">D</span><span class="wp-time" id="prev-d-fire">120m+</span></span>
+                        </div>
+                    </div>
+
+                    {{-- ND badge (Not Dilated) thresholds --}}
+                    <hr class="my-4">
+                    <h6 class="fw-bold mb-1" style="color:#1B4F72;">
+                        <span class="wait-pill wait-orange" style="font-size:.75rem;"><span class="wp-r" style="width:20px;height:20px;font-size:.55rem;">ND</span></span>
+                        Not Dilated (ND) — Primary done with Dilation = No
+                    </h6>
+                    <p class="text-muted small mb-3">Time is measured from when primary exam was completed.</p>
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold"><span class="wait-dot" style="background:#16a34a;"></span> Green — up to (min)</label>
+                            <input type="number" name="wait_nd_green_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_nd_green_max') is-invalid @enderror"
+                                   value="{{ old('wait_nd_green_max', $settings['wait_nd_green_max'] ?? 20) }}" placeholder="20">
+                            @error('wait_nd_green_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold"><span class="wait-dot" style="background:#ea580c;"></span> Orange — up to (min)</label>
+                            <input type="number" name="wait_nd_orange_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_nd_orange_max') is-invalid @enderror"
+                                   value="{{ old('wait_nd_orange_max', $settings['wait_nd_orange_max'] ?? 60) }}" placeholder="60">
+                            @error('wait_nd_orange_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold"><span class="wait-dot" style="background:#dc2626;"></span> Red — up to (min)</label>
+                            <input type="number" name="wait_nd_red_max" min="1" max="999"
+                                   class="form-control clinical-input @error('wait_nd_red_max') is-invalid @enderror"
+                                   value="{{ old('wait_nd_red_max', $settings['wait_nd_red_max'] ?? 120) }}" placeholder="120">
+                            @error('wait_nd_red_max')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="mt-3 p-3 rounded-3" style="background:rgba(27,79,114,.04);border:1px solid rgba(27,79,114,.1);">
+                        <p class="mb-2 fw-semibold" style="color:#1B4F72;font-size:.88rem;"><i class="bi bi-circle-fill me-1" style="color:#ea580c;font-size:.6rem;"></i> ND — Not Dilated Preview</p>
+                        <div class="d-flex flex-wrap gap-3 align-items-center">
+                            <span class="wait-pill wait-green"><span class="wp-r">ND</span><span class="wp-time" id="prev-nd-green">0 – 20m</span></span>
+                            <span class="wait-pill wait-orange"><span class="wp-r">ND</span><span class="wp-time" id="prev-nd-orange">20 – 60m</span></span>
+                            <span class="wait-pill wait-red"><span class="wp-r">ND</span><span class="wp-time" id="prev-nd-red">60 – 120m</span></span>
+                            <span class="wait-pill wait-fire"><span class="wp-r">ND</span><span class="wp-time" id="prev-nd-fire">120m+</span></span>
+                        </div>
+                    </div>
+                </div>
+                {{-- END WAIT STATUS TAB --}}
+
             </div>{{-- /.tab-content --}}
 
             {{-- Save Bar --}}
@@ -658,13 +909,13 @@
         });
     })();
 
-// File select hone par existing preview boxes ka src update karo (koi duplicate nahi)
+// File select → preview + optional bg removal
 (function () {
-    var input    = document.getElementById('logoFileInput');
-    var imgOrig  = document.getElementById('logoPreviewOriginal');
-    var imgDark  = document.getElementById('logoPreviewDark');
-    var ph1      = document.getElementById('logoPlaceholder1');
-    var ph2      = document.getElementById('logoPlaceholder2');
+    var input   = document.getElementById('logoFileInput');
+    var imgOrig = document.getElementById('logoPreviewOriginal');
+    var imgDark = document.getElementById('logoPreviewDark');
+    var ph1     = document.getElementById('logoPlaceholder1');
+    var ph2     = document.getElementById('logoPlaceholder2');
 
     if (!input) return;
 
@@ -675,19 +926,108 @@
         var reader = new FileReader();
         reader.onload = function (e) {
             var src = e.target.result;
+            _currentRawSrc = src;
+            _currentNobgSrc = null;
 
-            // Original box update
-            imgOrig.src = src;
-            imgOrig.style.display = 'block';
+            // Original box — always raw
+            if (imgOrig) { imgOrig.src = src; imgOrig.style.display = 'block'; }
             if (ph1) ph1.style.display = 'none';
 
-            // Sidebar (dark) box update
-            imgDark.src = src;
-            imgDark.style.display = 'block';
+            // Sidebar box — raw first, bg-removal updates it
+            if (imgDark) { imgDark.src = src; imgDark.style.display = 'block'; }
             if (ph2) ph2.style.display = 'none';
+
+            // Always process bg removal (store both versions)
+            processAndStore(src);
         };
         reader.readAsDataURL(file);
     });
+})();
+
+// ── Logo background removal ───────────────────────────────────────────────
+function removeWhiteBg(imgSrc, threshold, callback) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width  = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        var data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        var px = data.data;
+        for (var i = 0; i < px.length; i += 4) {
+            // If pixel is near-white AND opaque → make transparent
+            if (px[i] > threshold && px[i+1] > threshold && px[i+2] > threshold) {
+                px[i+3] = 0;
+            }
+        }
+        ctx.putImageData(data, 0, 0);
+        callback(canvas.toDataURL('image/png'));
+    };
+    img.src = imgSrc;
+}
+
+var _currentRawSrc   = null;
+var _currentNobgSrc  = null; // always keep bg-removed version
+
+function processAndStore(rawSrc) {
+    // Always generate bg-removed version and store in hidden field
+    var notice    = document.getElementById('bgRemoveNotice');
+    var processed = document.getElementById('logoProcessedBase64');
+    if (notice) notice.classList.remove('d-none');
+    removeWhiteBg(rawSrc, 230, function (transparentSrc) {
+        _currentNobgSrc = transparentSrc;
+        if (processed) processed.value = transparentSrc;
+        // Update sidebar preview based on current style
+        updateDarkPreview();
+    });
+}
+
+function updateDarkPreview() {
+    var imgDark = document.getElementById('logoPreviewDark');
+    if (!imgDark) return;
+    var src = _currentNobgSrc || _currentRawSrc;
+    if (src) {
+        imgDark.src = src;
+        imgDark.style.display = 'block';
+        imgDark.style.filter = 'brightness(0) invert(1)';
+    }
+}
+
+// Logo style selector — only updates preview, doesn't re-process
+function selectLogoStyle(value) {
+    document.getElementById('logoSidebarStyleInput').value = value;
+    document.querySelectorAll('.logo-style-option').forEach(function(opt) {
+        opt.classList.remove('active');
+        if (opt.getAttribute('onclick') === "selectLogoStyle('" + value + "')") {
+            opt.classList.add('active');
+        }
+    });
+    updateDarkPreview();
+}
+
+// Wait Status preview
+(function () {
+    function bindPreview(gName, oName, rName, pgId, poId, prId, pfId) {
+        const g = document.querySelector('[name="'+gName+'"]');
+        const o = document.querySelector('[name="'+oName+'"]');
+        const r = document.querySelector('[name="'+rName+'"]');
+        function update() {
+            const gv = parseInt(g?.value)||0, ov = parseInt(o?.value)||0, rv = parseInt(r?.value)||0;
+            const pg=document.getElementById(pgId), po=document.getElementById(poId);
+            const pr=document.getElementById(prId), pf=document.getElementById(pfId);
+            if(pg) pg.textContent = '0 – '+gv+'m';
+            if(po) po.textContent = gv+' – '+ov+'m';
+            if(pr) pr.textContent = ov+' – '+rv+'m';
+            if(pf) pf.textContent = rv+'m+';
+        }
+        [g,o,r].forEach(el => el?.addEventListener('input', update));
+        update();
+    }
+    bindPreview('wait_green_max','wait_orange_max','wait_red_max','prev-green','prev-orange','prev-red','prev-fire');
+    bindPreview('wait_d_green_max','wait_d_orange_max','wait_d_red_max','prev-d-green','prev-d-orange','prev-d-red','prev-d-fire');
+    bindPreview('wait_nd_green_max','wait_nd_orange_max','wait_nd_red_max','prev-nd-green','prev-nd-orange','prev-nd-red','prev-nd-fire');
 })();
 </script>
 @endpush

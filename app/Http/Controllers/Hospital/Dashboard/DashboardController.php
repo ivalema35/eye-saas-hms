@@ -309,7 +309,8 @@ class DashboardController extends Controller
             $receptionistTodayPatients = Patient::with([
                 'doctor:id,name,doctor_prefix',
                 'location:id,city',
-                'otBookings' => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
+                'otBookings'         => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
+                'primaryExamination' => fn ($query) => $query->select('id', 'patient_id', 'examined_at', 'exam_data', 'dilation_time', 'updated_at'),
             ])
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)

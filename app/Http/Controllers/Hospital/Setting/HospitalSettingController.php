@@ -67,6 +67,18 @@ class HospitalSettingController extends Controller
             'print_header_note' => ['nullable', 'string', 'max:255'],
             'print_footer_note' => ['nullable', 'string', 'max:255'],
             'pagination_limit'  => ['required', 'integer', 'in:10,25,50,100'],
+            'logo_sidebar_style'        => ['nullable', 'in:white,original_blur'],
+            'logo_processed_base64'     => ['nullable', 'string'],
+            'default_dilation_time' => ['nullable', 'integer', 'min:1', 'max:180'],
+            'wait_green_max'    => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_orange_max'   => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_red_max'      => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_d_green_max'  => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_d_orange_max' => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_d_red_max'    => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_nd_green_max' => ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_nd_orange_max'=> ['nullable', 'integer', 'min:1', 'max:999'],
+            'wait_nd_red_max'   => ['nullable', 'integer', 'min:1', 'max:999'],
             'hospital_logo'     => ['nullable', 'image', 'mimes:jpg,jpeg,png,svg,webp', 'max:2048'],
             'current_password'  => ['nullable', 'string', 'required_with:new_password'],
             'new_password'      => ['nullable', 'string', 'min:8', 'confirmed'],
@@ -74,21 +86,32 @@ class HospitalSettingController extends Controller
 
         DB::transaction(function () use ($request, $validated, $tenantId): void {
             $settingsData = collect($validated)
-                ->except('hospital_logo')
+                ->except(['hospital_logo', 'logo_processed_base64'])
                 ->toArray();
 
             if ($request->hasFile('hospital_logo')) {
-                $existingLogo = HospitalSetting::get('hospital_logo');
-
-                if ($existingLogo && Storage::disk('public')->exists($existingLogo)) {
-                    Storage::disk('public')->delete($existingLogo);
+                // Delete old originals
+                foreach (['hospital_logo', 'hospital_logo_nobg'] as $key) {
+                    $old = HospitalSetting::get($key);
+                    if ($old && Storage::disk('public')->exists($old)) {
+                        Storage::disk('public')->delete($old);
+                    }
                 }
 
-                $file = $request->file('hospital_logo');
+                // Save original file
+                $file     = $request->file('hospital_logo');
                 $filename = 'logo_'.time().'.'.$file->getClientOriginalExtension();
-                $path = $file->storeAs("tenants/{$tenantId}/logo", $filename, 'public');
+                $origPath = $file->storeAs("tenants/{$tenantId}/logo", $filename, 'public');
+                $settingsData['hospital_logo'] = $origPath;
 
-                $settingsData['hospital_logo'] = $path;
+                // Save bg-removed version if provided
+                if ($request->filled('logo_processed_base64') && str_starts_with($request->logo_processed_base64, 'data:image')) {
+                    $base64    = preg_replace('#^data:image/\w+;base64,#i', '', $request->logo_processed_base64);
+                    $imageData = base64_decode($base64);
+                    $nobgPath  = "tenants/{$tenantId}/logo/logo_nobg_".time().'.png';
+                    Storage::disk('public')->put($nobgPath, $imageData);
+                    $settingsData['hospital_logo_nobg'] = $nobgPath;
+                }
             }
 
             foreach ($settingsData as $key => $value) {
