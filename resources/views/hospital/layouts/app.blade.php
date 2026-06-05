@@ -66,6 +66,7 @@
         }
 
         @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+    :root { --hms-navbar-h: 120px; }
     .hms-sidebar { display: none !important; }
     .hms-main { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
     #hmsSidebarToggle { display: none !important; }
@@ -397,16 +398,27 @@
 
 /* Default ma menu hide rakhva mate */
 .black-menu-bar .dropdown-menu {
-    display: none; 
+    display: none;
     position: absolute;
     top: 100%;
     left: 0;
+    margin-top: 0;
     background-color: #ffffff;
     border: 1px solid #ddd;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     border-radius: 4px;
     padding: 5px 0;
     min-width: 150px;
+}
+
+/* Gap fill karo taki hover karte waqt menu band na ho */
+.black-menu-bar .dropdown::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    height: 8px;
 }
 
 /* Dropdown hover par show karva mate */
@@ -535,7 +547,7 @@
 <div class="black-menu-bar d-flex align-items-center" style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
     
     {{-- Dashboard --}}
-    <a href="#" class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
+    <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}" class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
     
 {{-- Basic Master Dropdown --}}
 <!-- <div class="dropdown">
@@ -552,7 +564,7 @@
 
     {{-- Diagnosis Master Dropdown --}}
 <div class="dropdown">
-    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+    <a href="#" class="text-white text-decoration-none dropdown-toggle">
         <i class="bi bi-info-circle-fill"></i> Diagnosis Master
     </a>
     <ul class="dropdown-menu">
@@ -593,7 +605,7 @@
 
 {{-- Medicine Master Dropdown --}}
 <div class="dropdown">
-    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+    <a href="#" class="text-white text-decoration-none dropdown-toggle">
         <i class="bi bi-capsule"></i> Medicine Master
     </a>
     <ul class="dropdown-menu">
@@ -1086,16 +1098,24 @@
             @endif
 
             {{-- Page Header --}}
-             @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
             @hasSection('page-header')
                 <div class="hms-page-header">
+                    @if(auth('hospital_user')->user()?->role?->slug === 'doctor'
+                        && !request()->routeIs('hospital.dashboard')
+                        && !request()->routeIs('hospital.masters.detail.*')
+                        && !request()->routeIs('hospital.masters.basic.*'))
+                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
+                           class="btn btn-sm btn-light me-2"
+                           style="border-radius:8px; border:1px solid #cde5f5; color:#1B4F72;">
+                            <i class="bi bi-arrow-left me-1"></i> Back
+                        </a>
+                    @endif
                     <h1 style="font-weight:900!important;color:#0D2137!important;letter-spacing:-.015em">@yield('page-header')</h1>
                     @hasSection('page-actions')
                         <div class="hms-page-actions">@yield('page-actions')</div>
                     @endif
                 </div>
             @endif
-                @endif
 
             {{-- Main Content --}}
             @yield('content')

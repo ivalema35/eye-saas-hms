@@ -28,8 +28,12 @@
     <div class="case-master-toolbar">
         <div class="d-flex align-items-center gap-2 flex-wrap">
             @if($showBackButton)
-                <a href="{{ route('hospital.masters.index', ['slug' => $slug]) }}"
-                   class="btn btn-light case-master-back-btn">
+                @php
+                    $backUrl = auth('hospital_user')->user()?->role?->slug === 'doctor'
+                        ? route('hospital.dashboard', ['slug' => $slug])
+                        : route('hospital.masters.index', ['slug' => $slug]);
+                @endphp
+                <a href="{{ $backUrl }}" class="btn btn-light case-master-back-btn">
                     <i class="bi bi-arrow-left me-1"></i> Back
                 </a>
             @endif
