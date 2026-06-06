@@ -3,10 +3,12 @@
 @section('page-header', 'Primary Eye Examination')
 
 @section('page-actions')
+@if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
     <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
        class="btn secondary-exam-back-btn btn-sm">
         <i class="bi bi-arrow-left"></i> Back to Patient
     </a>
+@endif
     @if($exam)
         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
             <i class="bi bi-printer"></i> Print Rx
@@ -156,6 +158,42 @@
             border: 1px solid #343a40 !important;
         }
     }
+
+    /* આ સ્ટાઇલ ફક્ત આ જ પેજ માટે છે */
+.exam-layout-wrapper {
+    display: grid;
+    grid-template-columns: 240px 1fr; /* સાઈડબાર અને મેઈન કન્ટેન્ટ */
+    gap: 20px;
+    align-items: start;
+    margin-top: 10px;
+}
+
+.doctor-stepper-sidebar {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    border-radius: 12px;
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.doctor-stepper-sidebar .step-btn {
+    width: 100%;
+    text-align: left !important;
+    padding: 10px 15px !important;
+    border-radius: 8px !important;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+/* આ વધારાની સ્ટાઇલ મેઈન કેનવાસને સાઈડબાર સાથે સરખું રાખશે */
+.main-canvas {
+    width: 100%;
+}
 </style>
 
 @if($errors->any())
@@ -237,14 +275,59 @@
     $prescriptions = $exam?->prescriptions ?? collect();
 @endphp
 
+@if(auth('hospital_user')->user()?->role?->slug === 'doctor')
 <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
+    @csrf
+
+    <div class="exam-layout-wrapper">
+        
+        {{-- ૨. નવી સાઈડબાર --}}
+        <div class="doctor-stepper-sidebar">
+            <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-context" data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">H/O & K/C/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-nct" data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-oe" data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+            
+            <hr>
+            <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
+        </div>
+
+        {{-- ૩. મેઈન કેનવાસ (તમારો જૂનો કેનવાસ કોડ) --}}
+        <div class="main-canvas">
+            <div class="card shadow-sm" style="padding:16px;" id="liveReportCanvas">
+                <div class="row g-2 clinical-grid-container" style="font-size:13px;">
+                    {{-- તમારી જૂની ફાઈલમાંથી આ DIV (LEFT/RIGHT Column) કોપી કરીને અહીં મૂકી દો --}}
+                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                        <div class="canvas-box"><div class="canvas-section-title">History &amp; Vision</div><div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div><div id="canvas_vision" class="mt-1"></div></div>
+                        <div class="canvas-box"><div class="canvas-section-title">Subjective Testing (ST)</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
+                    </div>
+                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                        <div class="canvas-box"><div class="canvas-section-title">On Examination (O/E)</div><div id="canvas_oe"></div></div>
+                        <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@else
+ <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
     @csrf
 
     <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-3 p-2 bg-white rounded shadow-sm border gap-2 flex-wrap">
         <div class="d-flex align-items-center gap-1 flex-wrap">
             <span class="fw-bold text-primary me-1" style="font-size:0.82rem;">Steps:</span>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O &amp; H/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">H/O &amp; KC/O</button>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
@@ -257,6 +340,7 @@
         </div>
         <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
     </div>
+
 
     {{-- Print-only hospital + patient header --}}
     <style>
@@ -340,7 +424,7 @@
             </div>
         </div>
     </div>
-
+@endif
     <div class="modal fade" id="modalContext" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
@@ -686,9 +770,9 @@
             </div>
         </div>
     </div>
-
+ 
     {{-- MODAL: Medicine --}}
-    <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
+   <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-light"><h5 class="modal-title">Medicines</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>

@@ -370,13 +370,11 @@ class DashboardController extends Controller
 
         if ($user && $user->role?->slug === 'doctor') {
 
-            // ૧. બધા ડૉક્ટર્સ લાવો (પોતે સહિત)
             $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->with('role:id,slug')
                 ->orderBy('name')
                 ->get(['id', 'role_id', 'name', 'doctor_type']);
 
-            // ૨. Stats DB query
             $doctorStatsById = Patient::whereDate('appointment_date', $today)
                 ->whereIn('doctor_id', $doctorCards->pluck('id'))
                 ->select('doctor_id')
@@ -387,7 +385,6 @@ class DashboardController extends Controller
                 ->get()
                 ->keyBy('doctor_id');
 
-            // ૩. Stats set karo
             $doctorCards = $doctorCards->map(function ($doc) use ($doctorStatsById) {
                 $stats = $doctorStatsById->get($doc->id);
                 $doc->assigned_today = (int) ($stats->assigned_today ?? 0);
@@ -397,7 +394,6 @@ class DashboardController extends Controller
                 return $doc;
             });
 
-            // ૪. ખુદ ને પ્રથમ બતાવો, બાકીના alphabetically
             $doctorCards = $doctorCards
                 ->sortBy(fn ($doc) => $doc->id === $user->id ? 0 : 1)
                 ->values();
@@ -417,7 +413,6 @@ class DashboardController extends Controller
             ));
         }
 
-        // ── એડમિન, રીસેપ્શનિસ્ટ, એકાઉન્ટન્ટ, આસિસ્ટન્ટ અને OT_DOCTOR માટે જૂનો ઓરિજિનલ વ્યુ લોડ થશે ──
         return view('hospital.dashboard.index', compact(
             'slug',
             'tenant',
@@ -475,23 +470,20 @@ class DashboardController extends Controller
         $slug = request()->route('slug');
         $user = Auth::guard('hospital_user')->user();
 
-        // સુરક્ષા: જો યુઝર ડૉક્ટર અથવા OT ડૉક્ટર ન હોય, તો તેમને પાછા ડેશબોર્ડ પર મોકલી દો
         if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
             return redirect()->route('hospital.dashboard', ['slug' => $slug]);
         }
 
-        // ડેટાબેઝ ક્વેરી: આ ડૉક્ટરે અત્યાર સુધીમાં જેટલા પેશન્ટ એટેન્ડ કર્યા છે તે લાવો
         $historyPatients = Patient::with(['caseType'])
             ->where('doctor_id', $user->id)
             ->where(function ($query) {
-                // શરત: જેનું પ્રાયમરી અથવા સેકન્ડરી થઈ ગયું હોય તેવા જ પેશન્ટ
+                
                 $query->whereNotNull('primary_done_at')
                     ->orWhereNotNull('secondary_done_at');
             })
-            ->latest('appointment_date') // નવા પેશન્ટ ઉપર દેખાય તે માટે
-            ->paginate(20); // એક પેજ પર ૨૦ પેશન્ટ બતાવશે
+            ->latest('appointment_date') 
+            ->paginate(20); 
 
-        // ડેટાને વ્યુ (View) ફાઈલમાં મોકલો
         return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
     }
 }

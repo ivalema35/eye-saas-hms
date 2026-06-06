@@ -570,8 +570,6 @@
     <ul class="dropdown-menu">
         <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a></li>
         <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/kcos') }}">KCO</a></li>
-        
-        {{-- O/E ડ્રોપડાઉન --}}
         <li class="dropend">
             <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
             <ul class="dropdown-menu">
@@ -587,8 +585,7 @@
                 <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/covertest') }}">COVER TEST</a></li>
             </ul>
         </li>
-        
-        {{-- FUNDUS ડ્રોપડાઉન (તમારી જરૂરિયાત મુજબ URL ઉમેરજો) --}}
+  
         <li class="dropend">
             <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
             <ul class="dropdown-menu">
@@ -602,8 +599,6 @@
     </ul>
 </div>
 
-
-{{-- Medicine Master Dropdown --}}
 <div class="dropdown">
     <a href="#" class="text-white text-decoration-none dropdown-toggle">
         <i class="bi bi-capsule"></i> Medicine Master
@@ -1122,11 +1117,6 @@
 
             @unless(request()->routeIs('hospital.dashboard'))
                 <style>
-                    /*
-                      Design-only override:
-                      Remove blue premium shadows on all non-main-dashboard pages.
-                      Kept after page content so it wins over page-level inline styles.
-                    */
                     .hms-main .shadow,
                     .hms-main .shadow-sm,
                     .hms-main .shadow-lg,
@@ -1228,9 +1218,8 @@
 
         </main>
 
-    </div>{{-- /.hms-layout --}}
+    </div>
 
-    {{-- Bootstrap 5.3 JS (local first, CDN fallback) --}}
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
     if (typeof window.bootstrap === 'undefined') {
@@ -1241,31 +1230,31 @@
         document.head.appendChild(fallbackScript);
     }
     </script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
-            var trigger = item.querySelector(':scope > .dropdown-toggle');
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
+                var trigger = item.querySelector(':scope > .dropdown-toggle');
 
-            if (!trigger) {
-                return;
-            }
+                if (!trigger) {
+                    return;
+                }
 
-            item.addEventListener('mouseenter', function () {
-                item.classList.add('show');
-            });
+                item.addEventListener('mouseenter', function () {
+                    item.classList.add('show');
+                });
 
-            item.addEventListener('mouseleave', function () {
-                item.classList.remove('show');
-            });
+                item.addEventListener('mouseleave', function () {
+                    item.classList.remove('show');
+                });
 
-            trigger.addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                item.classList.toggle('show');
+                trigger.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    item.classList.toggle('show');
+                });
             });
         });
-    });
-</script>
+    </script>
 
     {{-- Chart.js --}}
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
