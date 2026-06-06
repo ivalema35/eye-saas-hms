@@ -946,8 +946,8 @@
 .doctor-strip-card {
     border: 1px solid var(--dash-s2-18);
     border-radius: 22px;
-    background: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 10px 24px rgba(27, 79, 114, 0.08);
+    background: rgba(255,255,255,0.9);
+    box-shadow: 0 10px 24px rgba(27,79,114,.08);
     padding: 1.2rem;
 }
 
@@ -962,7 +962,7 @@
     height: 56px;
     border-radius: 999px;
     border: 1px solid var(--dash-s2-18);
-    background: rgba(27, 79, 114, 0.12);
+    background: rgba(27,79,114,.12);
     color: var(--dash-secondary);
     display: inline-flex;
     align-items: center;
@@ -990,9 +990,20 @@
 
 .doctor-strip-sub {
     margin: .35rem 0 0;
-    color: var(--dash-s2-70);
-    font-size: .9rem;
+    font-size: .82rem;
     font-weight: 600;
+}
+.doctor-strip-sub .assigned-num {
+    color: #1B4F72;
+    background: #EBF5FB;
+    padding: 1px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: .82rem;
+    margin-right: 3px;
+}
+.doctor-strip-sub .assigned-text {
+    color: var(--dash-s2-70);
 }
 
 .doctor-strip-status {
@@ -1017,23 +1028,9 @@
     line-height: 1.1;
     border: 1px solid var(--dash-s2-12);
 }
-
-.doctor-strip-pill.is-primary {
-    background: var(--dash-secondary);
-    color: #ffffff;
-    border-color: var(--dash-secondary);
-}
-
-.doctor-strip-pill.is-secondary {
-    background: #2563EB;
-    color: #ffffff;
-    border-color: #2563EB;
-}
-
-.doctor-strip-pill.is-muted {
-    background: rgba(255, 255, 255, 0.9);
-    color: var(--dash-s2-70);
-}
+.doctor-strip-pill.is-primary   { background: var(--dash-secondary); color: #fff; border-color: var(--dash-secondary); }
+.doctor-strip-pill.is-secondary { background: #2563EB; color: #fff; border-color: #2563EB; }
+.doctor-strip-pill.is-muted     { background: rgba(255,255,255,.9); color: var(--dash-s2-70); }
 
 /* ── Receptionist today patients panel ────────────────────────────────── */
 .rec-patient-scroll {
@@ -1173,6 +1170,10 @@
 .wait-pill.wait-orange { background: rgba(234,88,12,.10);  box-shadow: 0 0 0 1px rgba(234,88,12,.25); }
 .wait-pill.wait-red    { background: rgba(220,38,38,.10);  box-shadow: 0 0 0 1px rgba(220,38,38,.25); }
 .wait-pill.wait-fire   { background: rgba(220,38,38,.10);  box-shadow: 0 0 0 1px rgba(220,38,38,.35); animation: fire-glow 1s ease-in-out infinite alternate; }
+@keyframes checkin-pulse {
+    from { box-shadow:0 0 0 2px rgba(27,79,114,.35),0 0 4px rgba(27,79,114,.3); }
+    to   { box-shadow:0 0 0 4px rgba(27,79,114,.6),0 0 10px rgba(27,79,114,.5); }
+}
 @keyframes fire-glow {
     from { box-shadow: 0 0 0 1px rgba(220,38,38,.35), 0 0 6px rgba(234,88,12,.4); }
     to   { box-shadow: 0 0 0 2px rgba(220,38,38,.55), 0 0 12px rgba(234,88,12,.6); }
@@ -1517,7 +1518,10 @@
                     <div class="doctor-strip-avatar">{{ $doctorInitials }}</div>
                     <div>
                         <p class="doctor-strip-name">{{ $doctor->name }}</p>
-                        <p class="doctor-strip-sub">{{ $doctor->assigned_today }} Assigned</p>
+                        <p class="doctor-strip-sub">
+                            <span class="assigned-num">{{ $doctor->assigned_today }}</span>
+                            <span class="assigned-text">Assigned</span>
+                        </p>
                         @if(!$isOtDoctor && $doctor->primary_count === 0 && $doctor->secondary_count === 0)
                             <div class="doctor-strip-status"><i class="bi bi-check-circle-fill me-1"></i>All Clear</div>
                         @endif
@@ -1750,31 +1754,59 @@
 @endif
 
 @if($isReceptionistUser && $hasReception)
+<style>
+.tap-table-wrap { background:#fff; border-radius:14px; box-shadow:0 2px 16px rgba(27,79,114,.08); overflow:hidden; border:1px solid #e8eef4; }
+.tap-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid #edf2f7; }
+.tap-title { font-size:15px; font-weight:700; color:#1B4F72; display:flex; align-items:center; gap:8px; margin:0; }
+.tap-title i { font-size:14px; opacity:.8; }
+.tap-count { background:#EBF5FB; color:#1B4F72; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.3px; }
+.tap-table { width:100%; border-collapse:collapse; font-size:13px; }
+.tap-table thead tr { background:#1B4F72; }
+.tap-table thead th { color:rgba(255,255,255,.88); font-weight:600; font-size:11px; letter-spacing:.6px; text-transform:uppercase; padding:11px 14px; border:none; white-space:nowrap; }
+.tap-table tbody tr { border-bottom:1px solid #f1f5f9; transition:background .15s; }
+.tap-table tbody tr:last-child { border-bottom:none; }
+.tap-table tbody tr:hover { background:#f7fbff; }
+.tap-table tbody td { padding:12px 14px; vertical-align:middle; color:#374151; }
+.tap-mrd { font-family:monospace; font-size:12.5px; font-weight:700; color:#1B4F72; background:#EBF5FB; padding:3px 8px; border-radius:6px; letter-spacing:.5px; }
+.tap-patient-cell { display:flex; align-items:center; gap:10px; }
+.tap-avatar { width:34px; height:34px; border-radius:50%; background:#1B4F72; color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.tap-name { font-weight:600; font-size:13px; color:#1e293b; line-height:1.3; }
+.tap-type-pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:10px; letter-spacing:.2px; display:inline-block; margin-top:2px; }
+.tap-type-phone { background:#FEF3C7; color:#92400E; }
+.tap-type-walkin { background:#DBEAFE; color:#1e40af; }
+.tap-meta { font-size:12px; color:#64748b; }
+.tap-meta strong { color:#334155; font-weight:600; }
+.tap-slot { font-size:12px; color:#475569; }
+.tap-slot i { color:#94a3b8; margin-right:3px; }
+.tap-dr-index { font-family:monospace; font-size:12.5px; font-weight:700; color:#1B4F72; background:#EBF5FB; padding:3px 9px; border-radius:6px; }
+.tap-status-done     { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#15803d; background:#dcfce7; padding:4px 10px; border-radius:20px; }
+.tap-status-primary  { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#1B4F72; background:#dbeafe; padding:4px 10px; border-radius:20px; }
+.tap-status-waiting  { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; color:#b45309; background:#fef3c7; padding:4px 10px; border-radius:20px; }
+.tap-print-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid #e2e8f0; color:#64748b; background:#fff; transition:all .15s; text-decoration:none; }
+.tap-print-btn:hover { background:#1B4F72; color:#fff; border-color:#1B4F72; }
+.tap-empty { text-align:center; padding:3rem 1rem; color:#94a3b8; font-size:13.5px; }
+</style>
 <div class="row g-4 mb-4">
     <div class="col-12">
-        <div class="bento-card foc-premium-card">
-            <div class="bento-header">
-                <div>
-                    <h3 class="bento-title"><i class="fa-solid fa-users me-1"></i> Today Added Patients</h3>
-                </div>
-                <span class="b-badge {{ $receptionistTodayPatients->count() > 0 ? 'b-badge-info' : 'b-badge-green' }}">
-                    {{ $receptionistTodayPatients->count() }} today
-                </span>
+        <div class="tap-table-wrap">
+            <div class="tap-header">
+                <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
             </div>
-            <div class="table-responsive rec-patient-scroll">
-                <table class="bento-table foc-premium-table">
-                    <thead style="background-color: #1B4F72 !important;">
+            <div class="table-responsive">
+                <table class="tap-table">
+                    <thead>
                         <tr>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">#</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">MRD</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">PATIENT NAME</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">CITY / AGE</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">TIME SLOT</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">DOCTOR NAME</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">DR INDEX NO.</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">STATUS</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none; text-align:center;">WAIT</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none; text-align:center;">ACTION</th>
+                            <th style="width:40px">#</th>
+                            <th>MRD</th>
+                            <th>Patient</th>
+                            <th>City / Age</th>
+                            <th>Slot</th>
+                            <th>Doctor</th>
+                            <th>DR Index</th>
+                            <th>Status</th>
+                            <th style="text-align:center">Wait</th>
+                            <th style="text-align:center">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1782,92 +1814,102 @@
                             @php
                                 $hasPrimaryDone   = $patient->primary_done_at !== null;
                                 $hasSecondaryDone = $patient->secondary_done_at !== null;
-                            @endphp
-                            @php
-                                // R badge
-                                $waitMins  = (int) $patient->created_at->diffInMinutes(now());
+                                $waitMins  = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
                                 $waitClass = $waitMins < $wGreen ? 'wait-green' : ($waitMins < $wOrange ? 'wait-orange' : ($waitMins < $wRed ? 'wait-red' : 'wait-fire'));
                                 $waitFmt   = $waitMins < 60 ? $waitMins.'m' : floor($waitMins/60).'h'.($waitMins%60 > 0 ? ' '.($waitMins%60).'m' : '');
-                                // D / ND badge
-                                $pExam      = $patient->primaryExamination;
-                                $isDilated  = $pExam && ($pExam->exam_data['dilate'] ?? 'No') === 'Yes';
-                                $isNotDil   = $pExam && ($pExam->exam_data['dilate'] ?? 'No') !== 'Yes';
-                                $primeMins  = $pExam ? (int) \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
-                                $primeFmt   = $primeMins < 60 ? $primeMins.'m' : floor($primeMins/60).'h'.($primeMins%60 > 0 ? ' '.($primeMins%60).'m' : '');
-                                $dClass     = $primeMins < $wDGreen  ? 'wait-green' : ($primeMins < $wDOrange  ? 'wait-orange' : ($primeMins < $wDRed  ? 'wait-red' : 'wait-fire'));
-                                $ndClass    = $primeMins < $wNdGreen ? 'wait-green' : ($primeMins < $wNdOrange ? 'wait-orange' : ($primeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
+                                $pExam     = $patient->primaryExamination;
+                                $isDilated = $pExam && ($pExam->exam_data['dilate'] ?? 'No') === 'Yes';
+                                $isNotDil  = $pExam && ($pExam->exam_data['dilate'] ?? 'No') !== 'Yes';
+                                $primeMins = $pExam ? (int) \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+                                $primeFmt  = $primeMins < 60 ? $primeMins.'m' : floor($primeMins/60).'h'.($primeMins%60 > 0 ? ' '.($primeMins%60).'m' : '');
+                                $dClass    = $primeMins < $wDGreen  ? 'wait-green' : ($primeMins < $wDOrange  ? 'wait-orange' : ($primeMins < $wDRed  ? 'wait-red' : 'wait-fire'));
+                                $ndClass   = $primeMins < $wNdGreen ? 'wait-green' : ($primeMins < $wNdOrange ? 'wait-orange' : ($primeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
+                                $initials  = strtoupper(substr($patient->first_name, 0, 1) . substr($patient->last_name, 0, 1));
                             @endphp
                             <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td><strong>{{ $patient->patient_code }}</strong></td>
-                                <td>{{ $patient->full_name }}</td>
-                                <td>{{ $patient->location?->city ?? '—' }} / {{ $patient->age }}y</td>
-                                <td>{{ $patient->slot_name ?? '—' }}</td>
-                                <td>{{ $patient->doctor?->name ?? '—' }}</td>
+                                <td style="color:#94a3b8; font-size:12px; font-weight:600;">{{ $index + 1 }}</td>
+                                <td><span class="tap-mrd">{{ $patient->patient_code }}</span></td>
+                                <td>
+                                    <div class="tap-patient-cell">
+                                        <div class="tap-avatar">{{ $initials }}</div>
+                                        <div>
+                                            <div class="tap-name">{{ $patient->full_name }}</div>
+                                            <span class="tap-type-pill {{ $patient->type === 'phone' ? 'tap-type-phone' : 'tap-type-walkin' }}">
+                                                <i class="bi bi-{{ $patient->type === 'phone' ? 'phone' : 'person-walking' }}" style="font-size:9px;"></i>
+                                                {{ ucfirst($patient->type) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="tap-meta">
+                                    <strong>{{ $patient->location?->city ?? '—' }}</strong><br>
+                                    <span>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</span>
+                                </td>
+                                <td class="tap-slot">
+                                    @if($patient->slot_name)
+                                        <i class="bi bi-clock"></i>{{ $patient->slot_name }}
+                                    @else
+                                        <span style="color:#cbd5e1">—</span>
+                                    @endif
+                                </td>
+                                <td style="font-size:13px; color:#334155; font-weight:500;">{{ $patient->doctor?->name ?? '—' }}</td>
                                 <td>
                                     @if($patient->doctor_patient_no)
-                                        <strong>{{ ($patient->doctor?->doctor_prefix ?? '') ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) }}</strong>
+                                        <span class="tap-dr-index">{{ ($patient->doctor?->doctor_prefix ?? '') ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) }}</span>
                                     @else
-                                        <span style="color:#94A3B8">—</span>
+                                        <span style="color:#cbd5e1">—</span>
                                     @endif
                                 </td>
                                 <td>
                                     @if($hasSecondaryDone)
-                                        <span class="dash-status-badge completed">
-                                            <i class="bi bi-check2"></i> Secondary Done
-                                        </span>
+                                        <span class="tap-status-done"><i class="bi bi-check2-circle"></i> Done</span>
                                     @elseif($hasPrimaryDone)
-                                        <span class="dash-status-badge in-progress">
-                                            <i class="bi bi-arrow-repeat"></i> Primary Done
-                                        </span>
+                                        <span class="tap-status-primary"><i class="bi bi-arrow-repeat"></i> Primary Done</span>
                                     @else
-                                        <span class="dash-status-badge waiting">
-                                            <i class="bi bi-clock-history"></i> Waiting
-                                        </span>
+                                        <span class="tap-status-waiting"><i class="bi bi-clock-history"></i> Waiting</span>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    @if(!$hasSecondaryDone)
-                                    <div class="d-flex flex-column align-items-center gap-1">
-                                        <span class="wait-pill {{ $waitClass }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}" data-badge="R">
-                                            <span class="wp-r">R</span>
-                                            <span class="wp-time">{{ $waitFmt }}</span>
-                                        </span>
-                                        @if($isDilated)
-                                            <span class="wait-pill {{ $dClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="D" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
-                                                <span class="wp-r">D</span>
-                                                <span class="wp-time">{{ $primeFmt }}</span>
-                                            </span>
-                                        @elseif($isNotDil)
-                                            <span class="wait-pill {{ $ndClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="ND" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
-                                                <span class="wp-r" style="font-size:.58rem;">ND</span>
-                                                <span class="wp-time">{{ $primeFmt }}</span>
-                                            </span>
-                                        @endif
-                                    </div>
+                                <td style="text-align:center">
+                                    @if($hasSecondaryDone)
+                                        <span style="color:#16a34a; font-size:11px; font-weight:700;"><i class="bi bi-check2-circle"></i> Done</span>
+                                    @elseif($patient->type === 'phone' && !$patient->checked_in_at)
+                                        <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                                           style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:#1B4F72;color:#fff;border-radius:20px;font-size:.7rem;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px rgba(27,79,114,.35);animation:checkin-pulse 1.4s ease-in-out infinite alternate;">
+                                            <i class="bi bi-box-arrow-in-right"></i> Check In
+                                        </a>
                                     @else
-                                        <span style="color:#16a34a;font-size:.8rem;font-weight:700;">
-                                            <i class="bi bi-check2-circle"></i> Done
-                                        </span>
+                                        <div class="d-flex flex-column align-items-center gap-1">
+                                            <span class="wait-pill {{ $waitClass }}" data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}" data-badge="R">
+                                                <span class="wp-r">R</span>
+                                                <span class="wp-time">{{ $waitFmt }}</span>
+                                            </span>
+                                            @if($isDilated)
+                                                <span class="wait-pill {{ $dClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="D" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
+                                                    <span class="wp-r">D</span>
+                                                    <span class="wp-time">{{ $primeFmt }}</span>
+                                                </span>
+                                            @elseif($isNotDil)
+                                                <span class="wait-pill {{ $ndClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="ND" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
+                                                    <span class="wp-r" style="font-size:.58rem;">ND</span>
+                                                    <span class="wp-time">{{ $primeFmt }}</span>
+                                                </span>
+                                            @endif
+                                        </div>
                                     @endif
                                 </td>
-                                <td class="text-center">
-                                    <!-- <a href="{{ route('hospital.patients.bill-pdf', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                       class="hms-btn hms-btn-sm hms-btn-print"
-                                       title="Print"
-                                       aria-label="Print patient bill">
-                                        <i class="fa-solid fa-print"></i> -->
-                                        
+                                <td style="text-align:center">
                                     <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                       class="action-icon print" title="Print">
-                                        <i class="bi bi-printer"></i>
-                                    </a>
+                                       class="tap-print-btn" title="Print">
+                                        <i class="bi bi-printer" style="font-size:14px;"></i>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4" style="color:#94A3B8">No patients added today</td>
+                                <td colspan="10" class="tap-empty">
+                                    <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:8px; opacity:.4;"></i>
+                                    No patients added today
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
@@ -1876,7 +1918,6 @@
         </div>
     </div>
 </div>
-
 
 @endif
 

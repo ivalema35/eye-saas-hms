@@ -47,6 +47,7 @@ class Patient extends Model
         'reception_id',
         'referrer_id',
         'type',
+        'checked_in_at',
         'is_old_patient',
         'primary_done_at',
         'secondary_done_at',
@@ -54,6 +55,7 @@ class Patient extends Model
 
     protected $casts = [
         'appointment_date' => 'date',
+        'checked_in_at' => 'datetime',
         'primary_done_at' => 'datetime',
         'secondary_done_at' => 'datetime',
         'is_old_patient' => 'boolean',

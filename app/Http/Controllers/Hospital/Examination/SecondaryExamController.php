@@ -37,8 +37,12 @@ class SecondaryExamController extends Controller
             ->findOrFail($id);
         $primaryExam = $patient->primaryExamination;
 
-        // Dilation lock: block access until dilation time has elapsed
-        if ($primaryExam && ($primaryExam->exam_data['dilate'] ?? 'No') === 'Yes' && $primaryExam->dilation_time) {
+        $secondaryExam = SecondaryExamination::where('patient_id', $id)
+            ->where('tenant_id', $tenantId)
+            ->first();
+
+        // Dilation lock: block only if exam not yet saved and timer still running (bypass with ?force=1)
+        if (! $secondaryExam && $primaryExam && ($primaryExam->exam_data['dilate'] ?? 'No') === 'Yes' && $primaryExam->dilation_time && ! request()->boolean('force')) {
             $unlockTime = $primaryExam->updated_at->addMinutes($primaryExam->dilation_time);
             if (now()->lessThan($unlockTime)) {
                 $minutesLeft = (int) now()->diffInMinutes($unlockTime) + 1;
@@ -46,9 +50,6 @@ class SecondaryExamController extends Controller
                 return redirect()->back()->with('error', "Patient is currently dilating. Secondary Exam unlocks in {$minutesLeft} minute(s).");
             }
         }
-        $secondaryExam = SecondaryExamination::where('patient_id', $id)
-            ->where('tenant_id', $tenantId)
-            ->first();
         $user = Auth::guard('hospital_user')->user();
         $ed = $secondaryExam?->exam_data ?? ($primaryExam?->exam_data ?? []);
 
