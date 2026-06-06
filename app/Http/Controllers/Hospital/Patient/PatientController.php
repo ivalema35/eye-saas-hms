@@ -313,12 +313,15 @@ class PatientController extends Controller
         ]);
 
         DB::transaction(function () use ($request, $patient) {
-            $patient->update($request->only([
-                'first_name', 'middle_name', 'last_name', 'age', 'gender',
-                'occupation', 'contact_no', 'whatsapp_no', 'location_id',
-                'appointment_date', 'slot_id', 'doctor_id', 'case_id',
-                'case_fee', 'referrer_id',
-            ]));
+            $patient->update(array_merge(
+                $request->only([
+                    'first_name', 'middle_name', 'last_name', 'age', 'gender',
+                    'occupation', 'contact_no', 'whatsapp_no', 'location_id',
+                    'appointment_date', 'slot_id', 'doctor_id', 'case_id',
+                    'case_fee', 'referrer_id',
+                ]),
+                ['checked_in_at' => $patient->checked_in_at ?? now()]
+            ));
 
             $this->patientService->assignDoctorSerial(
                 $patient->fresh(),
