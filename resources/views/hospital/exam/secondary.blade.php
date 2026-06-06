@@ -3,10 +3,12 @@
 @section('page-header', 'Secondary Eye Examination')
 
 @section('page-actions')
+@if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
     <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
        class="btn secondary-exam-back-btn btn-sm">
         <i class="bi bi-arrow-left"></i> Back to Patient
     </a>
+@endif
     @if($exam)
         <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
             <i class="bi bi-printer"></i> Print Rx
@@ -258,6 +260,10 @@
     $initialMedicines = collect(old('medicines', ($initialMedicines ?? collect())->toArray()));
 @endphp
 
+@php
+    $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
+@endphp
+
 <div class="accordion mb-3" id="primaryExamReferenceAccordion">
     <div class="accordion-item border">
         <h2 class="accordion-header" id="primaryExamReferenceHeading">
@@ -377,31 +383,168 @@
 <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.secondary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
     @csrf
 
-    <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border gap-3 flex-wrap">
-        <div class="d-flex align-items-center gap-2 flex-wrap">
-            <div class="h5 mb-0 text-primary fw-bold">Exam Steps:</div>
-            @if(!$secondaryExam)
-                <span class="badge bg-info text-dark ms-3 rounded-pill px-3 py-2" style="font-size: 0.8rem; font-weight: 500;">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-filled from Primary Exam
-                </span>
-            @endif
+    @if($isDoctor)
+        <style>
+            .exam-layout-wrapper {
+                display: grid;
+                grid-template-columns: 240px 1fr;
+                gap: 20px;
+                align-items: start;
+            }
+
+            .doctor-stepper-sidebar {
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                padding: 15px;
+                border-radius: 12px;
+                position: sticky;
+                top: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            }
+
+            .doctor-stepper-sidebar .step-btn {
+                width: 100%;
+                text-align: left !important;
+                padding: 10px 15px !important;
+                border-radius: 8px !important;
+                font-weight: 600;
+            }
+
+            @media (max-width: 991.98px) {
+                .exam-layout-wrapper {
+                    grid-template-columns: 1fr;
+                }
+
+                .doctor-stepper-sidebar {
+                    position: static;
+                }
+            }
+        </style>
+
+        <div class="exam-layout-wrapper">
+            <div class="doctor-stepper-sidebar d-print-none">
+                <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-context" data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">H/O &amp; K/C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-nct" data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-oe" data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+
+                <hr>
+                <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
+            </div>
+
+            <div class="main-canvas">
+                <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
+                    <div class="clinical-grid-container" style="font-size:13px;">
+                        <div class="row g-2">
+                            <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                                <div class="canvas-box">
+                                    <div class="canvas-section-title">History &amp; Vision</div>
+                                    <div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
+                                    <div id="canvas_vision" class="mt-1"></div>
+                                </div>
+                                <div class="canvas-box">
+                                    <div class="canvas-section-title">Subjective Testing (ST)</div>
+                                    <div id="canvas_st" class="mb-1"></div>
+                                    <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
+                                    <div id="canvas_rx"></div>
+                                </div>
+                            </div>
+
+                            <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                                <div class="canvas-box">
+                                    <div class="canvas-section-title">On Examination (O/E)</div>
+                                    <div id="canvas_oe"></div>
+                                </div>
+                                <div class="canvas-box">
+                                    <div class="canvas-section-title">Fundus</div>
+                                    <div id="canvas_fundus"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="canvas-box mt-2">
+                            <div id="canvas_advice"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="d-flex align-items-center gap-1 flex-wrap">
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O &amp; H/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-nct"       data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+    @else
+        <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border gap-3 flex-wrap">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <div class="h5 mb-0 text-primary fw-bold">Exam Steps:</div>
+                @if(!$secondaryExam)
+                    <span class="badge bg-info text-dark ms-3 rounded-pill px-3 py-2" style="font-size: 0.8rem; font-weight: 500;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-filled from Primary Exam
+                    </span>
+                @endif
+            </div>
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">H/O &amp; K/C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-nct"       data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+            </div>
+            <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
         </div>
-        <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
-    </div>
+
+        <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
+            <div class="clinical-grid-container" style="font-size:13px;">
+                <div class="row g-2">
+                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                        <div class="canvas-box">
+                            <div class="canvas-section-title">History &amp; Vision</div>
+                            <div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
+                            <div id="canvas_vision" class="mt-1"></div>
+                        </div>
+                        <div class="canvas-box">
+                            <div class="canvas-section-title">Subjective Testing (ST)</div>
+                            <div id="canvas_st" class="mb-1"></div>
+                            <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
+                            <div id="canvas_rx"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                        <div class="canvas-box">
+                            <div class="canvas-section-title">On Examination (O/E)</div>
+                            <div id="canvas_oe"></div>
+                        </div>
+                        <div class="canvas-box">
+                            <div class="canvas-section-title">Fundus</div>
+                            <div id="canvas_fundus"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="canvas-box mt-2">
+                    <div id="canvas_advice"></div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <style>
         .print-logo {
@@ -439,41 +582,6 @@
             <div class="text-end">
                 <div>MRD: {{ $patient->patient_code ?? $patient->mr_number ?? '-' }}</div>
                 <div>Date: {{ $exam ? $exam->created_at->format('d M Y') : date('d M Y') }}</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
-        <div class="clinical-grid-container" style="font-size:13px;">
-            <div class="row g-2">
-                <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                    <div class="canvas-box">
-                        <div class="canvas-section-title">History &amp; Vision</div>
-                        <div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
-                        <div id="canvas_vision" class="mt-1"></div>
-                    </div>
-                    <div class="canvas-box">
-                        <div class="canvas-section-title">Subjective Testing (ST)</div>
-                        <div id="canvas_st" class="mb-1"></div>
-                        <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
-                        <div id="canvas_rx"></div>
-                    </div>
-                </div>
-
-                <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                    <div class="canvas-box">
-                        <div class="canvas-section-title">On Examination (O/E)</div>
-                        <div id="canvas_oe"></div>
-                    </div>
-                    <div class="canvas-box">
-                        <div class="canvas-section-title">Fundus</div>
-                        <div id="canvas_fundus"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="canvas-box mt-2">
-                <div id="canvas_advice"></div>
             </div>
         </div>
     </div>
