@@ -290,23 +290,23 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                 <div>
                     <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
                     
-                    <div class="doc-badges mt-1">
+                  <!--   <div class="doc-badges mt-1">
                         <span class="doc-badge {{ ($doctorPrimaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
                             Primary {{ $doctorPrimaryDone ?? 0 }}
                         </span>
                         <span class="doc-badge {{ ($doctorSecondaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
                             Secondary {{ $doctorSecondaryDone ?? 0 }}
                         </span>
-                    </div>
+                    </div> -->
                 </div>
             </div>
 
             {{-- Card 2: PENDING EXAMS (Primary Done) --}}
             <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
                 <div>
-        <div class="metric-icon" style="background:#ffedd5;">
-            <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
-        </div>
+                <div class="metric-icon" style="background:#ffedd5;">
+                    <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
+                </div>
                     <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Primary Done</div>
                 </div>
                 <div>
@@ -345,7 +345,6 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
 
 
     <div class="row g-4 mb-4">
-    {{-- Right Grid Box: Doctors Block --}}
         <div class="col-lg-12">
             <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
                 <h6 class="fw-bold mb-3" style="color: #1B4F72;">All Doctors</h6>
@@ -426,10 +425,7 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
         </div>
     @endif
 
-    {{-- Bottom Section: Side-by-Side Split Tables --}}
     <div class="row g-4">
-        
-        {{-- Left Table Panel: Primary Patient --}}
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
                 <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">

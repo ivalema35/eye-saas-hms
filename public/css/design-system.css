@@ -28,24 +28,6 @@
     --hms-primary:        #1B4F72;
     --hms-primary-dark:   #154160;
     --hms-primary-light:  #D6EAF8;
-
-    /* Master table shared variables — used by type-table, med-table, etc. */
-    --type-secondary:          #1B4F72;
-    --type-secondary-08:       rgba(27, 79, 114, .08);
-    --type-secondary-12:       rgba(27, 79, 114, .12);
-    --type-secondary-18:       rgba(27, 79, 114, .18);
-    --type-secondary-24:       rgba(27, 79, 114, .24);
-    --type-primary:            #ebf5fbeb;
-    --med-secondary:           #1B4F72;
-    --med-secondary-08:        rgba(27, 79, 114, .08);
-    --med-secondary-12:        rgba(27, 79, 114, .12);
-    --group-secondary:         #1B4F72;
-    --group-secondary-08:      rgba(27, 79, 114, .08);
-    --group-secondary-12:      rgba(27, 79, 114, .12);
-    --dosage-secondary:        #1B4F72;
-    --dosage-secondary-08:     rgba(27, 79, 114, .08);
-    --instruction-secondary:   #1B4F72;
-    --instruction-secondary-08:rgba(27, 79, 114, .08);
     --hms-secondary:      #2980B9;
     --hms-secondary-dark: #1F6391;
     --hms-teal:           #1ABC9C;
@@ -384,10 +366,9 @@ img, svg { vertical-align: middle; }
 }
 .hms-page-header h1 {
     font-size: 1.375rem;
-    font-weight: 900 !important;
-    color: #0D2137 !important;
+    font-weight: 700;
+    color: var(--hms-text);
     margin: 0;
-    letter-spacing: -.015em;
 }
 .hms-page-actions {
     display: flex;
