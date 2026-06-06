@@ -530,48 +530,8 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($secondaryQueue ?? [] as $i => $patient)
-                                <tr>
-                                    <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
-                                    <td class="text-start fw-semibold" style="color: #1B4F72;">
-                                        {{ $patient->first_name }} {{ $patient->last_name }}
-                                    </td>
-                                    <td>{{ $patient->age }}</td>
-                                    <td>{{ $patient->location->city ?? '-' }}</td>
-                                    <td>
-                                        @php
-                                            $wMins = (int) $patient->created_at->diffInMinutes(now());
-                                            $wCls  = $wMins < $wGreen ? 'wait-green' : ($wMins < $wOrange ? 'wait-orange' : ($wMins < $wRed ? 'wait-red' : 'wait-fire'));
-                                            $wFmt  = $wMins < 60 ? $wMins.'m' : floor($wMins/60).'h'.($wMins%60>0?' '.($wMins%60).'m':'');
-                                        @endphp
-                                        <span class="wait-pill {{ $wCls }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}">
-                                            <span class="wp-r">R</span>
-                                            <span class="wp-time">{{ $wFmt }}</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}" 
-                                        class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                                            Examine
-                                        </a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-<table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
-    <thead class="table-light text-secondary">
-        <tr>
-            <th>{{ $drIndexLabel }}</th>
-            <th class="text-start">Patient Name</th>
-            <th>Age</th>
-            <th>City</th>
-            <th>{{ $waitStatusLabel }}</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+                            
+
     <tbody>
         @forelse($secondaryQueue ?? [] as $i => $patient)
             @php
