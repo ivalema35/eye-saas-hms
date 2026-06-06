@@ -237,8 +237,14 @@
 .wait-pill.wait-green  { background:rgba(22,163,74,.10);  box-shadow:0 0 0 1px rgba(22,163,74,.25); }
 .wait-pill.wait-orange { background:rgba(234,88,12,.10);  box-shadow:0 0 0 1px rgba(234,88,12,.25); }
 .wait-pill.wait-red    { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.25); }
+/* ── Clickable doctor cards ── */
+a.doc-profile-card { text-decoration:none; color:inherit; display:block; }
+a.doc-profile-card:hover { border-color:#1B4F72 !important; background:#e8f4fb !important; transform:translateY(-1px); box-shadow:0 4px 12px rgba(27,79,114,.15); }
+a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; background:#ddeef9 !important; }
+
 .wait-pill.wait-fire   { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.35); animation:fire-glow 1s ease-in-out infinite alternate; }
 @keyframes fire-glow { from{box-shadow:0 0 0 1px rgba(220,38,38,.35),0 0 6px rgba(234,88,12,.4);}to{box-shadow:0 0 0 2px rgba(220,38,38,.55),0 0 12px rgba(234,88,12,.6);} }
+@keyframes dilModalIn { from{opacity:0;transform:translateY(12px) scale(.97);}to{opacity:1;transform:translateY(0) scale(1);} }
 .wp-r { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.65rem;font-weight:900;color:#fff;flex-shrink:0; }
 .wait-green  .wp-r { background:#16a34a; }
 .wait-orange .wp-r { background:#ea580c; }
@@ -261,6 +267,12 @@
         $wGreen          = (int) hospital_setting('wait_green_max',  30);
         $wOrange         = (int) hospital_setting('wait_orange_max', 60);
         $wRed            = (int) hospital_setting('wait_red_max',   120);
+        $wDGreen         = (int) hospital_setting('wait_d_green_max',  40);
+        $wDOrange        = (int) hospital_setting('wait_d_orange_max', 90);
+        $wDRed           = (int) hospital_setting('wait_d_red_max',   120);
+        $wNdGreen        = (int) hospital_setting('wait_nd_green_max',  20);
+        $wNdOrange       = (int) hospital_setting('wait_nd_orange_max', 60);
+        $wNdRed          = (int) hospital_setting('wait_nd_red_max',   120);
     @endphp
 
     {{-- Subscription Alert --}}
@@ -350,10 +362,21 @@
                 
                 <div class="doctor-cards-container">
                     @forelse($doctorCards ?? [] as $doc)
-                        @php $isSelf = $doc->id === auth('hospital_user')->id(); @endphp
-                        <div class="doc-profile-card" style="{{ $isSelf ? 'border:2px solid #1B4F72; background:#f0f6fb;' : '' }}">
+                        @php
+                            $loggedInId  = auth('hospital_user')->id();
+                            $isSelf      = $doc->id === $loggedInId;
+                            $isSelected  = $isSelf
+                                ? ($viewingDoctor === null)
+                                : ($viewingDoctor?->id === $doc->id);
+                            $cardUrl     = $isSelf
+                                ? route('hospital.dashboard', ['slug' => $slug])
+                                : route('hospital.dashboard', ['slug' => $slug]) . '?view_doctor=' . $doc->id;
+                        @endphp
+                        <a href="{{ $cardUrl }}"
+                           class="doc-profile-card {{ $isSelected ? 'doc-selected' : '' }}"
+                           style="{{ $isSelected ? 'border:2px solid #1B4F72; background:#ddeef9;' : '' }}">
                             {{-- Avatar --}}
-                            <div class="doc-avatar" style="{{ $isSelf ? 'background:#1B4F72; color:#fff;' : '' }}">
+                            <div class="doc-avatar" style="{{ $isSelected ? 'background:#1B4F72; color:#fff;' : '' }}">
                                 {{ substr($doc->name, 0, 1) }}
                             </div>
 
@@ -364,14 +387,13 @@
                                         <span style="font-size:10px;font-weight:700;background:#1B4F72;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
                                     @endif
                                 </div>
-                                
+
                                 @if($doc->role?->slug === 'ot_doctor')
                                     <div class="doc-assigned">OT Doctor</div>
                                 @else
                                     <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
                                 @endif
-                                
-                                {{-- માત્ર રેગ્યુલર ડૉક્ટર માટે જ Primary/Secondary બતાવવા માટેની શરત --}}
+
                                 @if($doc->role?->slug !== 'ot_doctor')
                                     <div class="doc-badges">
                                         <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
@@ -382,7 +404,6 @@
                                         </span>
                                     </div>
                                 @else
-                                    {{-- OT Doctor Assigned --}}
                                     <div class="doc-badges">
                                         <span class="doc-badge">
                                             Assigned {{ $doc->assigned_today ?? 0 }}
@@ -390,7 +411,7 @@
                                     </div>
                                 @endif
                             </div>
-                        </div>
+                        </a>
                     @empty
                         <div class="text-muted small p-2">No other duty records live right now.</div>
                     @endforelse
@@ -398,6 +419,22 @@
             </div>
         </div>
     </div>
+
+    {{-- Viewing another doctor banner --}}
+    @if($viewingDoctor)
+        <div class="d-flex align-items-center gap-3 mb-3 px-3 py-2 rounded-3"
+             style="background:#fff8e1; border:1px solid #ffc107;">
+            <i class="bi bi-eye-fill" style="color:#f59e0b; font-size:16px;"></i>
+            <span style="font-size:14px; font-weight:600; color:#7c5c00;">
+                Viewing <strong>Dr. {{ $viewingDoctor->name }}</strong>'s patients
+            </span>
+            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
+               class="btn btn-sm ms-auto"
+               style="background:#1B4F72; color:#fff; border-radius:6px; font-size:12px; padding:4px 12px;">
+                <i class="bi bi-arrow-left-circle me-1"></i> Back to My Patients
+            </a>
+        </div>
+    @endif
 
     {{-- Bottom Section: Side-by-Side Split Tables --}}
     <div class="row g-4">
@@ -504,6 +541,30 @@
     </thead>
     <tbody>
         @forelse($secondaryQueue ?? [] as $i => $patient)
+            @php
+                $sRMins    = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+                $sRCls     = $sRMins < $wGreen ? 'wait-green' : ($sRMins < $wOrange ? 'wait-orange' : ($sRMins < $wRed ? 'wait-red' : 'wait-fire'));
+                $sRFmt     = $sRMins < 60 ? $sRMins.'m' : floor($sRMins/60).'h'.($sRMins%60>0?' '.($sRMins%60).'m':'');
+                $sPExam    = $patient->primaryExamination;
+                $sIsDil    = $sPExam && ($sPExam->exam_data['dilate'] ?? 'No') === 'Yes';
+                $sPrimeMins= $sPExam ? (int)\Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+                $sPrimeFmt = $sPrimeMins < 60 ? $sPrimeMins.'m' : floor($sPrimeMins/60).'h'.($sPrimeMins%60>0?' '.($sPrimeMins%60).'m':'');
+                $sDClass   = $sPrimeMins < $wDGreen  ? 'wait-green' : ($sPrimeMins < $wDOrange  ? 'wait-orange' : ($sPrimeMins < $wDRed  ? 'wait-red' : 'wait-fire'));
+                $sNdClass  = $sPrimeMins < $wNdGreen ? 'wait-green' : ($sPrimeMins < $wNdOrange ? 'wait-orange' : ($sPrimeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
+                // Dilation lock
+                $isDilLocked  = false;
+                $dilUnlockMs  = 0;
+                $dilCountdown = '';
+                if ($sIsDil && $sPExam && $sPExam->dilation_time) {
+                    $unlockTime  = $sPExam->updated_at->copy()->addMinutes($sPExam->dilation_time);
+                    $isDilLocked = now()->lessThan($unlockTime);
+                    $dilUnlockMs = $unlockTime->timestamp * 1000;
+                    if ($isDilLocked) {
+                        $diff = $unlockTime->diffInSeconds(now());
+                        $dilCountdown = sprintf('%02d:%02d', intdiv($diff, 60), $diff % 60);
+                    }
+                }
+            @endphp
             <tr>
                 <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
                 <td class="text-start fw-semibold" style="color: #1B4F72;">
@@ -512,21 +573,40 @@
                 <td>{{ $patient->age }}</td>
                 <td>{{ $patient->location->city ?? '-' }}</td>
                 <td>
-                    @php
-                        $wMins = (int) $patient->created_at->diffInMinutes(now());
-                        $wCls  = $wMins < $wGreen ? 'wait-green' : ($wMins < $wOrange ? 'wait-orange' : ($wMins < $wRed ? 'wait-red' : 'wait-fire'));
-                        $wFmt  = $wMins < 60 ? $wMins.'m' : floor($wMins/60).'h'.($wMins%60>0?' '.($wMins%60).'m':'');
-                    @endphp
-                    <span class="wait-pill {{ $wCls }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}">
-                        <span class="wp-r">R</span>
-                        <span class="wp-time">{{ $wFmt }}</span>
-                    </span>
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <span class="wait-pill {{ $sRCls }}" data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}">
+                            <span class="wp-r">R</span>
+                            <span class="wp-time">{{ $sRFmt }}</span>
+                        </span>
+                        @if($sIsDil && $sPExam)
+                            <span class="wait-pill {{ $sDClass }}" data-wait-from="{{ \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
+                                <span class="wp-r">D</span>
+                                <span class="wp-time">{{ $sPrimeFmt }}</span>
+                            </span>
+                        @elseif($sPExam)
+                            <span class="wait-pill {{ $sNdClass }}" data-wait-from="{{ \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
+                                <span class="wp-r" style="font-size:.58rem;">ND</span>
+                                <span class="wp-time">{{ $sPrimeFmt }}</span>
+                            </span>
+                        @endif
+                    </div>
                 </td>
                 <td>
-                    <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}" 
-                       class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                        Examine
-                    </a>
+                    @if($isDilLocked)
+                        <button class="btn btn-sm fw-semibold px-3 dil-override-btn"
+                                style="background:#fff8ed; color:#92400e; border-radius:4px; cursor:pointer; border:1px solid #fcd34d;"
+                                data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}?force=1"
+                                data-patient-name="{{ $patient->first_name }} {{ $patient->last_name }}"
+                                title="Dilation in progress — click to override">
+                            <i class="bi bi-hourglass-split me-1" style="color:#f59e0b;"></i>
+                            <span class="dilation-countdown" data-unlock-ms="{{ $dilUnlockMs }}">{{ $dilCountdown }}</span>
+                        </button>
+                    @else
+                        <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
+                           class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                            Examine
+                        </a>
+                    @endif
                 </td>
             </tr>
         @empty
@@ -547,29 +627,100 @@
         </div>
     </div>
 </div>
+{{-- Dilation Override Modal --}}
+<div id="dilOverrideModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.5); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+    <div id="dilOverrideCard" style="background:#fff; border-radius:16px; width:100%; max-width:380px; margin:0 16px; box-shadow:0 24px 64px rgba(0,0,0,.18); animation:dilModalIn .18s ease;">
+        {{-- Icon area --}}
+        <div style="padding:28px 24px 0; text-align:center;">
+            <div style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:#fff8ed; border:2px solid #fcd34d; margin-bottom:14px;">
+                <i class="bi bi-hourglass-split" style="font-size:22px; color:#f59e0b;"></i>
+            </div>
+            <h6 style="margin:0 0 6px; font-size:15px; font-weight:700; color:#1e293b; letter-spacing:.01em;">Dilation In Progress</h6>
+            <p style="margin:0; font-size:13px; color:#64748b; line-height:1.55;">
+                <strong id="dilModalPatientName" style="color:#1B4F72;"></strong> is currently dilating.<br>
+                Override the lock and proceed to secondary exam?
+            </p>
+        </div>
+        {{-- Divider --}}
+        <div style="margin:20px 24px 0; border-top:1px solid #f1f5f9;"></div>
+        {{-- Actions --}}
+        <div style="padding:16px 24px 22px; display:flex; gap:10px;">
+            <button id="dilModalCancel" style="flex:1; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s;">
+                Cancel
+            </button>
+            <a id="dilModalConfirm" href="#" style="flex:1; background:#1B4F72; color:#fff; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s;">
+                <i class="bi bi-arrow-right-circle-fill" style="font-size:14px;"></i> Proceed
+            </a>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
 <script>
 (function () {
     const W = { green: {{ $wGreen }}, orange: {{ $wOrange }}, red: {{ $wRed }} };
-    function getWaitClass(m) {
-        return m < W.green ? 'wait-green' : m < W.orange ? 'wait-orange' : m < W.red ? 'wait-red' : 'wait-fire';
-    }
-    function fmtTime(m) {
-        return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h' + (m % 60 > 0 ? ' ' + (m % 60) + 'm' : '');
-    }
+    function getWC(m, g, o, r) { return m < g ? 'wait-green' : m < o ? 'wait-orange' : m < r ? 'wait-red' : 'wait-fire'; }
+    function getWaitClass(m) { return getWC(m, W.green, W.orange, W.red); }
+    function fmtTime(m) { return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h' + (m % 60 > 0 ? ' ' + (m % 60) + 'm' : ''); }
+
     function updateWaitPills() {
         const now = Date.now();
         document.querySelectorAll('.wait-pill[data-wait-from]').forEach(function (pill) {
             const mins = Math.floor((now - new Date(pill.dataset.waitFrom).getTime()) / 60000);
-            pill.className = 'wait-pill ' + getWaitClass(mins);
+            const thr  = pill.dataset.thresholds ? pill.dataset.thresholds.split(',').map(Number) : null;
+            pill.className = 'wait-pill ' + (thr ? getWC(mins, thr[0], thr[1], thr[2]) : getWaitClass(mins));
             const t = pill.querySelector('.wp-time');
             if (t) t.textContent = fmtTime(mins);
         });
     }
+
+    function updateDilationCountdowns() {
+        document.querySelectorAll('.dilation-countdown').forEach(function (el) {
+            const unlockMs = parseInt(el.getAttribute('data-unlock-ms'));
+            const diff = unlockMs - Date.now();
+            if (diff <= 0) {
+                el.textContent = '00:00';
+                el.closest('button')?.setAttribute('disabled', false);
+            } else {
+                const m = Math.floor(diff / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                el.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+            }
+        });
+    }
+
     updateWaitPills();
+    updateDilationCountdowns();
     setInterval(updateWaitPills, 30000);
+    setInterval(updateDilationCountdowns, 1000);
+
+    // Dilation override modal
+    const dilModal   = document.getElementById('dilOverrideModal');
+    const dilConfirm = document.getElementById('dilModalConfirm');
+    const dilCancel  = document.getElementById('dilModalCancel');
+    const dilName    = document.getElementById('dilModalPatientName');
+
+    function openDilModal(url, patientName) {
+        dilName.textContent    = patientName;
+        dilConfirm.href        = url;
+        dilModal.style.display = 'flex';
+    }
+    function closeDilModal() {
+        dilModal.style.display = 'none';
+        dilConfirm.href        = '#';
+    }
+
+    document.querySelectorAll('.dil-override-btn').forEach(function (btn) {
+        btn.addEventListener('dblclick', function (e) {
+            e.stopPropagation();
+            openDilModal(btn.dataset.forceUrl, btn.dataset.patientName);
+        });
+    });
+    dilCancel.addEventListener('click', closeDilModal);
+    document.getElementById('dilOverrideCard').addEventListener('click', function (e) { e.stopPropagation(); });
+    dilModal.addEventListener('click', closeDilModal);
 })();
 </script>
 @endpush

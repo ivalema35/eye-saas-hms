@@ -79,9 +79,29 @@ class DashboardController extends Controller
                 ->count();
 
             $selectedDoctorId = null;
+            $viewingDoctor = null;
             if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
                 $selectedDoctorId = $user->id;
+
+                // Allow switching to another doctor's view via ?view_doctor=ID
+                $viewDoctorId = (int) request('view_doctor', 0);
+                if ($viewDoctorId && $viewDoctorId !== $user->id) {
+                    $viewingDoctor = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+                        ->find($viewDoctorId);
+                    if ($viewingDoctor) {
+                        $selectedDoctorId = $viewingDoctor->id;
+                    }
+                }
             }
+
+            $buildIndex = function (Patient $patient): Patient {
+                $patient->display_doctor_index = $patient->doctor_patient_no
+                    ? (($patient->doctor?->doctor_prefix ?? '')
+                        ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
+                        : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
+                    : '-';
+                return $patient;
+            };
 
             $primaryQueueQuery = Patient::with(['doctor', 'caseType', 'primaryExamination'])
                 ->whereDate('appointment_date', $today);
@@ -91,55 +111,42 @@ class DashboardController extends Controller
             }
 
             $primaryQueue = $primaryQueueQuery
-                ->latest()
+                ->orderBy('doctor_patient_no')
                 ->get()
-                ->filter(fn (Patient $patient): bool => $patient->primary_done_at === null)
-                ->map(function (Patient $patient): Patient {
-                    $patient->display_doctor_index = $patient->doctor_patient_no
-                        ? (($patient->doctor?->doctor_prefix ?? '')
-                            ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
-                            : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
-                        : '-';
-                    $patient->display_wait_status = $patient->primary_done_at ? 'Done' : 'Waiting';
-
-                    return $patient;
-                })
+                ->filter(fn (Patient $patient): bool =>
+                    $patient->primary_done_at === null &&
+                    ($patient->type !== 'phone' || $patient->checked_in_at !== null)
+                )
+                ->map($buildIndex)
                 ->take(20)
                 ->values();
 
             if ($isDoctorUser && $user) {
-                $doctorName = $user->name;
-                $doctorAssignedPatients = Patient::where('doctor_id', $user->id)
+                $statsDoctorId = $viewingDoctor ? $viewingDoctor->id : $user->id;
+                $doctorName = $viewingDoctor ? $viewingDoctor->name : $user->name;
+
+                $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
                     ->whereDate('appointment_date', $today)
                     ->count();
-                $doctorPrimaryDone = Patient::where('doctor_id', $user->id)
+                $doctorPrimaryDone = Patient::where('doctor_id', $statsDoctorId)
                     ->whereDate('appointment_date', $today)
                     ->whereNotNull('primary_done_at')
                     ->whereNull('secondary_done_at')
                     ->count();
-                $doctorSecondaryDone = Patient::where('doctor_id', $user->id)
+                $doctorSecondaryDone = Patient::where('doctor_id', $statsDoctorId)
                     ->whereDate('appointment_date', $today)
                     ->whereNotNull('secondary_done_at')
                     ->count();
 
-                $secondaryQueue = Patient::with(['doctor', 'caseType'])
-                    ->where('doctor_id', $user->id)
+                $secondaryQueue = Patient::with(['doctor', 'caseType', 'primaryExamination'])
+                    ->where('doctor_id', $statsDoctorId)
                     ->whereDate('appointment_date', $today)
                     ->whereNotNull('primary_done_at')
                     ->whereNull('secondary_done_at')
-                    ->latest()
+                    ->orderBy('doctor_patient_no')
                     ->take(20)
                     ->get()
-                    ->map(function (Patient $patient): Patient {
-                        $patient->display_doctor_index = $patient->doctor_patient_no
-                            ? (($patient->doctor?->doctor_prefix ?? '')
-                                ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
-                                : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
-                            : '-';
-                        $patient->display_wait_status = $patient->secondary_done_at ? 'Done' : 'Waiting';
-
-                        return $patient;
-                    });
+                    ->map($buildIndex);
             }
         }
 
@@ -353,6 +360,7 @@ class DashboardController extends Controller
                     'patients.doctor_patient_no',
                     'patients.case_fee',
                     'patients.type',
+                    'patients.checked_in_at',
                     'patients.primary_done_at',
                     'patients.secondary_done_at',
                     'patients.created_at',
@@ -404,7 +412,8 @@ class DashboardController extends Controller
                 'doctorAssignedPatients',
                 'doctorPrimaryDone',
                 'doctorSecondaryDone',
-                'doctorCards'
+                'doctorCards',
+                'viewingDoctor'
             ));
         }
 

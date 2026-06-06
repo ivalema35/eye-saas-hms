@@ -130,7 +130,7 @@
                         <td>{{ $i + 1 }}</td>
                         <td><strong>{{ $p->patient_code }}</strong></td>
                         @php
-                            $rWaitMins  = (int) $p->created_at->diffInMinutes(now());
+                            $rWaitMins  = (int) ($p->checked_in_at ?? $p->created_at)->diffInMinutes(now());
                             $rWaitClass = $rWaitMins < $wGreen ? 'wait-green' : ($rWaitMins < $wOrange ? 'wait-orange' : ($rWaitMins < $wRed ? 'wait-red' : 'wait-fire'));
                             $rWaitFmt   = $rWaitMins < 60 ? $rWaitMins.'m' : floor($rWaitMins/60).'h'.($rWaitMins%60 > 0 ? ' '.($rWaitMins%60).'m' : '');
                             $rPExam     = $p->primaryExamination ?? null;
@@ -157,9 +157,14 @@
                                 <span style="color:#16a34a;font-size:.8rem;font-weight:700;margin-top:4px;display:inline-block;">
                                     <i class="bi bi-check2-circle"></i> Done
                                 </span>
+                            @elseif($p->type === 'phone' && !$p->checked_in_at)
+                                <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $p->id]) }}"
+                                   style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:4px 10px;background:#1B4F72;color:#fff;border-radius:20px;font-size:.72rem;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px rgba(27,79,114,.35);animation:checkin-pulse 1.4s ease-in-out infinite alternate;">
+                                    <i class="bi bi-box-arrow-in-right"></i> Check In
+                                </a>
                             @else
                             <div class="d-flex flex-column align-items-start gap-1 mt-1">
-                                <span class="wait-pill {{ $rWaitClass }}" data-wait-from="{{ $p->created_at->toIso8601String() }}" data-badge="R">
+                                <span class="wait-pill {{ $rWaitClass }}" data-wait-from="{{ ($p->checked_in_at ?? $p->created_at)->toIso8601String() }}" data-badge="R">
                                     <span class="wp-r">R</span>
                                     <span class="wp-time">{{ $rWaitFmt }}</span>
                                 </span>
@@ -250,6 +255,10 @@
 .wait-orange .wp-time { color:#c2410c; }
 .wait-red    .wp-time { color:#b91c1c; }
 .wait-fire   .wp-time { color:#dc2626; }
+@keyframes checkin-pulse {
+    from { box-shadow:0 0 0 2px rgba(27,79,114,.35),0 0 4px rgba(27,79,114,.3); }
+    to   { box-shadow:0 0 0 4px rgba(27,79,114,.6),0 0 10px rgba(27,79,114,.5); }
+}
 </style>
 @endpush
 
