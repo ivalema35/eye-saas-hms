@@ -411,7 +411,6 @@
     min-width: 150px;
 }
 
-/* Gap fill karo taki hover karte waqt menu band na ho */
 .black-menu-bar .dropdown::after {
     content: '';
     position: absolute;
@@ -421,12 +420,11 @@
     height: 8px;
 }
 
-/* Dropdown hover par show karva mate */
 .black-menu-bar .dropdown:hover > .dropdown-menu {
     display: block;
 }
 
-/* Dropdown items ni style */
+
 .black-menu-bar .dropdown-item {
     color: #333 !important;
     padding: 8px 15px;
@@ -436,7 +434,6 @@
     background-color: #f0f0f0;
 }
 
-/* Submenu ne baaju ma display karva mate */
 .dropdown-menu .dropend {
     position: relative;
 }
@@ -457,7 +454,6 @@
     display: none;
 }
 
-/* આ ખાસ કોડ ક્લિક પર મેનુ બંધ ન થાય તે માટે */
 .dropdown-menu .dropdown-toggle::after {
     float: right;
     margin-top: 0.5em;
@@ -497,7 +493,15 @@
             }
         }
 
-        /* Mobile: make overlay feel softer */
+    .avatar-circle {
+        width: 35px; height: 35px; background: #1B4F72; color: #fff;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .user-name { font-size: 13px; font-weight: 800; color: #1B4F72; line-height: 1; }
+    .user-role { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .user-dropdown .dropdown-toggle::after { display: none; } /* એરો દૂર કરવા માટે */
+
+
         .hms-sidebar-backdrop {
             background: rgba(27, 79, 114, 0.35) !important;
         }
@@ -537,12 +541,27 @@
             <img src="{{ $hospitalLogoUrl }}" style="height: 40px; margin-right: 15px;">
             <div class="fw-bold fs-4">{{ $hospitalName }}</div>
         </div>
-        <div class="ms-auto">
+<div class="dropdown user-dropdown">
+    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" style="text-decoration: none;">
+        <span class="avatar-circle">
+            <i class="bi bi-person-fill"></i>
+        </span>
+        <div class="user-info d-flex flex-column text-start">
+            <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
+            <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
+        </div>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+        <li>
             <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
                 @csrf
-                <button type="submit" class="btn btn-outline-dark btn-sm">Log Out</button>
+                <button type="submit" class="dropdown-item text-danger fw-bold">
+                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                </button>
             </form>
-        </div>
+        </li>
+    </ul>
+</div>
     </div>
 <div class="black-menu-bar d-flex align-items-center" style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
     
