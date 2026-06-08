@@ -62,6 +62,61 @@
         transform: translateY(-1px);
     }
 
+    .step-group-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        padding: 10px 4px 4px;
+        border-top: 1px solid #e2e8f0;
+        margin-top: 4px;
+    }
+    .step-group-label.first { border-top: none; padding-top: 0; margin-top: 0; }
+    /* Vision dropdown */
+    .vision-select-wrap { position: relative; }
+    /* C/O custom dropdown */
+    .co-select-wrap { position: relative; display: inline-block; width: 100%; max-width: 300px; }
+    .co-dropdown {
+        position: fixed; width: 300px;
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
+        box-shadow: 0 8px 28px rgba(15,23,42,.14); z-index: 9999;
+        max-height: 300px; overflow-y: auto; display: none;
+    }
+    .co-dropdown.show { display: block; }
+    .co-section-lbl {
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .07em; color: #94a3b8; padding: 8px 12px 4px;
+        position: sticky; top: 0; background: #f8fafc;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .co-item {
+        display: flex; align-items: center; padding: 8px 12px;
+        cursor: pointer; font-size: 13px; gap: 8px; user-select: none;
+    }
+    .co-item:hover { background: #eff6ff; }
+    .co-item-name { flex: 1; color: #1e293b; }
+    .co-fav-btn {
+        background: none; border: none; cursor: pointer; font-size: 17px;
+        padding: 0; line-height: 1; color: #cbd5e1; transition: color .15s, transform .15s;
+        flex-shrink: 0;
+    }
+    .co-fav-btn:hover { transform: scale(1.2); }
+    .co-fav-btn.fav-on { color: #f59e0b; }
+    .co-empty { padding: 14px 12px; text-align: center; color: #94a3b8; font-size: 13px; }
+    .step-group-tag {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        color: #475569;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        padding: 3px 9px;
+        white-space: nowrap;
+        align-self: center;
+    }
     .step-btn {
         min-width: 118px;
         font-weight: 600;
@@ -427,17 +482,21 @@
         <div class="exam-layout-wrapper">
             <div class="doctor-stepper-sidebar d-print-none">
                 <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
+
+                <div class="step-group-label first">Primary Exam</div>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-context" data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">H/O &amp; K/C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">H/O &amp; K/C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-nct" data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-oe" data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+
+                <div class="step-group-label">Secondary Exam</div>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
 
@@ -493,17 +552,19 @@
                 @endif
             </div>
             <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="step-group-tag">Primary</span>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">H/O &amp; K/C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">H/O &amp; K/C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-nct"       data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+                <span class="step-group-tag ms-1">Secondary</span>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
@@ -622,49 +683,135 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">A. Clinical History</h5>
+                    <h5 class="modal-title">A. Clinical History - Chief Complaints (C/O)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <label class="form-label fw-semibold">Chief Complaints (CC)</label>
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        @foreach($masters['complaints'] as $c)
-                            <div>
-                                <input class="btn-check" type="checkbox" name="exam_data[complaints][]" id="cc_{{ $c->id }}" value="{{ $c->id }}"
-                                    {{ in_array($c->id, $ed['complaints'] ?? []) ? 'checked' : '' }}>
-                                <label class="btn btn-outline-primary rounded-pill btn-sm" for="cc_{{ $c->id }}">{{ $c->complaint }}</label>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="row g-2 mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Duration</label>
-                            <input type="number" name="cc_since_number" id="cc_since_number" class="form-control" min="1" value="{{ $sinceNumber }}">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="co-select-wrap">
+                            <input type="text" id="coSearch" class="form-control form-control-sm" placeholder="Search complaint..." autocomplete="off" style="min-width:260px;">
+                            <div id="coDropdown" class="co-dropdown"></div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Unit</label>
-                            <select name="cc_since_unit" id="cc_since_unit" class="form-select">
-                                @foreach(['Days', 'Weeks', 'Months', 'Years'] as $unit)
-                                    <option value="{{ $unit }}" {{ $sinceUnit === $unit ? 'selected' : '' }}>{{ $unit }}</option>
+                        <button type="button" id="addCoRow" class="btn btn-sm btn-primary px-3">+ Add</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0" id="coTable">
+                            <thead class="table-light text-center" style="font-size:12px;">
+                                <tr>
+                                    <th class="text-start" style="min-width:180px;">C/O</th>
+                                    <th style="width:80px;">Since</th>
+                                    <th style="width:120px;">Duration</th>
+                                    <th style="width:110px;">Eye</th>
+                                    <th>Comment</th>
+                                    <th style="width:38px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="coBody">
+                                @foreach($ed['co_rows'] ?? [] as $ri => $row)
+                                <tr class="co-row">
+                                    <td><input type="text" name="exam_data[co_rows][{{ $ri }}][complaint]" value="{{ $row['complaint'] ?? '' }}" class="form-control form-control-sm row-co-search" placeholder="Complaint" autocomplete="off"></td>
+                                    <td>
+                                        <select name="exam_data[co_rows][{{ $ri }}][since]" class="form-select form-select-sm">
+                                            <option value="">-</option>
+                                            @foreach(array_merge(range(1,30),[45,60,90]) as $n)
+                                                <option value="{{ $n }}" {{ ($row['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="exam_data[co_rows][{{ $ri }}][unit]" class="form-select form-select-sm">
+                                            @foreach(['Days','Weeks','Months','Years','Longtime'] as $u)
+                                                <option value="{{ $u }}" {{ ($row['unit'] ?? 'Days') === $u ? 'selected' : '' }}>{{ $u }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="exam_data[co_rows][{{ $ri }}][eye]" class="form-select form-select-sm">
+                                            <option value="">-</option>
+                                            @foreach(['RE'=>'Right','LE'=>'Left','Both'=>'Both','OU'=>'OU'] as $val => $lbl)
+                                                <option value="{{ $val }}" {{ ($row['eye'] ?? '') === $val ? 'selected' : '' }}>{{ $lbl }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><input type="text" name="exam_data[co_rows][{{ $ri }}][comment]" value="{{ $row['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
+                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress();">&times;</button></td>
+                                </tr>
                                 @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <input type="hidden" name="exam_data[complaint_duration]" id="cc_since_hidden" value="{{ $sinceRaw }}">
-                            <small class="text-muted">Stored as combined value</small>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
+                    @if(empty($ed['co_rows']))
+                    <p class="text-muted text-center mt-3" id="coEmptyMsg" style="font-size:13px;">No complaints added. Search above and click + Add.</p>
+                    @endif
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                    <label class="form-label fw-semibold">Known Case Of (KCO)</label>
-                    <div class="d-flex flex-wrap gap-2">
-                        @foreach($masters['kcos'] as $k)
-                            <div>
-                                <input class="btn-check" type="checkbox" name="exam_data[kcos][]" id="kco_{{ $k->id }}" value="{{ $k->id }}"
-                                    {{ in_array($k->id, $ed['kcos'] ?? []) ? 'checked' : '' }}>
-                                <label class="btn btn-outline-secondary rounded-pill btn-sm" for="kco_{{ $k->id }}">{{ $k->kco }}</label>
-                            </div>
-                        @endforeach
+    {{-- MODAL: H/O & K/C/O --}}
+    <div class="modal fade" id="modalHko" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">B. History &amp; Known Conditions (H/O &amp; K/C/O)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="fw-semibold mb-2" style="font-size:13px;">K/C/O (Known Conditions)</div>
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="co-select-wrap">
+                            <input type="text" id="kcoSearch" class="form-control form-control-sm" placeholder="Search condition..." autocomplete="off" style="min-width:260px;">
+                            <div id="kcoDropdown" class="co-dropdown"></div>
+                        </div>
+                        <button type="button" id="addKcoRow" class="btn btn-sm btn-primary px-3">+ Add</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0">
+                            <thead class="table-light text-center" style="font-size:12px;">
+                                <tr>
+                                    <th class="text-start" style="min-width:180px;">K/C/O</th>
+                                    <th style="width:80px;">Since</th>
+                                    <th style="width:120px;">Duration</th>
+                                    <th>Comment</th>
+                                    <th style="width:38px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="kcoBody">
+                                @foreach($ed['kco_rows'] ?? [] as $ki => $krow)
+                                <tr class="kco-row">
+                                    <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][condition]" value="{{ $krow['condition'] ?? '' }}" class="form-control form-control-sm row-kco-search" placeholder="Condition" autocomplete="off"></td>
+                                    <td>
+                                        <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
+                                            <option value="">-</option>
+                                            @foreach(array_merge(range(1,30),[45,60,90]) as $n)
+                                                <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="exam_data[kco_rows][{{ $ki }}][unit]" class="form-select form-select-sm">
+                                            @foreach(['Days','Weeks','Months','Years','Longtime'] as $u)
+                                                <option value="{{ $u }}" {{ ($krow['unit'] ?? 'Years') === $u ? 'selected' : '' }}>{{ $u }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][comment]" value="{{ $krow['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
+                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if(empty($ed['kco_rows']))
+                    <p class="text-muted text-center mt-3" id="kcoEmptyMsg" style="font-size:13px;">No conditions added. Search above and click + Add.</p>
+                    @endif
+                    {{-- H/O --}}
+                    <div class="mt-4">
+                        <label class="form-label fw-semibold" style="font-size:13px; border-top:1px solid #e2e8f0; padding-top:12px; display:block;">H/O (History of Present Illness)</label>
+                        <textarea name="exam_data[history]" id="historyTextarea" class="form-control form-control-sm" rows="2" placeholder="Enter patient history...">{{ $ed['history'] ?? '' }}</textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -678,29 +825,76 @@
     <div class="modal fade" id="modalVision" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">Visual Acuity (VN)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">Visual Acuity (VN)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead><tr><th style="width:160px"></th><th>RE</th><th>LE</th></tr></thead>
+                        <table class="table table-bordered table-sm align-middle mb-0">
                             <tbody>
+                                {{-- Right Eye --}}
                                 <tr>
-                                    <td>Distance Vision (VN)</td>
-                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[vision][vn_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['vn'] as $opt)<option value="{{ $opt->value }}" {{ ($vision['vn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
+                                    <td colspan="2" style="background:#fff0f0; color:#dc2626; font-weight:700; font-size:13px; letter-spacing:.04em; padding:8px 12px;">
+                                        <i class="bi bi-eye-fill me-1"></i> Right Eye (RE)
+                                    </td>
                                 </tr>
+                                @foreach([
+                                    ['Vn',   'Distance Vision', 'vn',   'vn_re'],
+                                    ['PnVn', 'Pinhole',         'pnvn', 'pnvn_re'],
+                                    ['NrVn', 'Near Vision',     'nrvn', 'nrvn_re'],
+                                ] as [$abbr, $full, $master, $field])
+                                <tr style="background:#fffafa;">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px; color:#1e293b;">{{ $abbr }}</span>
+                                        <div style="font-size:11px; color:#94a3b8;">{{ $full }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="vision-select-wrap">
+                                            <input type="text" class="form-control form-control-sm vision-inp"
+                                                placeholder="-" autocomplete="off"
+                                                data-master="{{ $master }}" data-field="{{ $field }}"
+                                                value="{{ $vision[$field] ?? '' }}">
+                                            <input type="hidden" name="exam_data[vision][{{ $field }}]" value="{{ $vision[$field] ?? '' }}">
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+
+                                {{-- Left Eye --}}
                                 <tr>
-                                    <td>Pinhole (PH)</td>
-                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[vision][pnvn_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['pnvn'] as $opt)<option value="{{ $opt->value }}" {{ ($vision['pnvn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
+                                    <td colspan="2" style="background:#eff6ff; color:#1d4ed8; font-weight:700; font-size:13px; letter-spacing:.04em; padding:8px 12px;">
+                                        <i class="bi bi-eye-fill me-1"></i> Left Eye (LE)
+                                    </td>
                                 </tr>
-                                <tr>
-                                    <td>Near Vision (NV)</td>
-                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[vision][nrvn_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['nrvn'] as $opt)<option value="{{ $opt->value }}" {{ ($vision['nrvn_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
+                                @foreach([
+                                    ['Vn',   'Distance Vision', 'vn',   'vn_le'],
+                                    ['PnVn', 'Pinhole',         'pnvn', 'pnvn_le'],
+                                    ['NrVn', 'Near Vision',     'nrvn', 'nrvn_le'],
+                                ] as [$abbr, $full, $master, $field])
+                                <tr style="background:#f8faff;">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px; color:#1e293b;">{{ $abbr }}</span>
+                                        <div style="font-size:11px; color:#94a3b8;">{{ $full }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="vision-select-wrap">
+                                            <input type="text" class="form-control form-control-sm vision-inp"
+                                                placeholder="-" autocomplete="off"
+                                                data-master="{{ $master }}" data-field="{{ $field }}"
+                                                value="{{ $vision[$field] ?? '' }}">
+                                            <input type="hidden" name="exam_data[vision][{{ $field }}]" value="{{ $vision[$field] ?? '' }}">
+                                        </div>
+                                    </td>
                                 </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1145,13 +1339,311 @@ document.addEventListener('DOMContentLoaded', function () {
     const dosagesJson = @json($masters['dosages']->pluck('dosage','id'));
     const durationsJson = @json($masters['durations']->pluck('duration')->values());
 
-    function syncComplaintDuration() {
-        const numEl = document.getElementById('cc_since_number');
-        const unitEl = document.getElementById('cc_since_unit');
-        const hiddenEl = document.getElementById('cc_since_hidden');
-        const n = (numEl?.value || '').trim();
-        hiddenEl.value = n ? (n + ' ' + unitEl.value) : '';
+    // C/O rows and custom complaint dropdown
+    const coSearch = document.getElementById('coSearch');
+    const coDropdown = document.getElementById('coDropdown');
+    const coComplaints = @json($masters['complaints']);
+    let activeCoInput = null; // tracks which input is currently driving the dropdown
+
+    const escapeAttr = (value) => String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    function sortedCoComplaints() {
+        return [...coComplaints].sort((a, b) => {
+            if (Boolean(a.is_favourite) !== Boolean(b.is_favourite)) {
+                return a.is_favourite ? -1 : 1;
+            }
+            return String(a.complaint).localeCompare(String(b.complaint));
+        });
     }
+
+    const coFavBase = '{{ url($slug."/masters/detail/complaints") }}';
+    const coCsrf    = '{{ csrf_token() }}';
+
+    function positionCoDropdown() {
+        if (!activeCoInput || !coDropdown) { return; }
+        const rect = activeCoInput.getBoundingClientRect();
+        coDropdown.style.top  = (rect.bottom + 4) + 'px';
+        coDropdown.style.left = rect.left + 'px';
+        coDropdown.style.width = Math.max(rect.width, 300) + 'px';
+    }
+
+    function renderCoDropdown(queryOverride) {
+        if (!coDropdown || !activeCoInput) { return; }
+        const query = queryOverride !== undefined ? queryOverride : (activeCoInput.value || '').trim().toLowerCase();
+        const items = sortedCoComplaints().filter(item => String(item.complaint).toLowerCase().includes(query));
+
+        if (!items.length) {
+            coDropdown.innerHTML = '<div class="co-empty">No complaints found</div>';
+            positionCoDropdown();
+            coDropdown.classList.add('show');
+            return;
+        }
+
+        const groups = [
+            { label: '⭐ Favourites',  rows: items.filter(i => i.is_favourite)  },
+            { label: 'All Complaints', rows: items.filter(i => !i.is_favourite) },
+        ].filter(g => g.rows.length);
+
+        coDropdown.innerHTML = groups.map(g =>
+            `<div class="co-section-lbl">${g.label}</div>` +
+            g.rows.map(item =>
+                `<div class="co-item" data-name="${escapeAttr(item.complaint)}">` +
+                `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" title="${item.is_favourite ? 'Remove from favourites' : 'Add to favourites'}">${item.is_favourite ? '★' : '☆'}</button>` +
+                `<span class="co-item-name">${escapeAttr(item.complaint)}</span>` +
+                `</div>`
+            ).join('')
+        ).join('');
+        positionCoDropdown();
+        coDropdown.classList.add('show');
+
+        // Favourite toggle click
+        coDropdown.querySelectorAll('.co-fav-btn').forEach(btn => {
+            btn.addEventListener('mousedown', function (e) {
+                e.preventDefault(); e.stopPropagation();
+                const id = this.dataset.id;
+                fetch(`${coFavBase}/${id}/toggle-favourite`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': coCsrf, 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    const c = coComplaints.find(x => String(x.id) === String(id));
+                    if (c) { c.is_favourite = data.is_favourite; }
+                    renderCoDropdown();
+                });
+            });
+        });
+    }
+
+    // Top search input
+    coSearch?.addEventListener('focus', function () { activeCoInput = this; renderCoDropdown(); });
+    coSearch?.addEventListener('input', function () { activeCoInput = this; renderCoDropdown(); });
+    coSearch?.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); addCoRow(this.value.trim()); }
+    });
+
+    // Row complaint inputs (event delegation)
+    document.getElementById('coBody')?.addEventListener('focusin', function (e) {
+        const input = e.target.closest('.row-co-search');
+        if (!input) { return; }
+        activeCoInput = input;
+        renderCoDropdown(''); // show all on focus, not filtered by existing value
+    });
+    document.getElementById('coBody')?.addEventListener('input', function (e) {
+        const input = e.target.closest('.row-co-search');
+        if (!input) { return; }
+        activeCoInput = input;
+        renderCoDropdown(); // filter by typed value
+    });
+
+    window.addEventListener('scroll', positionCoDropdown, true);
+    window.addEventListener('resize', positionCoDropdown);
+
+    coDropdown?.addEventListener('mousedown', function (e) {
+        const item = e.target.closest('.co-item');
+        if (!item || e.target.closest('.co-fav-btn') || !activeCoInput) { return; }
+        e.preventDefault();
+        const name = item.dataset.name || '';
+        activeCoInput.value = name;
+        coDropdown.classList.remove('show');
+        // If it's the top search, also trigger addCoRow
+        if (activeCoInput === coSearch) {
+            addCoRow(name);
+        }
+        activeCoInput.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+
+    document.addEventListener('mousedown', function (e) {
+        if (!e.target.closest('.co-select-wrap') && !e.target.closest('#coDropdown') && !e.target.closest('.row-co-search')) {
+            coDropdown?.classList.remove('show');
+            activeCoInput = null;
+        }
+    });
+
+    let coRowIndex = document.querySelectorAll('#coBody .co-row').length;
+    function addCoRow(complaintVal) {
+        const complaint = (complaintVal || (activeCoInput === coSearch ? coSearch?.value : '') || '').trim();
+        if (!complaint) {
+            activeCoInput = coSearch;
+            coSearch?.focus();
+            renderCoDropdown();
+            return;
+        }
+        const i = coRowIndex++;
+        const tr = document.createElement('tr');
+        tr.className = 'co-row';
+        const sinceOpts = ['-',...Array.from({length:30},(_,n)=>n+1),45,60,90]
+            .map((n,idx) => `<option value="${idx===0?'':n}">${n}</option>`).join('');
+        const unitOpts = ['Days','Weeks','Months','Years','Longtime']
+            .map(u => `<option value="${u}">${u}</option>`).join('');
+        const eyeOpts = [['','-'],['RE','Right'],['LE','Left'],['Both','Both'],['OU','OU']]
+            .map(([v,l]) => `<option value="${v}">${l}</option>`).join('');
+        tr.innerHTML = `
+            <td><input type="text" name="exam_data[co_rows][${i}][complaint]" value="${escapeAttr(complaint)}" class="form-control form-control-sm row-co-search" placeholder="Complaint" autocomplete="off"></td>
+            <td><select name="exam_data[co_rows][${i}][since]" class="form-select form-select-sm">${sinceOpts}</select></td>
+            <td><select name="exam_data[co_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
+            <td><select name="exam_data[co_rows][${i}][eye]" class="form-select form-select-sm">${eyeOpts}</select></td>
+            <td><input type="text" name="exam_data[co_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
+        document.getElementById('coBody').appendChild(tr);
+        const msg = document.getElementById('coEmptyMsg');
+        if (msg) { msg.style.display = 'none'; }
+        if (coSearch) { coSearch.value = ''; }
+        coDropdown?.classList.remove('show');
+        activeCoInput = null;
+        checkProgress();
+        updateLivePreview();
+    }
+    document.getElementById('addCoRow')?.addEventListener('click', function () {
+        addCoRow(coSearch ? coSearch.value.trim() : '');
+    });
+
+    // ── KCO dropdown ──────────────────────────────────────────────────────────
+    (function () {
+        const kcoSearch   = document.getElementById('kcoSearch');
+        const kcoDropdown = document.getElementById('kcoDropdown');
+        if (!kcoSearch || !kcoDropdown) { return; }
+
+        const kcoItems   = @json($masters['kcos']); // {id, kco, is_favourite}
+        const kcoFavBase = '{{ url($slug."/masters/detail/kcos") }}';
+        let activeKcoInput = null;
+        let kcoRowIndex    = document.querySelectorAll('#kcoBody .kco-row').length;
+
+        function sortedKcos() {
+            return [...kcoItems].sort((a, b) => {
+                if (Boolean(a.is_favourite) !== Boolean(b.is_favourite)) { return a.is_favourite ? -1 : 1; }
+                return String(a.kco).localeCompare(String(b.kco));
+            });
+        }
+
+        function positionKcoDropdown() {
+            if (!activeKcoInput) { return; }
+            const rect = activeKcoInput.getBoundingClientRect();
+            kcoDropdown.style.top   = (rect.bottom + 4) + 'px';
+            kcoDropdown.style.left  = rect.left + 'px';
+            kcoDropdown.style.width = Math.max(rect.width, 300) + 'px';
+        }
+
+        function renderKcoDropdown(queryOverride) {
+            const query = queryOverride !== undefined ? queryOverride : (activeKcoInput?.value || '').trim().toLowerCase();
+            const items = sortedKcos().filter(i => String(i.kco).toLowerCase().includes(query));
+
+            if (!items.length) {
+                kcoDropdown.innerHTML = '<div class="co-empty">No conditions found</div>';
+                positionKcoDropdown();
+                kcoDropdown.classList.add('show');
+                return;
+            }
+
+            const groups = [
+                { label: '⭐ Favourites',  rows: items.filter(i => i.is_favourite)  },
+                { label: 'All Conditions', rows: items.filter(i => !i.is_favourite) },
+            ].filter(g => g.rows.length);
+
+            kcoDropdown.innerHTML = groups.map(g =>
+                `<div class="co-section-lbl">${g.label}</div>` +
+                g.rows.map(item =>
+                    `<div class="co-item" data-name="${escapeAttr(item.kco)}">` +
+                    `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" title="${item.is_favourite ? 'Remove' : 'Add'} favourite">${item.is_favourite ? '★' : '☆'}</button>` +
+                    `<span class="co-item-name">${escapeAttr(item.kco)}</span>` +
+                    `</div>`
+                ).join('')
+            ).join('');
+            positionKcoDropdown();
+            kcoDropdown.classList.add('show');
+
+            kcoDropdown.querySelectorAll('.co-fav-btn').forEach(btn => {
+                btn.addEventListener('mousedown', function (e) {
+                    e.preventDefault(); e.stopPropagation();
+                    const id = this.dataset.id;
+                    fetch(`${kcoFavBase}/${id}/toggle-favourite`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': coCsrf, 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        const c = kcoItems.find(x => String(x.id) === String(id));
+                        if (c) { c.is_favourite = data.is_favourite; }
+                        renderKcoDropdown();
+                    });
+                });
+            });
+        }
+
+        function addKcoRow(val) {
+            const condition = (val || (activeKcoInput === kcoSearch ? kcoSearch.value : '') || '').trim();
+            if (!condition) { activeKcoInput = kcoSearch; kcoSearch.focus(); renderKcoDropdown(''); return; }
+            const i  = kcoRowIndex++;
+            const tr = document.createElement('tr');
+            tr.className = 'kco-row';
+            const sinceOpts = ['-',...Array.from({length:30},(_,n)=>n+1),45,60,90]
+                .map((n,idx) => `<option value="${idx===0?'':n}">${n}</option>`).join('');
+            const unitOpts = ['Days','Weeks','Months','Years','Longtime']
+                .map(u => `<option value="${u}"${u==='Years'?' selected':''}>${u}</option>`).join('');
+            tr.innerHTML = `
+                <td><input type="text" name="exam_data[kco_rows][${i}][condition]" value="${escapeAttr(condition)}" class="form-control form-control-sm row-kco-search" placeholder="Condition" autocomplete="off"></td>
+                <td><select name="exam_data[kco_rows][${i}][since]" class="form-select form-select-sm">${sinceOpts}</select></td>
+                <td><select name="exam_data[kco_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
+                <td><input type="text" name="exam_data[kco_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
+                <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
+            document.getElementById('kcoBody').appendChild(tr);
+            const msg = document.getElementById('kcoEmptyMsg');
+            if (msg) { msg.style.display = 'none'; }
+            kcoSearch.value = '';
+            kcoDropdown.classList.remove('show');
+            activeKcoInput = null;
+            checkProgress();
+            updateLivePreview();
+        }
+
+        kcoSearch.addEventListener('focus', function () { activeKcoInput = this; renderKcoDropdown(''); });
+        kcoSearch.addEventListener('input', function () { activeKcoInput = this; renderKcoDropdown(); });
+        kcoSearch.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addKcoRow(this.value.trim()); } });
+        document.getElementById('addKcoRow')?.addEventListener('click', () => addKcoRow(kcoSearch.value.trim()));
+
+        document.getElementById('kcoBody')?.addEventListener('focusin', function (e) {
+            const input = e.target.closest('.row-kco-search');
+            if (!input) { return; }
+            activeKcoInput = input;
+            renderKcoDropdown('');
+        });
+        document.getElementById('kcoBody')?.addEventListener('input', function (e) {
+            const input = e.target.closest('.row-kco-search');
+            if (!input) { return; }
+            activeKcoInput = input;
+            renderKcoDropdown();
+        });
+
+        window.addEventListener('scroll', positionKcoDropdown, true);
+        window.addEventListener('resize', positionKcoDropdown);
+
+        kcoDropdown.addEventListener('mousedown', function (e) {
+            const item = e.target.closest('.co-item');
+            if (!item || e.target.closest('.co-fav-btn') || !activeKcoInput) { return; }
+            e.preventDefault();
+            const name = item.dataset.name || '';
+            activeKcoInput.value = name;
+            kcoDropdown.classList.remove('show');
+            if (activeKcoInput === kcoSearch) { addKcoRow(name); }
+            activeKcoInput.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+
+        document.addEventListener('mousedown', function (e) {
+            if (!e.target.closest('#kcoDropdown') && !e.target.closest('.row-kco-search') && e.target !== kcoSearch) {
+                kcoDropdown.classList.remove('show');
+                activeKcoInput = null;
+            }
+        });
+
+        document.getElementById('historyTextarea')?.addEventListener('input', function () {
+            checkProgress();
+            updateLivePreview();
+        });
+    })();
 
     function attachMedicineSearch(wrap) {
         if (!wrap) { return; }
@@ -1269,8 +1761,9 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         setState('btn-context',   hasValue('select[name="doctor_id"]'));
-        setState('btn-clinical',  hasValue('input[name="exam_data[complaints][]"], input[name="exam_data[kcos][]"], input[name="cc_since_number"]'));
-        setState('btn-vision',    hasValue('select[name="exam_data[vision][vn_re]"]'));
+        setState('btn-clinical',  document.querySelectorAll('#coBody .co-row').length > 0);
+        setState('btn-hko',       document.querySelectorAll('#kcoBody .kco-row').length > 0 || (document.getElementById('historyTextarea')?.value || '').trim() !== '');
+        setState('btn-vision',    hasValue('input[name="exam_data[vision][vn_re]"]'));
         setState('btn-pg',        hasValue('select[name="exam_data[pg][re][ds]"]'));
         setState('btn-st',        hasValue('input[name="exam_data[st][re][ds]"]'));
         setState('btn-nct',       hasValue('select[name="exam_data[nct][iop_re]"]'));
@@ -1293,9 +1786,17 @@ document.addEventListener('DOMContentLoaded', function () {
             return (el && String(el.value).trim() !== '') ? el.value : '-';
         };
 
-        const complaints = selectedLabels('input[name="exam_data[complaints][]"]');
-        const kcos = selectedLabels('input[name="exam_data[kcos][]"]');
-        const ccDur = `${byId('cc_since_number')} ${byId('cc_since_unit')}`;
+        const coRows = Array.from(document.querySelectorAll('#coBody .co-row'));
+        const complaints = coRows.map((row) => {
+            const complaint = row.querySelector('[name*="[complaint]"]')?.value?.trim() || '';
+            if (!complaint) { return ''; }
+            const since = row.querySelector('[name*="[since]"]')?.value || '';
+            const unit = row.querySelector('[name*="[unit]"]')?.value || '';
+            const eye = row.querySelector('[name*="[eye]"]')?.value || '';
+            const comment = row.querySelector('[name*="[comment]"]')?.value?.trim() || '';
+            const parts = [complaint, since ? `since ${since} ${unit}` : '', eye, comment].filter(Boolean);
+            return parts.join(' | ');
+        }).filter(Boolean);
 
         const makeVn = (label, re, le) =>
             `<div class="d-inline-flex align-items-center me-3 mb-1">` +
@@ -1315,9 +1816,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const historyHtml =
             `<div class="mb-1" style="font-size:12px;">` +
-            `<strong>C/O:</strong> ${complaints.length ? complaints.join(', ') : '-'} ` +
-            `<strong class="ms-2">Since:</strong> ${ccDur}</div>` +
-            `<div class="mb-1" style="font-size:12px;"><strong>KCO:</strong> ${kcos.length ? kcos.join(', ') : '-'}</div>` +
+            `<strong>C/O:</strong> ${complaints.length ? complaints.join('<br>') : '-'}</div>` +
             `<div class="d-flex flex-wrap align-items-center border-top pt-1 mt-1">` +
             makeVn('Vn', vnRe, vnLe) +
             makeVn('PH', phRe, phLe) +
@@ -1502,6 +2001,77 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('.medicine-search-wrap').forEach(attachMedicineSearch);
 
+    // ── Vision custom dropdowns ───────────────────────────────────────────────
+    (function () {
+        const visionMasters = {
+            vn:   @json($masters['vn']->pluck('value')->values()),
+            pnvn: @json($masters['pnvn']->pluck('value')->values()),
+            nrvn: @json($masters['nrvn']->pluck('value')->values()),
+        };
+
+        const vdd = document.createElement('div');
+        vdd.className = 'co-dropdown';
+        document.body.appendChild(vdd);
+
+        let activeVInp = null;
+
+        function positionVdd() {
+            if (!activeVInp) { return; }
+            const rect = activeVInp.getBoundingClientRect();
+            vdd.style.top   = (rect.bottom + 4) + 'px';
+            vdd.style.left  = rect.left + 'px';
+            vdd.style.width = Math.max(rect.width, 180) + 'px';
+        }
+
+        function renderVdd(queryOverride) {
+            if (!activeVInp) { return; }
+            const all   = visionMasters[activeVInp.dataset.master] || [];
+            const query = queryOverride !== undefined ? queryOverride : (activeVInp.value || '').trim().toLowerCase();
+            const items = query ? all.filter(v => String(v).toLowerCase().includes(query)) : all;
+
+            vdd.innerHTML = items.length
+                ? items.map(v => `<div class="co-item" data-val="${escapeAttr(String(v))}"><span class="co-item-name">${escapeAttr(String(v))}</span></div>`).join('')
+                : '<div class="co-empty">No options found</div>';
+
+            positionVdd();
+            vdd.classList.add('show');
+
+            vdd.querySelectorAll('.co-item').forEach(item => {
+                item.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    if (!activeVInp) { return; }
+                    const val = this.dataset.val;
+                    activeVInp.value = val;
+                    const hidden = activeVInp.closest('.vision-select-wrap')?.querySelector('input[type="hidden"]');
+                    if (hidden) { hidden.value = val; }
+                    vdd.classList.remove('show');
+                    activeVInp = null;
+                    checkProgress();
+                    updateLivePreview();
+                });
+            });
+        }
+
+        document.querySelectorAll('.vision-inp').forEach(inp => {
+            inp.addEventListener('focus',  function () { activeVInp = this; renderVdd(''); });
+            inp.addEventListener('input',  function () { activeVInp = this; renderVdd(); });
+            inp.addEventListener('blur',   function () {
+                const hidden = this.closest('.vision-select-wrap')?.querySelector('input[type="hidden"]');
+                if (hidden) { hidden.value = this.value; }
+            });
+        });
+
+        window.addEventListener('scroll', positionVdd, true);
+        window.addEventListener('resize', positionVdd);
+
+        document.addEventListener('mousedown', function (e) {
+            if (!e.target.closest('.vision-select-wrap') && !vdd.contains(e.target)) {
+                vdd.classList.remove('show');
+                activeVInp = null;
+            }
+        });
+    })();
+
     syncComplaintDuration();
     checkProgress();
     updateLivePreview();
@@ -1592,4 +2162,3 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 @endsection
-

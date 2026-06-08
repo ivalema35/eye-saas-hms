@@ -161,12 +161,14 @@ class SecondaryExamController extends Controller
         return [
             'complaints' => DB::table('chief_complaints')
                 ->where('tenant_id', $tenantId)
-                ->orderBy('id')
-                ->get(['id', DB::raw('value as complaint')]),
+                ->orderByDesc('is_favourite')
+                ->orderBy('value')
+                ->get(['id', DB::raw('value as complaint'), 'is_favourite']),
             'kcos' => DB::table('kcos')
                 ->where('tenant_id', $tenantId)
-                ->orderBy('id')
-                ->get(['id', DB::raw('value as kco')]),
+                ->orderByDesc('is_favourite')
+                ->orderBy('value')
+                ->get(['id', DB::raw('value as kco'), 'is_favourite']),
             'diagnoses' => DB::table('tbl_master_diagnosis')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('id')
