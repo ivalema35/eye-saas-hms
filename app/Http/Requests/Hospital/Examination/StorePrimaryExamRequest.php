@@ -52,10 +52,9 @@ class StorePrimaryExamRequest extends FormRequest
             'medicines.*.medicine_id' => ['nullable', 'integer', 'exists:medicines,id'],
             'medicines.*.name' => ['nullable', 'string', 'max:255'],
             'medicines.*.dosage_id' => ['nullable', 'integer', 'exists:dosages,id'],
-            'medicines.*.frequency' => ['nullable', 'string', 'max:50'],
             'medicines.*.duration' => ['nullable', 'string', 'max:50'],
-            'medicines.*.eye' => ['nullable', 'in:RE,LE,Both,OU'],
-            'medicines.*.instructions' => ['nullable', 'string', 'max:255'],
+            'medicines.*.quantity' => ['nullable', 'integer', 'min:1'],
+            'medicines.*.route_id' => ['nullable', 'integer', 'exists:medicine_routes,id'],
         ];
     }
 

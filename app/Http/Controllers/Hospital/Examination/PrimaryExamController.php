@@ -8,6 +8,7 @@ use App\Models\Hospital\Dosage;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
+use App\Models\Hospital\MedicineRoute;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Services\Hospital\ExaminationService;
@@ -270,16 +271,24 @@ class PrimaryExamController extends Controller
             'advices' => DB::table('tbl_master_advice')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('id')
-                ->get(['id', DB::raw('value as advice')]),
+                ->get(['id', DB::raw('value as advice'), 'diagnosis_id']),
             'durations' => $q('tbl_durations'),
             'vn' => $q('tbl_master_vn'),
             'pnvn' => $q('tbl_master_pnvn'),
             'nrvn' => $q('tbl_master_nrvn'),
             'sph_cyl' => $q('tbl_master_sph_cyl'),
             'axis' => $q('tbl_master_axis'),
-            'fr' => $q('tbl_master_fr'),
+            'fr' => DB::table('tbl_master_fr')
+                ->where('tenant_id', $tenantId)
+                ->orderByDesc('is_favourite')
+                ->orderBy('value')
+                ->get(['id', 'value', 'is_favourite']),
             'nct' => $q('tbl_master_nct'),
-            'disc' => $q('tbl_master_disc'),
+            'disc' => DB::table('tbl_master_disc')
+                ->where('tenant_id', $tenantId)
+                ->orderByDesc('is_favourite')
+                ->orderBy('value')
+                ->get(['id', 'value', 'is_favourite']),
             'sac' => $q('tbl_master_sac'),
             'lid' => $q('tbl_master_lid'),
             'conj' => $q('tbl_master_conj'),
@@ -297,10 +306,16 @@ class PrimaryExamController extends Controller
                 ->orderBy('brand_name')
                 ->orderBy('name')
                 ->get(['id', 'name', 'brand_name']),
-            'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage')
+            'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('name')
                 ->get(),
+            'routes' => MedicineRoute::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name']),
+            'referrers' => DB::table('tbl_referrers')
+                ->where('tenant_id', $tenantId)
+                ->whereNull('deleted_at')
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ];
     }
 
@@ -309,7 +324,7 @@ class PrimaryExamController extends Controller
      */
     public function ajaxGetMedicineGroup(string $slug, int $id): JsonResponse
     {
-        $group = MedicineGroup::with('items.medicine', 'items.dosage')
+        $group = MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
             ->where('tenant_id', app('tenant')->id)
             ->findOrFail($id);
 

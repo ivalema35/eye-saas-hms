@@ -10,9 +10,10 @@
     </a>
 @endif
     @if($exam)
-        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+        <a href="{{ route('hospital.exam.primary.print', ['slug' => $slug, 'id' => $patient->id]) }}"
+           target="_blank" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-printer"></i> Print Rx
-        </button>
+        </a>
     @endif
     @haspermission('opd.foc.create')
         <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModal">
@@ -74,8 +75,120 @@
         margin-top: 4px;
     }
     .step-group-label.first { border-top: none; padding-top: 0; margin-top: 0; }
-    /* Vision dropdown */
-    .vision-select-wrap { position: relative; }
+    /* Vision / PG dropdown */
+    .vision-select-wrap, .pg-select-wrap { position: relative; }
+    .vision-select-wrap .vision-inp:focus {
+        border-color: #1B4F72;
+        box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.12);
+    }
+    .pg-select-wrap .pg-inp,
+    .exam-plain-inp {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #1e293b;
+        background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .pg-select-wrap .pg-inp { padding-right: 28px; }
+    .pg-select-wrap .pg-inp:focus,
+    .exam-plain-inp:focus {
+        border-color: #1B4F72;
+        box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.12);
+        outline: none;
+    }
+    .pg-select-wrap .pg-inp-chevron {
+        position: absolute; right: 10px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px; color: #94a3b8; pointer-events: none;
+    }
+    .pg-table td { vertical-align: middle; }
+    .pg-eye-hdr { font-weight: 700; font-size: 13px; letter-spacing: .04em; padding: 8px 12px; }
+    .pg-eye-hdr.re { background: #fff0f0; color: #dc2626; }
+    .pg-eye-hdr.le { background: #eff6ff; color: #1B4F72; }
+    .pg-row-re { background: #fffafa; }
+    .pg-row-le { background: #f8faff; }
+    /* NCT dropdown */
+    .nct-select-wrap { position: relative; }
+    .nct-select-wrap .nct-inp {
+        padding-right: 28px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #1e293b;
+        background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .nct-select-wrap .nct-inp:focus {
+        border-color: #1B4F72;
+        box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.12);
+        outline: none;
+    }
+    .nct-select-wrap .nct-inp-chevron {
+        position: absolute; right: 10px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px; color: #94a3b8; pointer-events: none;
+    }
+    .nct-dropdown-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 3px;
+        padding: 8px;
+    }
+    .nct-grid-item {
+        text-align: center;
+        padding: 7px 4px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1e293b;
+        border: 1px solid transparent;
+        user-select: none;
+        transition: background .12s, border-color .12s, color .12s;
+    }
+    .nct-grid-item:hover {
+        background: rgba(27, 79, 114, 0.08);
+        border-color: rgba(27, 79, 114, 0.15);
+    }
+    .nct-grid-item.selected {
+        background: #1B4F72;
+        color: #fff;
+        font-weight: 700;
+        border-color: #1B4F72;
+    }
+    /* O/E dropdown */
+    .oe-table th.oe-eye-col { font-size: 13px; font-weight: 700; letter-spacing: .03em; padding: 8px 12px; }
+    .oe-table th.oe-eye-col.re { background: #fff0f0; color: #dc2626; }
+    .oe-table th.oe-eye-col.le { background: #eff6ff; color: #1B4F72; }
+    .oe-table td.oe-cell-re { background: #fffafa; }
+    .oe-table td.oe-cell-le { background: #f8faff; }
+    .oe-table td.oe-label-cell { background: #f8fafc; vertical-align: middle; }
+    .oe-select-wrap { position: relative; }
+    .oe-select-wrap .oe-inp {
+        padding-right: 28px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 13px;
+        color: #1e293b;
+        background: #fff;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .oe-select-wrap .oe-inp:focus {
+        border-color: #1B4F72;
+        box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.12);
+        outline: none;
+    }
+    .oe-select-wrap .oe-inp-chevron {
+        position: absolute; right: 10px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px; color: #94a3b8; pointer-events: none;
+    }
+    .pseudo-lens-summary {
+        font-size: 10px; color: #1B4F72; background: rgba(27, 79, 114, 0.06);
+        border-radius: 5px; padding: 3px 8px; line-height: 1.4;
+    }
+    .pseudo-type-btn.active { background: #1B4F72 !important; color: #fff !important; border-color: #1B4F72 !important; }
     /* C/O custom dropdown */
     .co-select-wrap { position: relative; display: inline-block; width: 100%; max-width: 300px; }
     .co-dropdown {
@@ -95,7 +208,8 @@
         display: flex; align-items: center; padding: 8px 12px;
         cursor: pointer; font-size: 13px; gap: 8px; user-select: none;
     }
-    .co-item:hover { background: #eff6ff; }
+    .co-item:hover { background: rgba(27, 79, 114, 0.07); }
+    .co-item.selected { background: rgba(27, 79, 114, 0.1); font-weight: 600; }
     .co-item-name { flex: 1; color: #1e293b; }
     .co-fav-btn {
         background: none; border: none; cursor: pointer; font-size: 17px;
@@ -333,6 +447,7 @@
 @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
 <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
     @csrf
+    <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
 
     <div class="exam-layout-wrapper">
         
@@ -374,12 +489,17 @@
                         <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
                     </div>
                 </div>
+                <div class="canvas-box mt-2">
+                    <div class="canvas-section-title">Advice</div>
+                    <div id="canvas_advice"></div>
+                </div>
             </div>
         </div>
     </div>
 @else
- <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
+<form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
     @csrf
+    <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
 
     <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-3 p-2 bg-white rounded shadow-sm border gap-2 flex-wrap">
         <div class="d-flex align-items-center gap-1 flex-wrap">
@@ -482,6 +602,10 @@
                 </div>
 
             </div>
+        </div>
+        <div class="canvas-box mt-2">
+            <div class="canvas-section-title">Advice</div>
+            <div id="canvas_advice"></div>
         </div>
     </div>
 @endif
@@ -708,83 +832,74 @@
 
     {{-- MODAL: PG --}}
     <div class="modal fade" id="modalPG" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable" style="max-width:460px;">
-            <div class="modal-content border-0 shadow-lg" style="border-radius:14px;overflow:hidden;">
-                <div class="modal-header" style="background:linear-gradient(135deg,#f8fafc,#e2e8f0);border-bottom:2px solid #e2e8f0;">
-                    <div class="d-flex align-items-center gap-2">
-                        <div style="width:36px;height:36px;background:#3b82f6;border-radius:8px;display:flex;align-items:center;justify-content:center;">
-                            <i class="bi bi-eyeglasses text-white" style="font-size:17px;"></i>
-                        </div>
-                        <div>
-                            <h5 class="modal-title mb-0 fw-bold" style="color:#1e293b;font-size:15px;">Present Glasses</h5>
-                            <small style="color:#64748b;font-size:10px;letter-spacing:.05em;">CURRENT PRESCRIPTION (PG)</small>
-                        </div>
-                    </div>
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="bi bi-eyeglasses me-2" style="color:#1B4F72;"></i>Present Glasses (PG)
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-3" style="background:#f1f5f9;">
+                <div class="modal-body">
                     @php
                         $pgFields = [
-                            'ds'      => ['abbr' => 'SPH',  'full' => 'Sphere',      'master' => 'sph_cyl', 'bipolar' => true],
-                            'dc'      => ['abbr' => 'CYL',  'full' => 'Cylinder',    'master' => 'sph_cyl', 'bipolar' => true],
-                            'ax'      => ['abbr' => 'AXIS', 'full' => 'Axis',        'master' => 'axis',    'bipolar' => false],
-                            'vn'      => ['abbr' => 'VN',   'full' => 'Vision',      'master' => 'vn',      'bipolar' => false],
-                            'add'     => ['abbr' => 'ADD',  'full' => 'Addition',    'master' => 'sph_cyl', 'bipolar' => true],
-                            'near_vn' => ['abbr' => 'NV',   'full' => 'Near Vision', 'master' => 'nrvn',    'bipolar' => false],
+                            'ds'      => ['abbr' => 'SPH',  'full' => 'Sphere',      'master' => 'sph_cyl'],
+                            'dc'      => ['abbr' => 'CYL',  'full' => 'Cylinder',    'master' => 'sph_cyl'],
+                            'ax'      => ['abbr' => 'AXIS', 'full' => 'Axis',        'master' => 'axis'],
+                            'vn'      => ['abbr' => 'VN',   'full' => 'Vision',      'master' => 'vn'],
+                            'add'     => ['abbr' => 'ADD',  'full' => 'Addition',    'master' => 'sph_cyl'],
+                            'near_vn' => ['abbr' => 'NV',   'full' => 'Near Vision', 'master' => 'nrvn'],
+                        ];
+                        $pgMasterOpts = [
+                            'sph_cyl' => collect($masters['sph_cyl'])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->flatMap(function ($cv) {
+                                if (! in_array((string) $cv, ['0', '0.00', 'Plano', 'PL'])) {
+                                    return ['+'.$cv, '-'.$cv];
+                                }
+                                return [(string) $cv];
+                            })->values()->all(),
+                            'axis' => collect($masters['axis'])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->values()->all(),
+                            'vn'   => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
+                            'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
                         ];
                     @endphp
-                    <div class="d-flex flex-column gap-3">
-                        @foreach([
-                            're' => ['label' => 'Right Eye', 'abbr' => 'RE', 'hdr_bg' => '#dc2626', 'row_bg' => '#fffafa', 'border' => '#fecaca'],
-                            'le' => ['label' => 'Left Eye',  'abbr' => 'LE', 'hdr_bg' => '#1d4ed8', 'row_bg' => '#f0f7ff', 'border' => '#bfdbfe'],
-                        ] as $eye => $em)
-                        <div class="card border-0" style="border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-                            <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:{{ $em['hdr_bg'] }};">
-                                <i class="bi bi-eye-fill text-white" style="font-size:14px;"></i>
-                                <span class="text-white fw-bold" style="font-size:13px;letter-spacing:.04em;">{{ $em['label'] }} ({{ $em['abbr'] }})</span>
-                            </div>
-                            <table class="table table-sm align-middle mb-0" style="background:#fff;">
-                                <tbody>
-                                    @foreach($pgFields as $key => $meta)
-                                    @php
-                                        $uv = collect($masters[$meta['master']])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->values();
-                                        $sv = $pg[$eye][$key] ?? '';
-                                    @endphp
-                                    <tr>
-                                        <td style="width:110px;padding:6px 12px;background:{{ $em['row_bg'] }};border-right:2px solid {{ $em['border'] }};">
-                                            <div class="fw-semibold" style="font-size:13px;color:#334155;">{{ $meta['abbr'] }}</div>
-                                            <div style="font-size:10px;color:#94a3b8;">{{ $meta['full'] }}</div>
-                                        </td>
-                                        <td style="padding:5px 10px;">
-                                            <select name="exam_data[pg][{{ $eye }}][{{ $key }}]"
-                                                class="form-select form-select-sm"
-                                                style="border:1px solid #e2e8f0;border-radius:6px;font-size:13px;color:#1e293b;">
-                                                <option value="">—</option>
-                                                @foreach($uv as $cv)
-                                                    @if(!empty($meta['bipolar']) && !in_array((string) $cv, ['0', '0.00', 'Plano', 'PL']))
-                                                        <option value="+{{ $cv }}" @selected($sv === '+'.$cv)>+{{ $cv }}</option>
-                                                        <option value="-{{ $cv }}" @selected($sv === '-'.$cv)>-{{ $cv }}</option>
-                                                    @else
-                                                        <option value="{{ $cv }}" @selected($sv === (string) $cv)>{{ $cv }}</option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @endforeach
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0 pg-table">
+                            <tbody>
+                                @foreach([
+                                    're' => ['label' => 'Right Eye (RE)', 'cls' => 're', 'row' => 'pg-row-re'],
+                                    'le' => ['label' => 'Left Eye (LE)',  'cls' => 'le', 'row' => 'pg-row-le'],
+                                ] as $eye => $em)
+                                <tr>
+                                    <td colspan="2" class="pg-eye-hdr {{ $em['cls'] }}">
+                                        <i class="bi bi-eye-fill me-1"></i>{{ $em['label'] }}
+                                    </td>
+                                </tr>
+                                @foreach($pgFields as $key => $meta)
+                                @php $sv = $pg[$eye][$key] ?? ''; @endphp
+                                <tr class="{{ $em['row'] }}">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['abbr'] }}</span>
+                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="pg-select-wrap">
+                                            <input type="text" class="form-control form-control-sm pg-inp"
+                                                placeholder="—" autocomplete="off"
+                                                data-master="{{ $meta['master'] }}"
+                                                value="{{ $sv }}">
+                                            <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $key }}]" value="{{ $sv }}">
+                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="modal-footer py-2" style="background:#f8fafc;border-top:1px solid #e2e8f0;">
-                    <button type="button" class="btn btn-sm btn-light border" data-bs-dismiss="modal">
-                        <i class="bi bi-x me-1"></i>Close
-                    </button>
-                    <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Done
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -792,42 +907,126 @@
 
     {{-- MODAL: ST --}}
     <div class="modal fade" id="modalST" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">Subjective Trial (ST)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="bi bi-binoculars me-2" style="color:#1B4F72;"></i>Subjective Trial (ST)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
+                    @php
+                        $stDistFields = [
+                            'ds' => ['abbr' => 'SPH',  'full' => 'Sphere',   'master' => 'sph_cyl'],
+                            'dc' => ['abbr' => 'CYL',  'full' => 'Cylinder', 'master' => 'sph_cyl'],
+                            'ax' => ['abbr' => 'AXIS', 'full' => 'Axis',     'master' => 'axis'],
+                        ];
+                        $stNearFields = [
+                            'ns' => ['abbr' => 'NSPH',  'full' => 'Near Sphere',   'master' => 'sph_cyl'],
+                            'nc' => ['abbr' => 'NCYL',  'full' => 'Near Cylinder', 'master' => 'sph_cyl'],
+                            'na' => ['abbr' => 'NAXIS', 'full' => 'Near Axis',     'master' => 'axis'],
+                        ];
+                    @endphp
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead><tr><th style="width:160px"></th><th>RE</th><th>LE</th></tr></thead>
+                        <table class="table table-bordered table-sm align-middle mb-0 pg-table">
                             <tbody>
                                 @foreach([
-                                    'ds' => ['label' => 'SPH (Sphere)',   'list' => 'sph_cyl_list'],
-                                    'dc' => ['label' => 'CYL (Cylinder)', 'list' => 'sph_cyl_list'],
-                                    'ax' => ['label' => 'AXIS',           'list' => 'axis_list'],
-                                    'ns' => ['label' => 'Near SPH',       'list' => 'sph_cyl_list'],
-                                    'nc' => ['label' => 'Near CYL',       'list' => 'sph_cyl_list'],
-                                    'na' => ['label' => 'Near AXIS',      'list' => 'axis_list'],
-                                ] as $key => $meta)
-                                    <tr>
-                                        <td>{{ $meta['label'] }}</td>
-                                        @foreach(['re','le'] as $eye)
-                                            <td><input type="text" name="exam_data[st][{{ $eye }}][{{ $key }}]" value="{{ old('exam_data.st.'.$eye.'.'.$key, $st[$eye][$key] ?? '') }}" list="{{ $meta['list'] }}" class="form-control form-control-sm"></td>
-                                        @endforeach
-                                    </tr>
-                                @endforeach
+                                    're' => ['label' => 'Right Eye (RE)', 'cls' => 're', 'row' => 'pg-row-re'],
+                                    'le' => ['label' => 'Left Eye (LE)',  'cls' => 'le', 'row' => 'pg-row-le'],
+                                ] as $eye => $em)
                                 <tr>
-                                    <td>ADD (Addition)</td>
-                                    <td colspan="2"><input type="text" name="exam_data[st][add]" value="{{ old('exam_data.st.add', $st['add'] ?? '') }}" list="sph_cyl_list" class="form-control form-control-sm"></td>
+                                    <td colspan="2" class="pg-eye-hdr {{ $em['cls'] }}">
+                                        <i class="bi bi-eye-fill me-1"></i>{{ $em['label'] }}
+                                    </td>
                                 </tr>
+                                <tr class="{{ $em['row'] }}">
+                                    <td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:5px 12px;background:rgba(0,0,0,.02);">Distance</td>
+                                </tr>
+                                @foreach($stDistFields as $key => $meta)
+                                @php $sv = old('exam_data.st.'.$eye.'.'.$key, $st[$eye][$key] ?? ''); @endphp
+                                <tr class="{{ $em['row'] }}">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['abbr'] }}</span>
+                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="pg-select-wrap">
+                                            <input type="text" class="form-control form-control-sm pg-inp"
+                                                placeholder="—" autocomplete="off"
+                                                data-master="{{ $meta['master'] }}"
+                                                value="{{ $sv }}">
+                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $key }}]" value="{{ $sv }}">
+                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                <tr class="{{ $em['row'] }}">
+                                    <td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:5px 12px;background:rgba(0,0,0,.02);">Near Vision</td>
+                                </tr>
+                                @foreach($stNearFields as $key => $meta)
+                                @php $sv = old('exam_data.st.'.$eye.'.'.$key, $st[$eye][$key] ?? ''); @endphp
+                                <tr class="{{ $em['row'] }}">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['abbr'] }}</span>
+                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
+                                    </td>
+                                    <td>
+                                        <div class="pg-select-wrap">
+                                            <input type="text" class="form-control form-control-sm pg-inp"
+                                                placeholder="—" autocomplete="off"
+                                                data-master="{{ $meta['master'] }}"
+                                                value="{{ $sv }}">
+                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $key }}]" value="{{ $sv }}">
+                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                                @endforeach
+
                                 <tr>
-                                    <td>Lens Type</td>
-                                    <td colspan="2"><input type="text" name="exam_data[st][lens_type]" value="{{ old('exam_data.st.lens_type', $st['lens_type'] ?? '') }}" class="form-control form-control-sm" placeholder="SV / Bifocal / Progressive"></td>
+                                    <td colspan="2" class="pg-eye-hdr le" style="background:#f1f5f9;color:#475569;">
+                                        <i class="bi bi-sliders me-1"></i>Common
+                                    </td>
+                                </tr>
+                                @php $stAdd = old('exam_data.st.add', $st['add'] ?? ''); @endphp
+                                <tr class="pg-row-le">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">ADD</span>
+                                        <div style="font-size:11px;color:#94a3b8;">Addition</div>
+                                    </td>
+                                    <td>
+                                        <div class="pg-select-wrap">
+                                            <input type="text" class="form-control form-control-sm pg-inp"
+                                                placeholder="—" autocomplete="off"
+                                                data-master="sph_cyl"
+                                                value="{{ $stAdd }}">
+                                            <input type="hidden" name="exam_data[st][add]" value="{{ $stAdd }}">
+                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="pg-row-le">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">Lens</span>
+                                        <div style="font-size:11px;color:#94a3b8;">Lens Type</div>
+                                    </td>
+                                    <td>
+                                        <input type="text" name="exam_data[st][lens_type]"
+                                            value="{{ old('exam_data.st.lens_type', $st['lens_type'] ?? '') }}"
+                                            class="form-control form-control-sm exam-plain-inp"
+                                            placeholder="SV / Bifocal / Progressive" autocomplete="off">
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>
@@ -836,21 +1035,49 @@
     <div class="modal fade" id="modalNCT" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">NCT (Intraocular Pressure — mmHg)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="bi bi-speedometer2 me-2" style="color:#1B4F72;"></i>NCT (Intraocular Pressure — mmHg)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
-                    <div class="row g-2">
-                        @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $label)
-                            <div class="col-md-6">
-                                <label class="form-label">{{ $label }}</label>
-                                <select name="exam_data[nct][iop_{{ $eye }}]" class="form-select form-select-sm">
-                                    <option value="">-</option>
-                                    @foreach($masters['nct'] as $opt)<option value="{{ $opt->value }}" {{ ($nct['iop_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach
-                                </select>
-                            </div>
-                        @endforeach
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm align-middle mb-0 pg-table">
+                            <tbody>
+                                @foreach([
+                                    're' => ['label' => 'Right Eye (RE)', 'cls' => 're', 'row' => 'pg-row-re'],
+                                    'le' => ['label' => 'Left Eye (LE)',  'cls' => 'le', 'row' => 'pg-row-le'],
+                                ] as $eye => $em)
+                                @php $sv = old('exam_data.nct.iop_'.$eye, $nct['iop_'.$eye] ?? ''); @endphp
+                                <tr>
+                                    <td colspan="2" class="pg-eye-hdr {{ $em['cls'] }}">
+                                        <i class="bi bi-eye-fill me-1"></i>{{ $em['label'] }}
+                                    </td>
+                                </tr>
+                                <tr class="{{ $em['row'] }}">
+                                    <td style="width:160px;">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">IOP</span>
+                                        <div style="font-size:11px;color:#94a3b8;">mmHg</div>
+                                    </td>
+                                    <td>
+                                        <div class="nct-select-wrap">
+                                            <input type="text" class="form-control form-control-sm nct-inp"
+                                                placeholder="—" autocomplete="off"
+                                                value="{{ $sv }}">
+                                            <input type="hidden" name="exam_data[nct][iop_{{ $eye }}]" value="{{ $sv }}">
+                                            <i class="bi bi-chevron-down nct-inp-chevron"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>
@@ -859,31 +1086,138 @@
     <div class="modal fade" id="modalOE" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">Ocular Examination (O/E)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="bi bi-clipboard2-pulse me-2" style="color:#1B4F72;"></i>Ocular Examination (O/E)
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
+                    @php
+                        $oeFieldMeta = [
+                            'sac'       => ['label' => 'SAC',       'full' => 'Sac',       'master' => 'sac',         'fav' => 'sac'],
+                            'lid'       => ['label' => 'LID',       'full' => 'Lid',       'master' => 'lid',         'fav' => 'lid'],
+                            'conj'      => ['label' => 'CONJ',      'full' => 'Conjunctiva','master' => 'conj',        'fav' => 'conj'],
+                            'cornea'    => ['label' => 'CORNEA',    'full' => 'Cornea',    'master' => 'cornea',      'fav' => 'cornea'],
+                            'ac'        => ['label' => 'AC',        'full' => 'Anterior Chamber', 'master' => 'ac',   'fav' => 'ac'],
+                            'iris'      => ['label' => 'IRIS',      'full' => 'Iris',      'master' => 'iris',        'fav' => 'iris'],
+                            'pupil'     => ['label' => 'PUPIL',     'full' => 'Pupil',     'master' => 'pupil',       'fav' => 'pupil'],
+                            'lens'      => ['label' => 'LENS',      'full' => 'Lens',      'master' => 'lens_master', 'fav' => 'lens'],
+                            'em'        => ['label' => 'EM',        'full' => 'Extraocular', 'master' => 'em',        'fav' => 'em'],
+                            'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test','master' => 'covertest',   'fav' => 'covertest'],
+                        ];
+                        $oeMasterData = [];
+                        foreach ($oeFieldMeta as $meta) {
+                            if (! isset($oeMasterData[$meta['master']])) {
+                                $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn ($o) => [
+                                    'id'           => $o->id,
+                                    'value'        => $o->value,
+                                    'is_favourite' => (bool) ($o->is_favourite ?? false),
+                                ])->values()->all();
+                            }
+                        }
+                    @endphp
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead><tr><th style="width:140px"></th><th>RE</th><th>LE</th></tr></thead>
+                        <table class="table table-bordered table-sm align-middle mb-0 oe-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:130px;background:#f8fafc;"></th>
+                                    <th class="oe-eye-col re"><i class="bi bi-eye-fill me-1"></i>Right Eye (RE)</th>
+                                    <th class="oe-eye-col le"><i class="bi bi-eye-fill me-1"></i>Left Eye (LE)</th>
+                                </tr>
+                            </thead>
                             <tbody>
-                                @foreach([
-                                    'sac' => ['label' => 'SAC', 'master' => 'sac'], 'lid' => ['label' => 'Lid', 'master' => 'lid'],
-                                    'conj' => ['label' => 'Conj', 'master' => 'conj'], 'cornea' => ['label' => 'Cornea', 'master' => 'cornea'],
-                                    'ac' => ['label' => 'AC', 'master' => 'ac'], 'iris' => ['label' => 'Iris', 'master' => 'iris'],
-                                    'pupil' => ['label' => 'Pupil', 'master' => 'pupil'], 'lens' => ['label' => 'Lens', 'master' => 'lens_master'],
-                                    'em' => ['label' => 'EM', 'master' => 'em'], 'covertest' => ['label' => 'Covertest', 'master' => 'covertest'],
-                                ] as $key => $meta)
-                                    <tr>
-                                        <td>{{ $meta['label'] }}</td>
-                                        @foreach(['re','le'] as $eye)
-                                            <td><select name="exam_data[oe][{{ $key }}_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters[$meta['master']] as $opt)<option value="{{ $opt->value }}" {{ ($oe[$key.'_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>
-                                        @endforeach
-                                    </tr>
+                                @foreach($oeFieldMeta as $key => $meta)
+                                <tr>
+                                    <td class="oe-label-cell">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['label'] }}</span>
+                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
+                                    </td>
+                                    @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
+                                    @php $sv = old('exam_data.oe.'.$key.'_'.$eye, $oe[$key.'_'.$eye] ?? ''); @endphp
+                                    <td class="{{ $cellCls }}">
+                                        <div class="oe-select-wrap">
+                                            <input type="text" class="form-control form-control-sm oe-inp"
+                                                placeholder="—" autocomplete="off"
+                                                data-oe-key="{{ $key }}"
+                                                data-master="{{ $meta['master'] }}"
+                                                data-fav="{{ $meta['fav'] }}"
+                                                value="{{ $sv }}">
+                                            <input type="hidden" name="exam_data[oe][{{ $key }}_{{ $eye }}]" value="{{ $sv }}">
+                                            <i class="bi bi-chevron-down oe-inp-chevron"></i>
+                                        </div>
+                                        @if($key === 'lens')
+                                        @php $pseudo = old('exam_data.oe.pseudophakia_'.$eye, $oe['pseudophakia_'.$eye] ?? []); @endphp
+                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_type]" value="{{ $pseudo['operation_type'] ?? '' }}" class="pseudo-op-type" data-eye="{{ $eye }}">
+                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_expense]" value="{{ $pseudo['operation_expense'] ?? '' }}" class="pseudo-op-expense" data-eye="{{ $eye }}">
+                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][hospital_name]" value="{{ $pseudo['hospital_name'] ?? '' }}" class="pseudo-hospital" data-eye="{{ $eye }}">
+                                        <div class="pseudo-lens-summary mt-1" data-eye="{{ $eye }}" style="display:none;"></div>
+                                        @endif
+                                    </td>
+                                    @endforeach
+                                </tr>
                                 @endforeach
+                                <tr>
+                                    <td class="oe-label-cell">
+                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">OTHER</span>
+                                        <div style="font-size:11px;color:#94a3b8;">Other findings</div>
+                                    </td>
+                                    @foreach(['re' => ['cls' => 'oe-cell-re', 'ph' => 'Right eye'], 'le' => ['cls' => 'oe-cell-le', 'ph' => 'Left eye']] as $eye => $em)
+                                    <td class="{{ $em['cls'] }}">
+                                        <input type="text" name="exam_data[oe][other_{{ $eye }}]"
+                                            value="{{ old('exam_data.oe.other_'.$eye, $oe['other_'.$eye] ?? '') }}"
+                                            class="form-control form-control-sm exam-plain-inp"
+                                            placeholder="{{ $em['ph'] }}" autocomplete="off">
+                                    </td>
+                                    @endforeach
+                                </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: Pseudophakia details --}}
+    <div class="modal fade" id="modalPseudophakia" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="bi bi-plus-circle me-2" style="color:#1B4F72;"></i>Pseudophakia — <span id="pseudoModalEyeLabel"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold mb-2">Operation Type</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary flex-fill pseudo-type-btn" data-val="Block">Block</button>
+                            <button type="button" class="btn btn-outline-secondary flex-fill pseudo-type-btn" data-val="Phaco">Phaco</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" for="pseudoOpExpense">Operation Expense</label>
+                        <input type="text" id="pseudoOpExpense" class="form-control exam-plain-inp" placeholder="Amount" autocomplete="off">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold" for="pseudoHospital">Hospital Name</label>
+                        <input type="text" id="pseudoHospital" class="form-control exam-plain-inp" placeholder="Hospital name" list="pseudoHospitalList" autocomplete="off">
+                        <datalist id="pseudoHospitalList">
+                            @foreach($masters['referrers'] ?? [] as $ref)
+                            <option value="{{ $ref->name }}">
+                            @endforeach
+                        </datalist>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="pseudoModalSave">Save</button>
+                </div>
             </div>
         </div>
     </div>
@@ -892,25 +1226,100 @@
     <div class="modal fade" id="modalFundus" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">Fundus Examination</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-                <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0">
-                            <thead><tr><th style="width:140px"></th><th>RE</th><th>LE</th></tr></thead>
-                            <tbody>
-                                <tr>
-                                    <td>Disc</td>
-                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[fundus][disc_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['disc'] as $opt)<option value="{{ $opt->value }}" {{ ($fundus['disc_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
-                                </tr>
-                                <tr>
-                                    <td>FR</td>
-                                    @foreach(['re','le'] as $eye)<td><select name="exam_data[fundus][fr_{{ $eye }}]" class="form-select form-select-sm"><option value="">-</option>@foreach($masters['fr'] as $opt)<option value="{{ $opt->value }}" {{ ($fundus['fr_'.$eye] ?? '') === $opt->value ? 'selected' : '' }}>{{ $opt->value }}</option>@endforeach</select></td>@endforeach
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title">
+                        <i class="bi bi-circle-half me-2" style="color:#7c3aed;"></i>Fundus Examination
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-body p-0">
+                    <table class="table table-bordered table-sm align-middle mb-0">
+                        <tbody>
+                            {{-- ── Right Eye ── --}}
+                            <tr>
+                                <td colspan="2" style="background:#fff0f0;color:#dc2626;font-weight:700;font-size:13px;letter-spacing:.04em;padding:9px 14px;border-bottom:2px solid #fca5a5;">
+                                    <i class="bi bi-eye-fill me-1"></i> Right Eye <span style="font-weight:400;opacity:.75;">(RE)</span>
+                                </td>
+                            </tr>
+                            @foreach([
+                                ['Disc', 'CDR / Appearance', 'disc', 'disc_re'],
+                                ['FR',   'Foveal Reflex',    'fr',   'fr_re'],
+                            ] as [$lbl, $sub, $type, $field])
+                            <tr style="background:#fffafa;">
+                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #fca5a5;">
+                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">{{ $lbl }}</div>
+                                    <div style="font-size:11px;color:#94a3b8;">{{ $sub }}</div>
+                                </td>
+                                <td style="padding:6px 10px;">
+                                    <div class="fundus-dd-wrap" style="position:relative;">
+                                        <input type="text" class="form-control form-control-sm fundus-dd-inp"
+                                            placeholder="Search or select..." autocomplete="off"
+                                            data-dd-type="{{ $type }}"
+                                            value="{{ $fundus[$field] ?? '' }}"
+                                            style="padding-right:28px;">
+                                        <i class="bi bi-chevron-down" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;font-size:11px;"></i>
+                                        <input type="hidden" name="exam_data[fundus][{{ $field }}]" value="{{ $fundus[$field] ?? '' }}">
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                            <tr style="background:#fffafa;">
+                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #fca5a5;vertical-align:top;">
+                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">Comment</div>
+                                    <div style="font-size:11px;color:#94a3b8;">RE findings</div>
+                                </td>
+                                <td style="padding:6px 10px;">
+                                    <textarea name="exam_data[fundus][comment_re]" class="form-control form-control-sm"
+                                        rows="2" placeholder="Right eye findings / notes..."
+                                        style="resize:none;">{{ old('exam_data.fundus.comment_re', $fundus['comment_re'] ?? '') }}</textarea>
+                                </td>
+                            </tr>
+
+                            {{-- ── Left Eye ── --}}
+                            <tr>
+                                <td colspan="2" style="background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:13px;letter-spacing:.04em;padding:9px 14px;border-bottom:2px solid #93c5fd;">
+                                    <i class="bi bi-eye-fill me-1"></i> Left Eye <span style="font-weight:400;opacity:.75;">(LE)</span>
+                                </td>
+                            </tr>
+                            @foreach([
+                                ['Disc', 'CDR / Appearance', 'disc', 'disc_le'],
+                                ['FR',   'Foveal Reflex',    'fr',   'fr_le'],
+                            ] as [$lbl, $sub, $type, $field])
+                            <tr style="background:#f8faff;">
+                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #93c5fd;">
+                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">{{ $lbl }}</div>
+                                    <div style="font-size:11px;color:#94a3b8;">{{ $sub }}</div>
+                                </td>
+                                <td style="padding:6px 10px;">
+                                    <div class="fundus-dd-wrap" style="position:relative;">
+                                        <input type="text" class="form-control form-control-sm fundus-dd-inp"
+                                            placeholder="Search or select..." autocomplete="off"
+                                            data-dd-type="{{ $type }}"
+                                            value="{{ $fundus[$field] ?? '' }}"
+                                            style="padding-right:28px;">
+                                        <i class="bi bi-chevron-down" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;font-size:11px;"></i>
+                                        <input type="hidden" name="exam_data[fundus][{{ $field }}]" value="{{ $fundus[$field] ?? '' }}">
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                            <tr style="background:#f8faff;">
+                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #93c5fd;vertical-align:top;">
+                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">Comment</div>
+                                    <div style="font-size:11px;color:#94a3b8;">LE findings</div>
+                                </td>
+                                <td style="padding:6px 10px;">
+                                    <textarea name="exam_data[fundus][comment_le]" class="form-control form-control-sm"
+                                        rows="2" placeholder="Left eye findings / notes..."
+                                        style="resize:none;">{{ old('exam_data.fundus.comment_le', $fundus['comment_le'] ?? '') }}</textarea>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>
@@ -919,19 +1328,47 @@
     <div class="modal fade" id="modalDiagnosis" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">Diagnosis</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-semibold">
+                        <i class="bi bi-clipboard2-pulse me-2 text-danger"></i>Diagnosis
+                        <span id="dxSelectedCount" class="badge bg-danger ms-2" style="font-size:11px;display:none;"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
+                    <div class="mb-3">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" id="dxSearch" class="form-control border-start-0" placeholder="Search diagnosis..." autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="mb-2" style="font-size:11px;color:#94a3b8;">
+                        <i class="bi bi-info-circle me-1"></i>Badges: <span class="badge bg-primary" style="font-size:9px;">G</span> groups &nbsp; <span class="badge bg-success" style="font-size:9px;">A</span> advices — linked to that diagnosis
+                    </div>
                     <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
+                        @php
+                            $dxGroupCount  = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
+                            $dxAdviceCount = collect($masters['advices'])->groupBy('diagnosis_id')->map->count();
+                        @endphp
                         @foreach($masters['diagnoses'] as $d)
-                            <div>
+                            @php $gc = $dxGroupCount[$d->id] ?? 0; $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
+                            <div class="dx-tag-wrap">
                                 <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}"
                                     {{ in_array($d->id, $ed['diagnoses'] ?? []) ? 'checked' : '' }}>
-                                <label class="btn btn-outline-danger rounded-pill btn-sm" for="dx_{{ $d->id }}">{{ $d->diagnosis }}</label>
+                                <label class="btn btn-outline-danger rounded-pill btn-sm px-3" for="dx_{{ $d->id }}" style="font-size:12.5px;">
+                                    {{ $d->diagnosis }}
+                                    @if($gc > 0)<span class="badge bg-primary ms-1" style="font-size:9px;">{{ $gc }}G</span>@endif
+                                    @if($ac > 0)<span class="badge bg-success ms-1" style="font-size:9px;">{{ $ac }}A</span>@endif
+                                </label>
                             </div>
                         @endforeach
                     </div>
+                    <p id="dxNoResult" class="text-muted text-center mt-3" style="display:none;font-size:13px;">No diagnosis found</p>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer justify-content-between">
+                    <span id="dxFooterHint" class="text-muted" style="font-size:12px;"></span>
+                    <button type="button" class="btn btn-danger px-4" data-bs-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>
@@ -968,31 +1405,48 @@
     </div>
  
     {{-- MODAL: Medicine --}}
-   <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light"><h5 class="modal-title">Medicines</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title fw-semibold">
+                        <i class="bi bi-capsule me-2 text-primary"></i>Medicines
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
                 <div class="modal-body">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="form-label fw-semibold mb-0">Medicines</label>
-                        <div class="d-flex gap-2 align-items-center">
-                            <select id="rxGroupSelector" class="form-select form-select-sm" style="min-width:200px">
-                                <option value="">-- Load Medicine Group --</option>
-                                @foreach($masters['med_groups'] as $grp)<option value="{{ $grp->id }}">{{ $grp->name }}</option>@endforeach
-                            </select>
-                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addMedicineRow()">+ Add</button>
+                    {{-- Suggested Groups panel (shown when diagnosis linked groups exist) --}}
+                    <div id="dxSuggestedGroups" style="display:none;"></div>
+
+                    {{-- Toolbar --}}
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <span class="fw-semibold text-secondary" style="font-size:13px;"><i class="bi bi-list-ul me-1"></i>Prescription List</span>
+                        <div class="d-flex gap-2 align-items-center flex-wrap">
+                            <div class="input-group input-group-sm" style="width:auto;">
+                                <label class="input-group-text bg-white" style="font-size:12px;">Group</label>
+                                <select id="rxGroupSelector" class="form-select form-select-sm" style="min-width:180px;">
+                                    <option value="">-- Load Group --</option>
+                                    @foreach($masters['med_groups'] as $grp)<option value="{{ $grp->id }}">{{ $grp->name }}</option>@endforeach
+                                </select>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-primary px-3" onclick="addMedicineRow()">
+                                <i class="bi bi-plus-lg me-1"></i>Add Row
+                            </button>
                         </div>
                     </div>
+
+                    {{-- Table --}}
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle mb-0" id="rxTable">
-                            <thead>
+                        <table class="table table-sm table-hover align-middle mb-0" id="rxTable"
+                               style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+                            <thead style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
                                 <tr>
-                                    <th style="min-width:200px">Medicine</th>
-                                    <th style="width:130px">Dosage</th>
-                                    <th style="width:120px">Duration</th>
-                                    <th>Instructions</th>
-                                    <th style="width:90px">Mode/Eye</th>
-                                    <th style="width:45px"></th>
+                                    <th style="font-size:12px;color:#64748b;font-weight:600;">Medicine Name</th>
+                                    <th style="width:130px;font-size:12px;color:#64748b;font-weight:600;">Dosage</th>
+                                    <th style="width:100px;font-size:12px;color:#64748b;font-weight:600;">Days</th>
+                                    <th style="width:80px;font-size:12px;color:#64748b;font-weight:600;">QTY</th>
+                                    <th style="width:160px;font-size:12px;color:#64748b;font-weight:600;">Route of Administration</th>
+                                    <th style="width:36px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="rxBody">
@@ -1015,27 +1469,37 @@
                                         </td>
                                         <td>
                                             <div class="input-group input-group-sm">
-                                                <input type="number" name="medicines[{{ $i }}][duration]" class="form-control" value="{{ $rx->duration ?? '' }}" placeholder="e.g. 5" min="1">
-                                                <span class="input-group-text">Days</span>
+                                                <input type="number" name="medicines[{{ $i }}][duration]" class="form-control" value="{{ $rx->duration ?? '' }}" placeholder="7" min="1">
+                                                <span class="input-group-text" style="font-size:11px;">D</span>
                                             </div>
                                         </td>
-                                        <td><input type="text" name="medicines[{{ $i }}][instructions]" class="form-control form-control-sm" value="{{ $rx->instructions }}" list="instructions_list" placeholder="Instructions"></td>
+                                        <td><input type="number" name="medicines[{{ $i }}][quantity]" class="form-control form-control-sm" value="{{ $rx->quantity ?? '' }}" placeholder="1" min="1"></td>
                                         <td>
-                                            <select name="medicines[{{ $i }}][eye]" class="form-select form-select-sm">
+                                            <select name="medicines[{{ $i }}][route_id]" class="form-select form-select-sm">
                                                 <option value="">-</option>
-                                                @foreach(['RE','LE','Both','OU'] as $eyeOpt)<option value="{{ $eyeOpt }}" {{ $rx->eye === $eyeOpt ? 'selected' : '' }}>{{ $eyeOpt }}</option>@endforeach
+                                                @foreach($masters['routes'] as $rt)<option value="{{ $rt->id }}" {{ ($rx->route_id ?? '') == $rt->id ? 'selected' : '' }}>{{ $rt->name }}</option>@endforeach
                                             </select>
                                         </td>
-                                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); updateLivePreview();">x</button></td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 7px;" onclick="this.closest('tr').remove(); updateLivePreview();">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </td>
                                     </tr>
                                 @empty
-                                    <tr id="rxEmpty"><td colspan="6" class="text-center text-muted">No medicines added</td></tr>
+                                    <tr id="rxEmpty">
+                                        <td colspan="6" class="text-center py-4 text-muted" style="font-size:13px;">
+                                            <i class="bi bi-capsule me-1"></i>No medicines added yet
+                                        </td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Done</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1044,29 +1508,58 @@
     <div class="modal fade" id="modalAdvice" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">Clinical Advice &amp; Instructions</h5>
+                <div class="modal-header" style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border-bottom:1px solid #bbf7d0;">
+                    <h5 class="modal-title fw-semibold">
+                        <i class="bi bi-chat-square-text me-2 text-success"></i>Clinical Advice &amp; Instructions
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-3">
+                    {{-- Diagnosis-linked suggestions --}}
+                    <div id="dxSuggestedAdvices"></div>
+
+                    {{-- Master list as quick-add chips --}}
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Select from Master Advices</label>
-                        <select id="advice_master_select" class="form-select">
-                            <option value="">-- Select Advice --</option>
+                        <div class="fw-semibold mb-2" style="font-size:13px;color:#374151;">
+                            <i class="bi bi-collection me-1 text-secondary"></i>Quick Add from Master
+                            <span class="fw-normal text-muted ms-1" style="font-size:11px;">(click to append)</span>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
                             @foreach($masters['advices'] ?? [] as $adv)
-                                <option value="{{ $adv->advice ?? '' }}">{{ $adv->advice ?? '' }}</option>
+                                @php $advText = $adv->advice ?? ''; @endphp
+                                @if($advText)
+                                <button type="button" class="btn btn-sm btn-outline-secondary advice-quick-btn"
+                                        style="font-size:12px;border-radius:20px;"
+                                        data-advice="{{ $advText }}">
+                                    <i class="bi bi-plus-lg me-1"></i>{{ $advText }}
+                                </button>
+                                @endif
                             @endforeach
-                        </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="form-label fw-semibold">Advice Text</label>
-                        <textarea name="exam_data[advice]" id="advice_textarea" class="form-control" rows="6"
-                                  placeholder="Enter clinical advice, post-operative care, lifestyle instructions, etc."
-                                  maxlength="2000">{{ old('exam_data.advice', $ed['advice'] ?? '') }}</textarea>
+
+                    {{-- Textarea --}}
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="fw-semibold mb-0" style="font-size:13px;color:#374151;">
+                                <i class="bi bi-pencil-square me-1 text-success"></i>Advice Text
+                            </label>
+                            <span id="adviceCharCount" class="text-muted" style="font-size:11px;">0 / 2000</span>
+                        </div>
+                        <textarea name="exam_data[advice]" id="advice_textarea" class="form-control" rows="7"
+                                  placeholder="Enter clinical advice, post-operative care, follow-up instructions, lifestyle recommendations, etc."
+                                  maxlength="2000"
+                                  style="resize:vertical;font-size:13px;">{{ old('exam_data.advice', $ed['advice'] ?? '') }}</textarea>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer justify-content-between" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-sm btn-outline-danger"
+                            onclick="document.getElementById('advice_textarea').value=''; document.getElementById('adviceCharCount').textContent='0 / 2000'; if(typeof updateLivePreview==='function') updateLivePreview();">
+                        <i class="bi bi-x-circle me-1"></i>Clear
+                    </button>
+                    <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Done
+                    </button>
                 </div>
             </div>
         </div>
@@ -1178,15 +1671,17 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    window.addMedicineRow = function (medId = '', medName = '', dosageId = '', duration = '', instruction = '', eye = '') {
+    const routesJson = @json($masters['routes']->pluck('name', 'id'));
+
+    window.addMedicineRow = function (medId = '', medName = '', dosageId = '', duration = '', quantity = '', routeId = '') {
         const emptyRow = document.getElementById('rxEmpty');
         if (emptyRow) { emptyRow.remove(); }
 
         const idx = rxRowIndex++;
         const dosageOptions = Object.entries(dosagesJson)
             .map(([id, label]) => `<option value="${id}" ${String(dosageId) === String(id) ? 'selected' : ''}>${label}</option>`).join('');
-        const eyeOptions = ['RE', 'LE', 'Both', 'OU']
-            .map(e => `<option value="${e}" ${eye === e ? 'selected' : ''}>${e}</option>`).join('');
+        const routeOptions = Object.entries(routesJson)
+            .map(([id, name]) => `<option value="${id}" ${String(routeId) === String(id) ? 'selected' : ''}>${name}</option>`).join('');
 
         const row = document.createElement('tr');
         row.className = 'rx-row';
@@ -1199,10 +1694,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             </td>
             <td><select name="medicines[${idx}][dosage_id]" class="form-select form-select-sm"><option value="">-</option>${dosageOptions}</select></td>
-            <td><div class="input-group input-group-sm"><input type="number" name="medicines[${idx}][duration]" class="form-control" value="${duration}" placeholder="5" min="1"><span class="input-group-text" style="font-size:0.75rem">Days</span></div></td>
-            <td><input type="text" name="medicines[${idx}][instructions]" class="form-control form-control-sm" list="instructions_list" placeholder="Instructions" value="${instruction}"></td>
-            <td><select name="medicines[${idx}][eye]" class="form-select form-select-sm"><option value="">-</option>${eyeOptions}</select></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">x</button></td>
+            <td><div class="input-group input-group-sm"><input type="number" name="medicines[${idx}][duration]" class="form-control" value="${duration}" placeholder="7" min="1"><span class="input-group-text" style="font-size:0.75rem">D</span></div></td>
+            <td><input type="number" name="medicines[${idx}][quantity]" class="form-control form-control-sm" value="${quantity}" placeholder="1" min="1"></td>
+            <td><select name="medicines[${idx}][route_id]" class="form-select form-select-sm"><option value="">-</option>${routeOptions}</select></td>
+            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 7px;" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();"><i class="bi bi-x-lg"></i></button></td>
         `;
         rxBody.appendChild(row);
         attachMedicineSearch(row.querySelector('.medicine-search-wrap'));
@@ -1248,10 +1743,10 @@ document.addEventListener('DOMContentLoaded', function () {
         setState('btn-clinical',  document.querySelectorAll('#coBody .co-row').length > 0);
         setState('btn-hko',       document.querySelectorAll('#kcoBody .kco-row').length > 0 || (document.getElementById('historyTextarea')?.value || '').trim() !== '');
         setState('btn-vision',    hasValue('input[name="exam_data[vision][vn_re]"]'));
-        setState('btn-pg',        hasValue('select[name="exam_data[pg][re][ds]"]'));
+        setState('btn-pg',        hasValue('input[name="exam_data[pg][re][ds]"]'));
         setState('btn-st',        hasValue('input[name="exam_data[st][re][ds]"]'));
-        setState('btn-nct',       hasValue('select[name="exam_data[nct][iop_re]"]'));
-        setState('btn-oe',        hasValue('select[name="exam_data[oe][lid_re]"]'));
+        setState('btn-nct',       hasValue('input[name="exam_data[nct][iop_re]"]'));
+        setState('btn-oe',        hasValue('input[name="exam_data[oe][lid_re]"]'));
         setState('btn-fundus',    hasValue('select[name="exam_data[fundus][disc_re]"]'));
         setState('btn-diagnosis', hasValue('input[name="exam_data[diagnoses][]"]'));
         setState('btn-dilate',    hasValue('input[name="exam_data[dilate]"]'));
@@ -1268,6 +1763,16 @@ document.addEventListener('DOMContentLoaded', function () {
         const byId = (id) => {
             const el = document.getElementById(id);
             return (el && String(el.value).trim() !== '') ? el.value : '-';
+        };
+
+        const formatLensOe = (eye) => {
+            const base = val(`exam_data[oe][lens_${eye}]`);
+            const type = val(`exam_data[oe][pseudophakia_${eye}][operation_type]`);
+            const exp  = val(`exam_data[oe][pseudophakia_${eye}][operation_expense]`);
+            const hosp = val(`exam_data[oe][pseudophakia_${eye}][hospital_name]`);
+            if (base === '-') { return '-'; }
+            const extras = [type, exp !== '-' ? '₹' + exp : '', hosp].filter(v => v && v !== '-');
+            return extras.length ? `${base} (${extras.join(', ')})` : base;
         };
 
         // Build co_rows summary for canvas
@@ -1354,7 +1859,7 @@ document.addEventListener('DOMContentLoaded', function () {
             `<tr><th>AC</th><td>${val('exam_data[oe][ac_re]')}</td><td>${val('exam_data[oe][ac_le]')}</td></tr>` +
             `<tr><th>IRIS</th><td>${val('exam_data[oe][iris_re]')}</td><td>${val('exam_data[oe][iris_le]')}</td></tr>` +
             `<tr><th>PUPIL</th><td>${val('exam_data[oe][pupil_re]')}</td><td>${val('exam_data[oe][pupil_le]')}</td></tr>` +
-            `<tr><th>LENS</th><td>${val('exam_data[oe][lens_re]')}</td><td>${val('exam_data[oe][lens_le]')}</td></tr>` +
+            `<tr><th>LENS</th><td>${formatLensOe('re')}</td><td>${formatLensOe('le')}</td></tr>` +
             `<tr><th>EM</th><td>${val('exam_data[oe][em_re]')}</td><td>${val('exam_data[oe][em_le]')}</td></tr>` +
             `<tr><th>COVERTEST</th><td>${val('exam_data[oe][covertest_re]')}</td><td>${val('exam_data[oe][covertest_le]')}</td></tr>` +
             `<tr><th>OTHER</th><td>${val('exam_data[oe][other_re]')}</td><td>${val('exam_data[oe][other_le]')}</td></tr>` +
@@ -1362,13 +1867,17 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('canvas_oe').innerHTML = oeHtml;
 
         // BOX 4: Fundus table
+        const fVal = (k) => {
+            const el = form.querySelector(`[name="exam_data[fundus][${k}]"]`);
+            return (el && String(el.value).trim()) ? el.value : '-';
+        };
         const fundusHtml =
             `<table class="table table-sm table-bordered border-dark text-center mb-0" style="font-size:11px;">` +
             `<thead><tr><th class="bg-dark text-white">Fundus</th><th class="bg-dark text-white">RIGHT</th><th class="bg-dark text-white">LEFT</th></tr></thead>` +
             `<tbody>` +
-            `<tr><th>DISC</th><td>${val('exam_data[fundus][disc_re]')}</td><td>${val('exam_data[fundus][disc_le]')}</td></tr>` +
-            `<tr><th>FR</th><td>${val('exam_data[fundus][fr_re]')}</td><td>${val('exam_data[fundus][fr_le]')}</td></tr>` +
-            `<tr><th>COMMENT</th><td colspan="2" class="text-start">${val('exam_data[fundus][comment]')}</td></tr>` +
+            `<tr><th>DISC</th><td>${fVal('disc_re')}</td><td>${fVal('disc_le')}</td></tr>` +
+            `<tr><th>FR</th><td>${fVal('fr_re')}</td><td>${fVal('fr_le')}</td></tr>` +
+            `<tr><th>COMMENT</th><td>${fVal('comment_re')}</td><td>${fVal('comment_le')}</td></tr>` +
             `</tbody></table>`;
         document.getElementById('canvas_fundus').innerHTML = fundusHtml;
 
@@ -1385,18 +1894,27 @@ document.addEventListener('DOMContentLoaded', function () {
             const dosage = dosageId && dosagesJson[dosageId] ? dosagesJson[dosageId] : '-';
             const durRaw = row.querySelector('[name*="[duration]"]')?.value.trim() || '';
             const duration = durRaw ? durRaw + ' Days' : '-';
-            const instruction = row.querySelector('[name*="[instructions]"]')?.value || '-';
-            const eye = row.querySelector('[name*="[eye]"]')?.value || '-';
-            return `<tr><td>${name}</td><td>${dosage}</td><td>${duration}</td><td>${eye}</td><td>${instruction}</td></tr>`;
+            const qty = row.querySelector('[name*="[quantity]"]')?.value || '-';
+            const routeId = row.querySelector('[name*="[route_id]"]')?.value || '';
+            const route = routeId && routesJson[routeId] ? routesJson[routeId] : '-';
+            return `<tr><td>${name}</td><td>${dosage}</td><td>${duration}</td><td>${qty}</td><td>${route}</td></tr>`;
         }).filter(Boolean).join('');
 
         const rxHtml =
             `<div class="mb-1" style="font-size:11px;"><strong>Dx:</strong> ${diagnosisText} &nbsp; <strong>Dilate:</strong> ${dilateVal}</div>` +
             `<table class="table table-sm table-bordered border-dark mb-0" style="font-size:11px;">` +
-            `<thead><tr><th class="bg-dark text-white">Medicine</th><th class="bg-dark text-white">Dose</th><th class="bg-dark text-white">Days</th><th class="bg-dark text-white">Eye</th><th class="bg-dark text-white">Instr.</th></tr></thead>` +
+            `<thead><tr><th class="bg-dark text-white">Medicine</th><th class="bg-dark text-white">Dosage</th><th class="bg-dark text-white">Days</th><th class="bg-dark text-white">QTY</th><th class="bg-dark text-white">Route</th></tr></thead>` +
             `<tbody>${rxBodyHtml || '<tr><td colspan="5" class="text-center text-muted">No medicines</td></tr>'}</tbody>` +
             `</table>`;
         document.getElementById('canvas_rx').innerHTML = rxHtml;
+
+        const adviceText = (document.getElementById('advice_textarea')?.value || '').trim();
+        const adviceEl = document.getElementById('canvas_advice');
+        if (adviceEl) {
+            adviceEl.innerHTML = adviceText
+                ? `<div style="font-size:12px;white-space:pre-line;">${adviceText}</div>`
+                : `<em class="text-muted" style="font-size:11px;">No advice entered</em>`;
+        }
     };
 
     // Medicine Group selector — AJAX auto-fill
@@ -1413,8 +1931,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         item.medicine ? (item.medicine.brand_name || item.medicine.name || '') : '',
                         item.dosage_id || '',
                         item.duration || '',
-                        '',
-                        ''
+                        item.quantity || '',
+                        item.route_id || ''
                     );
                 });
                 this.value = '';
@@ -1425,6 +1943,187 @@ document.addEventListener('DOMContentLoaded', function () {
                 alert('Could not load medicine group. Please try again.');
             });
     });
+
+    @php
+        $__dxGroups  = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
+        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_id' => $a->diagnosis_id ?? null])->values();
+    @endphp
+    // ── Diagnosis → Suggested Groups & Advice ────────────────────────────
+    (function () {
+        const dxMedGroups = @json($__dxGroups);
+        const dxAdvices   = @json($__dxAdvices);
+        const adviceMap   = Object.fromEntries(dxAdvices.map(a => [a.id, a.advice || '']));
+
+        function esc(s) {
+            return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function renderSuggestedGroups(groups, hasIds) {
+            const wrap = document.getElementById('dxSuggestedGroups');
+            if (!wrap) return;
+            wrap.style.display = '';
+
+            if (!hasIds) {
+                wrap.innerHTML =
+                    '<div class="d-flex align-items-center gap-2 px-3 py-2 mb-3 rounded" style="background:#f8fafc;border:1px dashed #cbd5e1;">' +
+                    '<i class="bi bi-lightbulb" style="color:#f59e0b;font-size:15px;"></i>' +
+                    '<span style="font-size:12px;color:#64748b;">Select a <strong>Diagnosis</strong> first — linked medicine groups will appear here for quick add.</span>' +
+                    '</div>';
+                return;
+            }
+
+            if (!groups.length) {
+                wrap.innerHTML =
+                    '<div class="d-flex align-items-center gap-2 px-3 py-2 mb-3 rounded" style="background:#fff7ed;border:1px solid #fed7aa;">' +
+                    '<i class="bi bi-info-circle" style="color:#f97316;font-size:15px;"></i>' +
+                    '<span style="font-size:12px;color:#9a3412;">No medicine groups linked to the selected diagnosis. You can link them from Medicine Groups master.</span>' +
+                    '</div>';
+                return;
+            }
+
+            wrap.innerHTML =
+                '<div class="mb-3 p-3 rounded-3" style="background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border:1px solid #bfdbfe;">' +
+                '<div class="d-flex align-items-center justify-content-between mb-2">' +
+                '<span class="fw-semibold" style="font-size:13px;color:#1d4ed8;"><i class="bi bi-stars me-1"></i>Suggested Groups</span>' +
+                '<span class="text-muted" style="font-size:11px;">Linked to selected diagnosis — click to load</span>' +
+                '</div>' +
+                '<div class="d-flex flex-wrap gap-2">' +
+                groups.map(g =>
+                    '<div class="bg-white rounded-3 px-3 py-2 d-flex flex-column" style="min-width:145px;max-width:200px;box-shadow:0 1px 4px rgba(0,0,0,.08);border:1px solid #dbeafe;">' +
+                    '<div class="fw-semibold mb-1" style="font-size:12.5px;color:#1e40af;">' + esc(g.name) + '</div>' +
+                    '<div class="text-muted mb-2" style="font-size:11px;"><i class="bi bi-capsule me-1"></i>' + g.item_count + ' medicine(s)</div>' +
+                    '<button type="button" class="btn btn-primary btn-sm mt-auto" style="font-size:11.5px;padding:4px 0;" onclick="loadSuggestedGroup(' + g.id + ')">' +
+                    '<i class="bi bi-plus-lg me-1"></i>Add All' +
+                    '</button>' +
+                    '</div>'
+                ).join('') +
+                '</div></div>';
+        }
+
+        function renderSuggestedAdvices(advices, hasIds) {
+            const wrap = document.getElementById('dxSuggestedAdvices');
+            if (!wrap) return;
+            wrap.style.display = '';
+
+            if (!hasIds) {
+                wrap.innerHTML =
+                    '<div class="d-flex align-items-center gap-2 px-3 py-2 mb-3 rounded" style="background:#f8fafc;border:1px dashed #cbd5e1;">' +
+                    '<i class="bi bi-lightbulb" style="color:#f59e0b;font-size:15px;"></i>' +
+                    '<span style="font-size:12px;color:#64748b;">Select a <strong>Diagnosis</strong> — linked advices will appear here.</span>' +
+                    '</div>';
+                return;
+            }
+
+            if (!advices.length) {
+                wrap.innerHTML =
+                    '<div class="d-flex align-items-center gap-2 px-3 py-2 mb-3 rounded" style="background:#fff7ed;border:1px solid #fed7aa;">' +
+                    '<i class="bi bi-info-circle" style="color:#f97316;font-size:15px;"></i>' +
+                    '<span style="font-size:12px;color:#9a3412;">No advices linked to selected diagnosis.</span>' +
+                    '</div>';
+                return;
+            }
+
+            wrap.innerHTML =
+                '<div class="p-3 rounded-3 mb-3" style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1px solid #bbf7d0;">' +
+                '<div class="fw-semibold mb-2" style="font-size:13px;color:#166534;"><i class="bi bi-check-circle me-1"></i>Suggested Advices <small class="fw-normal text-muted">(click to append)</small></div>' +
+                '<div class="d-flex flex-wrap gap-2">' +
+                advices.map(a =>
+                    '<button type="button" class="btn btn-sm btn-outline-success" style="font-size:12px;" onclick="appendSuggestedAdvice(' + a.id + ')">' +
+                    esc(a.advice) + '</button>'
+                ).join('') +
+                '</div></div>';
+        }
+
+        window.loadSuggestedGroup = function (id) {
+            const btn = document.querySelector(`button[onclick="loadSuggestedGroup(${id})"]`);
+            if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Adding...'; }
+            fetch(groupApiBase + '/' + id)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('rxEmpty')?.remove();
+                    (data.items || []).forEach(item => addMedicineRow(
+                        item.medicine_id || '',
+                        item.medicine ? (item.medicine.brand_name || item.medicine.name || '') : '',
+                        item.dosage_id || '',
+                        item.duration || '',
+                        item.quantity || '',
+                        item.route_id || ''
+                    ));
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Added'; btn.classList.replace('btn-primary', 'btn-success'); }
+                    updateLivePreview();
+                })
+                .catch(() => {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add All'; }
+                    alert('Could not load medicine group.');
+                });
+        };
+
+        window.appendSuggestedAdvice = function (id) {
+            const text = adviceMap[id] || '';
+            if (!text) return;
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return;
+            const cur = ta.value.trim();
+            ta.value = cur ? cur + '\n' + text : text;
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        };
+
+        function update() {
+            const ids = Array.from(document.querySelectorAll('input[name="exam_data[diagnoses][]"]:checked')).map(el => +el.value);
+            const hasIds = ids.length > 0;
+            renderSuggestedGroups(dxMedGroups.filter(g => g.diagnosis_id && ids.includes(+g.diagnosis_id)), hasIds);
+            renderSuggestedAdvices(dxAdvices.filter(a => a.diagnosis_id && ids.includes(+a.diagnosis_id)), hasIds);
+        }
+
+        document.addEventListener('change', function (e) {
+            if (e.target.matches('input[name="exam_data[diagnoses][]"]')) update();
+        });
+
+        update();
+    })();
+
+    // ── Diagnosis modal: search filter + selected count ───────────────────
+    (function () {
+        const searchInput = document.getElementById('dxSearch');
+        const countBadge  = document.getElementById('dxSelectedCount');
+        const footerHint  = document.getElementById('dxFooterHint');
+        const noResult    = document.getElementById('dxNoResult');
+
+        function updateCount() {
+            const n = document.querySelectorAll('input[name="exam_data[diagnoses][]"]:checked').length;
+            if (countBadge) { countBadge.textContent = n; countBadge.style.display = n ? '' : 'none'; }
+            if (footerHint) footerHint.textContent = n ? n + ' diagnosis selected' : '';
+        }
+
+        searchInput?.addEventListener('input', function () {
+            const q = this.value.toLowerCase().trim();
+            let visible = 0;
+            document.querySelectorAll('.dx-tag-wrap').forEach(wrap => {
+                const label = wrap.querySelector('label');
+                const text  = (label?.textContent || '').toLowerCase();
+                const show  = !q || text.includes(q);
+                wrap.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            if (noResult) noResult.style.display = visible === 0 ? '' : 'none';
+        });
+
+        document.addEventListener('change', e => {
+            if (e.target.matches('input[name="exam_data[diagnoses][]"]')) updateCount();
+        });
+
+        updateCount();
+    })();
+
+    // ── Advice textarea: char counter ─────────────────────────────────────
+    (function () {
+        const ta    = document.getElementById('advice_textarea');
+        const counter = document.getElementById('adviceCharCount');
+        if (!ta || !counter) return;
+        function sync() { counter.textContent = ta.value.length + ' / 2000'; }
+        ta.addEventListener('input', sync);
+        sync();
+    })();
 
     document.getElementById('cc_since_number')?.addEventListener('input', () => {
         checkProgress();
@@ -1476,6 +2175,36 @@ document.addEventListener('DOMContentLoaded', function () {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
 
+    function positionFixedDropdown(dropdown, anchorEl, minWidth = 200) {
+        if (!dropdown || !anchorEl) { return; }
+        const gap = 4;
+        const maxH = 300;
+        const rect = anchorEl.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const spaceBelow = vh - rect.bottom - gap;
+        const spaceAbove = rect.top - gap;
+        const width = Math.max(rect.width, minWidth);
+        const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+
+        let left = rect.left;
+        if (left + width > vw - 8) { left = Math.max(8, vw - width - 8); }
+
+        dropdown.style.width = width + 'px';
+        dropdown.style.left = left + 'px';
+        dropdown.style.transform = '';
+
+        if (openUp) {
+            dropdown.style.top = 'auto';
+            dropdown.style.bottom = (vh - rect.top + gap) + 'px';
+            dropdown.style.maxHeight = Math.max(100, Math.min(maxH, spaceAbove - 8)) + 'px';
+        } else {
+            dropdown.style.bottom = 'auto';
+            dropdown.style.top = (rect.bottom + gap) + 'px';
+            dropdown.style.maxHeight = Math.max(100, Math.min(maxH, spaceBelow - 8)) + 'px';
+        }
+    }
+
     function sortedCoComplaints() {
         return [...coComplaints].sort((a, b) => {
             if (Boolean(a.is_favourite) !== Boolean(b.is_favourite)) {
@@ -1490,10 +2219,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function positionCoDropdown() {
         if (!activeCoInput || !coDropdown) { return; }
-        const rect = activeCoInput.getBoundingClientRect();
-        coDropdown.style.top  = (rect.bottom + 4) + 'px';
-        coDropdown.style.left = rect.left + 'px';
-        coDropdown.style.width = Math.max(rect.width, 300) + 'px';
+        positionFixedDropdown(coDropdown, activeCoInput, 300);
     }
 
     function renderCoDropdown(queryOverride) {
@@ -1647,10 +2373,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function positionKcoDropdown() {
             if (!activeKcoInput) { return; }
-            const rect = activeKcoInput.getBoundingClientRect();
-            kcoDropdown.style.top   = (rect.bottom + 4) + 'px';
-            kcoDropdown.style.left  = rect.left + 'px';
-            kcoDropdown.style.width = Math.max(rect.width, 300) + 'px';
+            positionFixedDropdown(kcoDropdown, activeKcoInput, 300);
         }
 
         function renderKcoDropdown(queryOverride) {
@@ -1772,14 +2495,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     })();
 
-    // Advice master select → append to textarea
-    document.getElementById('advice_master_select')?.addEventListener('change', function () {
-        const val = this.value;
-        if (!val) { return; }
-        const ta = document.getElementById('advice_textarea');
-        ta.value = ta.value ? ta.value + '\n' + val : val;
-        this.value = '';
-        checkProgress();
+    // Advice quick-add chips → append to textarea
+    document.querySelectorAll('.advice-quick-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const text = this.dataset.advice || '';
+            if (!text) return;
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return;
+            ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+            ta.dispatchEvent(new Event('input'));
+            checkProgress();
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        });
     });
 
     // ── Vision custom dropdowns ───────────────────────────────────────────────
@@ -1798,10 +2525,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         function positionVdd() {
             if (!activeVInp) { return; }
-            const rect = activeVInp.getBoundingClientRect();
-            vdd.style.top   = (rect.bottom + 4) + 'px';
-            vdd.style.left  = rect.left + 'px';
-            vdd.style.width = Math.max(rect.width, 180) + 'px';
+            positionFixedDropdown(vdd, activeVInp, 180);
         }
 
         function renderVdd(queryOverride) {
@@ -1852,6 +2576,465 @@ document.addEventListener('DOMContentLoaded', function () {
                 activeVInp = null;
             }
         });
+    })();
+
+    // ── PG custom dropdowns ───────────────────────────────────────────────────
+    (function () {
+        const pgMasterOpts = {
+            sph_cyl: @json($pgMasterOpts['sph_cyl'] ?? []),
+            axis:    @json($pgMasterOpts['axis'] ?? []),
+            vn:      @json($pgMasterOpts['vn'] ?? []),
+            nrvn:    @json($pgMasterOpts['nrvn'] ?? []),
+        };
+
+        const pdd = document.createElement('div');
+        pdd.className = 'co-dropdown';
+        document.body.appendChild(pdd);
+
+        let activePgInp = null;
+
+        function positionPdd() {
+            if (!activePgInp) { return; }
+            positionFixedDropdown(pdd, activePgInp, 200);
+        }
+
+        function renderPdd(queryOverride) {
+            if (!activePgInp) { return; }
+            const all   = pgMasterOpts[activePgInp.dataset.master] || [];
+            const query = queryOverride !== undefined ? queryOverride : (activePgInp.value || '').trim().toLowerCase();
+            const items = query ? all.filter(v => String(v).toLowerCase().includes(query)) : all;
+            const current = activePgInp.value;
+
+            pdd.innerHTML = items.length
+                ? items.map(v => {
+                    const sel = v === current ? ' selected' : '';
+                    return `<div class="co-item${sel}" data-val="${escapeAttr(String(v))}"><span class="co-item-name">${escapeAttr(String(v))}</span></div>`;
+                }).join('')
+                : '<div class="co-empty">No options found</div>';
+
+            positionPdd();
+            pdd.classList.add('show');
+
+            pdd.querySelectorAll('.co-item').forEach(item => {
+                item.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    if (!activePgInp) { return; }
+                    const val = this.dataset.val;
+                    activePgInp.value = val;
+                    const hidden = activePgInp.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]');
+                    if (hidden) { hidden.value = val; }
+                    pdd.classList.remove('show');
+                    activePgInp = null;
+                    checkProgress();
+                    updateLivePreview();
+                });
+            });
+        }
+
+        document.querySelectorAll('.pg-inp').forEach(inp => {
+            inp.addEventListener('focus', function () { activePgInp = this; renderPdd(''); });
+            inp.addEventListener('input', function () { activePgInp = this; renderPdd(); });
+            inp.addEventListener('blur', function () {
+                const hidden = this.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]');
+                if (hidden) { hidden.value = this.value; }
+            });
+        });
+
+        window.addEventListener('scroll', positionPdd, true);
+        window.addEventListener('resize', positionPdd);
+
+        document.addEventListener('mousedown', function (e) {
+            if (!e.target.closest('.pg-select-wrap') && !pdd.contains(e.target)) {
+                pdd.classList.remove('show');
+                activePgInp = null;
+            }
+        });
+    })();
+
+    // ── NCT custom dropdown (multi-column grid) ───────────────────────────────
+    (function () {
+        const nctOpts = @json(collect($masters['nct'])->pluck('value')->filter()->values());
+
+        const ndd = document.createElement('div');
+        ndd.className = 'co-dropdown nct-dropdown';
+        document.body.appendChild(ndd);
+
+        let activeNctInp = null;
+
+        function positionNdd() {
+            if (!activeNctInp) { return; }
+            positionFixedDropdown(ndd, activeNctInp, 260);
+        }
+
+        function renderNdd(queryOverride) {
+            if (!activeNctInp) { return; }
+            const query = queryOverride !== undefined ? queryOverride : (activeNctInp.value || '').trim().toLowerCase();
+            const items = query ? nctOpts.filter(v => String(v).toLowerCase().includes(query)) : nctOpts;
+            const current = activeNctInp.value;
+
+            ndd.innerHTML = items.length
+                ? `<div class="nct-dropdown-grid">${items.map(v => {
+                    const sel = String(v) === String(current) ? ' selected' : '';
+                    return `<div class="nct-grid-item${sel}" data-val="${escapeAttr(String(v))}">${escapeAttr(String(v))}</div>`;
+                }).join('')}</div>`
+                : '<div class="co-empty">No options found</div>';
+
+            ndd.classList.add('show');
+            positionNdd();
+
+            ndd.querySelectorAll('.nct-grid-item').forEach(item => {
+                item.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    if (!activeNctInp) { return; }
+                    const val = this.dataset.val;
+                    activeNctInp.value = val;
+                    const hidden = activeNctInp.closest('.nct-select-wrap')?.querySelector('input[type="hidden"]');
+                    if (hidden) { hidden.value = val; }
+                    ndd.classList.remove('show');
+                    activeNctInp = null;
+                    checkProgress();
+                    updateLivePreview();
+                });
+            });
+        }
+
+        document.querySelectorAll('.nct-inp').forEach(inp => {
+            inp.addEventListener('focus', function () { activeNctInp = this; renderNdd(''); });
+            inp.addEventListener('input', function () { activeNctInp = this; renderNdd(); });
+            inp.addEventListener('blur', function () {
+                const hidden = this.closest('.nct-select-wrap')?.querySelector('input[type="hidden"]');
+                if (hidden) { hidden.value = this.value; }
+            });
+        });
+
+        window.addEventListener('scroll', positionNdd, true);
+        window.addEventListener('resize', positionNdd);
+
+        document.addEventListener('mousedown', function (e) {
+            if (!e.target.closest('.nct-select-wrap') && !ndd.contains(e.target)) {
+                ndd.classList.remove('show');
+                activeNctInp = null;
+            }
+        });
+    })();
+
+    // ── O/E custom dropdowns (favourites + search) ────────────────────────────
+    (function () {
+        const oeMasters = @json($oeMasterData ?? []);
+        const oeFavBase = '{{ url($slug."/masters/detail") }}';
+
+        const odd = document.createElement('div');
+        odd.className = 'co-dropdown';
+        document.body.appendChild(odd);
+
+        let activeOeInp = null;
+
+        function sortedOeItems(masterKey) {
+            return [...(oeMasters[masterKey] || [])].sort((a, b) => {
+                if (Boolean(a.is_favourite) !== Boolean(b.is_favourite)) { return a.is_favourite ? -1 : 1; }
+                return String(a.value).localeCompare(String(b.value));
+            });
+        }
+
+        function positionOdd() {
+            if (!activeOeInp) { return; }
+            positionFixedDropdown(odd, activeOeInp, 300);
+        }
+
+        function renderOdd(queryOverride) {
+            if (!activeOeInp) { return; }
+            const masterKey = activeOeInp.dataset.master;
+            const favType   = activeOeInp.dataset.fav;
+            const query     = queryOverride !== undefined ? queryOverride : (activeOeInp.value || '').trim().toLowerCase();
+            const items     = sortedOeItems(masterKey).filter(i => String(i.value).toLowerCase().includes(query));
+            const current   = activeOeInp.value;
+
+            if (!items.length) {
+                odd.innerHTML = '<div class="co-empty">No options found</div>';
+                positionOdd();
+                odd.classList.add('show');
+                return;
+            }
+
+            const groups = [
+                { label: '⭐ Favourites', rows: items.filter(i => i.is_favourite) },
+                { label: 'All Options',  rows: items.filter(i => !i.is_favourite) },
+            ].filter(g => g.rows.length);
+
+            odd.innerHTML = groups.map(g =>
+                `<div class="co-section-lbl">${g.label}</div>` +
+                g.rows.map(item => {
+                    const sel = item.value === current ? ' selected' : '';
+                    return `<div class="co-item${sel}" data-val="${escapeAttr(item.value)}">` +
+                        `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" data-fav="${escapeAttr(favType)}" title="${item.is_favourite ? 'Remove favourite' : 'Add favourite'}">${item.is_favourite ? '★' : '☆'}</button>` +
+                        `<span class="co-item-name">${escapeAttr(item.value)}</span>` +
+                        `</div>`;
+                }).join('')
+            ).join('');
+
+            positionOdd();
+            odd.classList.add('show');
+
+            odd.querySelectorAll('.co-item').forEach(item => {
+                item.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    if (!activeOeInp) { return; }
+                    const val = this.dataset.val;
+                    const oeKey = activeOeInp.dataset.oeKey;
+                    const hidden = activeOeInp.closest('.oe-select-wrap')?.querySelector('input[type="hidden"]');
+                    const eye = hidden?.name?.match(/_(re|le)\]$/)?.[1] || null;
+                    activeOeInp.value = val;
+                    if (hidden) { hidden.value = val; }
+                    odd.classList.remove('show');
+                    activeOeInp = null;
+                    if (oeKey === 'lens' && eye && window.handleOeLensSelection) {
+                        window.handleOeLensSelection(val, eye);
+                    }
+                    checkProgress();
+                    updateLivePreview();
+                });
+            });
+
+            odd.querySelectorAll('.co-fav-btn').forEach(btn => {
+                btn.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id  = this.dataset.id;
+                    const ft  = this.dataset.fav;
+                    fetch(`${oeFavBase}/${ft}/${id}/toggle-favourite`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': coCsrf, 'Accept': 'application/json' },
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        const list = oeMasters[masterKey] || [];
+                        const rec  = list.find(x => String(x.id) === String(id));
+                        if (rec) { rec.is_favourite = data.is_favourite; }
+                        renderOdd();
+                    });
+                });
+            });
+        }
+
+        document.querySelectorAll('.oe-inp').forEach(inp => {
+            inp.addEventListener('focus', function () { activeOeInp = this; renderOdd(''); });
+            inp.addEventListener('input', function () { activeOeInp = this; renderOdd(); });
+            inp.addEventListener('blur', function () {
+                const hidden = this.closest('.oe-select-wrap')?.querySelector('input[type="hidden"]');
+                if (hidden) { hidden.value = this.value; }
+            });
+        });
+
+        window.addEventListener('scroll', positionOdd, true);
+        window.addEventListener('resize', positionOdd);
+
+        document.addEventListener('mousedown', function (e) {
+            if (!e.target.closest('.oe-select-wrap') && !odd.contains(e.target)) {
+                odd.classList.remove('show');
+                activeOeInp = null;
+            }
+        });
+
+        odd.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    })();
+
+    // ── Fundus custom dropdowns (Disc + FR — favourites, search, A-Z) ─────────
+    (function () {
+        const discItems = @json(collect($masters['disc'])->map(fn ($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+        const frItems   = @json(collect($masters['fr'])->map(fn ($o)   => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+        const favBase   = '{{ url($slug."/masters/detail") }}';
+
+        let activeFInp = null, activeFType = null;
+
+        const fdd = document.createElement('div');
+        fdd.style.cssText = 'display:none;position:fixed;z-index:9999;background:#fff;border:1px solid #e2e8f0;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.15);max-height:230px;overflow-y:auto;min-width:220px;';
+        document.body.appendChild(fdd);
+
+        function getItems() { return activeFType === 'disc' ? discItems : frItems; }
+
+        function sortedItems(q) {
+            let list = getItems();
+            if (q) { list = list.filter(i => i.value.toLowerCase().includes(q.toLowerCase())); }
+            const favs = list.filter(i => i.is_favourite).sort((a, b) => a.value.localeCompare(b.value));
+            const rest = list.filter(i => !i.is_favourite).sort((a, b) => a.value.localeCompare(b.value));
+            return [...favs, ...rest];
+        }
+
+        function renderFdd(queryOverride) {
+            const q = queryOverride !== undefined ? queryOverride : (activeFInp?.value || '');
+            const items = sortedItems(q);
+            if (!items.length) {
+                fdd.innerHTML = '<div style="padding:10px 12px;color:#94a3b8;font-size:13px;text-align:center;">No results</div>';
+                return;
+            }
+            let html = '', prevFav = null;
+            items.forEach((item, idx) => {
+                if (idx > 0 && prevFav && !item.is_favourite) {
+                    html += '<div style="border-top:1px dashed #e2e8f0;margin:2px 0;font-size:10px;color:#94a3b8;padding:2px 10px;">Other</div>';
+                }
+                const sel = activeFInp?.value === item.value;
+                const esc = item.value.replace(/"/g, '&quot;');
+                html += `<div class="fdd-item" data-val="${esc}" style="display:flex;align-items:center;gap:6px;padding:6px 10px;cursor:pointer;font-size:13px;${sel ? 'background:#eff6ff;font-weight:600;' : ''}">` +
+                    `<button type="button" class="fdd-fav" data-id="${item.id}" style="background:none;border:none;padding:0;font-size:15px;line-height:1;color:${item.is_favourite ? '#f59e0b' : '#cbd5e1'};cursor:pointer;flex-shrink:0;">${item.is_favourite ? '★' : '☆'}</button>` +
+                    `<span style="flex:1;">${item.value}</span>` +
+                    `</div>`;
+                prevFav = item.is_favourite;
+            });
+            fdd.innerHTML = html;
+        }
+
+        function positionFdd() {
+            if (!activeFInp) { return; }
+            const r = activeFInp.getBoundingClientRect();
+            fdd.style.top   = (r.bottom + 2) + 'px';
+            fdd.style.left  = r.left + 'px';
+            fdd.style.width = Math.max(r.width, 220) + 'px';
+            fdd.style.display = 'block';
+        }
+
+        const fundusModal = document.getElementById('modalFundus');
+
+        fundusModal.addEventListener('focusin', e => {
+            const inp = e.target.closest('.fundus-dd-inp');
+            if (!inp) { return; }
+            activeFInp  = inp;
+            activeFType = inp.dataset.ddType;
+            renderFdd('');
+            positionFdd();
+        });
+
+        fundusModal.addEventListener('input', e => {
+            const inp = e.target.closest('.fundus-dd-inp');
+            if (!inp) { return; }
+            renderFdd();
+            positionFdd();
+        });
+
+        fdd.addEventListener('mousedown', e => {
+            const favBtn = e.target.closest('.fdd-fav');
+            if (favBtn) {
+                e.preventDefault();
+                const id   = favBtn.dataset.id;
+                const type = activeFType;
+                fetch(`${favBase}/${type}/${id}/toggle-favourite`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                }).then(r => r.json()).then(d => {
+                    const items = type === 'disc' ? discItems : frItems;
+                    const item  = items.find(i => i.id == id);
+                    if (item) { item.is_favourite = d.is_favourite; }
+                    renderFdd();
+                });
+                return;
+            }
+            const row = e.target.closest('.fdd-item');
+            if (row) {
+                e.preventDefault();
+                const v = row.dataset.val;
+                if (activeFInp) {
+                    activeFInp.value = v;
+                    const wrap = activeFInp.closest('.fundus-dd-wrap');
+                    if (wrap) { const h = wrap.querySelector('input[type="hidden"]'); if (h) { h.value = v; } }
+                    activeFInp.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                fdd.style.display = 'none';
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (e.target !== activeFInp && !fdd.contains(e.target)) { fdd.style.display = 'none'; }
+        });
+        window.addEventListener('scroll', () => { if (fdd.style.display !== 'none') { positionFdd(); } }, true);
+        window.addEventListener('resize', () => { if (fdd.style.display !== 'none') { positionFdd(); } });
+        fundusModal?.addEventListener('hide.bs.modal', () => { fdd.style.display = 'none'; });
+    })();
+
+    // ── Pseudophakia popup (Lens → Pseudophakia) ──────────────────────────────
+    (function () {
+        const pseudoModalEl = document.getElementById('modalPseudophakia');
+        if (!pseudoModalEl) { return; }
+
+        const pseudoModal = bootstrap.Modal.getOrCreateInstance(pseudoModalEl);
+        let currentPseudoEye = null;
+        let selectedOpType = '';
+
+        function isPseudophakia(val) {
+            return String(val).toLowerCase().includes('pseudophakia');
+        }
+
+        function pseudoInput(eye, cls) {
+            return document.querySelector(`input.pseudo-${cls}[data-eye="${eye}"]`);
+        }
+
+        window.updatePseudoSummary = function (eye) {
+            const el = document.querySelector(`.pseudo-lens-summary[data-eye="${eye}"]`);
+            if (!el) { return; }
+            const type = pseudoInput(eye, 'op-type')?.value || '';
+            const exp  = pseudoInput(eye, 'op-expense')?.value || '';
+            const hosp = pseudoInput(eye, 'hospital')?.value || '';
+            const parts = [];
+            if (type) { parts.push(type); }
+            if (exp)  { parts.push('₹' + exp); }
+            if (hosp) { parts.push(hosp); }
+            if (parts.length) {
+                el.textContent = parts.join(' · ');
+                el.style.display = '';
+            } else {
+                el.textContent = '';
+                el.style.display = 'none';
+            }
+        };
+
+        function clearPseudoData(eye) {
+            ['op-type', 'op-expense', 'hospital'].forEach(cls => {
+                const f = pseudoInput(eye, cls);
+                if (f) { f.value = ''; }
+            });
+            window.updatePseudoSummary(eye);
+        }
+
+        function setOpTypeUI(type) {
+            selectedOpType = type || '';
+            pseudoModalEl.querySelectorAll('.pseudo-type-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.val === selectedOpType);
+            });
+        }
+
+        window.openPseudoModal = function (eye) {
+            currentPseudoEye = eye;
+            document.getElementById('pseudoModalEyeLabel').textContent = eye === 're' ? 'Right Eye (RE)' : 'Left Eye (LE)';
+            setOpTypeUI(pseudoInput(eye, 'op-type')?.value || '');
+            document.getElementById('pseudoOpExpense').value = pseudoInput(eye, 'op-expense')?.value || '';
+            document.getElementById('pseudoHospital').value = pseudoInput(eye, 'hospital')?.value || '';
+            pseudoModal.show();
+        };
+
+        window.handleOeLensSelection = function (val, eye) {
+            if (isPseudophakia(val)) {
+                window.openPseudoModal(eye);
+            } else {
+                clearPseudoData(eye);
+            }
+        };
+
+        pseudoModalEl.querySelectorAll('.pseudo-type-btn').forEach(btn => {
+            btn.addEventListener('click', function () { setOpTypeUI(this.dataset.val); });
+        });
+
+        document.getElementById('pseudoModalSave')?.addEventListener('click', function () {
+            if (!currentPseudoEye) { return; }
+            const exp  = document.getElementById('pseudoOpExpense').value.trim();
+            const hosp = document.getElementById('pseudoHospital').value.trim();
+            if (pseudoInput(currentPseudoEye, 'op-type')) { pseudoInput(currentPseudoEye, 'op-type').value = selectedOpType; }
+            if (pseudoInput(currentPseudoEye, 'op-expense')) { pseudoInput(currentPseudoEye, 'op-expense').value = exp; }
+            if (pseudoInput(currentPseudoEye, 'hospital')) { pseudoInput(currentPseudoEye, 'hospital').value = hosp; }
+            window.updatePseudoSummary(currentPseudoEye);
+            pseudoModal.hide();
+            checkProgress();
+            updateLivePreview();
+        });
+
+        ['re', 'le'].forEach(eye => window.updatePseudoSummary(eye));
     })();
 
     form.addEventListener('input', () => {
