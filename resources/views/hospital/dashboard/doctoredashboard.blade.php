@@ -435,7 +435,7 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-1 text-secondary small">
                             Show entries 
-                            <select class="form-select form-select-sm w-auto"><option>10</option></select>
+                            <select class="form-select form-select-sm w-auto"><option>10</option><option>20</option><option>30</option></select>
                         </div>
                         <div class="d-flex align-items-center gap-1 text-secondary small">
                             search <input type="search" class="form-control form-control-sm w-auto" style="border: 1px solid #cbd5e1;">
@@ -507,7 +507,7 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-1 text-secondary small">
                             Show entries 
-                            <select class="form-select form-select-sm w-auto"><option>10</option></select>
+                            <select class="form-select form-select-sm w-auto"><option>10</option><option>20</option><option>30</option></select>
                         </div>
                         <div class="d-flex align-items-center gap-1 text-secondary small">
                             search <input type="search" class="form-control form-control-sm w-auto" style="border: 1px solid #cbd5e1;">
