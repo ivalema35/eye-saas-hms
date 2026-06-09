@@ -153,18 +153,16 @@ class DashboardController extends Controller
                 $statsDoctorId = $viewingDoctor ? $viewingDoctor->id : $user->id;
                 $doctorName = $viewingDoctor ? $viewingDoctor->name : $user->name;
 
-                // જો OT ડૉક્ટર હોય તો OtBooking ટેબલમાંથી ગણતરી કરો
                 if ($user->role?->slug === 'ot_doctor') {
-                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId) // અહીં 'surgeon_id' બદલીને તમારા ટેબલની સાચી કોલમ લખો
+                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId) 
                         ->whereDate('surgery_date', $today)
                         ->count();
                     
-                    // OT ડૉક્ટર માટે Primary/Secondary ની જરૂર નથી તો તેને 0 સેટ કરો
                     $doctorPrimaryDone = 0;
                     $doctorSecondaryDone = 0;
                     $secondaryQueue = collect(); 
                 } else {
-                    // OPD ડૉક્ટર માટે જૂનો કોડ એમ જ રાખો
+  
                     $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->count();

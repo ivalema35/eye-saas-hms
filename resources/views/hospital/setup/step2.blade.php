@@ -63,14 +63,14 @@
                 @error('password') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 
-            <div class="form-group">
+            <!-- <div class="form-group">
                 <label class="form-label" for="doctor_type">Doctor Type <span style="color:#C0392B">*</span></label>
                 <select id="doctor_type" name="doctor_type" class="form-input form-select" required>
                     <option value="primary" {{ old('doctor_type', 'primary') === 'primary' ? 'selected' : '' }}>Primary</option>
                     <option value="secondary" {{ old('doctor_type') === 'secondary' ? 'selected' : '' }}>Secondary</option>
                 </select>
                 @error('doctor_type') <div class="form-error">{{ $message }}</div> @enderror
-            </div>
+            </div> -->
         </div>
 
         <div class="wizard-actions">
