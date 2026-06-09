@@ -73,22 +73,22 @@
                                class="hms-btn hms-btn-sm hms-btn-primary">
                                 <i class="fa-solid fa-stethoscope"></i> Examine
                             </a>
-                            <button type="button"
+                            <!-- <button type="button"
                                     class="hms-btn hms-btn-sm hms-btn-outline"
                                     data-bs-toggle="modal"
                                     data-bs-target="#focRequestModal{{ $patient->id }}">
                                 <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-                            </button>
+                            </button> -->
 
                             <div class="modal fade" id="focRequestModal{{ $patient->id }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered">
                                     <div class="modal-content">
                                         <form method="POST" action="{{ route('hospital.foc.request', ['slug' => $slug]) }}">
                                             @csrf
-                                            <div class="modal-header">
+                                            <!-- <div class="modal-header">
                                                 <h5 class="modal-title">Request FOC</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                            </div>
+                                            </div> -->
                                             <div class="modal-body">
                                                 <input type="hidden" name="patient_id" value="{{ $patient->id }}">
                                                 <input type="hidden" name="doctor_id" value="{{ auth('hospital_user')->id() }}">

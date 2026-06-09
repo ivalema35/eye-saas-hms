@@ -14,11 +14,11 @@
             <i class="bi bi-printer"></i> Print Rx
         </button>
     @endif
-    @haspermission('opd.foc.create')
+    <!-- @haspermission('opd.foc.create')
         <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
             <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
         </button>
-    @endhaspermission
+    @endhaspermission -->
 @endsection
 
 @section('content')
@@ -367,10 +367,10 @@
         <div class="modal-content">
             <form method="POST" action="{{ route('hospital.foc.request', ['slug' => $slug]) }}">
                 @csrf
-                <div class="modal-header">
+                <!-- <div class="modal-header">
                     <h5 class="modal-title">Request FOC</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                </div> -->
                 <div class="modal-body">
                     <input type="hidden" name="patient_id" value="{{ $patient->id }}">
                     <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
