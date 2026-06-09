@@ -121,32 +121,73 @@ class DashboardController extends Controller
                 ->take(20)
                 ->values();
 
+            // if ($isDoctorUser && $user) {
+            //     $statsDoctorId = $viewingDoctor ? $viewingDoctor->id : $user->id;
+            //     $doctorName = $viewingDoctor ? $viewingDoctor->name : $user->name;
+
+            //     $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
+            //         ->whereDate('appointment_date', $today)
+            //         ->count();
+            //     $doctorPrimaryDone = Patient::where('doctor_id', $statsDoctorId)
+            //         ->whereDate('appointment_date', $today)
+            //         ->whereNotNull('primary_done_at')
+            //         ->whereNull('secondary_done_at')
+            //         ->count();
+            //     $doctorSecondaryDone = Patient::where('doctor_id', $statsDoctorId)
+            //         ->whereDate('appointment_date', $today)
+            //         ->whereNotNull('secondary_done_at')
+            //         ->count();
+
+            //     $secondaryQueue = Patient::with(['doctor', 'caseType', 'primaryExamination'])
+            //         ->where('doctor_id', $statsDoctorId)
+            //         ->whereDate('appointment_date', $today)
+            //         ->whereNotNull('primary_done_at')
+            //         ->whereNull('secondary_done_at')
+            //         ->orderBy('doctor_patient_no')
+            //         ->take(20)
+            //         ->get()
+            //         ->map($buildIndex);
+            // }
+
             if ($isDoctorUser && $user) {
                 $statsDoctorId = $viewingDoctor ? $viewingDoctor->id : $user->id;
                 $doctorName = $viewingDoctor ? $viewingDoctor->name : $user->name;
 
-                $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
-                    ->whereDate('appointment_date', $today)
-                    ->count();
-                $doctorPrimaryDone = Patient::where('doctor_id', $statsDoctorId)
-                    ->whereDate('appointment_date', $today)
-                    ->whereNotNull('primary_done_at')
-                    ->whereNull('secondary_done_at')
-                    ->count();
-                $doctorSecondaryDone = Patient::where('doctor_id', $statsDoctorId)
-                    ->whereDate('appointment_date', $today)
-                    ->whereNotNull('secondary_done_at')
-                    ->count();
+                // જો OT ડૉક્ટર હોય તો OtBooking ટેબલમાંથી ગણતરી કરો
+                if ($user->role?->slug === 'ot_doctor') {
+                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId) // અહીં 'surgeon_id' બદલીને તમારા ટેબલની સાચી કોલમ લખો
+                        ->whereDate('surgery_date', $today)
+                        ->count();
+                    
+                    // OT ડૉક્ટર માટે Primary/Secondary ની જરૂર નથી તો તેને 0 સેટ કરો
+                    $doctorPrimaryDone = 0;
+                    $doctorSecondaryDone = 0;
+                    $secondaryQueue = collect(); 
+                } else {
+                    // OPD ડૉક્ટર માટે જૂનો કોડ એમ જ રાખો
+                    $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
+                        ->whereDate('appointment_date', $today)
+                        ->count();
+                    $doctorPrimaryDone = Patient::where('doctor_id', $statsDoctorId)
+                        ->whereDate('appointment_date', $today)
+                        ->whereNotNull('primary_done_at')
+                        ->whereNull('secondary_done_at')
+                        ->count();
+                    $doctorSecondaryDone = Patient::where('doctor_id', $statsDoctorId)
+                        ->whereDate('appointment_date', $today)
+                        ->whereNotNull('secondary_done_at')
+                        ->count();
 
-                $secondaryQueue = Patient::with(['doctor', 'caseType', 'primaryExamination'])
-                    ->where('doctor_id', $statsDoctorId)
-                    ->whereDate('appointment_date', $today)
-                    ->whereNotNull('primary_done_at')
-                    ->whereNull('secondary_done_at')
-                    ->orderBy('doctor_patient_no')
-                    ->take(20)
-                    ->get()
-                    ->map($buildIndex);
+                    $secondaryQueue = Patient::with(['doctor', 'caseType', 'primaryExamination'])
+                        ->where('doctor_id', $statsDoctorId)
+                        ->whereDate('appointment_date', $today)
+                        ->whereNotNull('primary_done_at')
+                        ->whereNull('secondary_done_at')
+                        ->orderBy('doctor_patient_no')
+                        ->take(20)
+                        ->get()
+                        ->map($buildIndex);
+                }
             }
         }
 

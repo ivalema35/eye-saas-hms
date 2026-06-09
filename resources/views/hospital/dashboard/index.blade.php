@@ -1636,7 +1636,7 @@
                                         </span>
                                         <div>
                                             <div class="foc-modal-kicker">Queue action</div>
-                                            <h5 class="modal-title">Request FOC</h5>
+                                            <!-- <h5 class="modal-title">Request FOC</h5> -->
                                         </div>
                                     </div>
                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>

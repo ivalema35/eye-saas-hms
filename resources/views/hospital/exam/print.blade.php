@@ -94,7 +94,7 @@
             style="background:#1a56a0;color:#fff;border:none;padding:7px 20px;border-radius:5px;cursor:pointer;font-size:13px">
         <i class="fa-solid fa-print"></i> Print
     </button>
-    <a href="javascript:history.back()"
+    <a href="http://localhost/eye-saas/public/dilip"
        style="color:#1a56a0;font-size:13px;text-decoration:none">← Back</a>
 </div>
 
