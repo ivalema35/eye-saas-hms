@@ -1357,9 +1357,9 @@
                     <p class="metric-label">Doctor Dashboard</p>
                     <div class="metric-value" style="font-size:20px">{{ $doctorName }}</div>
                     <p class="metric-meta">
-                        Assigned: {{ $doctorAssignedPatients }} &bull;
-                        Primary: {{ $doctorPrimaryDone }} &bull;
-                        Secondary: {{ $doctorSecondaryDone }}
+                        Assigned: {{ $doctorAssignedPatients }} 
+                        <!-- Primary: {{ $doctorPrimaryDone }} &bull;
+                        Secondary: {{ $doctorSecondaryDone }} -->
                     </p>
                 </div>
             </div>
@@ -1404,7 +1404,7 @@
                 <div>
                     <p class="metric-label">Primary Queue</p>
                     <div class="metric-value">{{ $doctorPrimaryDone }}</div>
-                    <p class="metric-meta">Secondary Queue: {{ $doctorSecondaryDone }}</p>
+                    <p class="metric-label">Secondary Queue: {{ $doctorSecondaryDone }}</p>
                 </div>
             </div>
         </div>
