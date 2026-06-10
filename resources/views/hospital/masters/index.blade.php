@@ -94,6 +94,7 @@
         $clinicalMasters = [
             ['type' => 'chief-complaints', 'label' => 'Chief Complaints', 'icon' => 'bi-clipboard2-pulse', 'color' => 'danger'],
             ['type' => 'kcos',       'label' => 'K/C/O',            'icon' => 'bi-heart-pulse',      'color' => 'warning'],
+            ['type' => 'hno',        'label' => 'H/O',              'icon' => 'bi-clock-history',    'color' => 'info'],
             ['type' => 'diagnosis',  'label' => 'Diagnoses',        'icon' => 'bi-patch-check',      'color' => 'success'],
             ['type' => 'advice',     'label' => 'Advice',           'icon' => 'bi-chat-left-text',   'color' => 'primary'],
         ];

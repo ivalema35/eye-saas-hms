@@ -15,6 +15,7 @@ use App\Models\Hospital\MasterDiagnosis;
 use App\Models\Hospital\MasterDisc;
 use App\Models\Hospital\MasterEm;
 use App\Models\Hospital\MasterFr;
+use App\Models\Hospital\MasterHno;
 use App\Models\Hospital\MasterIris;
 use App\Models\Hospital\MasterLens;
 use App\Models\Hospital\MasterLid;
@@ -69,6 +70,7 @@ class DetailMasterController extends Controller
             'lens' => MasterLens::class,
             'em' => MasterEm::class,
             'covertest' => MasterCoverTest::class,
+            'hno'       => MasterHno::class,
         ];
     }
 
@@ -100,6 +102,7 @@ class DetailMasterController extends Controller
     {
         return $this->isComplaintType($type)
             || $this->isKcoType($type)
+            || in_array($type, ['hno'], true)
             || in_array($type, ['sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest'], true)
             || in_array($type, ['disc', 'fr'], true)
             || in_array($type, ['diagnosis', 'diagnoses', 'advice', 'advices'], true);

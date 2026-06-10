@@ -347,6 +347,23 @@
             break-inside: avoid !important;
         }
     }
+/* ── Wait Status Pill ── */
+.wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap;transition:background .4s,box-shadow .4s;vertical-align:middle; }
+.wait-pill.wait-green  { background:rgba(22,163,74,.10);  box-shadow:0 0 0 1px rgba(22,163,74,.25); }
+.wait-pill.wait-orange { background:rgba(234,88,12,.10);  box-shadow:0 0 0 1px rgba(234,88,12,.25); }
+.wait-pill.wait-red    { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.25); }
+.wait-pill.wait-fire   { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.35); animation:fire-glow 1s ease-in-out infinite alternate; }
+@keyframes fire-glow   { from{box-shadow:0 0 0 1px rgba(220,38,38,.35),0 0 6px rgba(234,88,12,.4);}to{box-shadow:0 0 0 2px rgba(220,38,38,.55),0 0 12px rgba(234,88,12,.6);} }
+.wp-r { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.65rem;font-weight:900;color:#fff;flex-shrink:0; }
+.wait-green  .wp-r { background:#16a34a; }
+.wait-orange .wp-r { background:#ea580c; }
+.wait-red    .wp-r { background:#dc2626; }
+.wait-fire   .wp-r { background:linear-gradient(135deg,#dc2626,#ea580c); }
+.wp-time { font-size:.72rem;font-weight:700; }
+.wait-green  .wp-time { color:#15803d; }
+.wait-orange .wp-time { color:#c2410c; }
+.wait-red    .wp-time { color:#b91c1c; }
+.wait-fire   .wp-time { color:#dc2626; }
 </style>
 
 @if($errors->any())
@@ -592,6 +609,77 @@
             }
         </style>
 
+        @php
+            $sWGreen    = (int) hospital_setting('wait_green_max',    30);
+            $sWOrange   = (int) hospital_setting('wait_orange_max',   60);
+            $sWRed      = (int) hospital_setting('wait_red_max',     120);
+            $sWDGreen   = (int) hospital_setting('wait_d_green_max',  40);
+            $sWDOrange  = (int) hospital_setting('wait_d_orange_max', 90);
+            $sWDRed     = (int) hospital_setting('wait_d_red_max',   120);
+            $sWNdGreen  = (int) hospital_setting('wait_nd_green_max',  20);
+            $sWNdOrange = (int) hospital_setting('wait_nd_orange_max', 45);
+            $sWNdRed    = (int) hospital_setting('wait_nd_red_max',    90);
+            $sRMins     = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+            $sRCls      = $sRMins < $sWGreen ? 'wait-green' : ($sRMins < $sWOrange ? 'wait-orange' : ($sRMins < $sWRed ? 'wait-red' : 'wait-fire'));
+            $sRFmt      = $sRMins < 60 ? $sRMins.'m' : floor($sRMins/60).'h'.($sRMins%60 > 0 ? ' '.($sRMins%60).'m' : '');
+            $sPExam2    = $patient->primaryExamination ?? null;
+            $sIsDil2    = $sPExam2 && ($sPExam2->exam_data['dilate'] ?? 'No') === 'Yes';
+            $sPrimeMins2 = $sPExam2 ? (int) \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+            $sPrimeFmt2  = $sPrimeMins2 < 60 ? $sPrimeMins2.'m' : floor($sPrimeMins2/60).'h'.($sPrimeMins2%60 > 0 ? ' '.($sPrimeMins2%60).'m' : '');
+            $sDClass2   = $sPrimeMins2 < $sWDGreen  ? 'wait-green' : ($sPrimeMins2 < $sWDOrange  ? 'wait-orange' : ($sPrimeMins2 < $sWDRed  ? 'wait-red' : 'wait-fire'));
+            $sNdClass2  = $sPrimeMins2 < $sWNdGreen ? 'wait-green' : ($sPrimeMins2 < $sWNdOrange ? 'wait-orange' : ($sPrimeMins2 < $sWNdRed ? 'wait-red' : 'wait-fire'));
+        @endphp
+        {{-- Patient Info Bar --}}
+        <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
+             style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
+                <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+                <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
+                <div class="ms-1 d-flex flex-column gap-1">
+                    <span class="wait-pill {{ $sRCls }}"
+                          data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
+                          data-thresholds="{{ $sWGreen }},{{ $sWOrange }},{{ $sWRed }}">
+                        <span class="wp-r">R</span>
+                        <span class="wp-time">{{ $sRFmt }}</span>
+                    </span>
+                    @if($sIsDil2 && $sPExam2)
+                        <span class="wait-pill {{ $sDClass2 }}"
+                              data-wait-from="{{ \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->toIso8601String() }}"
+                              data-thresholds="{{ $sWDGreen }},{{ $sWDOrange }},{{ $sWDRed }}">
+                            <span class="wp-r">D</span>
+                            <span class="wp-time">{{ $sPrimeFmt2 }}</span>
+                        </span>
+                    @elseif($sPExam2)
+                        <span class="wait-pill {{ $sNdClass2 }}"
+                              data-wait-from="{{ \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->toIso8601String() }}"
+                              data-thresholds="{{ $sWNdGreen }},{{ $sWNdOrange }},{{ $sWNdRed }}">
+                            <span class="wp-r" style="font-size:.58rem;">ND</span>
+                            <span class="wp-time">{{ $sPrimeFmt2 }}</span>
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="exam-layout-wrapper">
             <div class="doctor-stepper-sidebar d-print-none">
                 <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
@@ -655,6 +743,77 @@
             </div>
         </div>
     @else
+        @php
+            $sWGreen    = (int) hospital_setting('wait_green_max',    30);
+            $sWOrange   = (int) hospital_setting('wait_orange_max',   60);
+            $sWRed      = (int) hospital_setting('wait_red_max',     120);
+            $sWDGreen   = (int) hospital_setting('wait_d_green_max',  40);
+            $sWDOrange  = (int) hospital_setting('wait_d_orange_max', 90);
+            $sWDRed     = (int) hospital_setting('wait_d_red_max',   120);
+            $sWNdGreen  = (int) hospital_setting('wait_nd_green_max',  20);
+            $sWNdOrange = (int) hospital_setting('wait_nd_orange_max', 45);
+            $sWNdRed    = (int) hospital_setting('wait_nd_red_max',    90);
+            $sRMins     = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+            $sRCls      = $sRMins < $sWGreen ? 'wait-green' : ($sRMins < $sWOrange ? 'wait-orange' : ($sRMins < $sWRed ? 'wait-red' : 'wait-fire'));
+            $sRFmt      = $sRMins < 60 ? $sRMins.'m' : floor($sRMins/60).'h'.($sRMins%60 > 0 ? ' '.($sRMins%60).'m' : '');
+            $sPExam2    = $patient->primaryExamination ?? null;
+            $sIsDil2    = $sPExam2 && ($sPExam2->exam_data['dilate'] ?? 'No') === 'Yes';
+            $sPrimeMins2 = $sPExam2 ? (int) \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+            $sPrimeFmt2  = $sPrimeMins2 < 60 ? $sPrimeMins2.'m' : floor($sPrimeMins2/60).'h'.($sPrimeMins2%60 > 0 ? ' '.($sPrimeMins2%60).'m' : '');
+            $sDClass2   = $sPrimeMins2 < $sWDGreen  ? 'wait-green' : ($sPrimeMins2 < $sWDOrange  ? 'wait-orange' : ($sPrimeMins2 < $sWDRed  ? 'wait-red' : 'wait-fire'));
+            $sNdClass2  = $sPrimeMins2 < $sWNdGreen ? 'wait-green' : ($sPrimeMins2 < $sWNdOrange ? 'wait-orange' : ($sPrimeMins2 < $sWNdRed ? 'wait-red' : 'wait-fire'));
+        @endphp
+        {{-- Patient Info Bar --}}
+        <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
+             style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
+                <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+                <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
+                <div class="ms-1 d-flex flex-column gap-1">
+                    <span class="wait-pill {{ $sRCls }}"
+                          data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
+                          data-thresholds="{{ $sWGreen }},{{ $sWOrange }},{{ $sWRed }}">
+                        <span class="wp-r">R</span>
+                        <span class="wp-time">{{ $sRFmt }}</span>
+                    </span>
+                    @if($sIsDil2 && $sPExam2)
+                        <span class="wait-pill {{ $sDClass2 }}"
+                              data-wait-from="{{ \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->toIso8601String() }}"
+                              data-thresholds="{{ $sWDGreen }},{{ $sWDOrange }},{{ $sWDRed }}">
+                            <span class="wp-r">D</span>
+                            <span class="wp-time">{{ $sPrimeFmt2 }}</span>
+                        </span>
+                    @elseif($sPExam2)
+                        <span class="wait-pill {{ $sNdClass2 }}"
+                              data-wait-from="{{ \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->toIso8601String() }}"
+                              data-thresholds="{{ $sWNdGreen }},{{ $sWNdOrange }},{{ $sWNdRed }}">
+                            <span class="wp-r" style="font-size:.58rem;">ND</span>
+                            <span class="wp-time">{{ $sPrimeFmt2 }}</span>
+                        </span>
+                    @endif
+                </div>
+            </div>
+        </div>
+
         <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <div class="h5 mb-0 text-primary fw-bold">Exam Steps:</div>
@@ -3299,6 +3458,26 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     setTimeout(loadDraft, 300);
+})();
+</script>
+
+<script>
+(function () {
+    const W = { green: {{ (int) hospital_setting('wait_green_max', 30) }}, orange: {{ (int) hospital_setting('wait_orange_max', 60) }}, red: {{ (int) hospital_setting('wait_red_max', 120) }} };
+    function getWC(m, g, o, r) { return m < g ? 'wait-green' : m < o ? 'wait-orange' : m < r ? 'wait-red' : 'wait-fire'; }
+    function fmtTime(m) { return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h' + (m % 60 > 0 ? ' ' + (m % 60) + 'm' : ''); }
+    function updateWaitPills() {
+        var now = Date.now();
+        document.querySelectorAll('.wait-pill[data-wait-from]').forEach(function (pill) {
+            var mins = Math.floor((now - new Date(pill.dataset.waitFrom).getTime()) / 60000);
+            var thr = pill.dataset.thresholds ? pill.dataset.thresholds.split(',').map(Number) : null;
+            pill.className = 'wait-pill ' + (thr ? getWC(mins, thr[0], thr[1], thr[2]) : getWC(mins, W.green, W.orange, W.red));
+            var t = pill.querySelector('.wp-time');
+            if (t) t.textContent = fmtTime(mins);
+        });
+    }
+    updateWaitPills();
+    setInterval(updateWaitPills, 30000);
 })();
 </script>
 

@@ -272,14 +272,21 @@ class PrimaryExamController extends Controller
                 ->orderByDesc('is_favourite')
                 ->orderBy('value')
                 ->get(['id', DB::raw('value as kco'), 'is_favourite']),
+            'hnos' => DB::table('tbl_master_hno')
+                ->where('tenant_id', $tenantId)
+                ->whereNull('deleted_at')
+                ->orderByDesc('is_favourite')
+                ->orderBy('value')
+                ->get(['id', DB::raw('value as hno'), 'is_favourite']),
             'diagnoses' => DB::table('tbl_master_diagnosis')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('id')
                 ->get(['id', DB::raw('value as diagnosis')]),
             'advices' => DB::table('tbl_master_advice')
                 ->where('tenant_id', $tenantId)
+                ->orderByDesc('is_favourite')
                 ->orderBy('id')
-                ->get(['id', DB::raw('value as advice'), 'diagnosis_id']),
+                ->get(['id', DB::raw('value as advice'), 'diagnosis_id', 'is_favourite']),
             'durations' => $q('tbl_durations'),
             'vn' => $q('tbl_master_vn'),
             'pnvn' => $q('tbl_master_pnvn'),
