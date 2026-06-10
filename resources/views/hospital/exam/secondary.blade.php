@@ -1617,7 +1617,7 @@
                                 </select>
                             </div>
                             <button type="button" class="btn btn-sm btn-primary px-3" onclick="addMedicineRow()">
-                                <i class="bi bi-plus-lg me-1"></i>Add Row
+                                <i class="bi bi-plus-lg me-1"></i>Add Medicine
                             </button>
                         </div>
                     </div>

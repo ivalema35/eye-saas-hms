@@ -475,11 +475,10 @@
             <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
         </div>
 
-        {{-- ૩. મેઈન કેનવાસ (તમારો જૂનો કેનવાસ કોડ) --}}
         <div class="main-canvas">
             <div class="card shadow-sm" style="padding:16px;" id="liveReportCanvas">
                 <div class="row g-2 clinical-grid-container" style="font-size:13px;">
-                    {{-- તમારી જૂની ફાઈલમાંથી આ DIV (LEFT/RIGHT Column) કોપી કરીને અહીં મૂકી દો --}}
+                 
                     <div class="col-6 col-md-6 d-flex flex-column gap-2">
                         <div class="canvas-box"><div class="canvas-section-title">History &amp; Vision</div><div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div><div id="canvas_vision" class="mt-1"></div></div>
                         <div class="canvas-box"><div class="canvas-section-title">Subjective Testing (ST)</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
@@ -1430,7 +1429,7 @@
                                 </select>
                             </div>
                             <button type="button" class="btn btn-sm btn-primary px-3" onclick="addMedicineRow()">
-                                <i class="bi bi-plus-lg me-1"></i>Add Row
+                                <i class="bi bi-plus-lg me-1"></i>Add Medicine
                             </button>
                         </div>
                     </div>

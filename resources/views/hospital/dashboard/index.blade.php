@@ -1789,10 +1789,28 @@
 <div class="row g-4 mb-4">
     <div class="col-12">
         <div class="tap-table-wrap">
-            <div class="tap-header">
+            <!-- <div class="tap-header">
                 <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
                 <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+            </div> -->
+            <div class="tap-header">
+                <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                
+                <form method="GET" action="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="d-flex gap-2">
+                    <div class="input-group" style="width: 250px;">
+                        <input type="text" name="search_contact" value="{{ request('search_contact') }}" 
+                            class="form-control form-control-sm" placeholder="Search by mobile..." 
+                            maxlength="10">
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
+                        @if(request('search_contact'))
+                            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary">Clear</a>
+                        @endif
+                    </div>
+                </form>
+
+                <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
             </div>
+            
             <div class="table-responsive">
                 <table class="tap-table">
                     <thead>
@@ -1801,7 +1819,7 @@
                             <th>MRD</th>
                             <th>Patient</th>
                             <th>City / Age</th>
-                            <th>Slot</th>
+                            <th>Contact</th>
                             <th>Doctor</th>
                             <th>DR Index</th>
                             <th>Status</th>
@@ -1846,8 +1864,8 @@
                                     <span>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</span>
                                 </td>
                                 <td class="tap-slot">
-                                    @if($patient->slot_name)
-                                        <i class="bi bi-clock"></i>{{ $patient->slot_name }}
+                                    @if($patient->contact_no)
+                                        {{ $patient->contact_no }}
                                     @else
                                         <span style="color:#cbd5e1">—</span>
                                     @endif

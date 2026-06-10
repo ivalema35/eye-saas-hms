@@ -225,6 +225,87 @@
     }
 }
 
+.dil-override-btn:hover {
+    background-color: #fef3c7 !important;
+    border-color: #fbbf24 !important;
+}
+.dil-override-btn {
+    cursor: pointer !important;
+}
+/* Custom Tooltip Style */
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-container .tooltip-text {
+    visibility: hidden;
+    width: 220px;
+    background-color: #1B4F72;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 10px;
+    position: absolute;
+    z-index: 9999;
+    bottom: 125%; /* બટનની ઉપર દેખાશે */
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Custom Tooltip Style */
+.tooltip-container {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip-container .tooltip-text {
+    visibility: hidden;
+    width: 250px; /* થોડી પહોળાઈ વધારી */
+    background-color: #1B4F72;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 10px 12px;
+    position: absolute;
+    z-index: 9999;
+    
+    /* પોઝિશનિંગ - બટનની ઉપર બરાબર વચ્ચે */
+    bottom: 140%; 
+    left: 50%;
+    transform: translateX(-50%);
+    
+    opacity: 0;
+    transition: opacity 0.3s, visibility 0.3s;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.4;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    pointer-events: none; /* જેથી માઉસ હોવર વખતે અડચણ ન આવે */
+}
+
+/* ટૂલટીપ માટે એરો */
+.tooltip-container .tooltip-text::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: #1B4F72 transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip-text {
+    visibility: visible;
+    opacity: 1;
+}
+
 /* ── Wait Status Pill ── */
 .wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap;transition:background .4s,box-shadow .4s;vertical-align:middle; }
 .wait-pill.wait-green  { background:rgba(22,163,74,.10);  box-shadow:0 0 0 1px rgba(22,163,74,.25); }
@@ -582,14 +663,19 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                 </td>
                 <td>
                     @if($isDilLocked)
-                        <button class="btn btn-sm fw-semibold px-3 dil-override-btn"
-                                style="background:#fff8ed; color:#92400e; border-radius:4px; cursor:pointer; border:1px solid #fcd34d;"
-                                data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}?force=1"
-                                data-patient-name="{{ $patient->first_name }} {{ $patient->last_name }}"
-                                title="Dilation in progress — click to override">
-                            <i class="bi bi-hourglass-split me-1" style="color:#f59e0b;"></i>
-                            <span class="dilation-countdown" data-unlock-ms="{{ $dilUnlockMs }}">{{ $dilCountdown }}</span>
-                        </button>
+<div class="tooltip-container">
+        <button class="btn btn-sm fw-semibold px-3 dil-override-btn"
+                style="background:#fff8ed; color:#92400e; border-radius:4px; cursor:pointer; border:1px solid #fcd34d;"
+                data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}?force=1"
+                data-patient-name="{{ $patient->first_name }} {{ $patient->last_name }}">
+            <i class="bi bi-hourglass-split me-1" style="color:#f59e0b;"></i>
+            <span class="dilation-countdown" data-unlock-ms="{{ $dilUnlockMs }}">{{ $dilCountdown }}</span>
+        </button>
+        
+        <span class="tooltip-text">
+            ⚠️ Dilation in progress.<br>Double click to override and proceed.
+        </span>
+    </div>
                     @else
                         <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
                            class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">

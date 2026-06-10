@@ -144,6 +144,14 @@ class SecondaryExamController extends Controller
             $data['advice'] ?? null
         );
 
+$user = Auth::guard('hospital_user')->user();
+        
+        if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
+            return redirect()
+                ->route('hospital.dashboard', ['slug' => $slug]) 
+                ->with('success', 'Secondary examination saved successfully.');
+        }
+
         return redirect()
             ->route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $id])
             ->with('success', 'Secondary examination saved successfully.');

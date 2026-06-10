@@ -383,6 +383,9 @@ class DashboardController extends Controller
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)
                 ->whereDate('appointment_date', $today)
+                ->when(request('search_contact'), function ($query, $contact) {
+                 $query->where('patients.contact_no', 'like', "%{$contact}%");
+     })
                 ->latest('patients.created_at')
                 ->get([
                     'patients.id',
@@ -504,25 +507,27 @@ class DashboardController extends Controller
         ));
     }
 
-    public function history()
-    {
-        $slug = request()->route('slug');
-        $user = Auth::guard('hospital_user')->user();
+public function history()
+{
+    $slug = request()->route('slug');
+    $user = Auth::guard('hospital_user')->user();
 
-        if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
-            return redirect()->route('hospital.dashboard', ['slug' => $slug]);
-        }
-
-        $historyPatients = Patient::with(['caseType'])
-            ->where('doctor_id', $user->id)
-            ->where(function ($query) {
-                
-                $query->whereNotNull('primary_done_at')
-                    ->orWhereNotNull('secondary_done_at');
-            })
-            ->latest('appointment_date') 
-            ->paginate(20); 
-
-        return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
+    if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
+        return redirect()->route('hospital.dashboard', ['slug' => $slug]);
     }
+
+    $historyPatients = Patient::with(['caseType', 'doctor']) 
+        ->where(function ($query) {
+            $query->whereNotNull('primary_done_at')
+                  ->orWhereNotNull('secondary_done_at');
+        })
+   
+        ->whereHas('doctor.role', function($q) {
+            $q->where('slug', 'doctor');
+        })
+        ->latest('appointment_date') 
+        ->paginate(20); 
+
+    return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
+}
 }

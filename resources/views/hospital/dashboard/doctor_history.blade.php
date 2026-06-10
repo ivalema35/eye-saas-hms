@@ -25,51 +25,54 @@
     <div class="card custom-history-card">
         <div class="table-responsive">
             <table class="table table-hover align-middle text-center mb-0" style="font-size: 14px;">
-                <thead>
-                    <tr>
-                        <th style="width: 60px;">#</th>
-                        <th class="text-start">Patient Name</th>
-                        <th>Date</th>
-                        <th>Primary Time</th>
-                        <th>Secondary Time</th>
-                        <th>Age</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($historyPatients as $i => $patient)
-                        <tr>
-                            <td>{{ $historyPatients->firstItem() + $i }}</td>
-                            <td class="text-start fw-semibold" style="color: #1B4F72;">
-                                {{ $patient->first_name ?? '' }} {{ $patient->last_name ?? '' }}
-                            </td>
-                            <td>{{ \Carbon\Carbon::parse($patient->appointment_date)->format('d M, Y') }}</td>
-                            <td>
-                                @if($patient->primary_done_at)
-                                    <span class="badge-time"><i class="bi bi-check-circle me-1"></i> {{ \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') }}</span>
-                                @else <span class="text-muted">-</span> @endif
-                            </td>
-                            <td>
-                                @if($patient->secondary_done_at)
-                                    <span class="badge-time"><i class="bi bi-check-circle me-1"></i> {{ \Carbon\Carbon::parse($patient->secondary_done_at)->format('h:i A') }}</span>
-                                @else <span class="text-muted">-</span> @endif
-                            </td>
-                            <td>{{ $patient->age ?? '-' }}</td>
-                            <td>
-                                <a href="{{ url($slug . '/patient-history') }}?search={{ $patient->patient_code }}" 
-                                   class="btn btn-sm btn-view-history" title="View Patient Details" target="_blank">
-                                    <i class="bi bi-eye-fill"></i> View
-                                </a>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="py-5 text-muted bg-light">
-                                <i class="bi bi-inbox fs-3 d-block mb-2"></i> No history found.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
+    <thead>
+        <tr>
+            <th style="width: 60px;">#</th>
+            <th>MRD No.</th>  <th class="text-start">Patient Name</th>
+            <th>Doctor Name</th> <th>Date</th>
+            <th>Primary Time</th>
+            <th>Secondary Time</th>
+            <th>Age</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+<tbody>
+    @forelse($historyPatients as $i => $patient)
+        <tr>
+            <td>{{ $historyPatients->firstItem() + $i }}</td>
+            {{-- 1. MRD No --}}
+            <td><span class="badge bg-light text-dark border">{{ $patient->patient_code ?? '—' }}</span></td>
+            
+            <td class="text-start fw-semibold" style="color: #1B4F72;">
+                {{ $patient->first_name ?? '' }} {{ $patient->last_name ?? '' }}
+            </td>
+
+            {{-- 2. Doctor Name --}}
+            <td class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</td>
+
+            <td>{{ \Carbon\Carbon::parse($patient->appointment_date)->format('d M, Y') }}</td>
+            <td>
+                @if($patient->primary_done_at)
+                    <span class="badge-time">{{ \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') }}</span>
+                @else <span class="text-muted">-</span> @endif
+            </td>
+            <td>
+                @if($patient->secondary_done_at)
+                    <span class="badge-time">{{ \Carbon\Carbon::parse($patient->secondary_done_at)->format('h:i A') }}</span>
+                @else <span class="text-muted">-</span> @endif
+            </td>
+            <td>{{ $patient->age ?? '-' }}</td>
+            <td>
+                <a href="{{ url($slug . '/patient-history') }}?search={{ $patient->patient_code }}" 
+                   class="btn btn-sm btn-view-history" title="View Details" target="_blank">
+                    <i class="bi bi-eye-fill"></i> View
+                </a>
+            </td>
+        </tr>
+    @empty
+        <tr><td colspan="9" class="py-5 text-muted">No history found.</td></tr>
+    @endforelse
+</tbody>
             </table>
         </div>
         
