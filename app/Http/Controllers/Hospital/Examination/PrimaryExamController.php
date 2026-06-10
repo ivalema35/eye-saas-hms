@@ -109,6 +109,14 @@ class PrimaryExamController extends Controller
             ! empty($data['dilation_time']) ? (int) $data['dilation_time'] : null
         );
 
+        $user = Auth::guard('hospital_user')->user();
+        
+        if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
+            return redirect()
+                ->route('hospital.dashboard', ['slug' => $slug]) 
+                ->with('success', 'Primary examination saved successfully.');
+        }
+
         return redirect()
             ->route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $id])
             ->with('success', 'Primary examination saved successfully.');

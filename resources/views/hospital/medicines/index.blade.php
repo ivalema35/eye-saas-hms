@@ -224,9 +224,8 @@
                     {{-- Row 2: Dosage + Duration --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Medicine Dosage</label>
-                            <select name="dosage_id" id="input-dosage-id"
-                                    class="form-select clinical-input @error('dosage_id') is-invalid @enderror">
+                            <label class="form-label fw-medium">Medicine Dosage <span class="text-danger">*</span></label>
+                            <select name="dosage_id" id="input-dosage-id" class="form-select clinical-input @error('dosage_id') is-invalid @enderror" required>
                                 <option value="">Select dosage...</option>
                                 @foreach($dosages as $d)
                                     <option value="{{ $d->id }}" {{ old('dosage_id') == $d->id ? 'selected' : '' }}>{{ $d->dosage }}</option>
@@ -235,31 +234,24 @@
                             @error('dosage_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Duration</label>
+                            <label class="form-label fw-medium">Duration <span class="text-danger">*</span></label>
                             <input type="text" name="duration" id="input-duration" value="{{ old('duration') }}"
-                                   class="form-control clinical-input @error('duration') is-invalid @enderror"
-                                   placeholder="e.g. 4 days, 1 week">
+                                class="form-control clinical-input @error('duration') is-invalid @enderror"
+                                placeholder="e.g. 4 days, 1 week" required>
                             @error('duration')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
-                    {{-- Row 3: Qty + Company --}}
+                    {{-- Row 3: Qty --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Medicine Qty</label>
+                            <label class="form-label fw-medium">Medicine Qty <span class="text-danger">*</span></label>
                             <input type="text" name="qty" id="input-qty" value="{{ old('qty') }}"
-                                   class="form-control clinical-input @error('qty') is-invalid @enderror"
-                                   placeholder="e.g. 10 tablets, 5ml">
+                                class="form-control clinical-input @error('qty') is-invalid @enderror"
+                                placeholder="e.g. 10 tablets, 5ml" required>
                             @error('qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Company Name</label>
-                            <input type="text" name="company" id="input-company" value="{{ old('company') }}"
-                                   class="form-control clinical-input @error('company') is-invalid @enderror"
-                                   placeholder="e.g. Alcon, Sun Pharma">
-                            @error('company')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                    </div>
 
                     {{-- Row 4: Composition --}}
                     <div class="mb-3">

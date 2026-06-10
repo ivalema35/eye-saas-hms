@@ -153,18 +153,16 @@ class DashboardController extends Controller
                 $statsDoctorId = $viewingDoctor ? $viewingDoctor->id : $user->id;
                 $doctorName = $viewingDoctor ? $viewingDoctor->name : $user->name;
 
-                // જો OT ડૉક્ટર હોય તો OtBooking ટેબલમાંથી ગણતરી કરો
                 if ($user->role?->slug === 'ot_doctor') {
-                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId) // અહીં 'surgeon_id' બદલીને તમારા ટેબલની સાચી કોલમ લખો
+                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId) 
                         ->whereDate('surgery_date', $today)
                         ->count();
                     
-                    // OT ડૉક્ટર માટે Primary/Secondary ની જરૂર નથી તો તેને 0 સેટ કરો
                     $doctorPrimaryDone = 0;
                     $doctorSecondaryDone = 0;
                     $secondaryQueue = collect(); 
                 } else {
-                    // OPD ડૉક્ટર માટે જૂનો કોડ એમ જ રાખો
+  
                     $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->count();
@@ -385,6 +383,9 @@ class DashboardController extends Controller
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)
                 ->whereDate('appointment_date', $today)
+                ->when(request('search_contact'), function ($query, $contact) {
+                 $query->where('patients.contact_no', 'like', "%{$contact}%");
+     })
                 ->latest('patients.created_at')
                 ->get([
                     'patients.id',
@@ -506,25 +507,27 @@ class DashboardController extends Controller
         ));
     }
 
-    public function history()
-    {
-        $slug = request()->route('slug');
-        $user = Auth::guard('hospital_user')->user();
+public function history()
+{
+    $slug = request()->route('slug');
+    $user = Auth::guard('hospital_user')->user();
 
-        if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
-            return redirect()->route('hospital.dashboard', ['slug' => $slug]);
-        }
-
-        $historyPatients = Patient::with(['caseType'])
-            ->where('doctor_id', $user->id)
-            ->where(function ($query) {
-                
-                $query->whereNotNull('primary_done_at')
-                    ->orWhereNotNull('secondary_done_at');
-            })
-            ->latest('appointment_date') 
-            ->paginate(20); 
-
-        return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
+    if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
+        return redirect()->route('hospital.dashboard', ['slug' => $slug]);
     }
+
+    $historyPatients = Patient::with(['caseType', 'doctor']) 
+        ->where(function ($query) {
+            $query->whereNotNull('primary_done_at')
+                  ->orWhereNotNull('secondary_done_at');
+        })
+   
+        ->whereHas('doctor.role', function($q) {
+            $q->where('slug', 'doctor');
+        })
+        ->latest('appointment_date') 
+        ->paginate(20); 
+
+    return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
+}
 }

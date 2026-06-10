@@ -28,295 +28,148 @@
         </div>
     </div>
     <div class="hms-card-body" style="padding:2rem">
-        <form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}" class="patient-create-form">
-            @csrf
+<form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}" class="patient-create-form">
+    @csrf
 
-            {{-- Section 1: Personal Information --}}
-            <div style="margin-bottom:2.5rem">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem">
-                    <div style="width:4px;height:24px;background:#1B4F72;border-radius:2px"></div>
-                    <h5 style="margin:0;font-weight:700;color:#1B4F72;font-size:1.1rem">Personal Details</h5>
-                </div>
+    <div class="hms-card-body patient-create-card-body">
+        <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
+            
 
-                {{-- Row 0: MRD + Phone + WhatsApp (top — for existing patient lookup) --}}
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:1.25rem">
-                    {{-- MRD preview --}}
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">MRD No.</label>
-                        <input type="text" value="{{ $nextMrd }}" readonly
-                               style="background:linear-gradient(135deg,#ebf5fbeb 0%,#D6EAF8 100%);font-weight:700;color:#1B4F72;border:1px solid #D6EAF8;border-radius:8px;padding:0.75rem 1rem"
-                               class="form-control">
-                        <small style="font-size:.72rem;color:#718096">Auto-assigned on save</small>
-                    </div>
-
-                    {{-- Contact No with existing-patient autocomplete --}}
-                    <div class="form-group position-relative">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Contact No <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="text" name="contact_no" id="contactNo"
-                               value="{{ old('contact_no') }}" maxlength="10" pattern="\d{10}"
-                               class="form-control @error('contact_no') is-invalid @enderror"
-                               placeholder="10-digit number" autocomplete="off" required
-                               inputmode="numeric"
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
-                             style="z-index:1050;max-height:250px;overflow-y:auto;border:1px solid #E2E8F0;top:100%;left:0;margin-top:4px"></div>
-                        @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    {{-- WhatsApp No --}}
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">WhatsApp No</label>
-                        <input type="text" name="whatsapp_no" id="whatsappNo"
-                               value="{{ old('whatsapp_no') }}" maxlength="10" pattern="\d{10}"
-                               class="form-control @error('whatsapp_no') is-invalid @enderror"
-                               placeholder="Same if blank" inputmode="numeric"
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                {{-- Row 1: First Name + Surname + Middle Name --}}
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
-                    <!-- <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            MRD NO <span style="color:#C0392B;font-weight:700">*</span></label>
-                        <input type="text" name="mrd_no" id="mrdNo"
-                               value="{{ old('mrd_no') }}"
-                               class="form-control @error('mrd_no') is-invalid @enderror" required
-                               placeholder="e.g. MRD12345"
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('mrd_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div> -->
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            First Name <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="text" name="first_name" id="firstName"
-                               value="{{ old('first_name') }}"
-                               class="form-control @error('first_name') is-invalid @enderror" required
-                               placeholder="e.g. John"
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem;transition:all 0.3s">
-                        @error('first_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Surname <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="text" name="last_name" id="lastName"
-                               value="{{ old('last_name') }}"
-                               class="form-control @error('last_name') is-invalid @enderror" required
-                               placeholder="e.g. Patel"
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('last_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">Middle Name</label>
-                        <input type="text" name="middle_name" id="middleName"
-                               value="{{ old('middle_name') }}"
-                               placeholder="e.g. Kumar"
-                               class="form-control" style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                    </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-top:1.25rem">
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Age <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="number" name="age" id="age"
-                               value="{{ old('age') }}" min="0" max="150"
-                               class="form-control @error('age') is-invalid @enderror" required
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('age')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Gender <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <select name="gender" id="gender"
-                                class="form-control @error('gender') is-invalid @enderror" required
-                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                            <option value="">Select Gender</option>
-                            <option value="male" @selected(old('gender') === 'male')>Male</option>
-                            <option value="female" @selected(old('gender') === 'female')>Female</option>
-                            <option value="other" @selected(old('gender') === 'other')>Other</option>
-                        </select>
-                        @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">Occupation</label>
-                        <input type="text" name="occupation" id="occupation"
-                               value="{{ old('occupation') }}" 
-                               class="form-control" style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem"
-                               placeholder="e.g. Farmer, Teacher">
-                    </div>
-                </div>
+            {{-- MRD Number --}}
+            <div class="form-group">
+                <label class="form-label">MRD No.</label>
+                <input type="text" value="{{ $nextMrd }}" class="form-control hms-input" readonly style="background:#eef2f6">
+            </div>
+        
+            {{-- 1. Appointment Date --}}
+            <div class="form-group">
+                <label class="form-label">Appointment Date *</label>
+                <input type="text" name="appointment_date" class="form-control flatpickr hms-input" value="{{ old('appointment_date', now()->format('Y-m-d')) }}" required>
             </div>
 
-            {{-- Section 2: Location & Contact --}}
-            <div style="margin-bottom:2.5rem">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem">
-                    <div style="width:4px;height:24px;background:#2980B9;border-radius:2px"></div>
-                    <h5 style="margin:0;font-weight:700;color:#2980B9;font-size:1.1rem">Location & Contact</h5>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            City <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <div style="display:flex;gap:.5rem;align-items:center">
-                            <select name="location_id" id="locationSelect"
-                                    class="form-select select2 @error('location_id') is-invalid @enderror" required
-                                    style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                                <option value="">Select City</option>
-                                @foreach($locations as $loc)
-                                    <option value="{{ $loc->id }}"
-                                            data-district="{{ $loc->district }}"
-                                            data-state="{{ $loc->state }}"
-                                            @selected(old('location_id') == $loc->id)>
-                                        {{ $loc->city ?: "Location #{$loc->id}" }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline" aria-label="Add city"
-                                    style="width:30px;height:30px;padding:0;display:flex;align-items:center;justify-content:center;background:#fff;color:#1B4F72;margin-left:8px;flex:0 0 auto">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                    <path d="M12 5v14" stroke="#1B4F72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    <path d="M5 12h14" stroke="#1B4F72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </button>
-                        </div>
-                        @error('location_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">District</label>
-                        <input type="text" id="district" class="form-control" readonly placeholder="Auto-filled"
-                               style="background:linear-gradient(135deg, #ebf5fbeb 0%, #D6EAF8 100%);border:1px solid #D6EAF8;border-radius:8px;padding:0.75rem 1rem">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">State</label>
-                        <input type="text" id="state" class="form-control" readonly placeholder="Auto-filled"
-                               style="background:linear-gradient(135deg, #ebf5fbeb 0%, #D6EAF8 100%);border:1px solid #D6EAF8;border-radius:8px;padding:0.75rem 1rem">
-                    </div>
-                </div>
-
+            {{-- 2. Contact Number --}}
+            <div class="form-group position-relative">
+                <label class="form-label">Contact Number *</label>
+                <input type="text" name="contact_no" id="contactNo" class="form-control hms-input" maxlength="10" required placeholder="10-digit number">
+                <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none" style="z-index:1050; border:1px solid #E2E8F0; top:100%; margin-top:4px"></div>
             </div>
 
-            {{-- Section 3: Appointment & Case Details --}}
-            <div style="margin-bottom:2.5rem">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:1.5rem">
-                    <div style="width:4px;height:24px;background:#27AE60;border-radius:2px"></div>
-                    <h5 style="margin:0;font-weight:700;color:#27AE60;font-size:1.1rem">Appointment & Case</h5>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem">
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Appointment Date <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <input type="text" name="appointment_date" id="appointmentDate"
-                               value="{{ old('appointment_date', now()->format('Y-m-d')) }}"
-                               class="form-control flatpickr @error('appointment_date') is-invalid @enderror" required
-                               style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                        @error('appointment_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Case Type <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <select name="case_id" id="caseSelect"
-                                class="form-control select2 @error('case_id') is-invalid @enderror" required
-                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                            <option value="">Select Case</option>
-                            @foreach($cases as $c)
-                                <option value="{{ $c->id }}" data-fee="{{ $c->fee ?? 0 }}"
-                                        @selected(old('case_id') == $c->id)>
-                                    {{ $c->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('case_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Case Fee (₹) <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <div style="display:flex;align-items:center;background:linear-gradient(135deg,#D5F5E3,#E8F8F5);border:1px solid #A9DFBF;border-radius:8px;padding:0 0.75rem">
-                            <span style="color:#27AE60;font-weight:700;font-size:1.1rem">₹</span>
-                            <input type="number" name="case_fee" id="caseFee"
-                                   value="{{ old('case_fee', '0') }}" step="0.01" min="0"
-                                   class="form-control border-0 @error('case_fee') is-invalid @enderror" required
-                                   style="background:transparent;padding:0.75rem 0.5rem;font-weight:600;color:#27AE60">
-                        </div>
-                        @error('case_fee')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.25rem">
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">
-                            Doctor <span style="color:#C0392B;font-weight:700">*</span>
-                        </label>
-                        <select name="doctor_id"
-                                class="form-control select2 @error('doctor_id') is-invalid @enderror" required
-                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                            <option value="">Select Doctor</option>
-                            @foreach($doctors as $doc)
-                                <option value="{{ $doc->id }}" @selected(old('doctor_id') == $doc->id)>
-                                    {{ $doc->name }}{{ $doc->doctor_type ? ' (' . ucfirst($doc->doctor_type) . ')' : '' }}
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('doctor_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label fw-600" style="color:#2C3E50;font-size:0.9rem">Referred By</label>
-                        <select name="referrer_id" class="form-control select2 @error('referrer_id') is-invalid @enderror"
-                                style="border:1px solid #E2E8F0;border-radius:8px;padding:0.75rem 1rem">
-                            <option value="">Select Referrer</option>
-                            @if(isset($referrers) && $referrers->isNotEmpty())
-                                @foreach($referrers as $r)
-                                    <option value="{{ $r->id }}" @selected(old('referrer_id') == $r->id)>{{ $r->name }}</option>
-                                @endforeach
-                            @else
-                                @foreach(config('masters.basic_masters.referrers', []) as $rKey => $r)
-                                    @php
-                                        $value = is_array($r) ? ($r['id'] ?? $r['value'] ?? $rKey) : $rKey;
-                                        $label = is_array($r) ? ($r['name'] ?? $r['label'] ?? ($r['title'] ?? $value)) : $r;
-                                    @endphp
-                                    <option value="{{ $value }}" @selected(old('referrer_id') == $value)>{{ $label }}</option>
-                                @endforeach
-                            @endif
-                        </select>
-                        @error('referrer_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
+            {{-- 3. WhatsApp No --}}
+            <div class="form-group">
+                <label class="form-label">WhatsApp No</label>
+                <input type="text" name="whatsapp_no" id="whatsappNo" class="form-control hms-input" maxlength="10" placeholder="Same if blank">
             </div>
 
-            {{-- Action Buttons --}}
-            <div style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
-                <button type="submit" class="hms-btn" style="background:linear-gradient(135deg, #27AE60 0%, #229954 100%);color:#fff;border:none;padding:0.875rem 2rem;border-radius:8px;font-weight:600;display:flex;align-items:center;gap:0.5rem;transition:all 0.3s;cursor:pointer;box-shadow:0 2px 8px rgba(39,174,96,0.3)">
-                    <i class="bi bi-check-circle-fill"></i> Register Patient
-                </button>
-                <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="hms-btn" style="background:#1B4F72;color:#fff;border:none;padding:0.75rem 2rem;border-radius:8px;font-weight:600;display:flex;align-items:center;gap:0.5rem;transition:all 0.3s;cursor:pointer;box-shadow:0 2px 8px rgba(27,79,114,0.3)">
-                    <i class="bi bi-arrow-left"></i> Back
-                </a>
+            {{-- 4, 5, 6 Name Fields --}}
+            <div class="form-group">
+                <label class="form-label">First Name *</label>
+                <input type="text" name="first_name" id="firstName" class="form-control hms-input" required>
             </div>
-        </form>
+            <div class="form-group">
+                <label class="form-label">Surname *</label>
+                <input type="text" name="last_name" id="lastName" class="form-control hms-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Middle Name</label>
+                <input type="text" name="middle_name" id="middleName" class="form-control hms-input">
+            </div>
+
+            {{-- 7. Case Type --}}
+            <div class="form-group">
+                <label class="form-label">Case Type *</label>
+                <select name="case_id" id="caseSelect" class="form-control select2 hms-select" required>
+                    <option value="">Select Case</option>
+                    @foreach($cases as $c)
+                        <option value="{{ $c->id }}" data-fee="{{ $c->fee ?? 0 }}">{{ $c->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- 8. Case Fee --}}
+            <div class="form-group">
+                <label class="form-label">Case Fee (₹) *</label>
+                <input type="number" name="case_fee" id="caseFee" class="form-control hms-input" required readonly>
+            </div>
+
+            {{-- 9, 10, 11 City, District, State --}}
+            <div class="form-group">
+                <label class="form-label">City *</label>
+                <div style="display:flex;gap:5px">
+                    <select name="location_id" id="locationSelect" class="form-control select2 hms-select" required>
+                        <option value="">Select City</option>
+                        @foreach($locations as $loc)
+                            <option value="{{ $loc->id }}" data-district="{{ $loc->district }}" data-state="{{ $loc->state }}">{{ $loc->city }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline" style="width:30px;height:30px">+</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">District</label>
+                <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto-filled">
+            </div>
+            <div class="form-group">
+                <label class="form-label">State</label>
+                <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto-filled">
+            </div>
+
+            {{-- 12. Doctor Name --}}
+            <div class="form-group">
+                <label class="form-label">Doctor Name *</label>
+                <select name="doctor_id" class="form-control select2 hms-select" required>
+                    <option value="">Select Doctor</option>
+                    @foreach($doctors as $doc)
+                        <option value="{{ $doc->id }}">{{ $doc->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            {{-- 13. Age --}}
+            <div class="form-group">
+                <label class="form-label">Age *</label>
+                <input type="number" name="age" id="age" class="form-control hms-input" required>
+            </div>
+
+            {{-- 14. Gender --}}
+            <div class="form-group">
+                <label class="form-label">Gender *</label>
+                <select name="gender" id="gender" class="form-control hms-select" required>
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            {{-- 15. Occupation --}}
+            <div class="form-group">
+                <label class="form-label">Occupation</label>
+                <input type="text" name="occupation" id="occupation" class="form-control hms-input">
+            </div>
+
+            {{-- 16. Referred By --}}
+            <div class="form-group">
+                <label class="form-label">Referred By</label>
+                <select name="referrer_id" class="form-control select2 hms-select">
+                    <option value="">Select Referrer</option>
+                    @foreach($referrers as $r)
+                        <option value="{{ $r->id }}">{{ $r->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        {{-- 18. ADD Button --}}
+        <div style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
+            <button type="submit" class="hms-btn hms-btn-primary">
+                <i class="bi bi-check-circle-fill"></i> Register Patient
+            </button>
+            <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+</form>
     </div>
 </div>
 
@@ -333,7 +186,11 @@ document.addEventListener('DOMContentLoaded', function () {
         $('.select2').select2({ width: '100%' });
     }
     if (typeof flatpickr !== 'undefined') {
-        flatpickr('.flatpickr', { dateFormat: 'Y-m-d', defaultDate: 'today' });
+        flatpickr('.flatpickr', { 
+            dateFormat: 'Y-m-d', 
+            defaultDate: 'today',
+            minDate: 'today' 
+        });
     }
 
     // ── Toast helper ─────────────────────────────────────────────

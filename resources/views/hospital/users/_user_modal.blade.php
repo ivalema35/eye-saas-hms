@@ -207,7 +207,7 @@
                             @error('status')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
-                        <div class="hms-form-group user-doctor-only" style="display:none">
+                        <!-- <div class="hms-form-group user-doctor-only" style="display:none">
                             <label>Doctor Type</label>
                             <select name="doctor_type" id="user-doctor-type" class="hms-select @error('doctor_type') is-invalid @enderror">
                                 <option value="">Select Type</option>
@@ -215,7 +215,7 @@
                                 <option value="secondary" @selected(old('doctor_type') === 'secondary')>Secondary</option>
                             </select>
                             @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
-                        </div>
+                        </div> -->
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
                             <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters)</span></label>
