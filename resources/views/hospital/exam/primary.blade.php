@@ -363,6 +363,23 @@
 .main-canvas {
     width: 100%;
 }
+/* ── Wait Status Pill ── */
+.wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap;transition:background .4s,box-shadow .4s;vertical-align:middle; }
+.wait-pill.wait-green  { background:rgba(22,163,74,.10);  box-shadow:0 0 0 1px rgba(22,163,74,.25); }
+.wait-pill.wait-orange { background:rgba(234,88,12,.10);  box-shadow:0 0 0 1px rgba(234,88,12,.25); }
+.wait-pill.wait-red    { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.25); }
+.wait-pill.wait-fire   { background:rgba(220,38,38,.10);  box-shadow:0 0 0 1px rgba(220,38,38,.35); animation:fire-glow 1s ease-in-out infinite alternate; }
+@keyframes fire-glow   { from{box-shadow:0 0 0 1px rgba(220,38,38,.35),0 0 6px rgba(234,88,12,.4);}to{box-shadow:0 0 0 2px rgba(220,38,38,.55),0 0 12px rgba(234,88,12,.6);} }
+.wp-r { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:.65rem;font-weight:900;color:#fff;flex-shrink:0; }
+.wait-green  .wp-r { background:#16a34a; }
+.wait-orange .wp-r { background:#ea580c; }
+.wait-red    .wp-r { background:#dc2626; }
+.wait-fire   .wp-r { background:linear-gradient(135deg,#dc2626,#ea580c); }
+.wp-time { font-size:.72rem;font-weight:700; }
+.wait-green  .wp-time { color:#15803d; }
+.wait-orange .wp-time { color:#c2410c; }
+.wait-red    .wp-time { color:#b91c1c; }
+.wait-fire   .wp-time { color:#dc2626; }
 </style>
 
 @if($errors->any())
@@ -449,6 +466,48 @@
     @csrf
     <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
 
+    @php
+        $pWGreen  = (int) hospital_setting('wait_green_max',  30);
+        $pWOrange = (int) hospital_setting('wait_orange_max', 60);
+        $pWRed    = (int) hospital_setting('wait_red_max',   120);
+        $pWMins   = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+        $pWCls    = $pWMins < $pWGreen ? 'wait-green' : ($pWMins < $pWOrange ? 'wait-orange' : ($pWMins < $pWRed ? 'wait-red' : 'wait-fire'));
+        $pWFmt    = $pWMins < 60 ? $pWMins.'m' : (floor($pWMins/60).'h'.($pWMins%60 > 0 ? ' '.($pWMins%60).'m' : ''));
+    @endphp
+    {{-- Patient Info Bar --}}
+    <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
+         style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
+        <div class="d-flex align-items-center gap-1">
+            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
+            <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
+            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+            <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
+            <span class="wait-pill {{ $pWCls }} ms-1"
+                  data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
+                  data-thresholds="{{ $pWGreen }},{{ $pWOrange }},{{ $pWRed }}">
+                <span class="wp-r">R</span>
+                <span class="wp-time">{{ $pWFmt }}</span>
+            </span>
+        </div>
+    </div>
+
     <div class="exam-layout-wrapper">
         
         {{-- ૨. નવી સાઈડબાર --}}
@@ -499,6 +558,48 @@
 <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
     @csrf
     <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
+
+    @php
+        $pWGreen  = (int) hospital_setting('wait_green_max',  30);
+        $pWOrange = (int) hospital_setting('wait_orange_max', 60);
+        $pWRed    = (int) hospital_setting('wait_red_max',   120);
+        $pWMins   = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+        $pWCls    = $pWMins < $pWGreen ? 'wait-green' : ($pWMins < $pWOrange ? 'wait-orange' : ($pWMins < $pWRed ? 'wait-red' : 'wait-fire'));
+        $pWFmt    = $pWMins < 60 ? $pWMins.'m' : (floor($pWMins/60).'h'.($pWMins%60 > 0 ? ' '.($pWMins%60).'m' : ''));
+    @endphp
+    {{-- Patient Info Bar --}}
+    <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
+         style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
+        <div class="d-flex align-items-center gap-1">
+            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
+            <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
+            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+            <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
+        </div>
+        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+        <div class="d-flex align-items-center gap-1">
+            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
+            <span class="wait-pill {{ $pWCls }} ms-1"
+                  data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
+                  data-thresholds="{{ $pWGreen }},{{ $pWOrange }},{{ $pWRed }}">
+                <span class="wp-r">R</span>
+                <span class="wp-time">{{ $pWFmt }}</span>
+            </span>
+        </div>
+    </div>
 
     <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-3 p-2 bg-white rounded shadow-sm border gap-2 flex-wrap">
         <div class="d-flex align-items-center gap-1 flex-wrap">
@@ -739,9 +840,24 @@
                     <p class="text-muted text-center mt-3" id="kcoEmptyMsg" style="font-size:13px;">No conditions added. Search above and click + Add.</p>
                     @endif
                     {{-- H/O --}}
-                    <div class="mt-4">
-                        <label class="form-label fw-semibold" style="font-size:13px; border-top:1px solid #e2e8f0; padding-top:12px; display:block;">H/O (History of Present Illness)</label>
-                        <textarea name="exam_data[history]" id="historyTextarea" class="form-control form-control-sm" rows="2" placeholder="Enter patient history...">{{ $ed['history'] ?? '' }}</textarea>
+                    <div class="mt-4" style="border-top:1px solid #e2e8f0; padding-top:12px;">
+                        <label class="form-label fw-semibold mb-2" style="font-size:13px; display:block;">H/O (History of Present Illness)</label>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="co-select-wrap">
+                                <input type="text" id="hnoSearch" class="form-control form-control-sm" placeholder="Search H/O..." autocomplete="off" style="min-width:260px;">
+                                <div id="hnoDropdown" class="co-dropdown"></div>
+                            </div>
+                            <button type="button" id="addHnoChip" class="btn btn-sm btn-primary px-3">+ Add</button>
+                        </div>
+                        <div id="hnoChips" class="d-flex flex-wrap gap-1 mb-1">
+                            @foreach(array_filter(array_map('trim', explode(',', $ed['history'] ?? ''))) as $hval)
+                                <span class="badge rounded-pill hno-chip" style="background:rgba(27,79,114,.1);color:#1B4F72;font-size:12px;font-weight:600;padding:.35em .75em;border:1px solid rgba(27,79,114,.2);">
+                                    {{ $hval }}
+                                    <button type="button" class="btn-close btn-close-sm ms-1 hno-remove" style="font-size:.6em;vertical-align:middle;" aria-label="Remove"></button>
+                                </span>
+                            @endforeach
+                        </div>
+                        <input type="hidden" name="exam_data[history]" id="hnoHidden" value="{{ $ed['history'] ?? '' }}">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1523,10 +1639,11 @@
                             <i class="bi bi-collection me-1 text-secondary"></i>Quick Add from Master
                             <span class="fw-normal text-muted ms-1" style="font-size:11px;">(click to append)</span>
                         </div>
-                        <div class="d-flex flex-wrap gap-2">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            {{-- Favourites as chips --}}
                             @foreach($masters['advices'] ?? [] as $adv)
                                 @php $advText = $adv->advice ?? ''; @endphp
-                                @if($advText)
+                                @if($advText && $adv->is_favourite)
                                 <button type="button" class="btn btn-sm btn-outline-secondary advice-quick-btn"
                                         style="font-size:12px;border-radius:20px;"
                                         data-advice="{{ $advText }}">
@@ -1534,6 +1651,25 @@
                                 </button>
                                 @endif
                             @endforeach
+
+                            {{-- Non-favourites in a dropdown --}}
+                            @php $nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values(); @endphp
+                            @if($nonFavAdvices->isNotEmpty())
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:12px;border-radius:20px;">
+                                    <i class="bi bi-chevron-down me-1"></i>More
+                                </button>
+                                <ul class="dropdown-menu" style="max-height:220px;overflow-y:auto;min-width:200px;">
+                                    @foreach($nonFavAdvices as $adv)
+                                    <li>
+                                        <button type="button" class="dropdown-item advice-quick-btn" style="font-size:12px;" data-advice="{{ $adv->advice }}">
+                                            <i class="bi bi-plus-lg me-1 text-secondary"></i>{{ $adv->advice }}
+                                        </button>
+                                    </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -2112,6 +2248,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         updateCount();
+    })();
+
+    // ── Diagnosis → Advice auto-fill ──────────────────────────────────────
+    (function () {
+        let autoInsertedDiagnoses = '';
+
+        document.getElementById('modalDiagnosis')?.addEventListener('hidden.bs.modal', function () {
+            const selected = Array.from(
+                document.querySelectorAll('input[name="exam_data[diagnoses][]"]:checked')
+            ).map(function (cb) {
+                const label = document.querySelector('label[for="' + cb.id + '"]');
+                if (!label) return '';
+                const clone = label.cloneNode(true);
+                clone.querySelectorAll('.badge').forEach(function (b) { b.remove(); });
+                return clone.textContent.trim();
+            }).filter(Boolean);
+
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return;
+
+            const newDiagText = selected.length ? 'Diagnosis: ' + selected.join(', ') : '';
+
+            let currentVal = ta.value;
+            if (autoInsertedDiagnoses && currentVal.startsWith(autoInsertedDiagnoses)) {
+                currentVal = currentVal.slice(autoInsertedDiagnoses.length).replace(/^\n/, '');
+            }
+
+            autoInsertedDiagnoses = newDiagText;
+            ta.value = newDiagText ? (newDiagText + (currentVal ? '\n' + currentVal : '')) : currentVal;
+
+            ta.dispatchEvent(new Event('input'));
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        });
     })();
 
     // ── Advice textarea: char counter ─────────────────────────────────────
@@ -3121,6 +3290,161 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Restore after a short delay so Select2 / dynamic rows are initialised
     setTimeout(loadDraft, 300);
+})();
+</script>
+
+<script>
+// ── H/O chip dropdown ────────────────────────────────────────────────────────
+(function () {
+    const hnoSearch   = document.getElementById('hnoSearch');
+    const hnoDropdown = document.getElementById('hnoDropdown');
+    if (!hnoSearch || !hnoDropdown) { return; }
+
+    const hnoItems   = @json(collect($masters['hnos'] ?? [])->map(fn($o) => ['id' => $o->id, 'hno' => $o->hno, 'is_favourite' => (bool)($o->is_favourite ?? false)])->values());
+    const hnoFavBase = '{{ url($slug."/masters/detail/hno") }}';
+
+    function syncHnoHidden() {
+        const chips = Array.from(document.querySelectorAll('#hnoChips .hno-chip'))
+            .map(c => c.childNodes[0].textContent.trim());
+        const hidden = document.getElementById('hnoHidden');
+        if (hidden) { hidden.value = chips.join(', '); }
+        if (typeof checkProgress === 'function') { checkProgress(); }
+        if (typeof updateLivePreview === 'function') { updateLivePreview(); }
+    }
+
+    function positionHnoDropdown() {
+        if (typeof positionFixedDropdown === 'function') {
+            positionFixedDropdown(hnoDropdown, hnoSearch, 300);
+        }
+    }
+
+    function renderHnoDropdown(queryOverride) {
+        const query = queryOverride !== undefined ? queryOverride : hnoSearch.value.trim().toLowerCase();
+        const existing = Array.from(document.querySelectorAll('#hnoChips .hno-chip'))
+            .map(c => c.childNodes[0].textContent.trim().toLowerCase());
+        const items = hnoItems.filter(i => String(i.hno).toLowerCase().includes(query) && !existing.includes(String(i.hno).toLowerCase()));
+
+        if (!items.length) {
+            hnoDropdown.innerHTML = '<div class="co-empty">No items found</div>';
+            positionHnoDropdown();
+            hnoDropdown.classList.add('show');
+            return;
+        }
+
+        const groups = [
+            { label: '⭐ Favourites',  rows: items.filter(i => i.is_favourite)  },
+            { label: 'All H/O Items',  rows: items.filter(i => !i.is_favourite) },
+        ].filter(g => g.rows.length);
+
+        const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
+        hnoDropdown.innerHTML = groups.map(g =>
+            `<div class="co-section-lbl">${g.label}</div>` +
+            g.rows.map(item =>
+                `<div class="co-item" data-name="${escA(item.hno)}">` +
+                `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" title="${item.is_favourite ? 'Remove' : 'Add'} favourite">${item.is_favourite ? '★' : '☆'}</button>` +
+                `<span>${escA(item.hno)}</span></div>`
+            ).join('')
+        ).join('');
+        positionHnoDropdown();
+        hnoDropdown.classList.add('show');
+
+        hnoDropdown.querySelectorAll('.co-fav-btn').forEach(btn => {
+            btn.addEventListener('mousedown', function (e) {
+                e.preventDefault(); e.stopPropagation();
+                const id = this.dataset.id;
+                fetch(`${hnoFavBase}/${id}/toggle-favourite`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                }).then(r => r.json()).then(data => {
+                    const item = hnoItems.find(i => i.id == id);
+                    if (item) { item.is_favourite = data.is_favourite; }
+                    renderHnoDropdown();
+                });
+            });
+        });
+    }
+
+    function addHnoChip(val) {
+        const value = (val || hnoSearch.value).trim();
+        if (!value) { hnoSearch.focus(); renderHnoDropdown(''); return; }
+        const existing = Array.from(document.querySelectorAll('#hnoChips .hno-chip'))
+            .map(c => c.childNodes[0].textContent.trim().toLowerCase());
+        if (existing.includes(value.toLowerCase())) { hnoSearch.value = ''; hnoDropdown.classList.remove('show'); return; }
+
+        const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+        const chip = document.createElement('span');
+        chip.className = 'badge rounded-pill hno-chip';
+        chip.style.cssText = 'background:rgba(27,79,114,.1);color:#1B4F72;font-size:12px;font-weight:600;padding:.35em .75em;border:1px solid rgba(27,79,114,.2);cursor:default;';
+        chip.innerHTML = `${escA(value)}<button type="button" class="btn-close btn-close-sm ms-1 hno-remove" style="font-size:.6em;vertical-align:middle;" aria-label="Remove"></button>`;
+        document.getElementById('hnoChips').appendChild(chip);
+        hnoSearch.value = '';
+        hnoDropdown.classList.remove('show');
+        syncHnoHidden();
+    }
+
+    hnoSearch.addEventListener('focus', function () { renderHnoDropdown(''); });
+    hnoSearch.addEventListener('input', function () { renderHnoDropdown(); });
+    hnoSearch.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addHnoChip(this.value.trim()); } });
+    document.getElementById('addHnoChip')?.addEventListener('click', () => addHnoChip(hnoSearch.value.trim()));
+
+    window.addEventListener('scroll', positionHnoDropdown, true);
+    window.addEventListener('resize', positionHnoDropdown);
+
+    hnoDropdown.addEventListener('mousedown', function (e) {
+        const item = e.target.closest('.co-item');
+        if (!item || e.target.closest('.co-fav-btn')) { return; }
+        e.preventDefault();
+        addHnoChip(item.dataset.name || '');
+    });
+
+    document.addEventListener('mousedown', function (e) {
+        if (!e.target.closest('#hnoDropdown') && e.target !== hnoSearch && !e.target.closest('#addHnoChip')) {
+            hnoDropdown.classList.remove('show');
+        }
+    });
+
+    document.getElementById('hnoChips')?.addEventListener('click', function (e) {
+        if (e.target.closest('.hno-remove')) {
+            e.target.closest('.hno-chip').remove();
+            syncHnoHidden();
+        }
+    });
+})();
+
+// ── Inline exam mode: rewire step buttons to scroll-to-section ────────────
+if (document.documentElement.classList.contains('exam-inline')) {
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.step-btn[data-bs-toggle="modal"]').forEach(function (btn) {
+            var targetId = (btn.getAttribute('data-bs-target') || '').replace('#', '');
+            btn.removeAttribute('data-bs-toggle');
+            btn.removeAttribute('data-bs-target');
+            btn.addEventListener('click', function () {
+                var el = document.getElementById(targetId);
+                if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+            });
+        });
+    });
+}
+</script>
+
+<script>
+(function () {
+    const W = { green: {{ (int) hospital_setting('wait_green_max', 30) }}, orange: {{ (int) hospital_setting('wait_orange_max', 60) }}, red: {{ (int) hospital_setting('wait_red_max', 120) }} };
+    function getWC(m, g, o, r) { return m < g ? 'wait-green' : m < o ? 'wait-orange' : m < r ? 'wait-red' : 'wait-fire'; }
+    function fmtTime(m) { return m < 60 ? m + 'm' : Math.floor(m / 60) + 'h' + (m % 60 > 0 ? ' ' + (m % 60) + 'm' : ''); }
+    function updateWaitPills() {
+        var now = Date.now();
+        document.querySelectorAll('.wait-pill[data-wait-from]').forEach(function (pill) {
+            var mins = Math.floor((now - new Date(pill.dataset.waitFrom).getTime()) / 60000);
+            var thr = pill.dataset.thresholds ? pill.dataset.thresholds.split(',').map(Number) : null;
+            pill.className = 'wait-pill ' + (thr ? getWC(mins, thr[0], thr[1], thr[2]) : getWC(mins, W.green, W.orange, W.red));
+            var t = pill.querySelector('.wp-time');
+            if (t) t.textContent = fmtTime(mins);
+        });
+    }
+    updateWaitPills();
+    setInterval(updateWaitPills, 30000);
 })();
 </script>
 

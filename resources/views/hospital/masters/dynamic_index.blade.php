@@ -8,7 +8,7 @@
     $masterPermissionKey = str_contains($routeGroup, '.detail.') ? 'master.eye_exam' : 'master.case_types';
     $canWrite = auth('hospital_user')->user()?->role?->is_super
         || app(\App\Services\Auth\RolePermissionService::class)->can($masterPermissionKey);
-    $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
+    $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'hno', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
     $useModalLayout = in_array($type, $modalMasterTypes, true);
     $showBackButton = in_array($type, $modalMasterTypes, true);
 @endphp
@@ -132,7 +132,7 @@
                                             Diagnosis
                                         </th>
                                     @endif
-                                    @if(in_array($type, ['complaints','chief-complaints','kcos','sac','lid','conj','cornea','ac','iris','pupil','lens','em','covertest','disc','fr','diagnosis','diagnoses','advice','advices']))
+                                    @if(in_array($type, ['complaints','chief-complaints','kcos','hno','sac','lid','conj','cornea','ac','iris','pupil','lens','em','covertest','disc','fr','diagnosis','diagnoses','advice','advices']))
                                         <th class="py-3 text-muted text-uppercase small fw-bold text-center" style="letter-spacing:0.5px;width:90px;">
                                             Favourite
                                         </th>
@@ -160,7 +160,7 @@
                                                 @endif
                                             </td>
                                         @endif
-                                        @if(in_array($type, ['complaints','chief-complaints','kcos','sac','lid','conj','cornea','ac','iris','pupil','lens','em','covertest','disc','fr','diagnosis','diagnoses','advice','advices']))
+                                        @if(in_array($type, ['complaints','chief-complaints','kcos','hno','sac','lid','conj','cornea','ac','iris','pupil','lens','em','covertest','disc','fr','diagnosis','diagnoses','advice','advices']))
                                             <td class="py-3 text-center">
                                                 <button type="button"
                                                         class="btn btn-sm fav-toggle-btn border-0 bg-transparent p-1"
