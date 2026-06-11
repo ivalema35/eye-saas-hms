@@ -264,13 +264,13 @@
 
                     {{-- Price --}}
                     <div class="mb-1">
-                        <label class="form-label fw-medium">Price (₹) <span class="text-danger">*</span></label>
+                        <label class="form-label fw-medium">Price (₹)</label>
                         <div class="input-group">
                             <span class="input-group-text">₹</span>
                             <input type="number" name="price" id="input-price" step="0.01" min="0"
                                    value="{{ old('price', '0.00') }}"
                                    class="form-control clinical-input @error('price') is-invalid @enderror"
-                                   placeholder="0.00" required>
+                                   placeholder="0.00">
                         </div>
                         @error('price')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>

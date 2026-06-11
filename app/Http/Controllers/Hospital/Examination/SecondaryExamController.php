@@ -178,6 +178,12 @@ $user = Auth::guard('hospital_user')->user();
                 ->orderByDesc('is_favourite')
                 ->orderBy('value')
                 ->get(['id', DB::raw('value as kco'), 'is_favourite']),
+            'hnos' => DB::table('tbl_master_hno')
+                ->where('tenant_id', $tenantId)
+                ->whereNull('deleted_at')
+                ->orderByDesc('is_favourite')
+                ->orderBy('value')
+                ->get(['id', DB::raw('value as hno'), 'is_favourite']),
             'diagnoses' => DB::table('tbl_master_diagnosis')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('id')

@@ -189,6 +189,25 @@
         border-radius: 5px; padding: 3px 8px; line-height: 1.4;
     }
     .pseudo-type-btn.active { background: #1B4F72 !important; color: #fff !important; border-color: #1B4F72 !important; }
+    /* C/O favourite pills */
+    .co-fav-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: rgba(245,158,11,0.10); border: 1px solid rgba(245,158,11,0.38);
+        color: #78350f; border-radius: 999px; font-size: 12px;
+        padding: 4px 8px 4px 11px; font-weight: 600; cursor: pointer;
+        transition: background .15s, border-color .15s; user-select: none;
+        white-space: nowrap;
+    }
+    .co-fav-pill:hover { background: rgba(245,158,11,0.20); border-color: rgba(245,158,11,0.55); }
+    .co-fav-pill-star {
+        background: none; border: none; cursor: pointer; font-size: 13px;
+        color: #d97706; padding: 0; line-height: 1; opacity: 0.7;
+        transition: opacity .15s, color .15s; flex-shrink: 0;
+    }
+    .co-fav-pill-star:hover { opacity: 1; color: #dc2626; }
+    .co-fav-pills-section { margin-bottom: 10px; }
+    .co-fav-pills-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .07em; color: #94a3b8; margin-bottom: 5px; display: block; }
     /* C/O custom dropdown */
     .co-select-wrap { position: relative; display: inline-block; width: 100%; max-width: 300px; }
     .co-dropdown {
@@ -713,10 +732,14 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">A. Clinical History - Chief Complaints (C/O)</h5>
+                    <h5 class="modal-title">C/O</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
+                    <div id="coFavPillsWrap" class="co-fav-pills-section" style="display:none;">
+                        <span class="co-fav-pills-lbl">⭐ Favourites — click to add</span>
+                        <div id="coFavPills" class="d-flex flex-wrap gap-1"></div>
+                    </div>
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <div class="co-select-wrap">
                             <input type="text" id="coSearch" class="form-control form-control-sm" placeholder="Search complaint..." autocomplete="off" style="min-width:260px;">
@@ -743,7 +766,7 @@
                                     <td>
                                         <select name="exam_data[co_rows][{{ $ri }}][since]" class="form-select form-select-sm">
                                             <option value="">-</option>
-                                            @foreach(array_merge(range(1,30),[45,60,90]) as $n)
+                                            @foreach(range(1,10) as $n)
                                                 <option value="{{ $n }}" {{ ($row['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
                                             @endforeach
                                         </select>
@@ -786,12 +809,16 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">B. History &amp; Known Conditions (K/C/O &amp; H/O)</h5>
+                    <h5 class="modal-title">K/C/O &amp; H/O</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     {{-- K/C/O --}}
-                    <div class="fw-semibold mb-2" style="font-size:13px;">K/C/O (Known Conditions)</div>
+                    <div class="fw-semibold mb-2" style="font-size:13px;">K/C/O</div>
+                    <div id="kcoFavPillsWrap" class="co-fav-pills-section" style="display:none;">
+                        <span class="co-fav-pills-lbl">⭐ Favourites — click to add</span>
+                        <div id="kcoFavPills" class="d-flex flex-wrap gap-1"></div>
+                    </div>
                     <div class="d-flex align-items-center gap-2 mb-3">
                         <div class="co-select-wrap">
                             <input type="text" id="kcoSearch" class="form-control form-control-sm" placeholder="Search condition..." autocomplete="off" style="min-width:260px;">
@@ -817,7 +844,7 @@
                                     <td>
                                         <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
                                             <option value="">-</option>
-                                            @foreach(array_merge(range(1,30),[45,60,90]) as $n)
+                                            @foreach(range(1,10) as $n)
                                                 <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
                                             @endforeach
                                         </select>
@@ -842,6 +869,10 @@
                     {{-- H/O --}}
                     <div class="mt-4" style="border-top:1px solid #e2e8f0; padding-top:12px;">
                         <label class="form-label fw-semibold mb-2" style="font-size:13px; display:block;">H/O</label>
+                        <div id="hnoFavPillsWrap" class="co-fav-pills-section" style="display:none;">
+                            <span class="co-fav-pills-lbl">⭐ Favourites — click to add</span>
+                            <div id="hnoFavPills" class="d-flex flex-wrap gap-1"></div>
+                        </div>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <div class="co-select-wrap">
                                 <input type="text" id="hnoSearch" class="form-control form-control-sm" placeholder="Search H/O..." autocomplete="off" style="min-width:260px;">
@@ -951,7 +982,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-light">
                     <h5 class="modal-title">
-                        <i class="bi bi-eyeglasses me-2" style="color:#1B4F72;"></i>Present Glasses (PG)
+                        <i class="bi bi-eyeglasses me-2" style="color:#1B4F72;"></i>PG
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1026,7 +1057,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-light">
                     <h5 class="modal-title">
-                        <i class="bi bi-binoculars me-2" style="color:#1B4F72;"></i>Subjective Trial (ST)
+                        <i class="bi bi-binoculars me-2" style="color:#1B4F72;"></i>ST
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1152,7 +1183,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-light">
                     <h5 class="modal-title">
-                        <i class="bi bi-speedometer2 me-2" style="color:#1B4F72;"></i>NCT (Intraocular Pressure — mmHg)
+                        <i class="bi bi-speedometer2 me-2" style="color:#1B4F72;"></i>NCT
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1203,7 +1234,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-light">
                     <h5 class="modal-title">
-                        <i class="bi bi-clipboard2-pulse me-2" style="color:#1B4F72;"></i>Ocular Examination (O/E)
+                        <i class="bi bi-clipboard2-pulse me-2" style="color:#1B4F72;"></i>O/E
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1663,7 +1694,7 @@
                                     @foreach($nonFavAdvices as $adv)
                                     <li>
                                         <button type="button" class="dropdown-item advice-quick-btn" style="font-size:12px;" data-advice="{{ $adv->advice }}">
-                                            <i class="bi bi-plus-lg me-1 text-secondary"></i>{{ $adv->advice }}
+                                            {{ $adv->advice }}
                                         </button>
                                     </li>
                                     @endforeach
@@ -2390,10 +2421,58 @@ document.addEventListener('DOMContentLoaded', function () {
         positionFixedDropdown(coDropdown, activeCoInput, 300);
     }
 
+    // Render favourite complaints as quick-access pills above the search bar
+    function renderCoFavPills() {
+        const wrap = document.getElementById('coFavPillsWrap');
+        const container = document.getElementById('coFavPills');
+        if (!wrap || !container) { return; }
+
+        const favs = coComplaints.filter(i => i.is_favourite)
+            .sort((a, b) => String(a.complaint).localeCompare(String(b.complaint)));
+
+        if (!favs.length) { wrap.style.display = 'none'; return; }
+
+        wrap.style.display = '';
+        container.innerHTML = favs.map(item =>
+            `<button type="button" class="co-fav-pill" data-name="${escapeAttr(item.complaint)}" data-id="${item.id}">` +
+            `${escapeAttr(item.complaint)}` +
+            `<span class="co-fav-pill-star" data-id="${item.id}" title="Remove from favourites">★</span>` +
+            `</button>`
+        ).join('');
+
+        container.querySelectorAll('.co-fav-pill').forEach(pill => {
+            pill.addEventListener('click', function (e) {
+                if (e.target.closest('.co-fav-pill-star')) { return; }
+                addCoRow(this.dataset.name);
+            });
+        });
+
+        container.querySelectorAll('.co-fav-pill-star').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const id = this.dataset.id;
+                fetch(`${coFavBase}/${id}/toggle-favourite`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': coCsrf, 'Accept': 'application/json' }
+                })
+                .then(r => r.json())
+                .then(data => {
+                    const c = coComplaints.find(x => String(x.id) === String(id));
+                    if (c) { c.is_favourite = data.is_favourite; }
+                    renderCoFavPills();
+                    if (coDropdown?.classList.contains('show')) { renderCoDropdown(); }
+                });
+            });
+        });
+    }
+
+    // Dropdown shows only non-favourite items (favourites are accessible via pills above)
     function renderCoDropdown(queryOverride) {
         if (!coDropdown || !activeCoInput) { return; }
         const query = queryOverride !== undefined ? queryOverride : (activeCoInput.value || '').trim().toLowerCase();
-        const items = sortedCoComplaints().filter(item => String(item.complaint).toLowerCase().includes(query));
+        const items = sortedCoComplaints()
+            .filter(item => !item.is_favourite)
+            .filter(item => String(item.complaint).toLowerCase().includes(query));
 
         if (!items.length) {
             coDropdown.innerHTML = '<div class="co-empty">No complaints found</div>';
@@ -2402,24 +2481,18 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const groups = [
-            { label: '⭐ Favourites',  rows: items.filter(i => i.is_favourite)  },
-            { label: 'All Complaints', rows: items.filter(i => !i.is_favourite) },
-        ].filter(g => g.rows.length);
-
-        coDropdown.innerHTML = groups.map(g =>
-            `<div class="co-section-lbl">${g.label}</div>` +
-            g.rows.map(item =>
+        coDropdown.innerHTML =
+            `<div class="co-section-lbl">All Complaints</div>` +
+            items.map(item =>
                 `<div class="co-item" data-name="${escapeAttr(item.complaint)}">` +
-                `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" title="${item.is_favourite ? 'Remove from favourites' : 'Add to favourites'}">${item.is_favourite ? '★' : '☆'}</button>` +
+                `<button type="button" class="co-fav-btn" data-id="${item.id}" title="Add to favourites">☆</button>` +
                 `<span class="co-item-name">${escapeAttr(item.complaint)}</span>` +
                 `</div>`
-            ).join('')
-        ).join('');
+            ).join('');
         positionCoDropdown();
         coDropdown.classList.add('show');
 
-        // Favourite toggle click
+        // Favourite toggle — moves item from dropdown to pills
         coDropdown.querySelectorAll('.co-fav-btn').forEach(btn => {
             btn.addEventListener('mousedown', function (e) {
                 e.preventDefault(); e.stopPropagation();
@@ -2432,11 +2505,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 .then(data => {
                     const c = coComplaints.find(x => String(x.id) === String(id));
                     if (c) { c.is_favourite = data.is_favourite; }
+                    renderCoFavPills();
                     renderCoDropdown();
                 });
             });
         });
     }
+
+    renderCoFavPills();
 
     // Top search input
     coSearch?.addEventListener('focus', function () { activeCoInput = this; renderCoDropdown(); });
@@ -2495,7 +2571,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const i = coRowIndex++;
         const tr = document.createElement('tr');
         tr.className = 'co-row';
-        const sinceOpts = ['-',...Array.from({length:30},(_,n)=>n+1),45,60,90]
+        const sinceOpts = ['-',...Array.from({length:10},(_,n)=>n+1)]
             .map((n,idx) => `<option value="${idx===0?'':n}">${n}</option>`).join('');
         const unitOpts = ['Days','Weeks','Months','Years','Longtime']
             .map(u => `<option value="${u}">${u}</option>`).join('');
@@ -2544,9 +2620,51 @@ document.addEventListener('DOMContentLoaded', function () {
             positionFixedDropdown(kcoDropdown, activeKcoInput, 300);
         }
 
+        function renderKcoFavPills() {
+            const wrap = document.getElementById('kcoFavPillsWrap');
+            const container = document.getElementById('kcoFavPills');
+            if (!wrap || !container) { return; }
+            const favs = kcoItems.filter(i => i.is_favourite)
+                .sort((a, b) => String(a.kco).localeCompare(String(b.kco)));
+            if (!favs.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+            container.innerHTML = favs.map(item =>
+                `<button type="button" class="co-fav-pill" data-name="${escapeAttr(item.kco)}" data-id="${item.id}">` +
+                `${escapeAttr(item.kco)}` +
+                `<span class="co-fav-pill-star" data-id="${item.id}" title="Remove from favourites">★</span>` +
+                `</button>`
+            ).join('');
+            container.querySelectorAll('.co-fav-pill').forEach(pill => {
+                pill.addEventListener('click', function (e) {
+                    if (e.target.closest('.co-fav-pill-star')) { return; }
+                    addKcoRow(this.dataset.name);
+                });
+            });
+            container.querySelectorAll('.co-fav-pill-star').forEach(btn => {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    const id = this.dataset.id;
+                    fetch(`${kcoFavBase}/${id}/toggle-favourite`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': coCsrf, 'Accept': 'application/json' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        const c = kcoItems.find(x => String(x.id) === String(id));
+                        if (c) { c.is_favourite = data.is_favourite; }
+                        renderKcoFavPills();
+                        if (kcoDropdown?.classList.contains('show')) { renderKcoDropdown(); }
+                    });
+                });
+            });
+        }
+
+        // Dropdown shows only non-favourite items (favourites accessible via pills above)
         function renderKcoDropdown(queryOverride) {
             const query = queryOverride !== undefined ? queryOverride : (activeKcoInput?.value || '').trim().toLowerCase();
-            const items = sortedKcos().filter(i => String(i.kco).toLowerCase().includes(query));
+            const items = sortedKcos()
+                .filter(i => !i.is_favourite)
+                .filter(i => String(i.kco).toLowerCase().includes(query));
 
             if (!items.length) {
                 kcoDropdown.innerHTML = '<div class="co-empty">No conditions found</div>';
@@ -2555,20 +2673,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const groups = [
-                { label: '⭐ Favourites',    rows: items.filter(i => i.is_favourite)  },
-                { label: 'All Conditions',   rows: items.filter(i => !i.is_favourite) },
-            ].filter(g => g.rows.length);
-
-            kcoDropdown.innerHTML = groups.map(g =>
-                `<div class="co-section-lbl">${g.label}</div>` +
-                g.rows.map(item =>
+            kcoDropdown.innerHTML =
+                `<div class="co-section-lbl">All Conditions</div>` +
+                items.map(item =>
                     `<div class="co-item" data-name="${escapeAttr(item.kco)}">` +
-                    `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" title="${item.is_favourite ? 'Remove' : 'Add'} favourite">${item.is_favourite ? '★' : '☆'}</button>` +
+                    `<button type="button" class="co-fav-btn" data-id="${item.id}" title="Add to favourites">☆</button>` +
                     `<span class="co-item-name">${escapeAttr(item.kco)}</span>` +
                     `</div>`
-                ).join('')
-            ).join('');
+                ).join('');
             positionKcoDropdown();
             kcoDropdown.classList.add('show');
 
@@ -2584,11 +2696,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(data => {
                         const c = kcoItems.find(x => String(x.id) === String(id));
                         if (c) { c.is_favourite = data.is_favourite; }
+                        renderKcoFavPills();
                         renderKcoDropdown();
                     });
                 });
             });
         }
+
+        renderKcoFavPills();
 
         function addKcoRow(val) {
             const condition = (val || (activeKcoInput === kcoSearch ? kcoSearch.value : '') || '').trim();
@@ -2596,7 +2711,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const i  = kcoRowIndex++;
             const tr = document.createElement('tr');
             tr.className = 'kco-row';
-            const sinceOpts = ['-',...Array.from({length:30},(_,n)=>n+1),45,60,90]
+            const sinceOpts = ['-',...Array.from({length:10},(_,n)=>n+1)]
                 .map((n,idx) => `<option value="${idx===0?'':n}">${n}</option>`).join('');
             const unitOpts = ['Days','Weeks','Months','Years','Longtime']
                 .map(u => `<option value="${u}"${u==='Years'?' selected':''}>${u}</option>`).join('');
@@ -3312,17 +3427,59 @@ document.addEventListener('DOMContentLoaded', function () {
         if (typeof updateLivePreview === 'function') { updateLivePreview(); }
     }
 
+    const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+
     function positionHnoDropdown() {
         if (typeof positionFixedDropdown === 'function') {
             positionFixedDropdown(hnoDropdown, hnoSearch, 300);
         }
     }
 
+    function renderHnoFavPills() {
+        const wrap = document.getElementById('hnoFavPillsWrap');
+        const container = document.getElementById('hnoFavPills');
+        if (!wrap || !container) { return; }
+        const favs = hnoItems.filter(i => i.is_favourite)
+            .sort((a, b) => String(a.hno).localeCompare(String(b.hno)));
+        if (!favs.length) { wrap.style.display = 'none'; return; }
+        wrap.style.display = '';
+        container.innerHTML = favs.map(item =>
+            `<button type="button" class="co-fav-pill" data-name="${escA(item.hno)}" data-id="${item.id}">` +
+            `${escA(item.hno)}` +
+            `<span class="co-fav-pill-star" data-id="${item.id}" title="Remove from favourites">★</span>` +
+            `</button>`
+        ).join('');
+        container.querySelectorAll('.co-fav-pill').forEach(pill => {
+            pill.addEventListener('click', function (e) {
+                if (e.target.closest('.co-fav-pill-star')) { return; }
+                addHnoChip(this.dataset.name);
+            });
+        });
+        container.querySelectorAll('.co-fav-pill-star').forEach(btn => {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                const id = this.dataset.id;
+                fetch(`${hnoFavBase}/${id}/toggle-favourite`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+                }).then(r => r.json()).then(data => {
+                    const item = hnoItems.find(i => i.id == id);
+                    if (item) { item.is_favourite = data.is_favourite; }
+                    renderHnoFavPills();
+                    if (hnoDropdown?.classList.contains('show')) { renderHnoDropdown(); }
+                });
+            });
+        });
+    }
+
+    // Dropdown shows only non-favourite items (favourites accessible via pills above)
     function renderHnoDropdown(queryOverride) {
         const query = queryOverride !== undefined ? queryOverride : hnoSearch.value.trim().toLowerCase();
         const existing = Array.from(document.querySelectorAll('#hnoChips .hno-chip'))
             .map(c => c.childNodes[0].textContent.trim().toLowerCase());
-        const items = hnoItems.filter(i => String(i.hno).toLowerCase().includes(query) && !existing.includes(String(i.hno).toLowerCase()));
+        const items = hnoItems
+            .filter(i => !i.is_favourite)
+            .filter(i => String(i.hno).toLowerCase().includes(query) && !existing.includes(String(i.hno).toLowerCase()));
 
         if (!items.length) {
             hnoDropdown.innerHTML = '<div class="co-empty">No items found</div>';
@@ -3331,21 +3488,13 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        const groups = [
-            { label: '⭐ Favourites',  rows: items.filter(i => i.is_favourite)  },
-            { label: 'All H/O Items',  rows: items.filter(i => !i.is_favourite) },
-        ].filter(g => g.rows.length);
-
-        const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-
-        hnoDropdown.innerHTML = groups.map(g =>
-            `<div class="co-section-lbl">${g.label}</div>` +
-            g.rows.map(item =>
+        hnoDropdown.innerHTML =
+            `<div class="co-section-lbl">All H/O Items</div>` +
+            items.map(item =>
                 `<div class="co-item" data-name="${escA(item.hno)}">` +
-                `<button type="button" class="co-fav-btn ${item.is_favourite ? 'fav-on' : ''}" data-id="${item.id}" title="${item.is_favourite ? 'Remove' : 'Add'} favourite">${item.is_favourite ? '★' : '☆'}</button>` +
+                `<button type="button" class="co-fav-btn" data-id="${item.id}" title="Add to favourites">☆</button>` +
                 `<span>${escA(item.hno)}</span></div>`
-            ).join('')
-        ).join('');
+            ).join('');
         positionHnoDropdown();
         hnoDropdown.classList.add('show');
 
@@ -3359,6 +3508,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }).then(r => r.json()).then(data => {
                     const item = hnoItems.find(i => i.id == id);
                     if (item) { item.is_favourite = data.is_favourite; }
+                    renderHnoFavPills();
                     renderHnoDropdown();
                 });
             });
@@ -3372,7 +3522,6 @@ document.addEventListener('DOMContentLoaded', function () {
             .map(c => c.childNodes[0].textContent.trim().toLowerCase());
         if (existing.includes(value.toLowerCase())) { hnoSearch.value = ''; hnoDropdown.classList.remove('show'); return; }
 
-        const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;');
         const chip = document.createElement('span');
         chip.className = 'badge rounded-pill hno-chip';
         chip.style.cssText = 'background:rgba(27,79,114,.1);color:#1B4F72;font-size:12px;font-weight:600;padding:.35em .75em;border:1px solid rgba(27,79,114,.2);cursor:default;';
@@ -3382,6 +3531,8 @@ document.addEventListener('DOMContentLoaded', function () {
         hnoDropdown.classList.remove('show');
         syncHnoHidden();
     }
+
+    renderHnoFavPills();
 
     hnoSearch.addEventListener('focus', function () { renderHnoDropdown(''); });
     hnoSearch.addEventListener('input', function () { renderHnoDropdown(); });

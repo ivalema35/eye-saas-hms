@@ -44,7 +44,7 @@ class MedicineController extends Controller
             'qty'              => ['required', 'string', 'max:50'],
             'composition'      => ['nullable', 'string'],
             'company'          => ['nullable', 'string', 'max:255'],
-            'price'            => ['required', 'numeric', 'min:0'],
+            'price'            => ['nullable', 'numeric', 'min:0'],
         ]);
 
         Medicine::create($validated);
@@ -73,7 +73,7 @@ class MedicineController extends Controller
             'qty'              => ['required', 'string', 'max:50'],
             'composition'      => ['nullable', 'string'],
             'company'          => ['nullable', 'string', 'max:255'],
-            'price'            => ['required', 'numeric', 'min:0'],
+            'price'            => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $medicine->update($validated);
