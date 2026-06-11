@@ -687,7 +687,7 @@
                 <div class="step-group-label first">Primary Exam</div>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-context" data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">H/O &amp; K/C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
@@ -827,7 +827,7 @@
                 <span class="step-group-tag">Primary</span>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">H/O &amp; K/C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
@@ -1028,7 +1028,7 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">B. History &amp; Known Conditions (H/O &amp; K/C/O)</h5>
+                    <h5 class="modal-title">B. History &amp; Known Conditions (K/C/O &amp; H/O)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1082,7 +1082,7 @@
                     @endif
                     {{-- H/O --}}
                     <div class="mt-4">
-                        <label class="form-label fw-semibold" style="font-size:13px; border-top:1px solid #e2e8f0; padding-top:12px; display:block;">H/O (History of Present Illness)</label>
+                        <label class="form-label fw-semibold" style="font-size:13px; border-top:1px solid #e2e8f0; padding-top:12px; display:block;">H/O</label>
                         <textarea name="exam_data[history]" id="historyTextarea" class="form-control form-control-sm" rows="2" placeholder="Enter patient history...">{{ $ed['history'] ?? '' }}</textarea>
                     </div>
                 </div>

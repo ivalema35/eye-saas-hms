@@ -64,10 +64,10 @@
                 <div class="hms-qa-icon qa-orange"><i class="fa-solid fa-procedures"></i></div>
                 <span>OT Bookings</span>
             </a>
-            <a href="{{ route('hospital.foc.index', $slug) }}" class="hms-qa-btn">
+            <!-- <a href="{{ route('hospital.foc.index', $slug) }}" class="hms-qa-btn">
                 <div class="hms-qa-icon qa-green"><i class="fa-solid fa-gift"></i></div>
                 <span>FOC Cases</span>
-            </a>
+            </a> -->
             <a href="{{ route('hospital.reports.index', $slug) }}" class="hms-qa-btn">
                 <div class="hms-qa-icon qa-purple"><i class="fa-solid fa-chart-bar"></i></div>
                 <span>Reports</span>

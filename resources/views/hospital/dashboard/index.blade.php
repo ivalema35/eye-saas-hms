@@ -1492,10 +1492,7 @@
             </div>
         </div>
     @endif
-
-</div>{{-- /bento-dashboard row 1 --}}
-
-
+</div>
 
 @if(($isReceptionistUser || $isDoctorUser) && $doctorStripCards->isNotEmpty())
 <div class="mb-3 fw-bold" style="color:#1B4F72;font-size:1.05rem;letter-spacing:.02em">
@@ -1743,13 +1740,9 @@
                     </div>
                 </div>
             @endif
-
         </div>
     @endif
-
-</div>{{-- /row middle --}}
-
-
+</div>
 
 @endif
 
