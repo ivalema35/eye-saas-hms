@@ -510,13 +510,13 @@
 
     <div class="exam-layout-wrapper">
         
-        {{-- ૨. નવી સાઈડબાર --}}
+        
         <div class="doctor-stepper-sidebar">
             <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
 
             <div class="step-group-label first">Primary Exam</div>
             <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">H/O &amp; K/C/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
             <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
             <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
             <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
@@ -605,7 +605,7 @@
         <div class="d-flex align-items-center gap-1 flex-wrap">
             <span class="step-group-tag">Primary</span>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">H/O &amp; K/C/O</button>
+            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
             <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
@@ -786,7 +786,7 @@
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-light">
-                    <h5 class="modal-title">B. History &amp; Known Conditions (H/O &amp; K/C/O)</h5>
+                    <h5 class="modal-title">B. History &amp; Known Conditions (K/C/O &amp; H/O)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -841,7 +841,7 @@
                     @endif
                     {{-- H/O --}}
                     <div class="mt-4" style="border-top:1px solid #e2e8f0; padding-top:12px;">
-                        <label class="form-label fw-semibold mb-2" style="font-size:13px; display:block;">H/O (History of Present Illness)</label>
+                        <label class="form-label fw-semibold mb-2" style="font-size:13px; display:block;">H/O</label>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <div class="co-select-wrap">
                                 <input type="text" id="hnoSearch" class="form-control form-control-sm" placeholder="Search H/O..." autocomplete="off" style="min-width:260px;">

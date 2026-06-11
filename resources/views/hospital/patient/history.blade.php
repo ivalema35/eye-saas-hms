@@ -373,6 +373,12 @@
 
 @section('content')
 <div class="patient-history-page">
+@php
+        $user = Auth::guard('hospital_user')->user();
+        $isDoctor = in_array($user?->role?->slug, ['doctor', 'ot_doctor']);
+    @endph
+
+    @if(!$isDoctor)
     <div class="history-heading d-flex justify-content-between align-items-center mb-4">
         <h4 class="fw-bold mb-0 d-flex align-items-center gap-3" style="color: var(--color-primary);">
             <span class="history-heading-icon">
@@ -380,11 +386,14 @@
             </span>
             <span>Patient History</span>
         </h4>
-        <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="btn btn-outline-secondary d-flex align-items-center gap-2" style="border-color: var(--history-secondary); color: var(--history-secondary);">
+        <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" 
+           class="btn btn-outline-secondary d-flex align-items-center gap-2" 
+           style="border-color: var(--history-secondary); color: var(--history-secondary);">
             <i class="bi bi-arrow-left"></i>
             <span>Back to Patients</span>
         </a>
     </div>
+    @endif
 
     <div class="card premium-card history-search-card border-0 shadow-sm mb-4">
         <div class="card-body p-4">
@@ -397,8 +406,7 @@
                         <input type="text" name="search"
                                class="form-control clinical-input border-start-0 ps-0"
                                placeholder="Search by MRD No, Contact, or Patient Name..."
-                               value="{{ $search ?? '' }}"
-                               autofocus>
+                               value="{{ $search ?? '' }}"autofocus>
                     </div>
                     <button type="submit" class="btn btn-primary history-search-btn px-4">
                         <i class="bi bi-search me-2"></i> Find Patient

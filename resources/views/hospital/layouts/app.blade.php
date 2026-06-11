@@ -541,27 +541,27 @@
             <img src="{{ $hospitalLogoUrl }}" style="height: 40px; margin-right: 15px;">
             <div class="fw-bold fs-4">{{ $hospitalName }}</div>
         </div>
-<div class="dropdown user-dropdown">
-    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" style="text-decoration: none;">
-        <span class="avatar-circle">
-            <i class="bi bi-person-fill"></i>
-        </span>
-        <div class="user-info d-flex flex-column text-start">
-            <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
-            <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
+        <div class="dropdown user-dropdown">
+            <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" style="text-decoration: none;">
+                <span class="avatar-circle">
+                    <i class="bi bi-person-fill"></i>
+                </span>
+                <div class="user-info d-flex flex-column text-start">
+                    <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
+                    <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
+                </div>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                <li>
+                    <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
+                        @csrf
+                        <button type="submit" class="dropdown-item text-danger fw-bold">
+                            <i class="bi bi-box-arrow-right me-2"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
         </div>
-    </a>
-    <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-        <li>
-            <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
-                @csrf
-                <button type="submit" class="dropdown-item text-danger fw-bold">
-                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                </button>
-            </form>
-        </li>
-    </ul>
-</div>
     </div>
 <div class="black-menu-bar d-flex align-items-center" style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
     
@@ -1079,7 +1079,6 @@
                     @endif
                 </div>
                 @endif
-
             </nav>
             </div>{{-- /.hms-sidenav-wrap --}}
 
@@ -1231,12 +1230,9 @@
                     .hms-main [class*="delete-instruction"]:hover i {
                         color: #ffffff !important;
                     }
-                    
                 </style>
             @endunless
-
         </main>
-
     </div>
 
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
