@@ -630,7 +630,7 @@
              BOX 3 — O/E (On Examination)
              ════════════════════════════════════ --}}
         <div class="hud-card" id="sec-oe">
-            <div class="hud-card-title">&#9679; O/E — Ocular Examination</div>
+            <div class="hud-card-title">&#9679; O/E </div>
             <div class="hud-card-body" style="padding:0">
                 <table class="hud-table">
                     <thead>
