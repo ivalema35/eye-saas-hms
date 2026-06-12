@@ -14,6 +14,7 @@
 namespace App\Models\Platform;
 
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\Patient;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -30,6 +31,7 @@ class Tenant extends Model
         'admin_email',
         'admin_phone',
         'city',
+        'district',
         'state',
         'logo_path',
         'status',
@@ -45,6 +47,23 @@ class Tenant extends Model
     ];
 
     /** Active subscription for this tenant */
+    public function doctors()
+    {
+        return $this->hasMany(HospitalUser::class, 'tenant_id')
+            ->whereHas('role', fn($q) => $q->where('slug', 'doctor'));
+    }
+
+    public function receptionists()
+    {
+        return $this->hasMany(HospitalUser::class, 'tenant_id')
+            ->whereHas('role', fn($q) => $q->where('slug', 'receptionist'));
+    }
+
+    public function patients()
+    {
+        return $this->hasMany(Patient::class, 'tenant_id');
+    }
+
     public function activeSubscription()
     {
         return $this->hasOne(Subscription::class)

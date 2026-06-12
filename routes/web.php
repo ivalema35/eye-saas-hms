@@ -88,7 +88,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('hospitals.extend');
         Route::post('hospitals/{tenant}/reactivate', [TenantController::class, 'reactivate'])
             ->name('hospitals.reactivate');
-        
+
 
         // Payments
         Route::get('/payments', [PaymentController::class, 'index'])
@@ -133,9 +133,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 });
 
 // Hospital routes — path-based slug routing
-require __DIR__.'/hospital.php';
+require __DIR__ . '/hospital.php';
 
-
-// આ રાઉટ ડૉક્ટરની હિસ્ટ્રી બતાવવા માટે છે
-Route::get('/{slug}/doctor-history', [\App\Http\Controllers\Hospital\Dashboard\DashboardController::class, 'history'])
-    ->name('hospital.doctor.history');
+Route::get('/{slug}/ajax/hospital-details/{id}', [App\Http\Controllers\Hospital\Dashboard\DashboardController::class, 'getHospitalDetails'])
+    ->name('hospital.ajax.details');

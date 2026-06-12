@@ -115,6 +115,16 @@ Route::prefix('{slug}')
 
                 Route::get('patient-history', [PatientHistoryController::class, 'index'])->name('patients.history')->middleware('permission:opd.exam.history');
                 Route::get('patient-history/{patient}/print', [PatientHistoryController::class, 'print'])->name('patients.history.print')->middleware('permission:opd.exam.history');
+                Route::get('doctor-history', [DashboardController::class, 'history'])->name('doctor.history');
+                Route::get('hospital-history', [DashboardController::class, 'hospitalHistory'])->name('hospital.history');
+
+                // Hospital Share Requests
+                Route::post('hospital-share-requests/{toTenantId}', [DashboardController::class, 'sendShareRequest'])
+                    ->name('hospital.share.send')->whereNumber('toTenantId');
+                Route::post('hospital-share-requests/{requestId}/accept', [DashboardController::class, 'acceptShareRequest'])
+                    ->name('hospital.share.accept')->whereNumber('requestId');
+                Route::delete('hospital-share-requests/{requestId}', [DashboardController::class, 'removeShareRequest'])
+                    ->name('hospital.share.remove')->whereNumber('requestId');
 
                 // ============================================================
                 // Clinical Queue Dashboard
@@ -144,6 +154,11 @@ Route::prefix('{slug}')
                 Route::post('exam/secondary/{id}', [SecondaryExamController::class, 'save'])
                     ->name('exam.secondary.save')
                     ->middleware('permission:opd.exam.secondary');
+
+                // AJAX: Hospital details for modal
+                Route::get('ajax/hospital-details/{id}', [DashboardController::class, 'getHospitalDetails'])
+                    ->name('ajax.hospital.details')
+                    ->whereNumber('id');
 
                 // AJAX helpers for exam form
                 Route::post('ajax/complaint', [PrimaryExamController::class, 'ajaxAddComplaint'])
