@@ -12,5 +12,7 @@ class MasterSphCyl extends Model
 
     protected $table = 'tbl_master_sph_cyl';
 
-    protected $fillable = ['type', 'value'];
+    protected $fillable = ['value'];
+
+    protected $casts = ['is_seeded' => 'boolean'];
 }

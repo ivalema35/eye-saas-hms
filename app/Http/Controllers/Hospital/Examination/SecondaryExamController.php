@@ -196,7 +196,7 @@ $user = Auth::guard('hospital_user')->user();
             'vn' => $q('tbl_master_vn'),
             'pnvn' => $q('tbl_master_pnvn'),
             'nrvn' => $q('tbl_master_nrvn'),
-            'sph_cyl' => $q('tbl_master_sph_cyl'),
+            'sph_cyl' => DB::table('tbl_master_sph_cyl')->where('tenant_id', $tenantId)->whereNull('deleted_at')->orderBy('id')->get(),
             'axis' => $q('tbl_master_axis'),
             'fr' => DB::table('tbl_master_fr')
                 ->where('tenant_id', $tenantId)
