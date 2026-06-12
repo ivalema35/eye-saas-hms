@@ -358,7 +358,9 @@
                                             </span>
                                         @endif
                                     </td>
-                                    <td class="d-flex gap-1 justify-content-center flex-wrap">
+                                   
+                                         <td>
+                                        <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
                                         <button type="button" class="btn btn-sm btn-outline-primary view-hosp-btn"
                                             style="border-radius:8px;" data-id="{{ $hospital->id }}">
                                             <i class="bi bi-eye"></i>
@@ -405,6 +407,7 @@
                                                 </button>
                                             </form>
                                         @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
