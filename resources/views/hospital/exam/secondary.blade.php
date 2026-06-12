@@ -210,11 +210,17 @@
     .co-select-wrap { position: relative; display: inline-block; width: 100%; max-width: 300px; }
     .co-dropdown {
         position: fixed; width: 300px;
-        background: #fff; border: 1px solid #e2e8f0; border-radius: 10px;
-        box-shadow: 0 8px 28px rgba(15,23,42,.14); z-index: 9999;
-        max-height: 300px; overflow-y: auto; display: none;
+        background: #fff; border: 1px solid #dde3ea; border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(15,23,42,.18), 0 2px 8px rgba(27,79,114,.08);
+        z-index: 9999; max-height: 300px; overflow-y: auto; display: none;
+        padding: 4px 0;
     }
-    .co-dropdown.show { display: block; }
+    .co-dropdown::-webkit-scrollbar { width: 5px; }
+    .co-dropdown::-webkit-scrollbar-track { background: transparent; }
+    .co-dropdown::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .co-dropdown.show { display: block; animation: coFadeIn .12s ease; }
+    @keyframes coFadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+    .pg-co-dropdown { width: 180px !important; }
     .co-section-lbl {
         font-size: 10px; font-weight: 700; text-transform: uppercase;
         letter-spacing: .07em; color: #94a3b8; padding: 8px 12px 4px;
@@ -222,12 +228,27 @@
         border-bottom: 1px solid #f1f5f9;
     }
     .co-item {
-        display: flex; align-items: center; padding: 8px 12px;
-        cursor: pointer; font-size: 13px; gap: 8px; user-select: none;
+        display: flex; align-items: center; padding: 9px 14px;
+        cursor: pointer; font-size: 13px; font-weight: 500; gap: 8px;
+        user-select: none; border-radius: 6px; margin: 1px 4px;
+        transition: background .1s, color .1s;
     }
-    .co-item:hover { background: rgba(27, 79, 114, 0.07); }
-    .co-item.selected { background: rgba(27, 79, 114, 0.1); font-weight: 600; }
+    .co-item:hover { background: rgba(27,79,114,.08); color: #1B4F72; }
+    .co-item:hover .co-item-name { color: #1B4F72; }
+    .co-item.selected { background: #1B4F72; font-weight: 700; }
+    .co-item.selected .co-item-name { color: #fff; }
     .co-item-name { flex: 1; color: #1e293b; }
+    .pg-select-wrap:has(.pg-inp-chevron) .pg-inp {
+        cursor: pointer; border-color: #1B4F72 !important;
+        background: #f8fafc;
+    }
+    .pg-select-wrap:has(.pg-inp-chevron) .pg-inp:focus {
+        background: #fff;
+    }
+    .pg-select-wrap .pg-inp-chevron {
+        color: #1B4F72 !important;
+        font-size: 10px !important;
+    }
     .co-fav-btn {
         background: none; border: none; cursor: pointer; font-size: 17px;
         padding: 0; line-height: 1; color: #cbd5e1; transition: color .15s, transform .15s;
@@ -1219,74 +1240,146 @@
 
     {{-- MODAL: PG --}}
     <div class="modal fade" id="modalPG" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">
-                        <i class="bi bi-eyeglasses me-2" style="color:#1B4F72;"></i>PG
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-eyeglasses me-2"></i>Prescription Glass (PG)
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-3">
                     @php
-                        $pgFields = [
-                            'ds'      => ['abbr' => 'SPH',  'full' => 'Sphere',      'master' => 'sph_cyl'],
-                            'dc'      => ['abbr' => 'CYL',  'full' => 'Cylinder',    'master' => 'sph_cyl'],
-                            'ax'      => ['abbr' => 'AXIS', 'full' => 'Axis',        'master' => 'axis'],
-                            'vn'      => ['abbr' => 'VN',   'full' => 'Vision',      'master' => 'vn'],
-                            'add'     => ['abbr' => 'ADD',  'full' => 'Addition',    'master' => 'sph_cyl'],
-                            'near_vn' => ['abbr' => 'NV',   'full' => 'Near Vision', 'master' => 'nrvn'],
-                        ];
                         $pgMasterOpts = [
-                            'sph_cyl' => collect($masters['sph_cyl'])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->flatMap(function ($cv) {
-                                if (! in_array((string) $cv, ['0', '0.00', 'Plano', 'PL'])) {
-                                    return ['+'.$cv, '-'.$cv];
-                                }
-                                return [(string) $cv];
-                            })->values()->all(),
+                            'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
                             'axis' => collect($masters['axis'])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->values()->all(),
                             'vn'   => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
                             'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
                         ];
                     @endphp
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle mb-0 pg-table">
-                            <tbody>
-                                @foreach([
-                                    're' => ['label' => 'Right Eye (RE)', 'cls' => 're', 'row' => 'pg-row-re'],
-                                    'le' => ['label' => 'Left Eye (LE)',  'cls' => 'le', 'row' => 'pg-row-le'],
-                                ] as $eye => $em)
-                                <tr>
-                                    <td colspan="2" class="pg-eye-hdr {{ $em['cls'] }}">
-                                        <i class="bi bi-eye-fill me-1"></i>{{ $em['label'] }}
-                                    </td>
-                                </tr>
-                                @foreach($pgFields as $key => $meta)
-                                @php $sv = $pg[$eye][$key] ?? ''; @endphp
-                                <tr class="{{ $em['row'] }}">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['abbr'] }}</span>
-                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="pg-select-wrap">
-                                            <input type="text" class="form-control form-control-sm pg-inp"
-                                                placeholder="—" autocomplete="off"
-                                                data-master="{{ $meta['master'] }}"
-                                                value="{{ $sv }}">
-                                            <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $key }}]" value="{{ $sv }}">
-                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                                @endforeach
-                            </tbody>
-                        </table>
+
+                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @php
+                        $pgRows = [
+                            'DISTANCE' => [
+                                'sph' => ['key' => 'ds',      'val' => $pg[$eye]['ds']      ?? ''],
+                                'cyl' => ['key' => 'dc',      'val' => $pg[$eye]['dc']      ?? ''],
+                                'ax'  => ['key' => 'ax',      'val' => $pg[$eye]['ax']      ?? ''],
+                                'vn'  => ['key' => 'vn',      'val' => $pg[$eye]['vn']      ?? '', 'master' => 'vn'],
+                            ],
+                            'NEAR' => [
+                                'sph' => ['key' => 'ns',      'val' => $pg[$eye]['ns']      ?? ''],
+                                'cyl' => ['key' => 'nc',      'val' => $pg[$eye]['nc']      ?? ''],
+                                'ax'  => ['key' => 'na',      'val' => $pg[$eye]['na']      ?? ''],
+                                'vn'  => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+                            ],
+                        ];
+                    @endphp
+                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                            <i class="bi bi-eye-fill text-white"></i>
+                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                <thead style="background:#f0f4f8;">
+                                    <tr>
+                                        <th style="width:90px;border-bottom:2px solid #1B4F72;"></th>
+                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">SPH</th>
+                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">CYL</th>
+                                        <th class="text-center" style="min-width:110px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">Axis</th>
+                                        <th class="text-center" style="min-width:130px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">VN C GL</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pgRows as $rowLabel => $rf)
+                                    <tr style="background:white;">
+                                        <td class="text-center fw-bold" style="font-size:11px;color:#64748b;letter-spacing:.06em;background:#fafbfc;">{{ $rowLabel }}</td>
+                                        {{-- SPH --}}
+                                        <td class="text-center py-2">
+                                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                <div class="pg-select-wrap" style="width:88px;">
+                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['sph']['val'] }}">
+                                                    <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['sph']['key'] }}]" value="{{ $rf['sph']['val'] }}">
+                                                </div>
+                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                            </div>
+                                        </td>
+                                        {{-- CYL --}}
+                                        <td class="text-center py-2">
+                                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                <div class="pg-select-wrap" style="width:88px;">
+                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['cyl']['val'] }}">
+                                                    <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
+                                                </div>
+                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                            </div>
+                                        </td>
+                                        {{-- AXIS --}}
+                                        <td class="text-center py-2">
+                                            <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;" placeholder="0°" autocomplete="off" data-master="axis" value="{{ $rf['ax']['val'] }}">
+                                                <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
+                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                            </div>
+                                        </td>
+                                        {{-- VN C GL --}}
+                                        <td class="text-center py-2">
+                                            <div class="pg-select-wrap" style="max-width:115px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm pg-inp text-center" style="font-size:12px;border-color:#1B4F72;" placeholder="Select VN" autocomplete="off" data-master="{{ $rf['vn']['master'] }}" value="{{ $rf['vn']['val'] }}">
+                                                <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['vn']['key'] }}]" value="{{ $rf['vn']['val'] }}">
+                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                    @endforeach
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: PG Value Picker --}}
+    <div class="modal fade" id="modalPGPicker" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+                <div class="modal-header py-2 px-4" style="background:#1B4F72;">
+                    <h6 class="modal-title text-white fw-bold mb-0 fs-6" id="pgPickerTitle">Select Value</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4" style="background:#f8fafc;">
+                    <div id="pgPickerGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:10px;max-height:340px;overflow-y:auto;" class="mb-4"></div>
+                    <div class="d-flex align-items-center gap-3 px-4 py-3 rounded-3" style="background:white;border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.05);">
+                        <div class="d-flex flex-column align-items-center gap-1" style="min-width:90px;">
+                            <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-weight:600;">Selected</span>
+                            <span id="pgPickerCurrent" class="fw-bold px-3 py-1 rounded-2 text-center" style="font-size:18px;color:white;background:#1B4F72;min-width:80px;letter-spacing:.02em;">—</span>
+                        </div>
+                        <div style="width:1px;height:44px;background:#e2e8f0;"></div>
+                        <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="pgPickerClear" style="border-radius:8px;font-size:12px;font-weight:600;padding:6px 14px;">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                        <div class="ms-auto d-flex align-items-center gap-2">
+                            <div class="input-group" style="width:200px;">
+                                <span class="input-group-text" style="background:#f0f4f8;border-color:#1B4F72;color:#1B4F72;font-size:11px;font-weight:700;letter-spacing:.05em;">CUSTOM</span>
+                                <input type="number" id="pgPickerManual" class="form-control" step="0.25" style="border-color:#1B4F72;font-size:13px;font-weight:600;" placeholder="e.g. −3.75">
+                            </div>
+                            <button type="button" class="btn btn-primary d-flex align-items-center gap-1 px-3" id="pgPickerSaveManual" style="background:#1B4F72;border-color:#1B4F72;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap;">
+                                <i class="bi bi-check-lg"></i> Apply
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1294,125 +1387,165 @@
 
     {{-- MODAL: ST --}}
     <div class="modal fade" id="modalST" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">
-                        <i class="bi bi-binoculars me-2" style="color:#1B4F72;"></i>ST
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-binoculars me-2"></i>Subjective Test (ST)
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-3">
+
+                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
                     @php
-                        $stDistFields = [
-                            'ds' => ['abbr' => 'SPH',  'full' => 'Sphere',   'master' => 'sph_cyl'],
-                            'dc' => ['abbr' => 'CYL',  'full' => 'Cylinder', 'master' => 'sph_cyl'],
-                            'ax' => ['abbr' => 'AXIS', 'full' => 'Axis',     'master' => 'axis'],
-                        ];
-                        $stNearFields = [
-                            'ns' => ['abbr' => 'NSPH',  'full' => 'Near Sphere',   'master' => 'sph_cyl'],
-                            'nc' => ['abbr' => 'NCYL',  'full' => 'Near Cylinder', 'master' => 'sph_cyl'],
-                            'na' => ['abbr' => 'NAXIS', 'full' => 'Near Axis',     'master' => 'axis'],
+                        $stRows = [
+                            'DISTANCE' => [
+                                'sph' => ['key' => 'ds',      'val' => $st[$eye]['ds']      ?? ''],
+                                'cyl' => ['key' => 'dc',      'val' => $st[$eye]['dc']      ?? ''],
+                                'ax'  => ['key' => 'ax',      'val' => $st[$eye]['ax']      ?? ''],
+                                'vn'  => ['key' => 'vn',      'val' => $st[$eye]['vn']      ?? '', 'master' => 'vn'],
+                            ],
+                            'NEAR' => [
+                                'sph' => ['key' => 'ns',      'val' => $st[$eye]['ns']      ?? ''],
+                                'cyl' => ['key' => 'nc',      'val' => $st[$eye]['nc']      ?? ''],
+                                'ax'  => ['key' => 'na',      'val' => $st[$eye]['na']      ?? ''],
+                                'vn'  => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+                            ],
                         ];
                     @endphp
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle mb-0 pg-table">
-                            <tbody>
-                                @foreach([
-                                    're' => ['label' => 'Right Eye (RE)', 'cls' => 're', 'row' => 'pg-row-re'],
-                                    'le' => ['label' => 'Left Eye (LE)',  'cls' => 'le', 'row' => 'pg-row-le'],
-                                ] as $eye => $em)
-                                <tr>
-                                    <td colspan="2" class="pg-eye-hdr {{ $em['cls'] }}">
-                                        <i class="bi bi-eye-fill me-1"></i>{{ $em['label'] }}
-                                    </td>
-                                </tr>
-                                <tr class="{{ $em['row'] }}">
-                                    <td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:5px 12px;background:rgba(0,0,0,.02);">Distance</td>
-                                </tr>
-                                @foreach($stDistFields as $key => $meta)
-                                @php $sv = old('exam_data.st.'.$eye.'.'.$key, $st[$eye][$key] ?? ''); @endphp
-                                <tr class="{{ $em['row'] }}">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['abbr'] }}</span>
-                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="pg-select-wrap">
-                                            <input type="text" class="form-control form-control-sm pg-inp"
-                                                placeholder="—" autocomplete="off"
-                                                data-master="{{ $meta['master'] }}"
-                                                value="{{ $sv }}">
-                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $key }}]" value="{{ $sv }}">
-                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                                <tr class="{{ $em['row'] }}">
-                                    <td colspan="2" style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748b;padding:5px 12px;background:rgba(0,0,0,.02);">Near Vision</td>
-                                </tr>
-                                @foreach($stNearFields as $key => $meta)
-                                @php $sv = old('exam_data.st.'.$eye.'.'.$key, $st[$eye][$key] ?? ''); @endphp
-                                <tr class="{{ $em['row'] }}">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['abbr'] }}</span>
-                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="pg-select-wrap">
-                                            <input type="text" class="form-control form-control-sm pg-inp"
-                                                placeholder="—" autocomplete="off"
-                                                data-master="{{ $meta['master'] }}"
-                                                value="{{ $sv }}">
-                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $key }}]" value="{{ $sv }}">
-                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                                @endforeach
-
-                                <tr>
-                                    <td colspan="2" class="pg-eye-hdr le" style="background:#f1f5f9;color:#475569;">
-                                        <i class="bi bi-sliders me-1"></i>Common
-                                    </td>
-                                </tr>
-                                @php $stAdd = old('exam_data.st.add', $st['add'] ?? ''); @endphp
-                                <tr class="pg-row-le">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">ADD</span>
-                                        <div style="font-size:11px;color:#94a3b8;">Addition</div>
-                                    </td>
-                                    <td>
-                                        <div class="pg-select-wrap">
-                                            <input type="text" class="form-control form-control-sm pg-inp"
-                                                placeholder="—" autocomplete="off"
-                                                data-master="sph_cyl"
-                                                value="{{ $stAdd }}">
-                                            <input type="hidden" name="exam_data[st][add]" value="{{ $stAdd }}">
-                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr class="pg-row-le">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">Lens</span>
-                                        <div style="font-size:11px;color:#94a3b8;">Lens Type</div>
-                                    </td>
-                                    <td>
-                                        <input type="text" name="exam_data[st][lens_type]"
-                                            value="{{ old('exam_data.st.lens_type', $st['lens_type'] ?? '') }}"
-                                            class="form-control form-control-sm exam-plain-inp"
-                                            placeholder="SV / Bifocal / Progressive" autocomplete="off">
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                            <i class="bi bi-eye-fill text-white"></i>
+                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                <thead style="background:#f0f4f8;">
+                                    <tr>
+                                        <th style="width:90px;border-bottom:2px solid #1B4F72;"></th>
+                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">SPH</th>
+                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">CYL</th>
+                                        <th class="text-center" style="min-width:110px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">Axis</th>
+                                        <th class="text-center" style="min-width:130px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">VN C ST</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($stRows as $rowLabel => $rf)
+                                    <tr style="background:white;">
+                                        <td class="text-center fw-bold" style="font-size:11px;color:#64748b;letter-spacing:.06em;background:#fafbfc;">{{ $rowLabel }}</td>
+                                        {{-- SPH: picker for DISTANCE; ADD picker + NS calc for NEAR --}}
+                                        @if($rowLabel === 'DISTANCE')
+                                        <td class="text-center py-2">
+                                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                <div class="pg-select-wrap" style="width:88px;">
+                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['sph']['val'] }}">
+                                                    <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['sph']['key'] }}]" value="{{ $rf['sph']['val'] }}">
+                                                </div>
+                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                            </div>
+                                        </td>
+                                        @else
+                                        @php
+                                            $stAddVal = old('exam_data.st.'.$eye.'.add', $st[$eye]['add'] ?? '');
+                                            $stNsVal  = old('exam_data.st.'.$eye.'.ns',  $st[$eye]['ns']  ?? '');
+                                        @endphp
+                                        <td class="text-center py-2">
+                                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                <div class="pg-select-wrap" style="width:88px;">
+                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $stNsVal }}">
+                                                    <input type="hidden" name="exam_data[st][{{ $eye }}][add]" value="{{ $stAddVal }}">
+                                                </div>
+                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                            </div>
+                                            <div style="font-size:10px;color:#64748b;margin-top:3px;">ADD: <strong>{{ $stAddVal ?: '—' }}</strong></div>
+                                            <input type="hidden" name="exam_data[st][{{ $eye }}][ns]" value="{{ $stNsVal }}">
+                                        </td>
+                                        @endif
+                                        {{-- CYL: picker for DISTANCE, read-only mirror for NEAR --}}
+                                        @if($rowLabel === 'DISTANCE')
+                                        <td class="text-center py-2">
+                                            <div class="d-flex align-items-center justify-content-center gap-1">
+                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                <div class="pg-select-wrap" style="width:88px;">
+                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['cyl']['val'] }}">
+                                                    <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
+                                                </div>
+                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                            </div>
+                                        </td>
+                                        @else
+                                        <td class="text-center py-2">
+                                            <div style="width:88px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['cyl']['val'] }}">
+                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
+                                            </div>
+                                            <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
+                                        </td>
+                                        @endif
+                                        {{-- AXIS: dropdown for DISTANCE, read-only mirror for NEAR --}}
+                                        @if($rowLabel === 'DISTANCE')
+                                        <td class="text-center py-2">
+                                            <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;" placeholder="0°" autocomplete="off" data-master="axis" value="{{ $rf['ax']['val'] }}">
+                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
+                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                            </div>
+                                        </td>
+                                        @else
+                                        <td class="text-center py-2">
+                                            <div style="max-width:90px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['ax']['val'] }}">
+                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
+                                            </div>
+                                            <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
+                                        </td>
+                                        @endif
+                                        {{-- VN C ST: only for DISTANCE row --}}
+                                        @if($rowLabel === 'DISTANCE')
+                                        <td class="text-center py-2">
+                                            <div class="pg-select-wrap" style="max-width:115px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm pg-inp text-center" style="font-size:12px;border-color:#1B4F72;" placeholder="Select VN" autocomplete="off" data-master="{{ $rf['vn']['master'] }}" value="{{ $rf['vn']['val'] }}">
+                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['vn']['key'] }}]" value="{{ $rf['vn']['val'] }}">
+                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                            </div>
+                                        </td>
+                                        @else
+                                        <td class="text-center align-middle" style="color:#94a3b8;font-size:20px;">—</td>
+                                        @endif
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                    @endforeach
+
+                    {{-- Checkboxes --}}
+                    <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:#fafbfc;">
+                        <div class="d-flex flex-wrap gap-4">
+                            @foreach([
+                                'bifocal'       => 'Bifocal',
+                                'nd_separate'   => 'Near & Distance Separate',
+                                'progressive'   => 'Progressive',
+                                'computer_uses' => 'Computer Uses',
+                            ] as $cbKey => $cbLabel)
+                            @php $cbVal = old('exam_data.st.'.$cbKey, $st[$cbKey] ?? false); @endphp
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>
+                                <label class="form-check-label fw-semibold" for="st_{{ $cbKey }}" style="font-size:13px;color:#334155;">{{ $cbLabel }}</label>
+                            </div>
+                            @endforeach
+                        </div>
+                    </div>
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Save
+                    </button>
                 </div>
             </div>
         </div>
@@ -1995,6 +2128,36 @@
     @endforeach
 </datalist>
 
+{{-- MODAL: Exam Save Confirmation --}}
+<div class="modal fade" id="modalExamConfirm" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
+        <div class="modal-content" style="border:none;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);">
+            <div class="modal-header border-0 pb-0 pt-4 px-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle" style="width:48px;height:48px;background:#e8f4fd;flex-shrink:0;">
+                        <i class="bi bi-clipboard2-check" style="font-size:22px;color:#1B4F72;"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0" style="color:#1B4F72;">Save Exam?</h5>
+                        <p class="text-muted mb-0" style="font-size:13px;">Please review before confirming.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body px-4 py-3">
+                <p class="mb-0" style="font-size:13px;color:#64748b;">Are you sure you want to save this examination? Once saved, the record will be updated.</p>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal" style="border-radius:8px;font-weight:600;">
+                    <i class="bi bi-x-lg me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-success flex-fill" id="examConfirmYes" style="border-radius:8px;font-weight:600;background:#1B4F72;border-color:#1B4F72;">
+                    <i class="bi bi-check-lg me-1"></i>Yes, Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     function formatOpto(val) {
         const num = parseFloat(val);
@@ -2241,7 +2404,9 @@ document.addEventListener('DOMContentLoaded', function () {
         activeCoInput = null;
         checkProgress();
         updateLivePreview();
+        form.dispatchEvent(new Event('input', { bubbles: false }));
     }
+    window._addCoRow = addCoRow;
     document.getElementById('addCoRow')?.addEventListener('click', function () {
         addCoRow(coSearch ? coSearch.value.trim() : '');
     });
@@ -2378,7 +2543,9 @@ document.addEventListener('DOMContentLoaded', function () {
             activeKcoInput = null;
             checkProgress();
             updateLivePreview();
+            form.dispatchEvent(new Event('input', { bubbles: false }));
         }
+        window._addKcoRow = addKcoRow;
 
         kcoSearch.addEventListener('focus', function () { activeKcoInput = this; renderKcoDropdown(''); });
         kcoSearch.addEventListener('input', function () { activeKcoInput = this; renderKcoDropdown(); });
@@ -2438,6 +2605,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (hidden) { hidden.value = chips.join(', '); }
             if (typeof checkProgress === 'function') { checkProgress(); }
             if (typeof updateLivePreview === 'function') { updateLivePreview(); }
+            document.getElementById('primaryExamForm')?.dispatchEvent(new Event('input', { bubbles: false }));
         }
 
         function positionHnoDropdown() {
@@ -2542,6 +2710,7 @@ document.addEventListener('DOMContentLoaded', function () {
             hnoDropdown.classList.remove('show');
             syncHnoHidden();
         }
+        window._addHnoChip = addHnoChip;
 
         renderHnoFavPills();
 
@@ -2728,18 +2897,30 @@ document.addEventListener('DOMContentLoaded', function () {
             return extras.length ? `${base} (${extras.join(', ')})` : base;
         };
 
+        // Build C/O row data
         const coRows = Array.from(document.querySelectorAll('#coBody .co-row'));
-        const complaints = coRows.map((row) => {
-            const complaint = row.querySelector('[name*="[complaint]"]')?.value?.trim() || '';
-            if (!complaint) { return ''; }
-            const since = row.querySelector('[name*="[since]"]')?.value || '';
-            const unit = row.querySelector('[name*="[unit]"]')?.value || '';
-            const eye = row.querySelector('[name*="[eye]"]')?.value || '';
-            const comment = row.querySelector('[name*="[comment]"]')?.value?.trim() || '';
-            const parts = [complaint, since ? `since ${since} ${unit}` : '', eye, comment].filter(Boolean);
-            return parts.join(' | ');
-        }).filter(Boolean);
+        const coData = coRows.map(row => ({
+            complaint : row.querySelector('[name*="[complaint]"]')?.value?.trim() || '',
+            since     : row.querySelector('[name*="[since]"]')?.value || '',
+            unit      : row.querySelector('[name*="[unit]"]')?.value || '',
+            eye       : row.querySelector('[name*="[eye]"]')?.value || '',
+            comment   : row.querySelector('[name*="[comment]"]')?.value?.trim() || '',
+        })).filter(d => d.complaint);
 
+        // Build K/C/O row data
+        const kcoRows = Array.from(document.querySelectorAll('#kcoBody .kco-row'));
+        const kcoData = kcoRows.map(row => ({
+            condition : row.querySelector('[name*="[condition]"]')?.value?.trim() || '',
+            since     : row.querySelector('[name*="[since]"]')?.value || '',
+            unit      : row.querySelector('[name*="[unit]"]')?.value || '',
+            comment   : row.querySelector('[name*="[comment]"]')?.value?.trim() || '',
+        })).filter(d => d.condition);
+
+        // Build H/O pill list
+        const hnoVal  = document.getElementById('hnoHidden')?.value?.trim() || '';
+        const hnoList = hnoVal ? hnoVal.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+        // V-notation block helper
         const makeVn = (label, re, le) =>
             `<div class="d-inline-flex align-items-center me-3 mb-1">` +
             `<span class="fw-bold me-1" style="font-size:11px;">${label}</span>` +
@@ -2747,55 +2928,119 @@ document.addEventListener('DOMContentLoaded', function () {
             `<div class="d-flex flex-column" style="font-size:11px;line-height:1.3;">` +
             `<span>${re}</span><span>${le}</span></div></div>`;
 
-        const vnRe   = val('exam_data[vision][vn_re]');
-        const vnLe   = val('exam_data[vision][vn_le]');
-        const phRe   = val('exam_data[vision][pnvn_re]');
-        const phLe   = val('exam_data[vision][pnvn_le]');
-        const nrRe   = val('exam_data[vision][nrvn_re]');
-        const nrLe   = val('exam_data[vision][nrvn_le]');
-        const iopRe  = val('exam_data[nct][iop_re]');
-        const iopLe  = val('exam_data[nct][iop_le]');
+        const vnRe  = val('exam_data[vision][vn_re]');
+        const vnLe  = val('exam_data[vision][vn_le]');
+        const phRe  = val('exam_data[vision][pnvn_re]');
+        const phLe  = val('exam_data[vision][pnvn_le]');
+        const nrRe  = val('exam_data[vision][nrvn_re]');
+        const nrLe  = val('exam_data[vision][nrvn_le]');
+        const iopRe = val('exam_data[nct][iop_re]');
+        const iopLe = val('exam_data[nct][iop_le]');
 
-        const historyHtml =
-            `<div class="mb-1" style="font-size:12px;">` +
-            `<strong>C/O:</strong> ${complaints.length ? complaints.join('<br>') : '-'}</div>` +
-            `<div class="d-flex flex-wrap align-items-center border-top pt-1 mt-1">` +
+        const cvTd   = (t) => `<td class="text-center" style="font-size:10px;padding:2px 5px;">${t || '—'}</td>`;
+        const pill   = (t) => `<span style="background:#eef4f9;color:#1B4F72;padding:1px 8px;border-radius:8px;margin-right:3px;font-size:10px;">${t}</span>`;
+        const cvTable = (title, cols, rows) =>
+            `<table class="table table-sm table-bordered mb-2" style="font-size:10px;">` +
+            `<thead>` +
+            `<tr><th colspan="${cols.length}" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">${title}</th></tr>` +
+            `<tr style="background:#eef4f9;">${cols.map(c => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 5px;font-weight:600;">${c}</th>`).join('')}</tr>` +
+            `</thead><tbody>${rows}</tbody></table>`;
+
+        let historyHtml = '';
+
+        // C/O table
+        historyHtml += cvTable('C/O', ['Complaint', 'Since', 'Eye', 'Comment'],
+            coData.length
+                ? coData.map(d => `<tr>${cvTd(d.complaint)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.eye)}${cvTd(d.comment)}</tr>`).join('')
+                : `<tr><td colspan="4" class="text-center" style="font-size:10px;padding:3px;color:#94a3b8;">—</td></tr>`
+        );
+
+        // K/C/O table
+        if (kcoData.length) {
+            historyHtml += cvTable('K/C/O', ['Condition', 'Since', 'Comment'],
+                kcoData.map(d => `<tr>${cvTd(d.condition)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.comment)}</tr>`).join('')
+            );
+        }
+
+        // H/O pills
+        if (hnoList.length) {
+            historyHtml +=
+                `<div style="font-size:10px;font-weight:700;color:#1B4F72;letter-spacing:.06em;margin-bottom:3px;">H/O</div>` +
+                `<div style="margin-bottom:5px;">${hnoList.map(pill).join('')}</div>`;
+        }
+
+        // Vision data
+        historyHtml +=
+            `<div class="d-flex flex-wrap align-items-center" style="border-top:1px solid #dde3ea;padding-top:4px;margin-top:2px;">` +
             makeVn('Vn', vnRe, vnLe) +
             makeVn('PH', phRe, phLe) +
             makeVn('NrVn', nrRe, nrLe) +
-            `<div class="d-inline-flex align-items-center me-3 mb-1" style="font-size:11px;"><strong>IOP:</strong>&nbsp;${iopRe} / ${iopLe}</div>` +
+            `<div class="d-inline-flex align-items-center me-2 mb-1" style="font-size:11px;"><strong>IOP:</strong>&nbsp;${iopRe}/${iopLe}</div>` +
             `</div>`;
         document.getElementById('canvas_history').innerHTML = historyHtml;
 
+        // PG table (navy theme)
+        const pgCell  = (v) => `<td class="text-center" style="padding:2px;">${v}</td>`;
+        const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
         const visionHtml =
-            `<table class="table table-sm table-bordered border-dark text-center mb-0" style="font-size:11px;">` +
+            `<table class="table table-sm table-bordered mb-0" style="font-size:11px;">` +
             `<thead>` +
-            `<tr><th></th><th class="bg-secondary text-white" colspan="4">Right Eye PG</th><th class="bg-secondary text-white" colspan="4">Left Eye PG</th></tr>` +
-            `<tr><th></th><th>DS</th><th>DC</th><th>AX</th><th>VA</th><th>DS</th><th>DC</th><th>AX</th><th>VA</th></tr>` +
+            `<tr>` +
+              `<th style="background:#1B4F72;color:#fff;width:22px;padding:2px;border-color:#1B4F72;"></th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
+            `</tr>` +
+            `<tr style="background:#eef4f9;">${pgSubTh('')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}</tr>` +
             `</thead><tbody>` +
-            `<tr><th>D</th>` +
-            `<td>${val('exam_data[pg][re][ds]')}</td><td>${val('exam_data[pg][re][dc]')}</td><td>${val('exam_data[pg][re][ax]')}</td><td>${val('exam_data[pg][re][vn]')}</td>` +
-            `<td>${val('exam_data[pg][le][ds]')}</td><td>${val('exam_data[pg][le][dc]')}</td><td>${val('exam_data[pg][le][ax]')}</td><td>${val('exam_data[pg][le][vn]')}</td>` +
-            `</tr><tr><th>N</th>` +
-            `<td colspan="3" class="text-muted" style="font-size:10px;">Add: ${val('exam_data[pg][re][add]')}</td><td>${val('exam_data[pg][re][near_vn]')}</td>` +
-            `<td colspan="3" class="text-muted" style="font-size:10px;">Add: ${val('exam_data[pg][le][add]')}</td><td>${val('exam_data[pg][le][near_vn]')}</td>` +
-            `</tr></tbody></table>`;
+            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">D</th>` +
+              `${pgCell(val('exam_data[pg][re][ds]'))}${pgCell(val('exam_data[pg][re][dc]'))}${pgCell(val('exam_data[pg][re][ax]'))}${pgCell(val('exam_data[pg][re][vn]'))}` +
+              `${pgCell(val('exam_data[pg][le][ds]'))}${pgCell(val('exam_data[pg][le][dc]'))}${pgCell(val('exam_data[pg][le][ax]'))}${pgCell(val('exam_data[pg][le][vn]'))}` +
+            `</tr>` +
+            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">N</th>` +
+              `${pgCell(val('exam_data[pg][re][ns]'))}${pgCell(val('exam_data[pg][re][nc]'))}${pgCell(val('exam_data[pg][re][na]'))}${pgCell(val('exam_data[pg][re][near_vn]'))}` +
+              `${pgCell(val('exam_data[pg][le][ns]'))}${pgCell(val('exam_data[pg][le][nc]'))}${pgCell(val('exam_data[pg][le][na]'))}${pgCell(val('exam_data[pg][le][near_vn]'))}` +
+            `</tr>` +
+            `</tbody></table>`;
         document.getElementById('canvas_vision').innerHTML = visionHtml;
 
-        const stHtml =
-            `<div class="d-flex gap-3 mb-1" style="font-size:11px;"><strong>ADD:</strong> ${val('exam_data[st][add]')} &nbsp; <strong>Lens:</strong> ${val('exam_data[st][lens_type]')}</div>` +
-            `<table class="table table-sm table-bordered border-dark text-center mb-0" style="font-size:11px;">` +
+        // ST table (navy theme, per-eye ADD, badges, Near VN removed)
+        const stBadges = [
+            form.querySelector('[name="exam_data[st][bifocal]"]')?.checked       ? 'Bifocal'        : '',
+            form.querySelector('[name="exam_data[st][nd_separate]"]')?.checked   ? 'N&D Separate'   : '',
+            form.querySelector('[name="exam_data[st][progressive]"]')?.checked   ? 'Progressive'    : '',
+            form.querySelector('[name="exam_data[st][computer_uses]"]')?.checked ? 'Computer Uses'  : '',
+        ].filter(Boolean);
+        const stReAdd = val('exam_data[st][re][add]');
+        const stLeAdd = val('exam_data[st][le][add]');
+        const stCell  = (v, dim) => `<td class="text-center" style="padding:2px;${dim ? 'color:#94a3b8;' : ''}">${v}</td>`;
+
+        let stHtml =
+            `<table class="table table-sm table-bordered mb-1" style="font-size:11px;">` +
             `<thead>` +
-            `<tr><th></th><th class="bg-dark text-white" colspan="4">Right Eye</th><th class="bg-dark text-white" colspan="4">Left Eye</th></tr>` +
-            `<tr><th></th><th>SPH</th><th>CYL</th><th>AXIS</th><th>VA</th><th>SPH</th><th>CYL</th><th>AXIS</th><th>VA</th></tr>` +
+            `<tr>` +
+              `<th style="background:#1B4F72;color:#fff;width:22px;padding:2px;border-color:#1B4F72;"></th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
+            `</tr>` +
+            `<tr style="background:#eef4f9;">${pgSubTh('')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}</tr>` +
             `</thead><tbody>` +
-            `<tr><th>D</th>` +
-            `<td>${val('exam_data[st][re][ds]')}</td><td>${val('exam_data[st][re][dc]')}</td><td>${val('exam_data[st][re][ax]')}</td><td>${vnRe}</td>` +
-            `<td>${val('exam_data[st][le][ds]')}</td><td>${val('exam_data[st][le][dc]')}</td><td>${val('exam_data[st][le][ax]')}</td><td>${vnLe}</td>` +
-            `</tr><tr><th>N</th>` +
-            `<td>${val('exam_data[st][re][ns]')}</td><td>${val('exam_data[st][re][nc]')}</td><td>${val('exam_data[st][re][na]')}</td><td>${nrRe}</td>` +
-            `<td>${val('exam_data[st][le][ns]')}</td><td>${val('exam_data[st][le][nc]')}</td><td>${val('exam_data[st][le][na]')}</td><td>${nrLe}</td>` +
-            `</tr></tbody></table>`;
+            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">D</th>` +
+              `${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stCell(val('exam_data[st][re][ax]'))}${stCell(val('exam_data[st][re][vn]'))}` +
+              `${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stCell(val('exam_data[st][le][ax]'))}${stCell(val('exam_data[st][le][vn]'))}` +
+            `</tr>` +
+            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">N</th>` +
+              `${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stCell(val('exam_data[st][re][na]'))}${stCell('—', true)}` +
+              `${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}${stCell('—', true)}` +
+            `</tr>` +
+            `</tbody></table>`;
+        if (stReAdd !== '-' || stLeAdd !== '-') {
+            stHtml += `<div style="font-size:10px;color:#475569;margin-bottom:3px;"><span style="color:#1B4F72;font-weight:700;">ADD</span>&emsp;RE: <strong>${stReAdd}</strong>&emsp;LE: <strong>${stLeAdd}</strong></div>`;
+        }
+        if (stBadges.length) {
+            stHtml += `<div class="d-flex flex-wrap gap-1">` +
+                stBadges.map(b => `<span style="font-size:10px;background:#1B4F72;color:#fff;padding:1px 8px;border-radius:10px;">${b}</span>`).join('') +
+                `</div>`;
+        }
         document.getElementById('canvas_st').innerHTML = stHtml;
 
         const oeHtml =
@@ -3203,7 +3448,7 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         const pdd = document.createElement('div');
-        pdd.className = 'co-dropdown';
+        pdd.className = 'co-dropdown pg-co-dropdown';
         document.body.appendChild(pdd);
 
         let activePgInp = null;
@@ -3238,6 +3483,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     activePgInp.value = val;
                     const hidden = activePgInp.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]');
                     if (hidden) { hidden.value = val; }
+                    // Sync ST NEAR Axis from Distance Axis
+                    if (hidden?.name) {
+                        const axM = hidden.name.match(/^exam_data\[st\]\[(re|le)\]\[ax\]$/);
+                        if (axM && typeof window.syncStNearFromDist === 'function') window.syncStNearFromDist(axM[1]);
+                    }
                     pdd.classList.remove('show');
                     activePgInp = null;
                     checkProgress();
@@ -3247,8 +3497,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         document.querySelectorAll('.pg-inp').forEach(inp => {
-            inp.addEventListener('focus', function () { activePgInp = this; renderPdd(''); });
-            inp.addEventListener('input', function () { activePgInp = this; renderPdd(); });
+            inp.addEventListener('focus', function () { if (this.dataset.noDrop) return; activePgInp = this; renderPdd(''); });
+            inp.addEventListener('input', function () { if (this.dataset.noDrop) return; activePgInp = this; renderPdd(); });
             inp.addEventListener('blur', function () {
                 const hidden = this.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]');
                 if (hidden) { hidden.value = this.value; }
@@ -3263,6 +3513,227 @@ document.addEventListener('DOMContentLoaded', function () {
                 pdd.classList.remove('show');
                 activePgInp = null;
             }
+        });
+    })();
+
+    // ── PG value picker modal ─────────────────────────────────────────────────
+    (function () {
+        let pgPickTarget    = null;
+        let pgParentModalEl = null;
+
+        // Near SPH = Distance SPH + ADD (per eye)
+        function calcStNearSph(eye) {
+            var dsHid  = document.querySelector('[name="exam_data[st][' + eye + '][ds]"]');
+            var addHid = document.querySelector('[name="exam_data[st][' + eye + '][add]"]');
+            var nsHid  = document.querySelector('[name="exam_data[st][' + eye + '][ns]"]');
+            if (!dsHid || !addHid || !nsHid) return;
+            var ds  = parseFloat(String(dsHid.value  || '').replace(/^\+/, '')) || 0;
+            var add = parseFloat(String(addHid.value || '').replace(/^\+/, '')) || 0;
+            var ns  = ds + add;
+            var fmt = ns > 0 ? '+' + ns.toFixed(2) : (ns < 0 ? ns.toFixed(2) : '0.00');
+            nsHid.value = fmt;
+            // Show calculated NS in the picker display input
+            var pgInp = addHid.closest('.pg-select-wrap')?.querySelector('.pg-inp');
+            if (pgInp) pgInp.value = fmt;
+            // Update ADD label below
+            var addLabel = nsHid.previousElementSibling?.querySelector('strong');
+            if (addLabel) addLabel.textContent = addHid.value || '—';
+        }
+
+        // Sync ST NEAR CYL/Axis from Distance (NC mirrors DC, NA mirrors AX)
+        function syncStNearFromDist(eye) {
+            [['dc','nc'],['ax','na']].forEach(function (pair) {
+                var distHid = document.querySelector('[name="exam_data[st][' + eye + '][' + pair[0] + ']"]');
+                var nearHid = document.querySelector('[name="exam_data[st][' + eye + '][' + pair[1] + ']"]');
+                if (!distHid || !nearHid) return;
+                var v = distHid.value;
+                nearHid.value = v;
+                var disp = nearHid.previousElementSibling;
+                if (disp && disp.tagName === 'INPUT') disp.value = v;
+            });
+        }
+        window.syncStNearFromDist = syncStNearFromDist;
+
+        // Sync NEAR on ST modal open
+        document.getElementById('modalST')?.addEventListener('show.bs.modal', function () {
+            ['re', 'le'].forEach(function (eye) { calcStNearSph(eye); syncStNearFromDist(eye); });
+        });
+
+        function pgFmt(num) {
+            if (num === 0) return '0.00';
+            return num > 0 ? '+' + num.toFixed(2) : num.toFixed(2);
+        }
+
+        function openPicker(btn) {
+            const sign = btn.dataset.sign;
+            const row  = btn.closest('.d-flex');
+            const wrap = row?.querySelector('.pg-select-wrap');
+            const inp  = wrap?.querySelector('.pg-inp');
+            const hid  = wrap?.querySelector('input[type="hidden"]');
+            if (!inp) return;
+            pgPickTarget = { inp, hid };
+
+            document.getElementById('pgPickerTitle').textContent = sign === 'pos' ? '+ Positive Values' : '− Negative Values';
+
+            const grid = document.getElementById('pgPickerGrid');
+            grid.innerHTML = '';
+            const cur = String(inp.value || '').trim();
+            const masterVals = @json($pgMasterOpts['sph_cyl']);
+            masterVals.forEach(function (rawVal) {
+                const num = parseFloat(rawVal);
+                if (isNaN(num) || num <= 0) return;
+                const v   = num.toFixed(2);
+                const fmt = sign === 'pos' ? '+' + v : '-' + v;
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'pg-picker-chip';
+                chip.textContent = fmt;
+                chip.dataset.val = fmt;
+                if (cur === fmt) {
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid #1B4F72;background:#fff;color:#1B4F72;cursor:pointer;transition:all .12s;';
+                } else {
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#1B4F72;color:#fff;cursor:pointer;transition:all .12s;';
+                }
+                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#154360'; } });
+                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = '#1B4F72'; } });
+                grid.appendChild(chip);
+            });
+
+            // Always show 0.00 as last chip
+            (function () {
+                const fmt  = '0.00';
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'pg-picker-chip';
+                chip.textContent = fmt;
+                chip.dataset.val = fmt;
+                if (cur === fmt) {
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid #64748b;background:#fff;color:#64748b;cursor:pointer;transition:all .12s;';
+                } else {
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#475569;color:#fff;cursor:pointer;transition:all .12s;';
+                }
+                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#334155'; } });
+                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = '#475569'; } });
+                grid.appendChild(chip);
+            })();
+
+            document.getElementById('pgPickerCurrent').textContent = cur || '—';
+            document.getElementById('pgPickerManual').value = '';
+
+            // Bootstrap can't stack two modals — close parent modal first, then open picker
+            pgParentModalEl     = btn.closest('.modal');
+            const pickerModalEl = document.getElementById('modalPGPicker');
+            const pickerModal   = bootstrap.Modal.getOrCreateInstance(pickerModalEl);
+
+            if (pgParentModalEl) {
+                pgParentModalEl.addEventListener('hidden.bs.modal', function () { pickerModal.show(); }, { once: true });
+                bootstrap.Modal.getInstance(pgParentModalEl)?.hide();
+            } else {
+                pickerModal.show();
+            }
+        }
+
+        // Enable/disable Axis based on CYL value
+        function syncAxisForCyl(cylInp, cylVal) {
+            const td      = cylInp.closest('td');
+            const axisTd  = td?.nextElementSibling;
+            const axisInp = axisTd?.querySelector('.pg-inp[data-master="axis"]');
+            const axisHid = axisTd?.querySelector('input[type="hidden"]');
+            if (!axisInp) return;
+
+            const num    = parseFloat(String(cylVal || '').replace(/^\+/, ''));
+            const isZero = isNaN(num) || num === 0;
+
+            if (isZero) {
+                axisInp.value = '';
+                if (axisHid) axisHid.value = '';
+                axisInp.disabled = true;
+                axisInp.style.cssText += ';opacity:.35;cursor:not-allowed;pointer-events:none;background:#f1f5f9;border-color:#e2e8f0 !important;';
+            } else {
+                axisInp.disabled = false;
+                axisInp.style.opacity   = '1';
+                axisInp.style.cursor    = 'pointer';
+                axisInp.style.pointerEvents = '';
+                axisInp.style.background    = '';
+                axisInp.style.borderColor   = '';
+            }
+        }
+
+        function applyVal(val) {
+            if (!pgPickTarget) return;
+            pgPickTarget.inp.value = val;
+            if (pgPickTarget.hid) pgPickTarget.hid.value = val;
+            document.getElementById('pgPickerCurrent').textContent = val || '—';
+
+            // Sync Axis disabled state when CYL changes
+            const hidName = pgPickTarget.hid?.name || '';
+            if (hidName.includes('[dc]') || hidName.includes('[nc]')) {
+                syncAxisForCyl(pgPickTarget.inp, val);
+            }
+
+            // Recalc ST Near SPH when Distance SPH or ADD changes
+            const stDsMatch  = hidName.match(/^exam_data\[st\]\[(re|le)\]\[ds\]$/);
+            if (stDsMatch) calcStNearSph(stDsMatch[1]);
+            const stAddMatch = hidName.match(/^exam_data\[st\]\[(re|le)\]\[add\]$/);
+            if (stAddMatch) { calcStNearSph(stAddMatch[1]); syncStNearFromDist(stAddMatch[1]); }
+
+            // Sync ST NEAR CYL from Distance CYL
+            const stDcMatch = hidName.match(/^exam_data\[st\]\[(re|le)\]\[dc\]$/);
+            if (stDcMatch) syncStNearFromDist(stDcMatch[1]);
+
+            if (typeof checkProgress    === 'function') checkProgress();
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        }
+
+        function closePicker() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPGPicker')).hide();
+        }
+
+        // Reopen parent modal when picker closes
+        document.getElementById('modalPGPicker').addEventListener('hidden.bs.modal', function () {
+            if (pgParentModalEl) {
+                bootstrap.Modal.getOrCreateInstance(pgParentModalEl).show();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.pg-pick-btn');
+            if (btn) { openPicker(btn); return; }
+
+            const chip = e.target.closest('.pg-picker-chip');
+            if (chip) { applyVal(chip.dataset.val); closePicker(); }
+        });
+
+        document.getElementById('pgPickerClear')?.addEventListener('click', function () {
+            applyVal(''); closePicker();
+        });
+
+        document.getElementById('pgPickerSaveManual')?.addEventListener('click', function () {
+            const raw = document.getElementById('pgPickerManual').value.trim();
+            if (!raw) return;
+            const num = parseFloat(raw);
+            if (isNaN(num)) return;
+            applyVal(pgFmt(num)); closePicker();
+        });
+
+        // Prevent Enter in picker input from submitting exam form
+        document.getElementById('pgPickerManual')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('pgPickerSaveManual')?.click();
+            }
+        });
+
+        // Init Axis state on page load based on saved CYL values (PG + ST)
+        [
+            'exam_data[pg][re][dc]', 'exam_data[pg][re][nc]', 'exam_data[pg][le][dc]', 'exam_data[pg][le][nc]',
+            'exam_data[st][re][dc]', 'exam_data[st][re][nc]', 'exam_data[st][le][dc]', 'exam_data[st][le][nc]',
+        ].forEach(function (name) {
+            const hid = document.querySelector('[name="' + name + '"]');
+            if (!hid) return;
+            const cylInp = hid.closest('.pg-select-wrap')?.querySelector('.pg-inp');
+            if (cylInp) syncAxisForCyl(cylInp, hid.value);
         });
     })();
 
@@ -3703,6 +4174,9 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
+        const missingCoRows  = {};
+        const missingKcoRows = {};
+
         Object.entries(data).forEach(([name, value]) => {
             if (Array.isArray(value)) {
                 form.querySelectorAll(`input[name="${name}"][type="checkbox"]`).forEach(cb => {
@@ -3710,7 +4184,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             } else {
                 const el = form.querySelector(`[name="${name}"]`);
-                if (!el) { return; }
+                if (!el) {
+                    // Collect dynamic rows that don't exist in DOM yet
+                    const coM  = name.match(/^exam_data\[co_rows\]\[(\d+)\]\[(\w+)\]$/);
+                    const kcoM = name.match(/^exam_data\[kco_rows\]\[(\d+)\]\[(\w+)\]$/);
+                    if (coM)  { if (!missingCoRows[coM[1]])   missingCoRows[coM[1]]   = {}; missingCoRows[coM[1]][coM[2]]   = value; }
+                    if (kcoM) { if (!missingKcoRows[kcoM[1]]) missingKcoRows[kcoM[1]] = {}; missingKcoRows[kcoM[1]][kcoM[2]] = value; }
+                    return;
+                }
 
                 if (el.type === 'radio') {
                     const radio = form.querySelector(`[name="${name}"][value="${value}"]`);
@@ -3724,17 +4205,64 @@ document.addEventListener('DOMContentLoaded', function () {
                 el.dispatchEvent(new Event('change', { bubbles: true }));
             }
         });
+
+        // Recreate C/O rows that were added dynamically (not rendered by Blade on load)
+        Object.keys(missingCoRows).sort((a, b) => Number(a) - Number(b)).forEach(idx => {
+            const row = missingCoRows[idx];
+            if (!row.complaint || typeof window._addCoRow !== 'function') { return; }
+            window._addCoRow(row.complaint);
+            const allRows = document.querySelectorAll('#coBody .co-row');
+            const newRow  = allRows[allRows.length - 1];
+            if (!newRow) { return; }
+            if (row.since   !== undefined) { const s = newRow.querySelector('[name*="[since]"]');   if (s) s.value = row.since; }
+            if (row.unit    !== undefined) { const u = newRow.querySelector('[name*="[unit]"]');    if (u) u.value = row.unit; }
+            if (row.eye     !== undefined) { const e = newRow.querySelector('[name*="[eye]"]');     if (e) e.value = row.eye; }
+            if (row.comment !== undefined) { const c = newRow.querySelector('[name*="[comment]"]'); if (c) c.value = row.comment; }
+        });
+
+        // Recreate KCO rows that were added dynamically
+        Object.keys(missingKcoRows).sort((a, b) => Number(a) - Number(b)).forEach(idx => {
+            const row = missingKcoRows[idx];
+            if (!row.condition || typeof window._addKcoRow !== 'function') { return; }
+            window._addKcoRow(row.condition);
+            const allRows = document.querySelectorAll('#kcoBody .kco-row');
+            const newRow  = allRows[allRows.length - 1];
+            if (!newRow) { return; }
+            if (row.since   !== undefined) { const s = newRow.querySelector('[name*="[since]"]');   if (s) s.value = row.since; }
+            if (row.unit    !== undefined) { const u = newRow.querySelector('[name*="[unit]"]');    if (u) u.value = row.unit; }
+            if (row.comment !== undefined) { const c = newRow.querySelector('[name*="[comment]"]'); if (c) c.value = row.comment; }
+        });
+
+        // Rebuild H/O chips from the restored hnoHidden value
+        if (Object.prototype.hasOwnProperty.call(data, 'exam_data[history]') && typeof window._addHnoChip === 'function') {
+            const hnoHidden = document.getElementById('hnoHidden');
+            const hnoChips  = document.getElementById('hnoChips');
+            if (hnoHidden && hnoChips) {
+                hnoChips.innerHTML = '';
+                (hnoHidden.value || '').split(',').map(s => s.trim()).filter(Boolean)
+                    .forEach(val => window._addHnoChip(val));
+            }
+        }
     }
 
     form.addEventListener('input', saveDraft);
     form.addEventListener('change', saveDraft);
 
-    form.addEventListener('submit', function () {
-        try {
-            localStorage.removeItem(draftKey);
-        } catch (_) {
-            // ignore storage errors
+    let _examConfirmed = false;
+    form.addEventListener('submit', function (e) {
+        if (!_examConfirmed) {
+            e.preventDefault();
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).show();
+            return;
         }
+        _examConfirmed = false;
+        try { localStorage.removeItem(draftKey); } catch (_) { /* ignore */ }
+    });
+
+    document.getElementById('examConfirmYes')?.addEventListener('click', function () {
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).hide();
+        _examConfirmed = true;
+        form.requestSubmit();
     });
 
     setTimeout(loadDraft, 300);

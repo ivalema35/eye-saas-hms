@@ -14,26 +14,12 @@ class MasterSphCylSeeder extends Seeder
 
         MasterSphCyl::unguarded(function () use ($tenants): void {
             foreach ($tenants as $tenant) {
-                MasterSphCyl::query()->updateOrCreate([
-                    'tenant_id' => $tenant->id,
-                    'type' => 'Positive',
-                    'value' => '0',
-                ]);
-
                 for ($i = 0.25; $i <= 10.00; $i += 0.25) {
                     $value = number_format($i, 2);
-
-                    MasterSphCyl::query()->updateOrCreate([
-                        'tenant_id' => $tenant->id,
-                        'type' => 'Positive',
-                        'value' => $value,
-                    ]);
-
-                    MasterSphCyl::query()->updateOrCreate([
-                        'tenant_id' => $tenant->id,
-                        'type' => 'Negative',
-                        'value' => $value,
-                    ]);
+                    MasterSphCyl::query()->updateOrCreate(
+                        ['tenant_id' => $tenant->id, 'value' => $value],
+                        ['is_seeded' => true],
+                    );
                 }
             }
         });

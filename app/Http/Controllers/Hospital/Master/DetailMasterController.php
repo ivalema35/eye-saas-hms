@@ -157,6 +157,10 @@ class DetailMasterController extends Controller
     {
         $modelClass  = $this->resolveModel($type);
         $record      = $modelClass::findOrFail($id);
+
+        if (property_exists($record, 'casts') && isset($record->getCasts()['is_seeded']) && $record->is_seeded) {
+            return redirect()->back()->with('error', 'Default seeded values cannot be edited.');
+        }
         $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
         $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
         $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
@@ -188,7 +192,13 @@ class DetailMasterController extends Controller
     public function destroy(string $slug, string $type, int $id): RedirectResponse
     {
         $modelClass = $this->resolveModel($type);
-        $modelClass::findOrFail($id)->delete();
+        $record     = $modelClass::findOrFail($id);
+
+        if (isset($record->getCasts()['is_seeded']) && $record->is_seeded) {
+            return redirect()->back()->with('error', 'Default seeded values cannot be deleted.');
+        }
+
+        $record->delete();
 
         return redirect()->back()->with('success', Str::headline($type).' deleted successfully.');
     }

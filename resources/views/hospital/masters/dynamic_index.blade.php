@@ -76,16 +76,6 @@
                                     <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">
                                         {{ Str::headline($col) }} <span class="text-danger">*</span>
                                     </label>
-                                    @if($type === 'sph_cyl' && $col === 'type')
-                                        <select name="{{ $col }}"
-                                                id="input-{{ $col }}"
-                                                class="form-select form-select-lg bg-light border-0"
-                                                style="font-size: 15px;"
-                                                required>
-                                            <option value="Positive" {{ old($col, 'Positive') === 'Positive' ? 'selected' : '' }}>Positive</option>
-                                            <option value="Negative" {{ old($col) === 'Negative' ? 'selected' : '' }}>Negative</option>
-                                        </select>
-                                    @else
                                         <input type="text"
                                                name="{{ $col }}"
                                                id="input-{{ $col }}"
@@ -94,7 +84,6 @@
                                                placeholder="Enter {{ strtolower(Str::headline($col)) }}..."
                                                value="{{ old($col) }}"
                                                required>
-                                    @endif
                                 </div>
                             @endforeach
 
@@ -176,6 +165,7 @@
                                         @endif
                                         @if($canWrite)
                                             <td class="text-end pe-4">
+                                                @if(!isset($record->getCasts()['is_seeded']) || !$record->is_seeded)
                                                 <div class="btn-group shadow-sm rounded-3" role="group">
                                                     <button type="button"
                                                             class="btn btn-light border-0 text-primary {{ $useModalLayout ? 'case-master-icon-btn' : '' }}"
@@ -196,6 +186,9 @@
                                                         </button>
                                                     </form>
                                                 </div>
+                                                @else
+                                                    <span class="text-muted small px-2">—</span>
+                                                @endif
                                             </td>
                                         @endif
                                     </tr>
