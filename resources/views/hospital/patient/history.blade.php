@@ -376,7 +376,7 @@
 @php
         $user = Auth::guard('hospital_user')->user();
         $isDoctor = in_array($user?->role?->slug, ['doctor', 'ot_doctor']);
-    @endph
+    @endphp
 
     @if(!$isDoctor)
     <div class="history-heading d-flex justify-content-between align-items-center mb-4">
