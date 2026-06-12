@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,8 +13,7 @@
 
     {{-- Bootstrap 5.3 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossorigin="anonymous" />
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
 
     {{-- Bootstrap Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -21,10 +21,10 @@
     {{-- Premium Theme Overrides --}}
     <link rel="stylesheet" href="{{ asset('css/premium-theme.css') }}">
 
-        {{-- Font Awesome (legacy pages; can be removed after full icon migration) --}}
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-            integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
-            crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {{-- Font Awesome (legacy pages; can be removed after full icon migration) --}}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     {{-- Select2 CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
@@ -66,11 +66,25 @@
         }
 
         @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
-    :root { --hms-navbar-h: 120px; }
-    .hms-sidebar { display: none !important; }
-    .hms-main { margin-left: 0 !important; width: 100% !important; padding: 20px !important; }
-    #hmsSidebarToggle { display: none !important; }
-@endif
+            :root {
+                --hms-navbar-h: 120px;
+            }
+
+            .hms-sidebar {
+                display: none !important;
+            }
+
+            .hms-main {
+                margin-left: 0 !important;
+                width: 100% !important;
+                padding: 20px !important;
+            }
+
+            #hmsSidebarToggle {
+                display: none !important;
+            }
+
+        @endif
 
         /* ── Navbar ─────────────────────────────────────────────────── */
         .hms-navbar {
@@ -95,6 +109,7 @@
             line-height: 1;
             transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
         }
+
         .hms-sidebar-toggle:hover {
             transform: translateY(-1px);
             background: var(--shell-white-86);
@@ -107,15 +122,18 @@
             text-decoration: none !important;
             font-size: 1.06rem;
         }
+
         .hms-breadcrumb-link:hover {
             opacity: .88;
             text-decoration: none !important;
         }
+
         .breadcrumb-item,
         .breadcrumb-item.active {
             font-size: 1.02rem;
             font-weight: 650;
         }
+
         .breadcrumb-item.active {
             opacity: 0.9;
         }
@@ -126,15 +144,18 @@
             box-shadow: none;
             padding: 0.46rem 1.05rem;
         }
+
         .wait-queue-badge i {
             color: var(--shell-secondary) !important;
             opacity: .95;
         }
+
         .wait-queue-badge span {
             color: rgba(27, 79, 114, 0.72) !important;
             font-weight: 700;
             font-size: 1.02rem;
         }
+
         .wait-queue-badge strong {
             color: var(--shell-secondary) !important;
             font-weight: 900;
@@ -149,6 +170,7 @@
             margin-top: .85rem;
             align-self: flex-end;
         }
+
         .reception-register-btn {
             display: inline-flex;
             align-items: center;
@@ -165,10 +187,12 @@
             line-height: 1;
             transition: background 160ms ease, transform 160ms ease;
         }
+
         .reception-register-btn i,
         .reception-register-btn span {
             color: #ffffff !important;
         }
+
         .reception-register-btn:hover {
             background: #164361;
             transform: translateY(-1px);
@@ -181,21 +205,25 @@
             color: var(--shell-secondary) !important;
             box-shadow: none;
         }
+
         .user-name {
             font-size: .92rem;
             font-weight: 900;
         }
+
         .user-role {
             color: rgba(27, 79, 114, 0.72) !important;
             font-weight: 650;
             font-size: .86rem;
         }
+
         .user-dropdown .dropdown-menu {
             border: 1px solid var(--shell-s2-12) !important;
             border-radius: 16px;
             box-shadow: none;
             overflow: hidden;
         }
+
         .user-dropdown .dropdown-item {
             border-radius: 12px;
             font-weight: 700;
@@ -271,6 +299,7 @@
             font-size: .70rem;
             letter-spacing: .12em;
         }
+
         .hms-nav-divider {
             background: var(--shell-s2-12) !important;
             opacity: 1;
@@ -284,16 +313,19 @@
             padding: .65rem .9rem;
             transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, border-color 160ms ease;
         }
+
         .hms-nav-group-toggle:hover {
             transform: translateX(2px);
             box-shadow: none;
             background: var(--shell-secondary);
             border-color: transparent;
         }
+
         .hms-nav-group-toggle:hover .hms-nav-section-label,
         .hms-nav-group-toggle:hover .hms-nav-chevron {
             color: rgba(255, 255, 255, 0.95) !important;
         }
+
         .hms-nav-group-toggle .hms-nav-chevron {
             color: rgba(27, 79, 114, 0.72) !important;
             font-size: .75rem;
@@ -311,6 +343,7 @@
         .hms-nav-group-items .hms-nav-item {
             font-size: .92rem;
         }
+
         .hms-nav-group-items .hms-nav-item i {
             font-size: .95rem;
         }
@@ -326,6 +359,7 @@
             position: relative;
             transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
         }
+
         .hms-nav-item::before {
             content: '';
             position: absolute;
@@ -339,11 +373,13 @@
             opacity: 0;
             transition: width 160ms ease, opacity 160ms ease;
         }
+
         .hms-nav-item i {
             color: var(--shell-secondary) !important;
             font-size: 1.05rem;
             transition: transform 160ms ease;
         }
+
         .hms-nav-item:hover {
             background: var(--shell-secondary) !important;
             border-color: transparent !important;
@@ -351,14 +387,18 @@
             transform: translateX(2px);
             color: rgba(255, 255, 255, 0.98) !important;
             text-decoration: none !important;
-            padding-left: .95rem; /* prevent old left-padding shift feeling */
+            padding-left: .95rem;
+            /* prevent old left-padding shift feeling */
         }
+
         .hms-nav-item:hover i {
             color: rgba(255, 255, 255, 0.98) !important;
         }
+
         .hms-nav-item:hover i {
             transform: translateX(1px);
         }
+
         .hms-nav-item.active {
             background: rgba(27, 79, 114, 0.12) !important;
             color: var(--shell-secondary) !important;
@@ -367,6 +407,7 @@
             box-shadow: none;
             padding-left: .95rem !important;
         }
+
         .hms-nav-item.active::before {
             width: 4px;
             opacity: 1;
@@ -376,6 +417,7 @@
         .hms-sidebar-footer {
             border-top: none !important;
         }
+
         .hms-sidebar-logout {
             color: var(--shell-secondary) !important;
             font-weight: 900;
@@ -383,109 +425,119 @@
             border: none;
             background: rgba(255, 255, 255, 0.65);
         }
+
         .hms-sidebar-logout:hover {
             background: var(--shell-secondary) !important;
             color: rgba(255, 255, 255, 0.98) !important;
         }
+
         .hms-sidebar-logout:hover i {
             color: rgba(255, 255, 255, 0.98) !important;
         }
 
         /* Black menu dropdown ne proper align karva mate */
-.black-menu-bar .dropdown {
-    position: relative;
-}
+        .black-menu-bar .dropdown {
+            position: relative;
+        }
 
-/* Default ma menu hide rakhva mate */
-.black-menu-bar .dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    margin-top: 0;
-    background-color: #ffffff;
-    border: 1px solid #ddd;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    border-radius: 4px;
-    padding: 5px 0;
-    min-width: 150px;
-}
+        /* Default ma menu hide rakhva mate */
+        .black-menu-bar .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 0;
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            padding: 5px 0;
+            min-width: 150px;
+        }
 
-.black-menu-bar .dropdown::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 0;
-    width: 100%;
-    height: 8px;
-}
+        .black-menu-bar .dropdown::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 8px;
+        }
 
-.black-menu-bar .dropdown:hover > .dropdown-menu {
-    display: block;
-}
+        .black-menu-bar .dropdown:hover>.dropdown-menu {
+            display: block;
+        }
 
 
-.black-menu-bar .dropdown-item {
-    color: #333 !important;
-    padding: 8px 15px;
-    display: block;
-}
-.black-menu-bar .dropdown-item:hover {
-    background-color: #f0f0f0;
-}
+        .black-menu-bar .dropdown-item {
+            color: #333 !important;
+            padding: 8px 15px;
+            display: block;
+        }
 
-.dropdown-menu .dropend {
-    position: relative;
-}
+        .black-menu-bar .dropdown-item:hover {
+            background-color: #f0f0f0;
+        }
 
-.dropdown-menu .dropend > .dropdown-menu {
-    top: 0;
-    left: 100%;
-    margin-top: -0.25rem;
-    display: none;
-}
+        .dropdown-menu .dropend {
+            position: relative;
+        }
 
-.dropdown-menu .dropend:hover > .dropdown-menu,
-.dropdown-menu .dropend.show > .dropdown-menu {
-    display: block;
-}
+        .dropdown-menu .dropend>.dropdown-menu {
+            top: 0;
+            left: 100%;
+            margin-top: -0.25rem;
+            display: none;
+        }
 
-.black-menu-bar .dropdown-menu .dropdown-menu {
-    display: none;
-}
+        .dropdown-menu .dropend:hover>.dropdown-menu,
+        .dropdown-menu .dropend.show>.dropdown-menu {
+            display: block;
+        }
 
-.dropdown-menu .dropdown-toggle::after {
-    float: right;
-    margin-top: 0.5em;
-}
+        .black-menu-bar .dropdown-menu .dropdown-menu {
+            display: none;
+        }
+
+        .dropdown-menu .dropdown-toggle::after {
+            float: right;
+            margin-top: 0.5em;
+        }
 
 
         @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
-        .hms-navbar {
-            display: flex;
-            flex-direction: column;
-            padding: 10px 20px !important;
-        }
-        .top-header {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .black-menu-bar {
-            background: #1a1a1a;
-            width: 100%;
-            padding: 10px 20px;
-            display: flex;
-            gap: 20px;
-            color: white;
-        }
-        .black-menu-bar a { color: white; text-decoration: none; }
-        @endif
+            .hms-navbar {
+                display: flex;
+                flex-direction: column;
+                padding: 10px 20px !important;
+            }
 
+            .top-header {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
+                align-items: center;
+                margin-bottom: 10px;
+            }
+
+            .black-menu-bar {
+                background: #1a1a1a;
+                width: 100%;
+                padding: 10px 20px;
+                display: flex;
+                gap: 20px;
+                color: white;
+            }
+
+            .black-menu-bar a {
+                color: white;
+                text-decoration: none;
+            }
+
+        @endif
         /* Reduce-motion support */
         @media (prefers-reduced-motion: reduce) {
+
             .hms-nav-item,
             .hms-nav-group-toggle,
             .hms-sidebar-toggle {
@@ -493,33 +545,67 @@
             }
         }
 
-    .avatar-circle {
-        width: 35px; height: 35px; background: #1B4F72; color: #fff;
-        border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    }
-    .user-name { font-size: 13px; font-weight: 800; color: #1B4F72; line-height: 1; }
-    .user-role { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; }
-    .user-dropdown .dropdown-toggle::after { display: none; } /* એરો દૂર કરવા માટે */
+        .avatar-circle {
+            width: 35px;
+            height: 35px;
+            background: #1B4F72;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-name {
+            font-size: 13px;
+            font-weight: 800;
+            color: #1B4F72;
+            line-height: 1;
+        }
+
+        .user-role {
+            font-size: 10px;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .user-dropdown .dropdown-toggle::after {
+            display: none;
+        }
+
+        /* એરો દૂર કરવા માટે */
 
 
         .hms-sidebar-backdrop {
             background: rgba(27, 79, 114, 0.35) !important;
         }
+
         @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
-    <style>
-        .hms-layout { display: block !important; }
-        .hms-main { margin-left: 0 !important; width: 100% !important; padding: 1.5rem !important; }
-        #hmsSidebarToggle { display: none !important; }
-    </style>
-@endif
+                <style>.hms-layout {
+                    display: block !important;
+                }
+
+                .hms-main {
+                    margin-left: 0 !important;
+                    width: 100% !important;
+                    padding: 1.5rem !important;
+                }
+
+                #hmsSidebarToggle {
+                    display: none !important;
+                }
+            </style>
+        @endif
     </style>
 
     @stack('styles')
 </head>
+
 <body class="hms-body">
 
     {{-- ================================================
-         Grace Period Warning Banner
+    Grace Period Warning Banner
     ================================================ --}}
     @if(session('show_grace_warning'))
         <div class="hms-grace-banner">
@@ -527,237 +613,251 @@
             <strong>Warning:</strong>
             Aapka subscription expire ho gaya hai. Please renew karein warna access band ho jayega.
             <a href="{{ route('hospital.settings.index', ['slug' => request()->route('slug')]) }}"
-               class="hms-grace-link">Renew Now</a>
+                class="hms-grace-link">Renew Now</a>
         </div>
     @endif
 
     {{-- ================================================
-         Top Navigation Bar
+    Top Navigation Bar
     ================================================ --}}
     <nav class="hms-navbar">
-    @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
-        <div class="top-header">
-        <div class="d-flex align-items-center">
-            <img src="{{ $hospitalLogoUrl }}" style="height: 40px; margin-right: 15px;">
-            <div class="fw-bold fs-4">{{ $hospitalName }}</div>
-        </div>
-        <div class="dropdown user-dropdown">
-            <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown" style="text-decoration: none;">
-                <span class="avatar-circle">
-                    <i class="bi bi-person-fill"></i>
-                </span>
-                <div class="user-info d-flex flex-column text-start">
-                    <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
-                    <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
+        @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+            <div class="top-header">
+                <div class="d-flex align-items-center">
+                    <img src="{{ $hospitalLogoUrl }}" style="height: 40px; margin-right: 15px;">
+                    <div class="fw-bold fs-4">{{ $hospitalName }}</div>
                 </div>
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end" style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-                <li>
-                    <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
-                        @csrf
-                        <button type="submit" class="dropdown-item text-danger fw-bold">
-                            <i class="bi bi-box-arrow-right me-2"></i> Logout
-                        </button>
-                    </form>
-                </li>
-            </ul>
-        </div>
-    </div>
-<div class="black-menu-bar d-flex align-items-center" style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
-    
-    {{-- Dashboard --}}
-    <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}" class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
-    
-{{-- Basic Master Dropdown --}}
-<!-- <div class="dropdown">
-    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-        <i class="bi bi-list-task"></i> Basic Master
-    </a>
-    <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-<li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-<li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-<li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-    </ul>
-</div> -->
-
-    {{-- Diagnosis Master Dropdown --}}
-<div class="dropdown">
-    <a href="#" class="text-white text-decoration-none dropdown-toggle">
-        <i class="bi bi-info-circle-fill"></i> Diagnosis Master
-    </a>
-    <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/kcos') }}">KCO</a></li>
-        <li class="dropend">
-            <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/sac') }}">SAC</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lid') }}">LID</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/conj') }}">CONJ</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/cornea') }}">CORNEA</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/ac') }}">AC</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/iris') }}">IRIS</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/pupil') }}">PUPIL</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lens') }}">LENS</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/em') }}">EM</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/covertest') }}">COVER TEST</a></li>
-            </ul>
-        </li>
-  
-        <li class="dropend">
-            <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
-            <ul class="dropdown-menu">
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/disc') }}">DISC</a></li>
-                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/fr') }}">FR</a></li>
-            </ul>
-        </li>
-        
-        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/diagnosis') }}">DIAGNOSIS</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/advice') }}">ADVICE</a></li>
-    </ul>
-</div>
-
-<div class="dropdown">
-    <a href="#" class="text-white text-decoration-none dropdown-toggle">
-        <i class="bi bi-capsule"></i> Medicine Master
-    </a>
-    <ul class="dropdown-menu">
-        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-dosages') }}">Dosage</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-types') }}">Medicine Type</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-categories') }}">Medicine Category</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Root Of Administration</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Add Medicine</a></li>
-        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Add Group</a></li>
-    </ul>
-</div>
-
- {{-- History --}}
-    <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}" class="text-white text-decoration-none">
-        <i class="bi bi-clock-history"></i> History
-    </a>
-</div>
-
-    @else
-        @php
-            $currentUser = auth('hospital_user')->user();
-            $slug = request()->route('slug');
-            $isReceptionistUser = in_array($currentUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
-            $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
-            $permSvcTop = app(\App\Services\Auth\RolePermissionService::class);
-
-            $waitQueueCount = 0;
-            try {
-                $waitQueueCount = \App\Models\Hospital\Patient::query()
-                    ->whereDate('appointment_date', today())
-                    ->whereNull('primary_done_at')
-                    ->count();
-            } catch (\Throwable $e) {
-                $waitQueueCount = 0;
-            }
-
-            $segments = collect(request()->segments());
-            if ($slug && $segments->isNotEmpty() && $segments->first() === $slug) {
-                $segments = $segments->slice(1)->values();
-            }
-        @endphp
-
-        {{-- Mobile Sidebar Toggle --}}
-        <button class="hms-sidebar-toggle" id="hmsSidebarToggle" aria-label="Toggle sidebar">
-            <i class="bi bi-list"></i>
-        </button>
-
-        <nav class="hms-breadcrumb-wrap" aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item">
-                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="hms-breadcrumb-link">
-                        <i class="bi bi-house-door"></i> Home
-                    </a>
-                </li>
-                @forelse($segments as $i => $segment)
-                    @php
-                        $isLast = $i === $segments->count() - 1;
-                        $segmentLabel = str($segment)->replace(['-', '_'], ' ')->title();
-                    @endphp
-                    <li class="breadcrumb-item {{ $isLast ? 'active' : '' }}" {{ $isLast ? 'aria-current=page' : '' }}>
-                        {{ $segmentLabel }}
-                    </li>
-                @empty
-                    <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
-                @endforelse
-            </ol>
-        </nav>
-
-        <div class="hms-navbar-right">
-            <div class="wait-queue-badge">
-                <i class="bi bi-hourglass-split"></i>
-                <span>Wait Queue (OPD):</span>
-                <strong>{{ $waitQueueCount }}</strong>
-            </div>
-
-            @if($showReceptionRegisterActions)
-                <div class="reception-register-actions">
-                    @if($permSvcTop->can('opd.patient.register'))
-                        <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}" class="reception-register-btn">
-                            <i class="bi bi-person-plus"></i>
-                            <span>WALK IN</span>
-                        </a>
-                    @endif
-                    @if($permSvcTop->can('opd.patient.register_phone'))
-                        <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}" class="reception-register-btn">
-                            <i class="bi bi-telephone"></i>
-                            <span>PHONE</span>
-                        </a>
-                    @endif
-                </div>
-            @endif
-
-            @if($currentUser)
                 <div class="dropdown user-dropdown">
-                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-                       href="#"
-                       id="navbarUserDropdown"
-                       role="button"
-                       data-bs-toggle="dropdown"
-                       aria-expanded="false">
+                    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown"
+                        style="text-decoration: none;">
                         <span class="avatar-circle">
                             <i class="bi bi-person-fill"></i>
                         </span>
-                        <span class="user-info d-none d-md-flex flex-column text-start">
-                            <span class="user-name">{{ $currentUser->name }}</span>
-                            <small class="user-role">{{ $currentUser->role?->name ?? 'Hospital Staff' }}</small>
-                        </span>
+                        <div class="user-info d-flex flex-column text-start">
+                            <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
+                            <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
+                        </div>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
-                        <li><h6 class="dropdown-header">Switch Workspace</h6></li>
+                    <ul class="dropdown-menu dropdown-menu-end"
+                        style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
                         <li>
-                            <a class="dropdown-item" href="{{ route('hospital.patients.index', ['slug' => $slug]) }}">
-                                <i class="bi bi-person-badge me-2"></i> Doctor Workspace
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">
-                                <i class="bi bi-clipboard2-pulse me-2"></i> Reception Workspace
-                            </a>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <a class="dropdown-item" href="{{ route('hospital.settings.index', ['slug' => $slug]) }}">
-                                <i class="bi bi-gear me-2"></i> Settings
-                            </a>
-                        </li>
-                        <li>
-                            <form method="POST" action="{{ route('hospital.logout', ['slug' => $slug]) }}">
+                            <form method="POST"
+                                action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
                                 @csrf
-                                <button type="submit" class="dropdown-item text-danger">
+                                <button type="submit" class="dropdown-item text-danger fw-bold">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </button>
                             </form>
                         </li>
                     </ul>
                 </div>
-            @endif
-        </div>
+            </div>
+            <div class="black-menu-bar d-flex align-items-center"
+                style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
+
+                {{-- Dashboard --}}
+                <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
+                    class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
+
+                {{-- Basic Master Dropdown --}}
+                <!-- <div class="dropdown">
+                            <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="bi bi-list-task"></i> Basic Master
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                            </ul>
+                        </div> -->
+
+                {{-- Diagnosis Master Dropdown --}}
+                <div class="dropdown">
+                    <a href="#" class="text-white text-decoration-none dropdown-toggle">
+                        <i class="bi bi-info-circle-fill"></i> Diagnosis Master
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/kcos') }}">KCO</a></li>
+                        <li class="dropend">
+                            <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/sac') }}">SAC</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lid') }}">LID</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/conj') }}">CONJ</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/cornea') }}">CORNEA</a>
+                                </li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/ac') }}">AC</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/iris') }}">IRIS</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/pupil') }}">PUPIL</a>
+                                </li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lens') }}">LENS</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/em') }}">EM</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/covertest') }}">COVER
+                                        TEST</a></li>
+                            </ul>
+                        </li>
+
+                        <li class="dropend">
+                            <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/disc') }}">DISC</a></li>
+                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/fr') }}">FR</a></li>
+                            </ul>
+                        </li>
+
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/diagnosis') }}">DIAGNOSIS</a>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/advice') }}">ADVICE</a></li>
+                    </ul>
+                </div>
+
+                <div class="dropdown">
+                    <a href="#" class="text-white text-decoration-none dropdown-toggle">
+                        <i class="bi bi-capsule"></i> Medicine Master
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-dosages') }}">Dosage</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-types') }}">Medicine Type</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-categories') }}">Medicine Category</a>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Root Of Administration</a>
+                        </li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Add Medicine</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Add Group</a></li>
+                    </ul>
+                </div>
+
+                {{-- History --}}
+                <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}"
+                    class="text-white text-decoration-none">
+                    <i class="bi bi-clock-history"></i> History
+                </a>
+            </div>
+
+        @else
+            @php
+                $currentUser = auth('hospital_user')->user();
+                $slug = request()->route('slug');
+                $isReceptionistUser = in_array($currentUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
+                $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
+                $permSvcTop = app(\App\Services\Auth\RolePermissionService::class);
+
+                $waitQueueCount = 0;
+                try {
+                    $waitQueueCount = \App\Models\Hospital\Patient::query()
+                        ->whereDate('appointment_date', today())
+                        ->whereNull('primary_done_at')
+                        ->count();
+                } catch (\Throwable $e) {
+                    $waitQueueCount = 0;
+                }
+
+                $segments = collect(request()->segments());
+                if ($slug && $segments->isNotEmpty() && $segments->first() === $slug) {
+                    $segments = $segments->slice(1)->values();
+                }
+            @endphp
+
+            {{-- Mobile Sidebar Toggle --}}
+            <button class="hms-sidebar-toggle" id="hmsSidebarToggle" aria-label="Toggle sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <nav class="hms-breadcrumb-wrap" aria-label="breadcrumb">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item">
+                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="hms-breadcrumb-link">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    @forelse($segments as $i => $segment)
+                        @php
+                            $isLast = $i === $segments->count() - 1;
+                            $segmentLabel = str($segment)->replace(['-', '_'], ' ')->title();
+                        @endphp
+                        <li class="breadcrumb-item {{ $isLast ? 'active' : '' }}" {{ $isLast ? 'aria-current=page' : '' }}>
+                            {{ $segmentLabel }}
+                        </li>
+                    @empty
+                        <li class="breadcrumb-item active" aria-current="page">Dashboard</li>
+                    @endforelse
+                </ol>
+            </nav>
+
+            <div class="hms-navbar-right">
+                <div class="wait-queue-badge">
+                    <i class="bi bi-hourglass-split"></i>
+                    <span>Wait Queue (OPD):</span>
+                    <strong>{{ $waitQueueCount }}</strong>
+                </div>
+
+                @if($showReceptionRegisterActions)
+                    <div class="reception-register-actions">
+                        @if($permSvcTop->can('opd.patient.register'))
+                            <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}" class="reception-register-btn">
+                                <i class="bi bi-person-plus"></i>
+                                <span>WALK IN</span>
+                            </a>
+                        @endif
+                        @if($permSvcTop->can('opd.patient.register_phone'))
+                            <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}"
+                                class="reception-register-btn">
+                                <i class="bi bi-telephone"></i>
+                                <span>PHONE</span>
+                            </a>
+                        @endif
+                    </div>
+                @endif
+
+                @if($currentUser)
+                    <div class="dropdown user-dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarUserDropdown"
+                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="avatar-circle">
+                                <i class="bi bi-person-fill"></i>
+                            </span>
+                            <span class="user-info d-none d-md-flex flex-column text-start">
+                                <span class="user-name">{{ $currentUser->name }}</span>
+                                <small class="user-role">{{ $currentUser->role?->name ?? 'Hospital Staff' }}</small>
+                            </span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            <li>
+                                <h6 class="dropdown-header">Switch Workspace</h6>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('hospital.patients.index', ['slug' => $slug]) }}">
+                                    <i class="bi bi-person-badge me-2"></i> Doctor Workspace
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">
+                                    <i class="bi bi-clipboard2-pulse me-2"></i> Reception Workspace
+                                </a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('hospital.settings.index', ['slug' => $slug]) }}">
+                                    <i class="bi bi-gear me-2"></i> Settings
+                                </a>
+                            </li>
+                            <li>
+                                <form method="POST" action="{{ route('hospital.logout', ['slug' => $slug]) }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                @endif
+            </div>
         @endif
     </nav>
 
@@ -767,31 +867,23 @@
         <div class="hms-sidebar-backdrop" id="hmsSidebarBackdrop"></div>
 
         {{-- ============================================
-             Sidebar Navigation
+        Sidebar Navigation
         ============================================ --}}
         @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
         <aside class="hms-sidebar" id="hmsSidebar">
             <div class="premium-sidebar-brand">
                 <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
-                   class="premium-sidebar-brand-link"
-                   aria-label="Go to dashboard">
+                    class="premium-sidebar-brand-link" aria-label="Go to dashboard">
                     <span class="sidebar-brand-mark">
                         @if(($hospitalLogoSidebarStyle ?? 'white') === 'original_blur')
-                            <span style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:5px;">
-                                <img src="{{ $hospitalLogoUrl }}"
-                                     alt="{{ $hospitalName }} Logo"
-                                     class="sidebar-logo"
-                                     style="filter:none!important;"
-                                     loading="lazy"
-                                     decoding="async">
+                            <span
+                                style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:5px;">
+                                <img src="{{ $hospitalLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
+                                    style="filter:none!important;" loading="lazy" decoding="async">
                             </span>
                         @else
-                            <img src="{{ $hospitalLogoUrl }}"
-                                 alt="{{ $hospitalName }} Logo"
-                                 class="sidebar-logo"
-                                 style="filter:brightness(0) invert(1)!important;"
-                                 loading="lazy"
-                                 decoding="async">
+                            <img src="{{ $hospitalLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
+                                style="filter:brightness(0) invert(1)!important;" loading="lazy" decoding="async">
                         @endif
                     </span>
                     <span class="sidebar-brand-copy">
@@ -801,74 +893,74 @@
                 </a>
             </div>
             <div class="hms-sidenav-wrap">
-            <nav class="hms-sidenav">
+                <nav class="hms-sidenav">
 
-                {{-- Dashboard — always visible to authenticated hospital users --}}
-                @php $permSvc = app(\App\Services\Auth\RolePermissionService::class); @endphp
-                <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
-                   class="hms-nav-item {{ request()->routeIs('hospital.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span>Dashboard</span>
-                </a>
+                    {{-- Dashboard — always visible to authenticated hospital users --}}
+                    @php $permSvc = app(\App\Services\Auth\RolePermissionService::class); @endphp
+                    <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
+                        class="hms-nav-item {{ request()->routeIs('hospital.dashboard') ? 'active' : '' }}">
+                        <i class="bi bi-grid-1x2-fill"></i>
+                        <span>Dashboard</span>
+                    </a>
 
-                {{-- ── OPD ─────────────────────────────────────────
-                     Visible if user has any patient permission.
-                ── --}}
-                @php
-                    $showOpd = $permSvc->can('opd.patient.view')
-                        || $permSvc->can('opd.patient.register')
-                        || $permSvc->can('opd.patient.register_phone');
-                @endphp
+                    {{-- ── OPD ─────────────────────────────────────────
+                    Visible if user has any patient permission.
+                    ── --}}
+                    @php
+                        $showOpd = $permSvc->can('opd.patient.view')
+                            || $permSvc->can('opd.patient.register')
+                            || $permSvc->can('opd.patient.register_phone');
+                    @endphp
 
-                @if($showOpd)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-opd">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">OPD</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-opd">
-                    @haspermission('opd.patient.view')
+                    @if($showOpd)
+                    <div class="hms-nav-divider"></div>
+                    <div class="hms-nav-group-toggle" data-target="nav-opd">
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">OPD</span>
+                        <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                    </div>
+                    <div class="hms-nav-group-items" id="nav-opd">
+                        @haspermission('opd.patient.view')
                         <a href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ (request()->routeIs('hospital.patients.*') && ! request()->routeIs('hospital.patients.history')) ? 'active' : '' }}">
+                            class="hms-nav-item {{ (request()->routeIs('hospital.patients.*') && !request()->routeIs('hospital.patients.history')) ? 'active' : '' }}">
                             <i class="bi bi-people-fill"></i>
                             <span>Patients</span>
                         </a>
-                        <a href="{{ route('hospital.patients.history', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.patients.history') ? 'active' : '' }}">
+                        <a href="{{ route('hospital.doctor.history', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.doctor.history') ? 'active' : '' }}">
                             <i class="bi bi-clock-history"></i>
-                            <span>Patient History</span>
+                            <span>History</span>
                         </a>
-                    @endhaspermission
-                </div>
-                @endif
+                        @endhaspermission
+                    </div>
+                    @endif
 
-                {{-- ── CLINICAL ────────────────────────────────────
-                     Visible if user can view/write any exam.
-                ── --}}
-                @php
-                    $showClin = $permSvc->can('opd.exam.primary')
-                             || $permSvc->can('opd.exam.secondary');
-                @endphp
+                    {{-- ── CLINICAL ────────────────────────────────────
+                    Visible if user can view/write any exam.
+                    ── --}}
+                    @php
+                        $showClin = $permSvc->can('opd.exam.primary')
+                            || $permSvc->can('opd.exam.secondary');
+                    @endphp
 
-                @if($showClin)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-clinical">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-clinical">
-                    <a href="{{ route('hospital.clinical.queue', ['slug' => request()->route('slug')]) }}"
-                       class="hms-nav-item {{ request()->routeIs('hospital.clinical.queue') ? 'active' : '' }}">
-                        <i class="bi bi-list-check"></i>
-                        <span>Queue Dashboard</span>
-                    </a>
-                </div>
-                @endif
+                    @if($showClin)
+                        <div class="hms-nav-divider"></div>
+                        <div class="hms-nav-group-toggle" data-target="nav-clinical">
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
+                            <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                        </div>
+                        <div class="hms-nav-group-items" id="nav-clinical">
+                            <a href="{{ route('hospital.clinical.queue', ['slug' => request()->route('slug')]) }}"
+                                class="hms-nav-item {{ request()->routeIs('hospital.clinical.queue') ? 'active' : '' }}">
+                                <i class="bi bi-list-check"></i>
+                                <span>Queue Dashboard</span>
+                            </a>
+                        </div>
+                    @endif
 
-                {{-- ── FOC ─────────────────────────────────────────
-                     Visible if user can view or approve FOC.
-                ── --}}
-                <!-- @php
+                    {{-- ── FOC ─────────────────────────────────────────
+                    Visible if user can view or approve FOC.
+                    ── --}}
+                    <!-- @php
                     $showFoc = $permSvc->can('opd.foc.create') || $permSvc->can('opd.foc.accept');
                 @endphp
 
@@ -896,190 +988,190 @@
                 </div>
                 @endif -->
 
-                {{-- ── OT / SURGERY ────────────────────────────────
-                     Visible if user can view OT bookings or surgery.
-                ── --}}
-                @php
-                    $showOt = $permSvc->can('ot.patient.list')
-                        || $permSvc->can('ot.payment.record')
-                        || $permSvc->can('ot.ward.entry')
-                        || $permSvc->can('ot.surgery.record')
-                        || $permSvc->can('ot.lens.record')
-                        || $permSvc->can('ot.billing.manage');
-                @endphp
+                    {{-- ── OT / SURGERY ────────────────────────────────
+                    Visible if user can view OT bookings or surgery.
+                    ── --}}
+                    @php
+                        $showOt = $permSvc->can('ot.patient.list')
+                            || $permSvc->can('ot.payment.record')
+                            || $permSvc->can('ot.ward.entry')
+                            || $permSvc->can('ot.surgery.record')
+                            || $permSvc->can('ot.lens.record')
+                            || $permSvc->can('ot.billing.manage');
+                    @endphp
 
-                @if($showOt)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-ot">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">OT / Surgery</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-ot">
-                    @haspermission('ot.patient.list')
+                    @if($showOt)
+                    <div class="hms-nav-divider"></div>
+                    <div class="hms-nav-group-toggle" data-target="nav-ot">
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">OT / Surgery</span>
+                        <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                    </div>
+                    <div class="hms-nav-group-items" id="nav-ot">
+                        @haspermission('ot.patient.list')
                         <a href="{{ route('hospital.ot.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.dashboard') || request()->routeIs('hospital.ot.bookings.*') || request()->routeIs('hospital.ot.index') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.dashboard') || request()->routeIs('hospital.ot.bookings.*') || request()->routeIs('hospital.ot.index') ? 'active' : '' }}">
                             <i class="bi bi-heart-pulse-fill"></i>
                             <span>OT Bookings</span>
                         </a>
-                    @endhaspermission
+                        @endhaspermission
 
-                    @haspermission('ot.payment.record')
+                        @haspermission('ot.payment.record')
                         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.accountant.dashboard') || request()->routeIs('hospital.ot.payments.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.accountant.dashboard') || request()->routeIs('hospital.ot.payments.*') ? 'active' : '' }}">
                             <i class="bi bi-cash-coin"></i>
                             <span>OT Accountant / Billing</span>
                         </a>
-                    @endhaspermission
+                        @endhaspermission
 
-                    @haspermission('ot.ward.entry')
+                        @haspermission('ot.ward.entry')
                         <a href="{{ route('hospital.ot.ward.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.ward.index') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.ward.index') ? 'active' : '' }}">
                             <i class="bi bi-hospital"></i>
                             <span>Ward Management</span>
                         </a>
-                    @endhaspermission
+                        @endhaspermission
 
-                    @haspermission('ot.surgery.record')
+                        @haspermission('ot.surgery.record')
                         <a href="{{ route('hospital.ot.doctor.dashboard', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.doctor.dashboard') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.doctor.dashboard') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
                             <i class="bi bi-heart-pulse"></i>
                             <span>OT Doctor Dashboard</span>
                         </a>
-                    @endhaspermission
+                        @endhaspermission
 
-                    @haspermission('ot.lens.record')
+                        @haspermission('ot.lens.record')
                         <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') ? 'active' : '' }}">
                             <i class="bi bi-eyeglasses"></i>
                             <span>OT Assistant Dashboard</span>
                         </a>
-                    @endhaspermission
+                        @endhaspermission
 
-                    @haspermission('ot.billing.manage')
+                        @haspermission('ot.billing.manage')
                         <a href="{{ route('hospital.ot.billing.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.ot.billing.index') || request()->routeIs('hospital.ot.invoice.*') || request()->routeIs('hospital.ot.discharge.*') || request()->routeIs('hospital.ot.summary-bill.*') || request()->routeIs('hospital.ot.certificate.*') || request()->routeIs('hospital.ot.medicine-slip.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.billing.index') || request()->routeIs('hospital.ot.invoice.*') || request()->routeIs('hospital.ot.discharge.*') || request()->routeIs('hospital.ot.summary-bill.*') || request()->routeIs('hospital.ot.certificate.*') || request()->routeIs('hospital.ot.medicine-slip.*') ? 'active' : '' }}">
                             <i class="bi bi-receipt-cutoff"></i>
                             <span>Discharge & Invoices</span>
                         </a>
-                    @endhaspermission
-                </div>
-                @endif
+                        @endhaspermission
+                    </div>
+                    @endif
 
-                {{-- ── REPORTS ─────────────────────────────────────
-                     Visible if user has any report permission.
-                ── --}}
-                @php
-                    $showReports = $permSvc->can('reports.view') || $permSvc->can('reports.export');
-                @endphp
+                    {{-- ── REPORTS ─────────────────────────────────────
+                    Visible if user has any report permission.
+                    ── --}}
+                    @php
+                        $showReports = $permSvc->can('reports.view') || $permSvc->can('reports.export');
+                    @endphp
 
-                @if($showReports)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-reports">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-reports">
-                    <a href="{{ route('hospital.reports.index', ['slug' => request()->route('slug')]) }}"
-                       class="hms-nav-item {{ request()->routeIs('hospital.reports.*') ? 'active' : '' }}">
-                        <i class="bi bi-bar-chart-line-fill"></i>
-                        <span>Reports</span>
-                    </a>
-                </div>
-                @endif
+                    @if($showReports)
+                        <div class="hms-nav-divider"></div>
+                        <div class="hms-nav-group-toggle" data-target="nav-reports">
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
+                            <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                        </div>
+                        <div class="hms-nav-group-items" id="nav-reports">
+                            <a href="{{ route('hospital.reports.index', ['slug' => request()->route('slug')]) }}"
+                                class="hms-nav-item {{ request()->routeIs('hospital.reports.*') ? 'active' : '' }}">
+                                <i class="bi bi-bar-chart-line-fill"></i>
+                                <span>Reports</span>
+                            </a>
+                        </div>
+                    @endif
 
-                {{-- ── MEDICINES ────────────────────────────────────
-                     Visible if user has any medicine permission.
-                ── --}}
-                @php
-                    $showMed = $permSvc->can('master.medicines');
-                @endphp
+                    {{-- ── MEDICINES ────────────────────────────────────
+                    Visible if user has any medicine permission.
+                    ── --}}
+                    @php
+                        $showMed = $permSvc->can('master.medicines');
+                    @endphp
 
-                @if($showMed)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-medicines">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">Medicines</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-medicines">
-                    @haspermission('master.medicines')
+                    @if($showMed)
+                    <div class="hms-nav-divider"></div>
+                    <div class="hms-nav-group-toggle" data-target="nav-medicines">
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">Medicines</span>
+                        <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                    </div>
+                    <div class="hms-nav-group-items" id="nav-medicines">
+                        @haspermission('master.medicines')
                         <a href="{{ route('hospital.medicines.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.medicines.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.medicines.*') ? 'active' : '' }}">
                             <i class="bi bi-capsule-pill"></i>
                             <span>Medicines</span>
                         </a>
                         <a href="{{ route('hospital.medicine-types.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.medicine-types.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.medicine-types.*') ? 'active' : '' }}">
                             <i class="bi bi-tags"></i>
                             <span>Medicine Types</span>
                         </a>
                         <a href="{{ route('hospital.medicine-categories.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.medicine-categories.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.medicine-categories.*') ? 'active' : '' }}">
                             <i class="bi bi-grid"></i>
                             <span>Medicine Categories</span>
                         </a>
                         <a href="{{ route('hospital.medicine-routes.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.medicine-routes.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.medicine-routes.*') ? 'active' : '' }}">
                             <i class="bi bi-arrow-right-circle"></i>
                             <span>Route of Admin.</span>
                         </a>
                         <a href="{{ route('hospital.medicine-dosages.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.medicine-dosages.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.medicine-dosages.*') ? 'active' : '' }}">
                             <i class="bi bi-eyedropper"></i>
                             <span>Dosages</span>
                         </a>
-                    @endhaspermission
-                </div>
-                @endif
+                        @endhaspermission
+                    </div>
+                    @endif
 
-                {{-- ── CONFIG / MASTERS ────────────────────────────
-                     Visible if user can manage masters, settings, roles, or users.
-                ── --}}
-                @php
-                    $showConfig = $permSvc->can('master.case_types')
-                               || $permSvc->can('settings.hospital')
-                               || $permSvc->can('master.roles')
-                               || $permSvc->can('master.doctors')
-                               || $permSvc->can('master.receptions');
-                @endphp
+                    {{-- ── CONFIG / MASTERS ────────────────────────────
+                    Visible if user can manage masters, settings, roles, or users.
+                    ── --}}
+                    @php
+                        $showConfig = $permSvc->can('master.case_types')
+                            || $permSvc->can('settings.hospital')
+                            || $permSvc->can('master.roles')
+                            || $permSvc->can('master.doctors')
+                            || $permSvc->can('master.receptions');
+                    @endphp
 
-                @if($showConfig)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-config">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">Config</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-config">
-                    @haspermission('master.case_types')
+                    @if($showConfig)
+                    <div class="hms-nav-divider"></div>
+                    <div class="hms-nav-group-toggle" data-target="nav-config">
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">Config</span>
+                        <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                    </div>
+                    <div class="hms-nav-group-items" id="nav-config">
+                        @haspermission('master.case_types')
                         <a href="{{ route('hospital.masters.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.masters.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.masters.*') ? 'active' : '' }}">
                             <i class="bi bi-database-fill-gear"></i>
                             <span>Masters</span>
                         </a>
-                    @endhaspermission
-                    @haspermission('settings.hospital')
+                        @endhaspermission
+                        @haspermission('settings.hospital')
                         <a href="{{ route('hospital.settings.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.settings.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.settings.*') ? 'active' : '' }}">
                             <i class="bi bi-gear-fill"></i>
                             <span>Settings</span>
                         </a>
-                    @endhaspermission
-                    @haspermission('master.roles')
+                        @endhaspermission
+                        @haspermission('master.roles')
                         <a href="{{ route('hospital.roles.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.roles.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.roles.*') ? 'active' : '' }}">
                             <i class="bi bi-shield-lock-fill"></i>
                             <span>Roles & Permissions</span>
                         </a>
-                    @endhaspermission
-                    @if($permSvc->can('master.doctors') || $permSvc->can('master.receptions'))
-                        <a href="{{ route('hospital.users.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ request()->routeIs('hospital.users.*') ? 'active' : '' }}">
-                            <i class="bi bi-person-gear"></i>
-                            <span>Users</span>
-                        </a>
+                        @endhaspermission
+                        @if($permSvc->can('master.doctors') || $permSvc->can('master.receptions'))
+                            <a href="{{ route('hospital.users.index', ['slug' => request()->route('slug')]) }}"
+                                class="hms-nav-item {{ request()->routeIs('hospital.users.*') ? 'active' : '' }}">
+                                <i class="bi bi-person-gear"></i>
+                                <span>Users</span>
+                            </a>
+                        @endif
+                    </div>
                     @endif
-                </div>
-                @endif
-            </nav>
+                </nav>
             </div>{{-- /.hms-sidenav-wrap --}}
 
             <div class="hms-sidebar-footer">
@@ -1095,7 +1187,7 @@
         @endif
 
         {{-- ============================================
-             Main Content Area
+        Main Content Area
         ============================================ --}}
         <main class="hms-main" id="hmsMain">
 
@@ -1113,17 +1205,19 @@
             {{-- Page Header --}}
             @hasSection('page-header')
                 <div class="hms-page-header">
-                    @if(auth('hospital_user')->user()?->role?->slug === 'doctor'
-                        && !request()->routeIs('hospital.dashboard')
-                        && !request()->routeIs('hospital.masters.detail.*')
-                        && !request()->routeIs('hospital.masters.basic.*'))
-                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
-                           class="btn btn-sm btn-light me-2"
-                           style="border-radius:8px; border:1px solid #cde5f5; color:#1B4F72;">
+                    @if(
+                            auth('hospital_user')->user()?->role?->slug === 'doctor'
+                            && !request()->routeIs('hospital.dashboard')
+                            && !request()->routeIs('hospital.masters.detail.*')
+                            && !request()->routeIs('hospital.masters.basic.*')
+                        )
+                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-light me-2"
+                            style="border-radius:8px; border:1px solid #cde5f5; color:#1B4F72;">
                             <i class="bi bi-arrow-left me-1"></i> Back
                         </a>
                     @endif
-                    <h1 style="font-weight:900!important;color:#0D2137!important;letter-spacing:-.015em">@yield('page-header')</h1>
+                    <h1 style="font-weight:900!important;color:#0D2137!important;letter-spacing:-.015em">
+                        @yield('page-header')</h1>
                     @hasSection('page-actions')
                         <div class="hms-page-actions">@yield('page-actions')</div>
                     @endif
@@ -1237,13 +1331,13 @@
 
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script>
-    if (typeof window.bootstrap === 'undefined') {
-        var fallbackScript = document.createElement('script');
-        fallbackScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
-        fallbackScript.integrity = 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz';
-        fallbackScript.crossOrigin = 'anonymous';
-        document.head.appendChild(fallbackScript);
-    }
+        if (typeof window.bootstrap === 'undefined') {
+            var fallbackScript = document.createElement('script');
+            fallbackScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
+            fallbackScript.integrity = 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz';
+            fallbackScript.crossOrigin = 'anonymous';
+            document.head.appendChild(fallbackScript);
+        }
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -1288,42 +1382,42 @@
 
     {{-- Sidebar toggle & collapsible groups --}}
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var sidebar  = document.getElementById('hmsSidebar');
-        var backdrop = document.getElementById('hmsSidebarBackdrop');
-        var toggle   = document.getElementById('hmsSidebarToggle');
+        document.addEventListener('DOMContentLoaded', function () {
+            var sidebar = document.getElementById('hmsSidebar');
+            var backdrop = document.getElementById('hmsSidebarBackdrop');
+            var toggle = document.getElementById('hmsSidebarToggle');
 
-        // Mobile sidebar open / close
-        if (toggle) {
-            toggle.addEventListener('click', function () {
-                sidebar.classList.toggle('open');
-                backdrop.classList.toggle('show');
-            });
-        }
-        if (backdrop) {
-            backdrop.addEventListener('click', function () {
-                sidebar.classList.remove('open');
-                backdrop.classList.remove('show');
-            });
-        }
-
-        // Collapsible nav groups
-        document.querySelectorAll('.hms-nav-group-toggle').forEach(function (el) {
-            var target = document.getElementById(el.getAttribute('data-target'));
-            if (!target) return;
-
-            // Auto-collapse groups that don't contain the active link
-            if (!target.querySelector('.hms-nav-item.active')) {
-                target.classList.add('collapsed');
-                el.classList.add('collapsed');
+            // Mobile sidebar open / close
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('open');
+                    backdrop.classList.toggle('show');
+                });
+            }
+            if (backdrop) {
+                backdrop.addEventListener('click', function () {
+                    sidebar.classList.remove('open');
+                    backdrop.classList.remove('show');
+                });
             }
 
-            el.addEventListener('click', function () {
-                target.classList.toggle('collapsed');
-                el.classList.toggle('collapsed');
+            // Collapsible nav groups
+            document.querySelectorAll('.hms-nav-group-toggle').forEach(function (el) {
+                var target = document.getElementById(el.getAttribute('data-target'));
+                if (!target) return;
+
+                // Auto-collapse groups that don't contain the active link
+                if (!target.querySelector('.hms-nav-item.active')) {
+                    target.classList.add('collapsed');
+                    el.classList.add('collapsed');
+                }
+
+                el.addEventListener('click', function () {
+                    target.classList.toggle('collapsed');
+                    el.classList.toggle('collapsed');
+                });
             });
         });
-    });
     </script>
 
     {{-- Lucide Icons — free, open-source, MIT licensed --}}
@@ -1331,39 +1425,40 @@
     <script>lucide.createIcons();</script>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof Swal === 'undefined') {
-            return;
-        }
-
-        const Toast = Swal.mixin({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3000,
-            timerProgressBar: true,
-            didOpen: function (toast) {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Swal === 'undefined') {
+                return;
             }
-        });
 
-        const flashMessages = [
-            { icon: 'success', title: @json(session('success')) },
-            { icon: 'error', title: @json(session('error')) },
-            { icon: 'warning', title: @json(session('warning')) },
-            { icon: 'info', title: @json(session('info')) }
-        ].filter(function (message) {
-            return Boolean(message.title);
-        });
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: function (toast) {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                }
+            });
 
-        flashMessages.forEach(function (message) {
-            Toast.fire(message);
+            const flashMessages = [
+                { icon: 'success', title: @json(session('success')) },
+                { icon: 'error', title: @json(session('error')) },
+                { icon: 'warning', title: @json(session('warning')) },
+                { icon: 'info', title: @json(session('info')) }
+            ].filter(function (message) {
+                return Boolean(message.title);
+            });
+
+            flashMessages.forEach(function (message) {
+                Toast.fire(message);
+            });
         });
-    });
     </script>
 
     @stack('modals')
     @stack('scripts')
 </body>
+
 </html>

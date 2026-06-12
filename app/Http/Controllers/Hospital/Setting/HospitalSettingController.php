@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hospital\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
+use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,6 +37,9 @@ class HospitalSettingController extends Controller
             'hospital_email'    => $tenant?->admin_email ?? '',
             'hospital_phone'    => $tenant?->admin_phone ?? '',
             'hospital_address'  => '',
+            'hospital_city'     => $tenant?->city ?? '',
+            'hospital_district' => $tenant?->district ?? '',
+            'hospital_state'    => $tenant?->state ?? '',
             'invoice_prefix'    => 'INV-',
             'tax_percentage'    => '0',
             'print_header_note' => '',
@@ -62,6 +66,9 @@ class HospitalSettingController extends Controller
             'hospital_email'    => ['required', 'email', 'max:255'],
             'hospital_phone'    => ['required', 'string', 'max:20'],
             'hospital_address'  => ['required', 'string'],
+            'hospital_city'     => ['nullable', 'string', 'max:100'],
+            'hospital_district' => ['nullable', 'string', 'max:100'],
+            'hospital_state'    => ['nullable', 'string', 'max:100'],
             'invoice_prefix'    => ['required', 'string', 'max:10'],
             'tax_percentage'    => ['required', 'numeric', 'min:0', 'max:100'],
             'print_header_note' => ['nullable', 'string', 'max:255'],
@@ -116,6 +123,17 @@ class HospitalSettingController extends Controller
 
             foreach ($settingsData as $key => $value) {
                 HospitalSetting::set($key, $value);
+            }
+
+            // Sync city / district / state back to the tenants table
+            // so Hospital History page always shows up-to-date location data.
+            $tenantRecord = Tenant::find($tenantId);
+            if ($tenantRecord) {
+                $tenantRecord->update([
+                    'city'     => $validated['hospital_city']     ?? $tenantRecord->city,
+                    'district' => $validated['hospital_district'] ?? $tenantRecord->district,
+                    'state'    => $validated['hospital_state']    ?? $tenantRecord->state,
+                ]);
             }
         });
 

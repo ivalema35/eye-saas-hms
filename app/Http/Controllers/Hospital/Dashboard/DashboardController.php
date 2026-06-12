@@ -7,10 +7,13 @@ use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
+use App\Models\Platform\HospitalShareRequest;
+use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 /**
  * Hospital Dashboard Controller
@@ -25,7 +28,9 @@ use Illuminate\View\View;
  */
 class DashboardController extends Controller
 {
-    public function __construct(private readonly RolePermissionService $perm) {}
+    public function __construct(private readonly RolePermissionService $perm)
+    {
+    }
 
     public function index(): View|RedirectResponse
     {
@@ -38,7 +43,7 @@ class DashboardController extends Controller
         $isDoctorUser = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true);
 
         // Setup wizard redirect — admin, first login only
-        if ($user?->role?->is_super && $tenant && ! $tenant->is_setup_done) {
+        if ($user?->role?->is_super && $tenant && !$tenant->is_setup_done) {
             return redirect()->route('hospital.setup.show', ['slug' => $slug, 'step' => 1]);
         }
 
@@ -86,7 +91,7 @@ class DashboardController extends Controller
                 // Allow switching to another doctor's view via ?view_doctor=ID
                 $viewDoctorId = (int) request('view_doctor', 0);
                 if ($viewDoctorId && $viewDoctorId !== $user->id) {
-                    $viewingDoctor = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+                    $viewingDoctor = HospitalUser::whereHas('role', fn($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                         ->find($viewDoctorId);
                     if ($viewingDoctor) {
                         $selectedDoctorId = $viewingDoctor->id;
@@ -97,8 +102,8 @@ class DashboardController extends Controller
             $buildIndex = function (Patient $patient): Patient {
                 $patient->display_doctor_index = $patient->doctor_patient_no
                     ? (($patient->doctor?->doctor_prefix ?? '')
-                        ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
-                        : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
+                        ? $patient->doctor->doctor_prefix . '-' . str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT)
+                        : '#' . str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT))
                     : '-';
                 return $patient;
             };
@@ -113,7 +118,8 @@ class DashboardController extends Controller
             $primaryQueue = $primaryQueueQuery
                 ->orderBy('doctor_patient_no')
                 ->get()
-                ->filter(fn (Patient $patient): bool =>
+                ->filter(
+                    fn(Patient $patient): bool =>
                     $patient->primary_done_at === null &&
                     ($patient->type !== 'phone' || $patient->checked_in_at !== null)
                 )
@@ -154,15 +160,15 @@ class DashboardController extends Controller
                 $doctorName = $viewingDoctor ? $viewingDoctor->name : $user->name;
 
                 if ($user->role?->slug === 'ot_doctor') {
-                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId) 
+                    $doctorAssignedPatients = OtBooking::where('ot_doctor_id', $statsDoctorId)
                         ->whereDate('surgery_date', $today)
                         ->count();
-                    
+
                     $doctorPrimaryDone = 0;
                     $doctorSecondaryDone = 0;
-                    $secondaryQueue = collect(); 
+                    $secondaryQueue = collect();
                 } else {
-  
+
                     $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->count();
@@ -217,7 +223,7 @@ class DashboardController extends Controller
         $receptionistTodayPhone = null;
 
         if ($isReceptionistUser && ($this->perm->can('opd.patient.register') || $this->perm->can('opd.patient.register_phone'))) {
-            $receptionistBasePatients = Patient::whereHas('reception.role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
+            $receptionistBasePatients = Patient::whereHas('reception.role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
             $myPatientsQuery = Patient::where('reception_id', $user?->id);
 
             $receptionistTotalPatients = (clone $receptionistBasePatients)->count();
@@ -284,7 +290,7 @@ class DashboardController extends Controller
             $focAlerts = Foc::where('accepted', false)->count();
 
             $pendingFocRequests = Foc::with([
-                'patient' => fn ($q) => $q->withTrashed(),
+                'patient' => fn($q) => $q->withTrashed(),
                 'doctor',
             ])
                 ->where('status', 'pending')
@@ -294,7 +300,7 @@ class DashboardController extends Controller
         }
 
         if ($this->perm->can('opd.foc.create')) {
-            $focReceptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
+            $focReceptionists = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'receptionist'))
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'name']);
@@ -307,17 +313,17 @@ class DashboardController extends Controller
         $totalReceptions = null;
 
         if ($this->perm->can('master.doctors') || $this->perm->can('master.case_types')) {
-            $totalDoctors = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
-            $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))->count();
+            $totalDoctors = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'doctor'))->count();
+            $totalReceptions = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'receptionist'))->count();
 
-            $receptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
+            $receptionists = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'receptionist'))
                 ->get()
                 ->map(function (HospitalUser $rec) use ($today): HospitalUser {
                     $base = Patient::where('reception_id', $rec->id)->whereDate('appointment_date', $today);
                     $rec->today_count = $base->count();
                     $rec->today_gross = (float) $base->sum('case_fee');
                     $rec->today_foc = (float) Foc::where('reception_id', $rec->id)
-                        ->whereHas('patient', fn ($q) => $q->whereDate('appointment_date', $today))
+                        ->whereHas('patient', fn($q) => $q->whereDate('appointment_date', $today))
                         ->where('accepted', true)
                         ->sum('foc_fee');
                     $rec->today_net = $rec->today_gross - $rec->today_foc;
@@ -337,12 +343,14 @@ class DashboardController extends Controller
 
         $isPureDoctorUser = $user?->role?->slug === 'doctor';
 
-        if (($isReceptionistUser || $isDoctorUser) && ! $isPureDoctorUser && (
-            $this->perm->can('opd.patient.register')
-            || $this->perm->can('opd.exam.primary')
-            || $this->perm->can('opd.exam.secondary')
-        )) {
-            $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+        if (
+            ($isReceptionistUser || $isDoctorUser) && !$isPureDoctorUser && (
+                $this->perm->can('opd.patient.register')
+                || $this->perm->can('opd.exam.primary')
+                || $this->perm->can('opd.exam.secondary')
+            )
+        ) {
+            $doctorCards = HospitalUser::whereHas('role', fn($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->active()
                 ->with('role:id,slug')
                 ->orderBy('name')
@@ -377,15 +385,15 @@ class DashboardController extends Controller
             $receptionistTodayPatients = Patient::with([
                 'doctor:id,name,doctor_prefix',
                 'location:id,city',
-                'otBookings' => fn ($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
-                'primaryExamination' => fn ($query) => $query->select('id', 'patient_id', 'examined_at', 'exam_data', 'dilation_time', 'updated_at'),
+                'otBookings' => fn($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
+                'primaryExamination' => fn($query) => $query->select('id', 'patient_id', 'examined_at', 'exam_data', 'dilation_time', 'updated_at'),
             ])
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)
                 ->whereDate('appointment_date', $today)
                 ->when(request('search_contact'), function ($query, $contact) {
-                 $query->where('patients.contact_no', 'like', "%{$contact}%");
-     })
+                    $query->where('patients.contact_no', 'like', "%{$contact}%");
+                })
                 ->latest('patients.created_at')
                 ->get([
                     'patients.id',
@@ -412,7 +420,7 @@ class DashboardController extends Controller
 
         if ($user && $user->role?->slug === 'doctor') {
 
-            $doctorCards = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+            $doctorCards = HospitalUser::whereHas('role', fn($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->with('role:id,slug')
                 ->orderBy('name')
                 ->get(['id', 'role_id', 'name', 'doctor_type']);
@@ -437,7 +445,7 @@ class DashboardController extends Controller
             });
 
             $doctorCards = $doctorCards
-                ->sortBy(fn ($doc) => $doc->id === $user->id ? 0 : 1)
+                ->sortBy(fn($doc) => $doc->id === $user->id ? 0 : 1)
                 ->values();
 
             return view('hospital.dashboard.doctoredashboard', compact(
@@ -507,27 +515,190 @@ class DashboardController extends Controller
         ));
     }
 
-public function history()
-{
-    $slug = request()->route('slug');
-    $user = Auth::guard('hospital_user')->user();
+    public function hospitalHistory()
+    {
+        $slug = request()->route('slug');
 
-    if (! $user || ! in_array($user->role?->slug, ['doctor', 'ot_doctor'])) {
-        return redirect()->route('hospital.dashboard', ['slug' => $slug]);
+        $hospitals = Tenant::whereIn('status', ['trial', 'active', 'grace'])
+            ->where('slug', '!=', $slug)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status']);
+
+        return view('hospital.dashboard.hospital_history', compact('slug', 'hospitals'));
     }
 
-    $historyPatients = Patient::with(['caseType', 'doctor']) 
-        ->where(function ($query) {
-            $query->whereNotNull('primary_done_at')
-                  ->orWhereNotNull('secondary_done_at');
-        })
-   
-        ->whereHas('doctor.role', function($q) {
-            $q->where('slug', 'doctor');
-        })
-        ->latest('appointment_date') 
-        ->paginate(20); 
+    public function history()
+    {
+        $slug = request()->route('slug');
+        $currentTenant = app('tenant');
+        $patientName = request('patient_name');
+        $doctorName = request('doctor_name');
+        $date = request('date');
 
-    return view('hospital.dashboard.doctor_history', compact('slug', 'historyPatients'));
-}
+        // Get accepted partner tenant IDs
+        $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
+            $q->where('from_tenant_id', $currentTenant->id)
+              ->orWhere('to_tenant_id', $currentTenant->id);
+        })
+        ->where('status', 'accepted')
+        ->get()
+        ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
+        ->toArray();
+
+        $tenantIds = array_merge([$currentTenant->id], $partnerTenantIds);
+
+        $historyPatients = Patient::withoutTenantScope()
+            ->with(['caseType', 'doctor', 'tenant:id,name'])
+            ->whereIn('tenant_id', $tenantIds)
+            ->where(function ($query) {
+                $query->whereNotNull('primary_done_at')
+                    ->orWhereNotNull('secondary_done_at');
+            })
+            ->whereHas('doctor.role', function ($q) {
+                $q->withoutGlobalScope('tenant')->where('slug', 'doctor');
+            })
+            ->when($patientName, function ($q) use ($patientName) {
+                $q->where(function ($q2) use ($patientName) {
+                    $q2->where('first_name', 'like', "%{$patientName}%")
+                        ->orWhere('last_name', 'like', "%{$patientName}%");
+                });
+            })
+            ->when($doctorName, function ($q) use ($doctorName) {
+                $q->whereHas('doctor', function ($q2) use ($doctorName) {
+                    $q2->withoutGlobalScope('tenant')->where('name', 'like', "%{$doctorName}%");
+                });
+            })
+            ->when($date, function ($q) use ($date) {
+                $q->whereDate('appointment_date', $date);
+            })
+            ->latest('appointment_date')
+            ->paginate(20)
+            ->withQueryString();
+
+        $hospitals = Tenant::whereIn('status', ['trial', 'active', 'grace'])
+            ->where('slug', '!=', $slug)
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status']);
+
+        // Build a map of request statuses for the hospital list
+        $allRequests = HospitalShareRequest::where('from_tenant_id', $currentTenant->id)
+            ->orWhere('to_tenant_id', $currentTenant->id)
+            ->get();
+
+        $requestMap = [];
+        foreach ($allRequests as $req) {
+            $otherId = $req->from_tenant_id === $currentTenant->id ? $req->to_tenant_id : $req->from_tenant_id;
+            $requestMap[$otherId] = [
+                'id'        => $req->id,
+                'status'    => $req->status,
+                'direction' => $req->from_tenant_id === $currentTenant->id ? 'sent' : 'received',
+            ];
+        }
+
+        // Incoming pending requests for the Request tab
+        $incomingRequests = HospitalShareRequest::with('fromTenant')
+            ->where('to_tenant_id', $currentTenant->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        // Sent requests
+        $sentRequests = HospitalShareRequest::with('toTenant')
+            ->where('from_tenant_id', $currentTenant->id)
+            ->latest()
+            ->get();
+
+        return view('hospital.dashboard.doctor_history', compact(
+            'slug', 'historyPatients', 'hospitals',
+            'requestMap', 'incomingRequests', 'sentRequests', 'currentTenant'
+        ));
+    }
+
+    public function sendShareRequest(string $slug, int $toTenantId): RedirectResponse
+    {
+        $currentTenant = app('tenant');
+
+        if ($currentTenant->id === $toTenantId) {
+            return back()->with('error', 'Apne aap ko request nahi bhej sakte.');
+        }
+
+        $existing = HospitalShareRequest::where(function ($q) use ($currentTenant, $toTenantId) {
+            $q->where('from_tenant_id', $currentTenant->id)->where('to_tenant_id', $toTenantId);
+        })->orWhere(function ($q) use ($currentTenant, $toTenantId) {
+            $q->where('from_tenant_id', $toTenantId)->where('to_tenant_id', $currentTenant->id);
+        })->first();
+
+        if ($existing) {
+            return back()->with('info', 'Request already bheji ja chuki hai.');
+        }
+
+        HospitalShareRequest::create([
+            'from_tenant_id' => $currentTenant->id,
+            'to_tenant_id'   => $toTenantId,
+            'status'         => 'pending',
+        ]);
+
+        return back()->with('success', 'Request successfully bheji gayi!');
+    }
+
+    public function acceptShareRequest(string $slug, int $requestId): RedirectResponse
+    {
+        $currentTenant = app('tenant');
+
+        $req = HospitalShareRequest::where('id', $requestId)
+            ->where('to_tenant_id', $currentTenant->id)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $req->update(['status' => 'accepted']);
+
+        return back()->with('success', 'Request accept kar li gayi!');
+    }
+
+    public function removeShareRequest(string $slug, int $requestId): RedirectResponse
+    {
+        $currentTenant = app('tenant');
+
+        $req = HospitalShareRequest::where('id', $requestId)
+            ->where(function ($q) use ($currentTenant) {
+                $q->where('from_tenant_id', $currentTenant->id)
+                  ->orWhere('to_tenant_id', $currentTenant->id);
+            })
+            ->firstOrFail();
+
+        $req->delete();
+
+        return back()->with('success', 'Request remove kar di gayi.');
+    }
+
+    public function getHospitalDetails(string $slug, int $id): JsonResponse
+    {
+        $hospital = Tenant::findOrFail($id);
+
+        // BelongsToTenant scope Role model par bhi hai, isliye whereHas ke andar bhi
+        // withoutGlobalScope('tenant') lagana zaroori hai warna dusre hospitals ka count 0 aata hai.
+        $doctorsCount = HospitalUser::withoutTenantScope()
+            ->where('tenant_id', $id)
+            ->whereHas('role', fn($q) => $q->withoutGlobalScope('tenant')->where('slug', 'doctor'))
+            ->count();
+
+        // Staff = hospital ke saare users (all roles)
+        $staffCount = HospitalUser::withoutTenantScope()
+            ->where('tenant_id', $id)
+            ->count();
+
+        $patientsCount = Patient::withoutTenantScope()
+            ->where('tenant_id', $id)
+            ->count();
+
+        return response()->json([
+            'name'                => $hospital->name,
+            'city'                => $hospital->city ?? 'N/A',
+            'state'               => $hospital->state ?? 'N/A',
+            'admin_email'         => $hospital->admin_email ?? 'N/A',
+            'doctors_count'       => $doctorsCount,
+            'receptionists_count' => $staffCount,
+            'patients_count'      => $patientsCount,
+        ]);
+    }
 }

@@ -555,6 +555,39 @@
                             @enderror
                         </div>
 
+                        <div class="col-md-4">
+                            <label class="form-label">City</label>
+                            <input type="text" name="hospital_city"
+                                   class="form-control clinical-input @error('hospital_city') is-invalid @enderror"
+                                   value="{{ old('hospital_city', $settings['hospital_city'] ?? '') }}"
+                                   placeholder="e.g. Ahmedabad">
+                            @error('hospital_city')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">District</label>
+                            <input type="text" name="hospital_district"
+                                   class="form-control clinical-input @error('hospital_district') is-invalid @enderror"
+                                   value="{{ old('hospital_district', $settings['hospital_district'] ?? '') }}"
+                                   placeholder="e.g. Ahmedabad">
+                            @error('hospital_district')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">State</label>
+                            <input type="text" name="hospital_state"
+                                   class="form-control clinical-input @error('hospital_state') is-invalid @enderror"
+                                   value="{{ old('hospital_state', $settings['hospital_state'] ?? '') }}"
+                                   placeholder="e.g. Gujarat">
+                            @error('hospital_state')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         {{-- ── Change Password divider ── --}}
                         <div class="col-12">
                             <div class="pw-section-divider">

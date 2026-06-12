@@ -15,6 +15,7 @@
 namespace App\Models\Hospital;
 
 use App\Models\Hospital\OT\OtBooking;
+use App\Models\Platform\Tenant;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -101,5 +102,10 @@ class Patient extends Model
     public function otBookings()
     {
         return $this->hasMany(OtBooking::class, 'patient_id');
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class, 'tenant_id');
     }
 }
