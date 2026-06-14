@@ -353,7 +353,8 @@ function resetUserForm() {
     document.getElementById('user-role-id').value = '';
     document.getElementById('user-contact').value = '';
     document.getElementById('user-status').value = 'active';
-    document.getElementById('user-doctor-type').value = '';
+    const doctorTypeResetEl = document.getElementById('user-doctor-type');
+    if (doctorTypeResetEl) doctorTypeResetEl.value = '';
     document.getElementById('user-doctor-prefix').value = '';
     const userFocPermissionInput = document.getElementById('user-foc-permission');
     if (userFocPermissionInput) {
@@ -378,7 +379,8 @@ function openUserEditModal(record) {
     document.getElementById('user-role-id').value = record.role_id ?? '';
     document.getElementById('user-contact').value = record.contact ?? '';
     document.getElementById('user-status').value = record.status ?? 'active';
-    document.getElementById('user-doctor-type').value = record.doctor_type ?? '';
+    const doctorTypeEditEl = document.getElementById('user-doctor-type');
+    if (doctorTypeEditEl) doctorTypeEditEl.value = record.doctor_type ?? '';
     document.getElementById('user-doctor-prefix').value = (record.doctor_prefix ?? '').toUpperCase();
     const userFocPermissionInput = document.getElementById('user-foc-permission');
     if (userFocPermissionInput) {
@@ -424,7 +426,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('user-role-id').value = @json(old('role_id', ''));
         document.getElementById('user-contact').value = @json(old('contact', ''));
         document.getElementById('user-status').value = @json(old('status', 'active'));
-        document.getElementById('user-doctor-type').value = @json(old('doctor_type', ''));
+        const doctorTypeOldEl = document.getElementById('user-doctor-type');
+        if (doctorTypeOldEl) doctorTypeOldEl.value = @json(old('doctor_type', ''));
         document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
         const userFocPermissionInput = document.getElementById('user-foc-permission');
         if (userFocPermissionInput) {

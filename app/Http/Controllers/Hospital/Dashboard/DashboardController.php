@@ -7,10 +7,13 @@ use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
+use App\Models\Hospital\PrimaryExamination;
+use App\Models\Hospital\SecondaryExamination;
 use App\Models\Platform\HospitalShareRequest;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
@@ -280,6 +283,14 @@ class DashboardController extends Controller
                 ->count();
         }
 
+        // ── Incoming Share Requests (hospital admin only) ─────────────────────
+        $pendingShareRequestsCount = null;
+        if ($user?->role?->is_super && $tenant) {
+            $pendingShareRequestsCount = HospitalShareRequest::where('to_tenant_id', $tenant->id)
+                ->where('status', 'pending')
+                ->count();
+        }
+
         // ── FOC Approval Alerts (foc.approve) ────────────────────────────────
         // Pending FOC requests awaiting this approver's decision.
         $focAlerts = null;
@@ -512,6 +523,8 @@ class DashboardController extends Controller
             'doctorCards',
             'doctorCardSummary',
             'receptionistTodayPatients',
+            // Share requests (admin only)
+            'pendingShareRequestsCount',
         ));
     }
 
@@ -538,12 +551,12 @@ class DashboardController extends Controller
         // Get accepted partner tenant IDs
         $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
             $q->where('from_tenant_id', $currentTenant->id)
-              ->orWhere('to_tenant_id', $currentTenant->id);
+                ->orWhere('to_tenant_id', $currentTenant->id);
         })
-        ->where('status', 'accepted')
-        ->get()
-        ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
-        ->toArray();
+            ->where('status', 'accepted')
+            ->get()
+            ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
+            ->toArray();
 
         $tenantIds = array_merge([$currentTenant->id], $partnerTenantIds);
 
@@ -575,10 +588,20 @@ class DashboardController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $hospName     = request('hosp_name');
+        $hospCity     = request('hosp_city');
+        $hospDistrict = request('hosp_district');
+        $hospState    = request('hosp_state');
+
         $hospitals = Tenant::whereIn('status', ['trial', 'active', 'grace'])
             ->where('slug', '!=', $slug)
+            ->when($hospName,     fn($q) => $q->where('name',     'like', "%{$hospName}%"))
+            ->when($hospCity,     fn($q) => $q->where('city',     'like', "%{$hospCity}%"))
+            ->when($hospDistrict, fn($q) => $q->where('district', 'like', "%{$hospDistrict}%"))
+            ->when($hospState,    fn($q) => $q->where('state',    'like', "%{$hospState}%"))
             ->orderBy('name')
-            ->get(['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status']);
+            ->paginate(20, ['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status'])
+            ->withQueryString();
 
         // Build a map of request statuses for the hospital list
         $allRequests = HospitalShareRequest::where('from_tenant_id', $currentTenant->id)
@@ -589,8 +612,8 @@ class DashboardController extends Controller
         foreach ($allRequests as $req) {
             $otherId = $req->from_tenant_id === $currentTenant->id ? $req->to_tenant_id : $req->from_tenant_id;
             $requestMap[$otherId] = [
-                'id'        => $req->id,
-                'status'    => $req->status,
+                'id' => $req->id,
+                'status' => $req->status,
                 'direction' => $req->from_tenant_id === $currentTenant->id ? 'sent' : 'received',
             ];
         }
@@ -602,15 +625,37 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Sent requests
+        // Sent requests (all statuses)
         $sentRequests = HospitalShareRequest::with('toTenant')
             ->where('from_tenant_id', $currentTenant->id)
             ->latest()
             ->get();
 
+        // All accepted connections (both directions) — shown in Connected section
+        $acceptedConnections = HospitalShareRequest::where(function ($q) use ($currentTenant) {
+            $q->where('from_tenant_id', $currentTenant->id)
+                ->orWhere('to_tenant_id', $currentTenant->id);
+        })
+            ->where('status', 'accepted')
+            ->with(['fromTenant', 'toTenant'])
+            ->latest()
+            ->get()
+            ->map(function ($req) use ($currentTenant) {
+                $req->partner = $req->from_tenant_id === $currentTenant->id
+                    ? $req->toTenant
+                    : $req->fromTenant;
+                return $req;
+            });
+
         return view('hospital.dashboard.doctor_history', compact(
-            'slug', 'historyPatients', 'hospitals',
-            'requestMap', 'incomingRequests', 'sentRequests', 'currentTenant'
+            'slug',
+            'historyPatients',
+            'hospitals',
+            'requestMap',
+            'incomingRequests',
+            'sentRequests',
+            'acceptedConnections',
+            'currentTenant'
         ));
     }
 
@@ -619,7 +664,7 @@ class DashboardController extends Controller
         $currentTenant = app('tenant');
 
         if ($currentTenant->id === $toTenantId) {
-            return back()->with('error', 'Apne aap ko request nahi bhej sakte.');
+            return back()->with('error', 'You cannot send a request to your own hospital.');
         }
 
         $existing = HospitalShareRequest::where(function ($q) use ($currentTenant, $toTenantId) {
@@ -629,16 +674,16 @@ class DashboardController extends Controller
         })->first();
 
         if ($existing) {
-            return back()->with('info', 'Request already bheji ja chuki hai.');
+            return back()->with('info', 'The request has already been sent.');
         }
 
         HospitalShareRequest::create([
             'from_tenant_id' => $currentTenant->id,
-            'to_tenant_id'   => $toTenantId,
-            'status'         => 'pending',
+            'to_tenant_id' => $toTenantId,
+            'status' => 'pending',
         ]);
 
-        return back()->with('success', 'Request successfully bheji gayi!');
+        return back()->with('success', 'Request sent successfully!');
     }
 
     public function acceptShareRequest(string $slug, int $requestId): RedirectResponse
@@ -652,7 +697,7 @@ class DashboardController extends Controller
 
         $req->update(['status' => 'accepted']);
 
-        return back()->with('success', 'Request accept kar li gayi!');
+        return back()->with('success', 'Request accepted successfully!');
     }
 
     public function removeShareRequest(string $slug, int $requestId): RedirectResponse
@@ -662,13 +707,127 @@ class DashboardController extends Controller
         $req = HospitalShareRequest::where('id', $requestId)
             ->where(function ($q) use ($currentTenant) {
                 $q->where('from_tenant_id', $currentTenant->id)
-                  ->orWhere('to_tenant_id', $currentTenant->id);
+                    ->orWhere('to_tenant_id', $currentTenant->id);
             })
             ->firstOrFail();
 
         $req->delete();
 
-        return back()->with('success', 'Request remove kar di gayi.');
+        return back()->with('success', 'Request removed successfully!');
+    }
+
+    public function sharedPatientHistory(Request $request, string $slug): View|\Illuminate\Http\RedirectResponse
+    {
+        $currentTenant = app('tenant');
+        $search = $request->input('search');
+
+        // Accepted partner tenant IDs
+        $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
+            $q->where('from_tenant_id', $currentTenant->id)
+                ->orWhere('to_tenant_id', $currentTenant->id);
+        })
+            ->where('status', 'accepted')
+            ->get()
+            ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
+            ->toArray();
+
+        $patient = null;
+        $history = collect();
+
+        if ($search && count($partnerTenantIds) > 0) {
+            $patient = Patient::withoutTenantScope()
+                ->with(['location', 'tenant:id,name'])
+                ->whereIn('tenant_id', $partnerTenantIds)
+                ->where(function ($q) use ($search) {
+                    $q->where('patient_code', $search)
+                        ->orWhere('contact_no', $search)
+                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                })
+                ->first();
+
+            if ($patient) {
+                $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
+                    ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+                    ->where('patient_id', $patient->id)
+                    ->get()
+                    ->map(function ($exam) {
+                        $exam->type = 'Primary Exam';
+                        $exam->color = 'primary';
+                        $exam->icon = 'bi-clipboard2-pulse';
+                        return $exam;
+                    });
+
+                $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
+                    ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+                    ->where('patient_id', $patient->id)
+                    ->get()
+                    ->map(function ($exam) {
+                        $exam->type = 'Secondary Exam';
+                        $exam->color = 'secondary';
+                        $exam->icon = 'bi-clipboard2-check';
+                        return $exam;
+                    });
+
+                $history = $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
+            }
+        }
+
+        return view('hospital.patient.history', compact('patient', 'history', 'search', 'slug'));
+    }
+
+    public function partnerHistory(Request $request, string $slug, int $partnerTenantId): View|RedirectResponse
+    {
+        $currentTenant = app('tenant');
+
+        // Validate accepted share relationship
+        $shareExists = HospitalShareRequest::where(function ($q) use ($currentTenant, $partnerTenantId) {
+            $q->where('from_tenant_id', $currentTenant->id)->where('to_tenant_id', $partnerTenantId);
+        })->orWhere(function ($q) use ($currentTenant, $partnerTenantId) {
+            $q->where('from_tenant_id', $partnerTenantId)->where('to_tenant_id', $currentTenant->id);
+        })->where('status', 'accepted')->exists();
+
+        if (!$shareExists) {
+            return redirect()->route('hospital.doctor.history', ['slug' => $slug])
+                ->with('error', 'Is hospital ke saath koi accepted connection nahi hai.');
+        }
+
+        $partnerTenant = Tenant::findOrFail($partnerTenantId);
+
+        $patientName = $request->input('patient_name');
+        $doctorName = $request->input('doctor_name');
+        $date = $request->input('date');
+
+        $partnerPatients = Patient::withoutTenantScope()
+            ->with([
+                'doctor' => fn($q) => $q->withoutGlobalScope('tenant'),
+                'caseType' => fn($q) => $q->withoutGlobalScope('tenant'),
+            ])
+            ->where('tenant_id', $partnerTenantId)
+            ->where(function ($q) {
+                $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at');
+            })
+            ->when($patientName, fn($q) => $q->where(function ($q2) use ($patientName) {
+                $q2->where('first_name', 'like', "%{$patientName}%")
+                    ->orWhere('last_name', 'like', "%{$patientName}%");
+            }))
+            ->when($doctorName, fn($q) => $q->whereHas(
+                'doctor',
+                fn($q2) =>
+                $q2->withoutGlobalScope('tenant')->where('name', 'like', "%{$doctorName}%")
+            ))
+            ->when($date, fn($q) => $q->whereDate('appointment_date', $date))
+            ->latest('appointment_date')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('hospital.dashboard.partner_history', compact(
+            'slug',
+            'partnerTenant',
+            'partnerPatients',
+            'patientName',
+            'doctorName',
+            'date'
+        ));
     }
 
     public function getHospitalDetails(string $slug, int $id): JsonResponse
@@ -692,13 +851,13 @@ class DashboardController extends Controller
             ->count();
 
         return response()->json([
-            'name'                => $hospital->name,
-            'city'                => $hospital->city ?? 'N/A',
-            'state'               => $hospital->state ?? 'N/A',
-            'admin_email'         => $hospital->admin_email ?? 'N/A',
-            'doctors_count'       => $doctorsCount,
+            'name' => $hospital->name,
+            'city' => $hospital->city ?? 'N/A',
+            'state' => $hospital->state ?? 'N/A',
+            'admin_email' => $hospital->admin_email ?? 'N/A',
+            'doctors_count' => $doctorsCount,
             'receptionists_count' => $staffCount,
-            'patients_count'      => $patientsCount,
+            'patients_count' => $patientsCount,
         ]);
     }
 }

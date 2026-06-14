@@ -1247,6 +1247,7 @@
     }
 
     $hasAnyData   = $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert;
+    $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
 @endphp
 
 {{-- Subscription Alert --}}
@@ -1364,6 +1365,28 @@
                 </div>
             </div>
         </div>
+    @endif
+
+    {{-- Incoming Share Requests (hospital admin only) --}}
+    @if(($pendingShareRequestsCount ?? null) !== null)
+        <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}?_tab=request"
+            class="bento-card span-3 text-decoration-none" style="position:relative;">
+            <div class="bento-stat">
+                <div class="bento-icon" style="background:rgba(13,148,136,.12);">
+                    <i data-lucide="send" style="width:22px;height:22px;color:#0d9488;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Incoming Requests</p>
+                    <div class="metric-value">{{ $pendingShareRequestsCount }}</div>
+                    <p class="metric-meta">Hospital share requests pending</p>
+                </div>
+            </div>
+            @if($pendingShareRequestsCount > 0)
+                <span style="position:absolute;top:12px;right:14px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">
+                    {{ $pendingShareRequestsCount }} New
+                </span>
+            @endif
+        </a>
     @endif
 
     {{-- Today's Patients (exam.primary.view) --}}
