@@ -1873,7 +1873,7 @@
                         @foreach($masters['diagnoses'] as $d)
                             @php $gc = $dxGroupCount[$d->id] ?? 0; $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
                             <div class="dx-tag-wrap">
-                                <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}"
+                                <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}" data-name="{{ $d->diagnosis }}"
                                     {{ in_array($d->id, $ed['diagnoses'] ?? []) ? 'checked' : '' }}>
                                 <label class="btn btn-outline-danger rounded-pill btn-sm px-3" for="dx_{{ $d->id }}" style="font-size:12.5px;">
                                     {{ $d->diagnosis }}
@@ -2827,12 +2827,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function selectedLabels(selector) {
         return Array.from(form.querySelectorAll(selector + ':checked')).map(el => {
+            if (el.dataset.name) { return el.dataset.name; }
             if (el.id) {
                 const lbl = form.querySelector('label[for="' + el.id + '"]');
-                if (lbl) { return lbl.textContent.trim(); }
+                if (lbl) {
+                    // Use only text nodes to exclude badge spans
+                    const text = Array.from(lbl.childNodes)
+                        .filter(n => n.nodeType === 3)
+                        .map(n => n.textContent.trim())
+                        .join(' ').trim();
+                    if (text) { return text; }
+                    return lbl.textContent.trim();
+                }
             }
-            const span = el.closest('label')?.querySelector('span');
-            return span ? span.textContent.trim() : el.value;
+            return el.value;
         });
     }
 
@@ -3076,7 +3084,13 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('canvas_fundus').innerHTML = fundusHtml;
 
         const diagnoses = selectedLabels('input[name="exam_data[diagnoses][]"]');
-        const diagnosisText = diagnoses.length ? diagnoses.join(', ') : '-';
+        const dxPill = (t) => `<span style="background:#fef2f2;color:#991b1b;padding:1px 8px;border-radius:8px;margin-right:3px;margin-bottom:3px;font-size:10px;border:1px solid #fecaca;display:inline-block;">${t}</span>`;
+        const dxSection = diagnoses.length
+            ? `<table class="table table-sm table-bordered mb-1" style="font-size:10px;">` +
+              `<thead><tr><th colspan="1" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">DIAGNOSIS</th></tr></thead>` +
+              `<tbody><tr><td style="padding:3px 5px;">${diagnoses.map(dxPill).join('')}</td></tr></tbody>` +
+              `</table>`
+            : '';
 
         const rxRows = Array.from(document.querySelectorAll('#rxBody .rx-row'));
         const rxBodyHtml = rxRows.map((row) => {
@@ -3088,24 +3102,27 @@ document.addEventListener('DOMContentLoaded', function () {
             const duration = durRaw ? durRaw + ' Days' : '-';
             const instruction = row.querySelector('[name*="[instructions]"]')?.value || '-';
             const eye = row.querySelector('[name*="[eye]"]')?.value || '-';
-            return `<tr><td>${name}</td><td>${dosage}</td><td>${duration}</td><td>${eye}</td><td>${instruction}</td></tr>`;
+            return `<tr><td style="font-size:10px;padding:2px 4px;">${name}</td><td style="font-size:10px;padding:2px 4px;">${dosage}</td><td style="font-size:10px;padding:2px 4px;">${duration}</td><td style="font-size:10px;padding:2px 4px;">${eye}</td><td style="font-size:10px;padding:2px 4px;">${instruction}</td></tr>`;
         }).filter(Boolean).join('');
 
-        const rxHtml =
-            `<div class="mb-1" style="font-size:11px;"><strong>Dx:</strong> ${diagnosisText}</div>` +
-            `<table class="table table-sm table-bordered border-dark mb-0" style="font-size:11px;">` +
-            `<thead><tr><th class="bg-dark text-white">Medicine</th><th class="bg-dark text-white">Dose</th><th class="bg-dark text-white">Days</th><th class="bg-dark text-white">Eye</th><th class="bg-dark text-white">Instr.</th></tr></thead>` +
-            `<tbody>${rxBodyHtml || '<tr><td colspan="5" class="text-center text-muted">No medicines</td></tr>'}</tbody>` +
-            `</table>`;
-        document.getElementById('canvas_rx').innerHTML = rxHtml;
+        const rxTable = rxBodyHtml
+            ? `<table class="table table-sm table-bordered mb-0" style="font-size:10px;">` +
+              `<thead>` +
+              `<tr><th colspan="5" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">PRESCRIPTION (Rx)</th></tr>` +
+              `<tr style="background:#eef4f9;"><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Medicine</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Dose</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Days</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Eye</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Instr.</th></tr>` +
+              `</thead><tbody>${rxBodyHtml}</tbody></table>`
+            : '';
+
+        document.getElementById('canvas_rx').innerHTML = dxSection + rxTable;
 
         // Advice canvas
         const adviceText = (document.getElementById('advice_textarea')?.value || '').trim();
-        const adviceHtml =
-            `<table class="table table-sm table-bordered border-dark mb-0" style="page-break-inside:avoid;">` +
-            `<thead><tr><th class="bg-dark text-white">CLINICAL ADVICE &amp; INSTRUCTIONS</th></tr></thead>` +
-            `<tbody><tr id="advice_print_row"><td style="min-height:50px;font-size:13px;">${adviceText || 'No specific advice recorded.'}</td></tr></tbody>` +
-            `</table>`;
+        const adviceHtml = adviceText
+            ? `<table class="table table-sm table-bordered mb-0" style="font-size:10px;">` +
+              `<thead><tr><th class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">CLINICAL ADVICE &amp; INSTRUCTIONS</th></tr></thead>` +
+              `<tbody><tr><td style="font-size:10px;padding:3px 5px;white-space:pre-line;">${adviceText}</td></tr></tbody>` +
+              `</table>`
+            : '';
         document.getElementById('canvas_advice').innerHTML = adviceHtml;
     };
 
@@ -3268,7 +3285,27 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         document.addEventListener('change', function (e) {
-            if (e.target.matches('input[name="exam_data[diagnoses][]"]')) update();
+            if (!e.target.matches('input[name="exam_data[diagnoses][]"]')) { return; }
+            update();
+            // Auto-append linked advices to textarea when a diagnosis is checked
+            if (e.target.checked) {
+                const dxId = +e.target.value;
+                const linked = dxAdvices.filter(a => a.diagnosis_id && +a.diagnosis_id === dxId);
+                if (linked.length) {
+                    const ta = document.getElementById('advice_textarea');
+                    if (ta) {
+                        linked.forEach(a => {
+                            const text = adviceMap[a.id] || '';
+                            if (!text) { return; }
+                            if (!ta.value.includes(text)) {
+                                ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+                            }
+                        });
+                        ta.dispatchEvent(new Event('input'));
+                        if (typeof updateLivePreview === 'function') { updateLivePreview(); }
+                    }
+                }
+            }
         });
 
         update();
