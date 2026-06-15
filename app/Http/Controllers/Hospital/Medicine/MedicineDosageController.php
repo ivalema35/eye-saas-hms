@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hospital\Medicine;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -47,10 +48,20 @@ class MedicineDosageController extends Controller
 
     public function destroy(string $slug, int $id): RedirectResponse
     {
-        Dosage::findOrFail($id)->delete();
+        try {
+            Dosage::findOrFail($id)->delete();
 
-        return redirect()
-            ->route('hospital.medicine-dosages.index', ['slug' => $slug])
-            ->with('success', 'Medicine dosage deleted successfully.');
+            return redirect()
+                ->route('hospital.medicine-dosages.index', ['slug' => $slug])
+                ->with('success', 'Medicine dosage deleted successfully.');
+        } catch (QueryException $e) {
+            if ($e->getCode() === '23000') {
+                return redirect()
+                    ->route('hospital.medicine-dosages.index', ['slug' => $slug])
+                    ->with('error', 'This dosage cannot be deleted because it is linked to one or more medicines.');
+            }
+
+            throw $e;
+        }
     }
 }

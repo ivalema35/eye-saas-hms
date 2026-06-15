@@ -242,7 +242,7 @@
                         </div>
                     </div>
 
-                    {{-- Row 3: Qty --}}
+                    {{-- Row 3: Qty + Company --}}
                     <div class="row g-3 mb-3">
                         <div class="col-md-6">
                             <label class="form-label fw-medium">Medicine Qty <span class="text-danger">*</span></label>
@@ -250,6 +250,13 @@
                                 class="form-control clinical-input @error('qty') is-invalid @enderror"
                                 placeholder="e.g. 10 tablets, 5ml" required>
                             @error('qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Company</label>
+                            <input type="text" name="company" id="input-company" value="{{ old('company') }}"
+                                class="form-control clinical-input @error('company') is-invalid @enderror"
+                                placeholder="e.g. Sun Pharma">
+                            @error('company')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         </div>
 
@@ -346,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('input-medicine-id').value = oldMedicineId;
         document.getElementById('input-medicine-type-id').value = @json(old('medicine_type_id', ''));
         document.getElementById('input-name').value = @json(old('name', ''));
-        document.getElementById('input-brand-name').value = @json(old('brand_name', ''));
         document.getElementById('input-company').value = @json(old('company', ''));
         document.getElementById('input-price').value = @json(old('price', '0.00'));
 
