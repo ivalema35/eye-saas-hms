@@ -226,6 +226,13 @@
     </div>
 @endif
 
+@if(session('error'))
+    <div class="alert alert-danger d-flex gap-2 mb-4">
+        <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+@endif
+
 <ul class="nav nav-tabs mb-4 type-nav-tabs">
     <li class="nav-item">
         <a class="nav-link active"

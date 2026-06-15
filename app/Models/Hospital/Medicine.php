@@ -11,9 +11,11 @@
 
 namespace App\Models\Hospital;
 
+use App\Models\Hospital\MedicineGroupItem;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Medicine extends Model
@@ -33,6 +35,18 @@ class Medicine extends Model
         'company',
         'price',
     ];
+
+    protected static function booted(): void
+    {
+        static::deleting(function (Medicine $medicine) {
+            $medicine->groupItems()->delete();
+        });
+    }
+
+    public function groupItems(): HasMany
+    {
+        return $this->hasMany(MedicineGroupItem::class);
+    }
 
     public function medicineType(): BelongsTo
     {
