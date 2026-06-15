@@ -1868,7 +1868,12 @@
                     <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
                         @php
                             $dxGroupCount  = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
-                            $dxAdviceCount = collect($masters['advices'])->groupBy('diagnosis_id')->map->count();
+                            $dxAdviceCount = [];
+                            foreach ($masters['advices'] as $_a) {
+                                foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
+                                    $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
+                                }
+                            }
                         @endphp
                         @foreach($masters['diagnoses'] as $d)
                             @php $gc = $dxGroupCount[$d->id] ?? 0; $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
@@ -3155,7 +3160,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     @php
         $__dxGroups  = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
-        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->value ?? '', 'diagnosis_id' => $a->diagnosis_id ?? null])->values();
+        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->value ?? '', 'diagnosis_ids' => $a->diagnosis_ids ?? []])->values();
     @endphp
     // ── Diagnosis → Suggested Groups & Advice ────────────────────────────
     (function () {
@@ -3281,7 +3286,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const ids = Array.from(document.querySelectorAll('input[name="exam_data[diagnoses][]"]:checked')).map(el => +el.value);
             const hasIds = ids.length > 0;
             renderSuggestedGroups(dxMedGroups.filter(g => g.diagnosis_id && ids.includes(+g.diagnosis_id)), hasIds);
-            renderSuggestedAdvices(dxAdvices.filter(a => a.diagnosis_id && ids.includes(+a.diagnosis_id)), hasIds);
+            renderSuggestedAdvices(dxAdvices.filter(a => a.diagnosis_ids && a.diagnosis_ids.some(id => ids.includes(id))), hasIds);
         }
 
         document.addEventListener('change', function (e) {
@@ -3290,7 +3295,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Auto-append linked advices to textarea when a diagnosis is checked
             if (e.target.checked) {
                 const dxId = +e.target.value;
-                const linked = dxAdvices.filter(a => a.diagnosis_id && +a.diagnosis_id === dxId);
+                const linked = dxAdvices.filter(a => a.diagnosis_ids && a.diagnosis_ids.includes(dxId));
                 if (linked.length) {
                     const ta = document.getElementById('advice_textarea');
                     if (ta) {

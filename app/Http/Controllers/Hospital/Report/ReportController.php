@@ -152,24 +152,22 @@ class ReportController extends Controller
 
     private function applyDateRange(Builder $query, string $dateRange): void
     {
-        if ($dateRange !== '') {
-            $dates = explode(' to ', $dateRange);
+        if ($dateRange === '') {
+            return;
+        }
 
-            if (count($dates) === 2) {
-                $query->whereBetween('created_at', [
-                    $dates[0].' 00:00:00',
-                    $dates[1].' 23:59:59',
-                ]);
+        $dates = explode(' to ', $dateRange);
 
-                return;
-            }
-
-            $query->whereDate('created_at', $dates[0]);
+        if (count($dates) === 2) {
+            $query->whereBetween('appointment_date', [
+                $dates[0],
+                $dates[1],
+            ]);
 
             return;
         }
 
-        $query->whereDate('created_at', today());
+        $query->whereDate('appointment_date', $dates[0]);
     }
 
     private function authorizePermission(string $permissionKey): void

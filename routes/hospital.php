@@ -175,6 +175,9 @@ Route::prefix('{slug}')
                 Route::post('ajax/diagnosis', [PrimaryExamController::class, 'ajaxAddDiagnosis'])
                     ->name('ajax.diagnosis.add')
                     ->middleware('permission:opd.exam.primary');
+                Route::post('ajax/advice', [PrimaryExamController::class, 'ajaxAddAdvice'])
+                    ->name('ajax.advice.add')
+                    ->middleware('permission:opd.exam.primary');
                 Route::get('ajax/medicines', [PrimaryExamController::class, 'ajaxSearchMedicines'])
                     ->name('ajax.medicines.search')
                     ->middleware('permission:opd.exam.primary|opd.exam.secondary');
@@ -278,6 +281,7 @@ Route::prefix('{slug}')
                         ->group(function () {
                             Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
                             Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:master.eye_exam')->name('store');
+                            Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:master.eye_exam')->name('sync-by-diagnosis');
                             Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:master.eye_exam')->name('update')->whereNumber('id');
                             Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:master.eye_exam')->name('toggle-favourite')->whereNumber('id');
                             Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:master.eye_exam')->name('destroy')->whereNumber('id');

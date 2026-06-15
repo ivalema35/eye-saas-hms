@@ -188,10 +188,15 @@ $user = Auth::guard('hospital_user')->user();
                 ->where('tenant_id', $tenantId)
                 ->orderBy('id')
                 ->get(['id', DB::raw('value as diagnosis')]),
-            'advices' => MasterAdvice::query()
-                ->where('tenant_id', $tenantId)
+            'advices' => MasterAdvice::where('tenant_id', $tenantId)
+                ->with('diagnoses:id')
                 ->orderBy('id')
-                ->get(['id', 'value', 'diagnosis_id']),
+                ->get(['id', 'value'])
+                ->map(fn($a) => (object)[
+                    'id'            => $a->id,
+                    'value'         => $a->value,
+                    'diagnosis_ids' => $a->diagnoses->pluck('id')->all(),
+                ]),
             'durations' => $q('tbl_durations'),
             'vn' => $q('tbl_master_vn'),
             'pnvn' => $q('tbl_master_pnvn'),
