@@ -30,6 +30,7 @@ use App\Models\Hospital\MasterVngl;
 use App\Models\Hospital\MasterVnst;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -118,7 +119,7 @@ class DetailMasterController extends Controller
         $title       = Str::headline($type);
         $routeGroup  = 'hospital.masters.detail';
 
-        $withRelations = $this->isAdviceType($type) ? ['diagnosis'] : [];
+        $withRelations = $this->isAdviceType($type) ? ['diagnoses'] : [];
         $query = $modelClass::with($withRelations);
         if ($this->hasFavourite($type)) {
             $query->orderByDesc('is_favourite')->orderBy('value');
@@ -139,16 +140,19 @@ class DetailMasterController extends Controller
         $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
         $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
 
-        if ($this->isAdviceType($type)) {
-            $request->validate(['diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id']]);
-            $validated['diagnosis_id'] = $request->diagnosis_id ?: null;
-        }
-
         if ($this->hasFavourite($type)) {
             $validated['is_favourite'] = $request->boolean('is_favourite');
         }
 
-        $modelClass::create($validated);
+        $record = $modelClass::create($validated);
+
+        if ($this->isAdviceType($type)) {
+            $request->validate([
+                'diagnosis_ids'   => ['nullable', 'array'],
+                'diagnosis_ids.*' => ['exists:tbl_master_diagnosis,id'],
+            ]);
+            $record->diagnoses()->sync($request->input('diagnosis_ids', []));
+        }
 
         return redirect()->back()->with('success', Str::headline($type).' added successfully.');
     }
@@ -165,16 +169,19 @@ class DetailMasterController extends Controller
         $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
         $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
 
-        if ($this->isAdviceType($type)) {
-            $request->validate(['diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id']]);
-            $validated['diagnosis_id'] = $request->diagnosis_id ?: null;
-        }
-
         if ($this->hasFavourite($type)) {
             $validated['is_favourite'] = $request->boolean('is_favourite');
         }
 
         $record->update($validated);
+
+        if ($this->isAdviceType($type)) {
+            $request->validate([
+                'diagnosis_ids'   => ['nullable', 'array'],
+                'diagnosis_ids.*' => ['exists:tbl_master_diagnosis,id'],
+            ]);
+            $record->diagnoses()->sync($request->input('diagnosis_ids', []));
+        }
 
         return redirect()->back()->with('success', Str::headline($type).' updated successfully.');
     }
@@ -187,6 +194,35 @@ class DetailMasterController extends Controller
         $record->update(['is_favourite' => ! $record->is_favourite]);
 
         return response()->json(['is_favourite' => $record->is_favourite]);
+    }
+
+    public function syncByDiagnosis(Request $request, string $slug, string $type): RedirectResponse
+    {
+        abort_unless($this->isAdviceType($type), 404);
+
+        $request->validate([
+            'link_diagnosis_id' => ['required', 'exists:tbl_master_diagnosis,id'],
+            'link_advice_ids'   => ['nullable', 'array'],
+            'link_advice_ids.*' => ['exists:tbl_master_advice,id'],
+        ]);
+
+        $diagnosisId     = (int) $request->link_diagnosis_id;
+        $selectedIds     = array_map('intval', $request->input('link_advice_ids', []));
+        $tenantAdviceIds = MasterAdvice::pluck('id')->toArray();
+
+        DB::table('tbl_advice_diagnoses')
+            ->where('diagnosis_id', $diagnosisId)
+            ->whereIn('advice_id', $tenantAdviceIds)
+            ->delete();
+
+        $validIds = array_values(array_intersect($selectedIds, $tenantAdviceIds));
+        if (!empty($validIds)) {
+            DB::table('tbl_advice_diagnoses')->insert(
+                array_map(fn($id) => ['advice_id' => $id, 'diagnosis_id' => $diagnosisId], $validIds)
+            );
+        }
+
+        return redirect()->back()->with('success', 'Advice links updated successfully.');
     }
 
     public function destroy(string $slug, string $type, int $id): RedirectResponse

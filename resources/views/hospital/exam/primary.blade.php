@@ -1629,7 +1629,12 @@
                     <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
                         @php
                             $dxGroupCount  = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
-                            $dxAdviceCount = collect($masters['advices'])->groupBy('diagnosis_id')->map->count();
+                            $dxAdviceCount = [];
+                            foreach ($masters['advices'] as $_a) {
+                                foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
+                                    $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
+                                }
+                            }
                         @endphp
                         @foreach($masters['diagnoses'] as $d)
                             @php $gc = $dxGroupCount[$d->id] ?? 0; $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
@@ -1805,7 +1810,7 @@
                             <i class="bi bi-collection me-1 text-secondary"></i>Quick Add from Master
                             <span class="fw-normal text-muted ms-1" style="font-size:11px;">(click to append)</span>
                         </div>
-                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                        <div class="d-flex flex-wrap gap-2 align-items-center" id="adviceChipsWrap">
                             {{-- Favourites as chips --}}
                             @foreach($masters['advices'] ?? [] as $adv)
                                 @php $advText = $adv->advice ?? ''; @endphp
@@ -1821,11 +1826,11 @@
                             {{-- Non-favourites in a dropdown --}}
                             @php $nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values(); @endphp
                             @if($nonFavAdvices->isNotEmpty())
-                            <div class="dropdown">
+                            <div class="dropdown" id="adviceMoreDropdown">
                                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:12px;border-radius:20px;">
                                     <i class="bi bi-chevron-down me-1"></i>More
                                 </button>
-                                <ul class="dropdown-menu" style="max-height:220px;overflow-y:auto;min-width:200px;">
+                                <ul class="dropdown-menu" id="adviceMoreList" style="max-height:220px;overflow-y:auto;min-width:200px;">
                                     @foreach($nonFavAdvices as $adv)
                                     <li>
                                         <button type="button" class="dropdown-item advice-quick-btn" style="font-size:12px;" data-advice="{{ $adv->advice }}">
@@ -1835,7 +1840,25 @@
                                     @endforeach
                                 </ul>
                             </div>
+                            @else
+                            <div class="dropdown d-none" id="adviceMoreDropdown">
+                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:12px;border-radius:20px;">
+                                    <i class="bi bi-chevron-down me-1"></i>More
+                                </button>
+                                <ul class="dropdown-menu" id="adviceMoreList" style="max-height:220px;overflow-y:auto;min-width:200px;"></ul>
+                            </div>
                             @endif
+                        </div>
+
+                        {{-- Add New Advice --}}
+                        <div class="mt-2 d-flex gap-2 align-items-center">
+                            <input type="text" id="newAdviceInput" class="form-control form-control-sm"
+                                   placeholder="Type new advice and press Add..."
+                                   maxlength="255" style="font-size:12px;border-radius:20px;">
+                            <button type="button" id="newAdviceBtn" class="btn btn-sm btn-success px-3"
+                                    style="font-size:12px;border-radius:20px;white-space:nowrap;">
+                                <i class="bi bi-plus-lg me-1"></i>Add
+                            </button>
                         </div>
                     </div>
 
@@ -2351,7 +2374,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     @php
         $__dxGroups  = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
-        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_id' => $a->diagnosis_id ?? null])->values();
+        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_ids' => $a->diagnosis_ids ?? []])->values();
     @endphp
     // ── Diagnosis → Suggested Groups & Advice ────────────────────────────
     (function () {
@@ -2477,11 +2500,30 @@ document.addEventListener('DOMContentLoaded', function () {
             const ids = Array.from(document.querySelectorAll('input[name="exam_data[diagnoses][]"]:checked')).map(el => +el.value);
             const hasIds = ids.length > 0;
             renderSuggestedGroups(dxMedGroups.filter(g => g.diagnosis_id && ids.includes(+g.diagnosis_id)), hasIds);
-            renderSuggestedAdvices(dxAdvices.filter(a => a.diagnosis_id && ids.includes(+a.diagnosis_id)), hasIds);
+            renderSuggestedAdvices(dxAdvices.filter(a => a.diagnosis_ids && a.diagnosis_ids.some(id => ids.includes(id))), hasIds);
         }
 
         document.addEventListener('change', function (e) {
-            if (e.target.matches('input[name="exam_data[diagnoses][]"]')) update();
+            if (!e.target.matches('input[name="exam_data[diagnoses][]"]')) return;
+            update();
+            if (e.target.checked) {
+                const dxId = +e.target.value;
+                const linked = dxAdvices.filter(a => a.diagnosis_ids && a.diagnosis_ids.includes(dxId));
+                if (linked.length) {
+                    const ta = document.getElementById('advice_textarea');
+                    if (ta) {
+                        linked.forEach(a => {
+                            const text = adviceMap[a.id] || '';
+                            if (!text) return;
+                            if (!ta.value.includes(text)) {
+                                ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+                            }
+                        });
+                        ta.dispatchEvent(new Event('input'));
+                        if (typeof updateLivePreview === 'function') updateLivePreview();
+                    }
+                }
+            }
         });
 
         update();
@@ -3034,6 +3076,85 @@ document.addEventListener('DOMContentLoaded', function () {
             if (typeof updateLivePreview === 'function') updateLivePreview();
         });
     });
+
+    // Add New Advice (AJAX save to master + append to textarea)
+    (function () {
+        const input  = document.getElementById('newAdviceInput');
+        const btn    = document.getElementById('newAdviceBtn');
+        const moreList = document.getElementById('adviceMoreList');
+        const moreDrop = document.getElementById('adviceMoreDropdown');
+
+        function appendAdviceChip(text) {
+            // Add as a chip before the "More" dropdown
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'btn btn-sm btn-outline-secondary advice-quick-btn';
+            chip.style.cssText = 'font-size:12px;border-radius:20px;';
+            chip.dataset.advice = text;
+            chip.innerHTML = '<i class="bi bi-plus-lg me-1"></i>' + text;
+            chip.addEventListener('click', function () {
+                const ta = document.getElementById('advice_textarea');
+                if (!ta) return;
+                ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+                ta.dispatchEvent(new Event('input'));
+                if (typeof updateLivePreview === 'function') updateLivePreview();
+            });
+            // Insert before the "More" dropdown
+            const chipsWrap = document.getElementById('adviceChipsWrap');
+            if (chipsWrap && moreDrop) {
+                chipsWrap.insertBefore(chip, moreDrop);
+            }
+        }
+
+        function appendToTextarea(text) {
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return;
+            ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+            ta.dispatchEvent(new Event('input'));
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        }
+
+        function doAdd() {
+            const text = (input.value || '').trim();
+            if (!text) { input.focus(); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+            fetch('{{ route("hospital.ajax.advice.add", ["slug" => $slug]) }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ advice: text }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.advice) {
+                    appendAdviceChip(data.advice);
+                    appendToTextarea(data.advice);
+                    input.value = '';
+                }
+            })
+            .catch(() => {
+                // Even on error, append text to textarea
+                appendToTextarea(text);
+                input.value = '';
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add';
+                input.focus();
+            });
+        }
+
+        btn.addEventListener('click', doAdd);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') { e.preventDefault(); doAdd(); }
+        });
+    })();
 
     // ── Vision custom dropdowns ───────────────────────────────────────────────
     (function () {

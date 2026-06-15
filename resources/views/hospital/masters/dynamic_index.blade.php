@@ -11,6 +11,8 @@
     $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'hno', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
     $useModalLayout = in_array($type, $modalMasterTypes, true);
     $showBackButton = in_array($type, $modalMasterTypes, true);
+    $isAdviceType   = in_array($type, ['advice', 'advices'], true);
+    $showDiagnosis  = $isAdviceType && isset($diagnoses) && $diagnoses->isNotEmpty();
 @endphp
 
 @if($errors->any())
@@ -40,6 +42,15 @@
             <p class="text-muted small mb-0">Keep your hospital's master data organized and up-to-date.</p>
         </div>
         <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if($canWrite && $showDiagnosis)
+                <button type="button"
+                        class="btn btn-outline-secondary"
+                        style="border-radius:12px;font-weight:700;border-color:rgba(27,79,114,.3);color:#1B4F72;"
+                        data-bs-toggle="modal"
+                        data-bs-target="#linkByDiagnosisModal">
+                    <i class="bi bi-diagram-3 me-1"></i> Link by Diagnosis
+                </button>
+            @endif
             @if($canWrite && $useModalLayout)
                 <button type="button"
                         class="btn btn-primary case-master-add-btn"
@@ -116,7 +127,7 @@
                                             {{ Str::headline($col) }}
                                         </th>
                                     @endforeach
-                                    @if(in_array($type, ['advice','advices']) && isset($diagnoses) && $diagnoses->isNotEmpty())
+                                    @if($showDiagnosis)
                                         <th class="py-3 text-muted text-uppercase small fw-bold" style="letter-spacing: 0.5px;">
                                             Diagnosis
                                         </th>
@@ -138,12 +149,16 @@
                                         @foreach($columns as $col)
                                             <td class="fw-medium text-dark py-3">{{ $record->$col }}</td>
                                         @endforeach
-                                        @if(in_array($type, ['advice','advices']) && isset($diagnoses) && $diagnoses->isNotEmpty())
+                                        @if($showDiagnosis)
                                             <td class="py-3">
-                                                @if($record->diagnosis)
-                                                    <span style="font-size:.78rem;font-weight:700;color:#0d6949;background:rgba(13,105,73,.08);border:1px solid rgba(13,105,73,.2);border-radius:999px;padding:.2rem .6rem;">
-                                                        <i class="bi bi-clipboard2-pulse me-1"></i>{{ $record->diagnosis->value }}
-                                                    </span>
+                                                @if(collect($record->diagnoses)->isNotEmpty())
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        @foreach($record->diagnoses as $diag)
+                                                            <span style="font-size:.78rem;font-weight:700;color:#0d6949;background:rgba(13,105,73,.08);border:1px solid rgba(13,105,73,.2);border-radius:999px;padding:.2rem .6rem;">
+                                                                <i class="bi bi-clipboard2-pulse me-1"></i>{{ $diag->value }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
                                                 @else
                                                     <span class="text-muted small">—</span>
                                                 @endif
@@ -217,6 +232,7 @@
         </div>
     </div>
 
+    {{-- Add / Edit modal --}}
     @if($canWrite && $useModalLayout)
         <div class="modal fade case-master-modal" id="masterFormModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
@@ -255,16 +271,16 @@
                                 </div>
                             @endforeach
 
-                            @if(in_array($type, ['advice','advices']) && isset($diagnoses) && $diagnoses->isNotEmpty())
+                            @if($showDiagnosis)
                             <div class="mb-3">
                                 <label class="form-label text-muted small fw-bold text-uppercase" style="letter-spacing: 0.5px;">
                                     <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosis
                                 </label>
-                                <select name="diagnosis_id"
-                                        id="input-diagnosis_id"
-                                        class="form-select form-select-lg case-master-input"
+                                <select name="diagnosis_ids[]"
+                                        id="input-diagnosis_ids"
+                                        class="form-select case-master-input"
+                                        multiple
                                         style="font-size: 15px;">
-                                    <option value="">— Select diagnosis (optional) —</option>
                                     @foreach($diagnoses as $diag)
                                         <option value="{{ $diag->id }}">{{ $diag->value }}</option>
                                     @endforeach
@@ -287,6 +303,127 @@
             </div>
         </div>
     @endif
+
+    {{-- Link by Diagnosis modal --}}
+    @if($canWrite && $showDiagnosis)
+    @php
+        $adviceDiagMap = $records->mapWithKeys(fn($r) => [
+            $r->id => collect($r->diagnoses)->pluck('id')->all()
+        ])->all();
+    @endphp
+    <div class="modal fade" id="linkByDiagnosisModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0" style="border-radius:22px;box-shadow:0 20px 50px rgba(27,79,114,.15);overflow:hidden;">
+
+                <div class="modal-header border-0 pb-0"
+                     style="background:linear-gradient(135deg,rgba(235,245,251,.96),rgba(255,255,255,.94));border-bottom:1px solid rgba(27,79,114,.12)!important;padding:1.25rem 1.5rem!important;">
+                    <div class="d-flex align-items-center">
+                        <span style="width:42px;height:42px;border-radius:14px;background:#1B4F72;color:#fff;display:inline-flex;align-items:center;justify-content:center;margin-right:.8rem;">
+                            <i class="bi bi-diagram-3"></i>
+                        </span>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" style="color:#1B4F72;">Link Advices to Diagnosis</h5>
+                            <p class="text-muted small mb-0" style="font-size:.78rem;">Select a diagnosis, then check which advices belong to it</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form id="linkByDiagnosisForm"
+                      action="{{ route('hospital.masters.detail.sync-by-diagnosis', ['slug' => $slug, 'type' => $type]) }}"
+                      method="POST">
+                    @csrf
+
+                    <div class="modal-body p-4">
+
+                        {{-- Diagnosis Dropdown --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-uppercase small text-muted" style="letter-spacing:.05em;">
+                                <i class="bi bi-clipboard2-pulse me-1"></i> Select Diagnosis <span class="text-danger">*</span>
+                            </label>
+                            <select name="link_diagnosis_id"
+                                    id="linkDiagSelect"
+                                    class="form-select"
+                                    style="border:1.5px solid rgba(27,79,114,.2);border-radius:12px;font-weight:650;color:#1B4F72;">
+                                <option value="">— Choose a diagnosis —</option>
+                                @foreach($diagnoses as $diag)
+                                    <option value="{{ $diag->id }}">{{ $diag->value }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Advice Checklist (shown after diagnosis is selected) --}}
+                        <div id="adviceChecklistWrap" style="display:none;">
+                            <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                <label class="fw-bold text-uppercase small text-muted" style="letter-spacing:.05em;">
+                                    <i class="bi bi-list-check me-1"></i> Select Advices
+                                    <span id="selectedAdviceCount" class="badge ms-1" style="background:#1B4F72;font-size:.7rem;">0</span>
+                                </label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-primary rounded-3" style="font-size:.78rem;" onclick="linkDiagSelectAll(true)">
+                                        <i class="bi bi-check2-all me-1"></i>Select All
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" style="font-size:.78rem;" onclick="linkDiagSelectAll(false)">
+                                        <i class="bi bi-x me-1"></i>Clear All
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Search --}}
+                            <div class="mb-3 position-relative">
+                                <i class="bi bi-search position-absolute" style="top:50%;transform:translateY(-50%);left:12px;color:#94a3b8;"></i>
+                                <input type="text" id="adviceCheckSearch"
+                                       class="form-control"
+                                       placeholder="Search advice..."
+                                       style="padding-left:34px;border:1.5px solid rgba(27,79,114,.18);border-radius:10px;font-size:13px;">
+                            </div>
+
+                            {{-- Checklist --}}
+                            <div id="adviceChecklist"
+                                 style="max-height:320px;overflow-y:auto;border:1.5px solid rgba(27,79,114,.12);border-radius:14px;padding:.5rem .75rem;background:rgba(235,245,251,.3);">
+                                @foreach($records as $advice)
+                                    <div class="advice-check-item d-flex align-items-center gap-2 py-2"
+                                         style="border-bottom:1px solid rgba(27,79,114,.06);"
+                                         data-label="{{ strtolower($advice->value) }}">
+                                        <input type="checkbox"
+                                               class="form-check-input advice-link-cb mt-0"
+                                               name="link_advice_ids[]"
+                                               id="lnk_adv_{{ $advice->id }}"
+                                               value="{{ $advice->id }}"
+                                               style="width:18px;height:18px;border-radius:6px;cursor:pointer;flex-shrink:0;accent-color:#1B4F72;">
+                                        <label class="form-check-label fw-medium mb-0"
+                                               for="lnk_adv_{{ $advice->id }}"
+                                               style="cursor:pointer;font-size:13.5px;color:#1B4F72;">
+                                            {{ $advice->value }}
+                                        </label>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        {{-- Placeholder when no diagnosis selected --}}
+                        <div id="adviceChecklistPlaceholder" class="text-center py-4 text-muted">
+                            <i class="bi bi-arrow-up-circle" style="font-size:2.5rem;opacity:.3;"></i>
+                            <p class="mt-2 small mb-0">Select a diagnosis above to see linked advices</p>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer border-0 gap-2" style="background:#f9fafb;">
+                        <button type="button" class="btn btn-outline-secondary rounded-3" data-bs-dismiss="modal">
+                            <i class="bi bi-x me-1"></i> Cancel
+                        </button>
+                        <button type="submit" id="linkDiagSubmitBtn" class="btn btn-primary fw-semibold rounded-3" disabled>
+                            <i class="bi bi-check2 me-1"></i> Save Links
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 @endsection
 
@@ -295,6 +432,19 @@
 <script>
     const storeUrl   = "{{ route($routeGroup.'.store',  ['slug' => $slug, 'type' => $type]) }}";
     const updateBase = "{{ route($routeGroup.'.update', ['slug' => $slug, 'type' => $type, 'id' => '__ID__']) }}";
+
+    // Init Select2 on diagnosis multi-select
+    $(function () {
+        const $diagSel = $('#input-diagnosis_ids');
+        if ($diagSel.length) {
+            $diagSel.select2({
+                dropdownParent: $('#masterFormModal'),
+                placeholder: '— Select diagnoses (optional) —',
+                allowClear: true,
+                width: '100%',
+            });
+        }
+    });
 
     function resetForm() {
         const form = document.getElementById('masterForm');
@@ -314,6 +464,10 @@
         iconBg?.classList.replace('bg-success-subtle', 'bg-primary-subtle');
         iconBg?.classList.replace('text-success', 'text-primary');
         document.getElementById('formIcon').className = 'bi bi-plus-lg{{ $useModalLayout ? '' : ' fs-5' }}';
+
+        // Clear diagnosis multi-select
+        const $diagSel = $('#input-diagnosis_ids');
+        if ($diagSel.length) { $diagSel.val(null).trigger('change'); }
     }
     window.resetForm = resetForm;
 
@@ -339,10 +493,12 @@
             if (field) { field.value = value ?? ''; }
         }
 
-        // Diagnosis dropdown (advice type)
-        const diagSel = document.getElementById('input-diagnosis_id');
-        if (diagSel) { diagSel.value = record.diagnosis_id ?? ''; }
-
+        // Diagnosis multi-select (advice type)
+        const $diagSel = $('#input-diagnosis_ids');
+        if ($diagSel.length) {
+            const ids = (record.diagnoses || []).map(d => String(d.id));
+            $diagSel.val(ids).trigger('change');
+        }
 
         @if($useModalLayout)
             bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
@@ -361,7 +517,6 @@
         const current = btn.dataset.state === '1';
         const newState = !current;
 
-        // Optimistic UI
         btn.dataset.state = newState ? '1' : '0';
         icon.className    = 'bi ' + (newState ? 'bi-heart-fill' : 'bi-heart');
         icon.style.color  = newState ? '#e11d48' : '#cbd5e1';
@@ -382,7 +537,6 @@
             icon.style.color  = confirmed ? '#e11d48' : '#cbd5e1';
             btn.title         = confirmed ? 'Remove favourite' : 'Mark as favourite';
         }).catch(() => {
-            // revert on error
             btn.dataset.state = current ? '1' : '0';
             icon.className    = 'bi ' + (current ? 'bi-heart-fill' : 'bi-heart');
             icon.style.color  = current ? '#e11d48' : '#cbd5e1';
@@ -411,6 +565,84 @@
             bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
         @endif
     });
+    @endif
+
+    @if($showDiagnosis)
+    // ── Link-by-Diagnosis modal ───────────────────────────────────────────
+    (function () {
+        const adviceDiagMap = @json($adviceDiagMap ?? []);
+
+        const diagSelect    = document.getElementById('linkDiagSelect');
+        const checklist     = document.getElementById('adviceChecklist');
+        const checklistWrap = document.getElementById('adviceChecklistWrap');
+        const placeholder   = document.getElementById('adviceChecklistPlaceholder');
+        const submitBtn     = document.getElementById('linkDiagSubmitBtn');
+        const countBadge    = document.getElementById('selectedAdviceCount');
+        const searchInput   = document.getElementById('adviceCheckSearch');
+
+        function updateCount() {
+            const n = checklist ? checklist.querySelectorAll('.advice-link-cb:checked').length : 0;
+            if (countBadge) countBadge.textContent = n;
+        }
+
+        function loadDiagnosis(diagId) {
+            if (!diagId) {
+                if (checklistWrap)  checklistWrap.style.display  = 'none';
+                if (placeholder)    placeholder.style.display    = '';
+                if (submitBtn)      submitBtn.disabled           = true;
+                return;
+            }
+            diagId = +diagId;
+            checklist.querySelectorAll('.advice-link-cb').forEach(function (cb) {
+                const linkedDiags = adviceDiagMap[+cb.value] || [];
+                cb.checked = linkedDiags.includes(diagId);
+            });
+            if (searchInput) searchInput.value = '';
+            checklist.querySelectorAll('.advice-check-item').forEach(function (item) {
+                item.style.display = '';
+            });
+            if (checklistWrap)  checklistWrap.style.display = '';
+            if (placeholder)    placeholder.style.display   = 'none';
+            if (submitBtn)      submitBtn.disabled          = false;
+            updateCount();
+        }
+
+        if (diagSelect) {
+            $(diagSelect).select2({
+                dropdownParent: $('#linkByDiagnosisModal'),
+                placeholder: '— Choose a diagnosis —',
+                allowClear: true,
+                width: '100%',
+            }).on('change', function () {
+                loadDiagnosis(this.value);
+            });
+        }
+
+        if (checklist) checklist.addEventListener('change', updateCount);
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const q = this.value.toLowerCase().trim();
+                checklist.querySelectorAll('.advice-check-item').forEach(function (item) {
+                    item.style.display = (!q || (item.dataset.label || '').includes(q)) ? '' : 'none';
+                });
+            });
+        }
+
+        document.getElementById('linkByDiagnosisModal')?.addEventListener('show.bs.modal', function () {
+            $(diagSelect).val(null).trigger('change');
+            if (searchInput) searchInput.value = '';
+        });
+
+        window.linkDiagSelectAll = function (state) {
+            if (!checklist) return;
+            checklist.querySelectorAll('.advice-link-cb').forEach(function (cb) {
+                const item = cb.closest('.advice-check-item');
+                if (!item || item.style.display !== 'none') cb.checked = state;
+            });
+            updateCount();
+        };
+    })();
     @endif
 </script>
 @endpush

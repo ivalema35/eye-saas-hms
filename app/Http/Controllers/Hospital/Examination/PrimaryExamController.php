@@ -9,6 +9,7 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\MedicineRoute;
+use App\Models\Hospital\MasterAdvice;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Services\Hospital\ExaminationService;
@@ -233,6 +234,25 @@ class PrimaryExamController extends Controller
     }
 
     /**
+     * AJAX: Add a new advice to the master table.
+     */
+    public function ajaxAddAdvice(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'advice' => ['required', 'string', 'max:255'],
+        ]);
+
+        $tenantId = app('tenant')->id;
+        $advice = MasterAdvice::create([
+            'tenant_id'    => $tenantId,
+            'value'        => trim($validated['advice']),
+            'is_favourite' => false,
+        ]);
+
+        return response()->json(['id' => $advice->id, 'advice' => $advice->value]);
+    }
+
+    /**
      * AJAX: Search medicines for prescription type-ahead.
      */
     public function ajaxSearchMedicines(Request $request): JsonResponse
@@ -282,11 +302,17 @@ class PrimaryExamController extends Controller
                 ->where('tenant_id', $tenantId)
                 ->orderBy('id')
                 ->get(['id', DB::raw('value as diagnosis')]),
-            'advices' => DB::table('tbl_master_advice')
-                ->where('tenant_id', $tenantId)
+            'advices' => MasterAdvice::where('tenant_id', $tenantId)
+                ->with('diagnoses:id')
                 ->orderByDesc('is_favourite')
                 ->orderBy('id')
-                ->get(['id', DB::raw('value as advice'), 'diagnosis_id', 'is_favourite']),
+                ->get(['id', 'value', 'is_favourite'])
+                ->map(fn($a) => (object)[
+                    'id'            => $a->id,
+                    'advice'        => $a->value,
+                    'is_favourite'  => $a->is_favourite,
+                    'diagnosis_ids' => $a->diagnoses->pluck('id')->all(),
+                ]),
             'durations' => $q('tbl_durations'),
             'vn' => $q('tbl_master_vn'),
             'pnvn' => $q('tbl_master_pnvn'),
