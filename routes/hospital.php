@@ -118,6 +118,14 @@ Route::prefix('{slug}')
                 Route::get('doctor-history', [DashboardController::class, 'history'])->name('doctor.history');
                 Route::get('hospital-history', [DashboardController::class, 'hospitalHistory'])->name('hospital.history');
 
+                // Shared patient history (cross-tenant, partner hospitals only)
+                Route::get('shared-patient-history', [DashboardController::class, 'sharedPatientHistory'])
+                    ->name('shared.patient.history');
+
+                // Partner hospital's full patient history list
+                Route::get('partner-history/{partnerTenantId}', [DashboardController::class, 'partnerHistory'])
+                    ->name('partner.history')->whereNumber('partnerTenantId');
+
                 // Hospital Share Requests
                 Route::post('hospital-share-requests/{toTenantId}', [DashboardController::class, 'sendShareRequest'])
                     ->name('hospital.share.send')->whereNumber('toTenantId');

@@ -155,10 +155,30 @@
 
     <div class="history-page-wrap">
 
+        {{-- Global flash messages --}}
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert" style="border-radius:10px;">
+                <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show mb-3" role="alert" style="border-radius:10px;">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+        @if(session('info'))
+            <div class="alert alert-info alert-dismissible fade show mb-3" role="alert" style="border-radius:10px;">
+                <i class="bi bi-info-circle-fill me-2"></i>{{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         {{-- Page header --}}
         <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
             <h5 class="fw-bold mb-0" style="color: #1B4F72;">
-                <i class="bi bi-clock-history me-2"></i> History
+                <i class="bi bi-clock-history me-2"></i>History
             </h5>
             <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary px-3"
                 style="border-radius: 6px;">
@@ -276,7 +296,11 @@
                                                 <i class="bi bi-eye-fill"></i> View
                                             </a>
                                         @else
-                                            <span class="text-muted small"><i class="bi bi-lock-fill me-1"></i>Partner</span>
+                                            <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?search={{ $patient->patient_code }}"
+                                                class="btn btn-sm fw-bold" target="_blank"
+                                                style="background:#0d9488;color:#fff;border-radius:8px;padding:5px 12px;">
+                                                <i class="bi bi-eye-fill"></i> View
+                                            </a>
                                         @endif
                                     </td>
                                 </tr>
@@ -301,10 +325,54 @@
         {{-- ══════════ TAB 2: HOSPITAL HISTORY ══════════ --}}
         <div class="history-tab-pane" id="tab-hospital-history">
 
+            {{-- Filter Form --}}
+            <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}"
+                class="card mb-4 p-3" style="border-radius:14px; border:1px solid #e2e8f0; background:#ffffff;">
+                <input type="hidden" name="_tab" value="hospital">
+                <div class="row g-2 align-items-end">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Hospital Name</label>
+                        <input type="text" name="hosp_name" value="{{ request('hosp_name') }}"
+                            class="form-control form-control-sm" placeholder="Search hospital..."
+                            style="border-radius:8px; border:1px solid #cbd5e1;">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">City</label>
+                        <input type="text" name="hosp_city" value="{{ request('hosp_city') }}"
+                            class="form-control form-control-sm" placeholder="Search city..."
+                            style="border-radius:8px; border:1px solid #cbd5e1;">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">District</label>
+                        <input type="text" name="hosp_district" value="{{ request('hosp_district') }}"
+                            class="form-control form-control-sm" placeholder="District..."
+                            style="border-radius:8px; border:1px solid #cbd5e1;">
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">State</label>
+                        <input type="text" name="hosp_state" value="{{ request('hosp_state') }}"
+                            class="form-control form-control-sm" placeholder="State..."
+                            style="border-radius:8px; border:1px solid #cbd5e1;">
+                    </div>
+                    <div class="col-12 col-md-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-sm w-100 fw-bold"
+                            style="background:#1B4F72; color:#fff; border-radius:8px;">
+                            <i class="bi bi-search me-1"></i>Filter
+                        </button>
+                        @if(request('hosp_name') || request('hosp_city') || request('hosp_district') || request('hosp_state'))
+                            <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}#hospital"
+                                class="btn btn-sm fw-bold" style="background:#e2e8f0; color:#1B4F72; border-radius:8px;">
+                                <i class="bi bi-x-lg"></i>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            </form>
+
             <div class="mb-3">
                 <span class="fw-semibold" style="color:#1B4F72; font-size:14px;">
                     <i class="bi bi-hospitals me-1"></i>
-                    Total Active Hospitals: <strong>{{ $hospitals->count() }}</strong>
+                    Total: <strong>{{ $hospitals->total() }}</strong> hospitals
                 </span>
             </div>
 
@@ -358,7 +426,7 @@
                                             </span>
                                         @endif
                                     </td>
-                                   
+
                                          <td>
                                         <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
                                         <button type="button" class="btn btn-sm btn-outline-primary view-hosp-btn"
@@ -420,6 +488,12 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if($hospitals->hasPages())
+                    <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
+                        {{ $hospitals->links() }}
+                    </div>
+                @endif
             </div>
 
         </div>{{-- end tab-hospital-history --}}
@@ -439,6 +513,39 @@
                     <i class="bi bi-exclamation-circle-fill me-2"></i>{{ session('error') }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+            @endif
+
+            {{-- ── Connected Hospitals ── --}}
+            @if($acceptedConnections->count())
+            <h6 class="fw-bold mb-3" style="color:#1B4F72;">
+                <i class="bi bi-link-45deg me-2"></i>Connected Hospitals
+            </h6>
+            <div class="row g-3 mb-4">
+                @foreach($acceptedConnections as $conn)
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 p-3" style="border-radius:14px;border:2px solid #0d9488;background:#f0fdfa;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width:46px;height:46px;border-radius:12px;background:#0d9488;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                <i class="bi bi-building" style="color:#fff;font-size:20px;"></i>
+                            </div>
+                            <div class="flex-grow-1 min-width-0">
+                                <div class="fw-bold text-truncate" style="color:#0f766e;font-size:14px;">{{ $conn->partner->name ?? '—' }}</div>
+                                <div class="text-muted" style="font-size:12px;">
+                                    <i class="bi bi-geo-alt me-1"></i>{{ $conn->partner->city ?? '' }}{{ $conn->partner->state ? ', ' . $conn->partner->state : '' }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <a href="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $conn->partner->id]) }}"
+                                class="btn btn-sm w-100 fw-bold"
+                                style="background:#0d9488;color:#fff;border-radius:8px;">
+                                <i class="bi bi-person-lines-fill me-1"></i>View Patient History
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
             @endif
 
             {{-- ── Incoming Requests ── --}}
@@ -497,7 +604,7 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="py-4 text-muted">
-                                        <i class="bi bi-inbox me-2"></i>Koi incoming request nahi hai.
+                                        <i class="bi bi-inbox me-2"></i>No incoming requests.
                                     </td>
                                 </tr>
                             @endforelse
@@ -546,7 +653,14 @@
                                             <span class="badge-grace"><i class="bi bi-x-circle me-1"></i>Rejected</span>
                                         @endif
                                     </td>
-                                    <td>
+                                    <td class="d-flex gap-1 justify-content-center">
+                                        @if($req->status === 'accepted')
+                                            <a href="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $req->toTenant->id]) }}"
+                                                class="btn btn-sm fw-bold"
+                                                style="background:#0d9488;color:#fff;border-radius:8px;">
+                                                <i class="bi bi-person-lines-fill me-1"></i>View History
+                                            </a>
+                                        @endif
                                         <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
@@ -560,7 +674,7 @@
                             @empty
                                 <tr>
                                     <td colspan="7" class="py-4 text-muted">
-                                        <i class="bi bi-send me-2"></i>Koi sent request nahi hai.
+                                        <i class="bi bi-send me-2"></i>No sent requests.
                                     </td>
                                 </tr>
                             @endforelse
@@ -575,33 +689,33 @@
 
     @push('scripts')
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                var btns = document.querySelectorAll('.history-tab-btn');
+            // Global tab switch — callable from anywhere (View History button etc.)
+            function historyTabSwitch(name) {
+                var btns  = document.querySelectorAll('.history-tab-btn');
                 var panes = document.querySelectorAll('.history-tab-pane');
+                btns.forEach(function (b) {
+                    b.classList.toggle('active', b.getAttribute('data-tab') === name);
+                });
+                panes.forEach(function (p) {
+                    p.classList.toggle('active', p.id === 'tab-' + name);
+                });
+                var newHash = name === 'hospital-history' ? '#hospital' : (name === 'request-history' ? '#request' : '#');
+                history.replaceState(null, '', newHash);
+                window.scrollTo(0, 0);
+            }
 
-                // If filter params present (patient search), stay on patient tab
-                // If URL hash says hospital, switch to it
-                var hash = window.location.hash;
-                var activeTab = hash === '#hospital' ? 'hospital-history' : (hash === '#request' ? 'request-history' : 'patient-history');
+            document.addEventListener('DOMContentLoaded', function () {
+                var hash    = window.location.hash;
+                var urlTab  = new URLSearchParams(window.location.search).get('_tab');
+                var activeTab = (hash === '#hospital' || urlTab === 'hospital') ? 'hospital-history'
+                              : (hash === '#request'  || urlTab === 'request')  ? 'request-history'
+                              : 'patient-history';
 
-                function switchTab(name) {
-                    btns.forEach(function (b) {
-                        b.classList.toggle('active', b.getAttribute('data-tab') === name);
-                    });
-                    panes.forEach(function (p) {
-                        p.classList.toggle('active', p.id === 'tab-' + name);
-                    });
-                }
+                historyTabSwitch(activeTab);
 
-                switchTab(activeTab);
-
-                btns.forEach(function (btn) {
+                document.querySelectorAll('.history-tab-btn').forEach(function (btn) {
                     btn.addEventListener('click', function () {
-                        var name = btn.getAttribute('data-tab');
-                        switchTab(name);
-                        // Update hash without scrolling
-                        var newHash = name === 'hospital-history' ? '#hospital' : (name === 'request-history' ? '#request' : '#');
-                        history.replaceState(null, '', newHash);
+                        historyTabSwitch(btn.getAttribute('data-tab'));
                     });
                 });
 

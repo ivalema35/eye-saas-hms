@@ -77,7 +77,7 @@ class SetupWizardController extends Controller
         }
 
         return redirect()->route('hospital.setup.show', ['slug' => $slug, 'step' => $step + 1])
-            ->with('success', 'Step '.$step.' saved.');
+            ->with('success', 'Step ' . $step . ' saved.');
     }
 
     public function skip(string $slug, int $step): RedirectResponse
@@ -105,17 +105,17 @@ class SetupWizardController extends Controller
     private function saveProfile(Request $request, Tenant $tenant): void
     {
         $data = $request->validate([
-            'name'             => ['required', 'string', 'max:255'],
-            'city'             => ['nullable', 'string', 'max:100'],
-            'state'            => ['nullable', 'string', 'max:100'],
-            'admin_phone'      => ['nullable', 'string', 'max:15'],
+            'name' => ['required', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'state' => ['nullable', 'string', 'max:100'],
+            'admin_phone' => ['nullable', 'string', 'max:15'],
             'hospital_address' => ['nullable', 'string', 'max:500'],
         ]);
 
         $tenant->update([
-            'name'        => $data['name'],
-            'city'        => $data['city'] ?? null,
-            'state'       => $data['state'] ?? null,
+            'name' => $data['name'],
+            'city' => $data['city'] ?? null,
+            'state' => $data['state'] ?? null,
             'admin_phone' => $data['admin_phone'] ?? null,
         ]);
 
@@ -132,16 +132,16 @@ class SetupWizardController extends Controller
                 'email',
                 'max:255',
                 Rule::unique('hospital_users', 'email')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+                    ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'contact' => [
                 'nullable',
                 'regex:/^\d{10}$/',
                 Rule::unique('hospital_users', 'contact')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+                    ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'password' => ['required', 'string', 'min:8'],
-            'doctor_type' => ['required', 'in:primary,secondary'],
+            // 'doctor_type' => ['nullable', 'in:primary,secondary'],
         ], [
             'contact.regex' => 'Contact number must be exactly 10 digits.',
             'email.unique' => 'This email is already registered.',
@@ -160,7 +160,7 @@ class SetupWizardController extends Controller
             'email' => $data['email'],
             'contact' => $data['contact'] ?? null,
             'password' => Hash::make($data['password']),
-            'doctor_type' => $data['doctor_type'],
+            // 'doctor_type' => $data['doctor_type'] ?? null,
             'status' => 'active',
         ]);
     }
@@ -174,13 +174,13 @@ class SetupWizardController extends Controller
                 'email',
                 'max:255',
                 Rule::unique('hospital_users', 'email')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+                    ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'contact' => [
                 'nullable',
                 'regex:/^\d{10}$/',
                 Rule::unique('hospital_users', 'contact')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenant->id)),
+                    ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'password' => ['required', 'string', 'min:8'],
         ], [
@@ -228,7 +228,7 @@ class SetupWizardController extends Controller
             ];
         }
 
-        if (! empty($rows)) {
+        if (!empty($rows)) {
             DB::table('tbl_cases')->insert($rows);
         }
     }
