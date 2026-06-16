@@ -322,6 +322,88 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Date-grouped visit layout ── */
+.date-group { margin-bottom: 2.25rem; }
+
+.date-divider {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    margin-bottom: 1.1rem;
+}
+
+.date-divider-badge {
+    background: var(--history-secondary);
+    color: #fff;
+    border-radius: 999px;
+    padding: .38rem 1.05rem;
+    font-size: 12.5px;
+    font-weight: 800;
+    white-space: nowrap;
+    letter-spacing: .2px;
+    box-shadow: 0 6px 18px rgba(27,79,114,.22);
+    flex-shrink: 0;
+}
+
+.date-divider-line {
+    flex: 1;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(27,79,114,.22), rgba(27,79,114,.04));
+}
+
+.date-divider-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(27,79,114,.52);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.visit-exam-card {
+    border-radius: 16px !important;
+    border: 1px solid var(--history-secondary-12) !important;
+    box-shadow: 0 6px 22px rgba(27,79,114,.07) !important;
+    transition: transform 170ms ease, box-shadow 170ms ease;
+    overflow: hidden;
+}
+
+.visit-exam-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px rgba(27,79,114,.13) !important;
+}
+
+.visit-exam-header {
+    padding: .65rem 1rem;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    border-bottom: 1px solid var(--history-secondary-12);
+}
+
+.visit-exam-header.is-primary {
+    background: rgba(27,79,114,.07);
+    color: #1B4F72;
+}
+
+.visit-exam-header.is-secondary {
+    background: rgba(108,117,125,.07);
+    color: #495057;
+}
+
+.visit-exam-time {
+    margin-left: auto;
+    font-size: 11.5px;
+    font-weight: 700;
+    background: #fff;
+    border: 1px solid var(--history-secondary-12);
+    border-radius: 999px;
+    padding: .22rem .7rem;
+    color: var(--history-secondary);
+}
+
 @media (prefers-reduced-motion: reduce) {
     .patient-history-page,
     .history-search-card,
@@ -456,10 +538,13 @@
                             <i class="bi bi-calendar-plus text-muted me-2"></i>
                             Registered: {{ $patient->created_at->format('d M Y') }}
                         </li>
+                        @php
+                            $visitDays = $history->groupBy(fn($e) => \Carbon\Carbon::parse($e->examined_at)->format('d M Y'))->count();
+                        @endphp
                         <li class="list-group-item px-0 py-2 border-0">
                             <i class="bi bi-journal-medical text-muted me-2"></i>
-                            <span class="history-count-badge badge bg-primary">{{ $history->count() }}</span>
-                            visit{{ $history->count() === 1 ? '' : 's' }} recorded
+                            <span class="history-count-badge badge bg-primary">{{ $visitDays }}</span>
+                            visit{{ $visitDays === 1 ? '' : 's' }} recorded
                         </li>
                     </ul>
                 </div>
@@ -491,40 +576,63 @@
                             No examination history found for this patient.
                         </p>
                     @else
-                        <div class="timeline">
-                            @foreach($history as $exam)
+                        @php
+                            $grouped = $history->groupBy(
+                                fn($e) => \Carbon\Carbon::parse($e->examined_at)->format('d M Y')
+                            );
+                        @endphp
+
+                        @foreach($grouped as $date => $exams)
+                        <div class="date-group">
+
+                            {{-- Date divider --}}
+                            <div class="date-divider">
+                                <span class="date-divider-badge">
+                                    <i class="bi bi-calendar3 me-1"></i>{{ $date }}
+                                </span>
+                                <div class="date-divider-line"></div>
+                                <span class="date-divider-count">
+                                    {{ $exams->count() }} exam{{ $exams->count() > 1 ? 's' : '' }}
+                                </span>
+                            </div>
+
+                            {{-- Exam cards for this date --}}
+                            <div class="row g-3">
+                                @foreach($exams as $exam)
                                 @php
-                                    $data = is_array($exam->exam_data)
-                                        ? $exam->exam_data
-                                        : (json_decode($exam->exam_data, true) ?? []);
+                                    $data    = is_array($exam->exam_data)
+                                                ? $exam->exam_data
+                                                : (json_decode($exam->exam_data, true) ?? []);
+                                    $isPrimary = $exam->type === 'Primary Exam';
+                                    $collapseId = 'ed' . $exam->id . ($isPrimary ? 'P' : 'S');
                                 @endphp
+                                <div class="col-12">
+                                    <div class="visit-exam-card card border-0 mb-0">
 
-                                <div class="timeline-item">
-                                    <div class="timeline-marker bg-{{ $exam->color }} text-white shadow-sm">
-                                        <i class="bi {{ $exam->icon }}"></i>
-                                    </div>
+                                        {{-- Card header: type + time --}}
+                                        <div class="visit-exam-header {{ $isPrimary ? 'is-primary' : 'is-secondary' }}">
+                                            <i class="bi {{ $exam->icon }} fs-5"></i>
+                                            {{ $exam->type }}
+                                            <span class="visit-exam-time">
+                                                <i class="bi bi-clock me-1"></i>
+                                                {{ \Carbon\Carbon::parse($exam->examined_at)->format('h:i A') }}
+                                            </span>
+                                        </div>
 
-                                    <div class="timeline-content card border-0 border-start border-4
-                                                border-{{ $exam->color }} shadow-sm mb-0">
                                         <div class="card-body p-3">
-                                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
-                                                <h6 class="fw-bold text-{{ $exam->color }} mb-0">
-                                                    {{ $exam->type }}
-                                                </h6>
-                                                <span class="history-date-badge badge bg-light text-muted border small">
-                                                    <i class="bi bi-calendar-event me-1"></i>
-                                                    {{ \Carbon\Carbon::parse($exam->examined_at)->format('d M Y, h:i A') }}
-                                                </span>
-                                            </div>
 
-                                            <p class="text-muted small mb-3">
+                                            {{-- Doctor --}}
+                                            <p class="text-muted small mb-3 mb-0">
                                                 <i class="bi bi-person-badge me-1"></i>
                                                 Examined by:
-                                                <strong>Dr. {{ $exam->doctor->name ?? 'Unknown' }}</strong>
+                                                <strong class="ms-1" style="color:var(--history-secondary);">
+                                                    Dr. {{ $exam->doctor->name ?? 'Unknown' }}
+                                                </strong>
                                             </p>
 
-                                            @if(! empty($data))
-                                            <div class="history-summary-box bg-light p-3 rounded-3 mb-3">
+                                            {{-- Quick summary --}}
+                                            @if(! empty($data['chief_complaint']) || ! empty($data['diagnosis']))
+                                            <div class="history-summary-box p-3 rounded-3 mt-3 mb-3">
                                                 <div class="row g-2 small">
                                                     @if(! empty($data['chief_complaint']))
                                                     <div class="col-sm-6">
@@ -542,19 +650,20 @@
                                             </div>
                                             @endif
 
-                                            <button class="btn btn-sm btn-outline-{{ $exam->color }}"
+                                            {{-- Toggle button --}}
+                                            <button class="btn btn-sm btn-outline-{{ $exam->color }} mt-2"
                                                     type="button"
                                                     data-bs-toggle="collapse"
-                                                    data-bs-target="#examData{{ $exam->id }}{{ $exam->type === 'Primary Exam' ? 'P' : 'S' }}">
+                                                    data-bs-target="#{{ $collapseId }}">
                                                 <i class="bi bi-chevron-down me-1"></i> View Full Clinical Data
                                             </button>
 
-                                            <div class="collapse mt-3"
-                                                 id="examData{{ $exam->id }}{{ $exam->type === 'Primary Exam' ? 'P' : 'S' }}">
+                                            {{-- Full data collapse --}}
+                                            <div class="collapse mt-3" id="{{ $collapseId }}">
                                                 @if(empty($data))
                                                     <p class="text-muted small mb-0">No structured data recorded.</p>
                                                 @else
-                                                    <div class="history-data-card card card-body bg-light border-0 p-3">
+                                                    <div class="history-data-card card card-body border-0 p-3">
                                                         <div class="row g-3">
                                                             @foreach($data as $key => $value)
                                                                 @if(! is_array($value) && $value !== null && $value !== '')
@@ -585,11 +694,15 @@
                                                     </div>
                                                 @endif
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
+                                @endforeach
+                            </div>
+
                         </div>
+                        @endforeach
                     @endif
 
                 </div>
