@@ -144,8 +144,8 @@ class SecondaryExamController extends Controller
             $data['advice'] ?? null
         );
 
-$user = Auth::guard('hospital_user')->user();
-        
+        $user = Auth::guard('hospital_user')->user();
+
         if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
             return redirect()
                 ->route('hospital.dashboard', ['slug' => $slug]) 
@@ -190,11 +190,13 @@ $user = Auth::guard('hospital_user')->user();
                 ->get(['id', DB::raw('value as diagnosis')]),
             'advices' => MasterAdvice::where('tenant_id', $tenantId)
                 ->with('diagnoses:id')
+                ->orderByDesc('is_favourite')
                 ->orderBy('id')
-                ->get(['id', 'value'])
+                ->get(['id', 'value', 'is_favourite'])
                 ->map(fn($a) => (object)[
                     'id'            => $a->id,
-                    'value'         => $a->value,
+                    'advice'        => $a->value,
+                    'is_favourite'  => $a->is_favourite,
                     'diagnosis_ids' => $a->diagnoses->pluck('id')->all(),
                 ]),
             'durations' => $q('tbl_durations'),
@@ -228,9 +230,10 @@ $user = Auth::guard('hospital_user')->user();
             'instructions' => $q('tbl_master_medicine_instructions'),
             'medicines' => Medicine::query()
                 ->where('tenant_id', $tenantId)
+                ->with('dosage:id,dosage')
                 ->orderBy('brand_name')
                 ->orderBy('name')
-                ->get(['id', 'name', 'brand_name']),
+                ->get(['id', 'name', 'brand_name', 'dosage_id', 'duration', 'qty']),
             'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('name')
