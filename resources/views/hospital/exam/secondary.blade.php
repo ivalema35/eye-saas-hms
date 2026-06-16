@@ -73,6 +73,15 @@
         margin-top: 4px;
     }
     .step-group-label.first { border-top: none; padding-top: 0; margin-top: 0; }
+    /* Medicine suggest dropdown */
+    .medicine-search-wrap { position: relative; }
+    .medicine-suggest { display:none; position:fixed; z-index:9999; background:#fff; border:1px solid #dde3ea; border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.16); overflow-y:auto; padding:4px 0; scrollbar-width:thin; scrollbar-color:#cbd5e1 transparent; }
+    .med-opt { padding:8px 14px; cursor:pointer; border-bottom:1px solid #f1f5f9; transition:background .12s; }
+    .med-opt:last-child { border-bottom:none; }
+    .med-opt:hover, .med-opt.active { background:#f0f4f8; }
+    .med-opt-brand { font-size:13px; font-weight:600; color:#1e293b; }
+    .med-opt-generic { font-size:11px; color:#64748b; margin-top:2px; }
+
     /* Vision / PG dropdown */
     .vision-select-wrap, .pg-select-wrap { position: relative; }
     .vision-select-wrap .vision-inp:focus {
@@ -492,11 +501,11 @@
 <div class="accordion mb-3" id="primaryExamReferenceAccordion">
     <div class="accordion-item border">
         <h2 class="accordion-header" id="primaryExamReferenceHeading">
-            <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#primaryExamReferenceBody" aria-expanded="false" aria-controls="primaryExamReferenceBody">
-                Primary Exam Findings (Reference)
+            <button class="accordion-button fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#primaryExamReferenceBody" aria-expanded="true" aria-controls="primaryExamReferenceBody" style="background:#f0f4f8;color:#1B4F72;">
+                <i class="bi bi-clipboard2-pulse me-2"></i>Primary Exam Findings (Reference)
             </button>
         </h2>
-        <div id="primaryExamReferenceBody" class="accordion-collapse collapse" aria-labelledby="primaryExamReferenceHeading" data-bs-parent="#primaryExamReferenceAccordion">
+        <div id="primaryExamReferenceBody" class="accordion-collapse show" aria-labelledby="primaryExamReferenceHeading" data-bs-parent="#primaryExamReferenceAccordion">
             <div class="accordion-body bg-light">
                 @if($primaryExam)
                     @php
@@ -725,7 +734,6 @@
                 <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
 
                 <div class="step-group-label first">Primary Exam</div>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-context" data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
@@ -865,7 +873,6 @@
             </div>
             <div class="d-flex align-items-center gap-1 flex-wrap">
                 <span class="step-group-tag">Primary</span>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-context"   data-bs-toggle="modal" data-bs-target="#modalContext">Context</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
@@ -1984,11 +1991,11 @@
                                     <tr class="rx-row">
                                         <td>
                                             <input type="hidden" name="medicines[{{ $i }}][medicine_id]" value="{{ data_get($rx, 'medicine_id') }}" class="med-id-input">
-                                            <div class="medicine-search-wrap" style="position:relative">
+                                            <div class="medicine-search-wrap">
                                                 <input type="text" name="medicines[{{ $i }}][name]" class="form-control form-control-sm medicine-search"
                                                        value="{{ data_get($rx, 'name') ?: data_get($rx, 'medicine.brand_name') ?: data_get($rx, 'medicine.name') }}"
-                                                       placeholder="Medicine name" autocomplete="off" list="medicine_list">
-                                                <div class="medicine-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dee2e6;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:100;max-height:180px;overflow-y:auto"></div>
+                                                       placeholder="Medicine name" autocomplete="off">
+                                                <div class="medicine-suggest"></div>
                                             </div>
                                         </td>
                                         <td>
@@ -2178,6 +2185,18 @@ document.addEventListener('DOMContentLoaded', function () {
     let rxRowIndex = {{ count(old('medicines', ($initialMedicines ?? collect())->toArray())) }};
     const dosagesJson = @json($masters['dosages']->pluck('dosage','id'));
     const durationsJson = @json($masters['durations']->pluck('duration')->values());
+    @php
+        $medicinesForJs = $masters['medicines']->map(fn($m) => [
+            'id'           => $m->id,
+            'name'         => $m->name ?? '',
+            'brand_name'   => $m->brand_name ?? '',
+            'dosage_id'    => $m->dosage_id,
+            'dosage_label' => $m->dosage?->dosage ?? '',
+            'duration'     => $m->duration ?? '',
+            'qty'          => $m->qty ?? '',
+        ])->values();
+    @endphp
+    const allMedicinesData = @json($medicinesForJs);
 
     // C/O rows and custom complaint dropdown
     const coSearch = document.getElementById('coSearch');
@@ -2750,50 +2769,95 @@ document.addEventListener('DOMContentLoaded', function () {
     })();
 
     function attachMedicineSearch(wrap) {
-        if (!wrap) { return; }
-        const input = wrap.querySelector('.medicine-search');
+        if (!wrap) return;
+        const input   = wrap.querySelector('.medicine-search');
         const suggest = wrap.querySelector('.medicine-suggest');
-        const hidden = wrap.closest('tr').querySelector('.med-id-input');
-        let timer;
+        if (!input || !suggest) return;
+        const tr     = wrap.closest('tr');
+        const hidden = tr?.querySelector('.med-id-input');
 
-        input.addEventListener('input', () => {
-            clearTimeout(timer);
-            const q = input.value.trim();
-            hidden.value = '';
-            if (q.length < 2) {
-                suggest.style.display = 'none';
-                return;
+        function positionSuggest() {
+            const rect = input.getBoundingClientRect();
+            const vh   = window.innerHeight;
+            const w    = Math.max(rect.width, 280);
+            suggest.style.width = w + 'px';
+            suggest.style.left  = rect.left + 'px';
+            const spaceBelow = vh - rect.bottom - 4;
+            if (spaceBelow >= 120) {
+                suggest.style.top       = (rect.bottom + 4) + 'px';
+                suggest.style.bottom    = '';
+                suggest.style.maxHeight = Math.min(260, spaceBelow - 8) + 'px';
+            } else {
+                suggest.style.bottom    = (vh - rect.top + 4) + 'px';
+                suggest.style.top       = '';
+                suggest.style.maxHeight = Math.min(260, rect.top - 8) + 'px';
             }
-            timer = setTimeout(() => {
-                fetch(`{{ route("hospital.ajax.medicines.search", ["slug" => $slug]) }}?q=${encodeURIComponent(q)}`)
-                    .then(r => r.json())
-                    .then(items => {
-                        if (!items.length) {
-                            suggest.style.display = 'none';
-                            return;
-                        }
-                        suggest.innerHTML = items.map(m =>
-                            `<div class="med-opt" data-id="${m.id}" data-name="${m.brand_name || m.name}" style="padding:.45rem .75rem;cursor:pointer;border-bottom:1px solid #f0f0f0">` +
-                            `<strong>${m.name}</strong>` +
-                            `${m.brand_name ? `<span style="color:#888"> (${m.brand_name})</span>` : ''}` +
-                            `</div>`
-                        ).join('');
-                        suggest.style.display = 'block';
-                        suggest.querySelectorAll('.med-opt').forEach(opt => {
-                            opt.addEventListener('mousedown', e => {
-                                e.preventDefault();
-                                input.value = opt.dataset.name;
-                                hidden.value = opt.dataset.id;
-                                suggest.style.display = 'none';
-                                updateLivePreview();
-                            });
-                        });
-                    });
-            }, 250);
+        }
+
+        function renderSuggest(items) {
+            if (!items.length) { suggest.style.display = 'none'; return; }
+            suggest.innerHTML = items.slice(0, 40).map(function (m) {
+                const brand   = (m.brand_name || '').trim();
+                const generic = (m.name || '').trim();
+                const display = brand || generic;
+                const sub     = brand && generic && generic !== brand ? generic : '';
+                const badge   = m.dosage_label ? '<span style="font-size:10px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 5px;margin-left:6px;">' + m.dosage_label + '</span>' : '';
+                const meta    = [m.duration, m.qty ? 'Qty:' + m.qty : ''].filter(Boolean).join(' · ');
+                return '<div class="med-opt" data-id="' + m.id +
+                       '" data-name="' + display.replace(/"/g, '&quot;') +
+                       '" data-dosage-id="' + (m.dosage_id || '') +
+                       '" data-duration="' + (m.duration || '') +
+                       '" data-qty="' + (m.qty || '') + '">' +
+                       '<div class="med-opt-brand">' + display + badge + '</div>' +
+                       (sub  ? '<div class="med-opt-generic">' + sub + '</div>' : '') +
+                       (meta ? '<div class="med-opt-generic" style="color:#94a3b8;">' + meta + '</div>' : '') +
+                       '</div>';
+            }).join('');
+            positionSuggest();
+            suggest.style.display = 'block';
+            suggest.querySelectorAll('.med-opt').forEach(function (opt) {
+                opt.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    input.value = opt.dataset.name;
+                    if (hidden) hidden.value = opt.dataset.id;
+                    var dosageSel = tr?.querySelector('select[name*="[dosage_id]"]');
+                    if (dosageSel && opt.dataset.dosageId) dosageSel.value = opt.dataset.dosageId;
+                    var durInput = tr?.querySelector('input[name*="[duration]"]');
+                    if (durInput && opt.dataset.duration) {
+                        var durNum = parseInt(opt.dataset.duration, 10);
+                        if (!isNaN(durNum)) durInput.value = durNum;
+                    }
+                    var qtyInput = tr?.querySelector('input[name*="[quantity]"]');
+                    if (qtyInput && opt.dataset.qty) qtyInput.value = opt.dataset.qty;
+                    suggest.style.display = 'none';
+                    if (typeof updateLivePreview === 'function') updateLivePreview();
+                    if (typeof checkProgress === 'function') checkProgress();
+                });
+            });
+        }
+
+        input.addEventListener('focus', function () {
+            if (hidden) hidden.value = '';
+            renderSuggest(allMedicinesData);
         });
 
-        input.addEventListener('blur', () => {
-            setTimeout(() => { suggest.style.display = 'none'; }, 150);
+        input.addEventListener('input', function () {
+            if (hidden) hidden.value = '';
+            const q = this.value.trim().toLowerCase();
+            if (!q) { renderSuggest(allMedicinesData); return; }
+            const filtered = allMedicinesData.filter(function (m) {
+                return (m.name || '').toLowerCase().includes(q) ||
+                       (m.brand_name || '').toLowerCase().includes(q);
+            });
+            renderSuggest(filtered);
+        });
+
+        input.addEventListener('blur', function () {
+            setTimeout(function () { suggest.style.display = 'none'; }, 200);
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { suggest.style.display = 'none'; }
         });
     }
 
@@ -2814,9 +2878,9 @@ document.addEventListener('DOMContentLoaded', function () {
         row.innerHTML = `
             <td>
                 <input type="hidden" name="medicines[${idx}][medicine_id]" value="${medId}" class="med-id-input">
-                <div class="medicine-search-wrap" style="position:relative">
-                    <input type="text" name="medicines[${idx}][name]" class="form-control form-control-sm medicine-search" placeholder="Medicine name" autocomplete="off" list="medicine_list" value="${medName}">
-                    <div class="medicine-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dee2e6;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:100;max-height:180px;overflow-y:auto"></div>
+                <div class="medicine-search-wrap">
+                    <input type="text" name="medicines[${idx}][name]" class="form-control form-control-sm medicine-search" placeholder="Medicine name" autocomplete="off" value="${medName}">
+                    <div class="medicine-suggest"></div>
                 </div>
             </td>
             <td><select name="medicines[${idx}][dosage_id]" class="form-select form-select-sm"><option value="">-</option>${dosageOptions}</select></td>
@@ -2874,7 +2938,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         };
 
-        setState('btn-context',   hasValue('select[name="doctor_id"]'));
         setState('btn-clinical',  document.querySelectorAll('#coBody .co-row').length > 0);
         setState('btn-hko',       document.querySelectorAll('#kcoBody .kco-row').length > 0 || (document.getElementById('historyTextarea')?.value || '').trim() !== '');
         setState('btn-vision',    hasValue('input[name="exam_data[vision][vn_re]"]'));

@@ -344,9 +344,10 @@ class PrimaryExamController extends Controller
             'instructions' => $q('tbl_master_medicine_instructions'),
             'medicines' => Medicine::query()
                 ->where('tenant_id', $tenantId)
+                ->with('dosage:id,dosage')
                 ->orderBy('brand_name')
                 ->orderBy('name')
-                ->get(['id', 'name', 'brand_name']),
+                ->get(['id', 'name', 'brand_name', 'dosage_id', 'duration', 'qty']),
             'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
                 ->orderBy('name')

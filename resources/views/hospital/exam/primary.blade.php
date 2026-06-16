@@ -158,16 +158,14 @@
         border-color: #1B4F72;
     }
     /* O/E dropdown */
-    .oe-table th.oe-eye-col { font-size: 13px; font-weight: 700; letter-spacing: .03em; padding: 8px 12px; }
-    .oe-table th.oe-eye-col.re { background: #fff0f0; color: #dc2626; }
-    .oe-table th.oe-eye-col.le { background: #eff6ff; color: #1B4F72; }
-    .oe-table td.oe-cell-re { background: #fffafa; }
+    .oe-table th.oe-eye-col { font-size: 12px; font-weight: 700; letter-spacing: .06em; padding: 10px 14px; color: #1B4F72; border-bottom: 2px solid #1B4F72 !important; background: #f0f4f8; }
+    .oe-table td.oe-cell-re { background: #ffffff; }
     .oe-table td.oe-cell-le { background: #f8faff; }
-    .oe-table td.oe-label-cell { background: #f8fafc; vertical-align: middle; }
+    .oe-table td.oe-label-cell { background: #fafbfc; vertical-align: middle; width: 140px; }
     .oe-select-wrap { position: relative; }
     .oe-select-wrap .oe-inp {
         padding-right: 28px;
-        border: 1px solid #e2e8f0;
+        border: 1px solid #1B4F72;
         border-radius: 8px;
         font-size: 13px;
         color: #1e293b;
@@ -189,6 +187,17 @@
         border-radius: 5px; padding: 3px 8px; line-height: 1.4;
     }
     .pseudo-type-btn.active { background: #1B4F72 !important; color: #fff !important; border-color: #1B4F72 !important; }
+    /* Medicine suggest — position:fixed escapes ALL overflow clipping (table, modal-body, etc.) */
+    .medicine-suggest { display:none; position:fixed; z-index:9999; background:#fff; border:1px solid #dde3ea; border-radius:10px; box-shadow:0 8px 28px rgba(0,0,0,.16); overflow-y:auto; padding:4px 0; scrollbar-width:thin; scrollbar-color:#cbd5e1 transparent; }
+    .med-opt { padding:8px 14px; cursor:pointer; border-bottom:1px solid #f1f5f9; transition:background .12s; }
+    .med-opt:last-child { border-bottom:none; }
+    .med-opt:hover, .med-opt.active { background:#f0f4f8; }
+    .med-opt-brand { font-size:13px; font-weight:600; color:#1e293b; }
+    .med-opt-generic { font-size:11px; color:#64748b; margin-top:2px; }
+    /* Advice More dropdown hover */
+    .advice-more-item:hover { background: #f1f5f9; }
+    .advice-more-item .advice-fav-btn:hover { opacity: 1 !important; }
+    #adviceMoreList { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
     /* C/O favourite pills */
     .co-fav-pill {
         display: inline-flex; align-items: center; gap: 5px;
@@ -923,77 +932,70 @@
 
     {{-- MODAL: Vision --}}
     <div class="modal fade" id="modalVision" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">Visual Acuity (VN)</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-eye me-2"></i>Visual Acuity (VN)
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle mb-0">
-                            <tbody>
-                                {{-- Right Eye --}}
-                                <tr>
-                                    <td colspan="2" style="background:#fff0f0; color:#dc2626; font-weight:700; font-size:13px; letter-spacing:.04em; padding:8px 12px;">
-                                        <i class="bi bi-eye-fill me-1"></i> Right Eye (RE)
-                                    </td>
-                                </tr>
-                                @foreach([
-                                    ['Vn',   'Distance Vision', 'vn',   'vn_re'],
-                                    ['PnVn', 'Pinhole',         'pnvn', 'pnvn_re'],
-                                    ['NrVn', 'Near Vision',     'nrvn', 'nrvn_re'],
-                                ] as [$abbr, $full, $master, $field])
-                                <tr style="background:#fffafa;">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px; color:#1e293b;">{{ $abbr }}</span>
-                                        <div style="font-size:11px; color:#94a3b8;">{{ $full }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="vision-select-wrap">
-                                            <input type="text" class="form-control form-control-sm vision-inp"
-                                                placeholder="-" autocomplete="off"
-                                                data-master="{{ $master }}" data-field="{{ $field }}"
-                                                value="{{ $vision[$field] ?? '' }}">
-                                            <input type="hidden" name="exam_data[vision][{{ $field }}]" value="{{ $vision[$field] ?? '' }}">
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
+                <div class="modal-body p-3">
 
-                                {{-- Left Eye --}}
-                                <tr>
-                                    <td colspan="2" style="background:#eff6ff; color:#1d4ed8; font-weight:700; font-size:13px; letter-spacing:.04em; padding:8px 12px;">
-                                        <i class="bi bi-eye-fill me-1"></i> Left Eye (LE)
-                                    </td>
-                                </tr>
-                                @foreach([
-                                    ['Vn',   'Distance Vision', 'vn',   'vn_le'],
-                                    ['PnVn', 'Pinhole',         'pnvn', 'pnvn_le'],
-                                    ['NrVn', 'Near Vision',     'nrvn', 'nrvn_le'],
-                                ] as [$abbr, $full, $master, $field])
-                                <tr style="background:#f8faff;">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px; color:#1e293b;">{{ $abbr }}</span>
-                                        <div style="font-size:11px; color:#94a3b8;">{{ $full }}</div>
-                                    </td>
-                                    <td>
-                                        <div class="vision-select-wrap">
-                                            <input type="text" class="form-control form-control-sm vision-inp"
-                                                placeholder="-" autocomplete="off"
-                                                data-master="{{ $master }}" data-field="{{ $field }}"
-                                                value="{{ $vision[$field] ?? '' }}">
-                                            <input type="hidden" name="exam_data[vision][{{ $field }}]" value="{{ $vision[$field] ?? '' }}">
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    @php
+                        $vnCols = [
+                            ['abbr' => 'VN',   'full' => 'Distance Vision', 'master' => 'vn',   'field_re' => 'vn_re',   'field_le' => 'vn_le'],
+                            ['abbr' => 'PnVn', 'full' => 'Pinhole',         'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
+                            ['abbr' => 'NrVn', 'full' => 'Near Vision',     'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
+                        ];
+                    @endphp
+
+                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                            <i class="bi bi-eye-fill text-white"></i>
+                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                <thead style="background:#f0f4f8;">
+                                    <tr>
+                                        @foreach($vnCols as $col)
+                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                            {{ $col['abbr'] }}
+                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;">{{ $col['full'] }}</div>
+                                        </th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="background:white;">
+                                        @foreach($vnCols as $col)
+                                        @php $fieldKey = 'field_' . $eye; @endphp
+                                        <td class="text-center py-2">
+                                            <div class="vision-select-wrap" style="max-width:160px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm vision-inp text-center"
+                                                    style="border-color:#1B4F72;font-size:13px;"
+                                                    placeholder="-" autocomplete="off"
+                                                    data-master="{{ $col['master'] }}" data-field="{{ $col[$fieldKey] }}"
+                                                    value="{{ $vision[$col[$fieldKey]] ?? '' }}">
+                                                <input type="hidden" name="exam_data[vision][{{ $col[$fieldKey] }}]" value="{{ $vision[$col[$fieldKey]] ?? '' }}">
+                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;font-size:11px;pointer-events:none;"></i>
+                                            </div>
+                                        </td>
+                                        @endforeach
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
+                    @endforeach
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Done
+                    </button>
                 </div>
             </div>
         </div>
@@ -1316,48 +1318,72 @@
     <div class="modal fade" id="modalNCT" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">
-                        <i class="bi bi-speedometer2 me-2" style="color:#1B4F72;"></i>NCT
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-speedometer2 me-2"></i>NCT — Non-Contact Tonometry
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle mb-0 pg-table">
-                            <tbody>
-                                @foreach([
-                                    're' => ['label' => 'Right Eye (RE)', 'cls' => 're', 'row' => 'pg-row-re'],
-                                    'le' => ['label' => 'Left Eye (LE)',  'cls' => 'le', 'row' => 'pg-row-le'],
-                                ] as $eye => $em)
-                                @php $sv = old('exam_data.nct.iop_'.$eye, $nct['iop_'.$eye] ?? ''); @endphp
-                                <tr>
-                                    <td colspan="2" class="pg-eye-hdr {{ $em['cls'] }}">
-                                        <i class="bi bi-eye-fill me-1"></i>{{ $em['label'] }}
-                                    </td>
-                                </tr>
-                                <tr class="{{ $em['row'] }}">
-                                    <td style="width:160px;">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">IOP</span>
-                                        <div style="font-size:11px;color:#94a3b8;">mmHg</div>
-                                    </td>
-                                    <td>
-                                        <div class="nct-select-wrap">
-                                            <input type="text" class="form-control form-control-sm nct-inp"
-                                                placeholder="—" autocomplete="off"
-                                                value="{{ $sv }}">
-                                            <input type="hidden" name="exam_data[nct][iop_{{ $eye }}]" value="{{ $sv }}">
-                                            <i class="bi bi-chevron-down nct-inp-chevron"></i>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                <div class="modal-body p-3">
+                    <div class="rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                <thead style="background:#f0f4f8;">
+                                    <tr>
+                                        <th style="width:140px;border-bottom:2px solid #1B4F72;"></th>
+                                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                            <i class="bi bi-eye-fill me-1"></i>{{ $eyeLabel }}
+                                        </th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="background:white;">
+                                        <td style="background:#fafbfc;">
+                                            <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">IOP</span>
+                                            <div style="font-size:11px;color:#94a3b8;font-weight:500;">mmHg</div>
+                                        </td>
+                                        @foreach(['re', 'le'] as $eye)
+                                        @php $sv = old('exam_data.nct.iop_'.$eye, $nct['iop_'.$eye] ?? ''); @endphp
+                                        <td class="text-center py-3">
+                                            <div class="nct-select-wrap" style="max-width:160px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm nct-inp text-center fw-semibold"
+                                                    style="border-color:#1B4F72;font-size:14px;"
+                                                    placeholder="—" autocomplete="off"
+                                                    value="{{ $sv }}">
+                                                <input type="hidden" name="exam_data[nct][iop_{{ $eye }}]" value="{{ $sv }}">
+                                                <i class="bi bi-chevron-down nct-inp-chevron"></i>
+                                            </div>
+                                            <div style="font-size:10px;color:#94a3b8;margin-top:4px;font-weight:500;">mmHg</div>
+                                        </td>
+                                        @endforeach
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {{-- IOP indicator badges --}}
+                    <div class="d-flex gap-3 mt-3 px-1">
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;"></span>
+                            <span style="font-size:11px;color:#64748b;">Normal: 10–21 mmHg</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;"></span>
+                            <span style="font-size:11px;color:#64748b;">Borderline: 22–24 mmHg</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;"></span>
+                            <span style="font-size:11px;color:#64748b;">High: ≥25 mmHg</span>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Done
+                    </button>
                 </div>
             </div>
         </div>
@@ -1367,25 +1393,25 @@
     <div class="modal fade" id="modalOE" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">
-                        <i class="bi bi-clipboard2-pulse me-2" style="color:#1B4F72;"></i>O/E
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-clipboard2-pulse me-2"></i>On Examination (O/E)
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body p-3">
                     @php
                         $oeFieldMeta = [
-                            'sac'       => ['label' => 'SAC',       'full' => 'Sac',       'master' => 'sac',         'fav' => 'sac'],
-                            'lid'       => ['label' => 'LID',       'full' => 'Lid',       'master' => 'lid',         'fav' => 'lid'],
-                            'conj'      => ['label' => 'CONJ',      'full' => 'Conjunctiva','master' => 'conj',        'fav' => 'conj'],
-                            'cornea'    => ['label' => 'CORNEA',    'full' => 'Cornea',    'master' => 'cornea',      'fav' => 'cornea'],
-                            'ac'        => ['label' => 'AC',        'full' => 'Anterior Chamber', 'master' => 'ac',   'fav' => 'ac'],
-                            'iris'      => ['label' => 'IRIS',      'full' => 'Iris',      'master' => 'iris',        'fav' => 'iris'],
-                            'pupil'     => ['label' => 'PUPIL',     'full' => 'Pupil',     'master' => 'pupil',       'fav' => 'pupil'],
-                            'lens'      => ['label' => 'LENS',      'full' => 'Lens',      'master' => 'lens_master', 'fav' => 'lens'],
-                            'em'        => ['label' => 'EM',        'full' => 'Extraocular', 'master' => 'em',        'fav' => 'em'],
-                            'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test','master' => 'covertest',   'fav' => 'covertest'],
+                            'sac'       => ['label' => 'SAC',       'full' => 'Sac',              'master' => 'sac',         'fav' => 'sac'],
+                            'lid'       => ['label' => 'LID',       'full' => 'Lid',              'master' => 'lid',         'fav' => 'lid'],
+                            'conj'      => ['label' => 'CONJ',      'full' => 'Conjunctiva',      'master' => 'conj',        'fav' => 'conj'],
+                            'cornea'    => ['label' => 'CORNEA',    'full' => 'Cornea',           'master' => 'cornea',      'fav' => 'cornea'],
+                            'ac'        => ['label' => 'AC',        'full' => 'Anterior Chamber', 'master' => 'ac',          'fav' => 'ac'],
+                            'iris'      => ['label' => 'IRIS',      'full' => 'Iris',             'master' => 'iris',        'fav' => 'iris'],
+                            'pupil'     => ['label' => 'PUPIL',     'full' => 'Pupil',            'master' => 'pupil',       'fav' => 'pupil'],
+                            'lens'      => ['label' => 'LENS',      'full' => 'Lens',             'master' => 'lens_master', 'fav' => 'lens'],
+                            'em'        => ['label' => 'EM',        'full' => 'Extraocular Mov.', 'master' => 'em',          'fav' => 'em'],
+                            'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test',       'master' => 'covertest',   'fav' => 'covertest'],
                         ];
                         $oeMasterData = [];
                         foreach ($oeFieldMeta as $meta) {
@@ -1398,66 +1424,71 @@
                             }
                         }
                     @endphp
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm align-middle mb-0 oe-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:130px;background:#f8fafc;"></th>
-                                    <th class="oe-eye-col re"><i class="bi bi-eye-fill me-1"></i>Right Eye (RE)</th>
-                                    <th class="oe-eye-col le"><i class="bi bi-eye-fill me-1"></i>Left Eye (LE)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($oeFieldMeta as $key => $meta)
-                                <tr>
-                                    <td class="oe-label-cell">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">{{ $meta['label'] }}</span>
-                                        <div style="font-size:11px;color:#94a3b8;">{{ $meta['full'] }}</div>
-                                    </td>
-                                    @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
-                                    @php $sv = old('exam_data.oe.'.$key.'_'.$eye, $oe[$key.'_'.$eye] ?? ''); @endphp
-                                    <td class="{{ $cellCls }}">
-                                        <div class="oe-select-wrap">
-                                            <input type="text" class="form-control form-control-sm oe-inp"
-                                                placeholder="—" autocomplete="off"
-                                                data-oe-key="{{ $key }}"
-                                                data-master="{{ $meta['master'] }}"
-                                                data-fav="{{ $meta['fav'] }}"
-                                                value="{{ $sv }}">
-                                            <input type="hidden" name="exam_data[oe][{{ $key }}_{{ $eye }}]" value="{{ $sv }}">
-                                            <i class="bi bi-chevron-down oe-inp-chevron"></i>
-                                        </div>
-                                        @if($key === 'lens')
-                                        @php $pseudo = old('exam_data.oe.pseudophakia_'.$eye, $oe['pseudophakia_'.$eye] ?? []); @endphp
-                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_type]" value="{{ $pseudo['operation_type'] ?? '' }}" class="pseudo-op-type" data-eye="{{ $eye }}">
-                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_expense]" value="{{ $pseudo['operation_expense'] ?? '' }}" class="pseudo-op-expense" data-eye="{{ $eye }}">
-                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][hospital_name]" value="{{ $pseudo['hospital_name'] ?? '' }}" class="pseudo-hospital" data-eye="{{ $eye }}">
-                                        <div class="pseudo-lens-summary mt-1" data-eye="{{ $eye }}" style="display:none;"></div>
-                                        @endif
-                                    </td>
+                    <div class="rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0 oe-table" style="font-size:13px;">
+                                <thead>
+                                    <tr>
+                                        <th style="width:140px;background:#f0f4f8;border-bottom:2px solid #1B4F72;"></th>
+                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Right Eye (RE)</th>
+                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Left Eye (LE)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($oeFieldMeta as $key => $meta)
+                                    <tr>
+                                        <td class="oe-label-cell">
+                                            <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">{{ $meta['label'] }}</span>
+                                            <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">{{ $meta['full'] }}</div>
+                                        </td>
+                                        @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
+                                        @php $sv = old('exam_data.oe.'.$key.'_'.$eye, $oe[$key.'_'.$eye] ?? ''); @endphp
+                                        <td class="{{ $cellCls }} py-2 px-3">
+                                            <div class="oe-select-wrap">
+                                                <input type="text" class="form-control form-control-sm oe-inp"
+                                                    placeholder="—" autocomplete="off"
+                                                    data-oe-key="{{ $key }}"
+                                                    data-master="{{ $meta['master'] }}"
+                                                    data-fav="{{ $meta['fav'] }}"
+                                                    value="{{ $sv }}">
+                                                <input type="hidden" name="exam_data[oe][{{ $key }}_{{ $eye }}]" value="{{ $sv }}">
+                                                <i class="bi bi-chevron-down oe-inp-chevron"></i>
+                                            </div>
+                                            @if($key === 'lens')
+                                            @php $pseudo = old('exam_data.oe.pseudophakia_'.$eye, $oe['pseudophakia_'.$eye] ?? []); @endphp
+                                            <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_type]" value="{{ $pseudo['operation_type'] ?? '' }}" class="pseudo-op-type" data-eye="{{ $eye }}">
+                                            <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_expense]" value="{{ $pseudo['operation_expense'] ?? '' }}" class="pseudo-op-expense" data-eye="{{ $eye }}">
+                                            <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][hospital_name]" value="{{ $pseudo['hospital_name'] ?? '' }}" class="pseudo-hospital" data-eye="{{ $eye }}">
+                                            <div class="pseudo-lens-summary mt-1" data-eye="{{ $eye }}" style="display:none;"></div>
+                                            @endif
+                                        </td>
+                                        @endforeach
+                                    </tr>
                                     @endforeach
-                                </tr>
-                                @endforeach
-                                <tr>
-                                    <td class="oe-label-cell">
-                                        <span class="fw-bold" style="font-size:13px;color:#1e293b;">OTHER</span>
-                                        <div style="font-size:11px;color:#94a3b8;">Other findings</div>
-                                    </td>
-                                    @foreach(['re' => ['cls' => 'oe-cell-re', 'ph' => 'Right eye'], 'le' => ['cls' => 'oe-cell-le', 'ph' => 'Left eye']] as $eye => $em)
-                                    <td class="{{ $em['cls'] }}">
-                                        <input type="text" name="exam_data[oe][other_{{ $eye }}]"
-                                            value="{{ old('exam_data.oe.other_'.$eye, $oe['other_'.$eye] ?? '') }}"
-                                            class="form-control form-control-sm exam-plain-inp"
-                                            placeholder="{{ $em['ph'] }}" autocomplete="off">
-                                    </td>
-                                    @endforeach
-                                </tr>
-                            </tbody>
-                        </table>
+                                    <tr>
+                                        <td class="oe-label-cell">
+                                            <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">OTHER</span>
+                                            <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">Other findings</div>
+                                        </td>
+                                        @foreach(['re' => ['cls' => 'oe-cell-re', 'ph' => 'Right eye findings...'], 'le' => ['cls' => 'oe-cell-le', 'ph' => 'Left eye findings...']] as $eye => $em)
+                                        <td class="{{ $em['cls'] }} py-2 px-3">
+                                            <input type="text" name="exam_data[oe][other_{{ $eye }}]"
+                                                value="{{ old('exam_data.oe.other_'.$eye, $oe['other_'.$eye] ?? '') }}"
+                                                class="form-control form-control-sm exam-plain-inp"
+                                                style="border-color:#1B4F72;"
+                                                placeholder="{{ $em['ph'] }}" autocomplete="off">
+                                        </td>
+                                        @endforeach
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Done
+                    </button>
                 </div>
             </div>
         </div>
@@ -1505,101 +1536,83 @@
 
     {{-- MODAL: Fundus --}}
     <div class="modal fade" id="modalFundus" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title">
-                        <i class="bi bi-circle-half me-2" style="color:#7c3aed;"></i>Fundus Examination
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-circle-half me-2"></i>Fundus Examination
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-0">
-                    <table class="table table-bordered table-sm align-middle mb-0">
-                        <tbody>
-                            {{-- ── Right Eye ── --}}
-                            <tr>
-                                <td colspan="2" style="background:#fff0f0;color:#dc2626;font-weight:700;font-size:13px;letter-spacing:.04em;padding:9px 14px;border-bottom:2px solid #fca5a5;">
-                                    <i class="bi bi-eye-fill me-1"></i> Right Eye <span style="font-weight:400;opacity:.75;">(RE)</span>
-                                </td>
-                            </tr>
-                            @foreach([
-                                ['Disc', 'CDR / Appearance', 'disc', 'disc_re'],
-                                ['FR',   'Foveal Reflex',    'fr',   'fr_re'],
-                            ] as [$lbl, $sub, $type, $field])
-                            <tr style="background:#fffafa;">
-                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #fca5a5;">
-                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">{{ $lbl }}</div>
-                                    <div style="font-size:11px;color:#94a3b8;">{{ $sub }}</div>
-                                </td>
-                                <td style="padding:6px 10px;">
-                                    <div class="fundus-dd-wrap" style="position:relative;">
-                                        <input type="text" class="form-control form-control-sm fundus-dd-inp"
-                                            placeholder="Search or select..." autocomplete="off"
-                                            data-dd-type="{{ $type }}"
-                                            value="{{ $fundus[$field] ?? '' }}"
-                                            style="padding-right:28px;">
-                                        <i class="bi bi-chevron-down" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;font-size:11px;"></i>
-                                        <input type="hidden" name="exam_data[fundus][{{ $field }}]" value="{{ $fundus[$field] ?? '' }}">
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                            <tr style="background:#fffafa;">
-                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #fca5a5;vertical-align:top;">
-                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">Comment</div>
-                                    <div style="font-size:11px;color:#94a3b8;">RE findings</div>
-                                </td>
-                                <td style="padding:6px 10px;">
-                                    <textarea name="exam_data[fundus][comment_re]" class="form-control form-control-sm"
-                                        rows="2" placeholder="Right eye findings / notes..."
-                                        style="resize:none;">{{ old('exam_data.fundus.comment_re', $fundus['comment_re'] ?? '') }}</textarea>
-                                </td>
-                            </tr>
+                <div class="modal-body p-3">
 
-                            {{-- ── Left Eye ── --}}
-                            <tr>
-                                <td colspan="2" style="background:#eff6ff;color:#1d4ed8;font-weight:700;font-size:13px;letter-spacing:.04em;padding:9px 14px;border-bottom:2px solid #93c5fd;">
-                                    <i class="bi bi-eye-fill me-1"></i> Left Eye <span style="font-weight:400;opacity:.75;">(LE)</span>
-                                </td>
-                            </tr>
-                            @foreach([
-                                ['Disc', 'CDR / Appearance', 'disc', 'disc_le'],
-                                ['FR',   'Foveal Reflex',    'fr',   'fr_le'],
-                            ] as [$lbl, $sub, $type, $field])
-                            <tr style="background:#f8faff;">
-                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #93c5fd;">
-                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">{{ $lbl }}</div>
-                                    <div style="font-size:11px;color:#94a3b8;">{{ $sub }}</div>
-                                </td>
-                                <td style="padding:6px 10px;">
-                                    <div class="fundus-dd-wrap" style="position:relative;">
-                                        <input type="text" class="form-control form-control-sm fundus-dd-inp"
-                                            placeholder="Search or select..." autocomplete="off"
-                                            data-dd-type="{{ $type }}"
-                                            value="{{ $fundus[$field] ?? '' }}"
-                                            style="padding-right:28px;">
-                                        <i class="bi bi-chevron-down" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);color:#94a3b8;pointer-events:none;font-size:11px;"></i>
-                                        <input type="hidden" name="exam_data[fundus][{{ $field }}]" value="{{ $fundus[$field] ?? '' }}">
-                                    </div>
-                                </td>
-                            </tr>
-                            @endforeach
-                            <tr style="background:#f8faff;">
-                                <td style="width:155px;padding:8px 10px 8px 14px;border-left:3px solid #93c5fd;vertical-align:top;">
-                                    <div class="fw-semibold" style="font-size:13px;color:#1e293b;">Comment</div>
-                                    <div style="font-size:11px;color:#94a3b8;">LE findings</div>
-                                </td>
-                                <td style="padding:6px 10px;">
-                                    <textarea name="exam_data[fundus][comment_le]" class="form-control form-control-sm"
-                                        rows="2" placeholder="Left eye findings / notes..."
-                                        style="resize:none;">{{ old('exam_data.fundus.comment_le', $fundus['comment_le'] ?? '') }}</textarea>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                            <i class="bi bi-eye-fill text-white"></i>
+                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                <thead style="background:#f0f4f8;">
+                                    <tr>
+                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                            Disc
+                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">CDR / Appearance</div>
+                                        </th>
+                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                            FR
+                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">Foveal Reflex</div>
+                                        </th>
+                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                            Comment
+                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">Additional findings</div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="background:white;">
+                                        <td class="text-center py-2 px-3">
+                                            <div class="fundus-dd-wrap" style="position:relative;max-width:200px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm fundus-dd-inp text-center"
+                                                    placeholder="Search or select..." autocomplete="off"
+                                                    data-dd-type="disc"
+                                                    value="{{ $fundus['disc_'.$eye] ?? '' }}"
+                                                    style="padding-right:24px;border-color:#1B4F72;">
+                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
+                                                <input type="hidden" name="exam_data[fundus][disc_{{ $eye }}]" value="{{ $fundus['disc_'.$eye] ?? '' }}">
+                                            </div>
+                                        </td>
+                                        <td class="text-center py-2 px-3">
+                                            <div class="fundus-dd-wrap" style="position:relative;max-width:200px;margin:auto;">
+                                                <input type="text" class="form-control form-control-sm fundus-dd-inp text-center"
+                                                    placeholder="Search or select..." autocomplete="off"
+                                                    data-dd-type="fr"
+                                                    value="{{ $fundus['fr_'.$eye] ?? '' }}"
+                                                    style="padding-right:24px;border-color:#1B4F72;">
+                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
+                                                <input type="hidden" name="exam_data[fundus][fr_{{ $eye }}]" value="{{ $fundus['fr_'.$eye] ?? '' }}">
+                                            </div>
+                                        </td>
+                                        <td class="py-2 px-3" style="vertical-align:top;">
+                                            <textarea name="exam_data[fundus][comment_{{ $eye }}]"
+                                                class="form-control form-control-sm"
+                                                rows="2"
+                                                placeholder="{{ $eyeLabel }} findings / notes..."
+                                                style="resize:none;border-color:#1B4F72;font-size:12px;">{{ old('exam_data.fundus.comment_'.$eye, $fundus['comment_'.$eye] ?? '') }}</textarea>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    @endforeach
+
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f9fafb;">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                        <i class="bi bi-check-lg me-1"></i>Done
+                    </button>
                 </div>
             </div>
         </div>
@@ -1694,11 +1707,11 @@
     <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-light">
-                    <h5 class="modal-title fw-semibold">
-                        <i class="bi bi-capsule me-2 text-primary"></i>Medicines
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-capsule me-2"></i>Medicines
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     {{-- Suggested Groups panel (shown when diagnosis linked groups exist) --}}
@@ -1706,16 +1719,16 @@
 
                     {{-- Toolbar --}}
                     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                        <span class="fw-semibold text-secondary" style="font-size:13px;"><i class="bi bi-list-ul me-1"></i>Prescription List</span>
+                        <span class="fw-semibold" style="font-size:13px;color:#1B4F72;"><i class="bi bi-list-ul me-1"></i>Prescription List</span>
                         <div class="d-flex gap-2 align-items-center flex-wrap">
                             <div class="input-group input-group-sm" style="width:auto;">
-                                <label class="input-group-text bg-white" style="font-size:12px;">Group</label>
-                                <select id="rxGroupSelector" class="form-select form-select-sm" style="min-width:180px;">
+                                <label class="input-group-text" style="font-size:12px;background:#f0f4f8;color:#1B4F72;font-weight:600;border-color:#1B4F72;">Group</label>
+                                <select id="rxGroupSelector" class="form-select form-select-sm" style="min-width:180px;border-color:#1B4F72;">
                                     <option value="">-- Load Group --</option>
                                     @foreach($masters['med_groups'] as $grp)<option value="{{ $grp->id }}">{{ $grp->name }}</option>@endforeach
                                 </select>
                             </div>
-                            <button type="button" class="btn btn-sm btn-primary px-3" onclick="addMedicineRow()">
+                            <button type="button" class="btn btn-sm px-3" style="background:#1B4F72;color:white;border:none;border-radius:8px;font-weight:600;" onclick="addMedicineRow()">
                                 <i class="bi bi-plus-lg me-1"></i>Add Medicine
                             </button>
                         </div>
@@ -1723,59 +1736,60 @@
 
                     {{-- Table --}}
                     <div class="table-responsive">
-                        <table class="table table-sm table-hover align-middle mb-0" id="rxTable"
-                               style="border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-                            <thead style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
+                        <table class="table table-sm align-middle mb-0" id="rxTable"
+                               style="border:1px solid #dde3ea;border-radius:10px;overflow:hidden;">
+                            <thead style="background:#f0f4f8;border-bottom:2px solid #1B4F72;">
                                 <tr>
-                                    <th style="font-size:12px;color:#64748b;font-weight:600;">Medicine Name</th>
-                                    <th style="width:130px;font-size:12px;color:#64748b;font-weight:600;">Dosage</th>
-                                    <th style="width:100px;font-size:12px;color:#64748b;font-weight:600;">Days</th>
-                                    <th style="width:80px;font-size:12px;color:#64748b;font-weight:600;">QTY</th>
-                                    <th style="width:160px;font-size:12px;color:#64748b;font-weight:600;">Route of Administration</th>
-                                    <th style="width:36px;"></th>
+                                    <th style="font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Medicine Name</th>
+                                    <th style="width:130px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Dosage</th>
+                                    <th style="width:100px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Days</th>
+                                    <th style="width:80px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">QTY</th>
+                                    <th style="width:160px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Route of Administration</th>
+                                    <th style="width:40px;padding:10px 8px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="rxBody">
                                 @forelse($prescriptions as $i => $rx)
                                     <tr class="rx-row">
-                                        <td>
+                                        <td style="padding:8px 14px;">
                                             <input type="hidden" name="medicines[{{ $i }}][medicine_id]" value="{{ $rx->medicine_id }}" class="med-id-input">
-                                            <div class="medicine-search-wrap" style="position:relative">
+                                            <div class="medicine-search-wrap">
                                                 <input type="text" name="medicines[{{ $i }}][name]" class="form-control form-control-sm medicine-search"
                                                        value="{{ $rx->medicine?->brand_name ?: $rx->medicine?->name }}"
-                                                       placeholder="Medicine name" autocomplete="off" list="medicine_list">
-                                                <div class="medicine-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dee2e6;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:100;max-height:180px;overflow-y:auto"></div>
+                                                       placeholder="Type to search medicine..." autocomplete="off">
+                                                <div class="medicine-suggest"></div>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td style="padding:8px 14px;">
                                             <select name="medicines[{{ $i }}][dosage_id]" class="form-select form-select-sm">
                                                 <option value="">-</option>
                                                 @foreach($masters['dosages'] as $dos)<option value="{{ $dos->id }}" {{ $rx->dosage_id == $dos->id ? 'selected' : '' }}>{{ $dos->dosage }}</option>@endforeach
                                             </select>
                                         </td>
-                                        <td>
+                                        <td style="padding:8px 14px;">
                                             <div class="input-group input-group-sm">
                                                 <input type="number" name="medicines[{{ $i }}][duration]" class="form-control" value="{{ $rx->duration ?? '' }}" placeholder="7" min="1">
-                                                <span class="input-group-text" style="font-size:11px;">D</span>
+                                                <span class="input-group-text" style="font-size:11px;background:#f0f4f8;color:#1B4F72;font-weight:600;border-color:#dde3ea;">D</span>
                                             </div>
                                         </td>
-                                        <td><input type="number" name="medicines[{{ $i }}][quantity]" class="form-control form-control-sm" value="{{ $rx->quantity ?? '' }}" placeholder="1" min="1"></td>
-                                        <td>
+                                        <td style="padding:8px 14px;"><input type="number" name="medicines[{{ $i }}][quantity]" class="form-control form-control-sm" value="{{ $rx->quantity ?? '' }}" placeholder="1" min="1"></td>
+                                        <td style="padding:8px 14px;">
                                             <select name="medicines[{{ $i }}][route_id]" class="form-select form-select-sm">
                                                 <option value="">-</option>
                                                 @foreach($masters['routes'] as $rt)<option value="{{ $rt->id }}" {{ ($rx->route_id ?? '') == $rt->id ? 'selected' : '' }}>{{ $rt->name }}</option>@endforeach
                                             </select>
                                         </td>
-                                        <td class="text-center">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 7px;" onclick="this.closest('tr').remove(); updateLivePreview();">
+                                        <td class="text-center" style="padding:8px;">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 7px;border-radius:6px;" onclick="this.closest('tr').remove(); updateLivePreview();">
                                                 <i class="bi bi-x-lg"></i>
                                             </button>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr id="rxEmpty">
-                                        <td colspan="6" class="text-center py-4 text-muted" style="font-size:13px;">
-                                            <i class="bi bi-capsule me-1"></i>No medicines added yet
+                                        <td colspan="6" class="text-center py-5 text-muted" style="font-size:13px;">
+                                            <i class="bi bi-capsule me-1" style="color:#1B4F72;opacity:.4;font-size:20px;display:block;margin-bottom:6px;"></i>
+                                            No medicines added yet — click <strong>+ Add Medicine</strong>
                                         </td>
                                     </tr>
                                 @endforelse
@@ -1783,105 +1797,133 @@
                         </table>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">Done</button>
+                <div class="modal-footer" style="background:#f8fafc;border-top:1px solid #dde3ea;">
+                    <button type="button" class="btn px-4 fw-semibold" style="background:#1B4F72;color:white;border-radius:8px;" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
     </div>
 
     {{-- MODAL: Advice --}}
+    @php
+        $favAdvices    = collect($masters['advices'] ?? [])->filter(fn($a) =>  $a->is_favourite && ($a->advice ?? ''))->values();
+        $nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values();
+        $allAdvices    = collect($masters['advices'] ?? [])->filter(fn($a) => ($a->advice ?? ''))->values();
+    @endphp
     <div class="modal fade" id="modalAdvice" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header" style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border-bottom:1px solid #bbf7d0;">
-                    <h5 class="modal-title fw-semibold">
-                        <i class="bi bi-chat-square-text me-2 text-success"></i>Clinical Advice &amp; Instructions
+                <div class="modal-header" style="background:#1B4F72;">
+                    <h5 class="modal-title fw-semibold text-white">
+                        <i class="bi bi-chat-square-text me-2"></i>Clinical Advice &amp; Instructions
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body p-3">
-                    {{-- Diagnosis-linked suggestions --}}
+                <div class="modal-body p-3 d-flex flex-column gap-3">
+
+                    {{-- 1. Diagnosis-linked advices (JS rendered) --}}
                     <div id="dxSuggestedAdvices"></div>
 
-                    {{-- Master list as quick-add chips --}}
-                    <div class="mb-3">
-                        <div class="fw-semibold mb-2" style="font-size:13px;color:#374151;">
-                            <i class="bi bi-collection me-1 text-secondary"></i>Quick Add from Master
-                            <span class="fw-normal text-muted ms-1" style="font-size:11px;">(click to append)</span>
+                    {{-- 2. Favourites + More in one clean pill row --}}
+                    <div class="rounded-3 p-3" style="background:#fafbfc;border:1px solid #e2e8f0;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-lightning-charge-fill" style="color:#1B4F72;font-size:12px;"></i>
+                            <span class="fw-semibold" style="font-size:11px;color:#374151;text-transform:uppercase;letter-spacing:.07em;">Quick Add</span>
+                            <span class="text-muted" style="font-size:11px;">— click any pill to append</span>
                         </div>
                         <div class="d-flex flex-wrap gap-2 align-items-center" id="adviceChipsWrap">
-                            {{-- Favourites as chips --}}
-                            @foreach($masters['advices'] ?? [] as $adv)
-                                @php $advText = $adv->advice ?? ''; @endphp
-                                @if($advText && $adv->is_favourite)
-                                <button type="button" class="btn btn-sm btn-outline-secondary advice-quick-btn"
-                                        style="font-size:12px;border-radius:20px;"
-                                        data-advice="{{ $advText }}">
-                                    <i class="bi bi-plus-lg me-1"></i>{{ $advText }}
-                                </button>
-                                @endif
+                            {{-- Favourite pills --}}
+                            @foreach($favAdvices as $adv)
+                            <button type="button" class="advice-quick-btn"
+                                    style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #1B4F72;background:white;color:#1B4F72;font-weight:500;cursor:pointer;line-height:1.5;"
+                                    data-advice="{{ $adv->advice }}">
+                                <i class="bi bi-star-fill me-1" style="font-size:9px;color:#f59e0b;"></i>{{ $adv->advice }}
+                            </button>
                             @endforeach
 
-                            {{-- Non-favourites in a dropdown --}}
-                            @php $nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values(); @endphp
-                            @if($nonFavAdvices->isNotEmpty())
+                            {{-- More dropdown with search + add new --}}
                             <div class="dropdown" id="adviceMoreDropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:12px;border-radius:20px;">
-                                    <i class="bi bi-chevron-down me-1"></i>More
+                                <button class="btn btn-sm dropdown-toggle" type="button"
+                                        id="adviceMoreBtn"
+                                        data-bs-toggle="dropdown"
+                                        data-bs-auto-close="outside"
+                                        aria-expanded="false"
+                                        style="font-size:12px;border-radius:20px;border:1px solid #cbd5e1;background:white;color:#374151;padding:4px 12px;">
+                                    <i class="bi bi-grid me-1"></i>More
                                 </button>
-                                <ul class="dropdown-menu" id="adviceMoreList" style="max-height:220px;overflow-y:auto;min-width:200px;">
-                                    @foreach($nonFavAdvices as $adv)
-                                    <li>
-                                        <button type="button" class="dropdown-item advice-quick-btn" style="font-size:12px;" data-advice="{{ $adv->advice }}">
-                                            {{ $adv->advice }}
-                                        </button>
-                                    </li>
-                                    @endforeach
-                                </ul>
+                                <div class="dropdown-menu p-0 shadow" style="min-width:320px;border-radius:12px;overflow:hidden;border:1px solid #dde3ea;">
+                                    {{-- Search + Add bar --}}
+                                    <div class="p-2" style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                                        <div class="d-flex gap-2 align-items-center">
+                                            <div style="position:relative;flex:1;">
+                                                <i class="bi bi-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;pointer-events:none;"></i>
+                                                <input type="text" id="newAdviceInput"
+                                                       class="form-control form-control-sm"
+                                                       placeholder="Search or type new advice..."
+                                                       maxlength="255"
+                                                       autocomplete="off"
+                                                       oninput="adviceMoreFilter(this.value)"
+                                                       style="padding-left:28px;padding-right:8px;border-color:#dde3ea;border-radius:8px;font-size:13px;background:white;">
+                                            </div>
+                                            <button type="button" id="newAdviceBtn"
+                                                    class="btn btn-sm"
+                                                    style="padding:5px 12px;border-radius:8px;background:#1B4F72;border:none;color:white;font-size:13px;white-space:nowrap;font-weight:600;"
+                                                    title="Add as new advice">
+                                                + Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {{-- List --}}
+                                    <ul id="adviceMoreList" style="max-height:240px;overflow-y:auto;margin:0;padding:6px 0;list-style:none;">
+                                        @foreach($allAdvices as $adv)
+                                        <li class="advice-more-item" data-advice-text="{{ strtolower($adv->advice) }}"
+                                            style="display:flex;align-items:center;padding:2px 10px 2px 12px;transition:background .1s;">
+                                            <button type="button" class="advice-quick-btn"
+                                                    data-advice="{{ $adv->advice }}"
+                                                    style="flex:1;font-size:13px;padding:6px 4px;text-align:left;border:none;background:transparent;color:#1e293b;cursor:pointer;border-radius:6px;line-height:1.4;">
+                                                {{ $adv->advice }}
+                                            </button>
+                                            <button type="button" class="advice-fav-btn"
+                                                    data-id="{{ $adv->id }}"
+                                                    data-fav="{{ $adv->is_favourite ? '1' : '0' }}"
+                                                    title="{{ $adv->is_favourite ? 'Remove from favourites' : 'Mark as favourite' }}"
+                                                    style="border:none;background:transparent;padding:4px 4px;cursor:pointer;line-height:1;flex-shrink:0;opacity:{{ $adv->is_favourite ? '1' : '0.3' }};transition:opacity .15s;">
+                                                <i class="bi {{ $adv->is_favourite ? 'bi-star-fill' : 'bi-star' }}"
+                                                   style="font-size:14px;color:{{ $adv->is_favourite ? '#f59e0b' : '#94a3b8' }};"></i>
+                                            </button>
+                                        </li>
+                                        @endforeach
+                                        <li id="adviceNoResult" style="display:none;padding:10px 14px;font-size:12px;color:#94a3b8;text-align:center;">
+                                            <i class="bi bi-search me-1"></i>No match — click <strong>+ Add</strong> to create
+                                        </li>
+                                    </ul>
+                                </div>
                             </div>
-                            @else
-                            <div class="dropdown d-none" id="adviceMoreDropdown">
-                                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size:12px;border-radius:20px;">
-                                    <i class="bi bi-chevron-down me-1"></i>More
-                                </button>
-                                <ul class="dropdown-menu" id="adviceMoreList" style="max-height:220px;overflow-y:auto;min-width:200px;"></ul>
-                            </div>
-                            @endif
-                        </div>
-
-                        {{-- Add New Advice --}}
-                        <div class="mt-2 d-flex gap-2 align-items-center">
-                            <input type="text" id="newAdviceInput" class="form-control form-control-sm"
-                                   placeholder="Type new advice and press Add..."
-                                   maxlength="255" style="font-size:12px;border-radius:20px;">
-                            <button type="button" id="newAdviceBtn" class="btn btn-sm btn-success px-3"
-                                    style="font-size:12px;border-radius:20px;white-space:nowrap;">
-                                <i class="bi bi-plus-lg me-1"></i>Add
-                            </button>
                         </div>
                     </div>
 
-                    {{-- Textarea --}}
-                    <div class="border-top pt-3">
+                    {{-- 3. Advice Textarea --}}
+                    <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:white;">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <label class="fw-semibold mb-0" style="font-size:13px;color:#374151;">
-                                <i class="bi bi-pencil-square me-1 text-success"></i>Advice Text
+                            <label class="fw-semibold mb-0" style="font-size:13px;color:#1B4F72;">
+                                <i class="bi bi-pencil-square me-1"></i>Advice Text
                             </label>
-                            <span id="adviceCharCount" class="text-muted" style="font-size:11px;">0 / 2000</span>
+                            <span id="adviceCharCount" style="font-size:11px;color:#64748b;background:#f0f4f8;padding:2px 8px;border-radius:10px;">0 / 2000</span>
                         </div>
-                        <textarea name="exam_data[advice]" id="advice_textarea" class="form-control" rows="7"
-                                  placeholder="Enter clinical advice, post-operative care, follow-up instructions, lifestyle recommendations, etc."
+                        <textarea name="exam_data[advice]" id="advice_textarea" class="form-control" rows="8"
+                                  placeholder="Clinical advice, post-operative care, follow-up instructions..."
                                   maxlength="2000"
-                                  style="resize:vertical;font-size:13px;">{{ old('exam_data.advice', $ed['advice'] ?? '') }}</textarea>
+                                  style="resize:vertical;font-size:13px;border-color:#e2e8f0;border-radius:8px;line-height:1.7;">{{ old('exam_data.advice', $ed['advice'] ?? '') }}</textarea>
                     </div>
+
                 </div>
                 <div class="modal-footer justify-content-between" style="background:#f9fafb;">
                     <button type="button" class="btn btn-sm btn-outline-danger"
                             onclick="document.getElementById('advice_textarea').value=''; document.getElementById('adviceCharCount').textContent='0 / 2000'; if(typeof updateLivePreview==='function') updateLivePreview();">
                         <i class="bi bi-x-circle me-1"></i>Clear
                     </button>
-                    <button type="button" class="btn btn-success px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal"
+                            style="background:#1B4F72;border-color:#1B4F72;">
                         <i class="bi bi-check-lg me-1"></i>Done
                     </button>
                 </div>
@@ -1977,51 +2019,116 @@ document.addEventListener('DOMContentLoaded', function () {
         hiddenEl.value = n ? (n + ' ' + unitEl.value) : '';
     }
 
-    function attachMedicineSearch(wrap) {
-        if (!wrap) { return; }
-        const input = wrap.querySelector('.medicine-search');
-        const suggest = wrap.querySelector('.medicine-suggest');
-        const hidden = wrap.closest('tr').querySelector('.med-id-input');
-        let timer;
+    // All medicines pre-loaded — instant search, no AJAX
+    @php
+        $medicinesForJs = $masters['medicines']->map(fn($m) => [
+            'id'           => $m->id,
+            'name'         => $m->name ?? '',
+            'brand_name'   => $m->brand_name ?? '',
+            'dosage_id'    => $m->dosage_id,
+            'dosage_label' => $m->dosage?->dosage ?? '',
+            'duration'     => $m->duration ?? '',
+            'qty'          => $m->qty ?? '',
+        ])->values();
+    @endphp
+    const allMedicinesData = @json($medicinesForJs);
 
-        input.addEventListener('input', () => {
-            clearTimeout(timer);
-            const q = input.value.trim();
-            hidden.value = '';
-            if (q.length < 2) {
-                suggest.style.display = 'none';
-                return;
+    function attachMedicineSearch(wrap) {
+        if (!wrap) return;
+        const input   = wrap.querySelector('.medicine-search');
+        const suggest = wrap.querySelector('.medicine-suggest');
+        if (!input || !suggest) return;
+        const tr     = wrap.closest('tr');
+        const hidden = tr?.querySelector('.med-id-input');
+
+        function positionSuggest() {
+            const rect = input.getBoundingClientRect();
+            const vh   = window.innerHeight;
+            const w    = Math.max(rect.width, 280);
+            suggest.style.width = w + 'px';
+            suggest.style.left  = rect.left + 'px';
+            const spaceBelow = vh - rect.bottom - 4;
+            if (spaceBelow >= 120) {
+                suggest.style.top       = (rect.bottom + 4) + 'px';
+                suggest.style.bottom    = '';
+                suggest.style.maxHeight = Math.min(260, spaceBelow - 8) + 'px';
+            } else {
+                suggest.style.bottom    = (vh - rect.top + 4) + 'px';
+                suggest.style.top       = '';
+                suggest.style.maxHeight = Math.min(260, rect.top - 8) + 'px';
             }
-            timer = setTimeout(() => {
-                fetch(`{{ route("hospital.ajax.medicines.search", ["slug" => $slug]) }}?q=${encodeURIComponent(q)}`)
-                    .then(r => r.json())
-                    .then(items => {
-                        if (!items.length) {
-                            suggest.style.display = 'none';
-                            return;
-                        }
-                        suggest.innerHTML = items.map(m =>
-                            `<div class="med-opt" data-id="${m.id}" data-name="${m.brand_name || m.name}" style="padding:.45rem .75rem;cursor:pointer;border-bottom:1px solid #f0f0f0">` +
-                            `<strong>${m.name}</strong>` +
-                            `${m.brand_name ? `<span style="color:#888"> (${m.brand_name})</span>` : ''}` +
-                            `</div>`
-                        ).join('');
-                        suggest.style.display = 'block';
-                        suggest.querySelectorAll('.med-opt').forEach(opt => {
-                            opt.addEventListener('mousedown', e => {
-                                e.preventDefault();
-                                input.value = opt.dataset.name;
-                                hidden.value = opt.dataset.id;
-                                suggest.style.display = 'none';
-                                updateLivePreview();
-                            });
-                        });
-                    });
-            }, 250);
+        }
+
+        function renderSuggest(items) {
+            if (!items.length) { suggest.style.display = 'none'; return; }
+            suggest.innerHTML = items.slice(0, 40).map(function (m) {
+                const brand   = (m.brand_name || '').trim();
+                const generic = (m.name || '').trim();
+                const display = brand || generic;
+                const sub     = brand && generic && generic !== brand ? generic : '';
+                const badge   = m.dosage_label ? '<span style="font-size:10px;background:#e0f2fe;color:#0369a1;border-radius:4px;padding:1px 5px;margin-left:6px;">' + m.dosage_label + '</span>' : '';
+                const meta    = [m.duration, m.qty ? 'Qty:'+m.qty : ''].filter(Boolean).join(' · ');
+                return '<div class="med-opt" data-id="' + m.id +
+                       '" data-name="' + display.replace(/"/g, '&quot;') +
+                       '" data-dosage-id="' + (m.dosage_id || '') +
+                       '" data-duration="' + (m.duration || '') +
+                       '" data-qty="' + (m.qty || '') + '">' +
+                       '<div class="med-opt-brand">' + display + badge + '</div>' +
+                       (sub  ? '<div class="med-opt-generic">' + sub + '</div>' : '') +
+                       (meta ? '<div class="med-opt-generic" style="color:#94a3b8;">' + meta + '</div>' : '') +
+                       '</div>';
+            }).join('');
+            positionSuggest();
+            suggest.style.display = 'block';
+            suggest.querySelectorAll('.med-opt').forEach(function (opt) {
+                opt.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    input.value = opt.dataset.name;
+                    if (hidden) hidden.value = opt.dataset.id;
+                    // Autofill dosage
+                    var dosageSel = tr?.querySelector('select[name*="[dosage_id]"]');
+                    if (dosageSel && opt.dataset.dosageId) dosageSel.value = opt.dataset.dosageId;
+                    // Autofill duration (extract number from string like "7 Days" → 7)
+                    var durInput = tr?.querySelector('input[name*="[duration]"]');
+                    if (durInput && opt.dataset.duration) {
+                        var durNum = parseInt(opt.dataset.duration, 10);
+                        if (!isNaN(durNum)) durInput.value = durNum;
+                    }
+                    // Autofill qty
+                    var qtyInput = tr?.querySelector('input[name*="[quantity]"]');
+                    if (qtyInput && opt.dataset.qty) qtyInput.value = opt.dataset.qty;
+                    suggest.style.display = 'none';
+                    if (typeof updateLivePreview === 'function') updateLivePreview();
+                    if (typeof checkProgress === 'function') checkProgress();
+                });
+            });
+        }
+
+        // Show on focus — display all medicines immediately
+        input.addEventListener('focus', function () {
+            if (hidden) hidden.value = '';
+            renderSuggest(allMedicinesData);
         });
 
-        input.addEventListener('blur', () => {
-            setTimeout(() => { suggest.style.display = 'none'; }, 150);
+        // Filter on type
+        input.addEventListener('input', function () {
+            if (hidden) hidden.value = '';
+            const q = this.value.trim().toLowerCase();
+            if (!q) { renderSuggest(allMedicinesData); return; }
+            const filtered = allMedicinesData.filter(function (m) {
+                return (m.name || '').toLowerCase().includes(q) ||
+                       (m.brand_name || '').toLowerCase().includes(q);
+            });
+            renderSuggest(filtered);
+        });
+
+        input.addEventListener('blur', function () {
+            setTimeout(function () { suggest.style.display = 'none'; }, 200);
+        });
+
+        // Close on Escape
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { suggest.style.display = 'none'; }
         });
     }
 
@@ -2040,18 +2147,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const row = document.createElement('tr');
         row.className = 'rx-row';
         row.innerHTML = `
-            <td>
+            <td style="padding:8px 14px;">
                 <input type="hidden" name="medicines[${idx}][medicine_id]" value="${medId}" class="med-id-input">
-                <div class="medicine-search-wrap" style="position:relative">
-                    <input type="text" name="medicines[${idx}][name]" class="form-control form-control-sm medicine-search" placeholder="Medicine name" autocomplete="off" list="medicine_list" value="${medName}">
-                    <div class="medicine-suggest" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #dee2e6;border-radius:6px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:100;max-height:180px;overflow-y:auto"></div>
+                <div class="medicine-search-wrap">
+                    <input type="text" name="medicines[${idx}][name]" class="form-control form-control-sm medicine-search" placeholder="Type to search medicine..." autocomplete="off" value="${medName}">
+                    <div class="medicine-suggest"></div>
                 </div>
             </td>
-            <td><select name="medicines[${idx}][dosage_id]" class="form-select form-select-sm"><option value="">-</option>${dosageOptions}</select></td>
-            <td><div class="input-group input-group-sm"><input type="number" name="medicines[${idx}][duration]" class="form-control" value="${duration}" placeholder="7" min="1"><span class="input-group-text" style="font-size:0.75rem">D</span></div></td>
-            <td><input type="number" name="medicines[${idx}][quantity]" class="form-control form-control-sm" value="${quantity}" placeholder="1" min="1"></td>
-            <td><select name="medicines[${idx}][route_id]" class="form-select form-select-sm"><option value="">-</option>${routeOptions}</select></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 7px;" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();"><i class="bi bi-x-lg"></i></button></td>
+            <td style="padding:8px 14px;"><select name="medicines[${idx}][dosage_id]" class="form-select form-select-sm"><option value="">-</option>${dosageOptions}</select></td>
+            <td style="padding:8px 14px;"><div class="input-group input-group-sm"><input type="number" name="medicines[${idx}][duration]" class="form-control" value="${duration}" placeholder="7" min="1"><span class="input-group-text" style="font-size:11px;background:#f0f4f8;color:#1B4F72;font-weight:600;border-color:#dde3ea;">D</span></div></td>
+            <td style="padding:8px 14px;"><input type="number" name="medicines[${idx}][quantity]" class="form-control form-control-sm" value="${quantity}" placeholder="1" min="1"></td>
+            <td style="padding:8px 14px;"><select name="medicines[${idx}][route_id]" class="form-select form-select-sm"><option value="">-</option>${routeOptions}</select></td>
+            <td class="text-center" style="padding:8px;"><button type="button" class="btn btn-sm btn-outline-danger" style="padding:2px 7px;border-radius:6px;" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();"><i class="bi bi-x-lg"></i></button></td>
         `;
         rxBody.appendChild(row);
         attachMedicineSearch(row.querySelector('.medicine-search-wrap'));
@@ -2452,12 +2559,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             wrap.innerHTML =
-                '<div class="p-3 rounded-3 mb-3" style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1px solid #bbf7d0;">' +
-                '<div class="fw-semibold mb-2" style="font-size:13px;color:#166534;"><i class="bi bi-check-circle me-1"></i>Suggested Advices <small class="fw-normal text-muted">(click to append)</small></div>' +
+                '<div class="p-3 rounded-3 mb-1" style="background:#f0f9ff;border:1px solid #bae6fd;">' +
+                '<div class="d-flex align-items-center gap-2 mb-2">' +
+                '<i class="bi bi-link-45deg" style="color:#1B4F72;font-size:14px;"></i>' +
+                '<span class="fw-semibold" style="font-size:11px;color:#1B4F72;text-transform:uppercase;letter-spacing:.07em;">Diagnosis-linked Advices</span>' +
+                '<span style="font-size:11px;color:#64748b;">— already added · click to re-append</span>' +
+                '</div>' +
                 '<div class="d-flex flex-wrap gap-2">' +
                 advices.map(a =>
-                    '<button type="button" class="btn btn-sm btn-outline-success" style="font-size:12px;" onclick="appendSuggestedAdvice(' + a.id + ')">' +
-                    esc(a.advice) + '</button>'
+                    '<button type="button" class="advice-quick-btn" style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #0ea5e9;background:white;color:#0369a1;font-weight:500;cursor:pointer;" data-advice="' + esc(a.advice) + '">' +
+                    '<i class="bi bi-check2 me-1" style="font-size:10px;"></i>' + esc(a.advice) + '</button>'
                 ).join('') +
                 '</div></div>';
         }
@@ -2579,16 +2690,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const ta = document.getElementById('advice_textarea');
             if (!ta) return;
-
-            const newDiagText = selected.length ? 'Diagnosis: ' + selected.join(', ') : '';
-
-            let currentVal = ta.value;
-            if (autoInsertedDiagnoses && currentVal.startsWith(autoInsertedDiagnoses)) {
-                currentVal = currentVal.slice(autoInsertedDiagnoses.length).replace(/^\n/, '');
-            }
-
-            autoInsertedDiagnoses = newDiagText;
-            ta.value = newDiagText ? (newDiagText + (currentVal ? '\n' + currentVal : '')) : currentVal;
 
             ta.dispatchEvent(new Event('input'));
             if (typeof updateLivePreview === 'function') updateLivePreview();
@@ -3063,19 +3164,78 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     })();
 
-    // Advice quick-add chips → append to textarea
-    document.querySelectorAll('.advice-quick-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const text = this.dataset.advice || '';
-            if (!text) return;
-            const ta = document.getElementById('advice_textarea');
-            if (!ta) return;
-            ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
-            ta.dispatchEvent(new Event('input'));
-            checkProgress();
-            if (typeof updateLivePreview === 'function') updateLivePreview();
-        });
+    // Advice quick-add chips → append to textarea (delegated for dynamic pills too)
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.advice-quick-btn');
+        if (!btn) return;
+        const text = btn.dataset.advice || '';
+        if (!text) return;
+        const ta = document.getElementById('advice_textarea');
+        if (!ta) return;
+        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+        ta.dispatchEvent(new Event('input'));
+        checkProgress();
+        if (typeof updateLivePreview === 'function') updateLivePreview();
     });
+
+    // Global search filter for More dropdown — called via oninput on #newAdviceInput
+    window.adviceMoreFilter = function (val) {
+        const q        = val.trim().toLowerCase();
+        const list     = document.getElementById('adviceMoreList');
+        const noResult = document.getElementById('adviceNoResult');
+        if (!list) return;
+        let visible = 0;
+        list.querySelectorAll('li.advice-more-item').forEach(function (li) {
+            const text = (li.dataset.adviceText || li.querySelector('.advice-quick-btn')?.dataset.advice || '').toLowerCase();
+            const show = !q || text.includes(q);
+            li.style.display = show ? '' : 'none';
+            if (show) visible++;
+        });
+        if (noResult) noResult.style.display = (q && visible === 0) ? '' : 'none';
+    };
+
+    // Advice favourite toggle in More dropdown
+    (function () {
+        const advFavBase = '{{ url($slug."/masters/detail/advice") }}';
+        const csrf       = '{{ csrf_token() }}';
+
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.advice-fav-btn');
+            if (!btn) return;
+            e.stopPropagation();
+
+            const id      = btn.dataset.id;
+            const isFav   = btn.dataset.fav === '1';
+            const icon    = btn.querySelector('i');
+            const advText = btn.closest('li')?.querySelector('.advice-quick-btn')?.dataset.advice || '';
+
+            // Optimistic UI update
+            btn.dataset.fav  = isFav ? '0' : '1';
+            icon.className   = isFav ? 'bi bi-star' : 'bi bi-star-fill';
+            icon.style.color = isFav ? '#94a3b8' : '#f59e0b';
+            btn.style.opacity = isFav ? '0.3' : '1';
+            btn.title = isFav ? 'Mark as favourite' : 'Remove from favourites';
+
+            // Update Quick Add pill star icon if it exists
+            document.querySelectorAll('#adviceChipsWrap .advice-quick-btn').forEach(pill => {
+                if (pill.dataset.advice === advText) {
+                    const starI = pill.querySelector('i');
+                    if (starI) starI.className = isFav ? 'bi bi-plus-lg me-1' : 'bi bi-star-fill me-1';
+                }
+            });
+
+            fetch(`${advFavBase}/${id}/toggle-favourite`, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' }
+            }).catch(() => {
+                // Revert on failure
+                btn.dataset.fav   = isFav ? '1' : '0';
+                icon.className    = isFav ? 'bi bi-star-fill' : 'bi bi-star';
+                icon.style.color  = isFav ? '#f59e0b' : '#94a3b8';
+                btn.style.opacity = isFav ? '1' : '0.3';
+            });
+        });
+    })();
 
     // Add New Advice (AJAX save to master + append to textarea)
     (function () {
@@ -3085,24 +3245,29 @@ document.addEventListener('DOMContentLoaded', function () {
         const moreDrop = document.getElementById('adviceMoreDropdown');
 
         function appendAdviceChip(text) {
-            // Add as a chip before the "More" dropdown
+            // Add as a pill in the pills row before the More dropdown
             const chip = document.createElement('button');
             chip.type = 'button';
-            chip.className = 'btn btn-sm btn-outline-secondary advice-quick-btn';
-            chip.style.cssText = 'font-size:12px;border-radius:20px;';
+            chip.className = 'advice-quick-btn';
+            chip.style.cssText = 'font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #1B4F72;background:white;color:#1B4F72;font-weight:500;cursor:pointer;line-height:1.5;';
             chip.dataset.advice = text;
-            chip.innerHTML = '<i class="bi bi-plus-lg me-1"></i>' + text;
-            chip.addEventListener('click', function () {
-                const ta = document.getElementById('advice_textarea');
-                if (!ta) return;
-                ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
-                ta.dispatchEvent(new Event('input'));
-                if (typeof updateLivePreview === 'function') updateLivePreview();
-            });
-            // Insert before the "More" dropdown
+            chip.innerHTML = '<i class="bi bi-plus-lg me-1" style="font-size:9px;"></i>' + text;
             const chipsWrap = document.getElementById('adviceChipsWrap');
             if (chipsWrap && moreDrop) {
                 chipsWrap.insertBefore(chip, moreDrop);
+            }
+            // Also add to More list
+            const newLi = document.createElement('li');
+            newLi.className = 'advice-more-item';
+            newLi.dataset.adviceText = text.toLowerCase();
+            newLi.style.cssText = 'display:flex;align-items:center;padding:2px 10px 2px 12px;';
+            newLi.innerHTML =
+                '<button type="button" class="advice-quick-btn" data-advice="' + text.replace(/"/g, '&quot;') + '" style="flex:1;font-size:13px;padding:6px 4px;text-align:left;border:none;background:transparent;color:#1e293b;cursor:pointer;border-radius:6px;line-height:1.4;">' + text + '</button>';
+            const moreListEl = document.getElementById('adviceMoreList');
+            if (moreListEl) {
+                const noRes = document.getElementById('adviceNoResult');
+                if (noRes) moreListEl.insertBefore(newLi, noRes);
+                else moreListEl.appendChild(newLi);
             }
         }
 
@@ -3145,7 +3310,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .finally(() => {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add';
+                btn.textContent = '+ Add';
                 input.focus();
             });
         }
