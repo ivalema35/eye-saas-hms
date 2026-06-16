@@ -71,7 +71,7 @@ class DetailMasterController extends Controller
             'lens' => MasterLens::class,
             'em' => MasterEm::class,
             'covertest' => MasterCoverTest::class,
-            'hno'       => MasterHno::class,
+            'hno' => MasterHno::class,
         ];
     }
 
@@ -79,7 +79,7 @@ class DetailMasterController extends Controller
     protected function resolveModel(string $type): string
     {
         $map = $this->modelMap();
-        abort_if(! array_key_exists($type, $map), 404, 'Master type not found.');
+        abort_if(!array_key_exists($type, $map), 404, 'Master type not found.');
 
         return $map[$type];
     }
@@ -112,12 +112,23 @@ class DetailMasterController extends Controller
     public function index(string $slug, string $type): View
     {
         $modelClass = $this->resolveModel($type);
-        $instance   = new $modelClass;
+        $instance = new $modelClass;
 
         $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
-        $columns     = array_values(array_diff($instance->getFillable(), $excludeCols));
-        $title       = Str::headline($type);
-        $routeGroup  = 'hospital.masters.detail';
+        $columns = array_values(array_diff($instance->getFillable(), $excludeCols));
+        $titleOverrides = [
+            'hno' => 'H/O',
+            'kcos' => 'K/C/O',
+            'vn' => 'V/N',
+            'vngl' => 'Vn C GL',
+            'vnst' => 'Vn C ST',
+            'pnvn' => 'PH NV/N',
+            'nrvn' => 'NR V/N',
+            'sph_cyl' => 'SPH / CYL',
+            'nct' => 'NCT (IOP)',
+        ];
+        $title = $titleOverrides[$type] ?? Str::headline($type);
+        $routeGroup = 'hospital.masters.detail';
 
         $withRelations = $this->isAdviceType($type) ? ['diagnoses'] : [];
         $query = $modelClass::with($withRelations);
@@ -127,18 +138,20 @@ class DetailMasterController extends Controller
             $query->latest();
         }
         $records = $query->get();
-        $diagnoses  = $this->isAdviceType($type) ? MasterDiagnosis::orderBy('value')->get() : collect();
+        $diagnoses = $this->isAdviceType($type) ? MasterDiagnosis::orderBy('value')->get() : collect();
 
-        return view('hospital.masters.dynamic_index',
-            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup', 'diagnoses'));
+        return view(
+            'hospital.masters.dynamic_index',
+            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup', 'diagnoses')
+        );
     }
 
     public function store(Request $request, string $slug, string $type): RedirectResponse
     {
-        $modelClass  = $this->resolveModel($type);
+        $modelClass = $this->resolveModel($type);
         $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
-        $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
-        $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+        $columns = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
+        $validated = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
 
         if ($this->hasFavourite($type)) {
             $validated['is_favourite'] = $request->boolean('is_favourite');
@@ -148,26 +161,26 @@ class DetailMasterController extends Controller
 
         if ($this->isAdviceType($type)) {
             $request->validate([
-                'diagnosis_ids'   => ['nullable', 'array'],
+                'diagnosis_ids' => ['nullable', 'array'],
                 'diagnosis_ids.*' => ['exists:tbl_master_diagnosis,id'],
             ]);
             $record->diagnoses()->sync($request->input('diagnosis_ids', []));
         }
 
-        return redirect()->back()->with('success', Str::headline($type).' added successfully.');
+        return redirect()->back()->with('success', Str::headline($type) . ' added successfully.');
     }
 
     public function update(Request $request, string $slug, string $type, int $id): RedirectResponse
     {
-        $modelClass  = $this->resolveModel($type);
-        $record      = $modelClass::findOrFail($id);
+        $modelClass = $this->resolveModel($type);
+        $record = $modelClass::findOrFail($id);
 
         if (property_exists($record, 'casts') && isset($record->getCasts()['is_seeded']) && $record->is_seeded) {
             return redirect()->back()->with('error', 'Default seeded values cannot be edited.');
         }
         $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
-        $columns     = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
-        $validated   = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+        $columns = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
+        $validated = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
 
         if ($this->hasFavourite($type)) {
             $validated['is_favourite'] = $request->boolean('is_favourite');
@@ -177,13 +190,13 @@ class DetailMasterController extends Controller
 
         if ($this->isAdviceType($type)) {
             $request->validate([
-                'diagnosis_ids'   => ['nullable', 'array'],
+                'diagnosis_ids' => ['nullable', 'array'],
                 'diagnosis_ids.*' => ['exists:tbl_master_diagnosis,id'],
             ]);
             $record->diagnoses()->sync($request->input('diagnosis_ids', []));
         }
 
-        return redirect()->back()->with('success', Str::headline($type).' updated successfully.');
+        return redirect()->back()->with('success', Str::headline($type) . ' updated successfully.');
     }
 
     public function toggleFavourite(string $slug, string $type, int $id)
@@ -191,7 +204,7 @@ class DetailMasterController extends Controller
         abort_unless($this->hasFavourite($type), 404);
 
         $record = $this->resolveModel($type)::findOrFail($id);
-        $record->update(['is_favourite' => ! $record->is_favourite]);
+        $record->update(['is_favourite' => !$record->is_favourite]);
 
         return response()->json(['is_favourite' => $record->is_favourite]);
     }
@@ -202,12 +215,12 @@ class DetailMasterController extends Controller
 
         $request->validate([
             'link_diagnosis_id' => ['required', 'exists:tbl_master_diagnosis,id'],
-            'link_advice_ids'   => ['nullable', 'array'],
+            'link_advice_ids' => ['nullable', 'array'],
             'link_advice_ids.*' => ['exists:tbl_master_advice,id'],
         ]);
 
-        $diagnosisId     = (int) $request->link_diagnosis_id;
-        $selectedIds     = array_map('intval', $request->input('link_advice_ids', []));
+        $diagnosisId = (int) $request->link_diagnosis_id;
+        $selectedIds = array_map('intval', $request->input('link_advice_ids', []));
         $tenantAdviceIds = MasterAdvice::pluck('id')->toArray();
 
         DB::table('tbl_advice_diagnoses')
@@ -228,7 +241,7 @@ class DetailMasterController extends Controller
     public function destroy(string $slug, string $type, int $id): RedirectResponse
     {
         $modelClass = $this->resolveModel($type);
-        $record     = $modelClass::findOrFail($id);
+        $record = $modelClass::findOrFail($id);
 
         if (isset($record->getCasts()['is_seeded']) && $record->is_seeded) {
             return redirect()->back()->with('error', 'Default seeded values cannot be deleted.');
@@ -236,6 +249,6 @@ class DetailMasterController extends Controller
 
         $record->delete();
 
-        return redirect()->back()->with('success', Str::headline($type).' deleted successfully.');
+        return redirect()->back()->with('success', Str::headline($type) . ' deleted successfully.');
     }
 }
