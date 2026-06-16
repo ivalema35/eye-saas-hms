@@ -15,6 +15,7 @@
 namespace App\Models\Hospital;
 
 use App\Models\Hospital\OT\OtBooking;
+use App\Models\Hospital\Referrer;
 use App\Models\Platform\Tenant;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
@@ -81,6 +82,11 @@ class Patient extends Model
     public function caseType(): BelongsTo
     {
         return $this->belongsTo(CaseType::class, 'case_id');
+    }
+
+    public function referrer(): BelongsTo
+    {
+        return $this->belongsTo(Referrer::class, 'referrer_id');
     }
 
     public function primaryExamination()

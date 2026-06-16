@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Models\Hospital\Dosage;
 use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtBooking;
@@ -16,6 +17,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 
@@ -785,7 +787,15 @@ class DashboardController extends Controller
             }
         }
 
-        return view('hospital.patient.history', compact('patient', 'history', 'search', 'slug'));
+        // Use the patient's own tenant for diagnosis master so IDs resolve correctly
+        $masterTenantId = $patient?->tenant_id ?? $currentTenant->id;
+        $diagnosisMasters = DB::table('tbl_master_diagnosis')
+            ->where('tenant_id', $masterTenantId)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as diagnosis')]);
+        $dosageMasters = Dosage::all(['id', 'dosage'])->keyBy('id');
+
+        return view('hospital.patient.history', compact('patient', 'history', 'search', 'slug', 'diagnosisMasters', 'dosageMasters'));
     }
 
     public function partnerHistory(Request $request, string $slug, int $partnerTenantId): View|RedirectResponse
