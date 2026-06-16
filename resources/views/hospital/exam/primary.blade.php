@@ -4072,6 +4072,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const hnoSearch   = document.getElementById('hnoSearch');
     const hnoDropdown = document.getElementById('hnoDropdown');
     if (!hnoSearch || !hnoDropdown) { return; }
+    document.body.appendChild(hnoDropdown); // move to body so modal overflow doesn't clip the fixed dropdown
 
     const hnoItems   = @json(collect($masters['hnos'] ?? [])->map(fn($o) => ['id' => $o->id, 'hno' => $o->hno, 'is_favourite' => (bool)($o->is_favourite ?? false)])->values());
     const hnoFavBase = '{{ url($slug."/masters/detail/hno") }}';
@@ -4089,8 +4090,28 @@ document.addEventListener('DOMContentLoaded', function () {
     const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
     function positionHnoDropdown() {
-        if (typeof positionFixedDropdown === 'function') {
-            positionFixedDropdown(hnoDropdown, hnoSearch, 300);
+        if (!hnoDropdown || !hnoSearch) { return; }
+        const gap = 4, maxH = 300, minW = 300;
+        const rect = hnoSearch.getBoundingClientRect();
+        const vh = window.innerHeight;
+        const vw = window.innerWidth;
+        const spaceBelow = vh - rect.bottom - gap;
+        const spaceAbove = rect.top - gap;
+        const width = Math.max(rect.width, minW);
+        const openUp = spaceBelow < 160 && spaceAbove > spaceBelow;
+        let left = rect.left;
+        if (left + width > vw - 8) { left = Math.max(8, vw - width - 8); }
+        hnoDropdown.style.width = width + 'px';
+        hnoDropdown.style.left = left + 'px';
+        hnoDropdown.style.transform = '';
+        if (openUp) {
+            hnoDropdown.style.top = 'auto';
+            hnoDropdown.style.bottom = (vh - rect.top + gap) + 'px';
+            hnoDropdown.style.maxHeight = Math.max(100, Math.min(maxH, spaceAbove - 8)) + 'px';
+        } else {
+            hnoDropdown.style.bottom = 'auto';
+            hnoDropdown.style.top = (rect.bottom + gap) + 'px';
+            hnoDropdown.style.maxHeight = Math.max(100, Math.min(maxH, spaceBelow - 8)) + 'px';
         }
     }
 
