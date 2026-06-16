@@ -133,8 +133,7 @@
                             <th class="text-start">Patient Name</th>
                             <th>Doctor</th>
                             <th>Date</th>
-                            <th>Primary</th>
-                            <th>Secondary</th>
+                            <th>Contact No.</th>
                             <th>Age</th>
                             <th>Action</th>
                         </tr>
@@ -151,21 +150,8 @@
                                 </td>
                                 <td class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($patient->appointment_date)->format('d M, Y') }}</td>
-                                <td>
-                                    @if($patient->primary_done_at)
-                                        <span
-                                            class="badge-time">{{ \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') }}</span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($patient->secondary_done_at)
-                                        <span
-                                            class="badge-time">{{ \Carbon\Carbon::parse($patient->secondary_done_at)->format('h:i A') }}</span>
-                                    @else
-                                        <span class="text-muted">—</span>
-                                    @endif
+                                <td class="text-muted">
+                                    {{ $patient->contact_no ?? '—' }}
                                 </td>
                                 <td>{{ $patient->age ?? '—' }}</td>
                                 <td>
