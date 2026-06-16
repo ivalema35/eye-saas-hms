@@ -8,10 +8,9 @@
 @section('content')
 
     {{-- Toast notification --}}
-    <div id="contactToast"
-        style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
-                                                                             background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
-                                                                             box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
+    <div id="contactToast" style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
+                                                    background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
+                                                    box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
         <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
         <span id="contactToastMsg"></span>
     </div>
@@ -53,14 +52,14 @@
 
                         {{-- 1. Appointment Date --}}
                         <div class="form-group">
-                            <label class="form-label">Appointment Date *</label>
+                            <label class="form-label">Appointment Date</label>
                             <input type="text" name="appointment_date" class="form-control flatpickr hms-input"
                                 value="{{ old('appointment_date', now()->format('Y-m-d')) }}" required>
                         </div>
 
                         {{-- 2. Contact Number --}}
                         <div class="form-group position-relative">
-                            <label class="form-label">Contact Number *</label>
+                            <label class="form-label">Contact Number</label>
                             <input type="text" name="contact_no" id="contactNo" class="form-control hms-input"
                                 maxlength="10" required placeholder="10-digit number">
                             <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
@@ -76,11 +75,11 @@
 
                         {{-- 4, 5, 6 Name Fields --}}
                         <div class="form-group">
-                            <label class="form-label">First Name *</label>
+                            <label class="form-label">First Name</label>
                             <input type="text" name="first_name" id="firstName" class="form-control hms-input" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Surname *</label>
+                            <label class="form-label">Surname</label>
                             <input type="text" name="last_name" id="lastName" class="form-control hms-input" required>
                         </div>
                         <div class="form-group">
@@ -90,7 +89,7 @@
 
                         {{-- 7. Case Type --}}
                         <div class="form-group">
-                            <label class="form-label">Case Type *</label>
+                            <label class="form-label">Case Type</label>
                             <select name="case_id" id="caseSelect" class="form-control select2 hms-select" required>
                                 <option value="">Select Case</option>
                                 @foreach($cases as $c)
@@ -101,14 +100,25 @@
 
                         {{-- 8. Case Fee --}}
                         <div class="form-group">
-                            <label class="form-label">Case Fee (₹) *</label>
+                            <label class="form-label">Case Fee (₹)</label>
                             <input type="number" name="case_fee" id="caseFee" class="form-control hms-input" required
                                 readonly>
                         </div>
 
+                        {{-- 12. Doctor Name --}}
+                        <div class="form-group">
+                            <label class="form-label">Doctor Name</label>
+                            <select name="doctor_id" class="form-control select2 hms-select" required>
+                                <option value="">Select Doctor</option>
+                                @foreach($doctors as $doc)
+                                    <option value="{{ $doc->id }}">{{ $doc->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
                         {{-- 9, 10, 11 City, District, State --}}
                         <div class="form-group">
-                            <label class="form-label">City *</label>
+                            <label class="form-label">City</label>
                             <div style="display:flex;gap:5px">
                                 <select name="location_id" id="locationSelect" class="form-control select2 hms-select"
                                     required>
@@ -132,26 +142,16 @@
                             <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto-filled">
                         </div>
 
-                        {{-- 12. Doctor Name --}}
-                        <div class="form-group">
-                            <label class="form-label">Doctor Name *</label>
-                            <select name="doctor_id" class="form-control select2 hms-select" required>
-                                <option value="">Select Doctor</option>
-                                @foreach($doctors as $doc)
-                                    <option value="{{ $doc->id }}">{{ $doc->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
 
                         {{-- 13. Age --}}
                         <div class="form-group">
-                            <label class="form-label">Age *</label>
+                            <label class="form-label">Age</label>
                             <input type="number" name="age" id="age" class="form-control hms-input" required>
                         </div>
 
                         {{-- 14. Gender --}}
                         <div class="form-group">
-                            <label class="form-label">Gender *</label>
+                            <label class="form-label">Gender</label>
                             <select name="gender" id="gender" class="form-control hms-select" required>
                                 <option value="">Select Gender</option>
                                 <option value="male">Male</option>
@@ -200,6 +200,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             var searchUrl = '{{ route('hospital.patients.search-by-contact', ['slug' => $slug]) }}';
             var csrfToken = '{{ csrf_token() }}';
+            var currentHospitalName = '{{ addslashes($currentHospitalName) }}';
 
             // ── Init plugins ─────────────────────────────────────────────
             if (typeof $.fn.select2 !== 'undefined') {
@@ -292,13 +293,23 @@
                         locEl.dispatchEvent(new Event('change'));
                     }
                 }
+                // Shared patients have location_id = null (belongs to partner hospital's DB).
+                // Clear the field so the receptionist fills it manually.
+                if (p.type === 'shared' && locEl) {
+                    locEl.value = '';
+                    if (typeof $ !== 'undefined') { $(locEl).trigger('change'); }
+                    else { locEl.dispatchEvent(new Event('change')); }
+                }
 
                 var oldPatientCb = document.getElementById('isOldPatient');
                 if (oldPatientCb) { oldPatientCb.checked = true; }
 
                 if (patientSuggestions) { patientSuggestions.classList.add('d-none'); }
 
-                showToast('Patient selected — details filled.');
+                var msg = p.type === 'shared'
+                    ? 'Shared patient selected — please verify city/location.'
+                    : 'Patient selected — details filled.';
+                showToast(msg);
             };
 
             if (contactInput && patientSuggestions) {
@@ -323,8 +334,14 @@
                             var html = '';
                             data.patients.forEach(function (p, idx) {
                                 var displayName = p.first_name + (p.middle_name ? ' ' + p.middle_name : '') + (p.last_name ? ' ' + p.last_name : '');
+                                var isShared = p.type === 'shared';
+                                var badgeLabel = isShared ? (p.hospital_name || 'Partner Hospital') : currentHospitalName;
+                                var badgeStyle = isShared
+                                    ? 'background:#fff3cd;color:#856404;border:1px solid #ffc107;'
+                                    : 'background:#d1fae5;color:#065f46;border:1px solid #10b981;';
+                                var badge = '<span style="display:inline-block;font-size:.68rem;font-weight:700;padding:1px 8px;border-radius:20px;margin-left:6px;vertical-align:middle;' + badgeStyle + '">' + badgeLabel + '</span>';
                                 html += '<div class="patient-suggestion-card" onclick="fillSelectedPatient(' + idx + ')">' +
-                                    '<div class="fw-bold" style="color: var(--prim-blue-600, #1B4F72);">' + displayName + '</div>' +
+                                    '<div class="fw-bold" style="color: var(--prim-blue-600, #1B4F72);">' + displayName + badge + '</div>' +
                                     '<div class="small text-muted">Age: ' + (p.age ?? '-') + ' | Gender: ' + (p.gender ?? '-') + '</div>' +
                                     '</div>';
                             });
@@ -384,7 +401,7 @@
             if (!addBtn) return;
 
             // Create modal HTML and append to body
-            var modalHtml = '\n<div class="modal fade" id="modalAddLocation" tabindex="-1" aria-hidden="true">\n  <div class="modal-dialog modal-sm modal-dialog-centered">\n    <div class="modal-content">\n      <div class="modal-header">\n        <h5 class="modal-title">Add City</h5>\n        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>\n      </div>\n      <div class="modal-body">\n        <div id="addLocErrors" class="text-danger mb-2"></div>\n        <div class="mb-2">\n          <label class="form-label">City</label>\n          <input type="text" id="newCity" class="form-control" placeholder="City name">\n        </div>\n        <div class="mb-2">\n          <label class="form-label">District</label>\n          <input type="text" id="newDistrict" class="form-control" placeholder="District">\n        </div>\n        <div class="mb-2">\n          <label class="form-label">State</label>\n          <input type="text" id="newState" class="form-control" placeholder="State">\n        </div>\n      </div>\n      <div class="modal-footer">\n        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>\n        <button type="button" id="saveLocationBtn" class="btn btn-primary">Add</button>\n      </div>\n    </div>\n  </div>\n</div>\n';
+            var modalHtml = '\n<div class="modal fade" id="modalAddLocation" tabindex="-1" aria-hidden="true">\n  <div class="modal-dialog modal-sm modal-dialog-centered">\n    <div class="modal-content">\n      <div class="modal-header">\n        <h5 class="modal-title" style="color: #fff;">Add City</h5>\n        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>\n      </div>\n      <div class="modal-body">\n        <div id="addLocErrors" class="text-danger mb-2"></div>\n        <div class="mb-2">\n          <label class="form-label">City</label>\n          <input type="text" id="newCity" class="form-control" placeholder="City name">\n        </div>\n        <div class="mb-2">\n          <label class="form-label">District</label>\n          <input type="text" id="newDistrict" class="form-control" placeholder="District">\n        </div>\n        <div class="mb-2">\n          <label class="form-label">State</label>\n          <input type="text" id="newState" class="form-control" placeholder="State">\n        </div>\n      </div>\n      <div class="modal-footer">\n        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>\n        <button type="button" id="saveLocationBtn" class="btn btn-primary">Add</button>\n      </div>\n    </div>\n  </div>\n</div>\n';
 
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
@@ -664,6 +681,439 @@
             .patient-create-actions .hms-btn {
                 width: 100%;
             }
+        }
+    </style>
+
+    <style>
+        /* ============================================================
+                                                                                   PATIENT REGISTRATION - ATTRACTIVE DESIGN
+                                                                                   Color Theme: #1B4F72 (Deep Blue) | #2980B9 (Lighter Blue)
+                                                                                   No conflicts with existing styles - uses specific selectors
+                                                                                   ============================================================ */
+
+        /* Main container enhancement */
+        .hms-card.patient-registration-card {
+            border-radius: 28px !important;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.3s ease;
+        }
+
+        .hms-card.patient-registration-card:hover {
+            box-shadow: 0 25px 45px -12px rgba(27, 79, 114, 0.25) !important;
+        }
+
+        /* Header gradient enhancement */
+        .hms-card-header {
+            background: linear-gradient(135deg, #1B4F72 0%, #2471A3 50%, #2980B9 100%) !important;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hms-card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Icon container animation */
+        .hms-card-header>div>div:first-child {
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .hms-card-header:hover>div>div:first-child {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.25) !important;
+        }
+
+        /* Form grid - responsive with better spacing */
+        .patient-registration-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 992px) {
+            .patient-registration-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.25rem;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .patient-registration-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+
+        /* Form group styling */
+        .form-group {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #5a6e7c;
+            transition: color 0.2s ease;
+        }
+
+        .form-group:focus-within .form-label {
+            color: #1B4F72;
+        }
+
+        /* Input fields styling */
+        .hms-input,
+        .hms-select,
+        select.form-control,
+        input.form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.95rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 14px !important;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            color: #1a2a3a;
+        }
+
+        .hms-input:hover,
+        .hms-select:hover,
+        select.form-control:hover,
+        input.form-control:hover {
+            border-color: #b8c5d0;
+        }
+
+        .hms-input:focus,
+        .hms-select:focus,
+        select.form-control:focus,
+        input.form-control:focus {
+            outline: none;
+            border-color: #1B4F72;
+            box-shadow: 0 0 0 4px rgba(27, 79, 114, 0.1);
+        }
+
+        /* Readonly fields */
+        .hms-input[readonly],
+        input.form-control[readonly] {
+            background: #f4f7fb !important;
+            border-color: #e2e8f0 !important;
+            color: #4a6276 !important;
+            cursor: default;
+        }
+
+        /* Select2 customization */
+        .select2-container--default .select2-selection--single {
+            height: auto !important;
+            padding: 0.5rem 1rem;
+            border: 1.5px solid #e2e8f0 !important;
+            border-radius: 14px !important;
+            background: #ffffff !important;
+            transition: all 0.2s ease;
+        }
+
+        .select2-container--default .select2-selection--single:hover {
+            border-color: #b8c5d0 !important;
+        }
+
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #1B4F72 !important;
+            box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.1);
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 1.4 !important;
+            padding: 0 !important;
+            color: #1a2a3a !important;
+            font-size: 0.95rem;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 100% !important;
+            right: 12px !important;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 12px !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            background: #ffffff !important;
+        }
+
+        .select2-search--dropdown .select2-search__field {
+            background: #ffffff !important;
+            color: #1a2a3a !important;
+            border: 1px solid #d1d9e0 !important;
+            border-radius: 8px !important;
+            padding: 6px 10px !important;
+        }
+
+        .select2-results__options {
+            background: #ffffff !important;
+        }
+
+        .select2-results__option {
+            padding: 0.65rem 1rem !important;
+            color: #1a2a3a !important;
+            background: #ffffff !important;
+        }
+
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background: #eef4fb !important;
+            color: #1B4F72 !important;
+        }
+
+        .select2-container--default .select2-results__option[aria-selected=true] {
+            background: #dbeafe !important;
+            color: #1B4F72 !important;
+        }
+
+        /* Button group styling */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #eef2f6;
+        }
+
+        /* Primary button */
+        .hms-btn.hms-btn-primary,
+        .hms-card button[type="submit"] {
+            background: linear-gradient(135deg, #1B4F72 0%, #2471A3 100%) !important;
+            border: none !important;
+            padding: 0.875rem 2rem !important;
+            font-weight: 700 !important;
+            font-size: 0.9rem !important;
+            letter-spacing: 0.03em;
+            border-radius: 40px !important;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(27, 79, 114, 0.2);
+        }
+
+        .hms-btn.hms-btn-primary:hover,
+        .hms-card button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(27, 79, 114, 0.25);
+            background: linear-gradient(135deg, #15455e 0%, #1e6a9c 100%) !important;
+        }
+
+        .hms-btn.hms-btn-primary:active,
+        .hms-card button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* Outline button */
+        .hms-btn.hms-btn-outline,
+        a.hms-btn-outline {
+            background: transparent !important;
+            border: 1.5px solid #cbd5e1 !important;
+            color: #4a6276 !important;
+            padding: 0.875rem 1.75rem !important;
+            font-weight: 600 !important;
+            border-radius: 40px !important;
+            transition: all 0.2s ease;
+        }
+
+        .hms-btn.hms-btn-outline:hover,
+        a.hms-btn-outline:hover {
+            border-color: #1B4F72 !important;
+            color: #1B4F72 !important;
+            background: rgba(27, 79, 114, 0.04) !important;
+            transform: translateY(-1px);
+        }
+
+        /* Add location button */
+        #btnAddLocation {
+            width: 20px !important;
+            height: 35px !important;
+            border-radius: 12px !important;
+            background: #f0f4f9 !important;
+            border: 1.5px solid #e2e8f0 !important;
+            color: #1B4F72 !important;
+            font-size: 1.2rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #btnAddLocation:hover {
+            background: #1B4F72 !important;
+            color: white !important;
+            border-color: #1B4F72 !important;
+            transform: scale(1.02);
+        }
+
+        /* Patient suggestions dropdown */
+        #patientSuggestions {
+            border-radius: 16px !important;
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.15) !important;
+            overflow: hidden;
+            z-index: 1060 !important;
+        }
+
+        .patient-suggestion-card {
+            padding: 0.875rem 1.125rem !important;
+            border-bottom: 1px solid #eef2f6 !important;
+            transition: all 0.15s ease;
+        }
+
+        .patient-suggestion-card:hover {
+            background: #f8fafc !important;
+            padding-left: 1.375rem !important;
+        }
+
+        .patient-suggestion-card .fw-bold {
+            color: #1B4F72 !important;
+            font-weight: 700 !important;
+        }
+
+        /* Toast notification */
+        #contactToast {
+            border-radius: 60px !important;
+            font-weight: 500;
+            backdrop-filter: blur(8px);
+            background: #1B4F72 !important;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Modal styling */
+        .modal-content {
+            border-radius: 24px !important;
+            border: none !important;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #1B4F72 0%, #2471A3 100%);
+            color: white;
+            border-bottom: none;
+            padding: 1.25rem 1.5rem;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+            opacity: 0.8;
+        }
+
+        .modal-header .modal-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #eef2f6;
+            padding: 1rem 1.5rem;
+        }
+
+        .modal-footer .btn-primary {
+            background: linear-gradient(135deg, #1B4F72 0%, #2471A3 100%);
+            border: none;
+            border-radius: 40px;
+            padding: 0.5rem 1.5rem;
+        }
+
+        .modal-footer .btn-secondary {
+            background: #f1f5f9;
+            border: none;
+            color: #475569;
+            border-radius: 40px;
+            padding: 0.5rem 1.5rem;
+        }
+
+        /* MRD Number special styling */
+        input[value*="MRD"] {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        /* Fieldset grouping visual */
+        .form-group:has(input[required]) .form-label::after,
+        .form-group:has(select[required]) .form-label::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+
+        /* Optional fields subtle styling */
+        .form-group:has(input:not([required])) .form-label {
+            opacity: 0.7;
+        }
+
+        /* Flatpickr customization */
+        .flatpickr-calendar {
+            border-radius: 20px !important;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.2) !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+
+        .flatpickr-day.selected {
+            background: #1B4F72 !important;
+            border-color: #1B4F72 !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .hms-card-body {
+                padding: 1.25rem !important;
+            }
+
+            .form-actions {
+                flex-direction: column-reverse;
+                gap: 0.75rem;
+            }
+
+            .form-actions button,
+            .form-actions a {
+                text-align: center;
+                justify-content: center;
+            }
+
+            .hms-btn.hms-btn-primary,
+            button[type="submit"],
+            .hms-btn.hms-btn-outline {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        /* Loading state for buttons */
+        .hms-card button[type="submit"]:disabled {
+            opacity: 0.7;
+            transform: none !important;
+            cursor: not-allowed;
+        }
+
+        /* Smooth scrolling for the page */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Additional hover effects for better UX */
+        select.form-control option {
+            padding: 10px;
+        }
+
+        /* Focus visible outline for accessibility */
+        *:focus-visible {
+            outline: 2px solid #1B4F72;
+            outline-offset: 2px;
         }
     </style>
 @endpush

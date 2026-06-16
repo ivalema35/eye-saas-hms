@@ -10,6 +10,7 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\Referrer;
+use App\Models\Platform\HospitalShareRequest;
 use App\Services\Hospital\PatientService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -76,22 +77,68 @@ class PatientController extends Controller
             return response()->json(['found' => false]);
         }
 
-        $patients = Patient::where('contact_no', $contact)
+        // ── 1. Local search (existing logic, untouched) ───────────────────────
+        $localPatients = Patient::where('contact_no', $contact)
+            ->latest()
+            ->get()
+            ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
+
+        if ($localPatients->isNotEmpty()) {
+            return response()->json([
+                'found' => true,
+                'patients' => $localPatients->values()->map(fn ($p) => [
+                    'type'        => 'local',
+                    'first_name'  => $p->first_name,
+                    'middle_name' => $p->middle_name,
+                    'last_name'   => $p->last_name,
+                    'age'         => $p->age,
+                    'gender'      => $p->gender,
+                    'whatsapp_no' => $p->whatsapp_no,
+                    'occupation'  => $p->occupation,
+                    'location_id' => $p->location_id,
+                ])->toArray(),
+            ]);
+        }
+
+        // ── 2. Shared History search (only when no local match) ───────────────
+        $currentTenant = app('tenant');
+
+        $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
+            $q->where('from_tenant_id', $currentTenant->id)
+                ->orWhere('to_tenant_id', $currentTenant->id);
+        })
+            ->where('status', 'accepted')
+            ->get()
+            ->map(fn ($r) => $r->from_tenant_id === $currentTenant->id
+                ? $r->to_tenant_id
+                : $r->from_tenant_id)
+            ->toArray();
+
+        if (empty($partnerTenantIds)) {
+            return response()->json(['found' => false]);
+        }
+
+        $sharedPatients = Patient::withoutTenantScope()
+            ->with('tenant:id,name')
+            ->whereIn('tenant_id', $partnerTenantIds)
+            ->where('contact_no', $contact)
             ->latest()
             ->get()
             ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
 
         return response()->json([
-            'found' => $patients->isNotEmpty(),
-            'patients' => $patients->values()->map(fn ($patient) => [
-                'first_name' => $patient->first_name,
-                'middle_name' => $patient->middle_name,
-                'last_name' => $patient->last_name,
-                'age' => $patient->age,
-                'gender' => $patient->gender,
-                'whatsapp_no' => $patient->whatsapp_no,
-                'occupation' => $patient->occupation,
-                'location_id' => $patient->location_id,
+            'found'    => $sharedPatients->isNotEmpty(),
+            'patients' => $sharedPatients->values()->map(fn ($p) => [
+                'type'          => 'shared',
+                'hospital_name' => $p->tenant?->name ?? 'Partner Hospital',
+                'first_name'    => $p->first_name,
+                'middle_name'   => $p->middle_name,
+                'last_name'     => $p->last_name,
+                'age'           => $p->age,
+                'gender'        => $p->gender,
+                'whatsapp_no'   => $p->whatsapp_no,
+                'occupation'    => $p->occupation,
+                'location_id'   => null, // location IDs are tenant-specific; don't cross-fill
             ])->toArray(),
         ]);
     }
@@ -118,10 +165,11 @@ class PatientController extends Controller
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots   = $this->loadPatientSlots($tenantId);
-        $nextMrd = $this->patientService->peekNextMrd($tenantId);
+        $slots              = $this->loadPatientSlots($tenantId);
+        $nextMrd            = $this->patientService->peekNextMrd($tenantId);
+        $currentHospitalName = app('tenant')->name;
 
-        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers', 'nextMrd'));
+        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers', 'nextMrd', 'currentHospitalName'));
     }
 
     public function store(PatientStoreRequest $request): RedirectResponse

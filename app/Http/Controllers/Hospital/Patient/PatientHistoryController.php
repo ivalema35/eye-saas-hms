@@ -53,8 +53,12 @@ class PatientHistoryController extends Controller
         }
 
         if ($patient) {
+            // Collect all patient IDs with the same contact number (same physical patient,
+            // possibly registered multiple times) so their full history is shown together.
+            $patientIds = Patient::where('contact_no', $patient->contact_no)->pluck('id');
+
             $primaryExams = PrimaryExamination::with('doctor')
-                ->where('patient_id', $patient->id)
+                ->whereIn('patient_id', $patientIds)
                 ->get()
                 ->map(function (PrimaryExamination $exam): PrimaryExamination {
                     $exam->type = 'Primary Exam';
@@ -65,7 +69,7 @@ class PatientHistoryController extends Controller
                 });
 
             $secondaryExams = SecondaryExamination::with('doctor')
-                ->where('patient_id', $patient->id)
+                ->whereIn('patient_id', $patientIds)
                 ->get()
                 ->map(function (SecondaryExamination $exam): SecondaryExamination {
                     $exam->type = 'Secondary Exam';

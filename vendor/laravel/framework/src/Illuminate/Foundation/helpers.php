@@ -44,7 +44,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 use function Illuminate\Support\enum_value;
 
-if (! function_exists('abort')) {
+if (!function_exists('abort')) {
     /**
      * Throw an HttpException with the given data.
      *
@@ -68,7 +68,7 @@ if (! function_exists('abort')) {
     }
 }
 
-if (! function_exists('abort_if')) {
+if (!function_exists('abort_if')) {
     /**
      * Throw an HttpException with the given data if the given condition is true.
      *
@@ -87,7 +87,7 @@ if (! function_exists('abort_if')) {
     }
 }
 
-if (! function_exists('abort_unless')) {
+if (!function_exists('abort_unless')) {
     /**
      * Throw an HttpException with the given data unless the given condition is true.
      *
@@ -100,13 +100,13 @@ if (! function_exists('abort_unless')) {
      */
     function abort_unless($boolean, $code, $message = '', array $headers = []): void
     {
-        if (! $boolean) {
+        if (!$boolean) {
             abort($code, $message, $headers);
         }
     }
 }
 
-if (! function_exists('action')) {
+if (!function_exists('action')) {
     /**
      * Generate the URL to a controller action.
      *
@@ -120,7 +120,7 @@ if (! function_exists('action')) {
     }
 }
 
-if (! function_exists('app')) {
+if (!function_exists('app')) {
     /**
      * Get the available container instance.
      *
@@ -139,7 +139,7 @@ if (! function_exists('app')) {
     }
 }
 
-if (! function_exists('app_path')) {
+if (!function_exists('app_path')) {
     /**
      * Get the path to the application folder.
      *
@@ -151,7 +151,7 @@ if (! function_exists('app_path')) {
     }
 }
 
-if (! function_exists('asset')) {
+if (!function_exists('asset')) {
     /**
      * Generate an asset path for the application.
      *
@@ -164,7 +164,7 @@ if (! function_exists('asset')) {
     }
 }
 
-if (! function_exists('auth')) {
+if (!function_exists('auth')) {
     /**
      * Get the available auth instance.
      *
@@ -181,7 +181,7 @@ if (! function_exists('auth')) {
     }
 }
 
-if (! function_exists('back')) {
+if (!function_exists('back')) {
     /**
      * Create a new redirect response to the previous location.
      *
@@ -195,7 +195,7 @@ if (! function_exists('back')) {
     }
 }
 
-if (! function_exists('base_path')) {
+if (!function_exists('base_path')) {
     /**
      * Get the path to the base of the install.
      *
@@ -207,7 +207,7 @@ if (! function_exists('base_path')) {
     }
 }
 
-if (! function_exists('bcrypt')) {
+if (!function_exists('bcrypt')) {
     /**
      * Hash the given value against the bcrypt algorithm.
      *
@@ -220,7 +220,7 @@ if (! function_exists('bcrypt')) {
     }
 }
 
-if (! function_exists('broadcast')) {
+if (!function_exists('broadcast')) {
     /**
      * Begin broadcasting an event.
      *
@@ -232,7 +232,7 @@ if (! function_exists('broadcast')) {
     }
 }
 
-if (! function_exists('broadcast_if')) {
+if (!function_exists('broadcast_if')) {
     /**
      * Begin broadcasting an event if the given condition is true.
      *
@@ -249,7 +249,7 @@ if (! function_exists('broadcast_if')) {
     }
 }
 
-if (! function_exists('broadcast_unless')) {
+if (!function_exists('broadcast_unless')) {
     /**
      * Begin broadcasting an event unless the given condition is true.
      *
@@ -258,7 +258,7 @@ if (! function_exists('broadcast_unless')) {
      */
     function broadcast_unless($boolean, $event = null): PendingBroadcast
     {
-        if (! $boolean) {
+        if (!$boolean) {
             return app(BroadcastFactory::class)->event(value($event));
         } else {
             return new FakePendingBroadcast;
@@ -266,7 +266,7 @@ if (! function_exists('broadcast_unless')) {
     }
 }
 
-if (! function_exists('cache')) {
+if (!function_exists('cache')) {
     /**
      * Get / set the specified cache value.
      *
@@ -288,7 +288,7 @@ if (! function_exists('cache')) {
             return app('cache')->get($key, $default);
         }
 
-        if (! is_array($key)) {
+        if (!is_array($key)) {
             throw new InvalidArgumentException(
                 'When setting a value in the cache, you must pass an array of key / value pairs.'
             );
@@ -298,7 +298,7 @@ if (! function_exists('cache')) {
     }
 }
 
-if (! function_exists('config')) {
+if (!function_exists('config')) {
     /**
      * Get / set the specified configuration value.
      *
@@ -322,7 +322,7 @@ if (! function_exists('config')) {
     }
 }
 
-if (! function_exists('config_path')) {
+if (!function_exists('config_path')) {
     /**
      * Get the configuration path.
      *
@@ -334,7 +334,7 @@ if (! function_exists('config_path')) {
     }
 }
 
-if (! function_exists('context')) {
+if (!function_exists('context')) {
     /**
      * Get / set the specified context value.
      *
@@ -354,7 +354,7 @@ if (! function_exists('context')) {
     }
 }
 
-if (! function_exists('cookie')) {
+if (!function_exists('cookie')) {
     /**
      * Create a new cookie instance.
      *
@@ -381,17 +381,17 @@ if (! function_exists('cookie')) {
     }
 }
 
-if (! function_exists('csrf_field')) {
+if (!function_exists('csrf_field')) {
     /**
      * Generate a CSRF token form field.
      */
     function csrf_field(): HtmlString
     {
-        return new HtmlString('<input type="hidden" name="_token" value="'.csrf_token().'" autocomplete="off">');
+        return new HtmlString('<input type="hidden" name="_token" value="' . csrf_token() . '" autocomplete="off">');
     }
 }
 
-if (! function_exists('csrf_token')) {
+if (!function_exists('csrf_token')) {
     /**
      * Get the CSRF token value.
      *
@@ -409,7 +409,7 @@ if (! function_exists('csrf_token')) {
     }
 }
 
-if (! function_exists('database_path')) {
+if (!function_exists('database_path')) {
     /**
      * Get the database path.
      *
@@ -421,7 +421,7 @@ if (! function_exists('database_path')) {
     }
 }
 
-if (! function_exists('decrypt')) {
+if (!function_exists('decrypt')) {
     /**
      * Decrypt the given value.
      *
@@ -435,7 +435,7 @@ if (! function_exists('decrypt')) {
     }
 }
 
-if (! function_exists('defer')) {
+if (!function_exists('defer')) {
     /**
      * Defer execution of the given callback.
      *
@@ -447,7 +447,7 @@ if (! function_exists('defer')) {
     }
 }
 
-if (! function_exists('dispatch')) {
+if (!function_exists('dispatch')) {
     /**
      * Dispatch a job to its appropriate handler.
      *
@@ -462,7 +462,7 @@ if (! function_exists('dispatch')) {
     }
 }
 
-if (! function_exists('dispatch_sync')) {
+if (!function_exists('dispatch_sync')) {
     /**
      * Dispatch a command to its appropriate handler in the current process.
      *
@@ -478,7 +478,7 @@ if (! function_exists('dispatch_sync')) {
     }
 }
 
-if (! function_exists('encrypt')) {
+if (!function_exists('encrypt')) {
     /**
      * Encrypt the given value.
      *
@@ -491,7 +491,7 @@ if (! function_exists('encrypt')) {
     }
 }
 
-if (! function_exists('event')) {
+if (!function_exists('event')) {
     /**
      * Dispatch an event and call the listeners.
      *
@@ -506,7 +506,7 @@ if (! function_exists('event')) {
     }
 }
 
-if (! function_exists('fake') && class_exists(\Faker\Factory::class)) {
+if (!function_exists('fake') && class_exists(\Faker\Factory::class)) {
     /**
      * Get a faker instance.
      *
@@ -520,17 +520,17 @@ if (! function_exists('fake') && class_exists(\Faker\Factory::class)) {
 
         $locale ??= 'en_US';
 
-        $abstract = \Faker\Generator::class.':'.$locale;
+        $abstract = \Faker\Generator::class . ':' . $locale;
 
-        if (! app()->bound($abstract)) {
-            app()->singleton($abstract, fn () => \Faker\Factory::create($locale));
+        if (!app()->bound($abstract)) {
+            app()->singleton($abstract, fn() => \Faker\Factory::create($locale));
         }
 
         return app()->make($abstract);
     }
 }
 
-if (! function_exists('info')) {
+if (!function_exists('info')) {
     /**
      * Write some information to the log.
      *
@@ -543,7 +543,7 @@ if (! function_exists('info')) {
     }
 }
 
-if (! function_exists('lang_path')) {
+if (!function_exists('lang_path')) {
     /**
      * Get the path to the language folder.
      *
@@ -555,7 +555,7 @@ if (! function_exists('lang_path')) {
     }
 }
 
-if (! function_exists('logger')) {
+if (!function_exists('logger')) {
     /**
      * Log a debug message to the logs.
      *
@@ -572,7 +572,7 @@ if (! function_exists('logger')) {
     }
 }
 
-if (! function_exists('logs')) {
+if (!function_exists('logs')) {
     /**
      * Get a log driver instance.
      *
@@ -585,7 +585,7 @@ if (! function_exists('logs')) {
     }
 }
 
-if (! function_exists('method_field')) {
+if (!function_exists('method_field')) {
     /**
      * Generate a form field to spoof the HTTP verb used by forms.
      *
@@ -593,11 +593,11 @@ if (! function_exists('method_field')) {
      */
     function method_field($method): HtmlString
     {
-        return new HtmlString('<input type="hidden" name="_method" value="'.$method.'">');
+        return new HtmlString('<input type="hidden" name="_method" value="' . $method . '">');
     }
 }
 
-if (! function_exists('mix')) {
+if (!function_exists('mix')) {
     /**
      * Get the path to a versioned Mix file.
      *
@@ -612,7 +612,7 @@ if (! function_exists('mix')) {
     }
 }
 
-if (! function_exists('now')) {
+if (!function_exists('now')) {
     /**
      * Create a new Carbon instance for the current time.
      *
@@ -624,7 +624,7 @@ if (! function_exists('now')) {
     }
 }
 
-if (! function_exists('old')) {
+if (!function_exists('old')) {
     /**
      * Retrieve an old input item.
      *
@@ -638,7 +638,7 @@ if (! function_exists('old')) {
     }
 }
 
-if (! function_exists('policy')) {
+if (!function_exists('policy')) {
     /**
      * Get a policy instance for a given class.
      *
@@ -653,7 +653,7 @@ if (! function_exists('policy')) {
     }
 }
 
-if (! function_exists('precognitive')) {
+if (!function_exists('precognitive')) {
     /**
      * Handle a Precognition controller hook.
      *
@@ -682,7 +682,7 @@ if (! function_exists('precognitive')) {
     }
 }
 
-if (! function_exists('public_path')) {
+if (!function_exists('public_path')) {
     /**
      * Get the path to the public folder.
      *
@@ -694,7 +694,7 @@ if (! function_exists('public_path')) {
     }
 }
 
-if (! function_exists('redirect')) {
+if (!function_exists('redirect')) {
     /**
      * Get an instance of the redirector.
      *
@@ -714,7 +714,7 @@ if (! function_exists('redirect')) {
     }
 }
 
-if (! function_exists('report')) {
+if (!function_exists('report')) {
     /**
      * Report an exception.
      *
@@ -730,7 +730,7 @@ if (! function_exists('report')) {
     }
 }
 
-if (! function_exists('report_if')) {
+if (!function_exists('report_if')) {
     /**
      * Report an exception if the given condition is true.
      *
@@ -745,7 +745,7 @@ if (! function_exists('report_if')) {
     }
 }
 
-if (! function_exists('report_unless')) {
+if (!function_exists('report_unless')) {
     /**
      * Report an exception unless the given condition is true.
      *
@@ -754,13 +754,13 @@ if (! function_exists('report_unless')) {
      */
     function report_unless($boolean, $exception): void
     {
-        if (! $boolean) {
+        if (!$boolean) {
             report($exception);
         }
     }
 }
 
-if (! function_exists('request')) {
+if (!function_exists('request')) {
     /**
      * Get an instance of the current request or an input item from the request.
      *
@@ -784,7 +784,7 @@ if (! function_exists('request')) {
     }
 }
 
-if (! function_exists('rescue')) {
+if (!function_exists('rescue')) {
     /**
      * Catch a potential exception and return a default value.
      *
@@ -810,7 +810,7 @@ if (! function_exists('rescue')) {
     }
 }
 
-if (! function_exists('resolve')) {
+if (!function_exists('resolve')) {
     /**
      * Resolve a service from the container.
      *
@@ -825,7 +825,7 @@ if (! function_exists('resolve')) {
     }
 }
 
-if (! function_exists('resource_path')) {
+if (!function_exists('resource_path')) {
     /**
      * Get the path to the resources folder.
      *
@@ -837,7 +837,7 @@ if (! function_exists('resource_path')) {
     }
 }
 
-if (! function_exists('response')) {
+if (!function_exists('response')) {
     /**
      * Return a new response from the application.
      *
@@ -857,7 +857,7 @@ if (! function_exists('response')) {
     }
 }
 
-if (! function_exists('route')) {
+if (!function_exists('route')) {
     /**
      * Generate the URL to a named route.
      *
@@ -871,7 +871,7 @@ if (! function_exists('route')) {
     }
 }
 
-if (! function_exists('secure_asset')) {
+if (!function_exists('secure_asset')) {
     /**
      * Generate an asset path for the application.
      *
@@ -883,7 +883,7 @@ if (! function_exists('secure_asset')) {
     }
 }
 
-if (! function_exists('secure_url')) {
+if (!function_exists('secure_url')) {
     /**
      * Generate a HTTPS url for the application.
      *
@@ -897,7 +897,7 @@ if (! function_exists('secure_url')) {
     }
 }
 
-if (! function_exists('session')) {
+if (!function_exists('session')) {
     /**
      * Get / set the specified session value.
      *
@@ -921,7 +921,7 @@ if (! function_exists('session')) {
     }
 }
 
-if (! function_exists('storage_path')) {
+if (!function_exists('storage_path')) {
     /**
      * Get the path to the storage folder.
      *
@@ -933,7 +933,7 @@ if (! function_exists('storage_path')) {
     }
 }
 
-if (! function_exists('to_action')) {
+if (!function_exists('to_action')) {
     /**
      * Create a new redirect response to a controller action.
      *
@@ -949,7 +949,7 @@ if (! function_exists('to_action')) {
     }
 }
 
-if (! function_exists('to_route')) {
+if (!function_exists('to_route')) {
     /**
      * Create a new redirect response to a named route.
      *
@@ -965,7 +965,7 @@ if (! function_exists('to_route')) {
     }
 }
 
-if (! function_exists('today')) {
+if (!function_exists('today')) {
     /**
      * Create a new Carbon instance for the current date.
      *
@@ -978,7 +978,7 @@ if (! function_exists('today')) {
     }
 }
 
-if (! function_exists('trans')) {
+if (!function_exists('trans')) {
     /**
      * Translate the given message.
      *
@@ -997,7 +997,7 @@ if (! function_exists('trans')) {
     }
 }
 
-if (! function_exists('trans_choice')) {
+if (!function_exists('trans_choice')) {
     /**
      * Translates the given message based on a count.
      *
@@ -1011,7 +1011,7 @@ if (! function_exists('trans_choice')) {
     }
 }
 
-if (! function_exists('__')) {
+if (!function_exists('__')) {
     /**
      * Translate the given message.
      *
@@ -1029,7 +1029,7 @@ if (! function_exists('__')) {
     }
 }
 
-if (! function_exists('uri')) {
+if (!function_exists('uri')) {
     /**
      * Generate a URI for the application.
      */
@@ -1043,7 +1043,7 @@ if (! function_exists('uri')) {
     }
 }
 
-if (! function_exists('url')) {
+if (!function_exists('url')) {
     /**
      * Generate a URL for the application.
      *
@@ -1062,7 +1062,7 @@ if (! function_exists('url')) {
     }
 }
 
-if (! function_exists('validator')) {
+if (!function_exists('validator')) {
     /**
      * Create a new Validator instance.
      *
@@ -1080,7 +1080,7 @@ if (! function_exists('validator')) {
     }
 }
 
-if (! function_exists('view')) {
+if (!function_exists('view')) {
     /**
      * Get the evaluated view contents for the given view.
      *

@@ -661,16 +661,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                        <i class="bi bi-list-task"></i> Basic Master
-                                    </a>
-                                    <ul class="dropdown-menu">
-                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                    </ul>
-                                </div> -->
+                                                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                        <i class="bi bi-list-task"></i> Basic Master
+                                                                    </a>
+                                                                    <ul class="dropdown-menu">
+                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                    </ul>
+                                                                </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">

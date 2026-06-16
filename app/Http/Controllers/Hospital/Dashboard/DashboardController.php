@@ -14,6 +14,7 @@ use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
@@ -560,7 +561,7 @@ class DashboardController extends Controller
 
         $tenantIds = array_merge([$currentTenant->id], $partnerTenantIds);
 
-        $historyPatients = Patient::withoutTenantScope()
+        $allHistoryPatients = Patient::withoutTenantScope()
             ->with(['caseType', 'doctor', 'tenant:id,name'])
             ->whereIn('tenant_id', $tenantIds)
             ->where(function ($query) {
@@ -585,8 +586,20 @@ class DashboardController extends Controller
                 $q->whereDate('appointment_date', $date);
             })
             ->latest('appointment_date')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
+
+        // Same contact_no = same patient; keep only the latest appointment per contact
+        $deduped = $allHistoryPatients->unique('contact_no')->values();
+
+        $perPage  = 20;
+        $page     = max(1, (int) request('page', 1));
+        $historyPatients = new LengthAwarePaginator(
+            $deduped->slice(($page - 1) * $perPage, $perPage)->values(),
+            $deduped->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
 
         $hospName     = request('hosp_name');
         $hospCity     = request('hosp_city');

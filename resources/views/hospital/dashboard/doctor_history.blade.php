@@ -251,8 +251,7 @@
                                 <th>Hospital</th>
                                 <th>Doctor Name</th>
                                 <th>Date</th>
-                                <th>Primary Time</th>
-                                <th>Secondary Time</th>
+                                <th>Contact</th>
                                 <th>Age</th>
                                 <th>Action</th>
                             </tr>
@@ -278,25 +277,16 @@
                                     </td>
                                     <td class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</td>
                                     <td>{{ \Carbon\Carbon::parse($patient->appointment_date)->format('d M, Y') }}</td>
-                                    <td>
-                                        @if($patient->primary_done_at)
-                                            <span class="badge-time">{{ \Carbon\Carbon::parse($patient->primary_done_at)->format('h:i A') }}</span>
-                                        @else <span class="text-muted">-</span> @endif
-                                    </td>
-                                    <td>
-                                        @if($patient->secondary_done_at)
-                                            <span class="badge-time">{{ \Carbon\Carbon::parse($patient->secondary_done_at)->format('h:i A') }}</span>
-                                        @else <span class="text-muted">-</span> @endif
-                                    </td>
+                                    <td>{{ $patient->contact_no ?? '-' }}</td>
                                     <td>{{ $patient->age ?? '-' }}</td>
                                     <td>
                                         @if($patient->tenant_id === $currentTenant->id)
-                                            <a href="{{ url($slug . '/patient-history') }}?search={{ $patient->patient_code }}"
+                                            <a href="{{ url($slug . '/patient-history') }}?search={{ $patient->contact_no }}"
                                                 class="btn btn-sm btn-view-history" title="View Details" target="_blank">
                                                 <i class="bi bi-eye-fill"></i> View
                                             </a>
                                         @else
-                                            <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?search={{ $patient->patient_code }}"
+                                            <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?search={{ $patient->contact_no }}"
                                                 class="btn btn-sm fw-bold" target="_blank"
                                                 style="background:#0d9488;color:#fff;border-radius:8px;padding:5px 12px;">
                                                 <i class="bi bi-eye-fill"></i> View
@@ -306,7 +296,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="py-5 text-muted">No history found.</td>
+                                    <td colspan="9" class="py-5 text-muted">No history found.</td>
                                 </tr>
                             @endforelse
                         </tbody>
