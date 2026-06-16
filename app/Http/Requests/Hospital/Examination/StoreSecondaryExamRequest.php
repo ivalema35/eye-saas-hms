@@ -45,7 +45,7 @@ class StoreSecondaryExamRequest extends FormRequest
             'exam_data.followup_date' => ['nullable', 'date'],
             'exam_data.followup_duration' => ['nullable', 'string', 'max:50'],
             'exam_data.special_advice' => ['nullable', 'string', 'max:500'],
-            'advice' => ['nullable', 'string', 'max:2000'],
+            'exam_data.advice' => ['nullable', 'string', 'max:2000'],
             'medicines' => ['nullable', 'array'],
             'medicines.*.medicine_id' => ['nullable', 'integer', 'exists:medicines,id'],
             'medicines.*.name' => ['nullable', 'string', 'max:255'],

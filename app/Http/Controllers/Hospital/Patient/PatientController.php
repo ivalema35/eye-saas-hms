@@ -41,7 +41,7 @@ class PatientController extends Controller
         $role = $user?->role?->slug;
         $today = now()->toDateString();
 
-        $query = Patient::with(['doctor', 'reception', 'primaryExamination', 'secondaryExamination']);
+        $query = Patient::with(['doctor:id,name', 'reception:id,name', 'primaryExamination', 'secondaryExamination', 'location:id,city,district,state', 'caseType:id,case_type', 'referrer:id,name']);
 
         // Doctors see only their assigned patients
         if ($role === 'doctor') {
@@ -77,30 +77,25 @@ class PatientController extends Controller
             return response()->json(['found' => false]);
         }
 
-        // ── 1. Local search (existing logic, untouched) ───────────────────────
+        // ── 1. Local search ───────────────────────────────────────────────────
         $localPatients = Patient::where('contact_no', $contact)
             ->latest()
             ->get()
             ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
 
-        if ($localPatients->isNotEmpty()) {
-            return response()->json([
-                'found' => true,
-                'patients' => $localPatients->values()->map(fn ($p) => [
-                    'type'        => 'local',
-                    'first_name'  => $p->first_name,
-                    'middle_name' => $p->middle_name,
-                    'last_name'   => $p->last_name,
-                    'age'         => $p->age,
-                    'gender'      => $p->gender,
-                    'whatsapp_no' => $p->whatsapp_no,
-                    'occupation'  => $p->occupation,
-                    'location_id' => $p->location_id,
-                ])->toArray(),
-            ]);
-        }
+        $localMapped = $localPatients->values()->map(fn ($p) => [
+            'type'        => 'local',
+            'first_name'  => $p->first_name,
+            'middle_name' => $p->middle_name,
+            'last_name'   => $p->last_name,
+            'age'         => $p->age,
+            'gender'      => $p->gender,
+            'whatsapp_no' => $p->whatsapp_no,
+            'occupation'  => $p->occupation,
+            'location_id' => $p->location_id,
+        ]);
 
-        // ── 2. Shared History search (only when no local match) ───────────────
+        // ── 2. Partner hospital search (always run, not just on no local match) ─
         $currentTenant = app('tenant');
 
         $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
@@ -114,21 +109,17 @@ class PatientController extends Controller
                 : $r->from_tenant_id)
             ->toArray();
 
-        if (empty($partnerTenantIds)) {
-            return response()->json(['found' => false]);
-        }
+        $sharedMapped = collect();
+        if (!empty($partnerTenantIds)) {
+            $sharedPatients = Patient::withoutTenantScope()
+                ->with('tenant:id,name')
+                ->whereIn('tenant_id', $partnerTenantIds)
+                ->where('contact_no', $contact)
+                ->latest()
+                ->get()
+                ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
 
-        $sharedPatients = Patient::withoutTenantScope()
-            ->with('tenant:id,name')
-            ->whereIn('tenant_id', $partnerTenantIds)
-            ->where('contact_no', $contact)
-            ->latest()
-            ->get()
-            ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
-
-        return response()->json([
-            'found'    => $sharedPatients->isNotEmpty(),
-            'patients' => $sharedPatients->values()->map(fn ($p) => [
+            $sharedMapped = $sharedPatients->values()->map(fn ($p) => [
                 'type'          => 'shared',
                 'hospital_name' => $p->tenant?->name ?? 'Partner Hospital',
                 'first_name'    => $p->first_name,
@@ -138,8 +129,15 @@ class PatientController extends Controller
                 'gender'        => $p->gender,
                 'whatsapp_no'   => $p->whatsapp_no,
                 'occupation'    => $p->occupation,
-                'location_id'   => null, // location IDs are tenant-specific; don't cross-fill
-            ])->toArray(),
+                'location_id'   => null,
+            ]);
+        }
+
+        $all = $localMapped->concat($sharedMapped)->values();
+
+        return response()->json([
+            'found'    => $all->isNotEmpty(),
+            'patients' => $all->toArray(),
         ]);
     }
 

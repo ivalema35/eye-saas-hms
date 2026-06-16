@@ -36,8 +36,8 @@
                 @csrf
 
                 {{-- MRD Number --}}
-                <div class="row">
-                    <div class="col-md-4">
+                <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
+                    <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
                         <div class="form-group">
                             <label class="form-label">MRD No.</label>
                             <input type="text" value="{{ $nextMrd }}" class="form-control hms-input" readonly
@@ -48,7 +48,6 @@
 
                 <div class="hms-card-body patient-create-card-body">
                     <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
-
 
                         {{-- 1. Appointment Date --}}
                         <div class="form-group">

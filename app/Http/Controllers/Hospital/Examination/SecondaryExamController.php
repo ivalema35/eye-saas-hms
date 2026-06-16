@@ -135,13 +135,14 @@ class SecondaryExamController extends Controller
             })
             ->all();
 
+        $examData = $data['exam_data'] ?? [];
         $this->examinationService->saveSecondaryExam(
             $patient,
             (int) $data['doctor_id'],
-            $data['exam_data'] ?? [],
+            $examData,
             $medicines,
             $tenant->id,
-            $data['advice'] ?? null
+            $examData['advice'] ?? null
         );
 
         $user = Auth::guard('hospital_user')->user();
