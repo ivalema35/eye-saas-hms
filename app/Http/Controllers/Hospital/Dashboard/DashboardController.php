@@ -76,6 +76,8 @@ class DashboardController extends Controller
         $doctorPrimaryDone = null;
         $doctorSecondaryDone = null;
         $secondaryQueue = null;
+        $primaryQueueCount = null;
+        $secondaryQueueCount = null;
 
         if ($this->perm->can('opd.exam.primary') || $this->perm->can('opd.exam.secondary') || $isDoctorUser) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
@@ -114,7 +116,7 @@ class DashboardController extends Controller
                 return $patient;
             };
 
-            $primaryQueueQuery = Patient::with(['doctor', 'caseType', 'primaryExamination'])
+            $primaryQueueQuery = Patient::with(['doctor', 'caseType', 'primaryExamination', 'location', 'reception', 'referrer'])
                 ->whereDate('appointment_date', $today);
 
             if ($selectedDoctorId) {
@@ -132,6 +134,23 @@ class DashboardController extends Controller
                 ->map($buildIndex)
                 ->take(20)
                 ->values();
+
+            // Queue counts for the admin dashboard card (all doctors, no take() limit)
+            $primaryQueueCountQuery = Patient::whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->where(fn($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'));
+            if ($selectedDoctorId) {
+                $primaryQueueCountQuery->where('doctor_id', $selectedDoctorId);
+            }
+            $primaryQueueCount = $primaryQueueCountQuery->count();
+
+            $secondaryQueueCountQuery = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')
+                ->whereNull('secondary_done_at');
+            if ($selectedDoctorId) {
+                $secondaryQueueCountQuery->where('doctor_id', $selectedDoctorId);
+            }
+            $secondaryQueueCount = $secondaryQueueCountQuery->count();
 
             // if ($isDoctorUser && $user) {
             //     $statsDoctorId = $viewingDoctor ? $viewingDoctor->id : $user->id;
@@ -489,6 +508,8 @@ class DashboardController extends Controller
             'todayPrimary',
             'todaySecondary',
             'primaryQueue',
+            'primaryQueueCount',
+            'secondaryQueueCount',
             'doctorName',
             'doctorAssignedPatients',
             'doctorPrimaryDone',
@@ -548,8 +569,9 @@ class DashboardController extends Controller
         $slug = request()->route('slug');
         $currentTenant = app('tenant');
         $patientName = request('patient_name');
-        $doctorName = request('doctor_name');
-        $date = request('date');
+        $doctorName  = request('doctor_name');
+        $contactNo   = request('contact_no');
+        $date        = request('date');
 
         // Get accepted partner tenant IDs
         $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
@@ -584,6 +606,7 @@ class DashboardController extends Controller
                     $q2->withoutGlobalScope('tenant')->where('name', 'like', "%{$doctorName}%");
                 });
             })
+            ->when($contactNo, fn($q) => $q->where('contact_no', 'like', "%{$contactNo}%"))
             ->when($date, function ($q) use ($date) {
                 $q->whereDate('appointment_date', $date);
             })
@@ -733,8 +756,9 @@ class DashboardController extends Controller
 
     public function sharedPatientHistory(Request $request, string $slug): View|\Illuminate\Http\RedirectResponse
     {
-        $currentTenant = app('tenant');
-        $search = $request->input('search');
+        $currentTenant   = app('tenant');
+        $search          = $request->input('search');
+        $selectedId      = (int) $request->input('patient_id');
 
         // Accepted partner tenant IDs
         $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
@@ -746,56 +770,104 @@ class DashboardController extends Controller
             ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
             ->toArray();
 
-        $patient = null;
-        $history = collect();
+        $patient    = null;
+        $history    = collect();
+        $nameGroups = collect();
 
-        if ($search && count($partnerTenantIds) > 0) {
-            $patient = Patient::withoutTenantScope()
-                ->with(['location', 'tenant:id,name'])
-                ->whereIn('tenant_id', $partnerTenantIds)
-                ->where(function ($q) use ($search) {
-                    $q->where('patient_code', $search)
-                        ->orWhere('contact_no', $search)
-                        ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
-                })
-                ->first();
+        if (count($partnerTenantIds) > 0) {
+            $rawIds     = $request->input('patient_ids', '');
+            $patientIds = array_values(array_filter(array_map('intval', explode(',', $rawIds))));
 
-            if ($patient) {
-                $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
-                    ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
-                    ->where('patient_id', $patient->id)
-                    ->get()
-                    ->map(function ($exam) {
-                        $exam->type = 'Primary Exam';
-                        $exam->color = 'primary';
-                        $exam->icon = 'bi-clipboard2-pulse';
-                        return $exam;
-                    });
+            if ($patientIds) {
+                // A name-group card was clicked — load combined history for all IDs
+                $patient = Patient::withoutTenantScope()
+                    ->with(['location', 'tenant:id,name'])
+                    ->find($patientIds[0]);
+                $history = $this->loadSharedExamHistoryForIds($patientIds);
+            } elseif ($selectedId) {
+                $patient = Patient::withoutTenantScope()
+                    ->with(['location', 'tenant:id,name'])
+                    ->whereIn('tenant_id', $partnerTenantIds)
+                    ->find($selectedId);
+                if ($patient) {
+                    $history = $this->loadSharedExamHistoryForIds([$patient->id]);
+                }
+            } elseif ($search) {
+                $candidates = Patient::withoutTenantScope()
+                    ->with(['location', 'tenant:id,name'])
+                    ->whereIn('tenant_id', $partnerTenantIds)
+                    ->where(function ($q) use ($search) {
+                        $q->where('patient_code', $search)
+                            ->orWhere('contact_no', $search)
+                            ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
+                    })
+                    ->get();
 
-                $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
-                    ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
-                    ->where('patient_id', $patient->id)
-                    ->get()
-                    ->map(function ($exam) {
-                        $exam->type = 'Secondary Exam';
-                        $exam->color = 'secondary';
-                        $exam->icon = 'bi-clipboard2-check';
-                        return $exam;
-                    });
+                if ($candidates->count() === 1) {
+                    $patient = $candidates->first();
+                    $history = $this->loadSharedExamHistoryForIds([$patient->id]);
+                } elseif ($candidates->count() > 1) {
+                    $groups = $candidates->groupBy(
+                        fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name))
+                    );
 
-                $history = $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
+                    if ($groups->count() === 1) {
+                        // All same name → auto-merge
+                        $patient = $candidates->sortByDesc('id')->first();
+                        $history = $this->loadSharedExamHistoryForIds($candidates->pluck('id')->all());
+                    } else {
+                        $nameGroups = $groups->map(fn($group) => (object)[
+                            'display_name' => trim($group->first()->first_name . ' ' . $group->first()->last_name),
+                            'patient_code' => $group->first()->patient_code,
+                            'age'          => $group->first()->age,
+                            'gender'       => $group->first()->gender,
+                            'patient_ids'  => $group->pluck('id')->implode(','),
+                            'count'        => $group->count(),
+                        ])->values();
+                    }
+                }
             }
         }
 
         // Use the patient's own tenant for diagnosis master so IDs resolve correctly
-        $masterTenantId = $patient?->tenant_id ?? $currentTenant->id;
+        $masterTenantId   = $patient?->tenant_id ?? $currentTenant->id;
         $diagnosisMasters = DB::table('tbl_master_diagnosis')
             ->where('tenant_id', $masterTenantId)
             ->orderBy('id')
             ->get(['id', DB::raw('value as diagnosis')]);
         $dosageMasters = Dosage::all(['id', 'dosage'])->keyBy('id');
+        $historyRoute  = route('hospital.shared.patient.history', ['slug' => $slug]);
 
-        return view('hospital.patient.history', compact('patient', 'history', 'search', 'slug', 'diagnosisMasters', 'dosageMasters'));
+        return view('hospital.patient.history',
+            compact('patient', 'history', 'search', 'slug', 'diagnosisMasters', 'dosageMasters', 'nameGroups', 'historyRoute')
+        );
+    }
+
+    private function loadSharedExamHistoryForIds(array $patientIds): \Illuminate\Support\Collection
+    {
+        $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
+            ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(function ($exam) {
+                $exam->type  = 'Primary Exam';
+                $exam->color = 'primary';
+                $exam->icon  = 'bi-clipboard2-pulse';
+                return $exam;
+            });
+
+        $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
+            ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(function ($exam) {
+                $exam->type  = 'Secondary Exam';
+                $exam->color = 'secondary';
+                $exam->icon  = 'bi-clipboard2-check';
+                return $exam;
+            });
+
+        return $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
     }
 
     public function partnerHistory(Request $request, string $slug, int $partnerTenantId): View|RedirectResponse
@@ -817,10 +889,11 @@ class DashboardController extends Controller
         $partnerTenant = Tenant::findOrFail($partnerTenantId);
 
         $patientName = $request->input('patient_name');
-        $doctorName = $request->input('doctor_name');
-        $date = $request->input('date');
+        $doctorName  = $request->input('doctor_name');
+        $contactNo   = $request->input('contact_no');
+        $date        = $request->input('date');
 
-        $partnerPatients = Patient::withoutTenantScope()
+        $allPatients = Patient::withoutTenantScope()
             ->with([
                 'doctor' => fn($q) => $q->withoutGlobalScope('tenant'),
                 'caseType' => fn($q) => $q->withoutGlobalScope('tenant'),
@@ -835,13 +908,33 @@ class DashboardController extends Controller
             }))
             ->when($doctorName, fn($q) => $q->whereHas(
                 'doctor',
-                fn($q2) =>
-                $q2->withoutGlobalScope('tenant')->where('name', 'like', "%{$doctorName}%")
+                fn($q2) => $q2->withoutGlobalScope('tenant')->where('name', 'like', "%{$doctorName}%")
             ))
+            ->when($contactNo, fn($q) => $q->where('contact_no', 'like', "%{$contactNo}%"))
             ->when($date, fn($q) => $q->whereDate('appointment_date', $date))
             ->latest('appointment_date')
-            ->paginate(20)
-            ->withQueryString();
+            ->get();
+
+        // Group by (name + contact_no) so the same person registered multiple times
+        // appears as a single row; all their patient_ids are stored for the View link.
+        $grouped = $allPatients
+            ->groupBy(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no)
+            ->map(function ($group) {
+                $rep = $group->sortByDesc('id')->first();
+                $rep->all_patient_ids = $group->pluck('id')->implode(',');
+                return $rep;
+            })
+            ->values();
+
+        $perPage = 20;
+        $page    = max(1, (int) $request->input('page', 1));
+        $partnerPatients = new LengthAwarePaginator(
+            $grouped->slice(($page - 1) * $perPage, $perPage)->values(),
+            $grouped->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return view('hospital.dashboard.partner_history', compact(
             'slug',
@@ -849,6 +942,7 @@ class DashboardController extends Controller
             'partnerPatients',
             'patientName',
             'doctorName',
+            'contactNo',
             'date'
         ));
     }

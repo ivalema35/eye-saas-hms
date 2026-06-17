@@ -168,9 +168,6 @@
                         <button type="submit" class="hms-btn hms-btn-primary">
                             <i class="bi bi-check-circle-fill"></i> Register Phone Appointment
                         </button>
-                        <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-                            <i class="bi bi-arrow-left"></i> Back
-                        </a>
                     </div>
                 </div>
             </form>

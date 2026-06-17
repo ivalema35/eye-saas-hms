@@ -563,7 +563,49 @@
         </div>
     </div>
 
-    @if($search && ! $patient)
+    {{-- Disambiguation: multiple distinct-name patients found for this search --}}
+    @if(isset($nameGroups) && $nameGroups->isNotEmpty())
+        <div class="alert history-alert border-0 shadow-sm mb-3">
+            <i class="bi bi-people-fill me-2"></i>
+            <strong>{{ $nameGroups->count() }} patients found</strong> for
+            "<strong>{{ $search }}</strong>". Please select the correct patient:
+        </div>
+        <div class="row g-3 mb-4">
+            @foreach($nameGroups as $group)
+            @php
+                $baseUrl = ($historyRoute ?? route('hospital.patients.history', ['slug' => $slug]));
+                $href    = $baseUrl . '?search=' . urlencode($search ?? '') . '&patient_ids=' . $group->patient_ids;
+            @endphp
+            <div class="col-12 col-md-6 col-lg-4">
+                <a href="{{ $href }}"
+                   class="card h-100 text-decoration-none history-search-card border-0 shadow-sm"
+                   style="border-radius:18px;">
+                    <div class="card-body p-3 d-flex align-items-center gap-3">
+                        <div class="history-heading-icon flex-shrink-0"
+                             style="width:44px;height:44px;border-radius:14px;font-size:1.1rem;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="flex-grow-1 overflow-hidden">
+                            <h6 class="fw-bold mb-1 text-truncate" style="color:var(--history-secondary);">
+                                {{ $group->display_name }}
+                            </h6>
+                            <div class="small" style="color:rgba(27,79,114,.62);">
+                                MRD: <strong>{{ $group->patient_code }}</strong>
+                            </div>
+                            <div class="small" style="color:rgba(27,79,114,.62);">
+                                {{ ucfirst($group->gender ?? '') }}{{ $group->age ? ', ' . $group->age . ' yrs' : '' }}
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right ms-auto flex-shrink-0"
+                           style="color:rgba(27,79,114,.4);"></i>
+                    </div>
+                </a>
+            </div>
+            @endforeach
+        </div>
+    @endif
+
+    @if($search && ! $patient && (isset($nameGroups) ? $nameGroups->isEmpty() : true))
         <div class="alert alert-warning history-alert border-0 shadow-sm rounded-3">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             No patient found matching "<strong>{{ $search }}</strong>".
