@@ -28,6 +28,7 @@ use App\Http\Controllers\SuperAdmin\ProfileController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\LocationMasterController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use Illuminate\Support\Facades\Route;
 
@@ -129,6 +130,38 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // Plan Management (stub routes — controller built in T2.1)
         Route::resource('plans', PlanController::class)
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+        // Location Master — index (all 4 tabs)
+        Route::get('/locations', [LocationMasterController::class, 'index'])->name('locations.index');
+        Route::post('/locations/import', [LocationMasterController::class, 'import'])->name('locations.import');
+
+        // AJAX cascade dropdowns
+        Route::get('/locations/ajax/states',    [LocationMasterController::class, 'ajaxStates'])->name('locations.ajax.states');
+        Route::get('/locations/ajax/districts', [LocationMasterController::class, 'ajaxDistricts'])->name('locations.ajax.districts');
+
+        // Countries
+        Route::post('/locations/countries',                    [LocationMasterController::class, 'storeCountry'])->name('locations.countries.store');
+        Route::put('/locations/countries/{country}',           [LocationMasterController::class, 'updateCountry'])->name('locations.countries.update');
+        Route::delete('/locations/countries/{country}',        [LocationMasterController::class, 'destroyCountry'])->name('locations.countries.destroy');
+        Route::patch('/locations/countries/{country}/toggle',  [LocationMasterController::class, 'toggleCountry'])->name('locations.countries.toggle');
+
+        // States
+        Route::post('/locations/states',                   [LocationMasterController::class, 'storeState'])->name('locations.states.store');
+        Route::put('/locations/states/{state}',            [LocationMasterController::class, 'updateState'])->name('locations.states.update');
+        Route::delete('/locations/states/{state}',         [LocationMasterController::class, 'destroyState'])->name('locations.states.destroy');
+        Route::patch('/locations/states/{state}/toggle',   [LocationMasterController::class, 'toggleState'])->name('locations.states.toggle');
+
+        // Districts
+        Route::post('/locations/districts',                    [LocationMasterController::class, 'storeDistrict'])->name('locations.districts.store');
+        Route::put('/locations/districts/{district}',          [LocationMasterController::class, 'updateDistrict'])->name('locations.districts.update');
+        Route::delete('/locations/districts/{district}',       [LocationMasterController::class, 'destroyDistrict'])->name('locations.districts.destroy');
+        Route::patch('/locations/districts/{district}/toggle', [LocationMasterController::class, 'toggleDistrict'])->name('locations.districts.toggle');
+
+        // Cities
+        Route::post('/locations/cities',               [LocationMasterController::class, 'storeCity'])->name('locations.cities.store');
+        Route::put('/locations/cities/{city}',         [LocationMasterController::class, 'updateCity'])->name('locations.cities.update');
+        Route::delete('/locations/cities/{city}',      [LocationMasterController::class, 'destroyCity'])->name('locations.cities.destroy');
+        Route::patch('/locations/cities/{city}/toggle',[LocationMasterController::class, 'toggleCity'])->name('locations.cities.toggle');
     });
 });
 
