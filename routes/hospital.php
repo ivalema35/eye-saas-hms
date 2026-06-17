@@ -168,6 +168,11 @@ Route::prefix('{slug}')
                     ->name('ajax.hospital.details')
                     ->whereNumber('id');
 
+                // AJAX: Patients by phone — returns JSON list for patient_id disambiguation
+                Route::get('ajax/patients-by-phone', [PatientHistoryController::class, 'getPatientsByPhone'])
+                    ->name('ajax.patients.by-phone')
+                    ->middleware('permission:opd.exam.history');
+
                 // AJAX helpers for exam form
                 Route::post('ajax/complaint', [PrimaryExamController::class, 'ajaxAddComplaint'])
                     ->name('ajax.complaint.add')

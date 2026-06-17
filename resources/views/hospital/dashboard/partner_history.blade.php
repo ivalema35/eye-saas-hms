@@ -82,17 +82,23 @@
             action="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $partnerTenant->id]) }}"
             class="card mb-4 p-3" style="border-radius:14px;border:1px solid #e2e8f0;background:#fff;">
             <div class="row g-2 align-items-end">
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Patient Name</label>
                     <input type="text" name="patient_name" value="{{ $patientName ?? '' }}"
                         class="form-control form-control-sm" placeholder="Search patient..."
                         style="border-radius:8px;border:1px solid #cbd5e1;">
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Doctor Name</label>
                     <input type="text" name="doctor_name" value="{{ $doctorName ?? '' }}"
                         class="form-control form-control-sm" placeholder="Search doctor..."
                         style="border-radius:8px;border:1px solid #cbd5e1;">
+                </div>
+                <div class="col-12 col-md-2">
+                    <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Contact No.</label>
+                    <input type="text" name="contact_no" value="{{ $contactNo ?? '' }}"
+                        class="form-control form-control-sm" placeholder="Search contact..."
+                        maxlength="15" style="border-radius:8px;border:1px solid #cbd5e1;">
                 </div>
                 <div class="col-12 col-md-2">
                     <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Date</label>
@@ -104,7 +110,7 @@
                         style="background:#1B4F72;color:#fff;border-radius:8px;">
                         <i class="bi bi-search me-1"></i>Filter
                     </button>
-                    @if($patientName || $doctorName || $date)
+                    @if($patientName || $doctorName || $contactNo || $date)
                         <a href="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $partnerTenant->id]) }}"
                             class="btn btn-sm w-100 fw-bold" style="background:#e2e8f0;color:#1B4F72;border-radius:8px;">
                             <i class="bi bi-x-lg"></i>
@@ -155,7 +161,7 @@
                                 </td>
                                 <td>{{ $patient->age ?? '—' }}</td>
                                 <td>
-                                    <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?search={{ $patient->patient_code }}"
+                                    <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids }}"
                                         class="btn-view-partner" target="_blank">
                                         <i class="bi bi-eye-fill me-1"></i>View
                                     </a>

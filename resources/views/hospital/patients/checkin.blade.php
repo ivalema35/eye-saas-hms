@@ -3,9 +3,6 @@
 @section('page-header', '')
 
 @section('page-actions')
-    <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-arrow-left"></i> Back
-    </a>
 @endsection
 
 @section('content')
@@ -262,10 +259,6 @@
                     <button type="submit" class="hms-btn hms-btn-primary">
                         <i class="bi bi-check-circle-fill"></i> Check In &amp; Print Bill
                     </button>
-                    <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
-                       class="hms-btn hms-btn-outline">
-                        <i class="bi bi-x-circle"></i> Cancel
-                    </a>
                 </div>
 
             </form>

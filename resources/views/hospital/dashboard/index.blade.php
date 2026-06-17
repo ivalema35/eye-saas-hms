@@ -157,13 +157,14 @@
 }
 
 .bento-dashboard > .bento-card .bento-icon {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 999px;
     background: rgba(27, 79, 114, 0.08) !important;
     border: 1px solid rgba(27, 79, 114, 0.14) !important;
     box-shadow: none;
-    margin-top: .1rem;
+    margin-top: 1.1rem;
+    margin-left: 1.1rem;
 }
 
 .bento-dashboard > .bento-card .metric-label {
@@ -1224,6 +1225,8 @@
     $doctorAssignedPatients = $doctorAssignedPatients ?? null;
     $doctorPrimaryDone = $doctorPrimaryDone ?? null;
     $doctorSecondaryDone = $doctorSecondaryDone ?? null;
+    $primaryQueueCount = $primaryQueueCount ?? null;
+    $secondaryQueueCount = $secondaryQueueCount ?? null;
 
 
     $doctorCards = $doctorCards ?? collect();
@@ -1418,16 +1421,26 @@
             </div>
         </div>
 
-        {{-- Primary Done --}}
+        {{-- Primary & Secondary Queue --}}
+        @php
+            $cardPrimary   = $primaryQueueCount   ?? 0;
+            $cardSecondary = $secondaryQueueCount  ?? 0;
+        @endphp
         <div class="bento-card span-3">
-            <div class="bento-stat">
-                <div class="bento-icon ig-teal">
-                    <i data-lucide="eye" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
+            <div class="d-flex align-items-center gap-2" style="margin-bottom:10px;margin-top:4px;">
+                <div class="bento-icon ig-teal" style="flex-shrink:0;">
+                    <i data-lucide="eye" style="width:18px;height:18px;color:#1ABC9C;stroke-width:1.75"></i>
                 </div>
-                <div>
-                    <p class="metric-label">Primary Queue</p>
-                    <div class="metric-value">{{ $doctorPrimaryDone }}</div>
-                    <p class="metric-label">Secondary Queue: {{ $doctorSecondaryDone }}</p>
+                <p class="metric-label mb-0" style="font-size:11px;letter-spacing:.6px;">OPD QUEUE</p>
+            </div>
+            <div class="d-flex gap-2" style="padding:0 2px;">
+                <div style="flex:1;background:#e8f8f5;border-radius: 15px;padding: 7px 0px;text-align:center;margin-left: 1.1rem;">
+                    <div style="font-size:18px;font-weight:800;color:#1abc9c;line-height:1.1;">{{ $cardPrimary }}</div>
+                    <div style="font-size:9px;font-weight:700;color:#5d6d7e;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">Primary</div>
+                </div>
+                <div style="flex:1;background:#eaf4fb;border-radius: 15px;padding: 7px 0px;text-align:center;margin-right: 1.1rem;">
+                    <div style="font-size:18px;font-weight:800;color:#1B4F72;line-height:1.1;">{{ $cardSecondary }}</div>
+                    <div style="font-size:9px;font-weight:700;color:#5d6d7e;text-transform:uppercase;letter-spacing:.5px;margin-top:2px;">Secondary</div>
                 </div>
             </div>
         </div>
