@@ -33,6 +33,7 @@ class Tenant extends Model
         'city',
         'district',
         'state',
+        'country',
         'logo_path',
         'status',
         'trial_ends_at',
