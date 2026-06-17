@@ -24,37 +24,51 @@ class LocationMasterController extends Controller
     {
         $tab = request('tab', 'countries');
 
-        $countries = MasterCountry::orderBy('name')->get();
-        $states    = collect();
+        // $countries = MasterCountry::orderBy('name')->get();
+        $countries = MasterCountry::withCount('states')
+            ->orderBy('name')
+            ->paginate(10)
+            ->appends(request()->query());
+        $states = collect();
         $districts = collect();
-        $cities    = collect();
+        $cities = collect();
 
-        $filterCountryId  = request()->integer('country_id') ?: null;
-        $filterStateId    = request()->integer('state_id')   ?: null;
+        $filterCountryId = request()->integer('country_id') ?: null;
+        $filterStateId = request()->integer('state_id') ?: null;
         $filterDistrictId = request()->integer('district_id') ?: null;
-        $search           = request('search', '');
+        $search = request('search', '');
 
-        if ($tab === 'states' && $filterCountryId) {
-            $q = MasterState::with('country')->where('country_id', $filterCountryId);
-            if ($search) $q->where('name', 'like', "%{$search}%");
-            $states = $q->orderBy('name')->paginate(50)->appends(request()->query());
+        if ($tab === 'states') {
+            $q = MasterState::with('country');
+            if ($filterCountryId)
+                $q->where('country_id', $filterCountryId);
+            if ($search)
+                $q->where('name', 'like', "%{$search}%");
+            $states = $q->orderBy('name')->paginate(10)->appends(request()->query());
         }
 
-        if ($tab === 'districts' && $filterStateId) {
-            $q = MasterDistrict::with('state.country')->where('state_id', $filterStateId);
-            if ($search) $q->where('name', 'like', "%{$search}%");
-            $districts = $q->orderBy('name')->paginate(50)->appends(request()->query());
+        if ($tab === 'districts') {
+            $q = MasterDistrict::with('state.country');
+            if ($filterStateId)
+                $q->where('state_id', $filterStateId);
+            if ($search)
+                $q->where('name', 'like', "%{$search}%");
+            $districts = $q->orderBy('name')->paginate(10)->appends(request()->query());
         }
 
-        if ($tab === 'cities' && $filterStateId) {
-            $q = MasterCity::with('state', 'district')->where('state_id', $filterStateId);
-            if ($filterDistrictId) $q->where('district_id', $filterDistrictId);
-            if ($search) $q->where('name', 'like', "%{$search}%");
-            $cities = $q->orderBy('name')->paginate(50)->appends(request()->query());
+        if ($tab === 'cities') {
+            $q = MasterCity::with('state.country', 'district');
+            if ($filterStateId)
+                $q->where('state_id', $filterStateId);
+            if ($filterDistrictId)
+                $q->where('district_id', $filterDistrictId);
+            if ($search)
+                $q->where('name', 'like', "%{$search}%");
+            $cities = $q->orderBy('name')->paginate(10)->appends(request()->query());
         }
 
         // For state/district/city tabs — pre-load dependent selects
-        $statesForFilter    = $filterCountryId
+        $statesForFilter = $filterCountryId
             ? MasterState::where('country_id', $filterCountryId)->orderBy('name')->get()
             : collect();
         $districtsForFilter = $filterStateId
@@ -62,9 +76,17 @@ class LocationMasterController extends Controller
             : collect();
 
         return view('superadmin.locations.index', compact(
-            'tab', 'countries', 'states', 'districts', 'cities',
-            'filterCountryId', 'filterStateId', 'filterDistrictId', 'search',
-            'statesForFilter', 'districtsForFilter'
+            'tab',
+            'countries',
+            'states',
+            'districts',
+            'cities',
+            'filterCountryId',
+            'filterStateId',
+            'filterDistrictId',
+            'search',
+            'statesForFilter',
+            'districtsForFilter'
         ));
     }
 
@@ -111,7 +133,7 @@ class LocationMasterController extends Controller
 
     public function toggleCountry(MasterCountry $country): JsonResponse
     {
-        $country->update(['is_active' => ! $country->is_active]);
+        $country->update(['is_active' => !$country->is_active]);
         return response()->json(['is_active' => $country->is_active]);
     }
 
@@ -123,7 +145,7 @@ class LocationMasterController extends Controller
     {
         $request->validate([
             'country_id' => 'required|integer|exists:tbl_master_countries,id',
-            'name'       => 'required|string|max:150',
+            'name' => 'required|string|max:150',
         ]);
         $name = MasterState::normalize($request->name);
 
@@ -143,7 +165,7 @@ class LocationMasterController extends Controller
     {
         $request->validate([
             'country_id' => 'required|integer|exists:tbl_master_countries,id',
-            'name'       => 'required|string|max:150',
+            'name' => 'required|string|max:150',
         ]);
         $name = MasterState::normalize($request->name);
 
@@ -168,7 +190,7 @@ class LocationMasterController extends Controller
 
     public function toggleState(MasterState $state): JsonResponse
     {
-        $state->update(['is_active' => ! $state->is_active]);
+        $state->update(['is_active' => !$state->is_active]);
         return response()->json(['is_active' => $state->is_active]);
     }
 
@@ -180,7 +202,7 @@ class LocationMasterController extends Controller
     {
         $request->validate([
             'state_id' => 'required|integer|exists:tbl_master_states,id',
-            'name'     => 'required|string|max:150',
+            'name' => 'required|string|max:150',
         ]);
         $name = MasterDistrict::normalize($request->name);
 
@@ -200,7 +222,7 @@ class LocationMasterController extends Controller
     {
         $request->validate([
             'state_id' => 'required|integer|exists:tbl_master_states,id',
-            'name'     => 'required|string|max:150',
+            'name' => 'required|string|max:150',
         ]);
         $name = MasterDistrict::normalize($request->name);
 
@@ -225,7 +247,7 @@ class LocationMasterController extends Controller
 
     public function toggleDistrict(MasterDistrict $district): JsonResponse
     {
-        $district->update(['is_active' => ! $district->is_active]);
+        $district->update(['is_active' => !$district->is_active]);
         return response()->json(['is_active' => $district->is_active]);
     }
 
@@ -236,11 +258,11 @@ class LocationMasterController extends Controller
     public function storeCity(Request $request): RedirectResponse
     {
         $request->validate([
-            'state_id'    => 'required|integer|exists:tbl_master_states,id',
+            'state_id' => 'required|integer|exists:tbl_master_states,id',
             'district_id' => 'nullable|integer|exists:tbl_master_districts,id',
-            'name'        => 'required|string|max:150',
+            'name' => 'required|string|max:150',
         ]);
-        $name       = MasterCity::normalize($request->name);
+        $name = MasterCity::normalize($request->name);
         $districtId = $request->district_id ?: null;
 
         $dup = MasterCity::where('state_id', $request->state_id)
@@ -252,10 +274,10 @@ class LocationMasterController extends Controller
         }
 
         MasterCity::create([
-            'state_id'    => $request->state_id,
+            'state_id' => $request->state_id,
             'district_id' => $districtId,
-            'name'        => $name,
-            'is_active'   => true,
+            'name' => $name,
+            'is_active' => true,
         ]);
 
         return back()->with('success', "City \"{$name}\" added.")->with('open_tab', 'cities');
@@ -264,11 +286,11 @@ class LocationMasterController extends Controller
     public function updateCity(Request $request, MasterCity $city): RedirectResponse
     {
         $request->validate([
-            'state_id'    => 'required|integer|exists:tbl_master_states,id',
+            'state_id' => 'required|integer|exists:tbl_master_states,id',
             'district_id' => 'nullable|integer|exists:tbl_master_districts,id',
-            'name'        => 'required|string|max:150',
+            'name' => 'required|string|max:150',
         ]);
-        $name       = MasterCity::normalize($request->name);
+        $name = MasterCity::normalize($request->name);
         $districtId = $request->district_id ?: null;
 
         $dup = MasterCity::where('state_id', $request->state_id)
@@ -293,7 +315,7 @@ class LocationMasterController extends Controller
 
     public function toggleCity(MasterCity $city): JsonResponse
     {
-        $city->update(['is_active' => ! $city->is_active]);
+        $city->update(['is_active' => !$city->is_active]);
         return response()->json(['is_active' => $city->is_active]);
     }
 
