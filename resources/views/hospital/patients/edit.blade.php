@@ -7,221 +7,221 @@
 
 @section('content')
 
-    <div id="contactToast" style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
-                                   background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
-                                   box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
-        <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
-        <span id="contactToastMsg"></span>
-    </div>
-
-    @if($patient->primary_done_at)
-        <div class="alert alert-warning alert-dismissible fade show border-0 mb-3"
-             style="background:#FDEBD0;color:#784212;border-left:4px solid #E67E22" role="alert">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>
-            <strong>Examination Completed:</strong> Primary examination has already been done for this patient. Changes will not affect examination data.
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div id="contactToast" style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
+                                       background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
+                                       box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
+            <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
+            <span id="contactToastMsg"></span>
         </div>
-    @endif
 
-    <div class="hms-card border-0 shadow-lg" style="border-radius:16px">
-        <div class="hms-card-header"
-            style="background:linear-gradient(135deg, #1B4F72 0%, #2980B9 100%);padding:1.75rem;border-radius:16px 16px 0 0">
-            <div style="display:flex;align-items:center;gap:1rem;color:#fff">
-                <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
-                    <i class="bi bi-person-fill"></i>
-                </div>
-                <div>
-                    <h4 style="margin:0;font-weight:700;font-size:1.25rem;color:#fff">Edit Patient</h4>
-                    <p style="margin:0.25rem 0 0;font-size:0.9rem;opacity:0.9">Update patient information and appointment details</p>
-                </div>
+        @if($patient->primary_done_at)
+            <div class="alert alert-warning alert-dismissible fade show border-0 mb-3"
+                 style="background:#FDEBD0;color:#784212;border-left:4px solid #E67E22" role="alert">
+                <i class="bi bi-exclamation-circle-fill me-2"></i>
+                <strong>Examination Completed:</strong> Primary examination has already been done for this patient. Changes will not affect examination data.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        </div>
-        <div class="hms-card-body" style="padding:2rem">
-            <form method="POST"
-                  action="{{ route('hospital.patients.update', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                  class="patient-create-form">
-                @csrf @method('PUT')
+        @endif
 
-                {{-- MRD Number --}}
-                <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem">
-                        <div class="form-group">
-                            <label class="form-label">MRD No.</label>
-                            <input type="text" value="{{ $patient->patient_code }}" class="form-control hms-input" readonly
-                                   style="background:#eef2f6">
-                        </div>
+        <div class="hms-card border-0 shadow-lg" style="border-radius:16px">
+            <div class="hms-card-header"
+                style="background:linear-gradient(135deg, #1B4F72 0%, #2980B9 100%);padding:1.75rem;border-radius:16px 16px 0 0">
+                <div style="display:flex;align-items:center;gap:1rem;color:#fff">
+                    <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div>
+                        <h4 style="margin:0;font-weight:700;font-size:1.25rem;color:#fff">Edit Patient</h4>
+                        <p style="margin:0.25rem 0 0;font-size:0.9rem;opacity:0.9">Update patient information and appointment details</p>
                     </div>
                 </div>
+            </div>
+            <div class="hms-card-body" style="padding:2rem">
+                <form method="POST"
+                      action="{{ route('hospital.patients.update', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                      class="patient-create-form">
+                    @csrf @method('PUT')
 
-                <div class="hms-card-body patient-create-card-body">
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem">
-
-                        {{-- Appointment Date --}}
-                        <div class="form-group">
-                            <label class="form-label">Appointment Date <span style="color:#e74c3c">*</span></label>
-                            <input type="text" name="appointment_date" class="form-control flatpickr hms-input @error('appointment_date') is-invalid @enderror"
-                                   value="{{ old('appointment_date', $patient->appointment_date?->format('Y-m-d')) }}" required>
-                            @error('appointment_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                    {{-- MRD Number --}}
+                    <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem">
+                            <div class="form-group">
+                                <label class="form-label">MRD No.</label>
+                                <input type="text" value="{{ $patient->patient_code }}" class="form-control hms-input" readonly
+                                       style="background:#eef2f6">
+                            </div>
                         </div>
+                    </div>
 
-                        {{-- Contact Number --}}
-                        <div class="form-group">
-                            <label class="form-label">Contact Number <span style="color:#e74c3c">*</span></label>
-                            <input type="text" name="contact_no" id="contactNo" class="form-control hms-input @error('contact_no') is-invalid @enderror"
-                                   maxlength="10" required value="{{ old('contact_no', $patient->contact_no) }}">
-                            @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                    <div class="hms-card-body patient-create-card-body">
+                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem">
 
-                        {{-- WhatsApp No --}}
-                        <div class="form-group">
-                            <label class="form-label">WhatsApp No</label>
-                            <input type="text" name="whatsapp_no" id="whatsappNo" class="form-control hms-input"
-                                   maxlength="10" placeholder="Same if blank" value="{{ old('whatsapp_no', $patient->whatsapp_no) }}">
-                        </div>
+                            {{-- Appointment Date --}}
+                            <div class="form-group">
+                                <label class="form-label">Appointment Date <span style="color:#e74c3c">*</span></label>
+                                <input type="text" name="appointment_date" class="form-control flatpickr hms-input @error('appointment_date') is-invalid @enderror"
+                                       value="{{ old('appointment_date', $patient->appointment_date?->format('Y-m-d')) }}" required>
+                                @error('appointment_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
 
-                        {{-- First Name --}}
-                        <div class="form-group">
-                            <label class="form-label">First Name <span style="color:#e74c3c">*</span></label>
-                            <input type="text" name="first_name" id="firstName" class="form-control hms-input @error('first_name') is-invalid @enderror"
-                                   value="{{ old('first_name', $patient->first_name) }}" required>
-                            @error('first_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                            {{-- Contact Number --}}
+                            <div class="form-group">
+                                <label class="form-label">Contact Number <span style="color:#e74c3c">*</span></label>
+                                <input type="text" name="contact_no" id="contactNo" class="form-control hms-input @error('contact_no') is-invalid @enderror"
+                                       maxlength="10" required value="{{ old('contact_no', $patient->contact_no) }}">
+                                @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
 
-                        {{-- Surname --}}
-                        <div class="form-group">
-                            <label class="form-label">Surname <span style="color:#e74c3c">*</span></label>
-                            <input type="text" name="last_name" id="lastName" class="form-control hms-input @error('last_name') is-invalid @enderror"
-                                   value="{{ old('last_name', $patient->last_name) }}" required>
-                            @error('last_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                            {{-- WhatsApp No --}}
+                            <div class="form-group">
+                                <label class="form-label">WhatsApp No</label>
+                                <input type="text" name="whatsapp_no" id="whatsappNo" class="form-control hms-input"
+                                       maxlength="10" placeholder="Same if blank" value="{{ old('whatsapp_no', $patient->whatsapp_no) }}">
+                            </div>
 
-                        {{-- Middle Name --}}
-                        <div class="form-group">
-                            <label class="form-label">Middle Name</label>
-                            <input type="text" name="middle_name" id="middleName" class="form-control hms-input"
-                                   value="{{ old('middle_name', $patient->middle_name) }}">
-                        </div>
+                            {{-- First Name --}}
+                            <div class="form-group">
+                                <label class="form-label">First Name <span style="color:#e74c3c">*</span></label>
+                                <input type="text" name="first_name" id="firstName" class="form-control hms-input @error('first_name') is-invalid @enderror"
+                                       value="{{ old('first_name', $patient->first_name) }}" required>
+                                @error('first_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
 
-                        {{-- Case Type --}}
-                        <div class="form-group">
-                            <label class="form-label">Case Type <span style="color:#e74c3c">*</span></label>
-                            <select name="case_id" id="caseSelect" class="form-control select2 hms-select @error('case_id') is-invalid @enderror" required>
-                                <option value="">Select Case</option>
-                                @foreach($cases as $c)
-                                    <option value="{{ $c->id }}" data-fee="{{ $c->fee ?? 0 }}"
-                                            @selected(old('case_id', $patient->case_id) == $c->id)>{{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('case_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                            {{-- Surname --}}
+                            <div class="form-group">
+                                <label class="form-label">Surname <span style="color:#e74c3c">*</span></label>
+                                <input type="text" name="last_name" id="lastName" class="form-control hms-input @error('last_name') is-invalid @enderror"
+                                       value="{{ old('last_name', $patient->last_name) }}" required>
+                                @error('last_name')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
 
-                        {{-- Case Fee --}}
-                        <div class="form-group">
-                            <label class="form-label">Case Fee (₹) <span style="color:#e74c3c">*</span></label>
-                            <input type="number" name="case_fee" id="caseFee"
-                                   value="{{ old('case_fee', $patient->case_fee) }}"
-                                   class="form-control hms-input @error('case_fee') is-invalid @enderror" required>
-                            @error('case_fee')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                            {{-- Middle Name --}}
+                            <div class="form-group">
+                                <label class="form-label">Middle Name</label>
+                                <input type="text" name="middle_name" id="middleName" class="form-control hms-input"
+                                       value="{{ old('middle_name', $patient->middle_name) }}">
+                            </div>
 
-                        {{-- Doctor Name --}}
-                        <div class="form-group">
-                            <label class="form-label">Doctor Name <span style="color:#e74c3c">*</span></label>
-                            <select name="doctor_id" class="form-control select2 hms-select @error('doctor_id') is-invalid @enderror" required>
-                                <option value="">Select Doctor</option>
-                                @foreach($doctors as $doc)
-                                    <option value="{{ $doc->id }}" @selected(old('doctor_id', $patient->doctor_id) == $doc->id)>
-                                        {{ $doc->name }}{{ $doc->doctor_type ? ' (' . ucfirst($doc->doctor_type) . ')' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('doctor_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
+                            {{-- Case Type --}}
+                            <div class="form-group">
+                                <label class="form-label">Case Type <span style="color:#e74c3c">*</span></label>
+                                <select name="case_id" id="caseSelect" class="form-control select2 hms-select @error('case_id') is-invalid @enderror" required>
+                                    <option value="">Select Case</option>
+                                    @foreach($cases as $c)
+                                        <option value="{{ $c->id }}" data-fee="{{ $c->fee ?? 0 }}"
+                                                @selected(old('case_id', $patient->case_id) == $c->id)>{{ $c->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('case_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
 
-                        {{-- City --}}
-                        <div class="form-group">
-                            <label class="form-label">City <span style="color:#e74c3c">*</span></label>
-                            <div style="display:flex;gap:5px">
-                                <select name="location_id" id="locationSelect" class="form-control select2 hms-select @error('location_id') is-invalid @enderror" required>
-                                    <option value="">Select City</option>
-                                    @foreach($locations as $loc)
-                                        <option value="{{ $loc->id }}"
-                                                data-district="{{ $loc->district }}"
-                                                data-state="{{ $loc->state }}"
-                                                @selected(old('location_id', $patient->location_id) == $loc->id)>
-                                            {{ $loc->city ?: "Location #{$loc->id}" }}
+                            {{-- Case Fee --}}
+                            <div class="form-group">
+                                <label class="form-label">Case Fee (₹) <span style="color:#e74c3c">*</span></label>
+                                <input type="number" name="case_fee" id="caseFee"
+                                       value="{{ old('case_fee', $patient->case_fee) }}"
+                                       class="form-control hms-input @error('case_fee') is-invalid @enderror" required>
+                                @error('case_fee')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Doctor Name --}}
+                            <div class="form-group">
+                                <label class="form-label">Doctor Name <span style="color:#e74c3c">*</span></label>
+                                <select name="doctor_id" class="form-control select2 hms-select @error('doctor_id') is-invalid @enderror" required>
+                                    <option value="">Select Doctor</option>
+                                    @foreach($doctors as $doc)
+                                        <option value="{{ $doc->id }}" @selected(old('doctor_id', $patient->doctor_id) == $doc->id)>
+                                            {{ $doc->name }}{{ $doc->doctor_type ? ' (' . ucfirst($doc->doctor_type) . ')' : '' }}
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline"
-                                        style="width:30px;height:30px">+</button>
+                                @error('doctor_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
-                            @error('location_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+
+                            {{-- City --}}
+                            <div class="form-group">
+                                <label class="form-label">City <span style="color:#e74c3c">*</span></label>
+                                <div style="display:flex;gap:5px">
+                                    <select name="location_id" id="locationSelect" class="form-control select2 hms-select @error('location_id') is-invalid @enderror" required>
+                                        <option value="">Select City</option>
+                                        @foreach($locations as $loc)
+                                            <option value="{{ $loc->id }}" data-district="{{ $loc->district->name ?? '' }}"
+                                                data-state="{{ $loc->state->name ?? '' }}" @selected(old('location_id', $patient->location_id) == $loc->id)>
+
+                                                {{ $loc->name }}
+
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline"
+                                            style="width:30px;height:30px">+</button>
+                                </div>
+                                @error('location_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- District --}}
+                            <div class="form-group">
+                                <label class="form-label">District</label>
+                                <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto-filled">
+                            </div>
+
+                            {{-- State --}}
+                            <div class="form-group">
+                                <label class="form-label">State</label>
+                                <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto-filled">
+                            </div>
+
+                            {{-- Age --}}
+                            <div class="form-group">
+                                <label class="form-label">Age <span style="color:#e74c3c">*</span></label>
+                                <input type="number" name="age" id="age"
+                                       value="{{ old('age', $patient->age) }}" min="0" max="150"
+                                       class="form-control hms-input @error('age') is-invalid @enderror" required>
+                                @error('age')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Gender --}}
+                            <div class="form-group">
+                                <label class="form-label">Gender <span style="color:#e74c3c">*</span></label>
+                                <select name="gender" id="gender" class="form-control hms-select @error('gender') is-invalid @enderror" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="male"   @selected(old('gender', $patient->gender) === 'male')>Male</option>
+                                    <option value="female" @selected(old('gender', $patient->gender) === 'female')>Female</option>
+                                    <option value="other"  @selected(old('gender', $patient->gender) === 'other')>Other</option>
+                                </select>
+                                @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+
+                            {{-- Occupation --}}
+                            <div class="form-group">
+                                <label class="form-label">Occupation</label>
+                                <input type="text" name="occupation" id="occupation" class="form-control hms-input"
+                                       value="{{ old('occupation', $patient->occupation) }}">
+                            </div>
+
+                            {{-- Referred By --}}
+                            <div class="form-group">
+                                <label class="form-label">Referred By</label>
+                                <select name="referrer_id" class="form-control select2 hms-select">
+                                    <option value="">Select Referrer</option>
+                                    @foreach($referrers as $r)
+                                        <option value="{{ $r->id }}" @selected(old('referrer_id', $patient->referrer_id) == $r->id)>{{ $r->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                         </div>
 
-                        {{-- District --}}
-                        <div class="form-group">
-                            <label class="form-label">District</label>
-                            <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto-filled">
+                        {{-- Action Buttons --}}
+                        <div style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
+                            <button type="submit" class="hms-btn hms-btn-primary">
+                                <i class="bi bi-check-circle-fill"></i> Update Patient
+                            </button>
                         </div>
-
-                        {{-- State --}}
-                        <div class="form-group">
-                            <label class="form-label">State</label>
-                            <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto-filled">
-                        </div>
-
-                        {{-- Age --}}
-                        <div class="form-group">
-                            <label class="form-label">Age <span style="color:#e74c3c">*</span></label>
-                            <input type="number" name="age" id="age"
-                                   value="{{ old('age', $patient->age) }}" min="0" max="150"
-                                   class="form-control hms-input @error('age') is-invalid @enderror" required>
-                            @error('age')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-
-                        {{-- Gender --}}
-                        <div class="form-group">
-                            <label class="form-label">Gender <span style="color:#e74c3c">*</span></label>
-                            <select name="gender" id="gender" class="form-control hms-select @error('gender') is-invalid @enderror" required>
-                                <option value="">Select Gender</option>
-                                <option value="male"   @selected(old('gender', $patient->gender) === 'male')>Male</option>
-                                <option value="female" @selected(old('gender', $patient->gender) === 'female')>Female</option>
-                                <option value="other"  @selected(old('gender', $patient->gender) === 'other')>Other</option>
-                            </select>
-                            @error('gender')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
-                        </div>
-
-                        {{-- Occupation --}}
-                        <div class="form-group">
-                            <label class="form-label">Occupation</label>
-                            <input type="text" name="occupation" id="occupation" class="form-control hms-input"
-                                   value="{{ old('occupation', $patient->occupation) }}">
-                        </div>
-
-                        {{-- Referred By --}}
-                        <div class="form-group">
-                            <label class="form-label">Referred By</label>
-                            <select name="referrer_id" class="form-control select2 hms-select">
-                                <option value="">Select Referrer</option>
-                                @foreach($referrers as $r)
-                                    <option value="{{ $r->id }}" @selected(old('referrer_id', $patient->referrer_id) == $r->id)>{{ $r->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
                     </div>
-
-                    {{-- Action Buttons --}}
-                    <div style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
-                        <button type="submit" class="hms-btn hms-btn-primary">
-                            <i class="bi bi-check-circle-fill"></i> Update Patient
-                        </button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
-    </div>
 
 @endsection
 

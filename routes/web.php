@@ -51,6 +51,11 @@ Route::get('/check-slug', [RegisterController::class, 'checkSlug'])
     ->name('check-slug')
     ->middleware('throttle:30,1');
 
+// Location cascade AJAX for public registration form
+Route::get('/location/states',    [RegisterController::class, 'getStates'])->name('location.states')->middleware('throttle:60,1');
+Route::get('/location/districts', [RegisterController::class, 'getDistricts'])->name('location.districts')->middleware('throttle:60,1');
+Route::get('/location/cities',    [RegisterController::class, 'getCities'])->name('location.cities')->middleware('throttle:60,1');
+
 // Unified Hospital Login — single page for all staff
 Route::get('/login', [UnifiedLoginController::class, 'show'])->name('login');
 Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
