@@ -12,6 +12,7 @@ use App\Models\Hospital\Patient;
 use App\Models\Hospital\Referrer;
 use App\Models\Platform\HospitalShareRequest;
 use App\Services\Hospital\PatientService;
+use App\Models\Platform\MasterCity;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -32,7 +33,9 @@ use Illuminate\View\View;
  */
 class PatientController extends Controller
 {
-    public function __construct(private PatientService $patientService) {}
+    public function __construct(private PatientService $patientService)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -50,7 +53,7 @@ class PatientController extends Controller
 
         // Toggle today/all
         $showAll = $request->boolean('all');
-        if (! $showAll) {
+        if (!$showAll) {
             $query->whereDate('appointment_date', $today);
         }
 
@@ -81,17 +84,17 @@ class PatientController extends Controller
         $localPatients = Patient::where('contact_no', $contact)
             ->latest()
             ->get()
-            ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
+            ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
 
-        $localMapped = $localPatients->values()->map(fn ($p) => [
-            'type'        => 'local',
-            'first_name'  => $p->first_name,
+        $localMapped = $localPatients->values()->map(fn($p) => [
+            'type' => 'local',
+            'first_name' => $p->first_name,
             'middle_name' => $p->middle_name,
-            'last_name'   => $p->last_name,
-            'age'         => $p->age,
-            'gender'      => $p->gender,
+            'last_name' => $p->last_name,
+            'age' => $p->age,
+            'gender' => $p->gender,
             'whatsapp_no' => $p->whatsapp_no,
-            'occupation'  => $p->occupation,
+            'occupation' => $p->occupation,
             'location_id' => $p->location_id,
         ]);
 
@@ -104,7 +107,7 @@ class PatientController extends Controller
         })
             ->where('status', 'accepted')
             ->get()
-            ->map(fn ($r) => $r->from_tenant_id === $currentTenant->id
+            ->map(fn($r) => $r->from_tenant_id === $currentTenant->id
                 ? $r->to_tenant_id
                 : $r->from_tenant_id)
             ->toArray();
@@ -117,26 +120,26 @@ class PatientController extends Controller
                 ->where('contact_no', $contact)
                 ->latest()
                 ->get()
-                ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
+                ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
 
-            $sharedMapped = $sharedPatients->values()->map(fn ($p) => [
-                'type'          => 'shared',
+            $sharedMapped = $sharedPatients->values()->map(fn($p) => [
+                'type' => 'shared',
                 'hospital_name' => $p->tenant?->name ?? 'Partner Hospital',
-                'first_name'    => $p->first_name,
-                'middle_name'   => $p->middle_name,
-                'last_name'     => $p->last_name,
-                'age'           => $p->age,
-                'gender'        => $p->gender,
-                'whatsapp_no'   => $p->whatsapp_no,
-                'occupation'    => $p->occupation,
-                'location_id'   => null,
+                'first_name' => $p->first_name,
+                'middle_name' => $p->middle_name,
+                'last_name' => $p->last_name,
+                'age' => $p->age,
+                'gender' => $p->gender,
+                'whatsapp_no' => $p->whatsapp_no,
+                'occupation' => $p->occupation,
+                'location_id' => null,
             ]);
         }
 
         $all = $localMapped->concat($sharedMapped)->values();
 
         return response()->json([
-            'found'    => $all->isNotEmpty(),
+            'found' => $all->isNotEmpty(),
             'patients' => $all->toArray(),
         ]);
     }
@@ -156,15 +159,28 @@ class PatientController extends Controller
                         });
                     });
             })->get();
-        $locations = Location::orderBy('city')->get();
+        $user = auth('hospital_user')->user();
+
+        $hospitalCountry = $user->tenant->country;
+
+        $locations = MasterCity::with([
+            'district',
+            'state',
+            'state.country'
+        ])
+            ->whereHas('state.country', function ($q) use ($hospitalCountry) {
+                $q->where('name', $hospitalCountry);
+            })
+            ->orderBy('name')
+            ->get();
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots              = $this->loadPatientSlots($tenantId);
-        $nextMrd            = $this->patientService->peekNextMrd($tenantId);
+        $slots = $this->loadPatientSlots($tenantId);
+        $nextMrd = $this->patientService->peekNextMrd($tenantId);
         $currentHospitalName = app('tenant')->name;
 
         return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers', 'nextMrd', 'currentHospitalName'));
@@ -199,7 +215,20 @@ class PatientController extends Controller
                         });
                     });
             })->get();
-        $locations = Location::orderBy('city')->get();
+        $user = auth('hospital_user')->user();
+
+        $hospitalCountry = $user->tenant->country;
+
+        $locations = MasterCity::with([
+            'district',
+            'state',
+            'state.country'
+        ])
+            ->whereHas('state.country', function ($q) use ($hospitalCountry) {
+                $q->where('name', $hospitalCountry);
+            })
+            ->orderBy('name')
+            ->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
@@ -249,9 +278,9 @@ class PatientController extends Controller
             ->withQueryString();
 
         $groupedPatients = $patients->getCollection()->groupBy(
-            fn (Patient $patient): string => $patient->appointment_date
-                ? now()->parse((string) $patient->appointment_date)->format('Y-m-d')
-                : $patient->created_at->format('Y-m-d')
+            fn(Patient $patient): string => $patient->appointment_date
+            ? now()->parse((string) $patient->appointment_date)->format('Y-m-d')
+            : $patient->created_at->format('Y-m-d')
         );
 
         return view('hospital.patients.phone-history', compact('slug', 'patients', 'groupedPatients', 'fromDate', 'toDate'));
@@ -278,7 +307,20 @@ class PatientController extends Controller
                         });
                     });
             })->get();
-        $locations = Location::orderBy('city')->get();
+        $user = auth('hospital_user')->user();
+
+        $hospitalCountry = $user->tenant->country;
+
+        $locations = MasterCity::with([
+            'district',
+            'state',
+            'state.country'
+        ])
+            ->whereHas('state.country', function ($q) use ($hospitalCountry) {
+                $q->where('name', $hospitalCountry);
+            })
+            ->orderBy('name')
+            ->get();
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
@@ -317,13 +359,26 @@ class PatientController extends Controller
             ->where('tenant_id', $tenantId)
             ->where(function ($q) {
                 $q->whereNotNull('doctor_type')
-                    ->orWhereHas('role', fn ($r) => $r->where(function ($i) {
+                    ->orWhereHas('role', fn($r) => $r->where(function ($i) {
                         $i->whereIn('slug', ['doctor', 'ot_doctor'])
                             ->orWhereIn('name', ['doctor', 'ot_doctor']);
                     }));
             })->get();
 
-        $locations = Location::orderBy('city')->get();
+        $user = auth('hospital_user')->user();
+
+        $hospitalCountry = $user->tenant->country;
+
+        $locations = MasterCity::with([
+            'district',
+            'state',
+            'state.country'
+        ])
+            ->whereHas('state.country', function ($q) use ($hospitalCountry) {
+                $q->where('name', $hospitalCountry);
+            })
+            ->orderBy('name')
+            ->get();
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', $tenantId)
@@ -332,8 +387,10 @@ class PatientController extends Controller
             ->get();
         $slots = $this->loadPatientSlots($tenantId);
 
-        return view('hospital.patients.checkin',
-            compact('patient', 'slug', 'doctors', 'locations', 'referrers', 'cases', 'slots'));
+        return view(
+            'hospital.patients.checkin',
+            compact('patient', 'slug', 'doctors', 'locations', 'referrers', 'cases', 'slots')
+        );
     }
 
     public function checkin(Request $request, string $slug, Patient $patient): RedirectResponse
@@ -341,30 +398,41 @@ class PatientController extends Controller
         abort_if($patient->type !== 'phone', 404);
 
         $request->validate([
-            'first_name'       => ['required', 'string', 'max:100'],
-            'middle_name'      => ['nullable', 'string', 'max:100'],
-            'last_name'        => ['required', 'string', 'max:100'],
-            'age'              => ['required', 'integer', 'min:0', 'max:150'],
-            'gender'           => ['required', 'in:male,female,other'],
-            'occupation'       => ['nullable', 'string', 'max:100'],
-            'contact_no'       => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
-            'whatsapp_no'      => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
-            'location_id'      => ['required', 'integer', 'exists:tbl_locations,id'],
+            'first_name' => ['required', 'string', 'max:100'],
+            'middle_name' => ['nullable', 'string', 'max:100'],
+            'last_name' => ['required', 'string', 'max:100'],
+            'age' => ['required', 'integer', 'min:0', 'max:150'],
+            'gender' => ['required', 'in:male,female,other'],
+            'occupation' => ['nullable', 'string', 'max:100'],
+            'contact_no' => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
+            'whatsapp_no' => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
+            'location_id' => ['required', 'integer', 'exists:tbl_locations,id'],
             'appointment_date' => ['required', 'date'],
-            'slot_id'          => ['nullable', 'integer', 'exists:tbl_slots,id'],
-            'doctor_id'        => ['required', 'integer', 'exists:hospital_users,id'],
-            'case_id'          => ['required', 'integer', 'exists:tbl_cases,id'],
-            'case_fee'         => ['required', 'numeric', 'min:0'],
-            'referrer_id'      => ['nullable', 'integer', 'exists:tbl_referrers,id'],
+            'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
+            'doctor_id' => ['required', 'integer', 'exists:hospital_users,id'],
+            'case_id' => ['required', 'integer', 'exists:tbl_cases,id'],
+            'case_fee' => ['required', 'numeric', 'min:0'],
+            'referrer_id' => ['nullable', 'integer', 'exists:tbl_referrers,id'],
         ]);
 
         DB::transaction(function () use ($request, $patient) {
             $patient->update(array_merge(
                 $request->only([
-                    'first_name', 'middle_name', 'last_name', 'age', 'gender',
-                    'occupation', 'contact_no', 'whatsapp_no', 'location_id',
-                    'appointment_date', 'slot_id', 'doctor_id', 'case_id',
-                    'case_fee', 'referrer_id',
+                    'first_name',
+                    'middle_name',
+                    'last_name',
+                    'age',
+                    'gender',
+                    'occupation',
+                    'contact_no',
+                    'whatsapp_no',
+                    'location_id',
+                    'appointment_date',
+                    'slot_id',
+                    'doctor_id',
+                    'case_id',
+                    'case_fee',
+                    'referrer_id',
                 ]),
                 ['checked_in_at' => $patient->checked_in_at ?? now()]
             ));

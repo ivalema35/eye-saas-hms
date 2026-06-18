@@ -18,6 +18,10 @@
 namespace App\Http\Controllers\Platform;
 
 use App\Http\Controllers\Controller;
+use App\Models\Platform\MasterCity;
+use App\Models\Platform\MasterDistrict;
+use App\Models\Platform\MasterCountry;
+use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantService;
 use Illuminate\Http\JsonResponse;
@@ -30,14 +34,16 @@ class RegisterController extends Controller
 {
     public function __construct(
         protected TenantService $tenantService
-    ) {}
+    ) {
+    }
 
     /**
      * show() — Registration form dikhao
      */
     public function show(): View
     {
-        return view('landing.register');
+        $countries = MasterCountry::active()->orderBy('name')->get(['id', 'name']);
+        return view('landing.register', compact('countries'));
     }
 
     /**
@@ -48,7 +54,10 @@ class RegisterController extends Controller
         $validated = $request->validate([
             'hospital_name' => ['required', 'string', 'min:3', 'max:100'],
             'slug' => [
-                'required', 'string', 'min:3', 'max:30',
+                'required',
+                'string',
+                'min:3',
+                'max:30',
                 'regex:/^[a-z0-9\-]+$/',
                 'unique:tenants,slug',
                 function (string $attribute, mixed $value, \Closure $fail): void {
@@ -91,8 +100,10 @@ class RegisterController extends Controller
                 },
             ],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'city' => ['nullable', 'string', 'max:100'],
+            'country' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
+            'district' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:150'],
             'plan' => ['required', 'in:monthly,quarterly,yearly'],
             'start_trial' => ['nullable', 'in:1'],
         ]);
@@ -102,6 +113,27 @@ class RegisterController extends Controller
         return redirect()
             ->route('hospital.login', ['slug' => $tenant->slug])
             ->with('success', 'Hospital registered successfully! Please login to continue.');
+    }
+
+    public function getStates(Request $request): JsonResponse
+    {
+        $states = MasterState::where('country_id', $request->country_id)
+            ->active()->orderBy('name')->get(['id', 'name']);
+        return response()->json($states);
+    }
+
+    public function getDistricts(Request $request): JsonResponse
+    {
+        $districts = MasterDistrict::where('state_id', $request->state_id)
+            ->active()->orderBy('name')->get(['id', 'name']);
+        return response()->json($districts);
+    }
+
+    public function getCities(Request $request): JsonResponse
+    {
+        $cities = MasterCity::where('district_id', $request->district_id)
+            ->active()->orderBy('name')->get(['id', 'name']);
+        return response()->json($cities);
     }
 
     /**
@@ -126,7 +158,7 @@ class RegisterController extends Controller
             $suggestion = $slug;
             $i = 2;
             while (Tenant::where('slug', $suggestion)->exists()) {
-                $suggestion = $slug.$i;
+                $suggestion = $slug . $i;
                 $i++;
             }
 

@@ -8,9 +8,10 @@
 @section('content')
 
     {{-- Toast notification --}}
-    <div id="contactToast" style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
-                                                    background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
-                                                    box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
+    <div id="contactToast"
+        style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
+                                                                                    background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
+                                                                                    box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
         <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
         <span id="contactToastMsg"></span>
     </div>
@@ -118,17 +119,31 @@
                         {{-- 9, 10, 11 City, District, State --}}
                         <div class="form-group">
                             <label class="form-label">City</label>
+
                             <div style="display:flex;gap:5px">
+
                                 <select name="location_id" id="locationSelect" class="form-control select2 hms-select"
                                     required>
+
                                     <option value="">Select City</option>
+
                                     @foreach($locations as $loc)
-                                        <option value="{{ $loc->id }}" data-district="{{ $loc->district }}"
-                                            data-state="{{ $loc->state }}">{{ $loc->city }}</option>
+
+                                        <option value="{{ $loc->id }}" data-district="{{ $loc->district?->name }}"
+                                            data-state="{{ $loc->state?->name }}">
+
+                                            {{ $loc->name }}
+
+                                        </option>
+
                                     @endforeach
+
                                 </select>
-                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline"
-                                    style="width:30px;height:30px">+</button>
+
+                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline">
+                                    +
+                                </button>
+
                             </div>
                         </div>
                         <div class="form-group">
@@ -682,10 +697,10 @@
 
     <style>
         /* ============================================================
-                                                                                   PATIENT REGISTRATION - ATTRACTIVE DESIGN
-                                                                                   Color Theme: #1B4F72 (Deep Blue) | #2980B9 (Lighter Blue)
-                                                                                   No conflicts with existing styles - uses specific selectors
-                                                                                   ============================================================ */
+                            PATIENT REGISTRATION - ATTRACTIVE DESIGN
+                            Color Theme: #1B4F72 (Deep Blue) | #2980B9 (Lighter Blue)
+                            No conflicts with existing styles - uses specific selectors
+                            ============================================================ */
 
         /* Main container enhancement */
         .hms-card.patient-registration-card {

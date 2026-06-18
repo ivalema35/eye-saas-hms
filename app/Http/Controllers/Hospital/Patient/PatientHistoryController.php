@@ -9,6 +9,7 @@ use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -17,58 +18,68 @@ class PatientHistoryController extends Controller
 {
     public function index(Request $request, string $slug): View
     {
-        $search     = $request->input('search');
+        $tenantId   = app('tenant')->id;
         $rawIds     = $request->input('patient_ids', '');
         $patientIds = array_values(array_filter(array_map('intval', explode(',', $rawIds))));
-        $tenantId   = app('tenant')->id;
 
-        $patient    = null;
-        $history    = collect();
-        $nameGroups = collect();
-
+        // ── Detail mode: show clinical timeline for a specific patient ────────
         if ($patientIds) {
-            // A name-group card was clicked — load combined history for all IDs in that group
-            $patient = Patient::find($patientIds[0]);
-            $history = $this->loadExamHistoryForIds($patientIds);
-        } elseif ($search) {
-            $candidates = Patient::where(function ($q) use ($search) {
-                $q->where('patient_code', $search)
-                    ->orWhere('contact_no', $search)
-                    ->orWhereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"]);
-            })->get();
+            $patient      = Patient::find($patientIds[0]);
+            $history      = $this->loadExamHistoryForIds($patientIds);
+            $masters      = $this->loadMasters($tenantId);
+            $nameGroups   = collect();
+            $search       = null;
+            $historyRoute = route('hospital.patients.history', ['slug' => $slug]);
 
-            if ($candidates->count() === 1) {
-                $patient = $candidates->first();
-                $history = $this->loadExamHistoryForIds([$patient->id]);
-            } elseif ($candidates->count() > 1) {
-                // Group candidates by normalised full name
-                $groups = $candidates->groupBy(
-                    fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name))
-                );
-
-                if ($groups->count() === 1) {
-                    // All registrations belong to the same person → auto-merge history
-                    $patient = $candidates->sortByDesc('id')->first();
-                    $history = $this->loadExamHistoryForIds($candidates->pluck('id')->all());
-                } else {
-                    // Distinct names → show one disambiguation card per unique name
-                    $nameGroups = $groups->map(fn($group) => (object)[
-                        'display_name' => trim($group->first()->first_name . ' ' . $group->first()->last_name),
-                        'patient_code' => $group->first()->patient_code,
-                        'age'          => $group->first()->age,
-                        'gender'       => $group->first()->gender,
-                        'patient_ids'  => $group->pluck('id')->implode(','),
-                        'count'        => $group->count(),
-                    ])->values();
-                }
-            }
+            return view('hospital.patient.history',
+                compact('patient', 'history', 'search', 'slug', 'nameGroups', 'historyRoute') + $masters
+            );
         }
 
-        $masters      = $this->loadMasters($tenantId);
-        $historyRoute = route('hospital.patients.history', ['slug' => $slug]);
+        // ── List mode: filter + table (same layout as partner history) ────────
+        $patientName = $request->input('patient_name');
+        $doctorName  = $request->input('doctor_name');
+        $contactNo   = $request->input('contact_no');
+        $date        = $request->input('date');
+
+        $allPatients = Patient::with(['doctor'])
+            ->where(function ($q) {
+                $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at');
+            })
+            ->when($patientName, fn($q) => $q->where(function ($q2) use ($patientName) {
+                $q2->where('first_name', 'like', "%{$patientName}%")
+                    ->orWhere('last_name', 'like', "%{$patientName}%");
+            }))
+            ->when($doctorName, fn($q) => $q->whereHas(
+                'doctor',
+                fn($q2) => $q2->where('name', 'like', "%{$doctorName}%")
+            ))
+            ->when($contactNo, fn($q) => $q->where('contact_no', 'like', "%{$contactNo}%"))
+            ->when($date, fn($q) => $q->whereDate('appointment_date', $date))
+            ->latest('appointment_date')
+            ->get();
+
+        $grouped = $allPatients
+            ->groupBy(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no)
+            ->map(function ($group) {
+                $rep = $group->sortByDesc('id')->first();
+                $rep->all_patient_ids = $group->pluck('id')->implode(',');
+                return $rep;
+            })
+            ->values();
+
+        $perPage  = 20;
+        $page     = max(1, (int) $request->input('page', 1));
+        $patients = new LengthAwarePaginator(
+            $grouped->slice(($page - 1) * $perPage, $perPage)->values(),
+            $grouped->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return view('hospital.patient.history',
-            compact('patient', 'history', 'search', 'slug', 'nameGroups', 'historyRoute') + $masters
+            compact('slug', 'patients', 'patientName', 'doctorName', 'contactNo', 'date')
         );
     }
 

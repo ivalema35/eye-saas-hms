@@ -9,6 +9,7 @@ use App\Models\Hospital\Location;
 use App\Models\Hospital\MasterAdvice;
 use App\Models\Hospital\MasterMedicineInstruction;
 use App\Models\Hospital\Referrer;
+use App\Models\Platform\MasterCity;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,9 @@ use Illuminate\View\View;
 
 class BasicMasterController extends Controller
 {
-    public function __construct(private readonly RolePermissionService $perm) {}
+    public function __construct(private readonly RolePermissionService $perm)
+    {
+    }
 
     /**
      * Maps URL {type} slugs to their Eloquent model classes.
@@ -40,7 +43,7 @@ class BasicMasterController extends Controller
     protected function resolveModel(string $type): string
     {
         $map = $this->modelMap();
-        abort_if(! array_key_exists($type, $map), 404, 'Master type not found.');
+        abort_if(!array_key_exists($type, $map), 404, 'Master type not found.');
 
         return $map[$type];
     }
@@ -54,13 +57,35 @@ class BasicMasterController extends Controller
     {
         $modelClass = $this->resolveModel($type);
         $instance = new $modelClass;
-        $records = $modelClass::latest()->get();
+        if ($type === 'locations') {
+
+            $user = auth('hospital_user')->user();
+
+            $hospitalCountry = $user->tenant->country;
+
+            $records = MasterCity::with([
+                'district',
+                'state',
+                'state.country'
+            ])
+                ->whereHas('state.country', function ($q) use ($hospitalCountry) {
+                    $q->where('name', $hospitalCountry);
+                })
+                ->get();
+
+        } else {
+
+            $records = $modelClass::latest()->get();
+
+        }
         $columns = array_values(array_diff($instance->getFillable(), ['tenant_id']));
         $title = Str::headline($type);
         $routeGroup = 'hospital.masters.basic';
 
-        return view('hospital.masters.dynamic_index',
-            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup'));
+        return view(
+            'hospital.masters.dynamic_index',
+            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup')
+        );
     }
 
     public function store(Request $request, string $slug, string $type): RedirectResponse
@@ -71,7 +96,7 @@ class BasicMasterController extends Controller
 
         $modelClass::create($validated);
 
-        return redirect()->back()->with('success', Str::headline($type).' added successfully.');
+        return redirect()->back()->with('success', Str::headline($type) . ' added successfully.');
     }
 
     /**
@@ -85,13 +110,13 @@ class BasicMasterController extends Controller
         $allowedByRole = in_array($roleSlug, ['hospital_admin', 'reception', 'receptionist', 'receptionist_opd'], true);
         $allowedByPermission = $this->perm->canAny(['opd.patient.register', 'opd.patient.register_phone', 'master.locations']);
 
-        if (! $allowedByRole && ! $allowedByPermission) {
+        if (!$allowedByRole && !$allowedByPermission) {
             return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
         }
 
         $modelClass = $this->resolveModel($type);
-        $instance   = new $modelClass;
-        $columns    = array_values(array_diff($instance->getFillable(), ['tenant_id']));
+        $instance = new $modelClass;
+        $columns = array_values(array_diff($instance->getFillable(), ['tenant_id']));
 
         // Columns that are nullable on their model (optional in AJAX forms)
         $nullableCols = method_exists($instance, 'getNullable')
@@ -136,7 +161,7 @@ class BasicMasterController extends Controller
 
         $record->update($validated);
 
-        return redirect()->back()->with('success', Str::headline($type).' updated successfully.');
+        return redirect()->back()->with('success', Str::headline($type) . ' updated successfully.');
     }
 
     public function destroy(string $slug, string $type, int $id): RedirectResponse
@@ -144,6 +169,6 @@ class BasicMasterController extends Controller
         $modelClass = $this->resolveModel($type);
         $modelClass::findOrFail($id)->delete();
 
-        return redirect()->back()->with('success', Str::headline($type).' deleted successfully.');
+        return redirect()->back()->with('success', Str::headline($type) . ' deleted successfully.');
     }
 }

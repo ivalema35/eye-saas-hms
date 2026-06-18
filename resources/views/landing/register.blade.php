@@ -59,6 +59,61 @@
         pointer-events: none !important;
     }
 </style>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.min.css">
+<style>
+    /* Tom Select — HMS form integration */
+    .ts-wrapper { font-size: .9375rem; }
+    .ts-wrapper .ts-control {
+        border: 1px solid var(--hms-border, #dce3ed) !important;
+        border-radius: var(--hms-radius-sm, 6px) !important;
+        padding: .5rem .875rem !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        min-height: 42px;
+        cursor: pointer;
+        align-items: center;
+    }
+    .ts-wrapper.focus .ts-control {
+        border-color: var(--hms-primary, #1B4F72) !important;
+        box-shadow: 0 0 0 3px rgba(27,79,114,.1) !important;
+        outline: none !important;
+    }
+    .ts-wrapper .ts-control input {
+        font-size: .9375rem !important;
+        color: var(--hms-text, #1a2535) !important;
+        padding: 0 !important;
+    }
+    .ts-wrapper .ts-control .placeholder {
+        color: var(--hms-text-muted, #8fa1b5) !important;
+        font-size: .9375rem;
+    }
+    .ts-wrapper.disabled .ts-control {
+        background: #f5f7fa !important;
+        cursor: not-allowed !important;
+        opacity: .65;
+    }
+    .ts-dropdown {
+        border: 1px solid var(--hms-border, #dce3ed) !important;
+        border-radius: var(--hms-radius-sm, 6px) !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,.1) !important;
+        font-size: .9375rem;
+    }
+    .ts-dropdown .option { padding: .5rem .875rem; cursor: pointer; }
+    .ts-dropdown .option.active {
+        background: rgba(27,79,114,.08) !important;
+        color: var(--hms-text, #1a2535) !important;
+    }
+    .ts-dropdown .option.selected {
+        background: rgba(27,79,114,.14) !important;
+        font-weight: 600;
+    }
+    .ts-dropdown .no-results {
+        padding: .5rem .875rem;
+        color: var(--hms-text-muted, #8fa1b5);
+        font-size: .875rem;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -181,14 +236,36 @@
 
                         <div class="form-row-2">
                             <div class="hms-form-group">
-                                <label>City</label>
-                                <input type="text" name="city" class="hms-input"
-                                       value="{{ old('city') }}" placeholder="Mumbai">
+                                <label>Country</label>
+                                <select name="country" id="regCountry" class="hms-select">
+                                    <option value="">-- Select Country --</option>
+                                    @foreach($countries as $c)
+                                    <option value="{{ $c->name }}" data-id="{{ $c->id }}"
+                                        {{ old('country') === $c->name ? 'selected' : '' }}>
+                                        {{ $c->name }}
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="hms-form-group">
                                 <label>State</label>
-                                <input type="text" name="state" class="hms-input"
-                                       value="{{ old('state') }}" placeholder="Maharashtra">
+                                <select name="state" id="regState" class="hms-select" disabled>
+                                    <option value="">-- Select State --</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row-2">
+                            <div class="hms-form-group">
+                                <label>District</label>
+                                <select name="district" id="regDistrict" class="hms-select" disabled>
+                                    <option value="">-- Select District --</option>
+                                </select>
+                            </div>
+                            <div class="hms-form-group">
+                                <label>City</label>
+                                <select name="city" id="regCity" class="hms-select" disabled>
+                                    <option value="">-- Select City --</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -384,6 +461,89 @@
                 .catch(function () { slugStatus.textContent = ''; });
         }, 400);
     }
+}());
+</script>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+(function () {
+    // Country name → ID map for cascade (IDs come from server-rendered options)
+    var countryIdMap = {
+        @foreach($countries as $c)
+        '{{ addslashes($c->name) }}': {{ $c->id }},
+        @endforeach
+    };
+
+    function initTs(id, placeholder, disabled) {
+        var ts = new TomSelect(id, {
+            placeholder: placeholder,
+            allowEmptyOption: true,
+            create: false,
+            maxOptions: 300,
+        });
+        if (disabled) ts.disable();
+        return ts;
+    }
+
+    function resetTs(ts) {
+        ts.clear(true);
+        ts.clearOptions();
+        ts.disable();
+    }
+
+    function populateTs(ts, items) {
+        ts.addOptions(items.map(function (item) {
+            return { value: item.name, text: item.name, locId: item.id };
+        }));
+        if (items.length > 0) ts.enable();
+    }
+
+    function cascadeFetch(url, params, callback) {
+        var qs = Object.keys(params).map(function (k) {
+            return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+        }).join('&');
+        fetch(url + '?' + qs)
+            .then(function (r) { return r.json(); })
+            .then(callback)
+            .catch(function () {});
+    }
+
+    var tsCountry  = initTs('#regCountry',  '-- Select Country --',  false);
+    var tsState    = initTs('#regState',    '-- Select State --',    true);
+    var tsDistrict = initTs('#regDistrict', '-- Select District --', true);
+    var tsCity     = initTs('#regCity',     '-- Select City --',     true);
+
+    tsCountry.on('change', function (name) {
+        resetTs(tsState);
+        resetTs(tsDistrict);
+        resetTs(tsCity);
+        var id = name ? countryIdMap[name] : null;
+        if (!id) return;
+        cascadeFetch('{{ route("location.states") }}', { country_id: id }, function (data) {
+            populateTs(tsState, data);
+        });
+    });
+
+    tsState.on('change', function (name) {
+        resetTs(tsDistrict);
+        resetTs(tsCity);
+        var opt = name ? tsState.options[name] : null;
+        if (!opt) return;
+        cascadeFetch('{{ route("location.districts") }}', { state_id: opt.locId }, function (data) {
+            populateTs(tsDistrict, data);
+        });
+    });
+
+    tsDistrict.on('change', function (name) {
+        resetTs(tsCity);
+        var opt = name ? tsDistrict.options[name] : null;
+        if (!opt) return;
+        cascadeFetch('{{ route("location.cities") }}', { district_id: opt.locId }, function (data) {
+            populateTs(tsCity, data);
+        });
+    });
 }());
 </script>
 @endpush

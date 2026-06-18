@@ -285,12 +285,12 @@
                                     <td>{{ $patient->age ?? '-' }}</td>
                                     <td>
                                         @if($patient->tenant_id === $currentTenant->id)
-                                            <a href="{{ url($slug . '/patient-history') }}?search={{ $patient->contact_no }}"
+                                            <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids }}"
                                                 class="btn btn-sm btn-view-history" title="View Details" target="_blank">
                                                 <i class="bi bi-eye-fill"></i> View
                                             </a>
                                         @else
-                                            <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?search={{ $patient->contact_no }}"
+                                            <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids }}"
                                                 class="btn btn-sm fw-bold" target="_blank"
                                                 style="background:#0d9488;color:#fff;border-radius:8px;padding:5px 12px;">
                                                 <i class="bi bi-eye-fill"></i> View

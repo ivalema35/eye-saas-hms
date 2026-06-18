@@ -613,8 +613,16 @@ class DashboardController extends Controller
             ->latest('appointment_date')
             ->get();
 
-        // Same contact_no = same patient; keep only the latest appointment per contact
-        $deduped = $allHistoryPatients->unique('contact_no')->values();
+        // Group by name + contact + tenant so duplicates within the same hospital
+        // are merged into one row with all their IDs; cross-hospital rows stay separate.
+        $deduped = $allHistoryPatients
+            ->groupBy(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no . '|' . $p->tenant_id)
+            ->map(function ($group) {
+                $rep = $group->sortByDesc('id')->first();
+                $rep->all_patient_ids = $group->pluck('id')->implode(',');
+                return $rep;
+            })
+            ->values();
 
         $perPage  = 20;
         $page     = max(1, (int) request('page', 1));

@@ -520,6 +520,135 @@
 
 @section('content')
 <div class="patient-history-page">
+
+{{-- ══════════════════════════════════════════════════════════════════════
+     LIST MODE — table of all examined patients with filters
+     (rendered when $patients paginator is passed from the controller)
+     ══════════════════════════════════════════════════════════════════════ --}}
+@if(isset($patients))
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h5 class="fw-bold mb-0" style="color:#1B4F72;">
+                <i class="bi bi-clock-history me-2"></i>Patient History
+            </h5>
+        </div>
+        <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
+           class="btn btn-sm btn-outline-secondary px-3" style="border-radius:6px;">
+            <i class="bi bi-arrow-left me-1"></i> Back to Patients
+        </a>
+    </div>
+
+    {{-- Filters --}}
+    <form method="GET"
+          action="{{ route('hospital.patients.history', ['slug' => $slug]) }}"
+          class="card mb-4 p-3" style="border-radius:14px;border:1px solid #e2e8f0;background:#fff;">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Patient Name</label>
+                <input type="text" name="patient_name" value="{{ $patientName ?? '' }}"
+                       class="form-control form-control-sm" placeholder="Search patient..."
+                       style="border-radius:8px;border:1px solid #cbd5e1;">
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Doctor Name</label>
+                <input type="text" name="doctor_name" value="{{ $doctorName ?? '' }}"
+                       class="form-control form-control-sm" placeholder="Search doctor..."
+                       style="border-radius:8px;border:1px solid #cbd5e1;">
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Contact No.</label>
+                <input type="text" name="contact_no" value="{{ $contactNo ?? '' }}"
+                       class="form-control form-control-sm" placeholder="Search contact..."
+                       maxlength="15" style="border-radius:8px;border:1px solid #cbd5e1;">
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Date</label>
+                <input type="date" name="date" value="{{ $date ?? '' }}"
+                       class="form-control form-control-sm" style="border-radius:8px;border:1px solid #cbd5e1;">
+            </div>
+            <div class="col-12 col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-sm w-100 fw-bold"
+                        style="background:#1B4F72;color:#fff;border-radius:8px;">
+                    <i class="bi bi-search me-1"></i>Filter
+                </button>
+                @if($patientName || $doctorName || $contactNo || $date)
+                    <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}"
+                       class="btn btn-sm w-100 fw-bold"
+                       style="background:#e2e8f0;color:#1B4F72;border-radius:8px;">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                @endif
+            </div>
+        </div>
+    </form>
+
+    <div class="mb-3">
+        <span class="fw-semibold" style="color:#1B4F72;font-size:14px;">
+            <i class="bi bi-people me-1"></i>
+            Total Records: <strong>{{ $patients->total() }}</strong>
+        </span>
+    </div>
+
+    <div class="custom-partner-card" style="background:#fff;border-radius:16px;box-shadow:0 10px 25px -5px rgba(27,79,114,.1);border:1px solid #e2e8f0;overflow:hidden;">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center mb-0" style="font-size:14px;">
+                <thead>
+                    <tr>
+                        <th style="width:55px;background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">#</th>
+                        <th style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">MRD No.</th>
+                        <th class="text-start" style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">Patient Name</th>
+                        <th style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">Doctor</th>
+                        <th style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">Date</th>
+                        <th style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">Contact No.</th>
+                        <th style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">Age</th>
+                        <th style="background:#1B4F72;color:#fff;font-size:13px;text-transform:uppercase;letter-spacing:.5px;padding:15px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($patients as $i => $p)
+                        <tr style="cursor:pointer;" onclick="window.location='{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $p->all_patient_ids }}'">
+                            <td>{{ $patients->firstItem() + $i }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">{{ $p->patient_code ?? '—' }}</span>
+                            </td>
+                            <td class="text-start fw-semibold" style="color:#1B4F72;">
+                                {{ $p->first_name }} {{ $p->last_name }}
+                            </td>
+                            <td class="fw-semibold">{{ $p->doctor->name ?? '—' }}</td>
+                            <td>{{ \Carbon\Carbon::parse($p->appointment_date)->format('d M, Y') }}</td>
+                            <td class="text-muted">{{ $p->contact_no ?? '—' }}</td>
+                            <td>{{ $p->age ?? '—' }}</td>
+                            <td>
+                                <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $p->all_patient_ids }}"
+                                   class="btn-view-partner"
+                                   style="background:#0d9488;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:13px;text-decoration:none;"
+                                   onclick="event.stopPropagation()">
+                                    <i class="bi bi-eye-fill me-1"></i>View
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="py-5 text-muted">
+                                <i class="bi bi-person-slash me-2"></i>Koi patient history nahi mili.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($patients->hasPages())
+            <div class="d-flex justify-content-center p-3 border-top" style="background:#fcfcfc;">
+                {{ $patients->links() }}
+            </div>
+        @endif
+    </div>
+
+@else
+{{-- ══════════════════════════════════════════════════════════════════════
+     DETAIL MODE — clinical timeline for a specific patient
+     ══════════════════════════════════════════════════════════════════════ --}}
 @php
         $user = Auth::guard('hospital_user')->user();
         $isDoctor = in_array($user?->role?->slug, ['doctor', 'ot_doctor']);
@@ -1004,5 +1133,6 @@
         </div>
     </div>
     @endif
+@endif {{-- end list/detail mode --}}
 </div>
 @endsection
