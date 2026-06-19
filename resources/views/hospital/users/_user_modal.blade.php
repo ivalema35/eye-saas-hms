@@ -157,7 +157,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="userForm" method="POST" action="{{ route('hospital.users.store', ['slug' => $slug]) }}">
+            <form id="userForm" method="POST" action="{{ route('hospital.users.store', ['slug' => $slug]) }}" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="userFormMethod" value="POST">
                 <input type="hidden" name="user_id" id="user-id" value="{{ old('user_id') }}">
@@ -233,6 +233,56 @@
                             <div style="font-size:.72rem;color:#94A3B8;margin-top:.2rem">Daily serial format:
                                 <strong>JP-001, JP-002…</strong></div>
                             @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-doctor-only" style="display:none">
+                            <label>Registration No.</label>
+                            <input type="text" name="registration_no" id="user-registration-no"
+                                class="hms-input @error('registration_no') is-invalid @enderror"
+                                placeholder="e.g. MCI-12345">
+                            @error('registration_no')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-doctor-only" style="display:none">
+                            <label>Experience <span style="font-size:.75rem;color:#64748B;font-weight:400">(years)</span></label>
+                            <input type="number" name="experience_years" id="user-experience-years" min="0" max="60"
+                                class="hms-input @error('experience_years') is-invalid @enderror"
+                                placeholder="e.g. 5">
+                            @error('experience_years')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-doctor-only" style="display:none">
+                            <label>Signature <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
+                            <input type="file" name="signature" id="user-signature" accept="image/jpg,image/jpeg,image/png"
+                                class="hms-input @error('signature') is-invalid @enderror"
+                                onchange="previewDoctorFile(this, 'user-signature-preview')">
+                            <div id="user-signature-preview" style="margin-top:.4rem;display:none;">
+                                <img src="" alt="Signature Preview"
+                                     style="max-height:50px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:4px;">
+                            </div>
+                            <div id="user-signature-current" style="margin-top:.4rem;display:none;">
+                                <span style="font-size:.72rem;color:#64748B;">Current: </span>
+                                <img src="" alt="Current Signature"
+                                     style="max-height:44px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
+                            </div>
+                            @error('signature')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-doctor-only" style="display:none">
+                            <label>Profile Photo <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
+                            <input type="file" name="profile_photo" id="user-profile-photo" accept="image/jpg,image/jpeg,image/png"
+                                class="hms-input @error('profile_photo') is-invalid @enderror"
+                                onchange="previewDoctorFile(this, 'user-photo-preview')">
+                            <div id="user-photo-preview" style="margin-top:.4rem;display:none;">
+                                <img src="" alt="Photo Preview"
+                                     style="max-height:60px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:4px;">
+                            </div>
+                            <div id="user-photo-current" style="margin-top:.4rem;display:none;">
+                                <span style="font-size:.72rem;color:#64748B;">Current: </span>
+                                <img src="" alt="Current Photo"
+                                     style="max-height:55px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
+                            </div>
+                            @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <!-- <div class="hms-form-group user-doctor-only" style="display:none">
@@ -354,6 +404,20 @@
             }
         }
 
+        function previewDoctorFile(input, previewId) {
+            var previewWrap = document.getElementById(previewId);
+            if (!previewWrap) return;
+            var img = previewWrap.querySelector('img');
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    previewWrap.style.display = '';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         function resetUserForm() {
             document.getElementById('userFormModalTitle').innerText = 'Add User';
             document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
@@ -368,6 +432,14 @@
             const doctorTypeResetEl = document.getElementById('user-doctor-type');
             if (doctorTypeResetEl) doctorTypeResetEl.value = '';
             document.getElementById('user-doctor-prefix').value = '';
+            document.getElementById('user-registration-no').value = '';
+            document.getElementById('user-experience-years').value = '';
+            document.getElementById('user-signature').value = '';
+            document.getElementById('user-profile-photo').value = '';
+            document.getElementById('user-signature-preview').style.display = 'none';
+            document.getElementById('user-photo-preview').style.display = 'none';
+            document.getElementById('user-signature-current').style.display = 'none';
+            document.getElementById('user-photo-current').style.display = 'none';
             const userFocPermissionInput = document.getElementById('user-foc-permission');
             if (userFocPermissionInput) {
                 userFocPermissionInput.checked = false;
@@ -394,6 +466,28 @@
             const doctorTypeEditEl = document.getElementById('user-doctor-type');
             if (doctorTypeEditEl) doctorTypeEditEl.value = record.doctor_type ?? '';
             document.getElementById('user-doctor-prefix').value = (record.doctor_prefix ?? '').toUpperCase();
+            document.getElementById('user-registration-no').value = record.registration_no ?? '';
+            document.getElementById('user-experience-years').value = record.experience_years ?? '';
+            document.getElementById('user-signature').value = '';
+            document.getElementById('user-profile-photo').value = '';
+            document.getElementById('user-signature-preview').style.display = 'none';
+            document.getElementById('user-photo-preview').style.display = 'none';
+
+            var sigCurrent = document.getElementById('user-signature-current');
+            var photoCurrent = document.getElementById('user-photo-current');
+            if (record.signature_path) {
+                sigCurrent.querySelector('img').src = '/storage/' + record.signature_path;
+                sigCurrent.style.display = '';
+            } else {
+                sigCurrent.style.display = 'none';
+            }
+            if (record.profile_photo_path) {
+                photoCurrent.querySelector('img').src = '/storage/' + record.profile_photo_path;
+                photoCurrent.style.display = '';
+            } else {
+                photoCurrent.style.display = 'none';
+            }
+
             const userFocPermissionInput = document.getElementById('user-foc-permission');
             if (userFocPermissionInput) {
                 userFocPermissionInput.checked = !!record.foc_permission;
@@ -441,6 +535,8 @@
                     const doctorTypeOldEl = document.getElementById('user-doctor-type');
                     if (doctorTypeOldEl) doctorTypeOldEl.value = @json(old('doctor_type', ''));
                     document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
+                    document.getElementById('user-registration-no').value = @json(old('registration_no', ''));
+                    document.getElementById('user-experience-years').value = @json(old('experience_years', ''));
                     const userFocPermissionInput = document.getElementById('user-foc-permission');
                     if (userFocPermissionInput) {
                         userFocPermissionInput.checked = @json((bool) old('foc_permission'));

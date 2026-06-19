@@ -51,6 +51,7 @@ use App\Http\Controllers\Hospital\Patient\PatientController;
 use App\Http\Controllers\Hospital\Patient\PatientHistoryController;
 use App\Http\Controllers\Hospital\Report\ReportController;
 use App\Http\Controllers\Hospital\Role\RoleController;
+use App\Http\Controllers\Hospital\Setting\DoctorProfileController;
 use App\Http\Controllers\Hospital\Setting\HospitalSettingController;
 use App\Http\Controllers\Hospital\Setting\SetupWizardController;
 use App\Http\Controllers\Hospital\Setting\TimezoneController;
@@ -320,6 +321,12 @@ Route::prefix('{slug}')
                         Route::delete('charge-heads/{id}', [OtChargeHeadController::class, 'destroy'])->name('charge-heads.destroy')->whereNumber('id');
                     });
                 });
+
+                // ============================================================
+                // My Profile (self-edit for any logged-in user)
+                // ============================================================
+                Route::get('profile', [DoctorProfileController::class, 'show'])->name('profile.show');
+                Route::put('profile', [DoctorProfileController::class, 'update'])->name('profile.update');
 
                 // ============================================================
                 // Settings

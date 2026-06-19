@@ -114,6 +114,7 @@ class HospitalSettingController extends Controller
             'hospital_timezone' => ['nullable', 'string', 'timezone'],
             'invoice_prefix'    => ['required', 'string', 'max:10'],
             'tax_percentage'    => ['required', 'numeric', 'min:0', 'max:100'],
+            'letter_pad'        => ['nullable', 'in:available,unavailable'],
             'print_header_note' => ['nullable', 'string', 'max:255'],
             'print_footer_note' => ['nullable', 'string', 'max:255'],
             'pagination_limit'  => ['required', 'integer', 'in:10,25,50,100'],

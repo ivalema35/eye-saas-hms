@@ -761,6 +761,51 @@
                 {{-- ══════════════ PRINT SETTINGS TAB ══════════════ --}}
                 <div class="tab-pane fade" id="print" role="tabpanel" aria-labelledby="print-tab">
                     <div class="row g-4">
+
+                        {{-- Letter Pad --}}
+                        @php $currentLetterPad = old('letter_pad', $settings['letter_pad'] ?? 'unavailable'); @endphp
+                        <div class="col-12">
+                            <label class="form-label d-block mb-2">
+                                <i class="bi bi-file-earmark-text me-1"></i> Letter Pad
+                            </label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <label class="letter-pad-option {{ $currentLetterPad === 'unavailable' ? 'active' : '' }}"
+                                       onclick="selectLetterPad('unavailable')" style="cursor:pointer;">
+                                    <div class="letter-pad-box" style="border:2px solid {{ $currentLetterPad === 'unavailable' ? '#1B4F72' : 'rgba(27,79,114,.18)' }};border-radius:14px;padding:14px 20px;background:{{ $currentLetterPad === 'unavailable' ? 'rgba(27,79,114,.06)' : '#fff' }};transition:all .2s;">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <div style="width:16px;height:16px;border-radius:50%;border:2px solid {{ $currentLetterPad === 'unavailable' ? '#1B4F72' : 'rgba(27,79,114,.3)' }};display:flex;align-items:center;justify-content:center;">
+                                                @if($currentLetterPad === 'unavailable')
+                                                    <div style="width:8px;height:8px;border-radius:50%;background:#1B4F72;"></div>
+                                                @endif
+                                            </div>
+                                            <span style="font-weight:800;font-size:.85rem;color:var(--settings-primary)">Unavailable</span>
+                                        </div>
+                                        <p style="font-size:.74rem;color:var(--settings-muted);margin:0;max-width:220px;line-height:1.4">
+                                            Prescription header will show hospital name, address, phone &amp; logo.
+                                        </p>
+                                    </div>
+                                </label>
+
+                                <label class="letter-pad-option {{ $currentLetterPad === 'available' ? 'active' : '' }}"
+                                       onclick="selectLetterPad('available')" style="cursor:pointer;">
+                                    <div class="letter-pad-box" style="border:2px solid {{ $currentLetterPad === 'available' ? '#1B4F72' : 'rgba(27,79,114,.18)' }};border-radius:14px;padding:14px 20px;background:{{ $currentLetterPad === 'available' ? 'rgba(27,79,114,.06)' : '#fff' }};transition:all .2s;">
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <div style="width:16px;height:16px;border-radius:50%;border:2px solid {{ $currentLetterPad === 'available' ? '#1B4F72' : 'rgba(27,79,114,.3)' }};display:flex;align-items:center;justify-content:center;">
+                                                @if($currentLetterPad === 'available')
+                                                    <div style="width:8px;height:8px;border-radius:50%;background:#1B4F72;"></div>
+                                                @endif
+                                            </div>
+                                            <span style="font-weight:800;font-size:.85rem;color:var(--settings-primary)">Available</span>
+                                        </div>
+                                        <p style="font-size:.74rem;color:var(--settings-muted);margin:0;max-width:220px;line-height:1.4">
+                                            Prescription header will appear in black (physical letterhead is used).
+                                        </p>
+                                    </div>
+                                </label>
+                            </div>
+                            <input type="hidden" name="letter_pad" id="letterPadInput" value="{{ $currentLetterPad }}">
+                        </div>
+
                         <div class="col-md-6">
                             <label class="form-label">Print Header Note</label>
                             <input type="text" name="print_header_note"
@@ -1102,6 +1147,24 @@ function updateDarkPreview() {
         imgDark.style.display = 'block';
         imgDark.style.filter = 'brightness(0) invert(1)';
     }
+}
+
+// Letter Pad selector
+function selectLetterPad(value) {
+    document.getElementById('letterPadInput').value = value;
+    document.querySelectorAll('.letter-pad-option').forEach(function(opt) {
+        var box = opt.querySelector('.letter-pad-box');
+        var dot = opt.querySelector('div > div > div');
+        var isActive = opt.getAttribute('onclick') === "selectLetterPad('" + value + "')";
+        if (box) {
+            box.style.border = isActive ? '2px solid #1B4F72' : '2px solid rgba(27,79,114,.18)';
+            box.style.background = isActive ? 'rgba(27,79,114,.06)' : '#fff';
+        }
+        if (dot) {
+            dot.style.borderColor = isActive ? '#1B4F72' : 'rgba(27,79,114,.3)';
+            dot.innerHTML = isActive ? '<div style="width:8px;height:8px;border-radius:50%;background:#1B4F72;"></div>' : '';
+        }
+    });
 }
 
 // Logo style selector — only updates preview, doesn't re-process
