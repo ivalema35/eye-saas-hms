@@ -48,9 +48,13 @@ class HospitalUser extends Authenticatable
         'password',
         'contact',
         'status',
-        'doctor_type',       // Only for Doctor role: primary | secondary
-        'doctor_prefix',     // Only for Doctor role: 2-5 char prefix for daily serial (e.g. JP)
-        'foc_permission',    // Only for Doctor role: boolean
+        'doctor_type',         // Only for Doctor role: primary | secondary
+        'doctor_prefix',       // Only for Doctor role: 2-5 char prefix for daily serial (e.g. JP)
+        'foc_permission',      // Only for Doctor role: boolean
+        'registration_no',     // Only for Doctor role
+        'experience_years',    // Only for Doctor role
+        'signature_path',      // Only for Doctor role: signature image
+        'profile_photo_path',  // Only for Doctor role: profile photo
         'last_login_at',
     ];
 

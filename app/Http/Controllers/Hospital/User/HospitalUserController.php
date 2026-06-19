@@ -10,6 +10,7 @@ use App\Models\Role\Role;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class HospitalUserController extends Controller
@@ -57,22 +58,44 @@ class HospitalUserController extends Controller
         $canPerformClinicalExams = in_array('opd.exam.primary', $rolePermissionKeys, true)
             || in_array('opd.exam.secondary', $rolePermissionKeys, true);
 
+        $tenantId = app('tenant')->id;
+
+        $signaturePath    = $this->storeUserFile($request, 'signature',     $tenantId);
+        $profilePhotoPath = $this->storeUserFile($request, 'profile_photo', $tenantId);
+
         HospitalUser::create([
-            'tenant_id' => app('tenant')->id,
-            'role_id' => $role->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'contact' => $data['contact'] ?? null,
-            'password' => $data['password'],
-            'status' => $data['status'],
-            'doctor_type'   => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
-            'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
-            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'tenant_id'          => $tenantId,
+            'role_id'            => $role->id,
+            'name'               => $data['name'],
+            'email'              => $data['email'],
+            'contact'            => $data['contact'] ?? null,
+            'password'           => $data['password'],
+            'status'             => $data['status'],
+            'doctor_type'        => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_prefix'      => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
+            'foc_permission'     => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'registration_no'    => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
+            'experience_years'   => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
+            'signature_path'     => $canPerformClinicalExams ? $signaturePath : null,
+            'profile_photo_path' => $canPerformClinicalExams ? $profilePhotoPath : null,
         ]);
 
         return redirect()
             ->route('hospital.users.index', ['slug' => $slug])
             ->with('success', 'User added successfully.');
+    }
+
+    private function storeUserFile($request, string $field, int $tenantId, ?string $existingPath = null): ?string
+    {
+        if (! $request->hasFile($field)) {
+            return $existingPath;
+        }
+
+        if ($existingPath && Storage::disk('public')->exists($existingPath)) {
+            Storage::disk('public')->delete($existingPath);
+        }
+
+        return $request->file($field)->store("tenants/{$tenantId}/staff", 'public');
     }
 
     private function authorizeUserManagement(): void
@@ -120,15 +143,24 @@ class HospitalUserController extends Controller
         $canPerformClinicalExams = in_array('opd.exam.primary', $rolePermissionKeys, true)
             || in_array('opd.exam.secondary', $rolePermissionKeys, true);
 
+        $tenantId = app('tenant')->id;
+
+        $signaturePath    = $this->storeUserFile($request, 'signature',     $tenantId, $user->signature_path);
+        $profilePhotoPath = $this->storeUserFile($request, 'profile_photo', $tenantId, $user->profile_photo_path);
+
         $updateData = [
-            'role_id' => $role->id,
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'contact' => $data['contact'] ?? null,
-            'status' => $data['status'],
-            'doctor_type'   => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
-            'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
-            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'role_id'            => $role->id,
+            'name'               => $data['name'],
+            'email'              => $data['email'],
+            'contact'            => $data['contact'] ?? null,
+            'status'             => $data['status'],
+            'doctor_type'        => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_prefix'      => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
+            'foc_permission'     => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'registration_no'    => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
+            'experience_years'   => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
+            'signature_path'     => $canPerformClinicalExams ? $signaturePath : null,
+            'profile_photo_path' => $canPerformClinicalExams ? $profilePhotoPath : null,
         ];
 
         if (! empty($data['password'])) {

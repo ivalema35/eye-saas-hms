@@ -641,6 +641,12 @@
                     <ul class="dropdown-menu dropdown-menu-end"
                         style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
                         <li>
+                            <a class="dropdown-item" href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}">
+                                <i class="bi bi-person-circle me-2"></i> My Profile
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
                             <form method="POST"
                                 action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
                                 @csrf

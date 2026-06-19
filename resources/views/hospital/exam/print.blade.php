@@ -136,6 +136,22 @@
 <div class="page">
 
     {{-- ── Header ── --}}
+    @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+
+    @if($letterPad === 'available')
+    {{-- Letter pad available: physical letterhead is used — blank space with doctor info on right --}}
+    <div class="rx-header">
+        <div></div>
+        <div class="rx-header-doctor">
+            <strong>{{ $exam->doctor?->name ?? '—' }}</strong>
+            @if($exam->doctor?->designation ?? null)
+                <span style="display:block">{{ $exam->doctor->designation }}</span>
+            @endif
+            <span style="display:block;margin-top:2px;color:#888">Date: {{ $exam->examined_at?->format('d M Y') ?? now()->format('d M Y') }}</span>
+        </div>
+    </div>
+    @else
+    {{-- Letter pad unavailable: show full hospital info digitally --}}
     <div class="rx-header">
         <div style="display:flex;align-items:center;gap:12px;">
             <div class="rx-logo">
@@ -162,6 +178,7 @@
             <span style="display:block;margin-top:2px;color:#888">Date: {{ $exam->examined_at?->format('d M Y') ?? now()->format('d M Y') }}</span>
         </div>
     </div>
+    @endif
 
     {{-- ── Patient Info ── --}}
     <div class="rx-patient">
