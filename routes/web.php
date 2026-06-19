@@ -29,6 +29,7 @@ use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\LocationMasterController;
+use App\Http\Controllers\SuperAdmin\TimezoneMasterController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use Illuminate\Support\Facades\Route;
 
@@ -135,6 +136,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // Plan Management (stub routes — controller built in T2.1)
         Route::resource('plans', PlanController::class)
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+
+        // Timezone Master — view only
+        Route::get('/timezones', [TimezoneMasterController::class, 'index'])->name('timezones.index');
 
         // Location Master — index (all 4 tabs)
         Route::get('/locations', [LocationMasterController::class, 'index'])->name('locations.index');

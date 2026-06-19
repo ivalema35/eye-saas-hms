@@ -167,23 +167,27 @@
                         <div class="hms-form-group">
                             <label>Name <span class="hms-required">*</span></label>
                             <input type="text" name="name" id="user-name" value="{{ old('name') }}"
-                                   class="hms-input @error('name') is-invalid @enderror" placeholder="Enter full name" required>
+                                class="hms-input @error('name') is-invalid @enderror" placeholder="Enter full name"
+                                required>
                             @error('name')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
                             <label>Email <span class="hms-required">*</span></label>
                             <input type="email" name="email" id="user-email" value="{{ old('email') }}"
-                                   class="hms-input @error('email') is-invalid @enderror" placeholder="name@example.com" required>
+                                class="hms-input @error('email') is-invalid @enderror" placeholder="name@example.com"
+                                required>
                             @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
                             <label>Role <span class="hms-required">*</span></label>
-                            <select name="role_id" id="user-role-id" class="hms-select @error('role_id') is-invalid @enderror" required>
+                            <select name="role_id" id="user-role-id"
+                                class="hms-select @error('role_id') is-invalid @enderror" required>
                                 <option value="">Select Role</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id }}" data-slug="{{ $role->slug }}" @selected(old('role_id') == $role->id)>
+                                    <option value="{{ $role->id }}" data-slug="{{ $role->slug }}"
+                                        @selected(old('role_id') == $role->id)>
                                         {{ $role->name }}
                                     </option>
                                 @endforeach
@@ -194,13 +198,16 @@
                         <div class="hms-form-group">
                             <label>Contact</label>
                             <input type="text" name="contact" id="user-contact" value="{{ old('contact') }}"
-                                   class="hms-input @error('contact') is-invalid @enderror" placeholder="Enter contact number" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+                                class="hms-input @error('contact') is-invalid @enderror"
+                                placeholder="Enter contact number" maxlength="10" inputmode="numeric"
+                                pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
                             @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
                             <label>Status <span class="hms-required">*</span></label>
-                            <select name="status" id="user-status" class="hms-select @error('status') is-invalid @enderror" required>
+                            <select name="status" id="user-status"
+                                class="hms-select @error('status') is-invalid @enderror" required>
                                 <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
                                 <option value="inactive" @selected(old('status') === 'inactive')>Inactive</option>
                             </select>
@@ -218,12 +225,13 @@
                         </div> -->
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
-                            <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters)</span></label>
-                            <input type="text" name="doctor_prefix" id="user-doctor-prefix"
-                                   maxlength="5" placeholder="e.g. JP"
-                                   style="text-transform:uppercase"
-                                   class="hms-input @error('doctor_prefix') is-invalid @enderror">
-                            <div style="font-size:.72rem;color:#94A3B8;margin-top:.2rem">Daily serial format: <strong>JP-001, JP-002…</strong></div>
+                            <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5
+                                    letters)</span></label>
+                            <input type="text" name="doctor_prefix" id="user-doctor-prefix" maxlength="5"
+                                placeholder="e.g. JP" style="text-transform:uppercase"
+                                class="hms-input @error('doctor_prefix') is-invalid @enderror">
+                            <div style="font-size:.72rem;color:#94A3B8;margin-top:.2rem">Daily serial format:
+                                <strong>JP-001, JP-002…</strong></div>
                             @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
@@ -239,27 +247,31 @@
                         <div class="hms-form-group">
                             <label id="user-password-label">Password <span class="hms-required">*</span></label>
                             <div class="password-field-wrap">
-                                <input type="password" name="password" id="user-password" class="hms-input password-field-input @error('password') is-invalid @enderror" placeholder="Create a password" required>
-                                <button type="button" id="toggleUserPassword" class="password-field-toggle" aria-label="Toggle password visibility">
+                                <input type="password" name="password" id="user-password"
+                                    class="hms-input password-field-input @error('password') is-invalid @enderror"
+                                    placeholder="Create a password" required>
+                                <!-- <button type="button" id="toggleUserPassword" class="password-field-toggle" aria-label="Toggle password visibility">
                                     <svg id="userPasswordEye" viewBox="0 0 24 24" aria-hidden="true">
                                         <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                                         <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
                                     </svg>
-                                </button>
+                                </button> -->
                             </div>
                             @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
-                            <label id="user-password-confirm-label">Confirm Password <span class="hms-required">*</span></label>
+                            <label id="user-password-confirm-label">Confirm Password <span
+                                    class="hms-required">*</span></label>
                             <div class="password-field-wrap">
-                                <input type="password" name="password_confirmation" id="user-password-confirmation" class="hms-input password-field-input" placeholder="Re-enter password" required>
-                                <button type="button" id="toggleUserPasswordConfirmation" class="password-field-toggle" aria-label="Toggle confirm password visibility">
+                                <input type="password" name="password_confirmation" id="user-password-confirmation"
+                                    class="hms-input password-field-input" placeholder="Re-enter password" required>
+                                <!-- <button type="button" id="toggleUserPasswordConfirmation" class="password-field-toggle" aria-label="Toggle confirm password visibility">
                                     <svg id="userPasswordConfirmationEye" viewBox="0 0 24 24" aria-hidden="true">
                                         <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                                         <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
                                     </svg>
-                                </button>
+                                </button> -->
                             </div>
                         </div>
                     </div>
@@ -277,182 +289,182 @@
 </div>
 
 @push('scripts')
-<script>
-const userStoreUrl = "{{ route('hospital.users.store', ['slug' => $slug]) }}";
-const userUpdateBase = "{{ route('hospital.users.update', ['slug' => $slug, 'id' => '__ID__']) }}";
-const userPasswordEyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
-const userPasswordEyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+    <script>
+        const userStoreUrl = "{{ route('hospital.users.store', ['slug' => $slug]) }}";
+        const userUpdateBase = "{{ route('hospital.users.update', ['slug' => $slug, 'id' => '__ID__']) }}";
+        const userPasswordEyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
+        const userPasswordEyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 
-function toggleUserDoctorFields() {
-    const roleSelect = document.getElementById('user-role-id');
-    const selected = roleSelect.options[roleSelect.selectedIndex];
-    const slug = selected ? selected.dataset.slug : '';
-    const showDoctor = slug === 'doctor';
+        function toggleUserDoctorFields() {
+            const roleSelect = document.getElementById('user-role-id');
+            const selected = roleSelect.options[roleSelect.selectedIndex];
+            const slug = selected ? selected.dataset.slug : '';
+            const showDoctor = slug === 'doctor';
 
-    document.querySelectorAll('.user-doctor-only').forEach(function (el) {
-        el.style.display = showDoctor ? '' : 'none';
-    });
-}
-
-function setUserPasswordRequired(required) {
-    document.getElementById('user-password').required = required;
-    document.getElementById('user-password-confirmation').required = required;
-    document.getElementById('user-password-label').innerHTML = required
-        ? 'Password <span class="hms-required">*</span>'
-        : 'New Password <span style="color:var(--hms-text-muted);font-size:.8rem">(leave blank to keep current)</span>';
-    document.getElementById('user-password-confirm-label').innerText = required ? 'Confirm Password *' : 'Confirm Password';
-}
-
-function bindUserPasswordToggle(inputId, buttonId, eyeId) {
-    const input = document.getElementById(inputId);
-    const button = document.getElementById(buttonId);
-    const eye = document.getElementById(eyeId);
-
-    if (!input || !button || !eye) {
-        return;
-    }
-
-    button.addEventListener('click', function () {
-        const isHidden = input.type === 'password';
-        input.type = isHidden ? 'text' : 'password';
-        eye.innerHTML = isHidden ? userPasswordEyeSlashSvg : userPasswordEyeSvg;
-    });
-}
-
-function resetUserPasswordToggleState() {
-    const passwordInput = document.getElementById('user-password');
-    const passwordConfirmInput = document.getElementById('user-password-confirmation');
-    const passwordEye = document.getElementById('userPasswordEye');
-    const passwordConfirmEye = document.getElementById('userPasswordConfirmationEye');
-
-    if (passwordInput) {
-        passwordInput.type = 'password';
-    }
-
-    if (passwordConfirmInput) {
-        passwordConfirmInput.type = 'password';
-    }
-
-    if (passwordEye) {
-        passwordEye.innerHTML = userPasswordEyeSvg;
-    }
-
-    if (passwordConfirmEye) {
-        passwordConfirmEye.innerHTML = userPasswordEyeSvg;
-    }
-}
-
-function resetUserForm() {
-    document.getElementById('userFormModalTitle').innerText = 'Add User';
-    document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
-    document.getElementById('userForm').action = userStoreUrl;
-    document.getElementById('userFormMethod').value = 'POST';
-    document.getElementById('user-id').value = '';
-    document.getElementById('user-name').value = '';
-    document.getElementById('user-email').value = '';
-    document.getElementById('user-role-id').value = '';
-    document.getElementById('user-contact').value = '';
-    document.getElementById('user-status').value = 'active';
-    const doctorTypeResetEl = document.getElementById('user-doctor-type');
-    if (doctorTypeResetEl) doctorTypeResetEl.value = '';
-    document.getElementById('user-doctor-prefix').value = '';
-    const userFocPermissionInput = document.getElementById('user-foc-permission');
-    if (userFocPermissionInput) {
-        userFocPermissionInput.checked = false;
-    }
-    document.getElementById('user-password').value = '';
-    document.getElementById('user-password-confirmation').value = '';
-    setUserPasswordRequired(true);
-    resetUserPasswordToggleState();
-    toggleUserDoctorFields();
-}
-window.resetUserForm = resetUserForm;
-
-function openUserEditModal(record) {
-    document.getElementById('userFormModalTitle').innerText = 'Edit User';
-    document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update User';
-    document.getElementById('userForm').action = userUpdateBase.replace('__ID__', record.id);
-    document.getElementById('userFormMethod').value = 'PUT';
-    document.getElementById('user-id').value = record.id ?? '';
-    document.getElementById('user-name').value = record.name ?? '';
-    document.getElementById('user-email').value = record.email ?? '';
-    document.getElementById('user-role-id').value = record.role_id ?? '';
-    document.getElementById('user-contact').value = record.contact ?? '';
-    document.getElementById('user-status').value = record.status ?? 'active';
-    const doctorTypeEditEl = document.getElementById('user-doctor-type');
-    if (doctorTypeEditEl) doctorTypeEditEl.value = record.doctor_type ?? '';
-    document.getElementById('user-doctor-prefix').value = (record.doctor_prefix ?? '').toUpperCase();
-    const userFocPermissionInput = document.getElementById('user-foc-permission');
-    if (userFocPermissionInput) {
-        userFocPermissionInput.checked = !!record.foc_permission;
-    }
-    document.getElementById('user-password').value = '';
-    document.getElementById('user-password-confirmation').value = '';
-    setUserPasswordRequired(false);
-    resetUserPasswordToggleState();
-    toggleUserDoctorFields();
-
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('userFormModal')).show();
-}
-window.openUserEditModal = openUserEditModal;
-
-document.addEventListener('DOMContentLoaded', function () {
-    const userModalEl = document.getElementById('userFormModal');
-    if (userModalEl && userModalEl.parentElement !== document.body) {
-        document.body.appendChild(userModalEl);
-    }
-
-    bindUserPasswordToggle('user-password', 'toggleUserPassword', 'userPasswordEye');
-    bindUserPasswordToggle('user-password-confirmation', 'toggleUserPasswordConfirmation', 'userPasswordConfirmationEye');
-
-    document.getElementById('user-role-id').addEventListener('change', toggleUserDoctorFields);
-
-    document.querySelectorAll('.edit-user-modal-btn').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            openUserEditModal(JSON.parse(this.dataset.record));
-        });
-    });
-
-    @if($errors->any())
-    (function () {
-        const oldMethod = @json(old('_method', 'POST'));
-        const oldUserId = @json(old('user_id', ''));
-
-        document.getElementById('userFormMethod').value = oldMethod;
-        document.getElementById('user-id').value = oldUserId;
-        document.getElementById('user-name').value = @json(old('name', ''));
-        document.getElementById('user-email').value = @json(old('email', ''));
-        document.getElementById('user-role-id').value = @json(old('role_id', ''));
-        document.getElementById('user-contact').value = @json(old('contact', ''));
-        document.getElementById('user-status').value = @json(old('status', 'active'));
-        const doctorTypeOldEl = document.getElementById('user-doctor-type');
-        if (doctorTypeOldEl) doctorTypeOldEl.value = @json(old('doctor_type', ''));
-        document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
-        const userFocPermissionInput = document.getElementById('user-foc-permission');
-        if (userFocPermissionInput) {
-            userFocPermissionInput.checked = @json((bool) old('foc_permission'));
+            document.querySelectorAll('.user-doctor-only').forEach(function (el) {
+                el.style.display = showDoctor ? '' : 'none';
+            });
         }
 
-        if (oldMethod === 'PUT' && oldUserId) {
-            document.getElementById('userFormModalTitle').innerText = 'Edit User';
-            document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update User';
-            document.getElementById('userForm').action = userUpdateBase.replace('__ID__', oldUserId);
-            setUserPasswordRequired(false);
-        } else {
+        function setUserPasswordRequired(required) {
+            document.getElementById('user-password').required = required;
+            document.getElementById('user-password-confirmation').required = required;
+            document.getElementById('user-password-label').innerHTML = required
+                ? 'Password <span class="hms-required">*</span>'
+                : 'New Password <span style="color:var(--hms-text-muted);font-size:.8rem">(leave blank to keep current)</span>';
+            document.getElementById('user-password-confirm-label').innerText = required ? 'Confirm Password *' : 'Confirm Password';
+        }
+
+        function bindUserPasswordToggle(inputId, buttonId, eyeId) {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            const eye = document.getElementById(eyeId);
+
+            if (!input || !button || !eye) {
+                return;
+            }
+
+            button.addEventListener('click', function () {
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                eye.innerHTML = isHidden ? userPasswordEyeSlashSvg : userPasswordEyeSvg;
+            });
+        }
+
+        function resetUserPasswordToggleState() {
+            const passwordInput = document.getElementById('user-password');
+            const passwordConfirmInput = document.getElementById('user-password-confirmation');
+            const passwordEye = document.getElementById('userPasswordEye');
+            const passwordConfirmEye = document.getElementById('userPasswordConfirmationEye');
+
+            if (passwordInput) {
+                passwordInput.type = 'password';
+            }
+
+            if (passwordConfirmInput) {
+                passwordConfirmInput.type = 'password';
+            }
+
+            if (passwordEye) {
+                passwordEye.innerHTML = userPasswordEyeSvg;
+            }
+
+            if (passwordConfirmEye) {
+                passwordConfirmEye.innerHTML = userPasswordEyeSvg;
+            }
+        }
+
+        function resetUserForm() {
             document.getElementById('userFormModalTitle').innerText = 'Add User';
             document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
             document.getElementById('userForm').action = userStoreUrl;
+            document.getElementById('userFormMethod').value = 'POST';
+            document.getElementById('user-id').value = '';
+            document.getElementById('user-name').value = '';
+            document.getElementById('user-email').value = '';
+            document.getElementById('user-role-id').value = '';
+            document.getElementById('user-contact').value = '';
+            document.getElementById('user-status').value = 'active';
+            const doctorTypeResetEl = document.getElementById('user-doctor-type');
+            if (doctorTypeResetEl) doctorTypeResetEl.value = '';
+            document.getElementById('user-doctor-prefix').value = '';
+            const userFocPermissionInput = document.getElementById('user-foc-permission');
+            if (userFocPermissionInput) {
+                userFocPermissionInput.checked = false;
+            }
+            document.getElementById('user-password').value = '';
+            document.getElementById('user-password-confirmation').value = '';
             setUserPasswordRequired(true);
+            resetUserPasswordToggleState();
+            toggleUserDoctorFields();
         }
+        window.resetUserForm = resetUserForm;
 
-        resetUserPasswordToggleState();
-        toggleUserDoctorFields();
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('userFormModal')).show();
-    })();
-    @else
-    resetUserForm();
-    @endif
-});
-</script>
+        function openUserEditModal(record) {
+            document.getElementById('userFormModalTitle').innerText = 'Edit User';
+            document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update User';
+            document.getElementById('userForm').action = userUpdateBase.replace('__ID__', record.id);
+            document.getElementById('userFormMethod').value = 'PUT';
+            document.getElementById('user-id').value = record.id ?? '';
+            document.getElementById('user-name').value = record.name ?? '';
+            document.getElementById('user-email').value = record.email ?? '';
+            document.getElementById('user-role-id').value = record.role_id ?? '';
+            document.getElementById('user-contact').value = record.contact ?? '';
+            document.getElementById('user-status').value = record.status ?? 'active';
+            const doctorTypeEditEl = document.getElementById('user-doctor-type');
+            if (doctorTypeEditEl) doctorTypeEditEl.value = record.doctor_type ?? '';
+            document.getElementById('user-doctor-prefix').value = (record.doctor_prefix ?? '').toUpperCase();
+            const userFocPermissionInput = document.getElementById('user-foc-permission');
+            if (userFocPermissionInput) {
+                userFocPermissionInput.checked = !!record.foc_permission;
+            }
+            document.getElementById('user-password').value = '';
+            document.getElementById('user-password-confirmation').value = '';
+            setUserPasswordRequired(false);
+            resetUserPasswordToggleState();
+            toggleUserDoctorFields();
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('userFormModal')).show();
+        }
+        window.openUserEditModal = openUserEditModal;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const userModalEl = document.getElementById('userFormModal');
+            if (userModalEl && userModalEl.parentElement !== document.body) {
+                document.body.appendChild(userModalEl);
+            }
+
+            bindUserPasswordToggle('user-password', 'toggleUserPassword', 'userPasswordEye');
+            bindUserPasswordToggle('user-password-confirmation', 'toggleUserPasswordConfirmation', 'userPasswordConfirmationEye');
+
+            document.getElementById('user-role-id').addEventListener('change', toggleUserDoctorFields);
+
+            document.querySelectorAll('.edit-user-modal-btn').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    openUserEditModal(JSON.parse(this.dataset.record));
+                });
+            });
+
+            @if($errors->any())
+                (function () {
+                    const oldMethod = @json(old('_method', 'POST'));
+                    const oldUserId = @json(old('user_id', ''));
+
+                    document.getElementById('userFormMethod').value = oldMethod;
+                    document.getElementById('user-id').value = oldUserId;
+                    document.getElementById('user-name').value = @json(old('name', ''));
+                    document.getElementById('user-email').value = @json(old('email', ''));
+                    document.getElementById('user-role-id').value = @json(old('role_id', ''));
+                    document.getElementById('user-contact').value = @json(old('contact', ''));
+                    document.getElementById('user-status').value = @json(old('status', 'active'));
+                    const doctorTypeOldEl = document.getElementById('user-doctor-type');
+                    if (doctorTypeOldEl) doctorTypeOldEl.value = @json(old('doctor_type', ''));
+                    document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
+                    const userFocPermissionInput = document.getElementById('user-foc-permission');
+                    if (userFocPermissionInput) {
+                        userFocPermissionInput.checked = @json((bool) old('foc_permission'));
+                    }
+
+                    if (oldMethod === 'PUT' && oldUserId) {
+                        document.getElementById('userFormModalTitle').innerText = 'Edit User';
+                        document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update User';
+                        document.getElementById('userForm').action = userUpdateBase.replace('__ID__', oldUserId);
+                        setUserPasswordRequired(false);
+                    } else {
+                        document.getElementById('userFormModalTitle').innerText = 'Add User';
+                        document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
+                        document.getElementById('userForm').action = userStoreUrl;
+                        setUserPasswordRequired(true);
+                    }
+
+                    resetUserPasswordToggleState();
+                    toggleUserDoctorFields();
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('userFormModal')).show();
+                })();
+            @else
+                resetUserForm();
+            @endif
+    });
+    </script>
 @endpush

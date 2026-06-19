@@ -555,35 +555,111 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label">City</label>
-                            <input type="text" name="hospital_city"
-                                   class="form-control clinical-input @error('hospital_city') is-invalid @enderror"
-                                   value="{{ old('hospital_city', $settings['hospital_city'] ?? '') }}"
-                                   placeholder="e.g. Ahmedabad">
-                            @error('hospital_city')
+                        {{-- ── Location & Timezone ── --}}
+                        @php
+                            $savedCountry  = old('hospital_country',  $settings['hospital_country']  ?? '');
+                            $savedState    = old('hospital_state',    $settings['hospital_state']    ?? '');
+                            $savedDistrict = old('hospital_district', $settings['hospital_district'] ?? '');
+                            $savedCity     = old('hospital_city',     $settings['hospital_city']     ?? '');
+                            $savedTimezone = old('hospital_timezone', $settings['hospital_timezone'] ?? 'UTC');
+                        @endphp
+
+                        {{-- Country --}}
+                        <div class="col-md-6">
+                            <label class="form-label">Country</label>
+                            <select name="hospital_country" id="settingCountry"
+                                    class="form-select clinical-input @error('hospital_country') is-invalid @enderror">
+                                <option value="">— Select Country —</option>
+                                @foreach($countries as $c)
+                                    <option value="{{ $c->name }}"
+                                            data-id="{{ $c->id }}"
+                                            data-timezone="{{ $c->default_timezone ?? 'UTC' }}"
+                                            {{ $savedCountry === $c->name ? 'selected' : '' }}>
+                                        {{ $c->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('hospital_country')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        {{-- Timezone (auto from country, editable) --}}
+                        <div class="col-md-6">
+                            <label class="form-label">Timezone</label>
+                            <select name="hospital_timezone" id="settingTimezone"
+                                    class="form-select clinical-input @error('hospital_timezone') is-invalid @enderror">
+                                @foreach(\App\Services\Platform\TimezoneService::groupedTimezones() as $region => $zones)
+                                    <optgroup label="{{ $region }}">
+                                        @foreach($zones as $tz)
+                                            <option value="{{ $tz }}" {{ $savedTimezone === $tz ? 'selected' : '' }}>
+                                                {{ $tz }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                            <div class="form-text" style="font-size:.75rem;color:var(--settings-muted)">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Auto-fills when country is selected. Can be changed manually.
+                            </div>
+                            @error('hospital_timezone')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- State --}}
+                        <div class="col-md-4">
+                            <label class="form-label">State</label>
+                            <select name="hospital_state" id="settingState"
+                                    class="form-select clinical-input @error('hospital_state') is-invalid @enderror">
+                                <option value="">— Select State —</option>
+                                @foreach($states as $s)
+                                    <option value="{{ $s->name }}"
+                                            data-id="{{ $s->id }}"
+                                            {{ $savedState === $s->name ? 'selected' : '' }}>
+                                        {{ $s->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('hospital_state')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- District --}}
                         <div class="col-md-4">
                             <label class="form-label">District</label>
-                            <input type="text" name="hospital_district"
-                                   class="form-control clinical-input @error('hospital_district') is-invalid @enderror"
-                                   value="{{ old('hospital_district', $settings['hospital_district'] ?? '') }}"
-                                   placeholder="e.g. Ahmedabad">
+                            <select name="hospital_district" id="settingDistrict"
+                                    class="form-select clinical-input @error('hospital_district') is-invalid @enderror">
+                                <option value="">— Select District —</option>
+                                @foreach($districts as $d)
+                                    <option value="{{ $d->name }}"
+                                            data-id="{{ $d->id }}"
+                                            {{ $savedDistrict === $d->name ? 'selected' : '' }}>
+                                        {{ $d->name }}
+                                    </option>
+                                @endforeach
+                            </select>
                             @error('hospital_district')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
+                        {{-- City --}}
                         <div class="col-md-4">
-                            <label class="form-label">State</label>
-                            <input type="text" name="hospital_state"
-                                   class="form-control clinical-input @error('hospital_state') is-invalid @enderror"
-                                   value="{{ old('hospital_state', $settings['hospital_state'] ?? '') }}"
-                                   placeholder="e.g. Gujarat">
-                            @error('hospital_state')
+                            <label class="form-label">City</label>
+                            <select name="hospital_city" id="settingCity"
+                                    class="form-select clinical-input @error('hospital_city') is-invalid @enderror">
+                                <option value="">— Select City —</option>
+                                @foreach($cities as $city)
+                                    <option value="{{ $city->name }}"
+                                            {{ $savedCity === $city->name ? 'selected' : '' }}>
+                                        {{ $city->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('hospital_city')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1039,6 +1115,90 @@ function selectLogoStyle(value) {
     });
     updateDarkPreview();
 }
+
+// ── Location cascade dropdowns ────────────────────────────────────────────
+(function () {
+    const countrySel  = document.getElementById('settingCountry');
+    const stateSel    = document.getElementById('settingState');
+    const districtSel = document.getElementById('settingDistrict');
+    const citySel     = document.getElementById('settingCity');
+    const tzSel       = document.getElementById('settingTimezone');
+
+    function resetSelect(sel, placeholder) {
+        sel.innerHTML = '<option value="">' + placeholder + '</option>';
+    }
+
+    function loadOptions(sel, items, savedValue) {
+        items.forEach(function (item) {
+            var opt = document.createElement('option');
+            opt.value        = item.name;
+            opt.dataset.id   = item.id;
+            opt.textContent  = item.name;
+            if (item.name === savedValue) opt.selected = true;
+            sel.appendChild(opt);
+        });
+    }
+
+    function fetchJson(url, callback) {
+        fetch(url)
+            .then(function (r) { return r.json(); })
+            .then(callback)
+            .catch(function () {});
+    }
+
+    if (countrySel) {
+        countrySel.addEventListener('change', function () {
+            var opt = this.options[this.selectedIndex];
+
+            // Auto-fill timezone from country default
+            if (tzSel && opt.dataset.timezone) {
+                tzSel.value = opt.dataset.timezone;
+            }
+
+            resetSelect(stateSel,    '— Select State —');
+            resetSelect(districtSel, '— Select District —');
+            resetSelect(citySel,     '— Select City —');
+
+            var countryId = opt.dataset.id;
+            if (!countryId) return;
+
+            fetchJson('{{ route("location.states") }}?country_id=' + countryId, function (data) {
+                loadOptions(stateSel, data, '');
+            });
+        });
+    }
+
+    if (stateSel) {
+        stateSel.addEventListener('change', function () {
+            var opt = this.options[this.selectedIndex];
+
+            resetSelect(districtSel, '— Select District —');
+            resetSelect(citySel,     '— Select City —');
+
+            var stateId = opt.dataset.id;
+            if (!stateId) return;
+
+            fetchJson('{{ route("location.districts") }}?state_id=' + stateId, function (data) {
+                loadOptions(districtSel, data, '');
+            });
+        });
+    }
+
+    if (districtSel) {
+        districtSel.addEventListener('change', function () {
+            var opt = this.options[this.selectedIndex];
+
+            resetSelect(citySel, '— Select City —');
+
+            var districtId = opt.dataset.id;
+            if (!districtId) return;
+
+            fetchJson('{{ route("location.cities") }}?district_id=' + districtId, function (data) {
+                loadOptions(citySel, data, '');
+            });
+        });
+    }
+})();
 
 // Wait Status preview
 (function () {

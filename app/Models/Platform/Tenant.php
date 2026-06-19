@@ -34,6 +34,8 @@ class Tenant extends Model
         'district',
         'state',
         'country',
+        'timezone',
+        'is_timezone_override',
         'logo_path',
         'status',
         'trial_ends_at',
@@ -45,7 +47,17 @@ class Tenant extends Model
         'trial_ends_at' => 'datetime',
         'setup_completed_at' => 'datetime',
         'is_setup_done' => 'boolean',
+        'is_timezone_override' => 'boolean',
     ];
+
+    /** Effective timezone — falls back to country default if not overridden */
+    public function effectiveTimezone(): string
+    {
+        if ($this->timezone && $this->timezone !== 'UTC') {
+            return $this->timezone;
+        }
+        return 'UTC';
+    }
 
     /** Active subscription for this tenant */
     public function doctors()

@@ -39,6 +39,13 @@ class SetTenantScope
                     ? (int) $paginationLimit
                     : (int) config('app.pagination_limit', 25)
             );
+
+            // Hospital ka timezone set karo — saari date/time display isi se hogi
+            $timezone = $tenant->timezone ?? 'UTC';
+            if (in_array($timezone, timezone_identifiers_list(), true)) {
+                Config::set('app.hospital_timezone', $timezone);
+                date_default_timezone_set($timezone);
+            }
         }
 
         return $next($request);

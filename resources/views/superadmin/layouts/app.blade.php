@@ -439,17 +439,22 @@
 
                 {{-- MASTERS --}}
                 <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.locations.*') ? '' : 'collapsed' }}"
+                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.locations.*', 'superadmin.timezones.*') ? '' : 'collapsed' }}"
                     data-target="sa-nav-masters">
                     <span class="hms-nav-section-label" style="padding:0;margin:0">Masters</span>
                     <i class="bi bi-chevron-down hms-nav-chevron"></i>
                 </div>
-                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.locations.*') ? '' : 'collapsed' }}"
+                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.locations.*', 'superadmin.timezones.*') ? '' : 'collapsed' }}"
                     id="sa-nav-masters">
                     <a href="{{ route('superadmin.locations.index') }}"
                         class="hms-nav-item {{ request()->routeIs('superadmin.locations.*') ? 'active' : '' }}">
                         <i class="bi bi-geo-alt-fill"></i>
                         <span>Location Master</span>
+                    </a>
+                    <a href="{{ route('superadmin.timezones.index') }}"
+                        class="hms-nav-item {{ request()->routeIs('superadmin.timezones.*') ? 'active' : '' }}">
+                        <i class="bi bi-clock-fill"></i>
+                        <span>Timezone Master</span>
                     </a>
                 </div>
 

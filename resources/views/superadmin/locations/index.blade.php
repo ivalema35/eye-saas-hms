@@ -27,6 +27,7 @@
     @endif
 @endsection
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 @push('styles')
 <style>
     .loc-tab-nav { display:flex; gap:0; border-bottom:2px solid #E2E8F0; margin-bottom:1.5rem; }
@@ -94,12 +95,17 @@
             @else
                 <div class="hms-table-wrap" style="border:none">
                     <table class="hms-table">
-                        <thead><tr><th>#</th><th>Country Name</th><th>States</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                        <thead><tr><th>#</th><th>Country Name</th><th>Default Timezone</th><th>States</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                         <tbody>
                             @foreach($countries as $i => $c)
                                 <tr>
                                     <td style="color:#94A3B8;font-size:.8rem">{{ $countries->firstItem() + $i }}</td>
                                     <td style="font-weight:600;color:#1B4F72">{{ $c->name }}</td>
+                                    <td>
+                                        <span style="font-size:.8rem;background:#EFF6FF;color:#1B4F72;padding:.2rem .5rem;border-radius:6px">
+                                            <i class="bi bi-clock me-1"></i>{{ $c->default_timezone ?? 'UTC' }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <a href="{{ route('superadmin.locations.index', ['tab' => 'states', 'country_id' => $c->id]) }}"
                                            style="color:#1B4F72;font-size:.85rem">
@@ -117,7 +123,9 @@
                                     <td class="text-end">
                                         <div style="display:flex;gap:.4rem;justify-content:flex-end">
                                             <button class="hms-btn hms-btn-outline hms-btn-xs edit-country-btn"
-                                                data-id="{{ $c->id }}" data-name="{{ $c->name }}">
+                                                data-id="{{ $c->id }}"
+                                                data-name="{{ $c->name }}"
+                                                data-timezone="{{ $c->default_timezone ?? 'UTC' }}">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </button>
                                             <form method="POST" action="{{ route('superadmin.locations.countries.destroy', $c->id) }}" class="del-form">
@@ -433,9 +441,23 @@
                 <form method="POST" action="{{ route('superadmin.locations.countries.store') }}">
                     @csrf
                     <div class="modal-body" style="padding:1.25rem">
-                        <label class="hms-label">Country Name <span style="color:#E53E3E">*</span></label>
-                        <input type="text" name="name" class="hms-input" placeholder="e.g. India" required autofocus>
-                        <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Name will be auto-formatted (Title Case).</p>
+                        <div class="mb-3">
+                            <label class="hms-label">Country Name <span style="color:#E53E3E">*</span></label>
+                            <input type="text" name="name" class="hms-input" placeholder="e.g. India" required autofocus>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Name will be auto-formatted (Title Case).</p>
+                        </div>
+                        <div>
+                            <label class="hms-label">Default Timezone <span style="color:#E53E3E">*</span></label>
+                            <select name="default_timezone" id="addCountryTimezone" class="hms-input" required>
+                                @foreach(\App\Services\Platform\TimezoneService::groupedTimezones() as $region => $zones)
+                                    <optgroup label="{{ $region }}">
+                                        @foreach($zones as $tz)
+                                            <option value="{{ $tz }}" @selected($tz === 'UTC')>{{ $tz }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
                         <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-dismiss="modal">Cancel</button>
@@ -457,8 +479,26 @@
                 <form method="POST" id="editCountryForm" action="">
                     @csrf @method('PUT')
                     <div class="modal-body" style="padding:1.25rem">
-                        <label class="hms-label">Country Name <span style="color:#E53E3E">*</span></label>
-                        <input type="text" name="name" id="editCountryName" class="hms-input" required>
+                        <div class="mb-3">
+                            <label class="hms-label">Country Name <span style="color:#E53E3E">*</span></label>
+                            <input type="text" name="name" id="editCountryName" class="hms-input" required>
+                        </div>
+                        <div>
+                            <label class="hms-label">Default Timezone <span style="color:#E53E3E">*</span></label>
+                            <select name="default_timezone" id="editCountryTimezone" class="hms-input select2-timezone" required>
+                                @foreach(\App\Services\Platform\TimezoneService::groupedTimezones() as $region => $zones)
+                                    <optgroup label="{{ $region }}">
+                                        @foreach($zones as $tz)
+                                            <option value="{{ $tz }}">{{ $tz }}</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                            <p style="font-size:.78rem;color:#F59E0B;margin:.5rem 0 0">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                Updating will cascade to hospitals that have not overridden their timezone.
+                            </p>
+                        </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
                         <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-dismiss="modal">Cancel</button>
@@ -773,194 +813,219 @@
 @endsection
 
 @push('scripts')
-<script>
-(function () {
-    const ajaxStatesUrl    = @json(route('superadmin.locations.ajax.states'));
-    const ajaxDistrictsUrl = @json(route('superadmin.locations.ajax.districts'));
 
-    /* ── Fetch states for a country_id, populate a <select> ── */
-    function loadStates(countryId, selectEl, preselectId) {
-        selectEl.innerHTML = '<option value="">— Select State —</option>';
-        if (!countryId) return;
-        fetch(ajaxStatesUrl + '?country_id=' + countryId, { headers: { Accept: 'application/json' } })
-            .then(r => r.json())
-            .then(states => {
-                states.forEach(s => {
-                    const opt = new Option(s.name, s.id, false, String(s.id) === String(preselectId));
-                    selectEl.append(opt);
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+
+            $('#addCountryTimezone').select2({
+                width: '100%',
+                dropdownParent: $('#addCountryModal'),
+                placeholder: 'Select Timezone'
+            });
+
+            $('#editCountryTimezone').select2({
+                width: '100%',
+                dropdownParent: $('#editCountryModal'),
+                placeholder: 'Select Timezone'
+            });
+
+        });
+    </script>
+
+        <script>
+        (function () {
+            const ajaxStatesUrl    = @json(route('superadmin.locations.ajax.states'));
+            const ajaxDistrictsUrl = @json(route('superadmin.locations.ajax.districts'));
+
+            /* ── Fetch states for a country_id, populate a <select> ── */
+            function loadStates(countryId, selectEl, preselectId) {
+                selectEl.innerHTML = '<option value="">— Select State —</option>';
+                if (!countryId) return;
+                fetch(ajaxStatesUrl + '?country_id=' + countryId, { headers: { Accept: 'application/json' } })
+                    .then(r => r.json())
+                    .then(states => {
+                        states.forEach(s => {
+                            const opt = new Option(s.name, s.id, false, String(s.id) === String(preselectId));
+                            selectEl.append(opt);
+                        });
+                    });
+            }
+
+            /* ── Fetch districts for a state_id, populate a <select> ── */
+            function loadDistricts(stateId, selectEl, preselectId) {
+                selectEl.innerHTML = '<option value="">— None —</option>';
+                if (!stateId) return;
+                fetch(ajaxDistrictsUrl + '?state_id=' + stateId, { headers: { Accept: 'application/json' } })
+                    .then(r => r.json())
+                    .then(districts => {
+                        districts.forEach(d => {
+                            const opt = new Option(d.name, d.id, false, String(d.id) === String(preselectId));
+                            selectEl.append(opt);
+                        });
+                    });
+            }
+
+            /* ── Filter bar: country change → reload page with state_id cleared ── */
+            ['dfCountry', 'cfCountry'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', function () {
+                    this.closest('form').querySelector('[name="state_id"]').value = '';
+                    this.closest('form').querySelector('[name="district_id"]') &&
+                        (this.closest('form').querySelector('[name="district_id"]').value = '');
+                    this.closest('form').submit();
                 });
             });
-    }
 
-    /* ── Fetch districts for a state_id, populate a <select> ── */
-    function loadDistricts(stateId, selectEl, preselectId) {
-        selectEl.innerHTML = '<option value="">— None —</option>';
-        if (!stateId) return;
-        fetch(ajaxDistrictsUrl + '?state_id=' + stateId, { headers: { Accept: 'application/json' } })
-            .then(r => r.json())
-            .then(districts => {
-                districts.forEach(d => {
-                    const opt = new Option(d.name, d.id, false, String(d.id) === String(preselectId));
-                    selectEl.append(opt);
+            /* ── Filter bar: state change → reload page (district_id cleared) ── */
+            ['dfState', 'cfState'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('change', function () {
+                    const distSel = this.closest('form').querySelector('[name="district_id"]');
+                    if (distSel) distSel.value = '';
+                    this.closest('form').submit();
                 });
             });
-    }
 
-    /* ── Filter bar: country change → reload page with state_id cleared ── */
-    ['dfCountry', 'cfCountry'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', function () {
-            this.closest('form').querySelector('[name="state_id"]').value = '';
-            this.closest('form').querySelector('[name="district_id"]') &&
-                (this.closest('form').querySelector('[name="district_id"]').value = '');
-            this.closest('form').submit();
-        });
-    });
-
-    /* ── Filter bar: state change → reload page (district_id cleared) ── */
-    ['dfState', 'cfState'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener('change', function () {
-            const distSel = this.closest('form').querySelector('[name="district_id"]');
-            if (distSel) distSel.value = '';
-            this.closest('form').submit();
-        });
-    });
-
-    /* ── Filter bar: district change → reload page ── */
-    const cfDistrict = document.getElementById('cfDistrict');
-    if (cfDistrict) cfDistrict.addEventListener('change', function () {
-        this.closest('form').submit();
-    });
-
-    /* ── Modal: country selects → cascade states ── */
-    document.querySelectorAll('.modal-country-sel').forEach(sel => {
-        sel.addEventListener('change', function () {
-            const targetId = this.dataset.target;
-            const stateSel = document.getElementById(targetId);
-            if (stateSel) loadStates(this.value, stateSel, null);
-
-            // Also clear district if present
-            const stateEl = document.getElementById(targetId);
-            if (stateEl) {
-                const distTarget = stateEl.dataset.districtTarget;
-                if (distTarget) {
-                    const distSel = document.getElementById(distTarget);
-                    if (distSel) distSel.innerHTML = '<option value="">— None —</option>';
-                }
-            }
-        });
-    });
-
-    /* ── Modal: state selects → cascade districts ── */
-    document.querySelectorAll('.cascade-state').forEach(sel => {
-        sel.addEventListener('change', function () {
-            const distTarget = this.dataset.districtTarget;
-            if (distTarget) {
-                const distSel = document.getElementById(distTarget);
-                if (distSel) loadDistricts(this.value, distSel, null);
-            }
-        });
-    });
-
-    /* ── Edit Country ── */
-    document.querySelectorAll('.edit-country-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.getElementById('editCountryForm').action =
-                '{{ route("superadmin.locations.countries.update", ":id") }}'.replace(':id', this.dataset.id);
-            document.getElementById('editCountryName').value = this.dataset.name;
-            new bootstrap.Modal(document.getElementById('editCountryModal')).show();
-        });
-    });
-
-    /* ── Edit State ── */
-    document.querySelectorAll('.edit-state-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            document.getElementById('editStateForm').action =
-                '{{ route("superadmin.locations.states.update", ":id") }}'.replace(':id', this.dataset.id);
-            document.getElementById('editStateName').value = this.dataset.name;
-            document.getElementById('editStateCountry').value = this.dataset.countryId;
-            new bootstrap.Modal(document.getElementById('editStateModal')).show();
-        });
-    });
-
-    /* ── Edit District ── */
-    document.querySelectorAll('.edit-district-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const stateId = this.dataset.stateId;
-            document.getElementById('editDistrictForm').action =
-                '{{ route("superadmin.locations.districts.update", ":id") }}'.replace(':id', this.dataset.id);
-            document.getElementById('editDistrictName').value = this.dataset.name;
-
-            // We need to find country for this state — load all states and find
-            const editDistStateSel = document.getElementById('editDistStateSelect');
-            editDistStateSel.innerHTML = '<option value="">Loading...</option>';
-
-            // Pre-select the state once states are loaded
-            // Trigger country load by matching state from countries list
-            // Simpler: we pass state_id directly (no country cascade needed for editing)
-            fetch(ajaxStatesUrl + '?country_id=0', { headers: { Accept: 'application/json' } }) // dummy call
-                .catch(() => {});
-
-            // Direct approach: set state option manually
-            editDistStateSel.innerHTML = `<option value="${stateId}" selected>Current State</option>`;
-
-            new bootstrap.Modal(document.getElementById('editDistrictModal')).show();
-        });
-    });
-
-    /* ── Edit City ── */
-    document.querySelectorAll('.edit-city-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const stateId    = this.dataset.stateId;
-            const districtId = this.dataset.districtId;
-            document.getElementById('editCityForm').action =
-                '{{ route("superadmin.locations.cities.update", ":id") }}'.replace(':id', this.dataset.id);
-            document.getElementById('editCityName').value = this.dataset.name;
-
-            const stateSel = document.getElementById('editCityStateSelect');
-            const distSel  = document.getElementById('editCityDistrictSelect');
-
-            stateSel.innerHTML = `<option value="${stateId}" selected>Current State</option>`;
-            distSel.innerHTML  = districtId
-                ? `<option value="">— None —</option><option value="${districtId}" selected>Current District</option>`
-                : `<option value="">— None —</option>`;
-
-            new bootstrap.Modal(document.getElementById('editCityModal')).show();
-        });
-    });
-
-    /* ── Toggle Active ── */
-    document.querySelectorAll('.toggle-btn').forEach(btn => {
-        btn.addEventListener('click', function () {
-            fetch(this.dataset.url, {
-                method: 'PATCH',
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, Accept: 'application/json' }
-            }).then(r => r.json()).then(data => {
-                if (data.is_active) {
-                    this.textContent = 'Active';
-                    this.classList.replace('hms-badge-secondary', 'hms-badge-success');
-                } else {
-                    this.textContent = 'Inactive';
-                    this.classList.replace('hms-badge-success', 'hms-badge-secondary');
-                }
+            /* ── Filter bar: district change → reload page ── */
+            const cfDistrict = document.getElementById('cfDistrict');
+            if (cfDistrict) cfDistrict.addEventListener('change', function () {
+                this.closest('form').submit();
             });
-        });
-    });
 
-    /* ── Delete confirm ── */
-    document.querySelectorAll('.del-form').forEach(form => {
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Delete this entry?',
-                text: 'This will also delete all child records (states/districts/cities).',
-                icon: 'warning', showCancelButton: true,
-                confirmButtonColor: '#B91C1C', confirmButtonText: 'Yes, delete',
-            }).then(r => { if (r.isConfirmed) form.submit(); });
-        });
-    });
+            /* ── Modal: country selects → cascade states ── */
+            document.querySelectorAll('.modal-country-sel').forEach(sel => {
+                sel.addEventListener('change', function () {
+                    const targetId = this.dataset.target;
+                    const stateSel = document.getElementById(targetId);
+                    if (stateSel) loadStates(this.value, stateSel, null);
 
-})();
-</script>
+                    // Also clear district if present
+                    const stateEl = document.getElementById(targetId);
+                    if (stateEl) {
+                        const distTarget = stateEl.dataset.districtTarget;
+                        if (distTarget) {
+                            const distSel = document.getElementById(distTarget);
+                            if (distSel) distSel.innerHTML = '<option value="">— None —</option>';
+                        }
+                    }
+                });
+            });
+
+            /* ── Modal: state selects → cascade districts ── */
+            document.querySelectorAll('.cascade-state').forEach(sel => {
+                sel.addEventListener('change', function () {
+                    const distTarget = this.dataset.districtTarget;
+                    if (distTarget) {
+                        const distSel = document.getElementById(distTarget);
+                        if (distSel) loadDistricts(this.value, distSel, null);
+                    }
+                });
+            });
+
+            /* ── Edit Country ── */
+            document.querySelectorAll('.edit-country-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.getElementById('editCountryForm').action =
+                        '{{ route("superadmin.locations.countries.update", ":id") }}'.replace(':id', this.dataset.id);
+                    document.getElementById('editCountryName').value = this.dataset.name;
+                    const tzSel = document.getElementById('editCountryTimezone');
+                    if (tzSel) tzSel.value = this.dataset.timezone || 'UTC';
+                    new bootstrap.Modal(document.getElementById('editCountryModal')).show();
+                });
+            });
+
+            /* ── Edit State ── */
+            document.querySelectorAll('.edit-state-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.getElementById('editStateForm').action =
+                        '{{ route("superadmin.locations.states.update", ":id") }}'.replace(':id', this.dataset.id);
+                    document.getElementById('editStateName').value = this.dataset.name;
+                    document.getElementById('editStateCountry').value = this.dataset.countryId;
+                    new bootstrap.Modal(document.getElementById('editStateModal')).show();
+                });
+            });
+
+            /* ── Edit District ── */
+            document.querySelectorAll('.edit-district-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const stateId = this.dataset.stateId;
+                    document.getElementById('editDistrictForm').action =
+                        '{{ route("superadmin.locations.districts.update", ":id") }}'.replace(':id', this.dataset.id);
+                    document.getElementById('editDistrictName').value = this.dataset.name;
+
+                    // We need to find country for this state — load all states and find
+                    const editDistStateSel = document.getElementById('editDistStateSelect');
+                    editDistStateSel.innerHTML = '<option value="">Loading...</option>';
+
+                    // Pre-select the state once states are loaded
+                    // Trigger country load by matching state from countries list
+                    // Simpler: we pass state_id directly (no country cascade needed for editing)
+                    fetch(ajaxStatesUrl + '?country_id=0', { headers: { Accept: 'application/json' } }) // dummy call
+                        .catch(() => {});
+
+                    // Direct approach: set state option manually
+                    editDistStateSel.innerHTML = `<option value="${stateId}" selected>Current State</option>`;
+
+                    new bootstrap.Modal(document.getElementById('editDistrictModal')).show();
+                });
+            });
+
+            /* ── Edit City ── */
+            document.querySelectorAll('.edit-city-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const stateId    = this.dataset.stateId;
+                    const districtId = this.dataset.districtId;
+                    document.getElementById('editCityForm').action =
+                        '{{ route("superadmin.locations.cities.update", ":id") }}'.replace(':id', this.dataset.id);
+                    document.getElementById('editCityName').value = this.dataset.name;
+
+                    const stateSel = document.getElementById('editCityStateSelect');
+                    const distSel  = document.getElementById('editCityDistrictSelect');
+
+                    stateSel.innerHTML = `<option value="${stateId}" selected>Current State</option>`;
+                    distSel.innerHTML  = districtId
+                        ? `<option value="">— None —</option><option value="${districtId}" selected>Current District</option>`
+                        : `<option value="">— None —</option>`;
+
+                    new bootstrap.Modal(document.getElementById('editCityModal')).show();
+                });
+            });
+
+            /* ── Toggle Active ── */
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    fetch(this.dataset.url, {
+                        method: 'PATCH',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, Accept: 'application/json' }
+                    }).then(r => r.json()).then(data => {
+                        if (data.is_active) {
+                            this.textContent = 'Active';
+                            this.classList.replace('hms-badge-secondary', 'hms-badge-success');
+                        } else {
+                            this.textContent = 'Inactive';
+                            this.classList.replace('hms-badge-success', 'hms-badge-secondary');
+                        }
+                    });
+                });
+            });
+
+            /* ── Delete confirm ── */
+            document.querySelectorAll('.del-form').forEach(form => {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Swal.fire({
+                        title: 'Delete this entry?',
+                        text: 'This will also delete all child records (states/districts/cities).',
+                        icon: 'warning', showCancelButton: true,
+                        confirmButtonColor: '#B91C1C', confirmButtonText: 'Yes, delete',
+                    }).then(r => { if (r.isConfirmed) form.submit(); });
+                });
+            });
+
+        })();
+        </script>
 @endpush

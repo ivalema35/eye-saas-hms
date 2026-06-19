@@ -10,7 +10,7 @@ class MasterCountry extends Model
 {
     protected $table = 'tbl_master_countries';
 
-    protected $fillable = ['name', 'is_active'];
+    protected $fillable = ['name', 'default_timezone', 'is_active'];
 
     protected $casts = ['is_active' => 'boolean'];
 

@@ -4,6 +4,10 @@ namespace App\Http\Controllers\Hospital\Setting;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
+use App\Models\Platform\MasterCity;
+use App\Models\Platform\MasterCountry;
+use App\Models\Platform\MasterDistrict;
+use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
@@ -27,9 +31,7 @@ class HospitalSettingController extends Controller
     {
         $this->authorizePermission('settings.hospital');
 
-        $slug = request()->route('slug');
-
-        // Resolve tenant so defaults can be seeded from registration data
+        $slug   = request()->route('slug');
         $tenant = app()->bound('tenant') ? app('tenant') : null;
 
         $defaults = [
@@ -37,9 +39,11 @@ class HospitalSettingController extends Controller
             'hospital_email'    => $tenant?->admin_email ?? '',
             'hospital_phone'    => $tenant?->admin_phone ?? '',
             'hospital_address'  => '',
-            'hospital_city'     => $tenant?->city ?? '',
-            'hospital_district' => $tenant?->district ?? '',
+            'hospital_country'  => $tenant?->country ?? '',
             'hospital_state'    => $tenant?->state ?? '',
+            'hospital_district' => $tenant?->district ?? '',
+            'hospital_city'     => $tenant?->city ?? '',
+            'hospital_timezone' => $tenant?->timezone ?? 'UTC',
             'invoice_prefix'    => 'INV-',
             'tax_percentage'    => '0',
             'print_header_note' => '',
@@ -48,10 +52,47 @@ class HospitalSettingController extends Controller
             'hospital_logo'     => '',
         ];
 
-        // Saved settings override defaults; new hospitals see sensible pre-fills
         $settings = array_merge($defaults, hospital_settings());
 
-        return view('hospital.settings.index', compact('settings', 'slug'));
+        // All countries for dropdown
+        $countries = MasterCountry::active()->orderBy('name')->get();
+
+        // Pre-load cascade: find saved country → load its states
+        $selectedCountry = $settings['hospital_country']
+            ? MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($settings['hospital_country'])])->first()
+            : null;
+
+        $states = $selectedCountry
+            ? MasterState::where('country_id', $selectedCountry->id)->active()->orderBy('name')->get()
+            : collect();
+
+        // Pre-load cascade: find saved state → load its districts
+        $selectedState = ($selectedCountry && $settings['hospital_state'])
+            ? MasterState::where('country_id', $selectedCountry->id)
+                ->whereRaw('LOWER(name) = ?', [strtolower($settings['hospital_state'])])->first()
+            : null;
+
+        $districts = $selectedState
+            ? MasterDistrict::where('state_id', $selectedState->id)->active()->orderBy('name')->get()
+            : collect();
+
+        // Pre-load cascade: find saved district → load its cities
+        $selectedDistrict = ($selectedState && $settings['hospital_district'])
+            ? MasterDistrict::where('state_id', $selectedState->id)
+                ->whereRaw('LOWER(name) = ?', [strtolower($settings['hospital_district'])])->first()
+            : null;
+
+        $cities = $selectedState
+            ? MasterCity::where('state_id', $selectedState->id)
+                ->when($selectedDistrict, fn ($q) => $q->where('district_id', $selectedDistrict->id))
+                ->active()->orderBy('name')->get()
+            : collect();
+
+        return view('hospital.settings.index', compact(
+            'settings', 'slug',
+            'countries', 'states', 'districts', 'cities',
+            'selectedCountry', 'selectedState', 'selectedDistrict'
+        ));
     }
 
     public function update(Request $request): RedirectResponse
@@ -66,9 +107,11 @@ class HospitalSettingController extends Controller
             'hospital_email'    => ['required', 'email', 'max:255'],
             'hospital_phone'    => ['required', 'string', 'max:20'],
             'hospital_address'  => ['required', 'string'],
-            'hospital_city'     => ['nullable', 'string', 'max:100'],
-            'hospital_district' => ['nullable', 'string', 'max:100'],
-            'hospital_state'    => ['nullable', 'string', 'max:100'],
+            'hospital_country'  => ['nullable', 'string', 'max:100'],
+            'hospital_state'    => ['nullable', 'string', 'max:150'],
+            'hospital_district' => ['nullable', 'string', 'max:150'],
+            'hospital_city'     => ['nullable', 'string', 'max:150'],
+            'hospital_timezone' => ['nullable', 'string', 'timezone'],
             'invoice_prefix'    => ['required', 'string', 'max:10'],
             'tax_percentage'    => ['required', 'numeric', 'min:0', 'max:100'],
             'print_header_note' => ['nullable', 'string', 'max:255'],
@@ -125,14 +168,19 @@ class HospitalSettingController extends Controller
                 HospitalSetting::set($key, $value);
             }
 
-            // Sync city / district / state back to the tenants table
-            // so Hospital History page always shows up-to-date location data.
+            // Sync location + timezone back to tenants table
             $tenantRecord = Tenant::find($tenantId);
             if ($tenantRecord) {
+                $newTimezone = $validated['hospital_timezone'] ?? null;
+                $isOverride  = $newTimezone && $newTimezone !== $tenantRecord->timezone;
+
                 $tenantRecord->update([
-                    'city'     => $validated['hospital_city']     ?? $tenantRecord->city,
-                    'district' => $validated['hospital_district'] ?? $tenantRecord->district,
-                    'state'    => $validated['hospital_state']    ?? $tenantRecord->state,
+                    'country'              => $validated['hospital_country']  ?? $tenantRecord->country,
+                    'state'                => $validated['hospital_state']    ?? $tenantRecord->state,
+                    'district'             => $validated['hospital_district'] ?? $tenantRecord->district,
+                    'city'                 => $validated['hospital_city']     ?? $tenantRecord->city,
+                    'timezone'             => $newTimezone                    ?? $tenantRecord->timezone,
+                    'is_timezone_override' => $isOverride ? true : $tenantRecord->is_timezone_override,
                 ]);
             }
         });
