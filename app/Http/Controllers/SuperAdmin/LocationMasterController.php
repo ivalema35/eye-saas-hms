@@ -8,6 +8,8 @@ use App\Models\Platform\MasterCity;
 use App\Models\Platform\MasterCountry;
 use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
+use App\Models\Platform\Tenant;
+use App\Services\Platform\TimezoneService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -96,21 +98,31 @@ class LocationMasterController extends Controller
 
     public function storeCountry(Request $request): RedirectResponse
     {
-        $request->validate(['name' => 'required|string|max:100']);
+        $request->validate([
+            'name'             => 'required|string|max:100',
+            'default_timezone' => 'required|string|timezone',
+        ]);
         $name = MasterCountry::normalize($request->name);
 
         if (MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($name)])->exists()) {
             return back()->with('error', "Country \"{$name}\" already exists.")->withInput();
         }
 
-        MasterCountry::create(['name' => $name, 'is_active' => true]);
+        MasterCountry::create([
+            'name'             => $name,
+            'default_timezone' => $request->default_timezone,
+            'is_active'        => true,
+        ]);
 
         return back()->with('success', "Country \"{$name}\" added.")->with('open_tab', 'countries');
     }
 
     public function updateCountry(Request $request, MasterCountry $country): RedirectResponse
     {
-        $request->validate(['name' => 'required|string|max:100']);
+        $request->validate([
+            'name'             => 'required|string|max:100',
+            'default_timezone' => 'required|string|timezone',
+        ]);
         $name = MasterCountry::normalize($request->name);
 
         $dup = MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($name)])
@@ -120,9 +132,17 @@ class LocationMasterController extends Controller
             return back()->with('error', "Country \"{$name}\" already exists.")->withInput();
         }
 
-        $country->update(['name' => $name]);
+        $country->update([
+            'name'             => $name,
+            'default_timezone' => $request->default_timezone,
+        ]);
 
-        return back()->with('success', 'Country updated.')->with('open_tab', 'countries');
+        // Jo hospitals ne override nahi kiya unhe naya timezone cascade karo
+        Tenant::where('country', $name)
+            ->where('is_timezone_override', false)
+            ->update(['timezone' => $request->default_timezone]);
+
+        return back()->with('success', 'Country updated. Timezone cascaded to non-overridden hospitals.')->with('open_tab', 'countries');
     }
 
     public function destroyCountry(MasterCountry $country): RedirectResponse

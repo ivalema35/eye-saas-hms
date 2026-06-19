@@ -7,6 +7,7 @@ use App\Jobs\SendWelcomeEmail;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use App\Models\Role\Role;
+use App\Services\Platform\TimezoneService;
 use Carbon\Carbon;
 use Database\Seeders\SystemRolesSeeder;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Log;
 
 class TenantService
 {
+    public function __construct(private readonly TimezoneService $timezoneService) {}
+
     public function createTenant(array $data): Tenant
     {
         // Dispatch master seeder AFTER transaction commits so:
@@ -28,16 +31,23 @@ class TenantService
             $trialEndsAt = Carbon::now()->addDays($trialDays);
 
             // 1. Tenant record create karo
+            $country  = $data['country'] ?? null;
+            $timezone = $country
+                ? $this->timezoneService->getTimezoneForCountry($country)
+                : 'UTC';
+
             $tenant = Tenant::create([
                 'name' => $data['hospital_name'],
                 'slug' => $data['slug'],
                 'admin_name' => $data['admin_name'],
                 'admin_email' => $data['admin_email'],
                 'admin_phone' => $data['admin_phone'],
-                'country'  => $data['country'] ?? null,
+                'country'  => $country,
                 'state'    => $data['state'] ?? null,
                 'district' => $data['district'] ?? null,
                 'city'     => $data['city'] ?? null,
+                'timezone' => $timezone,
+                'is_timezone_override' => false,
                 'status' => 'trial',
                 'trial_ends_at' => $trialEndsAt,
                 'is_setup_done' => false,

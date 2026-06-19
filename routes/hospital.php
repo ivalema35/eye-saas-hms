@@ -53,6 +53,7 @@ use App\Http\Controllers\Hospital\Report\ReportController;
 use App\Http\Controllers\Hospital\Role\RoleController;
 use App\Http\Controllers\Hospital\Setting\HospitalSettingController;
 use App\Http\Controllers\Hospital\Setting\SetupWizardController;
+use App\Http\Controllers\Hospital\Setting\TimezoneController;
 use App\Http\Controllers\Hospital\User\HospitalUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -326,6 +327,13 @@ Route::prefix('{slug}')
                 Route::prefix('settings')->name('settings.')->group(function () {
                     Route::get('/', [HospitalSettingController::class, 'index'])->name('index')->middleware('permission:settings.hospital');
                     Route::put('/', [HospitalSettingController::class, 'update'])->name('update')->middleware('permission:settings.hospital');
+
+                    // Timezone management
+                    Route::prefix('timezone')->name('timezone.')->group(function () {
+                        Route::get('/', [TimezoneController::class, 'index'])->name('index');
+                        Route::put('/', [TimezoneController::class, 'update'])->name('update');
+                        Route::post('/reset', [TimezoneController::class, 'reset'])->name('reset');
+                    });
                 });
 
                 // ============================================================
