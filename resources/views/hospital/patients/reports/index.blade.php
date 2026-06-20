@@ -137,7 +137,7 @@
                         <td>{{ $patient->reception?->name ?: '-' }}</td>
                         <td>{{ $patient->appointment_date?->format('d M, Y h:i A') ?? ($patient->created_at?->format('d M, Y h:i A') ?? '-') }}</td>
                         <td>{{ $patient->contact_no ?: '-' }}</td>
-                        <td>{{ $patient->location?->city ?? $patient->location?->name ?? '-' }}</td>
+                        <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
                         <td>{{ $patient->age ?: '-' }}</td>
                         <td>{{ $patientTypeLabel }}</td>
                         <td>Dr. {{ $patient->doctor?->name ?: '-' }}</td>

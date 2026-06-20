@@ -16,6 +16,7 @@ namespace App\Models\Hospital;
 
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Referrer;
+use App\Models\Platform\MasterCity;
 use App\Models\Platform\Tenant;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
@@ -77,6 +78,11 @@ class Patient extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'location_id');
+    }
+
+    public function masterCity(): BelongsTo
+    {
+        return $this->belongsTo(MasterCity::class, 'location_id');
     }
 
     public function caseType(): BelongsTo

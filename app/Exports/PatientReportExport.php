@@ -51,7 +51,7 @@ class PatientReportExport implements FromCollection, WithHeadings, WithMapping
             $patient->created_at?->format('d-m-Y h:i A'),
             $patient->full_name,
             $patient->contact_no,
-            $patient->location?->name ?: '-',
+            $patient->location?->city ?? $patient->masterCity?->name ?: '-',
             $patient->age ?: '-',
             in_array((string) $patient->type, ['walkin', '0'], true) ? 'Walk-in' : 'Phone',
             $patient->doctor?->name ?: '-',

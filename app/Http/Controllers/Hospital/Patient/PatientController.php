@@ -44,7 +44,7 @@ class PatientController extends Controller
         $role = $user?->role?->slug;
         $today = now()->toDateString();
 
-        $query = Patient::with(['doctor:id,name', 'reception:id,name', 'primaryExamination', 'secondaryExamination', 'location:id,city,district,state', 'caseType:id,case_type', 'referrer:id,name']);
+        $query = Patient::with(['doctor:id,name', 'reception:id,name', 'primaryExamination', 'secondaryExamination', 'location:id,city,district,state', 'masterCity:id,name', 'caseType:id,case_type', 'referrer:id,name']);
 
         // Doctors see only their assigned patients
         if ($role === 'doctor') {
@@ -406,7 +406,7 @@ class PatientController extends Controller
             'occupation' => ['nullable', 'string', 'max:100'],
             'contact_no' => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
             'whatsapp_no' => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
-            'location_id' => ['required', 'integer', 'exists:tbl_locations,id'],
+            'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
             'doctor_id' => ['required', 'integer', 'exists:hospital_users,id'],
@@ -437,12 +437,12 @@ class PatientController extends Controller
                 ['checked_in_at' => $patient->checked_in_at ?? now()]
             ));
 
-            $this->patientService->assignDoctorSerial(
-                $patient->fresh(),
-                (int) $request->doctor_id,
-                $request->appointment_date,
-                app('tenant')->id
-            );
+            // $this->patientService->assignDoctorSerial(
+            //     $patient->fresh(),
+            //     (int) $request->doctor_id,
+            //     $request->appointment_date,
+            //     app('tenant')->id
+            // );
         });
 
         return redirect()

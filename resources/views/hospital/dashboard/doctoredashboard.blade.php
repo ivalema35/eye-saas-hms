@@ -542,7 +542,7 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                                         {{ $patient->first_name }} {{ $patient->last_name }}
                                     </td>
                                     <td>{{ $patient->age }}</td>
-                                    <td>{{ $patient->location->city ?? '-' }}</td>
+                                    <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
                                     <td>
                                         @php
                                             $wMins = (int) $patient->created_at->diffInMinutes(now());
@@ -655,7 +655,7 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                     {{ $patient->first_name }} {{ $patient->last_name }}
                 </td>
                 <td>{{ $patient->age }}</td>
-                <td>{{ $patient->location->city ?? '-' }}</td>
+                <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
                 <td>
                     <div class="d-flex flex-column align-items-center gap-1">
                         <span class="wait-pill {{ $sRCls }}" data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}">
@@ -811,7 +811,7 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                             <div class="col-6 col-md-4">
                                 <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
                                     <div class="text-muted" style="font-size:11px;">City</div>
-                                    <div class="fw-semibold">{{ $patient->location->city ?? '—' }}</div>
+                                    <div class="fw-semibold">{{ $patient->location?->city ?? $patient->masterCity?->name ?? '—' }}</div>
                                 </div>
                             </div>
                         </div>

@@ -254,7 +254,7 @@
                                             data-gender="{{ ucfirst($patient->gender) }}"
                                             data-contact="{{ $patient->contact_no }}"
                                             data-whatsapp="{{ $patient->whatsapp_no ?: '' }}"
-                                            data-city="{{ $patient->location?->city ?: '—' }}"
+                                            data-city="{{ $patient->location?->city ?? $patient->masterCity?->name ?: '—' }}"
                                             data-date="{{ $patient->appointment_date ? \Carbon\Carbon::parse($patient->appointment_date)->format('d M Y') : '—' }}"
                                             data-doctor="{{ $patient->doctor?->name ?? '—' }}"
                                             data-reception="{{ $patient->reception?->name ?? '—' }}"

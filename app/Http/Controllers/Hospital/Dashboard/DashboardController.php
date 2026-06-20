@@ -116,7 +116,7 @@ class DashboardController extends Controller
                 return $patient;
             };
 
-            $primaryQueueQuery = Patient::with(['doctor', 'caseType', 'primaryExamination', 'location', 'reception', 'referrer'])
+            $primaryQueueQuery = Patient::with(['doctor', 'caseType', 'primaryExamination', 'location', 'masterCity', 'reception', 'referrer'])
                 ->whereDate('appointment_date', $today);
 
             if ($selectedDoctorId) {
@@ -207,7 +207,7 @@ class DashboardController extends Controller
                         ->whereNotNull('secondary_done_at')
                         ->count();
 
-                    $secondaryQueue = Patient::with(['doctor', 'caseType', 'primaryExamination'])
+                    $secondaryQueue = Patient::with(['doctor', 'caseType', 'primaryExamination', 'location', 'masterCity'])
                         ->where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->whereNotNull('primary_done_at')
@@ -268,8 +268,9 @@ class DashboardController extends Controller
             $receptionistMyPatientsToday = Patient::where('reception_id', $user?->id)
                 ->whereDate('appointment_date', $today)
                 ->count();
-            $receptionistTodayPhone = Patient::whereDate('appointment_date', $today)
-                ->where('type', 'phone')
+            $receptionistTodayPhone = Patient::where('type', 'phone')
+                ->whereNull('case_id')
+                ->whereDate('appointment_date', '>=', $today)
                 ->count();
         }
 
@@ -418,6 +419,7 @@ class DashboardController extends Controller
             $receptionistTodayPatients = Patient::with([
                 'doctor:id,name,doctor_prefix',
                 'location:id,city',
+                'masterCity:id,name',
                 'otBookings' => fn($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
                 'primaryExamination' => fn($query) => $query->select('id', 'patient_id', 'examined_at', 'exam_data', 'dilation_time', 'updated_at'),
             ])

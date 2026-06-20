@@ -1181,6 +1181,12 @@
             </div>{{-- /.hms-sidenav-wrap --}}
 
             <div class="hms-sidebar-footer">
+                <a href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}"
+                   class="hms-nav-item {{ request()->routeIs('hospital.profile.*') ? 'active' : '' }}"
+                   style="margin-bottom:.5rem;">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
                 <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
                     @csrf
                     <button type="submit" class="hms-sidebar-logout">
