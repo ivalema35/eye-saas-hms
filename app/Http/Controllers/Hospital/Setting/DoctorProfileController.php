@@ -25,12 +25,19 @@ class DoctorProfileController extends Controller
         $user    = auth('hospital_user')->user();
         $isDoctor = $user->role?->slug === 'doctor';
 
+        // Reception role: email can only be changed by hospital admin, not self
+        $roleSlug      = $user->role?->slug;
+        $isReception   = in_array($roleSlug, ['receptionist', 'reception'], true);
+
         $rules = [
             'name'             => ['required', 'string', 'max:255'],
-            'email'            => ['required', 'email', 'max:255'],
             'current_password' => ['nullable', 'string', 'required_with:new_password'],
             'new_password'     => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
+
+        if (! $isReception) {
+            $rules['email'] = ['required', 'email', 'max:255'];
+        }
 
         if ($isDoctor) {
             $rules['registration_no']  = ['nullable', 'string', 'max:100'];
@@ -41,10 +48,11 @@ class DoctorProfileController extends Controller
 
         $validated = $request->validate($rules);
 
-        $updateData = [
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
-        ];
+        $updateData = ['name' => $validated['name']];
+
+        if (! $isReception) {
+            $updateData['email'] = $validated['email'];
+        }
 
         if ($isDoctor) {
             $tenantId = (int) config('app.tenant_id');

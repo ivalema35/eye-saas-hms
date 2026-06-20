@@ -3,7 +3,10 @@
 @section('page-header', 'My Profile')
 
 @section('content')
-@php $isDoctor = $user->role?->slug === 'doctor'; @endphp
+@php
+    $isDoctor    = $user->role?->slug === 'doctor';
+    $isReception = in_array($user->role?->slug, ['receptionist', 'reception'], true);
+@endphp
 <div class="hospital-settings-page">
 <style>
     .hospital-settings-page {
@@ -165,11 +168,25 @@
                         @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-md-6">
-                        <label class="sp-label">Email <span class="text-danger">*</span></label>
-                        <input type="email" name="email"
-                               class="form-control sp-input @error('email') is-invalid @enderror"
-                               value="{{ old('email', $user->email) }}" required>
-                        @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <label class="sp-label">Email
+                            @if($isReception)
+                                <span style="font-size:.72rem;font-weight:400;color:var(--sm);margin-left:.3rem">
+                                    <i class="bi bi-lock-fill" style="font-size:.65rem"></i> Updated by admin only
+                                </span>
+                            @else
+                                <span class="text-danger">*</span>
+                            @endif
+                        </label>
+                        @if($isReception)
+                            <input type="email" class="form-control sp-input"
+                                   value="{{ $user->email }}" readonly
+                                   style="background:rgba(27,79,114,.04);cursor:not-allowed;opacity:.75;">
+                        @else
+                            <input type="email" name="email"
+                                   class="form-control sp-input @error('email') is-invalid @enderror"
+                                   value="{{ old('email', $user->email) }}" required>
+                            @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        @endif
                     </div>
 
                     @if($isDoctor)
@@ -277,11 +294,12 @@
                 </div>
             </div>
 
-            {{-- ── Doctor Quick Links ── --}}
-            @if($isDoctor)
+            {{-- ── Quick Links ── --}}
+            @if($isDoctor || $isReception)
             <div class="sp-section">
                 <div class="sp-section-title"><i class="bi bi-grid"></i> Quick Access</div>
                 <div class="row g-3">
+                    @if($isDoctor)
                     <div class="col-md-6">
                         <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => 'diagnosis']) }}"
                            class="sp-quick-link">
@@ -304,6 +322,32 @@
                             <i class="bi bi-chevron-right ms-auto" style="color:var(--sm)"></i>
                         </a>
                     </div>
+                    @endif
+
+                    @if($isReception)
+                    <div class="col-md-6">
+                        <a href="{{ route('hospital.masters.basic.index', ['slug' => $slug, 'type' => 'locations']) }}"
+                           class="sp-quick-link">
+                            <span class="sp-quick-link-icon"><i class="bi bi-geo-alt-fill"></i></span>
+                            <div>
+                                <div>Location Master</div>
+                                <div style="font-size:.72rem;font-weight:400;color:var(--sm)">Manage hospital locations</div>
+                            </div>
+                            <i class="bi bi-chevron-right ms-auto" style="color:var(--sm)"></i>
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ route('hospital.masters.basic.index', ['slug' => $slug, 'type' => 'referrers']) }}"
+                           class="sp-quick-link">
+                            <span class="sp-quick-link-icon"><i class="bi bi-person-lines-fill"></i></span>
+                            <div>
+                                <div>Referral Master</div>
+                                <div style="font-size:.72rem;font-weight:400;color:var(--sm)">Manage referral sources</div>
+                            </div>
+                            <i class="bi bi-chevron-right ms-auto" style="color:var(--sm)"></i>
+                        </a>
+                    </div>
+                    @endif
                 </div>
             </div>
             @endif

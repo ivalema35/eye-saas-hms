@@ -730,7 +730,7 @@
                                         data-contact="{{ $p->contact_no }}"
                                         data-whatsapp="{{ $p->whatsapp_no }}"
                                         data-occupation="{{ $p->occupation }}"
-                                        data-city="{{ $p->location?->city }}"
+                                        data-city="{{ $p->location?->city ?? $p->masterCity?->name }}"
                                         data-district="{{ $p->location?->district }}"
                                         data-state="{{ $p->location?->state }}"
                                         data-doctor="{{ $p->doctor?->name }}"

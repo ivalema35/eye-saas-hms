@@ -22,7 +22,7 @@ class PatientPhoneStoreRequest extends FormRequest
             'occupation'       => ['nullable', 'string', 'max:100'],
             'contact_no'       => ['required', 'string', 'regex:/^\d{10}$/'],
             'whatsapp_no'      => ['nullable', 'string', 'regex:/^\d{10}$/'],
-            'location_id'      => ['required', 'integer', 'exists:tbl_locations,id'],
+            'location_id'      => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id'          => ['nullable', 'integer', 'exists:tbl_slots,id'],
             'doctor_id'        => ['required', 'integer', 'exists:hospital_users,id'],

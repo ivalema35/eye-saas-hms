@@ -48,7 +48,7 @@
                                 Appointment Date <span style="color:#C0392B;font-weight:700">*</span>
                             </label>
                             <input type="text" name="appointment_date" id="appointmentDate"
-                                value="{{ old('appointment_date', $patient->appointment_date?->format('Y-m-d') ?? now()->format('Y-m-d')) }}"
+                                value="{{ old('appointment_date', $patient->appointment_date?->format('Y-m-d')) }}"
                                 class="form-control hms-input flatpickr @error('appointment_date') is-invalid @enderror"
                                 required>
                             @error('appointment_date')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
@@ -179,12 +179,12 @@
                             <div class="col-md-4">
                                 <label class="form-label fw-600">District</label>
                                 <input type="text" id="district" class="form-control hms-input" readonly
-                                    placeholder="Auto-filled" value="{{ $patient->location?->district }}">
+                                    placeholder="Auto-filled" value="{{ $patient->masterCity?->district?->name }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-600">State</label>
                                 <input type="text" id="state" class="form-control hms-input" readonly
-                                    placeholder="Auto-filled" value="{{ $patient->location?->state }}">
+                                    placeholder="Auto-filled" value="{{ $patient->masterCity?->state?->name }}">
                             </div>
                         </div>
                     </div>
@@ -285,12 +285,24 @@
                 var locationSelectEl = document.getElementById('locationSelect');
                 var districtEl = document.getElementById('district');
                 var stateEl = document.getElementById('state');
+
+                function syncLocationCheckin() {
+                    if (!locationSelectEl || !districtEl || !stateEl) { return; }
+                    var opt = locationSelectEl.options[locationSelectEl.selectedIndex];
+                    if (locationSelectEl.value && opt) {
+                        var d = opt.getAttribute('data-district');
+                        var s = opt.getAttribute('data-state');
+                        if (d) districtEl.value = d;
+                        if (s) stateEl.value = s;
+                    }
+                }
+
                 if (locationSelectEl) {
-                    $(locationSelectEl).on('change', function () {
-                        var opt = this.options[this.selectedIndex];
-                        if (districtEl) districtEl.value = opt ? (opt.getAttribute('data-district') || '') : '';
-                        if (stateEl) stateEl.value = opt ? (opt.getAttribute('data-state') || '') : '';
-                    });
+                    $(locationSelectEl).on('change', syncLocationCheckin);
+                    // Trigger once after Select2 init to fill pre-selected city
+                    if (locationSelectEl.value) {
+                        syncLocationCheckin();
+                    }
                 }
 
                 // Flatpickr for appointment date
@@ -590,10 +602,10 @@
 
         <style>
             /* ============================================================
-                               PATIENT CHECK-IN FORM - ATTRACTIVE DESIGN
-                               Color Theme: #1B4F72 | #2980B9 | #27AE60
-                               No Conflicts - Uses specific selectors
-                               ============================================================ */
+                                       PATIENT CHECK-IN FORM - ATTRACTIVE DESIGN
+                                       Color Theme: #1B4F72 | #2980B9 | #27AE60
+                                       No Conflicts - Uses specific selectors
+                                       ============================================================ */
 
             /* ── Main Card Enhancement ── */
             .hms-card {
