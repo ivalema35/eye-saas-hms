@@ -198,7 +198,7 @@ class HospitalSettingController extends Controller
             $user->save();
         }
 
-        return redirect()->route('hospital.settings.index', ['slug' => $slug])
+        return redirect()->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Settings saved successfully.');
     }
 

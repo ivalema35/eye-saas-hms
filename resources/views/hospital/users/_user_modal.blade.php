@@ -157,7 +157,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="userForm" method="POST" action="{{ route('hospital.users.store', ['slug' => $slug]) }}" enctype="multipart/form-data">
+            <form id="userForm" method="POST" action="{{ route('hospital.users.store', ['slug' => $slug]) }}"
+                enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="_method" id="userFormMethod" value="POST">
                 <input type="hidden" name="user_id" id="user-id" value="{{ old('user_id') }}">
@@ -231,7 +232,8 @@
                                 placeholder="e.g. JP" style="text-transform:uppercase"
                                 class="hms-input @error('doctor_prefix') is-invalid @enderror">
                             <div style="font-size:.72rem;color:#94A3B8;margin-top:.2rem">Daily serial format:
-                                <strong>JP-001, JP-002…</strong></div>
+                                <strong>JP-001, JP-002…</strong>
+                            </div>
                             @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
@@ -244,43 +246,47 @@
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
-                            <label>Experience <span style="font-size:.75rem;color:#64748B;font-weight:400">(years)</span></label>
+                            <label>Experience <span
+                                    style="font-size:.75rem;color:#64748B;font-weight:400">(years)</span></label>
                             <input type="number" name="experience_years" id="user-experience-years" min="0" max="60"
-                                class="hms-input @error('experience_years') is-invalid @enderror"
-                                placeholder="e.g. 5">
+                                class="hms-input @error('experience_years') is-invalid @enderror" placeholder="e.g. 5">
                             @error('experience_years')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
-                            <label>Signature <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
-                            <input type="file" name="signature" id="user-signature" accept="image/jpg,image/jpeg,image/png"
+                            <label>Signature <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max
+                                    20KB)</span></label>
+                            <input type="file" name="signature" id="user-signature"
+                                accept="image/jpg,image/jpeg,image/png"
                                 class="hms-input @error('signature') is-invalid @enderror"
                                 onchange="previewDoctorFile(this, 'user-signature-preview')">
                             <div id="user-signature-preview" style="margin-top:.4rem;display:none;">
                                 <img src="" alt="Signature Preview"
-                                     style="max-height:50px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:4px;">
+                                    style="max-height:50px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:4px;">
                             </div>
                             <div id="user-signature-current" style="margin-top:.4rem;display:none;">
                                 <span style="font-size:.72rem;color:#64748B;">Current: </span>
                                 <img src="" alt="Current Signature"
-                                     style="max-height:44px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
+                                    style="max-height:44px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
                             </div>
                             @error('signature')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
-                            <label>Profile Photo <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
-                            <input type="file" name="profile_photo" id="user-profile-photo" accept="image/jpg,image/jpeg,image/png"
+                            <label>Profile Photo <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG ·
+                                    max 20KB)</span></label>
+                            <input type="file" name="profile_photo" id="user-profile-photo"
+                                accept="image/jpg,image/jpeg,image/png"
                                 class="hms-input @error('profile_photo') is-invalid @enderror"
                                 onchange="previewDoctorFile(this, 'user-photo-preview')">
                             <div id="user-photo-preview" style="margin-top:.4rem;display:none;">
                                 <img src="" alt="Photo Preview"
-                                     style="max-height:60px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:4px;">
+                                    style="max-height:60px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:4px;">
                             </div>
                             <div id="user-photo-current" style="margin-top:.4rem;display:none;">
                                 <span style="font-size:.72rem;color:#64748B;">Current: </span>
                                 <img src="" alt="Current Photo"
-                                     style="max-height:55px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
+                                    style="max-height:55px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
                             </div>
                             @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
@@ -300,12 +306,14 @@
                                 <input type="password" name="password" id="user-password"
                                     class="hms-input password-field-input @error('password') is-invalid @enderror"
                                     placeholder="Create a password" required>
-                                <!-- <button type="button" id="toggleUserPassword" class="password-field-toggle" aria-label="Toggle password visibility">
+                                <button type="button" id="toggleUserPassword" class="password-field-toggle"
+                                    aria-label="Toggle password visibility">
                                     <svg id="userPasswordEye" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
+                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                                         <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
                                     </svg>
-                                </button> -->
+                                </button>
                             </div>
                             @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
@@ -316,12 +324,14 @@
                             <div class="password-field-wrap">
                                 <input type="password" name="password_confirmation" id="user-password-confirmation"
                                     class="hms-input password-field-input" placeholder="Re-enter password" required>
-                                <!-- <button type="button" id="toggleUserPasswordConfirmation" class="password-field-toggle" aria-label="Toggle confirm password visibility">
+                                <button type="button" id="toggleUserPasswordConfirmation" class="password-field-toggle"
+                                    aria-label="Toggle confirm password visibility">
                                     <svg id="userPasswordConfirmationEye" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
+                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
                                         <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
                                     </svg>
-                                </button> -->
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -410,7 +420,7 @@
             var img = previewWrap.querySelector('img');
             if (input.files && input.files[0]) {
                 var reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     img.src = e.target.result;
                     previewWrap.style.display = '';
                 };
@@ -561,6 +571,6 @@
             @else
                 resetUserForm();
             @endif
-    });
+                });
     </script>
 @endpush
