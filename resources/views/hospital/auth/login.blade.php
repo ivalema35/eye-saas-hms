@@ -617,7 +617,7 @@
             <div class="banner-content">
                 <div class="banner-logo">
                     @if($hospitalLogo)
-                        <img src="{{ asset($hospitalLogo) }}" alt="{{ $hospitalName }} Logo">
+                        <img src="{{ asset('storage/' . $hospitalLogo) }}" alt="{{ $hospitalName }} Logo">
                     @else
                         <i class="fa-solid fa-hospital-user"></i>
                     @endif

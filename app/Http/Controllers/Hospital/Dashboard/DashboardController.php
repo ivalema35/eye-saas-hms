@@ -135,6 +135,20 @@ class DashboardController extends Controller
                 ->take(20)
                 ->values();
 
+            // Attach all_patient_ids so the View button shows complete history (all old visits)
+            if ($primaryQueue->isNotEmpty()) {
+                $contactNos = $primaryQueue->pluck('contact_no')->filter()->unique()->values()->all();
+                $allIdsByContact = Patient::whereIn('contact_no', $contactNos)
+                    ->get(['id', 'contact_no'])
+                    ->groupBy('contact_no')
+                    ->map(fn($g) => $g->pluck('id')->implode(','));
+
+                $primaryQueue = $primaryQueue->map(function (Patient $p) use ($allIdsByContact): Patient {
+                    $p->all_patient_ids = $allIdsByContact->get($p->contact_no) ?? (string) $p->id;
+                    return $p;
+                });
+            }
+
             // Queue counts for the admin dashboard card (all doctors, no take() limit)
             $primaryQueueCountQuery = Patient::whereDate('appointment_date', $today)
                 ->whereNull('primary_done_at')

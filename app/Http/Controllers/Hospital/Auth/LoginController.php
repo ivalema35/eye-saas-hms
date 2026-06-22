@@ -32,7 +32,7 @@ class LoginController extends Controller
         return view('hospital.auth.login', [
             'slug' => $slug,
             'hospitalName' => $tenant?->name ?? 'Hospital',
-            'hospitalLogo' => $tenant?->logo_path ?? null,
+            'hospitalLogo' => hospital_logo_path(),
         ]);
     }
 
