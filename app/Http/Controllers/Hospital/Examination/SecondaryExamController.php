@@ -159,6 +159,42 @@ class SecondaryExamController extends Controller
     }
 
     /**
+     * Print prescription view for secondary examination.
+     */
+    public function printRx(string $slug, int $id): View
+    {
+        $patient = Patient::findOrFail($id);
+        $tenant  = app('tenant');
+
+        $exam = SecondaryExamination::where('patient_id', $id)
+            ->where('tenant_id', $tenant->id)
+            ->with('doctor')
+            ->firstOrFail();
+
+        $diagnosisMasters = collect(DB::table('tbl_master_diagnosis')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as diagnosis')]));
+
+        $complaintMasters = collect(DB::table('chief_complaints')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as complaint')]));
+
+        $kcoMasters = collect(DB::table('kcos')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as kco')]));
+
+        $dosages = \App\Models\Hospital\Dosage::orderBy('dosage')->get(['id', 'dosage']);
+
+        return view('hospital.exam.secondary_print', compact(
+            'patient', 'exam', 'tenant', 'slug',
+            'diagnosisMasters', 'complaintMasters', 'kcoMasters', 'dosages'
+        ));
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function loadMasters(int $tenantId): array

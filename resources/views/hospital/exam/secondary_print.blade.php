@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prescription — {{ $patient->full_name }}</title>
+    <title>Secondary Rx — {{ $patient->full_name }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1a1a1a; background: #fff; }
@@ -57,19 +57,15 @@
 
         /* ── H/O chips ── */
         .hno-chips { display: flex; flex-wrap: wrap; gap: 3px; margin: 3px 0; }
-        .hno-chip  {
-            background: rgba(27,58,92,.08); border: 1px solid rgba(27,58,92,.18);
-            color: #1B3A5C; border-radius: 999px; font-size: 10px; font-weight: 600;
-            padding: 1px 8px;
-        }
+        .hno-chip  { background: rgba(27,58,92,.08); border: 1px solid rgba(27,58,92,.18);
+            color: #1B3A5C; border-radius: 999px; font-size: 10px; font-weight: 600; padding: 1px 8px; }
 
         /* ── Vision summary line ── */
         .vn-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
             font-size: 10.5px; border-top: 1px solid #dde3ea; padding-top: 4px; margin-top: 4px; }
-        .vn-item { display: inline-flex; align-items: center; gap: 2px; }
         .vn-item strong { color: #1B3A5C; }
 
-        /* ── PG table (inside History & Vision) ── */
+        /* ── PG table ── */
         .pg-eye-header { background: #1B3A5C; color: #fff; font-size: 10px; font-weight: 700;
             letter-spacing: .05em; padding: 3px 6px; text-align: center; }
         table.pg-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
@@ -79,7 +75,7 @@
         table.pg-table td.row-label { font-weight: 700; font-size: 9.5px; background: #f5f8ff;
             color: #475569; text-align: center; }
 
-        /* ── Subjective Testing (ST) ── */
+        /* ── ST table ── */
         table.st-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
         table.st-table .eye-header { background: #1B3A5C; color: #fff; text-align: center;
             font-size: 10px; font-weight: 700; padding: 3px 4px; }
@@ -101,8 +97,6 @@
             background: #f5f8ff; padding-left: 8px; }
         table.oe-table tr:nth-child(even) td { background: #f8faff; }
         table.oe-table tr:nth-child(even) td:first-child { background: #f0f4f8; }
-        .oe-val-hi  { color: #c0392b; font-weight: 600; }
-        .oe-val-hib { color: #1B3A5C; font-weight: 600; }
 
         /* ── Fundus table ── */
         table.fundus-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
@@ -113,13 +107,13 @@
         table.fundus-table td:first-child { text-align: left; font-weight: 700; font-size: 10px;
             background: #f5f8ff; padding-left: 8px; }
 
-        /* ── Diagnosis & RX ── */
-        .dx-line  { font-size: 11px; margin-bottom: 2px; }
+        /* ── Diagnosis ── */
         .rx-tags  { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
         .rx-tag   { background: #eef3fb; border: 1px solid #c7d9f5; border-radius: 99px;
             padding: 1px 9px; font-size: 10px; }
         .rx-sub-title { font-size: 9px; font-weight: 700; text-transform: uppercase;
             letter-spacing: .06em; color: #1B3A5C; margin: 5px 0 2px; }
+        .dx-line { font-size: 11px; margin-bottom: 2px; }
 
         /* ── Medicine table ── */
         table.rx-medicines { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-top: 3px; }
@@ -128,6 +122,11 @@
         table.rx-medicines td { padding: 3px 6px; border-bottom: 1px solid #e0e8f5; vertical-align: top; }
         table.rx-medicines tr:nth-child(even) td { background: #f8faff; }
         .med-brand { font-size: 9px; color: #666; }
+
+        /* ── Advice (full-width) ── */
+        .advice-box { border: 1px solid #bfcfe8; border-radius: 4px; overflow: hidden; margin-top: 6px; }
+        .advice-list { list-style: none; padding: 6px 10px; font-size: 11px; line-height: 1.8; }
+        .advice-list li::before { content: '• '; color: #1B3A5C; font-weight: 700; }
 
         /* ── Footer ── */
         .rx-footer { border-top: 1px solid #c7d9f5; margin-top: 12px; padding-top: 8px;
@@ -148,7 +147,6 @@
 </head>
 <body>
 
-{{-- Print / Back controls --}}
 <div class="no-print" style="background:#f0f0f0;padding:8px 12mm;display:flex;gap:12px;align-items:center">
     <button onclick="window.print()"
             style="background:#1B3A5C;color:#fff;border:none;padding:6px 18px;border-radius:5px;cursor:pointer;font-size:13px">
@@ -159,19 +157,6 @@
 </div>
 
 @php
-    $complaintMasters = $complaintMasters ?? collect();
-    $kcoMasters       = $kcoMasters ?? collect();
-    $diagnosisMasters = $diagnosisMasters ?? collect();
-    $adviceMasters    = $adviceMasters ?? collect();
-
-    $patient = $patient ?? (object)[
-        'full_name' => '—', 'patient_code' => '—', 'age' => '—',
-        'gender' => '—', 'contact_no' => null, 'appointment_date' => null,
-    ];
-    $exam = $exam ?? (object)[
-        'exam_data' => [], 'doctor' => null, 'prescriptions' => collect(), 'examined_at' => null,
-    ];
-
     $ed      = $exam->exam_data ?? [];
     $vision  = $ed['vision']   ?? [];
     $pg      = $ed['pg']       ?? [];
@@ -183,13 +168,13 @@
     $kcoRows = $ed['kco_rows'] ?? [];
     $hnoList = array_filter(array_map('trim', explode(',', $ed['history'] ?? '')));
     $diagnoses = $ed['diagnoses'] ?? [];
-    $advices   = $ed['advices']   ?? [];
+    $rxMeds    = $ed['rx']        ?? [];
+    $adviceText = $exam->advice ?? $ed['advice'] ?? '';
 
+    $dosageMap = $dosages->keyBy('id');
     $dash = '—';
 
-    function rxVal($v, $dash = '—') {
-        return ($v !== null && $v !== '') ? $v : $dash;
-    }
+    function secRxVal($v, $d = '—') { return ($v !== null && $v !== '') ? $v : $d; }
 @endphp
 
 <div class="page">
@@ -274,7 +259,6 @@
                 <div class="rx-box-title">History &amp; Vision</div>
                 <div class="rx-box-body">
 
-                    {{-- C/O table --}}
                     @if(!empty($coRows))
                     <div class="cv-label">C/O</div>
                     <table class="cv-table">
@@ -299,7 +283,6 @@
                     </table>
                     @endif
 
-                    {{-- K/C/O table --}}
                     @if(!empty($kcoRows))
                     <div class="cv-label">K/C/O</div>
                     <table class="cv-table">
@@ -322,7 +305,6 @@
                     </table>
                     @endif
 
-                    {{-- H/O chips --}}
                     @if(!empty($hnoList))
                     <div class="cv-label">H/O</div>
                     <div class="hno-chips">
@@ -332,21 +314,20 @@
                     </div>
                     @endif
 
-                    {{-- Vision summary line --}}
                     @php
-                        $vnRe  = rxVal($vision['vn_re']    ?? '');
-                        $vnLe  = rxVal($vision['vn_le']    ?? '');
-                        $phRe  = rxVal($vision['pnvn_re']  ?? '');
-                        $phLe  = rxVal($vision['pnvn_le']  ?? '');
-                        $nrRe  = rxVal($vision['nrvn_re']  ?? '');
-                        $nrLe  = rxVal($vision['nrvn_le']  ?? '');
-                        $iopRe = rxVal($nct['iop_re']      ?? '');
-                        $iopLe = rxVal($nct['iop_le']      ?? '');
-                        $hasVision = ($vnRe !== $dash || $vnLe !== $dash || $phRe !== $dash || $nrRe !== $dash);
+                        $vnRe  = secRxVal($vision['vn_re']    ?? '');
+                        $vnLe  = secRxVal($vision['vn_le']    ?? '');
+                        $phRe  = secRxVal($vision['pnvn_re']  ?? '');
+                        $phLe  = secRxVal($vision['pnvn_le']  ?? '');
+                        $nrRe  = secRxVal($vision['nrvn_re']  ?? '');
+                        $nrLe  = secRxVal($vision['nrvn_le']  ?? '');
+                        $iopRe = secRxVal($nct['iop_re']      ?? '');
+                        $iopLe = secRxVal($nct['iop_le']      ?? '');
+                        $hasVn = ($vnRe !== $dash || $vnLe !== $dash || $phRe !== $dash || $nrRe !== $dash);
                     @endphp
-                    @if($hasVision || ($iopRe !== $dash || $iopLe !== $dash))
+                    @if($hasVn || ($iopRe !== $dash || $iopLe !== $dash))
                     <div class="vn-line">
-                        @if($hasVision)
+                        @if($hasVn)
                         <span class="vn-item"><strong>Vn</strong> &lt; {{ $vnRe }}&nbsp;/&nbsp;{{ $vnLe }}</span>
                         <span class="vn-item"><strong>PH</strong> &lt; {{ $phRe }}&nbsp;/&nbsp;{{ $phLe }}</span>
                         <span class="vn-item"><strong>NrVn</strong> &lt; {{ $nrRe }}&nbsp;/&nbsp;{{ $nrLe }}</span>
@@ -357,7 +338,6 @@
                     </div>
                     @endif
 
-                    {{-- PG (Objective glass prescription) --}}
                     @php
                         $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds']) ||
                                  !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
@@ -377,17 +357,17 @@
                             <tbody>
                                 <tr>
                                     <td class="row-label">D</td>
-                                    <td>{{ rxVal($pg[$eye]['ds'] ?? '') }}</td>
-                                    <td>{{ rxVal($pg[$eye]['dc'] ?? '') }}</td>
-                                    <td>{{ rxVal($pg[$eye]['ax'] ?? '') }}</td>
-                                    <td>{{ rxVal($pg[$eye]['vn'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['ds'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['dc'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['ax'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['vn'] ?? '') }}</td>
                                 </tr>
                                 <tr>
                                     <td class="row-label">N</td>
-                                    <td>{{ rxVal($pg[$eye]['ns'] ?? '') }}</td>
-                                    <td>{{ rxVal($pg[$eye]['nc'] ?? '') }}</td>
-                                    <td>{{ rxVal($pg[$eye]['na'] ?? '') }}</td>
-                                    <td>{{ rxVal($pg[$eye]['near_vn'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['ns'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['nc'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['na'] ?? '') }}</td>
+                                    <td>{{ secRxVal($pg[$eye]['near_vn'] ?? '') }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -396,10 +376,10 @@
                     </div>
                     @endif
 
-                </div>{{-- /rx-box-body --}}
-            </div>{{-- /Box 1 --}}
+                </div>
+            </div>
 
-            {{-- Box 2: Subjective Testing (ST) + Diagnosis & Rx --}}
+            {{-- Box 2: ST + Diagnosis & Rx --}}
             <div class="rx-box">
                 <div class="rx-box-title">Subjective Testing (ST)</div>
                 <div class="rx-box-body">
@@ -408,7 +388,6 @@
                         $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds']) ||
                                  !empty($st['re']['ns']) || !empty($st['le']['ns']);
                     @endphp
-
                     @if($hasSt)
                     <table class="st-table">
                         <thead>
@@ -426,29 +405,28 @@
                         <tbody>
                             <tr>
                                 <td class="row-label">D</td>
-                                <td>{{ rxVal($st['re']['ds'] ?? '') }}</td>
-                                <td>{{ rxVal($st['re']['dc'] ?? '') }}</td>
-                                <td>{{ rxVal($st['re']['ax'] ?? '') }}</td>
-                                <td>{{ rxVal($st['re']['vn'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['ds'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['dc'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['ax'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['vn'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['ds'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['dc'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['ax'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['vn'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['ds'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['dc'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['ax'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['vn'] ?? '') }}</td>
                             </tr>
                             <tr>
                                 <td class="row-label">N</td>
-                                <td>{{ rxVal($st['re']['ns'] ?? '') }}</td>
-                                <td>{{ rxVal($st['re']['nc'] ?? '') }}</td>
-                                <td>{{ rxVal($st['re']['na'] ?? '') }}</td>
-                                <td>{{ rxVal($st['re']['near_vn'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['ns'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['nc'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['na'] ?? '') }}</td>
-                                <td>{{ rxVal($st['le']['near_vn'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['ns'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['nc'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['na'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['re']['near_vn'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['ns'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['nc'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['na'] ?? '') }}</td>
+                                <td>{{ secRxVal($st['le']['near_vn'] ?? '') }}</td>
                             </tr>
                         </tbody>
                     </table>
-
                     @php
                         $addRe = $st['re']['add'] ?? '';
                         $addLe = $st['le']['add'] ?? '';
@@ -458,91 +436,60 @@
                         <strong>ADD</strong>&nbsp;
                         RE: {{ $addRe ?: ($st['add'] ?? $dash) }}&nbsp;&nbsp;
                         LE: {{ $addLe ?: $dash }}
-                        @if(!empty($st['lens_type']))
-                            &nbsp;|&nbsp; {{ $st['lens_type'] }}
-                        @endif
+                        @if(!empty($st['lens_type'])) &nbsp;|&nbsp; {{ $st['lens_type'] }} @endif
                     </div>
                     @endif
                     @endif
 
                 </div>
 
-                {{-- Diagnosis & Rx sub-section --}}
-                <div class="rx-box-title" style="margin-top:0">Diagnosis &amp; Rx</div>
+                <div class="rx-box-title">Diagnosis &amp; Rx</div>
                 <div class="rx-box-body">
 
                     @php
-                        $dx = $ed['diagnoses'] ?? [];
-                        $dxNames = $diagnosisMasters->filter(fn($d) => in_array($d->id, $dx));
-                        $dilate = $ed['dilate'] ?? ($ed['dilation'] ?? null);
+                        $dxNames = $diagnosisMasters->filter(fn($d) => in_array($d->id, $diagnoses));
+                        $dilate  = $ed['dilate'] ?? $ed['dilation'] ?? null;
                     @endphp
 
-                    <div class="dx-line">
-                        <strong>Dx:</strong>
-                        @if($dxNames->isNotEmpty())
-                            {{ $dxNames->pluck('diagnosis')->implode(', ') }}
-                        @else
-                            -
-                        @endif
-                        &nbsp;&nbsp;
-                        <strong>Dilate:</strong> {{ $dilate ? ucfirst($dilate) : 'No' }}
-                    </div>
-
-                    {{-- Advice --}}
-                    @if(!empty($advices) && $adviceMasters->isNotEmpty())
-                    @php $advNames = $adviceMasters->filter(fn($a) => in_array($a->id, $advices)); @endphp
-                    @if($advNames->isNotEmpty())
-                    <div class="rx-sub-title">Advice</div>
+                    @if($dxNames->isNotEmpty())
+                    <div class="rx-sub-title">Diagnosis</div>
                     <div class="rx-tags">
-                        @foreach($advNames as $a)
-                            <span class="rx-tag">{{ $a->advice }}</span>
+                        @foreach($dxNames as $d)
+                            <span class="rx-tag">{{ $d->diagnosis }}</span>
                         @endforeach
                     </div>
                     @endif
-                    @endif
 
-                    @if(!empty($ed['special_advice']))
-                    <p style="font-size:10.5px;font-style:italic;color:#444;margin-top:3px;">{{ $ed['special_advice'] }}</p>
-                    @endif
-
-                    {{-- Medicines --}}
-                    @if($exam->prescriptions->isNotEmpty())
-                    <div class="rx-sub-title">Medicines (Rx)</div>
+                    @if(!empty($rxMeds))
+                    <div class="rx-sub-title">Prescription (Rx)</div>
                     <table class="rx-medicines">
                         <thead>
                             <tr>
                                 <th>#</th>
                                 <th>Medicine</th>
-                                <th>Dosage</th>
-                                <th>Duration</th>
+                                <th>Dose</th>
+                                <th>Days</th>
                                 <th>Eye</th>
-                                <th>Instructions</th>
+                                <th>Instr.</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($exam->prescriptions as $i => $rx)
+                            @foreach($rxMeds as $i => $med)
+                            @if(!empty($med['name']))
                             <tr>
                                 <td style="text-align:center">{{ $i + 1 }}</td>
-                                <td>
-                                    <span style="font-weight:600">{{ $rx->medicine?->name ?? '—' }}</span>
-                                    @if($rx->medicine?->brand_name)
-                                        <br><span class="med-brand">{{ $rx->medicine->brand_name }}</span>
-                                    @endif
-                                    @if($rx->medicine?->medicineType)
-                                        <span class="med-brand"> ({{ $rx->medicine->medicineType->name }})</span>
-                                    @endif
-                                </td>
-                                <td>{{ $rx->dosage?->dosage ?? '—' }}</td>
-                                <td>{{ $rx->duration ? $rx->duration . 'd' : '—' }}</td>
-                                <td>{{ $rx->eye ?? '—' }}</td>
-                                <td>{{ $rx->instructions ?? '—' }}</td>
+                                <td><span style="font-weight:600">{{ $med['name'] }}</span></td>
+                                <td>{{ !empty($med['dosage_id']) ? ($dosageMap[$med['dosage_id']]->dosage ?? '—') : '—' }}</td>
+                                <td>{{ $med['duration'] ?? '—' }}</td>
+                                <td>{{ $med['eye'] ?? '—' }}</td>
+                                <td>{{ $med['instructions'] ?? '—' }}</td>
                             </tr>
+                            @endif
                             @endforeach
                         </tbody>
                     </table>
                     @endif
 
-                    {{-- Follow-up --}}
                     @if(!empty($ed['followup_date']) || !empty($ed['followup_duration']))
                     <div style="font-size:10.5px;margin-top:4px;">
                         <strong style="color:#1B3A5C">Follow-up:</strong>
@@ -556,7 +503,7 @@
                     @endif
 
                 </div>
-            </div>{{-- /Box 2 --}}
+            </div>
 
         </div>{{-- /LEFT COLUMN --}}
 
@@ -581,8 +528,6 @@
                             'covertest' => 'COVERTEST',
                             'other'     => 'OTHER',
                         ];
-                        $hasOe = collect(array_keys($oeFields))
-                            ->first(fn($k) => !empty($oe[$k.'_re']) || !empty($oe[$k.'_le']));
                     @endphp
                     <table class="oe-table">
                         <thead>
@@ -646,6 +591,23 @@
 
     </div>{{-- /rx-grid --}}
 
+    {{-- ── Advice (full width below grid) ── --}}
+    @if($adviceText)
+    <div class="advice-box">
+        <div class="rx-box-title">Advice</div>
+        <div class="rx-box-body" style="padding:0">
+            <div class="rx-box-title" style="background:#eef3fb;color:#1B3A5C;font-size:9.5px;letter-spacing:.06em;">
+                CLINICAL ADVICE &amp; INSTRUCTIONS
+            </div>
+            <ul class="advice-list">
+                @foreach(array_filter(array_map('trim', explode("\n", $adviceText))) as $line)
+                    <li style="{{ str_starts_with(strtolower($line), 'cold') || str_starts_with(strtolower($line), "don't") ? 'color:#1B3A5C;' : '' }}">{{ $line }}</li>
+                @endforeach
+            </ul>
+        </div>
+    </div>
+    @endif
+
     {{-- ── Signature ── --}}
     <div class="rx-footer">
         <div></div>
@@ -656,7 +618,7 @@
         </div>
     </div>
 
-</div>{{-- /page --}}
+</div>
 
 </body>
 </html>
