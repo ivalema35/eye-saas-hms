@@ -333,581 +333,584 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
 @endpush
 
 @section('content')
-<div class="doctor-page-wrap">
+        <div class="doctor-page-wrap">
 
-    @php
-        $drIndexLabel    = $drIndexLabel    ?? 'DR Index No';
-        $waitStatusLabel = $waitStatusLabel ?? 'Wait Status';
-        $wGreen          = (int) hospital_setting('wait_green_max',  30);
-        $wOrange         = (int) hospital_setting('wait_orange_max', 60);
-        $wRed            = (int) hospital_setting('wait_red_max',   120);
-        $wDGreen         = (int) hospital_setting('wait_d_green_max',  40);
-        $wDOrange        = (int) hospital_setting('wait_d_orange_max', 90);
-        $wDRed           = (int) hospital_setting('wait_d_red_max',   120);
-        $wNdGreen        = (int) hospital_setting('wait_nd_green_max',  20);
-        $wNdOrange       = (int) hospital_setting('wait_nd_orange_max', 60);
-        $wNdRed          = (int) hospital_setting('wait_nd_red_max',   120);
-    @endphp
+            @php
+    $drIndexLabel = $drIndexLabel ?? 'DR Index No';
+    $waitStatusLabel = $waitStatusLabel ?? 'Wait Status';
+    $wGreen = (int) hospital_setting('wait_green_max', 30);
+    $wOrange = (int) hospital_setting('wait_orange_max', 60);
+    $wRed = (int) hospital_setting('wait_red_max', 120);
+    $wDGreen = (int) hospital_setting('wait_d_green_max', 40);
+    $wDOrange = (int) hospital_setting('wait_d_orange_max', 90);
+    $wDRed = (int) hospital_setting('wait_d_red_max', 120);
+    $wNdGreen = (int) hospital_setting('wait_nd_green_max', 20);
+    $wNdOrange = (int) hospital_setting('wait_nd_orange_max', 60);
+    $wNdRed = (int) hospital_setting('wait_nd_red_max', 120);
+            @endphp
 
-    {{-- Subscription Alert --}}
-    @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
-        <div class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>
-                Subscription expires in <strong>{{ $subscriptionDaysLeft }} days</strong>. Please renew soon.
-            </span>
-        </div>
-    @endif
+            {{-- Subscription Alert --}}
+            @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
+                <div class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>
+                        Subscription expires in <strong>{{ $subscriptionDaysLeft }} days</strong>. Please renew soon.
+                    </span>
+                </div>
+            @endif
 
-        <div class="metric-grid">
-            {{-- Card 1: TODAY'S ASSIGNED --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-        <div class="metric-icon" style="background:#e0f2fe;">
-            <i class="bi bi-people-fill" style="color:#0284c7;font-size:14px;"></i>
-        </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Today's Assigned</div>
+                <div class="metric-grid">
+                    {{-- Card 1: TODAY'S ASSIGNED --}}
+                    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+                        <div>
+                <div class="metric-icon" style="background:#e0f2fe;">
+                    <i class="bi bi-people-fill" style="color:#0284c7;font-size:14px;"></i>
                 </div>
-                <div>
-                    <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
-                    
-                  <!--   <div class="doc-badges mt-1">
-                        <span class="doc-badge {{ ($doctorPrimaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
-                            Primary {{ $doctorPrimaryDone ?? 0 }}
-                        </span>
-                        <span class="doc-badge {{ ($doctorSecondaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
-                            Secondary {{ $doctorSecondaryDone ?? 0 }}
-                        </span>
-                    </div> -->
-                </div>
-            </div>
+                            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Today's Assigned</div>
+                        </div>
+                        <div>
+                            <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
 
-            {{-- Card 2: PENDING EXAMS (Primary Done) --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                <div class="metric-icon" style="background:#ffedd5;">
-                    <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
-                </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Primary Done</div>
-                </div>
-                <div>
-                    <div class="metric-number mb-0">{{ $doctorPrimaryDone ?? 0 }}</div>
-                </div>
-            </div>
-
-            {{-- Card 3: SECONDARY DONE --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                    <div class="metric-icon" style="background:#dcfce7;">
-                        <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:14px;"></i>
+                          <!--   <div class="doc-badges mt-1">
+                                <span class="doc-badge {{ ($doctorPrimaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
+                                    Primary {{ $doctorPrimaryDone ?? 0 }}
+                                </span>
+                                <span class="doc-badge {{ ($doctorSecondaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
+                                    Secondary {{ $doctorSecondaryDone ?? 0 }}
+                                </span>
+                            </div> -->
+                        </div>
                     </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Secondary Done</div>
+
+                    {{-- Card 2: PENDING EXAMS (Primary Done) --}}
+                    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+                        <div>
+                        <div class="metric-icon" style="background:#ffedd5;">
+                            <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
+                        </div>
+                            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Primary Done</div>
+                        </div>
+                        <div>
+                            <div class="metric-number mb-0">{{ $doctorPrimaryDone ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Card 3: SECONDARY DONE --}}
+                    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+                        <div>
+                            <div class="metric-icon" style="background:#dcfce7;">
+                                <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:14px;"></i>
+                            </div>
+                            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Secondary Done</div>
+                        </div>
+                        <div>
+                            <div class="metric-number mb-0">{{ $doctorSecondaryDone ?? 0 }}</div>
+                        </div>
+                    </div>
+
+                    {{-- Card 4: REPORT --}}
+                    <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
+                        <div>
+                            <div class="metric-icon" style="background:#f8f0fc;">
+                                <i class="bi bi-bar-chart-fill" style="color:#7b2cbf;font-size:14px;"></i>
+                            </div>
+                            <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Reports</div>
+                        </div>
+                        <div class="mt-2">
+                            <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="text-decoration-none text-dark d-flex align-items-center fw-bolder" style="font-size: 14px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+                                View <i class="bi bi-arrow-right ms-1" style="font-size: 14px;"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <div class="metric-number mb-0">{{ $doctorSecondaryDone ?? 0 }}</div>
+
+
+            <div class="row g-4 mb-4">
+                <div class="col-lg-12">
+                    <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
+                        <h6 class="fw-bold mb-3" style="color: #1B4F72;">All Doctors</h6>
+
+                        <div class="doctor-cards-container">
+                            @forelse($doctorCards ?? [] as $doc)
+                                                        @if($doc->role?->slug === 'ot_doctor')
+                                                            @continue
+                                                        @endif
+                                                        @php
+                                $loggedInId = auth('hospital_user')->id();
+                                $isSelf = $doc->id === $loggedInId;
+                                $isSelected = $isSelf
+                                    ? ($viewingDoctor === null)
+                                    : ($viewingDoctor?->id === $doc->id);
+                                $cardUrl = $isSelf
+                                    ? route('hospital.dashboard', ['slug' => $slug])
+                                    : route('hospital.dashboard', ['slug' => $slug]) . '?view_doctor=' . $doc->id;
+                                                        @endphp
+                                                                            <a href="{{ $cardUrl }}" class="doc-profile-card {{ $isSelected ? 'doc-selected' : '' }}"
+                                                                                style="{{ $isSelected ? 'border:2px solid #1B4F72; background:#ddeef9;' : '' }}">
+                                                                                {{-- Avatar --}}
+                                                                                <div class="doc-avatar" style="{{ $isSelected ? 'background:#1B4F72; color:#fff;' : '' }}">
+                                                                                    {{ substr($doc->name, 0, 1) }}
+                                                                                </div>
+
+                                                                                <div class="doc-info">
+                                                                                    <div class="d-flex align-items-center gap-2">
+                                                                                        <div class="doc-name">{{ $doc->name }}</div>
+                                                                                        @if($isSelf)
+                                                                                            <span
+                                                                                                style="font-size:10px;font-weight:700;background:#1B4F72;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
+                                                                                        @endif
+                                                                                    </div>
+
+                                                                                    @if($doc->role?->slug === 'ot_doctor')
+                                                                                        <div class="doc-assigned">OT Doctor</div>
+                                                                                    @else
+                                                                                        <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
+                                                                                    @endif
+
+                                                                                    @if($doc->role?->slug !== 'ot_doctor')
+                                                                                        <div class="doc-badges">
+                                                                                            <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
+                                                                                                Primary Exam {{ $doc->primary_count ?? 0 }}
+                                                                                            </span>
+                                                                                            <span class="doc-badge {{ ($doc->secondary_count ?? 0) > 0 ? 'active' : '' }}">
+                                                                                                Secondary Exam {{ $doc->secondary_count ?? 0 }}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    @else
+                                                                                        <div class="doc-badges">
+                                                                                            <span class="doc-badge">
+                                                                                                Assigned {{ $doc->assigned_today ?? 0 }}
+                                                                                            </span>
+                                                                                        </div>
+                                                                                    @endif
+                                                                                </div>
+                                                                            </a>
+                            @empty
+                                <div class="text-muted small p-2">No other duty records live right now.</div>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {{-- Card 4: REPORT --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                    <div class="metric-icon" style="background:#f8f0fc;">
-                        <i class="bi bi-bar-chart-fill" style="color:#7b2cbf;font-size:14px;"></i>
-                    </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Reports</div>
+            {{-- Viewing another doctor banner --}}
+            @if($viewingDoctor)
+                <div class="d-flex align-items-center gap-3 mb-3 px-3 py-2 rounded-3"
+                     style="background:#fff8e1; border:1px solid #ffc107;">
+                    <i class="bi bi-eye-fill" style="color:#f59e0b; font-size:16px;"></i>
+                    <span style="font-size:14px; font-weight:600; color:#7c5c00;">
+                        Viewing <strong>Dr. {{ $viewingDoctor->name }}</strong>'s patients
+                    </span>
+                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
+                       class="btn btn-sm ms-auto"
+                       style="background:#1B4F72; color:#fff; border-radius:6px; font-size:12px; padding:4px 12px;">
+                        <i class="bi bi-arrow-left-circle me-1"></i> Back to My Patients
+                    </a>
                 </div>
-                <div class="mt-2">
-                    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="text-decoration-none text-dark d-flex align-items-center fw-bolder" style="font-size: 14px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-                        View <i class="bi bi-arrow-right ms-1" style="font-size: 14px;"></i>
+            @endif
+
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
+                        <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
+                            Primary Patient
+                        </div>
+                        <div class="p-3 bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-1 text-secondary small">
+                                    Show entries 
+                                    <select class="form-select form-select-sm w-auto"><option>10</option><option>20</option><option>30</option></select>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 text-secondary small">
+                                    search <input type="search" class="form-control form-control-sm w-auto" style="border: 1px solid #cbd5e1;">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                            <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th>{{ $drIndexLabel }}</th>
+                                        <th class="text-start">Patient Name</th>
+                                        <th>Age</th>
+                                        <th>City</th>
+                                        <th>{{ $waitStatusLabel }}</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($primaryQueue ?? [] as $i => $patient)
+                                        <tr>
+                                            <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
+                                            <td class="text-start fw-semibold" style="color: #1B4F72;">
+                                                {{ $patient->first_name }} {{ $patient->last_name }}
+                                            </td>
+                                            <td>{{ $patient->age }}</td>
+                                            <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
+                                            <td>
+                                                @php
+        $wMins = (int) $patient->created_at->diffInMinutes(now());
+        $wCls = $wMins < $wGreen ? 'wait-green' : ($wMins < $wOrange ? 'wait-orange' : ($wMins < $wRed ? 'wait-red' : 'wait-fire'));
+        $wFmt = $wMins < 60 ? $wMins . 'm' : floor($wMins / 60) . 'h' . ($wMins % 60 > 0 ? ' ' . ($wMins % 60) . 'm' : '');
+                                                @endphp
+                                                <span class="wait-pill {{ $wCls }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}">
+                                                    <span class="wp-r">R</span>
+                                                    <span class="wp-time">{{ $wFmt }}</span>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                                    <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
+                                                    class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                                                        Examine
+                                                    </a>
+                                                    <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids ?? $patient->id }}"
+                                                    class="btn btn-sm px-3 fw-semibold" style="background-color: #0d9488; color:#fff; border-radius: 4px;" target="_blank" title="View Patient History">
+                                                        <i class="bi bi-clock-history"></i> View
+                                                    </a>
+                                                    <button type="button"
+                                                        class="btn btn-sm px-2 fw-semibold"
+                                                        style="background-color: #f59e0b; color:#fff; border-radius: 4px; border:none;"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#patientInfoModal{{ $patient->id }}"
+                                                        title="Patient Details">
+                                                        <i class="bi bi-person-lines-fill"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
+                                <div>Showing 1 to entries of 0 entries</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-secondary px-3" disabled>Previous</button>
+                                    <button class="btn btn-sm btn-outline-secondary px-3" disabled>Next</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Right Table Panel: Secondary Patient --}}
+                <div class="col-lg-6">
+                    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
+                        <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
+                            Secondary Patient
+                        </div>
+                        <div class="p-3 bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="d-flex align-items-center gap-1 text-secondary small">
+                                    Show entries 
+                                    <select class="form-select form-select-sm w-auto"><option>10</option><option>20</option><option>30</option></select>
+                                </div>
+                                <div class="d-flex align-items-center gap-1 text-secondary small">
+                                    search <input type="search" class="form-control form-control-sm w-auto" style="border: 1px solid #cbd5e1;">
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                            <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
+                                <thead class="table-light text-secondary">
+                                    <tr>
+                                        <th>{{ $drIndexLabel }}</th>
+                                        <th class="text-start">Patient Name</th>
+                                        <th>Age</th>
+                                        <th>City</th>
+                                        <th>{{ $waitStatusLabel }}</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+
+            <tbody>
+                @forelse($secondaryQueue ?? [] as $i => $patient)
+                    @php
+        $sRMins = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+        $sRCls = $sRMins < $wGreen ? 'wait-green' : ($sRMins < $wOrange ? 'wait-orange' : ($sRMins < $wRed ? 'wait-red' : 'wait-fire'));
+        $sRFmt = $sRMins < 60 ? $sRMins . 'm' : floor($sRMins / 60) . 'h' . ($sRMins % 60 > 0 ? ' ' . ($sRMins % 60) . 'm' : '');
+        $sPExam = $patient->primaryExamination;
+        $sIsDil = $sPExam && ($sPExam->exam_data['dilate'] ?? 'No') === 'Yes';
+        $sPrimeMins = $sPExam ? (int) \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+        $sPrimeFmt = $sPrimeMins < 60 ? $sPrimeMins . 'm' : floor($sPrimeMins / 60) . 'h' . ($sPrimeMins % 60 > 0 ? ' ' . ($sPrimeMins % 60) . 'm' : '');
+        $sDClass = $sPrimeMins < $wDGreen ? 'wait-green' : ($sPrimeMins < $wDOrange ? 'wait-orange' : ($sPrimeMins < $wDRed ? 'wait-red' : 'wait-fire'));
+        $sNdClass = $sPrimeMins < $wNdGreen ? 'wait-green' : ($sPrimeMins < $wNdOrange ? 'wait-orange' : ($sPrimeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
+        // Dilation lock
+        $isDilLocked = false;
+        $dilUnlockMs = 0;
+        $dilCountdown = '';
+        if ($sIsDil && $sPExam && $sPExam->dilation_time) {
+            $unlockTime = $sPExam->updated_at->copy()->addMinutes($sPExam->dilation_time);
+            $isDilLocked = now()->lessThan($unlockTime);
+            $dilUnlockMs = $unlockTime->timestamp * 1000;
+            if ($isDilLocked) {
+                $diff = $unlockTime->diffInSeconds(now());
+                $dilCountdown = sprintf('%02d:%02d', intdiv($diff, 60), $diff % 60);
+            }
+        }
+                    @endphp
+                    <tr>
+                        <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
+                        <td class="text-start fw-semibold" style="color: #1B4F72;">
+                            {{ $patient->first_name }} {{ $patient->last_name }}
+                        </td>
+                        <td>{{ $patient->age }}</td>
+                        <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
+                        <td>
+                            <div class="d-flex flex-column align-items-center gap-1">
+                                <span class="wait-pill {{ $sRCls }}" data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}">
+                                    <span class="wp-r">R</span>
+                                    <span class="wp-time">{{ $sRFmt }}</span>
+                                </span>
+                                @if($sIsDil && $sPExam)
+                                    <span class="wait-pill {{ $sDClass }}" data-wait-from="{{ \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
+                                        <span class="wp-r">D</span>
+                                        <span class="wp-time">{{ $sPrimeFmt }}</span>
+                                    </span>
+                                @elseif($sPExam)
+                                    <span class="wait-pill {{ $sNdClass }}" data-wait-from="{{ \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
+                                        <span class="wp-r" style="font-size:.58rem;">ND</span>
+                                        <span class="wp-time">{{ $sPrimeFmt }}</span>
+                                    </span>
+                                @endif
+                            </div>
+                        </td>
+                        <td>
+                            @if($isDilLocked)
+        <div class="tooltip-container">
+                <button class="btn btn-sm fw-semibold px-3 dil-override-btn"
+                        style="background:#fff8ed; color:#92400e; border-radius:4px; cursor:pointer; border:1px solid #fcd34d;"
+                        data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}?force=1"
+                        data-patient-name="{{ $patient->first_name }} {{ $patient->last_name }}">
+                    <i class="bi bi-hourglass-split me-1" style="color:#f59e0b;"></i>
+                    <span class="dilation-countdown" data-unlock-ms="{{ $dilUnlockMs }}">{{ $dilCountdown }}</span>
+                </button>
+
+                <span class="tooltip-text">
+                    ⚠️ Dilation in progress.<br>Double click to override and proceed.
+                </span>
+            </div>
+                            @else
+                                <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
+                                   class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
+                                    Examine
+                                </a>
+                            @endif
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
+                                <div>Showing 1 to entries of 0 entries</div>
+                                <div class="btn-group">
+                                    <button class="btn btn-sm btn-outline-secondary px-3" disabled>Previous</button>
+                                    <button class="btn btn-sm btn-outline-secondary px-3" disabled>Next</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{-- Dilation Override Modal --}}
+        <div id="dilOverrideModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.5); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+            <div id="dilOverrideCard" style="background:#fff; border-radius:16px; width:100%; max-width:380px; margin:0 16px; box-shadow:0 24px 64px rgba(0,0,0,.18); animation:dilModalIn .18s ease;">
+                {{-- Icon area --}}
+                <div style="padding:28px 24px 0; text-align:center;">
+                    <div style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:#fff8ed; border:2px solid #fcd34d; margin-bottom:14px;">
+                        <i class="bi bi-hourglass-split" style="font-size:22px; color:#f59e0b;"></i>
+                    </div>
+                    <h6 style="margin:0 0 6px; font-size:15px; font-weight:700; color:#1e293b; letter-spacing:.01em;">Dilation In Progress</h6>
+                    <p style="margin:0; font-size:13px; color:#64748b; line-height:1.55;">
+                        <strong id="dilModalPatientName" style="color:#1B4F72;"></strong> is currently dilating.<br>
+                        Override the lock and proceed to secondary exam?
+                    </p>
+                </div>
+                {{-- Divider --}}
+                <div style="margin:20px 24px 0; border-top:1px solid #f1f5f9;"></div>
+                {{-- Actions --}}
+                <div style="padding:16px 24px 22px; display:flex; gap:10px;">
+                    <button id="dilModalCancel" style="flex:1; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s;">
+                        Cancel
+                    </button>
+                    <a id="dilModalConfirm" href="#" style="flex:1; background:#1B4F72; color:#fff; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s;">
+                        <i class="bi bi-arrow-right-circle-fill" style="font-size:14px;"></i> Proceed
                     </a>
                 </div>
             </div>
         </div>
 
+        {{-- Patient Info Modals (Primary Queue) --}}
+        @foreach($primaryQueue ?? [] as $patient)
+        <div class="modal fade" id="patientInfoModal{{ $patient->id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius:14px; overflow:hidden; border:none; box-shadow:0 20px 60px rgba(0,0,0,.18);">
 
-    <div class="row g-4 mb-4">
-        <div class="col-lg-12">
-            <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
-                <h6 class="fw-bold mb-3" style="color: #1B4F72;">All Doctors</h6>
-                
-                <div class="doctor-cards-container">
-                    @forelse($doctorCards ?? [] as $doc)
-                        @php
-                            $loggedInId  = auth('hospital_user')->id();
-                            $isSelf      = $doc->id === $loggedInId;
-                            $isSelected  = $isSelf
-                                ? ($viewingDoctor === null)
-                                : ($viewingDoctor?->id === $doc->id);
-                            $cardUrl     = $isSelf
-                                ? route('hospital.dashboard', ['slug' => $slug])
-                                : route('hospital.dashboard', ['slug' => $slug]) . '?view_doctor=' . $doc->id;
-                        @endphp
-                        <a href="{{ $cardUrl }}"
-                           class="doc-profile-card {{ $isSelected ? 'doc-selected' : '' }}"
-                           style="{{ $isSelected ? 'border:2px solid #1B4F72; background:#ddeef9;' : '' }}">
-                            {{-- Avatar --}}
-                            <div class="doc-avatar" style="{{ $isSelected ? 'background:#1B4F72; color:#fff;' : '' }}">
-                                {{ substr($doc->name, 0, 1) }}
+                    {{-- Header --}}
+                    <div class="modal-header text-white py-3 px-4" style="background:#1B4F72;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-person-badge-fill fs-5"></i>
+                            <div>
+                                <div class="fw-bold fs-6">{{ $patient->first_name }} {{ $patient->middle_name }} {{ $patient->last_name }}</div>
+                                <small style="opacity:.8;">MRD: {{ $patient->patient_code ?? '—' }}</small>
                             </div>
-
-                            <div class="doc-info">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="doc-name">{{ $doc->name }}</div>
-                                    @if($isSelf)
-                                        <span style="font-size:10px;font-weight:700;background:#1B4F72;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
-                                    @endif
-                                </div>
-
-                                @if($doc->role?->slug === 'ot_doctor')
-                                    <div class="doc-assigned">OT Doctor</div>
-                                @else
-                                    <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
-                                @endif
-
-                                @if($doc->role?->slug !== 'ot_doctor')
-                                    <div class="doc-badges">
-                                        <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
-                                            Primary Exam {{ $doc->primary_count ?? 0 }}
-                                        </span>
-                                        <span class="doc-badge {{ ($doc->secondary_count ?? 0) > 0 ? 'active' : '' }}">
-                                            Secondary Exam {{ $doc->secondary_count ?? 0 }}
-                                        </span>
-                                    </div>
-                                @else
-                                    <div class="doc-badges">
-                                        <span class="doc-badge">
-                                            Assigned {{ $doc->assigned_today ?? 0 }}
-                                        </span>
-                                    </div>
-                                @endif
-                            </div>
-                        </a>
-                    @empty
-                        <div class="text-muted small p-2">No other duty records live right now.</div>
-                    @endforelse
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Viewing another doctor banner --}}
-    @if($viewingDoctor)
-        <div class="d-flex align-items-center gap-3 mb-3 px-3 py-2 rounded-3"
-             style="background:#fff8e1; border:1px solid #ffc107;">
-            <i class="bi bi-eye-fill" style="color:#f59e0b; font-size:16px;"></i>
-            <span style="font-size:14px; font-weight:600; color:#7c5c00;">
-                Viewing <strong>Dr. {{ $viewingDoctor->name }}</strong>'s patients
-            </span>
-            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
-               class="btn btn-sm ms-auto"
-               style="background:#1B4F72; color:#fff; border-radius:6px; font-size:12px; padding:4px 12px;">
-                <i class="bi bi-arrow-left-circle me-1"></i> Back to My Patients
-            </a>
-        </div>
-    @endif
-
-    <div class="row g-4">
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
-                <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
-                    Primary Patient
-                </div>
-                <div class="p-3 bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-1 text-secondary small">
-                            Show entries 
-                            <select class="form-select form-select-sm w-auto"><option>10</option><option>20</option><option>30</option></select>
                         </div>
-                        <div class="d-flex align-items-center gap-1 text-secondary small">
-                            search <input type="search" class="form-control form-control-sm w-auto" style="border: 1px solid #cbd5e1;">
-                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="table-responsive">
-                    <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
-                        <thead class="table-light text-secondary">
-                            <tr>
-                                <th>{{ $drIndexLabel }}</th>
-                                <th class="text-start">Patient Name</th>
-                                <th>Age</th>
-                                <th>City</th>
-                                <th>{{ $waitStatusLabel }}</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($primaryQueue ?? [] as $i => $patient)
-                                <tr>
-                                    <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
-                                    <td class="text-start fw-semibold" style="color: #1B4F72;">
-                                        {{ $patient->first_name }} {{ $patient->last_name }}
-                                    </td>
-                                    <td>{{ $patient->age }}</td>
-                                    <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
-                                    <td>
-                                        @php
-                                            $wMins = (int) $patient->created_at->diffInMinutes(now());
-                                            $wCls  = $wMins < $wGreen ? 'wait-green' : ($wMins < $wOrange ? 'wait-orange' : ($wMins < $wRed ? 'wait-red' : 'wait-fire'));
-                                            $wFmt  = $wMins < 60 ? $wMins.'m' : floor($wMins/60).'h'.($wMins%60>0?' '.($wMins%60).'m':'');
-                                        @endphp
-                                        <span class="wait-pill {{ $wCls }}" data-wait-from="{{ $patient->created_at->toIso8601String() }}">
-                                            <span class="wp-r">R</span>
-                                            <span class="wp-time">{{ $wFmt }}</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <div class="d-flex gap-1 justify-content-center flex-wrap">
-                                            <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
-                                            class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                                                Examine
-                                            </a>
-                                            <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids ?? $patient->id }}"
-                                            class="btn btn-sm px-3 fw-semibold" style="background-color: #0d9488; color:#fff; border-radius: 4px;" target="_blank" title="View Patient History">
-                                                <i class="bi bi-clock-history"></i> View
-                                            </a>
-                                            <button type="button"
-                                                class="btn btn-sm px-2 fw-semibold"
-                                                style="background-color: #f59e0b; color:#fff; border-radius: 4px; border:none;"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#patientInfoModal{{ $patient->id }}"
-                                                title="Patient Details">
-                                                <i class="bi bi-person-lines-fill"></i>
-                                            </button>
+
+                    {{-- Body --}}
+                    <div class="modal-body p-4" style="background:#f8fafc;">
+                        <div class="row g-3">
+
+                            {{-- Personal Info --}}
+                            <div class="col-12">
+                                <div class="fw-bold mb-2" style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
+                                    <i class="bi bi-person-fill me-1"></i> Personal Information
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Full Name</div>
+                                            <div class="fw-semibold">{{ trim($patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name) }}</div>
                                         </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
-                        <div>Showing 1 to entries of 0 entries</div>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Previous</button>
-                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Next</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Age</div>
+                                            <div class="fw-semibold">{{ $patient->age ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Gender</div>
+                                            <div class="fw-semibold">{{ ucfirst($patient->gender ?? '—') }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Occupation</div>
+                                            <div class="fw-semibold">{{ $patient->occupation ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Contact No.</div>
+                                            <div class="fw-semibold">{{ $patient->contact_no ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">WhatsApp No.</div>
+                                            <div class="fw-semibold">{{ $patient->whatsapp_no ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-4">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">City</div>
+                                            <div class="fw-semibold">{{ $patient->location?->city ?? $patient->masterCity?->name ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-        {{-- Right Table Panel: Secondary Patient --}}
-        <div class="col-lg-6">
-            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
-                <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
-                    Secondary Patient
-                </div>
-                <div class="p-3 bg-white">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-1 text-secondary small">
-                            Show entries 
-                            <select class="form-select form-select-sm w-auto"><option>10</option><option>20</option><option>30</option></select>
-                        </div>
-                        <div class="d-flex align-items-center gap-1 text-secondary small">
-                            search <input type="search" class="form-control form-control-sm w-auto" style="border: 1px solid #cbd5e1;">
-                        </div>
-                    </div>
-                    <div class="table-responsive">
-                    <table class="table table-bordered align-middle text-center mb-0" style="font-size: 13.5px; border-color: #e2e8f0;">
-                        <thead class="table-light text-secondary">
-                            <tr>
-                                <th>{{ $drIndexLabel }}</th>
-                                <th class="text-start">Patient Name</th>
-                                <th>Age</th>
-                                <th>City</th>
-                                <th>{{ $waitStatusLabel }}</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            
+                            {{-- Appointment Info --}}
+                            <div class="col-12">
+                                <div class="fw-bold mb-2" style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
+                                    <i class="bi bi-calendar2-check-fill me-1"></i> Appointment Information
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Appointment Date</div>
+                                            <div class="fw-semibold">{{ $patient->appointment_date ? $patient->appointment_date->format('d M, Y') : '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Type</div>
+                                            <div class="fw-semibold">
+                                                @if($patient->type === 'walkin')
+                                                    <span class="badge" style="background:#dcfce7; color:#166534;">Walk-in</span>
+                                                @elseif($patient->type === 'phone')
+                                                    <span class="badge" style="background:#dbeafe; color:#1e40af;">Phone</span>
+                                                @else
+                                                    {{ ucfirst($patient->type ?? '—') }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Patient Status</div>
+                                            <div class="fw-semibold">
+                                                @if($patient->is_old_patient)
+                                                    <span class="badge" style="background:#fef3c7; color:#92400e;">Old Patient</span>
+                                                @else
+                                                    <span class="badge" style="background:#d1fae5; color:#065f46;">New Patient</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Doctor</div>
+                                            <div class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Case Type</div>
+                                            <div class="fw-semibold">{{ $patient->caseType->case_type ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Case Fee</div>
+                                            <div class="fw-semibold">₹ {{ number_format($patient->case_fee ?? 0, 2) }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Receptionist</div>
+                                            <div class="fw-semibold">{{ $patient->reception->name ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                            <div class="text-muted" style="font-size:11px;">Referrer</div>
+                                            <div class="fw-semibold">{{ $patient->referrer->name ?? '—' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-    <tbody>
-        @forelse($secondaryQueue ?? [] as $i => $patient)
-            @php
-                $sRMins    = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
-                $sRCls     = $sRMins < $wGreen ? 'wait-green' : ($sRMins < $wOrange ? 'wait-orange' : ($sRMins < $wRed ? 'wait-red' : 'wait-fire'));
-                $sRFmt     = $sRMins < 60 ? $sRMins.'m' : floor($sRMins/60).'h'.($sRMins%60>0?' '.($sRMins%60).'m':'');
-                $sPExam    = $patient->primaryExamination;
-                $sIsDil    = $sPExam && ($sPExam->exam_data['dilate'] ?? 'No') === 'Yes';
-                $sPrimeMins= $sPExam ? (int)\Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
-                $sPrimeFmt = $sPrimeMins < 60 ? $sPrimeMins.'m' : floor($sPrimeMins/60).'h'.($sPrimeMins%60>0?' '.($sPrimeMins%60).'m':'');
-                $sDClass   = $sPrimeMins < $wDGreen  ? 'wait-green' : ($sPrimeMins < $wDOrange  ? 'wait-orange' : ($sPrimeMins < $wDRed  ? 'wait-red' : 'wait-fire'));
-                $sNdClass  = $sPrimeMins < $wNdGreen ? 'wait-green' : ($sPrimeMins < $wNdOrange ? 'wait-orange' : ($sPrimeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
-                // Dilation lock
-                $isDilLocked  = false;
-                $dilUnlockMs  = 0;
-                $dilCountdown = '';
-                if ($sIsDil && $sPExam && $sPExam->dilation_time) {
-                    $unlockTime  = $sPExam->updated_at->copy()->addMinutes($sPExam->dilation_time);
-                    $isDilLocked = now()->lessThan($unlockTime);
-                    $dilUnlockMs = $unlockTime->timestamp * 1000;
-                    if ($isDilLocked) {
-                        $diff = $unlockTime->diffInSeconds(now());
-                        $dilCountdown = sprintf('%02d:%02d', intdiv($diff, 60), $diff % 60);
-                    }
-                }
-            @endphp
-            <tr>
-                <td><span class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span></td>
-                <td class="text-start fw-semibold" style="color: #1B4F72;">
-                    {{ $patient->first_name }} {{ $patient->last_name }}
-                </td>
-                <td>{{ $patient->age }}</td>
-                <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '-' }}</td>
-                <td>
-                    <div class="d-flex flex-column align-items-center gap-1">
-                        <span class="wait-pill {{ $sRCls }}" data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}">
-                            <span class="wp-r">R</span>
-                            <span class="wp-time">{{ $sRFmt }}</span>
-                        </span>
-                        @if($sIsDil && $sPExam)
-                            <span class="wait-pill {{ $sDClass }}" data-wait-from="{{ \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
-                                <span class="wp-r">D</span>
-                                <span class="wp-time">{{ $sPrimeFmt }}</span>
-                            </span>
-                        @elseif($sPExam)
-                            <span class="wait-pill {{ $sNdClass }}" data-wait-from="{{ \Carbon\Carbon::parse($sPExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
-                                <span class="wp-r" style="font-size:.58rem;">ND</span>
-                                <span class="wp-time">{{ $sPrimeFmt }}</span>
-                            </span>
-                        @endif
+                        </div>
                     </div>
-                </td>
-                <td>
-                    @if($isDilLocked)
-<div class="tooltip-container">
-        <button class="btn btn-sm fw-semibold px-3 dil-override-btn"
-                style="background:#fff8ed; color:#92400e; border-radius:4px; cursor:pointer; border:1px solid #fcd34d;"
-                data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}?force=1"
-                data-patient-name="{{ $patient->first_name }} {{ $patient->last_name }}">
-            <i class="bi bi-hourglass-split me-1" style="color:#f59e0b;"></i>
-            <span class="dilation-countdown" data-unlock-ms="{{ $dilUnlockMs }}">{{ $dilCountdown }}</span>
-        </button>
-        
-        <span class="tooltip-text">
-            ⚠️ Dilation in progress.<br>Double click to override and proceed.
-        </span>
-    </div>
-                    @else
-                        <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
-                           class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
-                            Examine
+
+                    {{-- Footer --}}
+                    <div class="modal-footer px-4 py-3" style="background:#fff; border-top:1px solid #e2e8f0;">
+                        <button type="button" class="btn btn-sm px-4" data-bs-dismiss="modal"
+                            style="background:#e2e8f0; color:#475569; border-radius:8px; font-weight:600; border:none;">
+                            Close
+                        </button>
+                        <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                            class="btn btn-sm px-4 text-white fw-semibold"
+                            style="background:#1B4F72; border-radius:8px; border:none;">
+                            <i class="bi bi-pencil-fill me-1"></i> Edit Patient
                         </a>
-                    @endif
-                </td>
-            </tr>
-        @empty
-            <tr><td colspan="6" class="py-4 text-muted bg-light">No Data Found</td></tr>
-        @endforelse
-    </tbody>
-</table>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
-                        <div>Showing 1 to entries of 0 entries</div>
-                        <div class="btn-group">
-                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Previous</button>
-                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Next</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{{-- Dilation Override Modal --}}
-<div id="dilOverrideModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.5); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
-    <div id="dilOverrideCard" style="background:#fff; border-radius:16px; width:100%; max-width:380px; margin:0 16px; box-shadow:0 24px 64px rgba(0,0,0,.18); animation:dilModalIn .18s ease;">
-        {{-- Icon area --}}
-        <div style="padding:28px 24px 0; text-align:center;">
-            <div style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:#fff8ed; border:2px solid #fcd34d; margin-bottom:14px;">
-                <i class="bi bi-hourglass-split" style="font-size:22px; color:#f59e0b;"></i>
-            </div>
-            <h6 style="margin:0 0 6px; font-size:15px; font-weight:700; color:#1e293b; letter-spacing:.01em;">Dilation In Progress</h6>
-            <p style="margin:0; font-size:13px; color:#64748b; line-height:1.55;">
-                <strong id="dilModalPatientName" style="color:#1B4F72;"></strong> is currently dilating.<br>
-                Override the lock and proceed to secondary exam?
-            </p>
-        </div>
-        {{-- Divider --}}
-        <div style="margin:20px 24px 0; border-top:1px solid #f1f5f9;"></div>
-        {{-- Actions --}}
-        <div style="padding:16px 24px 22px; display:flex; gap:10px;">
-            <button id="dilModalCancel" style="flex:1; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s;">
-                Cancel
-            </button>
-            <a id="dilModalConfirm" href="#" style="flex:1; background:#1B4F72; color:#fff; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s;">
-                <i class="bi bi-arrow-right-circle-fill" style="font-size:14px;"></i> Proceed
-            </a>
-        </div>
-    </div>
-</div>
-
-{{-- Patient Info Modals (Primary Queue) --}}
-@foreach($primaryQueue ?? [] as $patient)
-<div class="modal fade" id="patientInfoModal{{ $patient->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="border-radius:14px; overflow:hidden; border:none; box-shadow:0 20px 60px rgba(0,0,0,.18);">
-
-            {{-- Header --}}
-            <div class="modal-header text-white py-3 px-4" style="background:#1B4F72;">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-person-badge-fill fs-5"></i>
-                    <div>
-                        <div class="fw-bold fs-6">{{ $patient->first_name }} {{ $patient->middle_name }} {{ $patient->last_name }}</div>
-                        <small style="opacity:.8;">MRD: {{ $patient->patient_code ?? '—' }}</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
-            </div>
-
-            {{-- Body --}}
-            <div class="modal-body p-4" style="background:#f8fafc;">
-                <div class="row g-3">
-
-                    {{-- Personal Info --}}
-                    <div class="col-12">
-                        <div class="fw-bold mb-2" style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
-                            <i class="bi bi-person-fill me-1"></i> Personal Information
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Full Name</div>
-                                    <div class="fw-semibold">{{ trim($patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Age</div>
-                                    <div class="fw-semibold">{{ $patient->age ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Gender</div>
-                                    <div class="fw-semibold">{{ ucfirst($patient->gender ?? '—') }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Occupation</div>
-                                    <div class="fw-semibold">{{ $patient->occupation ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Contact No.</div>
-                                    <div class="fw-semibold">{{ $patient->contact_no ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">WhatsApp No.</div>
-                                    <div class="fw-semibold">{{ $patient->whatsapp_no ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">City</div>
-                                    <div class="fw-semibold">{{ $patient->location?->city ?? $patient->masterCity?->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Appointment Info --}}
-                    <div class="col-12">
-                        <div class="fw-bold mb-2" style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
-                            <i class="bi bi-calendar2-check-fill me-1"></i> Appointment Information
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Appointment Date</div>
-                                    <div class="fw-semibold">{{ $patient->appointment_date ? $patient->appointment_date->format('d M, Y') : '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Type</div>
-                                    <div class="fw-semibold">
-                                        @if($patient->type === 'walkin')
-                                            <span class="badge" style="background:#dcfce7; color:#166534;">Walk-in</span>
-                                        @elseif($patient->type === 'phone')
-                                            <span class="badge" style="background:#dbeafe; color:#1e40af;">Phone</span>
-                                        @else
-                                            {{ ucfirst($patient->type ?? '—') }}
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Patient Status</div>
-                                    <div class="fw-semibold">
-                                        @if($patient->is_old_patient)
-                                            <span class="badge" style="background:#fef3c7; color:#92400e;">Old Patient</span>
-                                        @else
-                                            <span class="badge" style="background:#d1fae5; color:#065f46;">New Patient</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Doctor</div>
-                                    <div class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Case Type</div>
-                                    <div class="fw-semibold">{{ $patient->caseType->case_type ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Case Fee</div>
-                                    <div class="fw-semibold">₹ {{ number_format($patient->case_fee ?? 0, 2) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Receptionist</div>
-                                    <div class="fw-semibold">{{ $patient->reception->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Referrer</div>
-                                    <div class="fw-semibold">{{ $patient->referrer->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
             </div>
-
-            {{-- Footer --}}
-            <div class="modal-footer px-4 py-3" style="background:#fff; border-top:1px solid #e2e8f0;">
-                <button type="button" class="btn btn-sm px-4" data-bs-dismiss="modal"
-                    style="background:#e2e8f0; color:#475569; border-radius:8px; font-weight:600; border:none;">
-                    Close
-                </button>
-                <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                    class="btn btn-sm px-4 text-white fw-semibold"
-                    style="background:#1B4F72; border-radius:8px; border:none;">
-                    <i class="bi bi-pencil-fill me-1"></i> Edit Patient
-                </a>
-            </div>
-
         </div>
-    </div>
-</div>
-@endforeach
+        @endforeach
 
 @endsection
 

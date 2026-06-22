@@ -669,6 +669,7 @@
                         </div>
 
                         <div class="canvas-box mt-2">
+                            <div class="canvas-section-title">Advice</div>
                             <div id="canvas_advice"></div>
                         </div>
                     </div>
@@ -805,6 +806,7 @@
                 </div>
 
                 <div class="canvas-box mt-2">
+                    <div class="canvas-section-title">Advice</div>
                     <div id="canvas_advice"></div>
                 </div>
             </div>
@@ -4480,6 +4482,25 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     updateWaitPills();
     setInterval(updateWaitPills, 30000);
+})();
+</script>
+
+<script>
+// Ensure canvas is always fully open/populated on page load (for both doctor and admin)
+(function () {
+    function initCanvas() {
+        if (typeof updateLivePreview === 'function') {
+            try { updateLivePreview(); } catch (e) {}
+        }
+    }
+    // Run immediately if DOM is ready, else wait for it
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCanvas);
+    } else {
+        initCanvas();
+    }
+    // Fallback: run after draft-restore timer (300ms) completes
+    setTimeout(initCanvas, 400);
 })();
 </script>
 
