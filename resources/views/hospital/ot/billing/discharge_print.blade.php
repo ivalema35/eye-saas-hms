@@ -95,6 +95,13 @@
     <button class="print-btn" onclick="window.print()">Print</button>
 
     <div class="page">
+        @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+        @if($letterPad === 'available')
+        <div class="header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h1>OT Discharge Summary</h1>
+            <p>Prepared: {{ now()->format('d M Y h:i A') }}</p>
+        </div>
+        @else
         <div class="header">
             <div style="display:flex;align-items:center;gap:12px;">
                 <div class="print-logo" style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-right:12px;">
@@ -110,6 +117,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <div class="section">
             <h3>Patient & Surgery Information</h3>

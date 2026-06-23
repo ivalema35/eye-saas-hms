@@ -62,6 +62,17 @@ class TenantController extends Controller
     {
         $validated = $request->validate([
             'hospital_name' => ['required', 'string', 'min:3', 'max:100'],
+            'hospital_code' => [
+                'required',
+                'string',
+                'size:3',
+                'regex:/^[A-Za-z]{3}$/',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (Tenant::where('hospital_code', strtoupper($value))->exists()) {
+                        $fail('This hospital code is already taken by another hospital.');
+                    }
+                },
+            ],
             'slug' => [
                 'required',
                 'string',

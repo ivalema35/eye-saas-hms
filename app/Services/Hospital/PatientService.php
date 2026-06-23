@@ -123,8 +123,13 @@ class PatientService
     private function prefix(int $tenantId): string
     {
         $tenant = Tenant::findOrFail($tenantId);
-        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $tenant->slug), 0, 3));
 
+        if (!empty($tenant->hospital_code)) {
+            return strtoupper($tenant->hospital_code);
+        }
+
+        // Fallback for tenants created before hospital_code was introduced
+        $prefix = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $tenant->slug), 0, 3));
         return strlen($prefix) < 3 ? str_pad($prefix, 3, 'X') : $prefix;
     }
 }

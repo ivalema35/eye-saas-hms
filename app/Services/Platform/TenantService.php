@@ -39,6 +39,7 @@ class TenantService
             $tenant = Tenant::create([
                 'name' => $data['hospital_name'],
                 'slug' => $data['slug'],
+                'hospital_code' => strtoupper($data['hospital_code']),
                 'admin_name' => $data['admin_name'],
                 'admin_email' => $data['admin_email'],
                 'admin_phone' => $data['admin_phone'],

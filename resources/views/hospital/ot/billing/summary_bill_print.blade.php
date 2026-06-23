@@ -18,6 +18,13 @@
 </head>
 <body>
 <button class="print-btn" onclick="window.print()">Print</button>
+@php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+@if($letterPad === 'available')
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;border-bottom:2px solid #0f4c81;padding-bottom:8px;">
+    <h1 style="margin:0">Bill of Summary</h1>
+    <div>Invoice: {{ $invoice->invoice_number ?? '-' }} | Patient: {{ $booking->patient?->full_name ?? '-' }}</div>
+</div>
+@else
 <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
     <div style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;">
         @if(hospital_logo_url())
@@ -31,6 +38,7 @@
         <div>Invoice: {{ $invoice->invoice_number ?? '-' }} | Patient: {{ $booking->patient?->full_name ?? '-' }}</div>
     </div>
 </div>
+@endif
 <table>
     <thead>
         <tr>

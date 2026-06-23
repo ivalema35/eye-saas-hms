@@ -47,6 +47,11 @@ Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
 Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 
+// Hospital code availability check (AJAX, rate limited)
+Route::get('/check-code', [RegisterController::class, 'checkCode'])
+    ->name('check-code')
+    ->middleware('throttle:30,1');
+
 // Slug availability check (AJAX, rate limited)
 Route::get('/check-slug', [RegisterController::class, 'checkSlug'])
     ->name('check-slug')
