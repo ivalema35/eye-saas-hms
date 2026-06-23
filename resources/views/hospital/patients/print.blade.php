@@ -81,6 +81,11 @@
 
 <div class="bill-container">
     {{-- Hospital Header --}}
+    @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+    @if($letterPad === 'available')
+    <div class="bill-header">
+    </div>
+    @else
     <div class="bill-header">
         <div class="bill-logo">
             @if(hospital_logo_url())
@@ -95,6 +100,7 @@
         @endif
         <p>Phone: {{ hospital_contact_number() ?: '—' }} &bull; Email: {{ hospital_official_email() ?: '—' }}</p>
     </div>
+    @endif
 
     <div class="bill-title">OPD Bill / Receipt</div>
 

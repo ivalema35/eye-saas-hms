@@ -136,6 +136,13 @@
     <button class="print-btn" onclick="window.print()">Print</button>
 
     <div class="page">
+        @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+        @if($letterPad === 'available')
+        <div class="header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h1>OT Invoice</h1>
+            <p style="margin:0;color:#4b5563;font-size:13px;">Generated: {{ now()->format('d M Y h:i A') }}</p>
+        </div>
+        @else
         <div class="header">
             <div style="display:flex;align-items:center;gap:12px;">
                 <div class="print-logo">
@@ -151,6 +158,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <div class="meta">
             <div class="meta-box">

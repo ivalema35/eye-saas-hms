@@ -16,6 +16,12 @@
 </head>
 <body>
 <button class="print-btn" onclick="window.print()">Print</button>
+@php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+@if($letterPad === 'available')
+<div class="head">
+    <h1>Operation Certificate</h1>
+</div>
+@else
 <div class="head" style="display:flex;align-items:center;gap:12px;">
     <div style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;">
         @if(hospital_logo_url())
@@ -29,6 +35,7 @@
         <div>{{ hospital_name() }} | Tenant: {{ $slug }}</div>
     </div>
 </div>
+@endif
 <div class="line"><span class="label">Patient:</span> {{ $booking->patient?->full_name ?? '-' }}</div>
 <div class="line"><span class="label">Patient Code:</span> {{ $booking->patient?->patient_code ?? '-' }}</div>
 <div class="line"><span class="label">Doctor:</span> {{ $booking->otDoctor?->name ?? '-' }}</div>

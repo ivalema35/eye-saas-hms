@@ -241,11 +241,16 @@
 <body>
     <div class="print-shell">
         <div class="print-header">
+            @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
             <div class="brand">
+                @if($letterPad !== 'available')
                 <div class="brand-mark"><i class="bi bi-clock-history"></i></div>
+                @endif
                 <div>
                     <h1>Patient History</h1>
+                    @if($letterPad !== 'available')
                     <p>{{ hospital_name() }} | {{ hospital_contact_number() ?: '—' }}</p>
+                    @endif
                 </div>
             </div>
             <div class="print-actions">

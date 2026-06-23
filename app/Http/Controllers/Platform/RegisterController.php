@@ -53,6 +53,17 @@ class RegisterController extends Controller
     {
         $validated = $request->validate([
             'hospital_name' => ['required', 'string', 'min:3', 'max:100'],
+            'hospital_code' => [
+                'required',
+                'string',
+                'size:3',
+                'regex:/^[A-Za-z]{3}$/',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (Tenant::where('hospital_code', strtoupper($value))->exists()) {
+                        $fail('This hospital code is already taken by another hospital.');
+                    }
+                },
+            ],
             'slug' => [
                 'required',
                 'string',
@@ -134,6 +145,29 @@ class RegisterController extends Controller
         $cities = MasterCity::where('district_id', $request->district_id)
             ->active()->orderBy('name')->get(['id', 'name']);
         return response()->json($cities);
+    }
+
+    /**
+     * checkCode() — AJAX: hospital code availability check karo
+     */
+    public function checkCode(Request $request): JsonResponse
+    {
+        $code = strtoupper(preg_replace('/[^a-zA-Z]/', '', $request->input('code', '')));
+
+        if (strlen($code) !== 3) {
+            return response()->json(['available' => false, 'message' => 'Code must be exactly 3 letters']);
+        }
+
+        $exists = Tenant::where('hospital_code', $code)->exists();
+
+        if ($exists) {
+            return response()->json([
+                'available' => false,
+                'message' => 'This code is already taken by another hospital',
+            ]);
+        }
+
+        return response()->json(['available' => true, 'code' => $code]);
     }
 
     /**
