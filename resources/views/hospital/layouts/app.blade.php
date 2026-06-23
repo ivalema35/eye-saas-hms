@@ -641,11 +641,14 @@
                     <ul class="dropdown-menu dropdown-menu-end"
                         style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
                         <li>
-                            <a class="dropdown-item" href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}">
+                            <a class="dropdown-item"
+                                href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}">
                                 <i class="bi bi-person-circle me-2"></i> My Profile
                             </a>
                         </li>
-                        <li><hr class="dropdown-divider my-1"></li>
+                        <li>
+                            <hr class="dropdown-divider my-1">
+                        </li>
                         <li>
                             <form method="POST"
                                 action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
@@ -667,16 +670,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                        <i class="bi bi-list-task"></i> Basic Master
-                                                                    </a>
-                                                                    <ul class="dropdown-menu">
-                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                    </ul>
-                                                                </div> -->
+                                                                        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                            <i class="bi bi-list-task"></i> Basic Master
+                                                                        </a>
+                                                                        <ul class="dropdown-menu">
+                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                        </ul>
+                                                                    </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
@@ -820,8 +823,9 @@
 
                 @if($currentUser)
                     <div class="dropdown user-dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="navbarUserDropdown"
-                            role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="nav-link dropdown-toggle d-flex align-items-center gap-2 border-0 bg-transparent"
+                            id="navbarUserDropdown" type="button" data-bs-toggle="dropdown" data-bs-auto-close="true"
+                            aria-expanded="false">
                             <span class="avatar-circle">
                                 <i class="bi bi-person-fill"></i>
                             </span>
@@ -829,27 +833,36 @@
                                 <span class="user-name">{{ $currentUser->name }}</span>
                                 <small class="user-role">{{ $currentUser->role?->name ?? 'Hospital Staff' }}</small>
                             </span>
-                        </a>
+                        </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                            @if($currentUser->role?->is_super)
+                                {{-- Hospital Admin: full menu --}}
+                                <li>
+                                    <h6 class="dropdown-header">Switch Workspace</h6>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hospital.patients.index', ['slug' => $slug]) }}">
+                                        <i class="bi bi-person-badge me-2"></i> Doctor Workspace
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">
+                                        <i class="bi bi-clipboard2-pulse me-2"></i> Reception Workspace
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="{{ route('hospital.settings.index', ['slug' => $slug]) }}">
+                                        <i class="bi bi-gear me-2"></i> Settings
+                                    </a>
+                                </li>
+                            @endif
+                            {{-- All roles: My Profile + Logout --}}
                             <li>
-                                <h6 class="dropdown-header">Switch Workspace</h6>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('hospital.patients.index', ['slug' => $slug]) }}">
-                                    <i class="bi bi-person-badge me-2"></i> Doctor Workspace
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">
-                                    <i class="bi bi-clipboard2-pulse me-2"></i> Reception Workspace
-                                </a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{{ route('hospital.settings.index', ['slug' => $slug]) }}">
-                                    <i class="bi bi-gear me-2"></i> Settings
+                                <a class="dropdown-item" href="{{ route('hospital.profile.show', ['slug' => $slug]) }}">
+                                    <i class="bi bi-person-circle me-2"></i> My Profile
                                 </a>
                             </li>
                             <li>
@@ -1181,12 +1194,6 @@
             </div>{{-- /.hms-sidenav-wrap --}}
 
             <div class="hms-sidebar-footer">
-                <a href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}"
-                   class="hms-nav-item {{ request()->routeIs('hospital.profile.*') ? 'active' : '' }}"
-                   style="margin-bottom:.5rem;">
-                    <i class="bi bi-person-circle"></i>
-                    <span>My Profile</span>
-                </a>
                 <form method="POST" action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
                     @csrf
                     <button type="submit" class="hms-sidebar-logout">

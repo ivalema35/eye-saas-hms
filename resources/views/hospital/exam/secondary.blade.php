@@ -10,9 +10,10 @@
     </a>
 @endif
     @if($exam)
-        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+        <a href="{{ route('hospital.exam.secondary.print', ['slug' => $slug, 'id' => $patient->id]) }}"
+           target="_blank" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-printer"></i> Print Rx
-        </button>
+        </a>
     @endif
     <!-- @haspermission('opd.foc.create')
         <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">

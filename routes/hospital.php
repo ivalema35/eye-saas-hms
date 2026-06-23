@@ -66,7 +66,7 @@ Route::prefix('{slug}')
         // ================================================================
         // Login / Logout — no hospital auth required
         // ================================================================
-
+    
         // Hospital login page: hmssaas.com/{slug}/login
         Route::get('/login', [LoginController::class, 'show'])
             ->middleware('redirect.inactive')
@@ -87,7 +87,7 @@ Route::prefix('{slug}')
         // ================================================================
         // Authenticated Hospital Routes
         // ================================================================
-
+    
         Route::middleware(['auth.hospital', 'subscription.active', 'grace.check'])
             ->group(function () {
 
@@ -164,6 +164,9 @@ Route::prefix('{slug}')
                 Route::post('exam/secondary/{id}', [SecondaryExamController::class, 'save'])
                     ->name('exam.secondary.save')
                     ->middleware('permission:opd.exam.secondary');
+                Route::get('exam/secondary/{id}/print', [SecondaryExamController::class, 'printRx'])
+                    ->name('exam.secondary.print')
+                    ->middleware('permission:opd.prescription.print');
 
                 // AJAX: Hospital details for modal
                 Route::get('ajax/hospital-details/{id}', [DashboardController::class, 'getHospitalDetails'])
@@ -272,27 +275,27 @@ Route::prefix('{slug}')
                     Route::prefix('basic')->name('basic.')
                         ->middleware('permission:master.case_types')
                         ->group(function () {
-                            Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
-                            Route::post('{type}', [BasicMasterController::class, 'store'])->middleware('permission:master.case_types')->name('store');
-                            // AJAX create for masters from forms (e.g. add city inline)
-                            Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
-                                ->withoutMiddleware('permission:master.case_types')
-                                ->name('ajax.store');
-                            Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->middleware('permission:master.case_types')->name('update')->whereNumber('id');
-                            Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->middleware('permission:master.case_types')->name('destroy')->whereNumber('id');
-                        });
+                        Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
+                        Route::post('{type}', [BasicMasterController::class, 'store'])->middleware('permission:master.case_types')->name('store');
+                        // AJAX create for masters from forms (e.g. add city inline)
+                        Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
+                            ->withoutMiddleware('permission:master.case_types')
+                            ->name('ajax.store');
+                        Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->middleware('permission:master.case_types')->name('update')->whereNumber('id');
+                        Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->middleware('permission:master.case_types')->name('destroy')->whereNumber('id');
+                    });
 
                     // Detail (Eye-Exam) Masters: vn, pnvn, sph_cyl, axis, complaints, etc.
                     Route::prefix('detail')->name('detail.')
                         ->middleware('permission:master.eye_exam')
                         ->group(function () {
-                            Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
-                            Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:master.eye_exam')->name('store');
-                            Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:master.eye_exam')->name('sync-by-diagnosis');
-                            Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:master.eye_exam')->name('update')->whereNumber('id');
-                            Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:master.eye_exam')->name('toggle-favourite')->whereNumber('id');
-                            Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:master.eye_exam')->name('destroy')->whereNumber('id');
-                        });
+                        Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
+                        Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:master.eye_exam')->name('store');
+                        Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:master.eye_exam')->name('sync-by-diagnosis');
+                        Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:master.eye_exam')->name('update')->whereNumber('id');
+                        Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:master.eye_exam')->name('toggle-favourite')->whereNumber('id');
+                        Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:master.eye_exam')->name('destroy')->whereNumber('id');
+                    });
 
                     Route::prefix('ot')->name('ot.')->middleware('role:admin')->group(function () {
                         Route::get('lens-options', [OtLensOptionController::class, 'index'])->name('lens-options.index');
@@ -480,5 +483,5 @@ Route::prefix('{slug}')
                     ->where('step', '[1-4]');
 
             }); // end authenticated group
-
+    
     }); // end {slug} prefix

@@ -68,7 +68,7 @@
                         <option value="">All Cities</option>
                         @foreach($locations as $loc)
                             <option value="{{ $loc->id }}" {{ (string) request('location_id') === (string) $loc->id ? 'selected' : '' }}>
-                                {{ $loc->city ?: "Location #{$loc->id}" }}
+                                {{ $loc->name }}
                             </option>
                         @endforeach
                     </select>

@@ -6,8 +6,8 @@ use App\Exports\PatientReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\CaseType;
 use App\Models\Hospital\HospitalUser;
-use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
+use App\Models\Platform\MasterCity;
 use App\Services\Auth\RolePermissionService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -58,7 +58,10 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $locations = Location::query()->orderBy('city')->get(['id', 'city', 'district', 'state']);
+        $hospitalCountry = auth('hospital_user')->user()->tenant->country;
+        $locations = MasterCity::whereHas('state.country', fn ($q) => $q->where('name', $hospitalCountry))
+            ->orderBy('name')
+            ->get(['id', 'name']);
         $cases = CaseType::query()->orderBy('case_type')->get(['id', 'case_type']);
 
         return view('hospital.patients.reports.index', compact(
