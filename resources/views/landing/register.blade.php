@@ -230,7 +230,7 @@
                                                         @error('slug')
                                                             <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
                                                         @enderror
-                                                    </div>-
+                                                    </div>
 
                             <div class="hms-form-group">
                                 <label>Hospital Code * <span style="font-weight:400;color:var(--hms-text-muted);font-size:.8rem">(3 letters — prefix for all patient MRD numbers)</span></label>
