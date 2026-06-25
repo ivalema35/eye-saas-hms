@@ -93,7 +93,7 @@
     {{-- Brand --}}
     <div class="wizard-brand">
         <a href="#">
-            <i class="fa-solid fa-eye"></i>
+            <img src="{{ platform_logo_url() }}" alt="Eye HMS" style="height:32px;width:auto;object-fit:contain;">
             <span>Eye<span style="color:#1ABC9C">HMS</span> — Setup Wizard</span>
         </a>
     </div>

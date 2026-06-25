@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
           integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
           crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/png" href="{{ platform_logo_url() }}">
 
     @stack('styles')
 </head>
@@ -63,7 +64,9 @@
             {{-- Brand column --}}
             <div class="footer-animate">
                 <a href="{{ route('home') }}" class="pub-footer-brand">
-                    <div class="fb-icon"><i class="fa-solid fa-eye"></i></div>
+                    <div class="fb-icon">
+                        <img src="{{ platform_logo_url() }}" alt="Eye HMS" class="brand-logo-img">
+                    </div>
                     <span>Eye<span style="color:var(--hms-teal)">HMS</span></span>
                 </a>
                 <p class="pub-footer-desc">

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -655,7 +655,7 @@
 
             <div class="banner-content">
                 <div class="banner-logo">
-                    <i class="bi bi-shield-fill"></i>
+                    <img src="{{ platform_logo_url() }}" alt="Eye HMS Logo">
                 </div>
                 <div class="hero-pet">
                     <span class="admin-hero-icon">

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * ============================================================
  *  Eye HMS SaaS — Landing / Public Pages CSS  v2.0
  *  Premium SaaS design — matches PRD Section 2 + 3
@@ -560,16 +560,25 @@ body {
     letter-spacing: -.03em;
 }
 .pub-nav-brand .brand-icon-box {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--hms-primary), var(--hms-secondary));
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
     font-size: .9375rem;
     flex-shrink: 0;
+    overflow: visible;
+    padding: 0;
+}
+.brand-logo-img,
+.pub-footer-brand .brand-logo-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
 }
 .pub-nav-brand .brand-text { color: var(--hms-primary); }
 .pub-nav-brand .brand-accent { color: var(--hms-teal); }
@@ -1466,10 +1475,10 @@ body {
     text-decoration: none;
 }
 .pub-footer-brand .fb-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 9px;
-    background: linear-gradient(135deg, var(--hms-primary), var(--hms-secondary));
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3504,18 +3513,15 @@ body:has(.pricing-section-wrap) .pub-section:has(.pricing-grid) {
 }
 
 .pub-nav-brand .brand-icon-box {
-    background: linear-gradient(135deg, var(--hms-primary), var(--hms-secondary), var(--hms-teal));
-    background-size: 200% 200%;
-    animation: gradientShift 8s ease infinite;
-    box-shadow:
-        0 4px 14px color-mix(in srgb, var(--hms-primary) 35%, transparent),
-        inset 0 1px 0 color-mix(in srgb, white 30%, transparent);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: transparent;
+    box-shadow: none;
+    transition: transform 0.3s ease;
+    overflow: visible;
+    padding: 0;
 }
 
 .pub-nav-brand:hover .brand-icon-box {
-    transform: rotate(-8deg) scale(1.1);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--hms-teal) 40%, transparent);
+    transform: rotate(-4deg) scale(1.06);
 }
 
 .pub-nav-brand .brand-text {
@@ -3783,11 +3789,12 @@ body:has(.pricing-section-wrap) .pub-section:has(.pricing-grid) {
 }
 
 .pub-footer-brand .fb-icon {
-    background: linear-gradient(135deg, var(--hms-primary), var(--hms-secondary), var(--hms-teal));
-    background-size: 200% 200%;
-    animation: gradientShift 8s ease infinite;
-    box-shadow: 0 4px 14px color-mix(in srgb, var(--hms-teal) 30%, transparent);
+    background: transparent;
+    box-shadow: none;
     transition: transform 0.3s ease;
+    overflow: visible;
+    padding: 0;
+}
 }
 
 .pub-footer-brand:hover .fb-icon {

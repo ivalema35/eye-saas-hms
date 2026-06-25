@@ -52,6 +52,13 @@ if (! function_exists('hospital_contact_number')) {
     }
 }
 
+if (! function_exists('platform_logo_url')) {
+    function platform_logo_url(): string
+    {
+        return asset('images/eye-hms-logo.png');
+    }
+}
+
 if (! function_exists('hospital_logo_path')) {
     function hospital_logo_path(): ?string
     {
@@ -68,7 +75,7 @@ if (! function_exists('hospital_logo_url')) {
 
         return $path
             ? asset('storage/'.$path)
-            : asset('images/aeh-logo-white.svg');
+            : platform_logo_url();
     }
 }
 

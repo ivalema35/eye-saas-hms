@@ -3,7 +3,9 @@
     <span class="nav-heartbeat-line" aria-hidden="true"></span>
     {{-- Brand / Logo --}}
     <a href="{{ route('home') }}" class="pub-nav-brand">
-        <div class="brand-icon-box"><i class="fa-solid fa-eye"></i></div>
+        <div class="brand-icon-box">
+            <img src="{{ platform_logo_url() }}" alt="Eye HMS" class="brand-logo-img">
+        </div>
         <span class="brand-text">Eye</span><span class="brand-accent">HMS</span>
     </a>
 

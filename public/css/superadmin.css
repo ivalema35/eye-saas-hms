@@ -138,6 +138,12 @@
     color: var(--sa-accent);
     font-size: 1.25rem;
 }
+.sa-navbar-brand .sa-navbar-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
 .sa-navbar-brand:hover {
     color: var(--sa-primary);
     text-decoration: none;
