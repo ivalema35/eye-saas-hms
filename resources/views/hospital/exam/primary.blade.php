@@ -591,10 +591,10 @@
                  
                     <div class="col-6 col-md-6 d-flex flex-column gap-2">
                         <div class="canvas-box"><div class="canvas-section-title">History &amp; Vision</div><div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div><div id="canvas_vision" class="mt-1"></div></div>
-                        <div class="canvas-box"><div class="canvas-section-title">Subjective Testing (ST)</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
+                        <div class="canvas-box"><div class="canvas-section-title">ST</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
                     </div>
                     <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                        <div class="canvas-box"><div class="canvas-section-title">On Examination (O/E)</div><div id="canvas_oe"></div></div>
+                        <div class="canvas-box"><div class="canvas-section-title">O/E</div><div id="canvas_oe"></div></div>
                         <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
                     </div>
                 </div>
@@ -729,7 +729,7 @@
 
                 {{-- Box 2: ST & Rx --}}
                 <div class="canvas-box">
-                    <div class="canvas-section-title">Subjective Testing (ST)</div>
+                    <div class="canvas-section-title">ST</div>
                     <div id="canvas_st" class="mb-1"></div>
                     <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
                     <div id="canvas_rx"></div>
@@ -742,7 +742,7 @@
 
                 {{-- Box 3: O/E --}}
                 <div class="canvas-box">
-                    <div class="canvas-section-title">On Examination (O/E)</div>
+                    <div class="canvas-section-title">O/E</div>
                     <div id="canvas_oe"></div>
                 </div>
 
@@ -936,7 +936,7 @@
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
-                        <i class="bi bi-eye me-2"></i>Visual Acuity (VN)
+                        <i class="bi bi-eye me-2"></i>VN
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -1007,7 +1007,7 @@
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
-                        <i class="bi bi-eyeglasses me-2"></i>Prescription Glass (PG)
+                        <i class="bi bi-eyeglasses me-2"></i>PG
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -1154,7 +1154,7 @@
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
-                        <i class="bi bi-binoculars me-2"></i>Subjective Test (ST)
+                        <i class="bi bi-binoculars me-2"></i>ST
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -1320,7 +1320,7 @@
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
-                        <i class="bi bi-speedometer2 me-2"></i>NCT — Non-Contact Tonometry
+                        <i class="bi bi-speedometer2 me-2"></i>NCT
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -1395,7 +1395,7 @@
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
-                        <i class="bi bi-clipboard2-pulse me-2"></i>On Examination (O/E)
+                        <i class="bi bi-clipboard2-pulse me-2"></i>O/E
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
