@@ -207,15 +207,15 @@
                 <div class="reg-form-body">
 
                     <!-- @if($errors->any())
-                                    <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
-                                        <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
-                                        <div style="font-size:.875rem">
-                                            @foreach($errors->all() as $error)
-                                                <div>{{ $error }}</div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif -->
+                                            <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
+                                                <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
+                                                <div style="font-size:.875rem">
+                                                    @foreach($errors->all() as $error)
+                                                        <div>{{ $error }}</div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endif -->
 
                     <form method="POST" action="{{ route('register.store') }}" id="registerForm">
                         @csrf
@@ -568,7 +568,7 @@
                 @foreach($countries as $c)
                     '{{ addslashes($c->name) }}': {{ $c->id }},
                 @endforeach
-                };
+                        };
 
         function initTs(id, placeholder, disabled) {
             var ts = new TomSelect(id, {
@@ -638,7 +638,7 @@
                 populateTs(tsCity, data);
             });
         });
-            }());
+                    }());
     </script>
 @endpush
 

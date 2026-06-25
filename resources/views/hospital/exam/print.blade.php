@@ -791,7 +791,7 @@
 
                 {{-- Box 2: Subjective Testing (ST) + Diagnosis & Rx --}}
                 <div class="rx-box">
-                    <div class="rx-box-title">Subjective Testing (ST)</div>
+                    <div class="rx-box-title">ST</div>
                     <div class="rx-box-body">
 
                         @php

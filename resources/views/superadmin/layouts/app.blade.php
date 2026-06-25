@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SuperAdmin') — Eye HMS SaaS</title>
+    <link rel="icon" type="image/png" href="{{ platform_logo_url() }}">
 
     {{-- Design System CSS --}}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
@@ -319,7 +320,7 @@
                 <i class="bi bi-list"></i>
             </button>
             <a href="{{ route('superadmin.dashboard') }}" class="sa-navbar-brand" style="text-decoration:none">
-                <i class="bi bi-eye-fill"></i>
+                <img src="{{ platform_logo_url() }}" alt="Eye HMS" class="sa-navbar-logo">
                 <span>Eye HMS</span>
                 <small class="sa-badge-platform">Platform Admin</small>
             </a>

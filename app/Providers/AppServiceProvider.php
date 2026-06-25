@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
                 'hospitalLogo' => $hospitalLogoPath,
                 'hospitalLogoUrl' => $sidebarLogoPath
                     ? asset('storage/'.$sidebarLogoPath)
-                    : asset('images/aeh-logo-white.svg'),
+                    : platform_logo_url(),
                 'hospitalLogoSidebarStyle' => $logoSidebarStyle,
             ]);
         });

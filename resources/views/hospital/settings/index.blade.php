@@ -451,8 +451,11 @@
                                                  style="max-width:88%;max-height:88%;object-fit:contain;">
                                             <i id="logoPlaceholder1" class="bi bi-image text-muted" style="font-size:2.2rem;opacity:.35;display:none"></i>
                                         @else
-                                            <img id="logoPreviewOriginal" src="" alt="" style="max-width:88%;max-height:88%;object-fit:contain;display:none;">
-                                            <i id="logoPlaceholder1" class="bi bi-image text-muted" style="font-size:2.2rem;opacity:.35"></i>
+                                            <img id="logoPreviewOriginal"
+                                                 src="{{ platform_logo_url() }}"
+                                                 alt="Hospital Logo"
+                                                 style="max-width:88%;max-height:88%;object-fit:contain;">
+                                            <i id="logoPlaceholder1" class="bi bi-image text-muted" style="font-size:2.2rem;opacity:.35;display:none"></i>
                                         @endif
                                     </div>
                                     <div class="logo-preview-label">Original</div>
@@ -463,22 +466,19 @@
                                 @php
                                     $sidebarPreviewSrc = !empty($settings['hospital_logo_nobg'])
                                         ? asset('storage/' . $settings['hospital_logo_nobg'])
-                                        : (!empty($settings['hospital_logo']) ? asset('storage/' . $settings['hospital_logo']) : null);
+                                        : (!empty($settings['hospital_logo'])
+                                            ? asset('storage/' . $settings['hospital_logo'])
+                                            : platform_logo_url());
                                     $sidebarPreviewFilter = 'brightness(0) invert(1)';
                                 @endphp
                                 <label class="logo-style-option {{ $currentLogoStyle === 'white' ? 'active' : '' }}"
                                        onclick="selectLogoStyle('white')">
                                     <div class="settings-logo-box-dark" style="cursor:pointer;">
-                                        @if($sidebarPreviewSrc)
-                                            <img id="logoPreviewDark"
-                                                 src="{{ $sidebarPreviewSrc }}"
-                                                 alt="Sidebar Preview"
-                                                 style="max-width:72%;max-height:72%;object-fit:contain;filter:{{ $sidebarPreviewFilter }};margin-bottom:14px;">
-                                            <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);margin-bottom:14px;display:none"></i>
-                                        @else
-                                            <img id="logoPreviewDark" src="" alt="" style="max-width:72%;max-height:72%;object-fit:contain;margin-bottom:14px;display:none;">
-                                            <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);margin-bottom:14px"></i>
-                                        @endif
+                                        <img id="logoPreviewDark"
+                                             src="{{ $sidebarPreviewSrc }}"
+                                             alt="Sidebar Preview"
+                                             style="max-width:72%;max-height:72%;object-fit:contain;filter:{{ $sidebarPreviewFilter }};margin-bottom:14px;">
+                                        <i id="logoPlaceholder2" class="bi bi-image" style="font-size:2rem;color:rgba(255,255,255,.3);margin-bottom:14px;display:none"></i>
                                     </div>
                                     <div class="logo-preview-label">Sidebar View</div>
                                     <span class="logo-style-hint">Best with transparent PNG — removes background</span>

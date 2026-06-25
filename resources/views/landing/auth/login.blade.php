@@ -653,7 +653,7 @@
 
             <div class="banner-content">
                 <div class="banner-logo">
-                    <i class="fa-solid fa-hospital-user"></i>
+                    <img src="{{ platform_logo_url() }}" alt="Eye HMS Logo">
                 </div>
                 <div class="hero-pet">
                     <i class="fa-solid fa-hospital-user"></i>

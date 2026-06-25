@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Hospital') — {{ hospital_name() }}</title>
+    <link rel="icon" type="image/png" href="{{ platform_logo_url() }}">
 
     {{-- Design System CSS --}}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
@@ -249,7 +250,7 @@
             display: flex;
             align-items: center;
             gap: .75rem;
-            padding: .95rem 1rem;
+            padding: .85rem 1rem;
             text-decoration: none;
         }
 
@@ -259,7 +260,17 @@
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            overflow: visible;
+            width: 63px;
+            height: 63px;
+            overflow: hidden;
+        }
+
+        .sidebar-brand-mark .sidebar-logo {
+            height: 48px;
+            width: auto;
+            max-width: 63px;
+            object-fit: contain;
+            display: block;
         }
 
         .sidebar-brand-copy {
@@ -271,7 +282,7 @@
 
         .sidebar-brand-name {
             color: #fff;
-            font-size: 1rem;
+            font-size: 2rem;
             font-weight: 900;
             letter-spacing: -.02em;
             white-space: nowrap;
@@ -670,16 +681,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                                                        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                            <i class="bi bi-list-task"></i> Basic Master
-                                                                        </a>
-                                                                        <ul class="dropdown-menu">
-                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                        </ul>
-                                                                    </div> -->
+                                                                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                                        <i class="bi bi-list-task"></i> Basic Master
+                                                                                    </a>
+                                                                                    <ul class="dropdown-menu">
+                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                                    </ul>
+                                                                                </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
@@ -894,15 +905,22 @@
                 <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
                     class="premium-sidebar-brand-link" aria-label="Go to dashboard">
                     <span class="sidebar-brand-mark">
-                        @if(($hospitalLogoSidebarStyle ?? 'white') === 'original_blur')
+                        @php
+                            $sidebarStyle = $hospitalLogoSidebarStyle ?? 'white';
+                            $useBlurBox = !empty($hospitalLogo) && $sidebarStyle === 'original_blur';
+                            $sidebarLogoFilter = (!empty($hospitalLogo) && $sidebarStyle === 'white') || empty($hospitalLogo)
+                                ? 'brightness(0) invert(1)'
+                                : 'none';
+                        @endphp
+                        @if($useBlurBox)
                             <span
-                                style="display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;padding:5px;">
+                                style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;">
                                 <img src="{{ $hospitalLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
                                     style="filter:none!important;" loading="lazy" decoding="async">
                             </span>
                         @else
                             <img src="{{ $hospitalLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
-                                style="filter:brightness(0) invert(1)!important;" loading="lazy" decoding="async">
+                                style="filter:{{ $sidebarLogoFilter }}!important;" loading="lazy" decoding="async">
                         @endif
                     </span>
                     <span class="sidebar-brand-copy">
