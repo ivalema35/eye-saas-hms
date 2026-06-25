@@ -121,6 +121,8 @@ class SetupWizardController extends Controller
 
         HospitalSetting::set('hospital_address', $data['hospital_address'] ?? '');
         HospitalSetting::set('hospital_name', $data['name']);
+        HospitalSetting::set('hospital_phone', $data['admin_phone'] ?? $tenant->admin_phone ?? '');
+        HospitalSetting::set('hospital_email', $tenant->admin_email ?? '');
     }
 
     private function saveDoctor(Request $request, Tenant $tenant): void

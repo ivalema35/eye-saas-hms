@@ -39,8 +39,8 @@ class AppServiceProvider extends ServiceProvider
             $hospitalSettings = hospital_settings();
             $hospitalName = $hospitalSettings['hospital_name'] ?? (app('tenant')?->name ?? config('app.name'));
             $hospitalFullAddress = $hospitalSettings['hospital_address'] ?? '';
-            $hospitalOfficialEmail = $hospitalSettings['hospital_email'] ?? '';
-            $hospitalContactNumber = $hospitalSettings['hospital_phone'] ?? '';
+            $hospitalOfficialEmail = $hospitalSettings['hospital_email'] ?? (app('tenant')?->admin_email ?? '');
+            $hospitalContactNumber = $hospitalSettings['hospital_phone'] ?? (app('tenant')?->admin_phone ?? '');
             $hospitalLogoPath       = $hospitalSettings['hospital_logo'] ?? null;
             $hospitalLogoNobgPath   = $hospitalSettings['hospital_logo_nobg'] ?? null;
             $logoSidebarStyle       = $hospitalSettings['logo_sidebar_style'] ?? 'white';

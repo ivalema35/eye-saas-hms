@@ -41,14 +41,14 @@ if (! function_exists('hospital_full_address')) {
 if (! function_exists('hospital_official_email')) {
     function hospital_official_email(?string $default = null): string
     {
-        return (string) hospital_setting('hospital_email', $default ?? '');
+        return (string) hospital_setting('hospital_email', $default ?? (app('tenant')?->admin_email ?? ''));
     }
 }
 
 if (! function_exists('hospital_contact_number')) {
     function hospital_contact_number(?string $default = null): string
     {
-        return (string) hospital_setting('hospital_phone', $default ?? '');
+        return (string) hospital_setting('hospital_phone', $default ?? (app('tenant')?->admin_phone ?? ''));
     }
 }
 
