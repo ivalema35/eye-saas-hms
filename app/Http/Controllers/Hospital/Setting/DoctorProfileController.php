@@ -21,43 +21,43 @@ class DoctorProfileController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $slug    = $request->route('slug');
-        $user    = auth('hospital_user')->user();
+        $slug = $request->route('slug');
+        $user = auth('hospital_user')->user();
         $isDoctor = $user->role?->slug === 'doctor';
 
         // Reception role: email can only be changed by hospital admin, not self
-        $roleSlug      = $user->role?->slug;
-        $isReception   = in_array($roleSlug, ['receptionist', 'reception'], true);
+        $roleSlug = $user->role?->slug;
+        $isReception = in_array($roleSlug, ['receptionist', 'reception'], true);
 
         $rules = [
-            'name'             => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'current_password' => ['nullable', 'string', 'required_with:new_password'],
-            'new_password'     => ['nullable', 'string', 'min:8', 'confirmed'],
+            'new_password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ];
 
-        if (! $isReception) {
+        if (!$isReception) {
             $rules['email'] = ['required', 'email', 'max:255'];
         }
 
         if ($isDoctor) {
-            $rules['registration_no']  = ['nullable', 'string', 'max:100'];
+            $rules['registration_no'] = ['nullable', 'string', 'max:100'];
             $rules['experience_years'] = ['nullable', 'integer', 'min:0', 'max:60'];
-            $rules['signature']        = ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'];
-            $rules['profile_photo']    = ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'];
+            $rules['signature'] = ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'];
+            $rules['profile_photo'] = ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'];
         }
 
         $validated = $request->validate($rules);
 
         $updateData = ['name' => $validated['name']];
 
-        if (! $isReception) {
+        if (!$isReception) {
             $updateData['email'] = $validated['email'];
         }
 
         if ($isDoctor) {
             $tenantId = (int) config('app.tenant_id');
 
-            $updateData['registration_no']  = $validated['registration_no'] ?? null;
+            $updateData['registration_no'] = $validated['registration_no'] ?? null;
             $updateData['experience_years'] = $validated['experience_years'] ?? null;
 
             if ($request->hasFile('signature')) {
@@ -78,7 +78,7 @@ class DoctorProfileController extends Controller
         }
 
         if ($request->filled('new_password')) {
-            if (! Hash::check($request->current_password, $user->password)) {
+            if (!Hash::check($request->current_password, $user->password)) {
                 return back()
                     ->withErrors(['current_password' => 'The current password is incorrect.'])
                     ->withInput();
@@ -89,7 +89,7 @@ class DoctorProfileController extends Controller
         $user->update($updateData);
 
         return redirect()
-            ->route('hospital.profile.show', ['slug' => $slug])
+            ->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Profile updated successfully.');
     }
 }

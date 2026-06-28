@@ -295,7 +295,7 @@
             </div>
 
             {{-- ── Quick Links ── --}}
-            @if($isDoctor || $isReception)
+            <!-- @if($isDoctor || $isReception)
             <div class="sp-section">
                 <div class="sp-section-title"><i class="bi bi-grid"></i> Quick Access</div>
                 <div class="row g-3">
@@ -322,7 +322,7 @@
                             <i class="bi bi-chevron-right ms-auto" style="color:var(--sm)"></i>
                         </a>
                     </div>
-                    @endif
+                    @endif -->
 
                     @if($isReception)
                     <div class="col-md-6">
