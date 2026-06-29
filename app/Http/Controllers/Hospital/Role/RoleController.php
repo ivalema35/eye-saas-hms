@@ -19,7 +19,9 @@ use Illuminate\View\View;
  */
 class RoleController extends Controller
 {
-    public function __construct(private RolePermissionService $permService) {}
+    public function __construct(private RolePermissionService $permService)
+    {
+    }
 
     public function index(): View
     {
@@ -59,7 +61,7 @@ class RoleController extends Controller
         );
 
         return redirect()->route('hospital.roles.index', ['slug' => $slug])
-            ->with('success', 'Role "'.$role->name.'" created successfully.');
+            ->with('success', 'Role "' . $role->name . '" created successfully.');
     }
 
     public function edit(string $slug, string $id): View
@@ -87,7 +89,7 @@ class RoleController extends Controller
         ];
 
         // System roles (Hospital Admin) — name cannot be changed
-        if (! $role->is_system) {
+        if (!$role->is_system) {
             $updateData['name'] = $request->validated('name');
             $updateData['slug'] = Str::slug($request->validated('name'), '_');
         }
@@ -95,7 +97,7 @@ class RoleController extends Controller
         $role->update($updateData);
 
         // is_super roles bypass all permission checks — don't overwrite role_permissions
-        if (! $role->is_super) {
+        if (!$role->is_super) {
             $this->permService->saveRolePermissions(
                 $role->id,
                 $request->validated('permissions', []),
@@ -103,8 +105,8 @@ class RoleController extends Controller
             );
         }
 
-        return redirect()->route('hospital.roles.edit', ['slug' => $slug, 'id' => $role->id])
-            ->with('success', 'Role "'.$role->name.'" updated.');
+        return redirect()->route('hospital.roles.index', compact('slug'))
+            ->with('success', 'Role "' . $role->name . '" updated.');
     }
 
     public function destroy(string $slug, string $id): RedirectResponse
@@ -117,13 +119,13 @@ class RoleController extends Controller
         }
 
         if ($role->users_count > 0) {
-            return redirect()->back()->with('error', 'Reassign '.$role->users_count.' user(s) to another role before deleting.');
+            return redirect()->back()->with('error', 'Reassign ' . $role->users_count . ' user(s) to another role before deleting.');
         }
 
         $roleName = $role->name;
         $role->delete();
 
         return redirect()->route('hospital.roles.index', ['slug' => $slug])
-            ->with('success', 'Role "'.$roleName.'" deleted.');
+            ->with('success', 'Role "' . $roleName . '" deleted.');
     }
 }

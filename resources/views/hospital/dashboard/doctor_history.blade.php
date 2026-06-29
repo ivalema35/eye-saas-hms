@@ -309,8 +309,10 @@
 
                 @if($historyPatients->hasPages())
                     <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
-                        {{ $historyPatients->links() }}
-                    </div>
+                    {{ $historyPatients->appends(request()->except('patient_page'))->appends([
+                            '_tab' => 'patient'
+                        ])->links() }}
+                                        </div>
                 @endif
             </div>
 
@@ -484,9 +486,9 @@
                 </div>
 
                 @if($hospitals->hasPages())
-                    <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
-                        {{ $hospitals->links() }}
-                    </div>
+                <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
+                {{ $hospitals->appends(request()->except('hospital_page'))->appends(['_tab' => 'hospital'])->links() }}
+                </div>
                 @endif
             </div>
 

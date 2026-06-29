@@ -585,9 +585,9 @@ class DashboardController extends Controller
         $slug = request()->route('slug');
         $currentTenant = app('tenant');
         $patientName = request('patient_name');
-        $doctorName  = request('doctor_name');
-        $contactNo   = request('contact_no');
-        $date        = request('date');
+        $doctorName = request('doctor_name');
+        $contactNo = request('contact_no');
+        $date = request('date');
 
         // Get accepted partner tenant IDs
         $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
@@ -640,29 +640,37 @@ class DashboardController extends Controller
             })
             ->values();
 
-        $perPage  = 20;
-        $page     = max(1, (int) request('page', 1));
+        $perPage = 20;
+        $page = max(1, (int) request('patient_page', 1));
         $historyPatients = new LengthAwarePaginator(
             $deduped->slice(($page - 1) * $perPage, $perPage)->values(),
             $deduped->count(),
             $perPage,
             $page,
-            ['path' => request()->url(), 'query' => request()->query()]
+            [
+                'path' => request()->url(),
+                'pageName' => 'patient_page',
+                'query' => request()->query(),
+            ]
         );
 
-        $hospName     = request('hosp_name');
-        $hospCity     = request('hosp_city');
+        $hospName = request('hosp_name');
+        $hospCity = request('hosp_city');
         $hospDistrict = request('hosp_district');
-        $hospState    = request('hosp_state');
+        $hospState = request('hosp_state');
 
         $hospitals = Tenant::whereIn('status', ['trial', 'active', 'grace'])
             ->where('slug', '!=', $slug)
-            ->when($hospName,     fn($q) => $q->where('name',     'like', "%{$hospName}%"))
-            ->when($hospCity,     fn($q) => $q->where('city',     'like', "%{$hospCity}%"))
+            ->when($hospName, fn($q) => $q->where('name', 'like', "%{$hospName}%"))
+            ->when($hospCity, fn($q) => $q->where('city', 'like', "%{$hospCity}%"))
             ->when($hospDistrict, fn($q) => $q->where('district', 'like', "%{$hospDistrict}%"))
-            ->when($hospState,    fn($q) => $q->where('state',    'like', "%{$hospState}%"))
+            ->when($hospState, fn($q) => $q->where('state', 'like', "%{$hospState}%"))
             ->orderBy('name')
-            ->paginate(20, ['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status'])
+            ->paginate(
+                20,
+                ['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status'],
+                'hospital_page'
+            )
             ->withQueryString();
 
         // Build a map of request statuses for the hospital list
@@ -780,9 +788,9 @@ class DashboardController extends Controller
 
     public function sharedPatientHistory(Request $request, string $slug): View|\Illuminate\Http\RedirectResponse
     {
-        $currentTenant   = app('tenant');
-        $search          = $request->input('search');
-        $selectedId      = (int) $request->input('patient_id');
+        $currentTenant = app('tenant');
+        $search = $request->input('search');
+        $selectedId = (int) $request->input('patient_id');
 
         // Accepted partner tenant IDs
         $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
@@ -794,12 +802,12 @@ class DashboardController extends Controller
             ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
             ->toArray();
 
-        $patient    = null;
-        $history    = collect();
+        $patient = null;
+        $history = collect();
         $nameGroups = collect();
 
         if (count($partnerTenantIds) > 0) {
-            $rawIds     = $request->input('patient_ids', '');
+            $rawIds = $request->input('patient_ids', '');
             $patientIds = array_values(array_filter(array_map('intval', explode(',', $rawIds))));
 
             if ($patientIds) {
@@ -840,13 +848,13 @@ class DashboardController extends Controller
                         $patient = $candidates->sortByDesc('id')->first();
                         $history = $this->loadSharedExamHistoryForIds($candidates->pluck('id')->all());
                     } else {
-                        $nameGroups = $groups->map(fn($group) => (object)[
+                        $nameGroups = $groups->map(fn($group) => (object) [
                             'display_name' => trim($group->first()->first_name . ' ' . $group->first()->last_name),
                             'patient_code' => $group->first()->patient_code,
-                            'age'          => $group->first()->age,
-                            'gender'       => $group->first()->gender,
-                            'patient_ids'  => $group->pluck('id')->implode(','),
-                            'count'        => $group->count(),
+                            'age' => $group->first()->age,
+                            'gender' => $group->first()->gender,
+                            'patient_ids' => $group->pluck('id')->implode(','),
+                            'count' => $group->count(),
                         ])->values();
                     }
                 }
@@ -854,15 +862,16 @@ class DashboardController extends Controller
         }
 
         // Use the patient's own tenant for diagnosis master so IDs resolve correctly
-        $masterTenantId   = $patient?->tenant_id ?? $currentTenant->id;
+        $masterTenantId = $patient?->tenant_id ?? $currentTenant->id;
         $diagnosisMasters = DB::table('tbl_master_diagnosis')
             ->where('tenant_id', $masterTenantId)
             ->orderBy('id')
             ->get(['id', DB::raw('value as diagnosis')]);
         $dosageMasters = Dosage::all(['id', 'dosage'])->keyBy('id');
-        $historyRoute  = route('hospital.shared.patient.history', ['slug' => $slug]);
+        $historyRoute = route('hospital.shared.patient.history', ['slug' => $slug]);
 
-        return view('hospital.patient.history',
+        return view(
+            'hospital.patient.history',
             compact('patient', 'history', 'search', 'slug', 'diagnosisMasters', 'dosageMasters', 'nameGroups', 'historyRoute')
         );
     }
@@ -874,9 +883,9 @@ class DashboardController extends Controller
             ->whereIn('patient_id', $patientIds)
             ->get()
             ->map(function ($exam) {
-                $exam->type  = 'Primary Exam';
+                $exam->type = 'Primary Exam';
                 $exam->color = 'primary';
-                $exam->icon  = 'bi-clipboard2-pulse';
+                $exam->icon = 'bi-clipboard2-pulse';
                 return $exam;
             });
 
@@ -885,9 +894,9 @@ class DashboardController extends Controller
             ->whereIn('patient_id', $patientIds)
             ->get()
             ->map(function ($exam) {
-                $exam->type  = 'Secondary Exam';
+                $exam->type = 'Secondary Exam';
                 $exam->color = 'secondary';
-                $exam->icon  = 'bi-clipboard2-check';
+                $exam->icon = 'bi-clipboard2-check';
                 return $exam;
             });
 
@@ -913,9 +922,9 @@ class DashboardController extends Controller
         $partnerTenant = Tenant::findOrFail($partnerTenantId);
 
         $patientName = $request->input('patient_name');
-        $doctorName  = $request->input('doctor_name');
-        $contactNo   = $request->input('contact_no');
-        $date        = $request->input('date');
+        $doctorName = $request->input('doctor_name');
+        $contactNo = $request->input('contact_no');
+        $date = $request->input('date');
 
         $allPatients = Patient::withoutTenantScope()
             ->with([
@@ -951,7 +960,7 @@ class DashboardController extends Controller
             ->values();
 
         $perPage = 20;
-        $page    = max(1, (int) $request->input('page', 1));
+        $page = max(1, (int) $request->input('page', 1));
         $partnerPatients = new LengthAwarePaginator(
             $grouped->slice(($page - 1) * $perPage, $perPage)->values(),
             $grouped->count(),

@@ -703,6 +703,7 @@
                 background: var(--case-soft) !important;
                 border-color: var(--case-primary) !important;
                 color: var(--case-primary) !important;
+                text-decoration: none !important;
             }
 
             .case-master-card {

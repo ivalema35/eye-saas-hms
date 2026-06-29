@@ -450,7 +450,7 @@
     background: rgba(255, 255, 255, 0.86);
     border: 1px solid var(--dash-s2-12);
     border-radius: 16px;
-    text-decoration: none;
+    text-decoration: none !important;
     color: var(--dash-secondary);
     font-weight: 800;
     font-size: 13px;
@@ -466,6 +466,7 @@
     background: var(--dash-secondary);
     border-color: var(--dash-secondary);
     color: var(--dash-white);
+    text-decoration: none;
     transform: translateY(-3px);
     box-shadow: 0 16px 40px rgba(27, 79, 114, 0.18);
 }
