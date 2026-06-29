@@ -180,6 +180,7 @@
         background: var(--ot-soft) !important;
         border-color: var(--ot-primary) !important;
         color: var(--ot-primary) !important;
+        text-decoration: none !important;
     }
 
     .ot-master-card {

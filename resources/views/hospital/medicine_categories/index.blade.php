@@ -23,12 +23,6 @@
         --type-secondary-18: rgba(27, 79, 114, .18);
         --type-secondary-24: rgba(27, 79, 114, .24);
     }
-    .type-nav-tabs { background: var(--card-bg, #f7fbff); padding: 10px; border-radius: 14px; border: none; display: flex; gap: .5rem; align-items: center; box-shadow: none; }
-    .type-nav-tabs .nav-item { margin: 0; }
-    .type-nav-tabs .nav-link { border: none !important; background: transparent; color: var(--muted-color, #1f3560); padding: .5rem .9rem; border-radius: 999px; box-shadow: none; transition: all .15s ease-in-out; display: inline-flex; align-items: center; }
-    .type-nav-tabs .nav-link i { margin-right: .5rem; }
-    .type-nav-tabs .nav-link.active { background: var(--color-primary) !important; color: #ffffff !important; border-color: transparent !important; box-shadow: 0 6px 18px rgba(36,85,160,0.12); }
-    .type-nav-tabs .nav-link:hover { background: rgba(36,85,160,0.1); color: var(--muted-color, #1f3560) !important; }
 </style>
 
 @if($errors->any())
