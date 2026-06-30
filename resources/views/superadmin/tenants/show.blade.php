@@ -128,6 +128,14 @@
                 </form>
             @endif
 
+            <form method="POST" action="{{ route('superadmin.hospitals.reseed-masters', $tenant) }}"
+                  onsubmit="return confirm('Re-seed default masters for this hospital?')">
+                @csrf
+                <button type="submit" class="hms-btn hms-btn-sm" style="width:100%;background:#e2e8f0;color:#1A202C">
+                    <i class="bi bi-database-fill-gear"></i> Re-seed Default Masters
+                </button>
+            </form>
+
             <form method="POST" action="{{ route('superadmin.hospitals.extend', $tenant) }}"
                   style="display:flex;gap:.5rem;align-items:center">
                 @csrf

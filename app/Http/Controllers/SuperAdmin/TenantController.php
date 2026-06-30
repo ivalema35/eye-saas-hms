@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SeedTenantDefaultMasters;
 use App\Models\Platform\AuditLog;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantService;
@@ -236,6 +237,18 @@ class TenantController extends Controller
         );
 
         return back()->with('success', "Grace period extended by {$days} days.");
+    }
+
+    /**
+     * reseedMasters() — Re-dispatch default masters seeding job for a tenant.
+     */
+    public function reseedMasters(Tenant $tenant): RedirectResponse
+    {
+        SeedTenantDefaultMasters::dispatch($tenant->id);
+
+        $this->auditLog('hospital.masters.reseeded', $tenant->id, 'Default masters re-seeded by SuperAdmin');
+
+        return back()->with('success', "Default masters seeding started for '{$tenant->name}'.");
     }
 
     /**

@@ -373,14 +373,14 @@ class SeedTenantDefaultMasters implements ShouldQueue
         $ts = $this->ts();
         $rows = [];
 
-        // Start with zero (type = Positive)
-        $rows[] = ['tenant_id' => $this->tenantId, 'type' => 'Positive', 'value' => '0', 'created_at' => $ts, 'updated_at' => $ts];
-
-        // Interleave Positive / Negative from 0.25 to 10.00
-        for ($i = 25; $i <= 1000; $i += 25) {
-            $val = number_format($i / 100, 2);
-            $rows[] = ['tenant_id' => $this->tenantId, 'type' => 'Positive', 'value' => $val, 'created_at' => $ts, 'updated_at' => $ts];
-            $rows[] = ['tenant_id' => $this->tenantId, 'type' => 'Negative', 'value' => $val, 'created_at' => $ts, 'updated_at' => $ts];
+        for ($i = 0.25; $i <= 10.00; $i += 0.25) {
+            $rows[] = [
+                'tenant_id' => $this->tenantId,
+                'value' => number_format($i, 2),
+                'is_seeded' => true,
+                'created_at' => $ts,
+                'updated_at' => $ts,
+            ];
         }
 
         $this->insert('tbl_master_sph_cyl', $rows);
