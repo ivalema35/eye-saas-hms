@@ -58,9 +58,15 @@ Route::get('/check-slug', [RegisterController::class, 'checkSlug'])
     ->middleware('throttle:30,1');
 
 // Location cascade AJAX for public registration form
-Route::get('/location/states',    [RegisterController::class, 'getStates'])->name('location.states')->middleware('throttle:60,1');
+Route::get('/location/states', [RegisterController::class, 'getStates'])->name('location.states')->middleware('throttle:60,1');
 Route::get('/location/districts', [RegisterController::class, 'getDistricts'])->name('location.districts')->middleware('throttle:60,1');
-Route::get('/location/cities',    [RegisterController::class, 'getCities'])->name('location.cities')->middleware('throttle:60,1');
+Route::get('/location/cities', [RegisterController::class, 'getCities'])->name('location.cities')->middleware('throttle:60,1');
+
+// Location create AJAX — registration form can add new entries to master tables
+Route::post('/location/create-country', [RegisterController::class, 'createCountry'])->name('location.create-country')->middleware('throttle:20,1');
+Route::post('/location/create-state', [RegisterController::class, 'createState'])->name('location.create-state')->middleware('throttle:20,1');
+Route::post('/location/create-district', [RegisterController::class, 'createDistrict'])->name('location.create-district')->middleware('throttle:20,1');
+Route::post('/location/create-city', [RegisterController::class, 'createCity'])->name('location.create-city')->middleware('throttle:20,1');
 
 // Unified Hospital Login — single page for all staff
 Route::get('/login', [UnifiedLoginController::class, 'show'])->name('login');
@@ -152,32 +158,32 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/locations/import', [LocationMasterController::class, 'import'])->name('locations.import');
 
         // AJAX cascade dropdowns
-        Route::get('/locations/ajax/states',    [LocationMasterController::class, 'ajaxStates'])->name('locations.ajax.states');
+        Route::get('/locations/ajax/states', [LocationMasterController::class, 'ajaxStates'])->name('locations.ajax.states');
         Route::get('/locations/ajax/districts', [LocationMasterController::class, 'ajaxDistricts'])->name('locations.ajax.districts');
 
         // Countries
-        Route::post('/locations/countries',                    [LocationMasterController::class, 'storeCountry'])->name('locations.countries.store');
-        Route::put('/locations/countries/{country}',           [LocationMasterController::class, 'updateCountry'])->name('locations.countries.update');
-        Route::delete('/locations/countries/{country}',        [LocationMasterController::class, 'destroyCountry'])->name('locations.countries.destroy');
-        Route::patch('/locations/countries/{country}/toggle',  [LocationMasterController::class, 'toggleCountry'])->name('locations.countries.toggle');
+        Route::post('/locations/countries', [LocationMasterController::class, 'storeCountry'])->name('locations.countries.store');
+        Route::put('/locations/countries/{country}', [LocationMasterController::class, 'updateCountry'])->name('locations.countries.update');
+        Route::delete('/locations/countries/{country}', [LocationMasterController::class, 'destroyCountry'])->name('locations.countries.destroy');
+        Route::patch('/locations/countries/{country}/toggle', [LocationMasterController::class, 'toggleCountry'])->name('locations.countries.toggle');
 
         // States
-        Route::post('/locations/states',                   [LocationMasterController::class, 'storeState'])->name('locations.states.store');
-        Route::put('/locations/states/{state}',            [LocationMasterController::class, 'updateState'])->name('locations.states.update');
-        Route::delete('/locations/states/{state}',         [LocationMasterController::class, 'destroyState'])->name('locations.states.destroy');
-        Route::patch('/locations/states/{state}/toggle',   [LocationMasterController::class, 'toggleState'])->name('locations.states.toggle');
+        Route::post('/locations/states', [LocationMasterController::class, 'storeState'])->name('locations.states.store');
+        Route::put('/locations/states/{state}', [LocationMasterController::class, 'updateState'])->name('locations.states.update');
+        Route::delete('/locations/states/{state}', [LocationMasterController::class, 'destroyState'])->name('locations.states.destroy');
+        Route::patch('/locations/states/{state}/toggle', [LocationMasterController::class, 'toggleState'])->name('locations.states.toggle');
 
         // Districts
-        Route::post('/locations/districts',                    [LocationMasterController::class, 'storeDistrict'])->name('locations.districts.store');
-        Route::put('/locations/districts/{district}',          [LocationMasterController::class, 'updateDistrict'])->name('locations.districts.update');
-        Route::delete('/locations/districts/{district}',       [LocationMasterController::class, 'destroyDistrict'])->name('locations.districts.destroy');
+        Route::post('/locations/districts', [LocationMasterController::class, 'storeDistrict'])->name('locations.districts.store');
+        Route::put('/locations/districts/{district}', [LocationMasterController::class, 'updateDistrict'])->name('locations.districts.update');
+        Route::delete('/locations/districts/{district}', [LocationMasterController::class, 'destroyDistrict'])->name('locations.districts.destroy');
         Route::patch('/locations/districts/{district}/toggle', [LocationMasterController::class, 'toggleDistrict'])->name('locations.districts.toggle');
 
         // Cities
-        Route::post('/locations/cities',               [LocationMasterController::class, 'storeCity'])->name('locations.cities.store');
-        Route::put('/locations/cities/{city}',         [LocationMasterController::class, 'updateCity'])->name('locations.cities.update');
-        Route::delete('/locations/cities/{city}',      [LocationMasterController::class, 'destroyCity'])->name('locations.cities.destroy');
-        Route::patch('/locations/cities/{city}/toggle',[LocationMasterController::class, 'toggleCity'])->name('locations.cities.toggle');
+        Route::post('/locations/cities', [LocationMasterController::class, 'storeCity'])->name('locations.cities.store');
+        Route::put('/locations/cities/{city}', [LocationMasterController::class, 'updateCity'])->name('locations.cities.update');
+        Route::delete('/locations/cities/{city}', [LocationMasterController::class, 'destroyCity'])->name('locations.cities.destroy');
+        Route::patch('/locations/cities/{city}/toggle', [LocationMasterController::class, 'toggleCity'])->name('locations.cities.toggle');
     });
 });
 

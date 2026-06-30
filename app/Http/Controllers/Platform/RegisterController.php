@@ -148,6 +148,57 @@ class RegisterController extends Controller
         return response()->json($cities);
     }
 
+    public function createCountry(Request $request): JsonResponse
+    {
+        $request->validate(['name' => ['required', 'string', 'min:2', 'max:100']]);
+        $name = MasterCountry::normalize($request->name);
+        $country = MasterCountry::firstOrCreate(['name' => $name], ['is_active' => true]);
+        return response()->json(['id' => $country->id, 'name' => $country->name]);
+    }
+
+    public function createState(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100'],
+            'country_id' => ['required', 'integer', 'exists:tbl_master_countries,id'],
+        ]);
+        $name = MasterState::normalize($request->name);
+        $state = MasterState::firstOrCreate(
+            ['country_id' => $request->country_id, 'name' => $name],
+            ['is_active' => true]
+        );
+        return response()->json(['id' => $state->id, 'name' => $state->name]);
+    }
+
+    public function createDistrict(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:100'],
+            'state_id' => ['required', 'integer', 'exists:tbl_master_states,id'],
+        ]);
+        $name = MasterDistrict::normalize($request->name);
+        $district = MasterDistrict::firstOrCreate(
+            ['state_id' => $request->state_id, 'name' => $name],
+            ['is_active' => true]
+        );
+        return response()->json(['id' => $district->id, 'name' => $district->name]);
+    }
+
+    public function createCity(Request $request): JsonResponse
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'min:2', 'max:150'],
+            'district_id' => ['required', 'integer', 'exists:tbl_master_districts,id'],
+            'state_id' => ['required', 'integer', 'exists:tbl_master_states,id'],
+        ]);
+        $name = MasterCity::normalize($request->name);
+        $city = MasterCity::firstOrCreate(
+            ['district_id' => $request->district_id, 'state_id' => $request->state_id, 'name' => $name],
+            ['is_active' => true]
+        );
+        return response()->json(['id' => $city->id, 'name' => $city->name]);
+    }
+
     /**
      * checkCode() — AJAX: hospital code availability check karo
      */

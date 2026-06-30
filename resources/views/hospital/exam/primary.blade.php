@@ -1,25 +1,22 @@
 @extends('hospital.layouts.app')
-@section('title', 'Primary Examination - '.$patient->full_name)
-@section('page-header', 'Primary Eye Examination')
-
-@section('page-actions')
-@if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
-    <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
-       class="btn secondary-exam-back-btn btn-sm">
-        <i class="bi bi-arrow-left"></i> Back to Patient
-    </a>
-@endif
-    @if($exam)
-        <a href="{{ route('hospital.exam.primary.print', ['slug' => $slug, 'id' => $patient->id]) }}"
-           target="_blank" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-printer"></i> Print Rx
+@section('title', 'Primary Examination - ' . $patient->full_name)@section('page-header', 'Primary Eye Examination')@section('page-actions')
+    @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
+        <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
+           class="btn secondary-exam-back-btn btn-sm">
+            <i class="bi bi-arrow-left"></i> Back to Patient
         </a>
     @endif
-    <!-- @haspermission('opd.foc.create')
-        <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModal">
-            <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-        </button>
-    @endhaspermission -->
+        @if($exam)
+            <a href="{{ route('hospital.exam.primary.print', ['slug' => $slug, 'id' => $patient->id]) }}"
+               target="_blank" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-printer"></i> Print Rx
+            </a>
+        @endif
+        <!-- @haspermission('opd.foc.create')
+            <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModal">
+                <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
+            </button>
+        @endhaspermission -->
 @endsection
 
 @section('content')
@@ -495,270 +492,270 @@
 @endhaspermission
 
 @php
-    $ed = $exam?->exam_data ?? [];
-    $vision = $ed['vision'] ?? [];
-    $pg = $ed['pg'] ?? [];
-    $st = $ed['st'] ?? [];
-    $nct = $ed['nct'] ?? [];
-    $oe = $ed['oe'] ?? [];
-    $fundus = $ed['fundus'] ?? [];
+$ed = $exam?->exam_data ?? [];
+$vision = $ed['vision'] ?? [];
+$pg = $ed['pg'] ?? [];
+$st = $ed['st'] ?? [];
+$nct = $ed['nct'] ?? [];
+$oe = $ed['oe'] ?? [];
+$fundus = $ed['fundus'] ?? [];
 
-    $sinceRaw = old('exam_data.complaint_duration', $ed['complaint_duration'] ?? '');
-    preg_match('/^(\d+)\s*(Days?|Weeks?|Months?|Years?)$/i', $sinceRaw, $sinceMatch);
-    $sinceNumber = $sinceMatch[1] ?? '';
-    $sinceUnit = isset($sinceMatch[2]) ? ucfirst(strtolower($sinceMatch[2])) : 'Days';
-    $sinceUnit = rtrim($sinceUnit, 's').'s';
+$sinceRaw = old('exam_data.complaint_duration', $ed['complaint_duration'] ?? '');
+preg_match('/^(\d+)\s*(Days?|Weeks?|Months?|Years?)$/i', $sinceRaw, $sinceMatch);
+$sinceNumber = $sinceMatch[1] ?? '';
+$sinceUnit = isset($sinceMatch[2]) ? ucfirst(strtolower($sinceMatch[2])) : 'Days';
+$sinceUnit = rtrim($sinceUnit, 's') . 's';
 
-    $prescriptions = $exam?->prescriptions ?? collect();
+$prescriptions = $exam?->prescriptions ?? collect();
 @endphp
 
 @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
-<form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
-    @csrf
-    <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
+    <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
+        @csrf
+        <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
 
-    @php
-        $pWGreen  = (int) hospital_setting('wait_green_max',  30);
-        $pWOrange = (int) hospital_setting('wait_orange_max', 60);
-        $pWRed    = (int) hospital_setting('wait_red_max',   120);
-        $pWMins   = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
-        $pWCls    = $pWMins < $pWGreen ? 'wait-green' : ($pWMins < $pWOrange ? 'wait-orange' : ($pWMins < $pWRed ? 'wait-red' : 'wait-fire'));
-        $pWFmt    = $pWMins < 60 ? $pWMins.'m' : (floor($pWMins/60).'h'.($pWMins%60 > 0 ? ' '.($pWMins%60).'m' : ''));
-    @endphp
-    {{-- Patient Info Bar --}}
-    <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
-         style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
-        <div class="d-flex align-items-center gap-1">
-            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
-            <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
-            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
-            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
-            <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
-            <span class="wait-pill {{ $pWCls }} ms-1"
-                  data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
-                  data-thresholds="{{ $pWGreen }},{{ $pWOrange }},{{ $pWRed }}">
-                <span class="wp-r">R</span>
-                <span class="wp-time">{{ $pWFmt }}</span>
-            </span>
-        </div>
-    </div>
-
-    <div class="exam-layout-wrapper">
-        
-        
-        <div class="doctor-stepper-sidebar">
-            <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
-
-            <div class="step-group-label first">Primary Exam</div>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-nct" data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-oe" data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
-
-            <div class="step-group-label">Secondary Exam</div>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-            <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
-
-            <hr>
-            <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
+        @php
+    $pWGreen = (int) hospital_setting('wait_green_max', 30);
+    $pWOrange = (int) hospital_setting('wait_orange_max', 60);
+    $pWRed = (int) hospital_setting('wait_red_max', 120);
+    $pWMins = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+    $pWCls = $pWMins < $pWGreen ? 'wait-green' : ($pWMins < $pWOrange ? 'wait-orange' : ($pWMins < $pWRed ? 'wait-red' : 'wait-fire'));
+    $pWFmt = $pWMins < 60 ? $pWMins . 'm' : (floor($pWMins / 60) . 'h' . ($pWMins % 60 > 0 ? ' ' . ($pWMins % 60) . 'm' : ''));
+        @endphp
+        {{-- Patient Info Bar --}}
+        <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
+             style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
+                <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+                <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
+                <span class="wait-pill {{ $pWCls }} ms-1"
+                      data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
+                      data-thresholds="{{ $pWGreen }},{{ $pWOrange }},{{ $pWRed }}">
+                    <span class="wp-r">R</span>
+                    <span class="wp-time">{{ $pWFmt }}</span>
+                </span>
+            </div>
         </div>
 
-        <div class="main-canvas">
-            <div class="card shadow-sm" style="padding:16px;" id="liveReportCanvas">
-                <div class="row g-2 clinical-grid-container" style="font-size:13px;">
-                 
-                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                        <div class="canvas-box"><div class="canvas-section-title">History &amp; Vision</div><div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div><div id="canvas_vision" class="mt-1"></div></div>
-                        <div class="canvas-box"><div class="canvas-section-title">ST</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
+        <div class="exam-layout-wrapper">
+
+
+            <div class="doctor-stepper-sidebar">
+                <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
+
+                <div class="step-group-label first">Primary Exam</div>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-pg" data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-st" data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-nct" data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-oe" data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+
+                <div class="step-group-label">Secondary Exam</div>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+
+                <hr>
+                <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
+            </div>
+
+            <div class="main-canvas">
+                <div class="card shadow-sm" style="padding:16px;" id="liveReportCanvas">
+                    <div class="row g-2 clinical-grid-container" style="font-size:13px;">
+
+                        <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                            <div class="canvas-box"><div class="canvas-section-title">History &amp; Vision</div><div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div><div id="canvas_vision" class="mt-1"></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">ST</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
+                        </div>
+                        <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                            <div class="canvas-box"><div class="canvas-section-title">O/E</div><div id="canvas_oe"></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
+                        </div>
                     </div>
-                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                        <div class="canvas-box"><div class="canvas-section-title">O/E</div><div id="canvas_oe"></div></div>
-                        <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
+                    <div class="canvas-box mt-2">
+                        <div class="canvas-section-title">Advice</div>
+                        <div id="canvas_advice"></div>
                     </div>
-                </div>
-                <div class="canvas-box mt-2">
-                    <div class="canvas-section-title">Advice</div>
-                    <div id="canvas_advice"></div>
                 </div>
             </div>
         </div>
-    </div>
 @else
-<form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
-    @csrf
-    <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
+    <form id="primaryExamForm" method="POST" action="{{ route('hospital.exam.primary.save', ['slug' => $slug, 'id' => $patient->id]) }}" novalidate>
+        @csrf
+        <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
 
-    @php
-        $pWGreen  = (int) hospital_setting('wait_green_max',  30);
-        $pWOrange = (int) hospital_setting('wait_orange_max', 60);
-        $pWRed    = (int) hospital_setting('wait_red_max',   120);
-        $pWMins   = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
-        $pWCls    = $pWMins < $pWGreen ? 'wait-green' : ($pWMins < $pWOrange ? 'wait-orange' : ($pWMins < $pWRed ? 'wait-red' : 'wait-fire'));
-        $pWFmt    = $pWMins < 60 ? $pWMins.'m' : (floor($pWMins/60).'h'.($pWMins%60 > 0 ? ' '.($pWMins%60).'m' : ''));
-    @endphp
-    {{-- Patient Info Bar --}}
-    <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
-         style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
-        <div class="d-flex align-items-center gap-1">
-            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
-            <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
-            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
-            <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
-            <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
-        </div>
-        <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
-        <div class="d-flex align-items-center gap-1">
-            <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
-            <span class="wait-pill {{ $pWCls }} ms-1"
-                  data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
-                  data-thresholds="{{ $pWGreen }},{{ $pWOrange }},{{ $pWRed }}">
-                <span class="wp-r">R</span>
-                <span class="wp-time">{{ $pWFmt }}</span>
-            </span>
-        </div>
-    </div>
-
-    <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-3 p-2 bg-white rounded shadow-sm border gap-2 flex-wrap">
-        <div class="d-flex align-items-center gap-1 flex-wrap">
-            <span class="step-group-tag">Primary</span>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-nct"       data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
-            <span class="step-group-tag ms-1">Secondary</span>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-            <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
-        </div>
-        <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
-    </div>
-
-
-    {{-- Print-only hospital + patient header --}}
-    <style>
-        .print-logo {
-            width: 72px;
-            height: 72px;
-            border-radius: 12px;
-            background: #F8FAFC;
-            border: 1px solid #E5E7EB;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        .print-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
-        .print-logo span { font-size: 28px; color: #1B4F72; }
-    </style>
-
-    <div class="print-header d-none d-print-block mb-3 border-bottom border-dark pb-2">
-        <div class="text-center mb-2">
-            <div class="print-logo" style="margin:0 auto 8px;">
-                @if(hospital_logo_url())
-                    <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
-                @else
-                    <span>👁</span>
-                @endif
+        @php
+    $pWGreen = (int) hospital_setting('wait_green_max', 30);
+    $pWOrange = (int) hospital_setting('wait_orange_max', 60);
+    $pWRed = (int) hospital_setting('wait_red_max', 120);
+    $pWMins = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+    $pWCls = $pWMins < $pWGreen ? 'wait-green' : ($pWMins < $pWOrange ? 'wait-orange' : ($pWMins < $pWRed ? 'wait-red' : 'wait-fire'));
+    $pWFmt = $pWMins < 60 ? $pWMins . 'm' : (floor($pWMins / 60) . 'h' . ($pWMins % 60 > 0 ? ' ' . ($pWMins % 60) . 'm' : ''));
+        @endphp
+        {{-- Patient Info Bar --}}
+        <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
+             style="background:linear-gradient(135deg,#f0f7ff,#e8f4fd);border-color:rgba(27,79,114,.2)!important;font-size:13px;">
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">MRD</span>
+                <span class="fw-bold ms-1" style="color:#1B4F72;">{{ $patient->patient_code ?? '-' }}</span>
             </div>
-            <h4 class="mb-0 fw-bold" style="color:#1B4F72;">{{ app('tenant')->name ?? 'Eye Hospital' }}</h4>
-            <p class="mb-0" style="font-size:12px;">Complete Eye Care Center</p>
-        </div>
-        <div class="d-flex justify-content-between" style="font-size:13px;font-weight:600;">
-            <div>
-                <div>Patient: {{ $patient->full_name }}</div>
-                <div>Age/Sex: {{ $patient->age }} / {{ ucfirst($patient->gender ?? '') }}</div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
             </div>
-            <div class="text-end">
-                <div>MRD: {{ $patient->patient_code ?? $patient->mr_number ?? '-' }}</div>
-                <div>Date: {{ $exam ? $exam->created_at->format('d M Y') : date('d M Y') }}</div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Age/Gender</span>
+                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+                <span class="ms-1" style="color:#1e293b;">{{ $patient->contact_no ?? '-' }}</span>
+            </div>
+            <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
+            <div class="d-flex align-items-center gap-1">
+                <span style="color:#94a3b8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;">Wait Status</span>
+                <span class="wait-pill {{ $pWCls }} ms-1"
+                      data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}"
+                      data-thresholds="{{ $pWGreen }},{{ $pWOrange }},{{ $pWRed }}">
+                    <span class="wp-r">R</span>
+                    <span class="wp-time">{{ $pWFmt }}</span>
+                </span>
             </div>
         </div>
-    </div>
 
-    <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
-        <div class="row g-2 clinical-grid-container" style="font-size:13px;">
+        <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-3 p-2 bg-white rounded shadow-sm border gap-2 flex-wrap">
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="step-group-tag">Primary</span>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-clinical"  data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-hko"       data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-vision"    data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-pg"        data-bs-toggle="modal" data-bs-target="#modalPG">PG</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-st"        data-bs-toggle="modal" data-bs-target="#modalST">ST</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-nct"       data-bs-toggle="modal" data-bs-target="#modalNCT">NCT</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
+                <span class="step-group-tag ms-1">Secondary</span>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+            </div>
+            <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
+        </div>
 
-            {{-- LEFT COLUMN --}}
-            <div class="col-6 col-md-6 d-flex flex-column gap-2">
 
-                {{-- Box 1: History & Vision --}}
-                <div class="canvas-box">
-                    <div class="canvas-section-title">History &amp; Vision</div>
-                    <div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
-                    <div id="canvas_vision" class="mt-1"></div>
+        {{-- Print-only hospital + patient header --}}
+        <style>
+            .print-logo {
+                width: 72px;
+                height: 72px;
+                border-radius: 12px;
+                background: #F8FAFC;
+                border: 1px solid #E5E7EB;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }
+            .print-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
+            .print-logo span { font-size: 28px; color: #1B4F72; }
+        </style>
+
+        <div class="print-header d-none d-print-block mb-3 border-bottom border-dark pb-2">
+            <div class="text-center mb-2">
+                <div class="print-logo" style="margin:0 auto 8px;">
+                    @if(hospital_logo_url())
+                        <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+                    @else
+                        <span>👁</span>
+                    @endif
+                </div>
+                <h4 class="mb-0 fw-bold" style="color:#1B4F72;">{{ app('tenant')->name ?? 'Eye Hospital' }}</h4>
+                <p class="mb-0" style="font-size:12px;">Complete Eye Care Center</p>
+            </div>
+            <div class="d-flex justify-content-between" style="font-size:13px;font-weight:600;">
+                <div>
+                    <div>Patient: {{ $patient->full_name }}</div>
+                    <div>Age/Sex: {{ $patient->age }} / {{ ucfirst($patient->gender ?? '') }}</div>
+                </div>
+                <div class="text-end">
+                    <div>MRD: {{ $patient->patient_code ?? $patient->mr_number ?? '-' }}</div>
+                    <div>Date: {{ $exam ? $exam->created_at->format('d M Y') : date('d M Y') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
+            <div class="row g-2 clinical-grid-container" style="font-size:13px;">
+
+                {{-- LEFT COLUMN --}}
+                <div class="col-6 col-md-6 d-flex flex-column gap-2">
+
+                    {{-- Box 1: History & Vision --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">History &amp; Vision</div>
+                        <div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
+                        <div id="canvas_vision" class="mt-1"></div>
+                    </div>
+
+                    {{-- Box 2: ST & Rx --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">ST</div>
+                        <div id="canvas_st" class="mb-1"></div>
+                        <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
+                        <div id="canvas_rx"></div>
+                    </div>
+
                 </div>
 
-                {{-- Box 2: ST & Rx --}}
-                <div class="canvas-box">
-                    <div class="canvas-section-title">ST</div>
-                    <div id="canvas_st" class="mb-1"></div>
-                    <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
-                    <div id="canvas_rx"></div>
-                </div>
+                {{-- RIGHT COLUMN --}}
+                <div class="col-6 col-md-6 d-flex flex-column gap-2">
 
+                    {{-- Box 3: O/E --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">O/E</div>
+                        <div id="canvas_oe"></div>
+                    </div>
+
+                    {{-- Box 4: Fundus --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">Fundus</div>
+                        <div id="canvas_fundus"></div>
+                    </div>
+
+                </div>
             </div>
-
-            {{-- RIGHT COLUMN --}}
-            <div class="col-6 col-md-6 d-flex flex-column gap-2">
-
-                {{-- Box 3: O/E --}}
-                <div class="canvas-box">
-                    <div class="canvas-section-title">O/E</div>
-                    <div id="canvas_oe"></div>
-                </div>
-
-                {{-- Box 4: Fundus --}}
-                <div class="canvas-box">
-                    <div class="canvas-section-title">Fundus</div>
-                    <div id="canvas_fundus"></div>
-                </div>
-
+            <div class="canvas-box mt-2">
+                <div class="canvas-section-title">Advice</div>
+                <div id="canvas_advice"></div>
             </div>
         </div>
-        <div class="canvas-box mt-2">
-            <div class="canvas-section-title">Advice</div>
-            <div id="canvas_advice"></div>
-        </div>
-    </div>
 @endif
     <div class="modal fade" id="modalClinical" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -793,40 +790,40 @@
                             </thead>
                             <tbody id="coBody">
                                 @foreach($ed['co_rows'] ?? [] as $ri => $row)
-                                <tr class="co-row">
-                                    <td><input type="text" name="exam_data[co_rows][{{ $ri }}][complaint]" value="{{ $row['complaint'] ?? '' }}" class="form-control form-control-sm row-co-search" placeholder="Complaint" autocomplete="off"></td>
-                                    <td>
-                                        <select name="exam_data[co_rows][{{ $ri }}][since]" class="form-select form-select-sm">
-                                            <option value="">-</option>
-                                            @foreach(range(1,10) as $n)
-                                                <option value="{{ $n }}" {{ ($row['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="exam_data[co_rows][{{ $ri }}][unit]" class="form-select form-select-sm">
-                                            @foreach(['Days','Weeks','Months','Years','Longtime'] as $u)
-                                                <option value="{{ $u }}" {{ ($row['unit'] ?? 'Days') === $u ? 'selected' : '' }}>{{ $u }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="exam_data[co_rows][{{ $ri }}][eye]" class="form-select form-select-sm">
-                                            <option value="">-</option>
-                                            @foreach(['RE'=>'Right','LE'=>'Left','Both'=>'Both','OU'=>'OU'] as $val => $lbl)
-                                                <option value="{{ $val }}" {{ ($row['eye'] ?? '') === $val ? 'selected' : '' }}>{{ $lbl }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="text" name="exam_data[co_rows][{{ $ri }}][comment]" value="{{ $row['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
-                                </tr>
+                                    <tr class="co-row">
+                                        <td><input type="text" name="exam_data[co_rows][{{ $ri }}][complaint]" value="{{ $row['complaint'] ?? '' }}" class="form-control form-control-sm row-co-search" placeholder="Complaint" autocomplete="off"></td>
+                                        <td>
+                                            <select name="exam_data[co_rows][{{ $ri }}][since]" class="form-select form-select-sm">
+                                                <option value="">-</option>
+                                                @foreach(range(1, 10) as $n)
+                                                    <option value="{{ $n }}" {{ ($row['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="exam_data[co_rows][{{ $ri }}][unit]" class="form-select form-select-sm">
+                                                @foreach(['Days', 'Weeks', 'Months', 'Years', 'Longtime'] as $u)
+                                                    <option value="{{ $u }}" {{ ($row['unit'] ?? 'Days') === $u ? 'selected' : '' }}>{{ $u }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="exam_data[co_rows][{{ $ri }}][eye]" class="form-select form-select-sm">
+                                                <option value="">-</option>
+                                                @foreach(['RE' => 'Right', 'LE' => 'Left', 'Both' => 'Both', 'OU' => 'OU'] as $val => $lbl)
+                                                    <option value="{{ $val }}" {{ ($row['eye'] ?? '') === $val ? 'selected' : '' }}>{{ $lbl }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td><input type="text" name="exam_data[co_rows][{{ $ri }}][comment]" value="{{ $row['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
+                                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
                     @if(empty($ed['co_rows']))
-                    <p class="text-muted text-center mt-3" id="coEmptyMsg" style="font-size:13px;">No complaints added. Search above and click + Add.</p>
+                        <p class="text-muted text-center mt-3" id="coEmptyMsg" style="font-size:13px;">No complaints added. Search above and click + Add.</p>
                     @endif
                 </div>
                 <div class="modal-footer">
@@ -871,32 +868,32 @@
                             </thead>
                             <tbody id="kcoBody">
                                 @foreach($ed['kco_rows'] ?? [] as $ki => $krow)
-                                <tr class="kco-row">
-                                    <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][condition]" value="{{ $krow['condition'] ?? '' }}" class="form-control form-control-sm row-kco-search" placeholder="Condition" autocomplete="off"></td>
-                                    <td>
-                                        <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
-                                            <option value="">-</option>
-                                            @foreach(range(1,10) as $n)
-                                                <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="exam_data[kco_rows][{{ $ki }}][unit]" class="form-select form-select-sm">
-                                            @foreach(['Days','Weeks','Months','Years','Longtime'] as $u)
-                                                <option value="{{ $u }}" {{ ($krow['unit'] ?? 'Years') === $u ? 'selected' : '' }}>{{ $u }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][comment]" value="{{ $krow['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
-                                </tr>
+                                    <tr class="kco-row">
+                                        <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][condition]" value="{{ $krow['condition'] ?? '' }}" class="form-control form-control-sm row-kco-search" placeholder="Condition" autocomplete="off"></td>
+                                        <td>
+                                            <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
+                                                <option value="">-</option>
+                                                @foreach(range(1, 10) as $n)
+                                                    <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="exam_data[kco_rows][{{ $ki }}][unit]" class="form-select form-select-sm">
+                                                @foreach(['Days', 'Weeks', 'Months', 'Years', 'Longtime'] as $u)
+                                                    <option value="{{ $u }}" {{ ($krow['unit'] ?? 'Years') === $u ? 'selected' : '' }}>{{ $u }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
+                                        <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][comment]" value="{{ $krow['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
+                                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
                     </div>
                     @if(empty($ed['kco_rows']))
-                    <p class="text-muted text-center mt-3" id="kcoEmptyMsg" style="font-size:13px;">No conditions added. Search above and click + Add.</p>
+                        <p class="text-muted text-center mt-3" id="kcoEmptyMsg" style="font-size:13px;">No conditions added. Search above and click + Add.</p>
                     @endif
                     {{-- H/O --}}
                     <div class="mt-4" style="border-top:1px solid #e2e8f0; padding-top:12px;">
@@ -943,52 +940,52 @@
                 <div class="modal-body p-3">
 
                     @php
-                        $vnCols = [
-                            ['abbr' => 'VN',   'full' => 'Distance Vision', 'master' => 'vn',   'field_re' => 'vn_re',   'field_le' => 'vn_le'],
-                            ['abbr' => 'PnVn', 'full' => 'Pinhole',         'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
-                            ['abbr' => 'NrVn', 'full' => 'Near Vision',     'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
-                        ];
+$vnCols = [
+    ['abbr' => 'VN', 'full' => 'Distance Vision', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
+    ['abbr' => 'PnVn', 'full' => 'Pinhole', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
+    ['abbr' => 'NrVn', 'full' => 'Near Vision', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
+];
                     @endphp
 
                     @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
-                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
-                            <i class="bi bi-eye-fill text-white"></i>
-                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                            <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                                <i class="bi bi-eye-fill text-white"></i>
+                                <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                    <thead style="background:#f0f4f8;">
+                                        <tr>
+                                            @foreach($vnCols as $col)
+                                                <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                                    {{ $col['abbr'] }}
+                                                    <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;">{{ $col['full'] }}</div>
+                                                </th>
+                                            @endforeach
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="background:white;">
+                                            @foreach($vnCols as $col)
+                                                @php $fieldKey = 'field_' . $eye; @endphp
+                                                <td class="text-center py-2">
+                                                    <div class="vision-select-wrap" style="max-width:160px;margin:auto;">
+                                                        <input type="text" class="form-control form-control-sm vision-inp text-center"
+                                                            style="border-color:#1B4F72;font-size:13px;"
+                                                            placeholder="-" autocomplete="off"
+                                                            data-master="{{ $col['master'] }}" data-field="{{ $col[$fieldKey] }}"
+                                                            value="{{ $vision[$col[$fieldKey]] ?? '' }}">
+                                                        <input type="hidden" name="exam_data[vision][{{ $col[$fieldKey] }}]" value="{{ $vision[$col[$fieldKey]] ?? '' }}">
+                                                        <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;font-size:11px;pointer-events:none;"></i>
+                                                    </div>
+                                                </td>
+                                            @endforeach
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
-                                <thead style="background:#f0f4f8;">
-                                    <tr>
-                                        @foreach($vnCols as $col)
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            {{ $col['abbr'] }}
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;">{{ $col['full'] }}</div>
-                                        </th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr style="background:white;">
-                                        @foreach($vnCols as $col)
-                                        @php $fieldKey = 'field_' . $eye; @endphp
-                                        <td class="text-center py-2">
-                                            <div class="vision-select-wrap" style="max-width:160px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm vision-inp text-center"
-                                                    style="border-color:#1B4F72;font-size:13px;"
-                                                    placeholder="-" autocomplete="off"
-                                                    data-master="{{ $col['master'] }}" data-field="{{ $col[$fieldKey] }}"
-                                                    value="{{ $vision[$col[$fieldKey]] ?? '' }}">
-                                                <input type="hidden" name="exam_data[vision][{{ $col[$fieldKey] }}]" value="{{ $vision[$col[$fieldKey]] ?? '' }}">
-                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;font-size:11px;pointer-events:none;"></i>
-                                            </div>
-                                        </td>
-                                        @endforeach
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                     @endforeach
 
                 </div>
@@ -1013,95 +1010,95 @@
                 </div>
                 <div class="modal-body p-3">
                     @php
-                        $pgMasterOpts = [
-                            'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
-                            'axis' => collect($masters['axis'])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->values()->all(),
-                            'vn'   => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
-                            'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
-                        ];
+$pgMasterOpts = [
+    'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
+    'axis' => collect($masters['axis'])->map(fn($o) => ltrim(trim($o->value), '+-'))->reject(fn($v) => $v === '')->unique()->values()->all(),
+    'vn' => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
+    'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
+];
                     @endphp
 
                     @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
-                    @php
-                        $pgRows = [
-                            'DISTANCE' => [
-                                'sph' => ['key' => 'ds',      'val' => $pg[$eye]['ds']      ?? ''],
-                                'cyl' => ['key' => 'dc',      'val' => $pg[$eye]['dc']      ?? ''],
-                                'ax'  => ['key' => 'ax',      'val' => $pg[$eye]['ax']      ?? ''],
-                                'vn'  => ['key' => 'vn',      'val' => $pg[$eye]['vn']      ?? '', 'master' => 'vn'],
-                            ],
-                            'NEAR' => [
-                                'sph' => ['key' => 'ns',      'val' => $pg[$eye]['ns']      ?? ''],
-                                'cyl' => ['key' => 'nc',      'val' => $pg[$eye]['nc']      ?? ''],
-                                'ax'  => ['key' => 'na',      'val' => $pg[$eye]['na']      ?? ''],
-                                'vn'  => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
-                            ],
-                        ];
-                    @endphp
-                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
-                            <i class="bi bi-eye-fill text-white"></i>
-                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        @php
+    $pgRows = [
+        'DISTANCE' => [
+            'sph' => ['key' => 'ds', 'val' => $pg[$eye]['ds'] ?? ''],
+            'cyl' => ['key' => 'dc', 'val' => $pg[$eye]['dc'] ?? ''],
+            'ax' => ['key' => 'ax', 'val' => $pg[$eye]['ax'] ?? ''],
+            'vn' => ['key' => 'vn', 'val' => $pg[$eye]['vn'] ?? '', 'master' => 'vn'],
+        ],
+        'NEAR' => [
+            'sph' => ['key' => 'ns', 'val' => $pg[$eye]['ns'] ?? ''],
+            'cyl' => ['key' => 'nc', 'val' => $pg[$eye]['nc'] ?? ''],
+            'ax' => ['key' => 'na', 'val' => $pg[$eye]['na'] ?? ''],
+            'vn' => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+        ],
+    ];
+                        @endphp
+                        <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                            <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                                <i class="bi bi-eye-fill text-white"></i>
+                                <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                    <thead style="background:#f0f4f8;">
+                                        <tr>
+                                            <th style="width:90px;border-bottom:2px solid #1B4F72;"></th>
+                                            <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">SPH</th>
+                                            <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">CYL</th>
+                                            <th class="text-center" style="min-width:110px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">Axis</th>
+                                            <th class="text-center" style="min-width:130px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">VN C GL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($pgRows as $rowLabel => $rf)
+                                            <tr style="background:white;">
+                                                <td class="text-center fw-bold" style="font-size:11px;color:#64748b;letter-spacing:.06em;background:#fafbfc;">{{ $rowLabel }}</td>
+                                                {{-- SPH --}}
+                                                <td class="text-center py-2">
+                                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                                            <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                        <div class="pg-select-wrap" style="width:88px;">
+                                                            <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['sph']['val'] }}">
+                                                            <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['sph']['key'] }}]" value="{{ $rf['sph']['val'] }}">
+                                                        </div>
+                                                        <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                                    </div>
+                                                </td>
+                                                {{-- CYL --}}
+                                                <td class="text-center py-2">
+                                                    <div class="d-flex align-items-center justify-content-center gap-1">
+                                                        <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                        <div class="pg-select-wrap" style="width:88px;">
+                                                            <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['cyl']['val'] }}">
+                                                            <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
+                                                        </div>
+                                                        <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                                    </div>
+                                                </td>
+                                                {{-- AXIS --}}
+                                                <td class="text-center py-2">
+                                                    <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
+                                                        <input type="text" class="form-control form-control-sm axis-disp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0°" autocomplete="off" data-axis-picker="1" readonly value="{{ $rf['ax']['val'] }}">
+                                                        <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
+                                                        <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                                    </div>
+                                                </td>
+                                                {{-- VN C GL --}}
+                                                <td class="text-center py-2">
+                                                    <div class="pg-select-wrap" style="max-width:115px;margin:auto;">
+                                                        <input type="text" class="form-control form-control-sm pg-inp text-center" style="font-size:12px;border-color:#1B4F72;" placeholder="Select VN" autocomplete="off" data-master="{{ $rf['vn']['master'] }}" value="{{ $rf['vn']['val'] }}">
+                                                        <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['vn']['key'] }}]" value="{{ $rf['vn']['val'] }}">
+                                                        <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
-                                <thead style="background:#f0f4f8;">
-                                    <tr>
-                                        <th style="width:90px;border-bottom:2px solid #1B4F72;"></th>
-                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">SPH</th>
-                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">CYL</th>
-                                        <th class="text-center" style="min-width:110px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">Axis</th>
-                                        <th class="text-center" style="min-width:130px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">VN C GL</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($pgRows as $rowLabel => $rf)
-                                    <tr style="background:white;">
-                                        <td class="text-center fw-bold" style="font-size:11px;color:#64748b;letter-spacing:.06em;background:#fafbfc;">{{ $rowLabel }}</td>
-                                        {{-- SPH --}}
-                                        <td class="text-center py-2">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
-                                                <div class="pg-select-wrap" style="width:88px;">
-                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['sph']['val'] }}">
-                                                    <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['sph']['key'] }}]" value="{{ $rf['sph']['val'] }}">
-                                                </div>
-                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
-                                            </div>
-                                        </td>
-                                        {{-- CYL --}}
-                                        <td class="text-center py-2">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
-                                                <div class="pg-select-wrap" style="width:88px;">
-                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['cyl']['val'] }}">
-                                                    <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
-                                                </div>
-                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
-                                            </div>
-                                        </td>
-                                        {{-- AXIS --}}
-                                        <td class="text-center py-2">
-                                            <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;" placeholder="0°" autocomplete="off" data-master="axis" value="{{ $rf['ax']['val'] }}">
-                                                <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
-                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                            </div>
-                                        </td>
-                                        {{-- VN C GL --}}
-                                        <td class="text-center py-2">
-                                            <div class="pg-select-wrap" style="max-width:115px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm pg-inp text-center" style="font-size:12px;border-color:#1B4F72;" placeholder="Select VN" autocomplete="off" data-master="{{ $rf['vn']['master'] }}" value="{{ $rf['vn']['val'] }}">
-                                                <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['vn']['key'] }}]" value="{{ $rf['vn']['val'] }}">
-                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                     @endforeach
 
                 </div>
@@ -1148,6 +1145,21 @@
         </div>
     </div>
 
+    {{-- MODAL: Axis Picker --}}
+    <div class="modal fade" id="modalAxisPicker" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+                <div class="modal-header py-2 px-4" style="background:#1B4F72;">
+                    <h6 class="modal-title text-white fw-bold mb-0 fs-6 text-uppercase">AXIS</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3" style="background:#fff;">
+                    <div id="axisPickerGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:4px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- MODAL: ST --}}
     <div class="modal fade" id="modalST" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable">
@@ -1161,145 +1173,147 @@
                 <div class="modal-body p-3">
 
                     @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
-                    @php
-                        $stRows = [
-                            'DISTANCE' => [
-                                'sph' => ['key' => 'ds',      'val' => $st[$eye]['ds']      ?? ''],
-                                'cyl' => ['key' => 'dc',      'val' => $st[$eye]['dc']      ?? ''],
-                                'ax'  => ['key' => 'ax',      'val' => $st[$eye]['ax']      ?? ''],
-                                'vn'  => ['key' => 'vn',      'val' => $st[$eye]['vn']      ?? '', 'master' => 'vn'],
-                            ],
-                            'NEAR' => [
-                                'sph' => ['key' => 'ns',      'val' => $st[$eye]['ns']      ?? ''],
-                                'cyl' => ['key' => 'nc',      'val' => $st[$eye]['nc']      ?? ''],
-                                'ax'  => ['key' => 'na',      'val' => $st[$eye]['na']      ?? ''],
-                                'vn'  => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
-                            ],
-                        ];
-                    @endphp
-                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
-                            <i class="bi bi-eye-fill text-white"></i>
-                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                        @php
+    $stRows = [
+        'DISTANCE' => [
+            'sph' => ['key' => 'ds', 'val' => $st[$eye]['ds'] ?? ''],
+            'cyl' => ['key' => 'dc', 'val' => $st[$eye]['dc'] ?? ''],
+            'ax' => ['key' => 'ax', 'val' => $st[$eye]['ax'] ?? ''],
+            'vn' => ['key' => 'vn', 'val' => $st[$eye]['vn'] ?? '', 'master' => 'vn'],
+        ],
+        'NEAR' => [
+            'sph' => ['key' => 'ns', 'val' => $st[$eye]['ns'] ?? ''],
+            'cyl' => ['key' => 'nc', 'val' => $st[$eye]['nc'] ?? ''],
+            'ax' => ['key' => 'na', 'val' => $st[$eye]['na'] ?? ''],
+            'vn' => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+        ],
+    ];
+                        @endphp
+                        <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                            <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                                <i class="bi bi-eye-fill text-white"></i>
+                                <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
+                                    <thead style="background:#f0f4f8;">
+                                        <tr>
+                                            <th style="width:90px;border-bottom:2px solid #1B4F72;"></th>
+                                            <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">SPH</th>
+                                            <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">CYL</th>
+                                            <th class="text-center" style="min-width:110px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">Axis</th>
+                                            <th class="text-center" style="min-width:130px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">VN C ST</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($stRows as $rowLabel => $rf)
+                                            <tr style="background:white;">
+                                                <td class="text-center fw-bold" style="font-size:11px;color:#64748b;letter-spacing:.06em;background:#fafbfc;">{{ $rowLabel }}</td>
+                                                {{-- SPH: picker for DISTANCE; ADD picker + NS calc for NEAR --}}
+                                                @if($rowLabel === 'DISTANCE')
+                                                    <td class="text-center py-2">
+                                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                                            <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                            <div class="pg-select-wrap" style="width:88px;">
+                                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['sph']['val'] }}">
+                                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['sph']['key'] }}]" value="{{ $rf['sph']['val'] }}">
+                                                            </div>
+                                                            <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                                        </div>
+                                                    </td>
+                                                @else
+                                                    @php
+            $stAddVal = old('exam_data.st.' . $eye . '.add', $st[$eye]['add'] ?? '');
+            $stNsVal = old('exam_data.st.' . $eye . '.ns', $st[$eye]['ns'] ?? '');
+                                                    @endphp
+                                                    <td class="text-center py-2">
+                                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                                            @if(!($eye == 're' && $rowLabel == 'NEAR'))
+                                                            <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                            @endif
+                                                            <div class="pg-select-wrap" style="width:88px;">
+                                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $stNsVal }}">
+                                                                <input type="hidden" name="exam_data[st][{{ $eye }}][add]" value="{{ $stAddVal }}">
+                                                            </div>
+                                                            <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                                        </div>
+                                                        <div style="font-size:10px;color:#64748b;margin-top:3px;">ADD: <strong>{{ $stAddVal ?: '—' }}</strong></div>
+                                                        <input type="hidden" name="exam_data[st][{{ $eye }}][ns]" value="{{ $stNsVal }}">
+                                                    </td>
+                                                @endif
+                                                {{-- CYL: picker for DISTANCE, read-only mirror for NEAR --}}
+                                                @if($rowLabel === 'DISTANCE')
+                                                    <td class="text-center py-2">
+                                                        <div class="d-flex align-items-center justify-content-center gap-1">
+                                                            <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                            <div class="pg-select-wrap" style="width:88px;">
+                                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['cyl']['val'] }}">
+                                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
+                                                            </div>
+                                                            <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
+                                                        </div>
+                                                    </td>
+                                                @else
+                                                    <td class="text-center py-2">
+                                                        <div style="width:88px;margin:auto;">
+                                                            <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['cyl']['val'] }}">
+                                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
+                                                        </div>
+                                                        <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
+                                                    </td>
+                                                @endif
+                                                {{-- AXIS: dropdown for DISTANCE, read-only mirror for NEAR --}}
+                                                @if($rowLabel === 'DISTANCE')
+                                                    <td class="text-center py-2">
+                                                        <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
+                                                            <input type="text" class="form-control form-control-sm axis-disp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0°" autocomplete="off" data-axis-picker="1" readonly value="{{ $rf['ax']['val'] }}">
+                                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
+                                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                                        </div>
+                                                    </td>
+                                                @else
+                                                    <td class="text-center py-2">
+                                                        <div style="max-width:90px;margin:auto;">
+                                                            <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['ax']['val'] }}">
+                                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
+                                                        </div>
+                                                        <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
+                                                    </td>
+                                                @endif
+                                                {{-- VN C ST: only for DISTANCE row --}}
+                                                @if($rowLabel === 'DISTANCE')
+                                                    <td class="text-center py-2">
+                                                        <div class="pg-select-wrap" style="max-width:115px;margin:auto;">
+                                                            <input type="text" class="form-control form-control-sm pg-inp text-center" style="font-size:12px;border-color:#1B4F72;" placeholder="Select VN" autocomplete="off" data-master="{{ $rf['vn']['master'] }}" value="{{ $rf['vn']['val'] }}">
+                                                            <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['vn']['key'] }}]" value="{{ $rf['vn']['val'] }}">
+                                                            <i class="bi bi-chevron-down pg-inp-chevron"></i>
+                                                        </div>
+                                                    </td>
+                                                @else
+                                                    <td class="text-center align-middle" style="color:#94a3b8;font-size:20px;">—</td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
-                                <thead style="background:#f0f4f8;">
-                                    <tr>
-                                        <th style="width:90px;border-bottom:2px solid #1B4F72;"></th>
-                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">SPH</th>
-                                        <th class="text-center" style="min-width:160px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">CYL</th>
-                                        <th class="text-center" style="min-width:110px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">Axis</th>
-                                        <th class="text-center" style="min-width:130px;font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">VN C ST</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($stRows as $rowLabel => $rf)
-                                    <tr style="background:white;">
-                                        <td class="text-center fw-bold" style="font-size:11px;color:#64748b;letter-spacing:.06em;background:#fafbfc;">{{ $rowLabel }}</td>
-                                        {{-- SPH: picker for DISTANCE; ADD picker + NS calc for NEAR --}}
-                                        @if($rowLabel === 'DISTANCE')
-                                        <td class="text-center py-2">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
-                                                <div class="pg-select-wrap" style="width:88px;">
-                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['sph']['val'] }}">
-                                                    <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['sph']['key'] }}]" value="{{ $rf['sph']['val'] }}">
-                                                </div>
-                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
-                                            </div>
-                                        </td>
-                                        @else
-                                        @php
-                                            $stAddVal = old('exam_data.st.'.$eye.'.add', $st[$eye]['add'] ?? '');
-                                            $stNsVal  = old('exam_data.st.'.$eye.'.ns',  $st[$eye]['ns']  ?? '');
-                                        @endphp
-                                        <td class="text-center py-2">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
-                                                <div class="pg-select-wrap" style="width:88px;">
-                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $stNsVal }}">
-                                                    <input type="hidden" name="exam_data[st][{{ $eye }}][add]" value="{{ $stAddVal }}">
-                                                </div>
-                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
-                                            </div>
-                                            <div style="font-size:10px;color:#64748b;margin-top:3px;">ADD: <strong>{{ $stAddVal ?: '—' }}</strong></div>
-                                            <input type="hidden" name="exam_data[st][{{ $eye }}][ns]" value="{{ $stNsVal }}">
-                                        </td>
-                                        @endif
-                                        {{-- CYL: picker for DISTANCE, read-only mirror for NEAR --}}
-                                        @if($rowLabel === 'DISTANCE')
-                                        <td class="text-center py-2">
-                                            <div class="d-flex align-items-center justify-content-center gap-1">
-                                                <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
-                                                <div class="pg-select-wrap" style="width:88px;">
-                                                    <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $rf['cyl']['val'] }}">
-                                                    <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
-                                                </div>
-                                                <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
-                                            </div>
-                                        </td>
-                                        @else
-                                        <td class="text-center py-2">
-                                            <div style="width:88px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['cyl']['val'] }}">
-                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
-                                            </div>
-                                            <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
-                                        </td>
-                                        @endif
-                                        {{-- AXIS: dropdown for DISTANCE, read-only mirror for NEAR --}}
-                                        @if($rowLabel === 'DISTANCE')
-                                        <td class="text-center py-2">
-                                            <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;" placeholder="0°" autocomplete="off" data-master="axis" value="{{ $rf['ax']['val'] }}">
-                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
-                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                            </div>
-                                        </td>
-                                        @else
-                                        <td class="text-center py-2">
-                                            <div style="max-width:90px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['ax']['val'] }}">
-                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
-                                            </div>
-                                            <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
-                                        </td>
-                                        @endif
-                                        {{-- VN C ST: only for DISTANCE row --}}
-                                        @if($rowLabel === 'DISTANCE')
-                                        <td class="text-center py-2">
-                                            <div class="pg-select-wrap" style="max-width:115px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm pg-inp text-center" style="font-size:12px;border-color:#1B4F72;" placeholder="Select VN" autocomplete="off" data-master="{{ $rf['vn']['master'] }}" value="{{ $rf['vn']['val'] }}">
-                                                <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['vn']['key'] }}]" value="{{ $rf['vn']['val'] }}">
-                                                <i class="bi bi-chevron-down pg-inp-chevron"></i>
-                                            </div>
-                                        </td>
-                                        @else
-                                        <td class="text-center align-middle" style="color:#94a3b8;font-size:20px;">—</td>
-                                        @endif
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                     @endforeach
 
                     {{-- Checkboxes --}}
                     <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:#fafbfc;">
                         <div class="d-flex flex-wrap gap-4">
                             @foreach([
-                                'bifocal'       => 'Bifocal',
-                                'nd_separate'   => 'Near & Distance Separate',
-                                'progressive'   => 'Progressive',
-                                'computer_uses' => 'Computer Uses',
-                            ] as $cbKey => $cbLabel)
-                            @php $cbVal = old('exam_data.st.'.$cbKey, $st[$cbKey] ?? false); @endphp
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>
-                                <label class="form-check-label fw-semibold" for="st_{{ $cbKey }}" style="font-size:13px;color:#334155;">{{ $cbLabel }}</label>
-                            </div>
+    'bifocal' => 'Bifocal',
+    'nd_separate' => 'Near & Distance Separate',
+    'progressive' => 'Progressive',
+    'computer_uses' => 'Computer Uses',
+] as $cbKey => $cbLabel)
+                                @php $cbVal = old('exam_data.st.' . $cbKey, $st[$cbKey] ?? false); @endphp
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="st_{{ $cbKey }}" style="font-size:13px;color:#334155;">{{ $cbLabel }}</label>
+                                </div>
                             @endforeach
                         </div>
                     </div>
@@ -1332,9 +1346,9 @@
                                     <tr>
                                         <th style="width:140px;border-bottom:2px solid #1B4F72;"></th>
                                         @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            <i class="bi bi-eye-fill me-1"></i>{{ $eyeLabel }}
-                                        </th>
+                                            <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
+                                                <i class="bi bi-eye-fill me-1"></i>{{ $eyeLabel }}
+                                            </th>
                                         @endforeach
                                     </tr>
                                 </thead>
@@ -1345,18 +1359,18 @@
                                             <div style="font-size:11px;color:#94a3b8;font-weight:500;">mmHg</div>
                                         </td>
                                         @foreach(['re', 'le'] as $eye)
-                                        @php $sv = old('exam_data.nct.iop_'.$eye, $nct['iop_'.$eye] ?? ''); @endphp
-                                        <td class="text-center py-3">
-                                            <div class="nct-select-wrap" style="max-width:160px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm nct-inp text-center fw-semibold"
-                                                    style="border-color:#1B4F72;font-size:14px;"
-                                                    placeholder="—" autocomplete="off"
-                                                    value="{{ $sv }}">
-                                                <input type="hidden" name="exam_data[nct][iop_{{ $eye }}]" value="{{ $sv }}">
-                                                <i class="bi bi-chevron-down nct-inp-chevron"></i>
-                                            </div>
-                                            <div style="font-size:10px;color:#94a3b8;margin-top:4px;font-weight:500;">mmHg</div>
-                                        </td>
+                                            @php $sv = old('exam_data.nct.iop_' . $eye, $nct['iop_' . $eye] ?? ''); @endphp
+                                            <td class="text-center py-3">
+                                                <div class="nct-select-wrap" style="max-width:160px;margin:auto;">
+                                                    <input type="text" class="form-control form-control-sm nct-inp text-center fw-semibold"
+                                                        style="border-color:#1B4F72;font-size:14px;"
+                                                        placeholder="—" autocomplete="off"
+                                                        value="{{ $sv }}">
+                                                    <input type="hidden" name="exam_data[nct][iop_{{ $eye }}]" value="{{ $sv }}">
+                                                    <i class="bi bi-chevron-down nct-inp-chevron"></i>
+                                                </div>
+                                                <div style="font-size:10px;color:#94a3b8;margin-top:4px;font-weight:500;">mmHg</div>
+                                            </td>
                                         @endforeach
                                     </tr>
                                 </tbody>
@@ -1401,28 +1415,28 @@
                 </div>
                 <div class="modal-body p-3">
                     @php
-                        $oeFieldMeta = [
-                            'sac'       => ['label' => 'SAC',       'full' => 'Sac',              'master' => 'sac',         'fav' => 'sac'],
-                            'lid'       => ['label' => 'LID',       'full' => 'Lid',              'master' => 'lid',         'fav' => 'lid'],
-                            'conj'      => ['label' => 'CONJ',      'full' => 'Conjunctiva',      'master' => 'conj',        'fav' => 'conj'],
-                            'cornea'    => ['label' => 'CORNEA',    'full' => 'Cornea',           'master' => 'cornea',      'fav' => 'cornea'],
-                            'ac'        => ['label' => 'AC',        'full' => 'Anterior Chamber', 'master' => 'ac',          'fav' => 'ac'],
-                            'iris'      => ['label' => 'IRIS',      'full' => 'Iris',             'master' => 'iris',        'fav' => 'iris'],
-                            'pupil'     => ['label' => 'PUPIL',     'full' => 'Pupil',            'master' => 'pupil',       'fav' => 'pupil'],
-                            'lens'      => ['label' => 'LENS',      'full' => 'Lens',             'master' => 'lens_master', 'fav' => 'lens'],
-                            'em'        => ['label' => 'EM',        'full' => 'Extraocular Mov.', 'master' => 'em',          'fav' => 'em'],
-                            'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test',       'master' => 'covertest',   'fav' => 'covertest'],
-                        ];
-                        $oeMasterData = [];
-                        foreach ($oeFieldMeta as $meta) {
-                            if (! isset($oeMasterData[$meta['master']])) {
-                                $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn ($o) => [
-                                    'id'           => $o->id,
-                                    'value'        => $o->value,
-                                    'is_favourite' => (bool) ($o->is_favourite ?? false),
-                                ])->values()->all();
-                            }
-                        }
+$oeFieldMeta = [
+    'sac' => ['label' => 'SAC', 'full' => 'Sac', 'master' => 'sac', 'fav' => 'sac'],
+    'lid' => ['label' => 'LID', 'full' => 'Lid', 'master' => 'lid', 'fav' => 'lid'],
+    'conj' => ['label' => 'CONJ', 'full' => 'Conjunctiva', 'master' => 'conj', 'fav' => 'conj'],
+    'cornea' => ['label' => 'CORNEA', 'full' => 'Cornea', 'master' => 'cornea', 'fav' => 'cornea'],
+    'ac' => ['label' => 'AC', 'full' => 'Anterior Chamber', 'master' => 'ac', 'fav' => 'ac'],
+    'iris' => ['label' => 'IRIS', 'full' => 'Iris', 'master' => 'iris', 'fav' => 'iris'],
+    'pupil' => ['label' => 'PUPIL', 'full' => 'Pupil', 'master' => 'pupil', 'fav' => 'pupil'],
+    'lens' => ['label' => 'LENS', 'full' => 'Lens', 'master' => 'lens_master', 'fav' => 'lens'],
+    'em' => ['label' => 'EM', 'full' => 'Extraocular Mov.', 'master' => 'em', 'fav' => 'em'],
+    'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test', 'master' => 'covertest', 'fav' => 'covertest'],
+];
+$oeMasterData = [];
+foreach ($oeFieldMeta as $meta) {
+    if (!isset($oeMasterData[$meta['master']])) {
+        $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn($o) => [
+            'id' => $o->id,
+            'value' => $o->value,
+            'is_favourite' => (bool) ($o->is_favourite ?? false),
+        ])->values()->all();
+    }
+}
                     @endphp
                     <div class="rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="table-responsive">
@@ -1436,34 +1450,34 @@
                                 </thead>
                                 <tbody>
                                     @foreach($oeFieldMeta as $key => $meta)
-                                    <tr>
-                                        <td class="oe-label-cell">
-                                            <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">{{ $meta['label'] }}</span>
-                                            <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">{{ $meta['full'] }}</div>
-                                        </td>
-                                        @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
-                                        @php $sv = old('exam_data.oe.'.$key.'_'.$eye, $oe[$key.'_'.$eye] ?? ''); @endphp
-                                        <td class="{{ $cellCls }} py-2 px-3">
-                                            <div class="oe-select-wrap">
-                                                <input type="text" class="form-control form-control-sm oe-inp"
-                                                    placeholder="—" autocomplete="off"
-                                                    data-oe-key="{{ $key }}"
-                                                    data-master="{{ $meta['master'] }}"
-                                                    data-fav="{{ $meta['fav'] }}"
-                                                    value="{{ $sv }}">
-                                                <input type="hidden" name="exam_data[oe][{{ $key }}_{{ $eye }}]" value="{{ $sv }}">
-                                                <i class="bi bi-chevron-down oe-inp-chevron"></i>
-                                            </div>
-                                            @if($key === 'lens')
-                                            @php $pseudo = old('exam_data.oe.pseudophakia_'.$eye, $oe['pseudophakia_'.$eye] ?? []); @endphp
-                                            <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_type]" value="{{ $pseudo['operation_type'] ?? '' }}" class="pseudo-op-type" data-eye="{{ $eye }}">
-                                            <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_expense]" value="{{ $pseudo['operation_expense'] ?? '' }}" class="pseudo-op-expense" data-eye="{{ $eye }}">
-                                            <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][hospital_name]" value="{{ $pseudo['hospital_name'] ?? '' }}" class="pseudo-hospital" data-eye="{{ $eye }}">
-                                            <div class="pseudo-lens-summary mt-1" data-eye="{{ $eye }}" style="display:none;"></div>
-                                            @endif
-                                        </td>
-                                        @endforeach
-                                    </tr>
+                                        <tr>
+                                            <td class="oe-label-cell">
+                                                <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">{{ $meta['label'] }}</span>
+                                                <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">{{ $meta['full'] }}</div>
+                                            </td>
+                                            @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
+                                                @php $sv = old('exam_data.oe.' . $key . '_' . $eye, $oe[$key . '_' . $eye] ?? ''); @endphp
+                                                <td class="{{ $cellCls }} py-2 px-3">
+                                                    <div class="oe-select-wrap">
+                                                        <input type="text" class="form-control form-control-sm oe-inp"
+                                                            placeholder="—" autocomplete="off"
+                                                            data-oe-key="{{ $key }}"
+                                                            data-master="{{ $meta['master'] }}"
+                                                            data-fav="{{ $meta['fav'] }}"
+                                                            value="{{ $sv }}">
+                                                        <input type="hidden" name="exam_data[oe][{{ $key }}_{{ $eye }}]" value="{{ $sv }}">
+                                                        <i class="bi bi-chevron-down oe-inp-chevron"></i>
+                                                    </div>
+                                                    @if($key === 'lens')
+                                                        @php $pseudo = old('exam_data.oe.pseudophakia_' . $eye, $oe['pseudophakia_' . $eye] ?? []); @endphp
+                                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_type]" value="{{ $pseudo['operation_type'] ?? '' }}" class="pseudo-op-type" data-eye="{{ $eye }}">
+                                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_expense]" value="{{ $pseudo['operation_expense'] ?? '' }}" class="pseudo-op-expense" data-eye="{{ $eye }}">
+                                                        <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][hospital_name]" value="{{ $pseudo['hospital_name'] ?? '' }}" class="pseudo-hospital" data-eye="{{ $eye }}">
+                                                        <div class="pseudo-lens-summary mt-1" data-eye="{{ $eye }}" style="display:none;"></div>
+                                                    @endif
+                                                </td>
+                                            @endforeach
+                                        </tr>
                                     @endforeach
                                     <tr>
                                         <td class="oe-label-cell">
@@ -1471,13 +1485,13 @@
                                             <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">Other findings</div>
                                         </td>
                                         @foreach(['re' => ['cls' => 'oe-cell-re', 'ph' => 'Right eye findings...'], 'le' => ['cls' => 'oe-cell-le', 'ph' => 'Left eye findings...']] as $eye => $em)
-                                        <td class="{{ $em['cls'] }} py-2 px-3">
-                                            <input type="text" name="exam_data[oe][other_{{ $eye }}]"
-                                                value="{{ old('exam_data.oe.other_'.$eye, $oe['other_'.$eye] ?? '') }}"
-                                                class="form-control form-control-sm exam-plain-inp"
-                                                style="border-color:#1B4F72;"
-                                                placeholder="{{ $em['ph'] }}" autocomplete="off">
-                                        </td>
+                                            <td class="{{ $em['cls'] }} py-2 px-3">
+                                                <input type="text" name="exam_data[oe][other_{{ $eye }}]"
+                                                    value="{{ old('exam_data.oe.other_' . $eye, $oe['other_' . $eye] ?? '') }}"
+                                                    class="form-control form-control-sm exam-plain-inp"
+                                                    style="border-color:#1B4F72;"
+                                                    placeholder="{{ $em['ph'] }}" autocomplete="off">
+                                            </td>
                                         @endforeach
                                     </tr>
                                 </tbody>
@@ -1521,7 +1535,7 @@
                         <input type="text" id="pseudoHospital" class="form-control exam-plain-inp" placeholder="Hospital name" list="pseudoHospitalList" autocomplete="off">
                         <datalist id="pseudoHospitalList">
                             @foreach($masters['referrers'] ?? [] as $ref)
-                            <option value="{{ $ref->name }}">
+                                <option value="{{ $ref->name }}">
                             @endforeach
                         </datalist>
                     </div>
@@ -1546,67 +1560,52 @@
                 </div>
                 <div class="modal-body p-3">
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
-                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
-                            <i class="bi bi-eye-fill text-white"></i>
-                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                    <div class="row g-3">
+                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                        <div class="col-md-6">
+                            <div class="rounded-3 overflow-hidden h-100" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                                <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                                    <i class="bi bi-eye-fill text-white"></i>
+                                    <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                                </div>
+                                <div class="p-3">
+                                    <div class="mb-3">
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">DISC <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">CDR / Appearance</span></label>
+                                        <div class="fundus-dd-wrap" style="position:relative;">
+                                            <input type="text" class="form-control form-control-sm fundus-dd-inp"
+                                                placeholder="Search or select..." autocomplete="off"
+                                                data-dd-type="disc"
+                                                value="{{ $fundus['disc_' . $eye] ?? '' }}"
+                                                style="padding-right:28px;border-color:#1B4F72;">
+                                            <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
+                                            <input type="hidden" name="exam_data[fundus][disc_{{ $eye }}]" value="{{ $fundus['disc_' . $eye] ?? '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">FR <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">Foveal Reflex</span></label>
+                                        <div class="fundus-dd-wrap" style="position:relative;">
+                                            <input type="text" class="form-control form-control-sm fundus-dd-inp"
+                                                placeholder="Search or select..." autocomplete="off"
+                                                data-dd-type="fr"
+                                                value="{{ $fundus['fr_' . $eye] ?? '' }}"
+                                                style="padding-right:28px;border-color:#1B4F72;">
+                                            <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
+                                            <input type="hidden" name="exam_data[fundus][fr_{{ $eye }}]" value="{{ $fundus['fr_' . $eye] ?? '' }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">COMMENT <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">Additional findings</span></label>
+                                        <textarea name="exam_data[fundus][comment_{{ $eye }}]"
+                                            class="form-control form-control-sm"
+                                            rows="3"
+                                            placeholder="{{ $eyeLabel }} findings / notes..."
+                                            style="resize:none;border-color:#1B4F72;font-size:12px;">{{ old('exam_data.fundus.comment_' . $eye, $fundus['comment_' . $eye] ?? '') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
-                                <thead style="background:#f0f4f8;">
-                                    <tr>
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            Disc
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">CDR / Appearance</div>
-                                        </th>
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            FR
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">Foveal Reflex</div>
-                                        </th>
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            Comment
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">Additional findings</div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr style="background:white;">
-                                        <td class="text-center py-2 px-3">
-                                            <div class="fundus-dd-wrap" style="position:relative;max-width:200px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm fundus-dd-inp text-center"
-                                                    placeholder="Search or select..." autocomplete="off"
-                                                    data-dd-type="disc"
-                                                    value="{{ $fundus['disc_'.$eye] ?? '' }}"
-                                                    style="padding-right:24px;border-color:#1B4F72;">
-                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
-                                                <input type="hidden" name="exam_data[fundus][disc_{{ $eye }}]" value="{{ $fundus['disc_'.$eye] ?? '' }}">
-                                            </div>
-                                        </td>
-                                        <td class="text-center py-2 px-3">
-                                            <div class="fundus-dd-wrap" style="position:relative;max-width:200px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm fundus-dd-inp text-center"
-                                                    placeholder="Search or select..." autocomplete="off"
-                                                    data-dd-type="fr"
-                                                    value="{{ $fundus['fr_'.$eye] ?? '' }}"
-                                                    style="padding-right:24px;border-color:#1B4F72;">
-                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
-                                                <input type="hidden" name="exam_data[fundus][fr_{{ $eye }}]" value="{{ $fundus['fr_'.$eye] ?? '' }}">
-                                            </div>
-                                        </td>
-                                        <td class="py-2 px-3" style="vertical-align:top;">
-                                            <textarea name="exam_data[fundus][comment_{{ $eye }}]"
-                                                class="form-control form-control-sm"
-                                                rows="2"
-                                                placeholder="{{ $eyeLabel }} findings / notes..."
-                                                style="resize:none;border-color:#1B4F72;font-size:12px;">{{ old('exam_data.fundus.comment_'.$eye, $fundus['comment_'.$eye] ?? '') }}</textarea>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        @endforeach
                     </div>
-                    @endforeach
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
@@ -1641,16 +1640,17 @@
                     </div>
                     <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
                         @php
-                            $dxGroupCount  = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
-                            $dxAdviceCount = [];
-                            foreach ($masters['advices'] as $_a) {
-                                foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
-                                    $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
-                                }
-                            }
+$dxGroupCount = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
+$dxAdviceCount = [];
+foreach ($masters['advices'] as $_a) {
+    foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
+        $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
+    }
+}
                         @endphp
                         @foreach($masters['diagnoses'] as $d)
-                            @php $gc = $dxGroupCount[$d->id] ?? 0; $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
+                            @php $gc = $dxGroupCount[$d->id] ?? 0;
+    $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
                             <div class="dx-tag-wrap">
                                 <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}"
                                     {{ in_array($d->id, $ed['diagnoses'] ?? []) ? 'checked' : '' }}>
@@ -1806,9 +1806,9 @@
 
     {{-- MODAL: Advice --}}
     @php
-        $favAdvices    = collect($masters['advices'] ?? [])->filter(fn($a) =>  $a->is_favourite && ($a->advice ?? ''))->values();
-        $nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values();
-        $allAdvices    = collect($masters['advices'] ?? [])->filter(fn($a) => ($a->advice ?? ''))->values();
+$favAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => $a->is_favourite && ($a->advice ?? ''))->values();
+$nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values();
+$allAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => ($a->advice ?? ''))->values();
     @endphp
     <div class="modal fade" id="modalAdvice" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -1834,11 +1834,11 @@
                         <div class="d-flex flex-wrap gap-2 align-items-center" id="adviceChipsWrap">
                             {{-- Favourite pills --}}
                             @foreach($favAdvices as $adv)
-                            <button type="button" class="advice-quick-btn"
-                                    style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #1B4F72;background:white;color:#1B4F72;font-weight:500;cursor:pointer;line-height:1.5;"
-                                    data-advice="{{ $adv->advice }}">
-                                <i class="bi bi-star-fill me-1" style="font-size:9px;color:#f59e0b;"></i>{{ $adv->advice }}
-                            </button>
+                                <button type="button" class="advice-quick-btn"
+                                        style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #1B4F72;background:white;color:#1B4F72;font-weight:500;cursor:pointer;line-height:1.5;"
+                                        data-advice="{{ $adv->advice }}">
+                                    <i class="bi bi-star-fill me-1" style="font-size:9px;color:#f59e0b;"></i>{{ $adv->advice }}
+                                </button>
                             @endforeach
 
                             {{-- More dropdown with search + add new --}}
@@ -1876,22 +1876,22 @@
                                     {{-- List --}}
                                     <ul id="adviceMoreList" style="max-height:240px;overflow-y:auto;margin:0;padding:6px 0;list-style:none;">
                                         @foreach($allAdvices as $adv)
-                                        <li class="advice-more-item" data-advice-text="{{ strtolower($adv->advice) }}"
-                                            style="display:flex;align-items:center;padding:2px 10px 2px 12px;transition:background .1s;">
-                                            <button type="button" class="advice-quick-btn"
-                                                    data-advice="{{ $adv->advice }}"
-                                                    style="flex:1;font-size:13px;padding:6px 4px;text-align:left;border:none;background:transparent;color:#1e293b;cursor:pointer;border-radius:6px;line-height:1.4;">
-                                                {{ $adv->advice }}
-                                            </button>
-                                            <button type="button" class="advice-fav-btn"
-                                                    data-id="{{ $adv->id }}"
-                                                    data-fav="{{ $adv->is_favourite ? '1' : '0' }}"
-                                                    title="{{ $adv->is_favourite ? 'Remove from favourites' : 'Mark as favourite' }}"
-                                                    style="border:none;background:transparent;padding:4px 4px;cursor:pointer;line-height:1;flex-shrink:0;opacity:{{ $adv->is_favourite ? '1' : '0.3' }};transition:opacity .15s;">
-                                                <i class="bi {{ $adv->is_favourite ? 'bi-star-fill' : 'bi-star' }}"
-                                                   style="font-size:14px;color:{{ $adv->is_favourite ? '#f59e0b' : '#94a3b8' }};"></i>
-                                            </button>
-                                        </li>
+                                            <li class="advice-more-item" data-advice-text="{{ strtolower($adv->advice) }}"
+                                                style="display:flex;align-items:center;padding:2px 10px 2px 12px;transition:background .1s;">
+                                                <button type="button" class="advice-quick-btn"
+                                                        data-advice="{{ $adv->advice }}"
+                                                        style="flex:1;font-size:13px;padding:6px 4px;text-align:left;border:none;background:transparent;color:#1e293b;cursor:pointer;border-radius:6px;line-height:1.4;">
+                                                    {{ $adv->advice }}
+                                                </button>
+                                                <button type="button" class="advice-fav-btn"
+                                                        data-id="{{ $adv->id }}"
+                                                        data-fav="{{ $adv->is_favourite ? '1' : '0' }}"
+                                                        title="{{ $adv->is_favourite ? 'Remove from favourites' : 'Mark as favourite' }}"
+                                                        style="border:none;background:transparent;padding:4px 4px;cursor:pointer;line-height:1;flex-shrink:0;opacity:{{ $adv->is_favourite ? '1' : '0.3' }};transition:opacity .15s;">
+                                                    <i class="bi {{ $adv->is_favourite ? 'bi-star-fill' : 'bi-star' }}"
+                                                       style="font-size:14px;color:{{ $adv->is_favourite ? '#f59e0b' : '#94a3b8' }};"></i>
+                                                </button>
+                                            </li>
                                         @endforeach
                                         <li id="adviceNoResult" style="display:none;padding:10px 14px;font-size:12px;color:#94a3b8;text-align:center;">
                                             <i class="bi bi-search me-1"></i>No match — click <strong>+ Add</strong> to create
@@ -1934,11 +1934,11 @@
 
 <datalist id="sph_cyl_list">
     @php
-        $uniqueSphCyl = collect($masters['sph_cyl'])
-            ->map(fn ($o) => ltrim(trim($o->value), '+-'))
-            ->reject(fn ($v) => $v === '')
-            ->unique()
-            ->values();
+$uniqueSphCyl = collect($masters['sph_cyl'])
+    ->map(fn($o) => ltrim(trim($o->value), '+-'))
+    ->reject(fn($v) => $v === '')
+    ->unique()
+    ->values();
     @endphp
     @foreach($uniqueSphCyl as $cleanVal)
         @if(in_array((string) $cleanVal, ['0', '0.00', 'Plano', 'PL']))
@@ -1966,7 +1966,7 @@
 </datalist>
 
 {{-- MODAL: Exam Save Confirmation --}}
-<div class="modal fade" id="modalExamConfirm" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<!-- <div class="modal fade" id="modalExamConfirm" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
         <div class="modal-content" style="border:none;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
@@ -1993,7 +1993,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <script>
     function formatOpto(val) {
@@ -2008,7 +2008,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const rxBody = document.getElementById('rxBody');
 
     let rxRowIndex = {{ max($exam?->prescriptions?->count() ?? 0, 0) }};
-    const dosagesJson = @json($masters['dosages']->pluck('dosage','id'));
+    const dosagesJson = @json($masters['dosages']->pluck('dosage', 'id'));
     const durationsJson = @json($masters['durations']->pluck('duration')->values());
 
     function syncComplaintDuration() {
@@ -2021,15 +2021,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // All medicines pre-loaded — instant search, no AJAX
     @php
-        $medicinesForJs = $masters['medicines']->map(fn($m) => [
-            'id'           => $m->id,
-            'name'         => $m->name ?? '',
-            'brand_name'   => $m->brand_name ?? '',
-            'dosage_id'    => $m->dosage_id,
-            'dosage_label' => $m->dosage?->dosage ?? '',
-            'duration'     => $m->duration ?? '',
-            'qty'          => $m->qty ?? '',
-        ])->values();
+$medicinesForJs = $masters['medicines']->map(fn($m) => [
+    'id' => $m->id,
+    'name' => $m->name ?? '',
+    'brand_name' => $m->brand_name ?? '',
+    'dosage_id' => $m->dosage_id,
+    'dosage_label' => $m->dosage?->dosage ?? '',
+    'duration' => $m->duration ?? '',
+    'qty' => $m->qty ?? '',
+])->values();
     @endphp
     const allMedicinesData = @json($medicinesForJs);
 
@@ -2480,8 +2480,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     @php
-        $__dxGroups  = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
-        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_ids' => $a->diagnosis_ids ?? []])->values();
+$__dxGroups = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
+$__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_ids' => $a->diagnosis_ids ?? []])->values();
     @endphp
     // ── Diagnosis → Suggested Groups & Advice ────────────────────────────
     (function () {
@@ -2795,7 +2795,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const coFavBase = '{{ url($slug."/masters/detail/complaints") }}';
+    const coFavBase = '{{ url($slug . "/masters/detail/complaints") }}';
     const coCsrf    = '{{ csrf_token() }}';
 
     function positionCoDropdown() {
@@ -2988,7 +2988,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!kcoSearch || !kcoDropdown) { return; }
 
         const kcoItems   = @json($masters['kcos']); // {id, kco, is_favourite}
-        const kcoFavBase = '{{ url($slug."/masters/detail/kcos") }}';
+        const kcoFavBase = '{{ url($slug . "/masters/detail/kcos") }}';
         let activeKcoInput = null;
         let kcoRowIndex    = document.querySelectorAll('#kcoBody .kco-row').length;
 
@@ -3196,7 +3196,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Advice favourite toggle in More dropdown
     (function () {
-        const advFavBase = '{{ url($slug."/masters/detail/advice") }}';
+        const advFavBase = '{{ url($slug . "/masters/detail/advice") }}';
         const csrf       = '{{ csrf_token() }}';
 
         document.addEventListener('click', function (e) {
@@ -3449,8 +3449,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         document.querySelectorAll('.pg-inp').forEach(inp => {
-            inp.addEventListener('focus', function () { if (this.dataset.noDrop) return; activePgInp = this; renderPdd(''); });
-            inp.addEventListener('input', function () { if (this.dataset.noDrop) return; activePgInp = this; renderPdd(); });
+            inp.addEventListener('focus', function () { if (this.dataset.noDrop || this.dataset.axisPicker) return; activePgInp = this; renderPdd(''); });
+            inp.addEventListener('input', function () { if (this.dataset.noDrop || this.dataset.axisPicker) return; activePgInp = this; renderPdd(); });
             inp.addEventListener('blur', function () {
                 const hidden = this.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]');
                 if (hidden) { hidden.value = this.value; }
@@ -3593,7 +3593,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function syncAxisForCyl(cylInp, cylVal) {
             const td      = cylInp.closest('td');
             const axisTd  = td?.nextElementSibling;
-            const axisInp = axisTd?.querySelector('.pg-inp[data-master="axis"]');
+            const axisInp = axisTd?.querySelector('.axis-disp');
             const axisHid = axisTd?.querySelector('input[type="hidden"]');
             if (!axisInp) return;
 
@@ -3696,6 +3696,84 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     })();
 
+    // ── Axis Picker Modal ─────────────────────────────────────────────────────
+    (function () {
+        let axisPickTarget    = null;
+        let axisParentModalEl = null;
+
+        const grid       = document.getElementById('axisPickerGrid');
+        const axisValues = [5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180];
+
+        function buildGrid(currentVal) {
+            grid.innerHTML = '';
+            axisValues.forEach(function (v) {
+                const btn      = document.createElement('button');
+                btn.type       = 'button';
+                btn.className  = 'axis-picker-btn';
+                btn.textContent = v + '°';
+                btn.dataset.val = String(v);
+                const isSel    = String(currentVal) === String(v);
+                btn.style.cssText = 'width:100%;padding:10px 4px;font-size:13px;font-weight:700;border-radius:8px;border:2px solid #1B4F72'
+                    + ';background:' + (isSel ? '#fff' : '#1B4F72')
+                    + ';color:' + (isSel ? '#1B4F72' : '#fff') + ';cursor:pointer;transition:background .12s,color .12s,border-color .12s;';
+                grid.appendChild(btn);
+            });
+        }
+
+        function openAxisPicker(inp) {
+            axisPickTarget = {
+                inp: inp,
+                hid: inp.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]'),
+            };
+            buildGrid(String(inp.value || '').trim().replace('°', ''));
+
+            axisParentModalEl   = inp.closest('.modal');
+            const pickerModalEl = document.getElementById('modalAxisPicker');
+            const pickerModal   = bootstrap.Modal.getOrCreateInstance(pickerModalEl);
+
+            if (axisParentModalEl) {
+                axisParentModalEl.addEventListener('hidden.bs.modal', function () { pickerModal.show(); }, { once: true });
+                bootstrap.Modal.getInstance(axisParentModalEl)?.hide();
+            } else {
+                pickerModal.show();
+            }
+        }
+
+        function applyAxisVal(val) {
+            if (!axisPickTarget) return;
+            axisPickTarget.inp.value = val;
+            if (axisPickTarget.hid) axisPickTarget.hid.value = val;
+
+            if (axisPickTarget.hid?.name) {
+                const axM = axisPickTarget.hid.name.match(/^exam_data\[st\]\[(re|le)\]\[ax\]$/);
+                if (axM && typeof window.syncStNearFromDist === 'function') window.syncStNearFromDist(axM[1]);
+            }
+            if (typeof checkProgress     === 'function') checkProgress();
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        }
+
+        grid.addEventListener('click', function (e) {
+            const btn = e.target.closest('.axis-picker-btn');
+            if (!btn) return;
+            applyAxisVal(btn.dataset.val);
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAxisPicker')).hide();
+        });
+
+        document.getElementById('modalAxisPicker').addEventListener('hidden.bs.modal', function () {
+            if (axisParentModalEl) {
+                bootstrap.Modal.getOrCreateInstance(axisParentModalEl).show();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            const inp = e.target.closest('.axis-disp[data-axis-picker]');
+            if (inp && !inp.disabled) {
+                e.preventDefault();
+                openAxisPicker(inp);
+            }
+        });
+    })();
+
     // ── NCT custom dropdown (multi-column grid) ───────────────────────────────
     (function () {
         const nctOpts = @json(collect($masters['nct'])->pluck('value')->filter()->values());
@@ -3766,7 +3844,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── O/E custom dropdowns (favourites + search) ────────────────────────────
     (function () {
         const oeMasters = @json($oeMasterData ?? []);
-        const oeFavBase = '{{ url($slug."/masters/detail") }}';
+        const oeFavBase = '{{ url($slug . "/masters/detail") }}';
 
         const odd = document.createElement('div');
         odd.className = 'co-dropdown';
@@ -3885,9 +3963,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Fundus custom dropdowns (Disc + FR — favourites, search, A-Z) ─────────
     (function () {
-        const discItems = @json(collect($masters['disc'])->map(fn ($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
-        const frItems   = @json(collect($masters['fr'])->map(fn ($o)   => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
-        const favBase   = '{{ url($slug."/masters/detail") }}';
+        const discItems = @json(collect($masters['disc'])->map(fn($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+        const frItems   = @json(collect($masters['fr'])->map(fn($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+        const favBase   = '{{ url($slug . "/masters/detail") }}';
 
         let activeFInp = null, activeFType = null;
 
@@ -4208,23 +4286,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('input', saveDraft);
     form.addEventListener('change', saveDraft);
+    form.addEventListener('submit', function () {
+    try {
+        localStorage.removeItem(draftKey);
+    } catch (_) {}
+}); 
 
-    let _examConfirmed = false;
-    form.addEventListener('submit', function (e) {
-        if (!_examConfirmed) {
-            e.preventDefault();
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).show();
-            return;
-        }
-        _examConfirmed = false;
-        try { localStorage.removeItem(draftKey); } catch (_) { /* ignore */ }
-    });
+    // let _examConfirmed = false;
+    // form.addEventListener('submit', function (e) {
+    //     if (!_examConfirmed) {
+    //         e.preventDefault();
+    //         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).show();
+    //         return;
+    //     }
+    //     _examConfirmed = false;
+    //     try { localStorage.removeItem(draftKey); } catch (_) { /* ignore */ }
+    // });
 
-    document.getElementById('examConfirmYes')?.addEventListener('click', function () {
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).hide();
-        _examConfirmed = true;
-        form.requestSubmit();
-    });
+    // document.getElementById('examConfirmYes')?.addEventListener('click', function () {
+    //     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).hide();
+    //     _examConfirmed = true;
+    //     form.requestSubmit();
+    // });
 
     // Restore after a short delay so Select2 / dynamic rows are initialised
     setTimeout(loadDraft, 300);
@@ -4239,8 +4322,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!hnoSearch || !hnoDropdown) { return; }
     document.body.appendChild(hnoDropdown); // move to body so modal overflow doesn't clip the fixed dropdown
 
-    const hnoItems   = @json(collect($masters['hnos'] ?? [])->map(fn($o) => ['id' => $o->id, 'hno' => $o->hno, 'is_favourite' => (bool)($o->is_favourite ?? false)])->values());
-    const hnoFavBase = '{{ url($slug."/masters/detail/hno") }}';
+    const hnoItems   = @json(collect($masters['hnos'] ?? [])->map(fn($o) => ['id' => $o->id, 'hno' => $o->hno, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+    const hnoFavBase = '{{ url($slug . "/masters/detail/hno") }}';
 
     function syncHnoHidden() {
         const chips = Array.from(document.querySelectorAll('#hnoChips .hno-chip'))
