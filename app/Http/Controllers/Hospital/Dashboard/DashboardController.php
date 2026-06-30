@@ -767,6 +767,10 @@ class DashboardController extends Controller
 
         $req->update(['status' => 'accepted']);
 
+        if ($fromTab = request('_from_tab')) {
+            return redirect()->route('hospital.doctor.history', ['slug' => $slug, '_tab' => $fromTab])
+                ->with('success', 'Request accepted successfully!');
+        }
         return back()->with('success', 'Request accepted successfully!');
     }
 
@@ -783,6 +787,10 @@ class DashboardController extends Controller
 
         $req->delete();
 
+        if ($fromTab = request('_from_tab')) {
+            return redirect()->route('hospital.doctor.history', ['slug' => $slug, '_tab' => $fromTab])
+                ->with('success', 'Request removed successfully!');
+        }
         return back()->with('success', 'Request removed successfully!');
     }
 

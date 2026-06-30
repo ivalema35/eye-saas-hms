@@ -1080,7 +1080,7 @@ $pgMasterOpts = [
                                                 {{-- AXIS --}}
                                                 <td class="text-center py-2">
                                                     <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
-                                                        <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;" placeholder="0°" autocomplete="off" data-master="axis" value="{{ $rf['ax']['val'] }}">
+                                                        <input type="text" class="form-control form-control-sm axis-disp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0°" autocomplete="off" data-axis-picker="1" readonly value="{{ $rf['ax']['val'] }}">
                                                         <input type="hidden" name="exam_data[pg][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
                                                         <i class="bi bi-chevron-down pg-inp-chevron"></i>
                                                     </div>
@@ -1140,6 +1140,21 @@ $pgMasterOpts = [
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: Axis Picker --}}
+    <div class="modal fade" id="modalAxisPicker" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+                <div class="modal-header py-2 px-4" style="background:#1B4F72;">
+                    <h6 class="modal-title text-white fw-bold mb-0 fs-6 text-uppercase">AXIS</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-3" style="background:#fff;">
+                    <div id="axisPickerGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:4px;"></div>
                 </div>
             </div>
         </div>
@@ -1251,7 +1266,7 @@ $pgMasterOpts = [
                                                 @if($rowLabel === 'DISTANCE')
                                                     <td class="text-center py-2">
                                                         <div class="pg-select-wrap" style="max-width:90px;margin:auto;">
-                                                            <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;" placeholder="0°" autocomplete="off" data-master="axis" value="{{ $rf['ax']['val'] }}">
+                                                            <input type="text" class="form-control form-control-sm axis-disp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0°" autocomplete="off" data-axis-picker="1" readonly value="{{ $rf['ax']['val'] }}">
                                                             <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
                                                             <i class="bi bi-chevron-down pg-inp-chevron"></i>
                                                         </div>
@@ -3434,8 +3449,8 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         }
 
         document.querySelectorAll('.pg-inp').forEach(inp => {
-            inp.addEventListener('focus', function () { if (this.dataset.noDrop) return; activePgInp = this; renderPdd(''); });
-            inp.addEventListener('input', function () { if (this.dataset.noDrop) return; activePgInp = this; renderPdd(); });
+            inp.addEventListener('focus', function () { if (this.dataset.noDrop || this.dataset.axisPicker) return; activePgInp = this; renderPdd(''); });
+            inp.addEventListener('input', function () { if (this.dataset.noDrop || this.dataset.axisPicker) return; activePgInp = this; renderPdd(); });
             inp.addEventListener('blur', function () {
                 const hidden = this.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]');
                 if (hidden) { hidden.value = this.value; }
@@ -3578,7 +3593,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         function syncAxisForCyl(cylInp, cylVal) {
             const td      = cylInp.closest('td');
             const axisTd  = td?.nextElementSibling;
-            const axisInp = axisTd?.querySelector('.pg-inp[data-master="axis"]');
+            const axisInp = axisTd?.querySelector('.axis-disp');
             const axisHid = axisTd?.querySelector('input[type="hidden"]');
             if (!axisInp) return;
 
@@ -3678,6 +3693,84 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (!hid) return;
             const cylInp = hid.closest('.pg-select-wrap')?.querySelector('.pg-inp');
             if (cylInp) syncAxisForCyl(cylInp, hid.value);
+        });
+    })();
+
+    // ── Axis Picker Modal ─────────────────────────────────────────────────────
+    (function () {
+        let axisPickTarget    = null;
+        let axisParentModalEl = null;
+
+        const grid       = document.getElementById('axisPickerGrid');
+        const axisValues = [5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125,130,135,140,145,150,155,160,165,170,175,180];
+
+        function buildGrid(currentVal) {
+            grid.innerHTML = '';
+            axisValues.forEach(function (v) {
+                const btn      = document.createElement('button');
+                btn.type       = 'button';
+                btn.className  = 'axis-picker-btn';
+                btn.textContent = v + '°';
+                btn.dataset.val = String(v);
+                const isSel    = String(currentVal) === String(v);
+                btn.style.cssText = 'width:100%;padding:10px 4px;font-size:13px;font-weight:700;border-radius:8px;border:2px solid #1B4F72'
+                    + ';background:' + (isSel ? '#fff' : '#1B4F72')
+                    + ';color:' + (isSel ? '#1B4F72' : '#fff') + ';cursor:pointer;transition:background .12s,color .12s,border-color .12s;';
+                grid.appendChild(btn);
+            });
+        }
+
+        function openAxisPicker(inp) {
+            axisPickTarget = {
+                inp: inp,
+                hid: inp.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]'),
+            };
+            buildGrid(String(inp.value || '').trim().replace('°', ''));
+
+            axisParentModalEl   = inp.closest('.modal');
+            const pickerModalEl = document.getElementById('modalAxisPicker');
+            const pickerModal   = bootstrap.Modal.getOrCreateInstance(pickerModalEl);
+
+            if (axisParentModalEl) {
+                axisParentModalEl.addEventListener('hidden.bs.modal', function () { pickerModal.show(); }, { once: true });
+                bootstrap.Modal.getInstance(axisParentModalEl)?.hide();
+            } else {
+                pickerModal.show();
+            }
+        }
+
+        function applyAxisVal(val) {
+            if (!axisPickTarget) return;
+            axisPickTarget.inp.value = val;
+            if (axisPickTarget.hid) axisPickTarget.hid.value = val;
+
+            if (axisPickTarget.hid?.name) {
+                const axM = axisPickTarget.hid.name.match(/^exam_data\[st\]\[(re|le)\]\[ax\]$/);
+                if (axM && typeof window.syncStNearFromDist === 'function') window.syncStNearFromDist(axM[1]);
+            }
+            if (typeof checkProgress     === 'function') checkProgress();
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+        }
+
+        grid.addEventListener('click', function (e) {
+            const btn = e.target.closest('.axis-picker-btn');
+            if (!btn) return;
+            applyAxisVal(btn.dataset.val);
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAxisPicker')).hide();
+        });
+
+        document.getElementById('modalAxisPicker').addEventListener('hidden.bs.modal', function () {
+            if (axisParentModalEl) {
+                bootstrap.Modal.getOrCreateInstance(axisParentModalEl).show();
+            }
+        });
+
+        document.addEventListener('click', function (e) {
+            const inp = e.target.closest('.axis-disp[data-axis-picker]');
+            if (inp && !inp.disabled) {
+                e.preventDefault();
+                openAxisPicker(inp);
+            }
         });
     })();
 

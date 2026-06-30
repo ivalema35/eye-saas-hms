@@ -391,7 +391,7 @@
                             @forelse($hospitals as $i => $hospital)
                                 @php $reqInfo = $requestMap[$hospital->id] ?? null; @endphp
                                 <tr>
-                                    <td>{{ $i + 1 }}</td>
+                                    <td>{{ $hospitals->firstItem() + $i }}</td>
                                     <td>
                                         @if($hospital->logo_path)
                                             <img src="{{ asset('storage/' . $hospital->logo_path) }}" alt="{{ $hospital->name }}" class="hosp-logo">
@@ -582,6 +582,7 @@
                                     <td class="d-flex gap-2 justify-content-center">
                                         <form method="POST" action="{{ route('hospital.hospital.share.accept', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf
+                                            <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm fw-bold"
                                                 style="background:#16a34a;color:#fff;border-radius:8px;min-width:80px;">
                                                 <i class="bi bi-check-lg me-1"></i>Accept
@@ -589,6 +590,7 @@
                                         </form>
                                         <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf @method('DELETE')
+                                            <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
                                                 style="border-radius:8px;min-width:80px;"
                                                 onclick="return confirm('Request remove karna chahte ho?')">
@@ -659,6 +661,7 @@
                                         @endif
                                         <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf @method('DELETE')
+                                            <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
                                                 style="border-radius:8px;"
                                                 onclick="return confirm('Remove karna chahte ho?')">
