@@ -1,5 +1,5 @@
 @extends('hospital.layouts.app')
-@section('title', 'Secondary Examination - '.$patient->full_name)
+@section('title', 'Secondary Examination - ' . $patient->full_name)
 @section('page-header', 'Secondary Eye Examination')
 
 @section('page-actions')
@@ -478,25 +478,25 @@
 @endhaspermission
 
 @php
-    $ed = old('exam_data', $ed ?? ($exam?->exam_data ?? []));
-    $vision = $ed['vision'] ?? [];
-    $pg = $ed['pg'] ?? [];
-    $st = $ed['st'] ?? [];
-    $nct = $ed['nct'] ?? [];
-    $oe = $ed['oe'] ?? [];
-    $fundus = $ed['fundus'] ?? [];
+$ed = old('exam_data', $ed ?? ($exam?->exam_data ?? []));
+$vision = $ed['vision'] ?? [];
+$pg = $ed['pg'] ?? [];
+$st = $ed['st'] ?? [];
+$nct = $ed['nct'] ?? [];
+$oe = $ed['oe'] ?? [];
+$fundus = $ed['fundus'] ?? [];
 
-    $sinceRaw = old('exam_data.complaint_duration', $ed['complaint_duration'] ?? '');
-    preg_match('/^(\d+)\s*(Days?|Weeks?|Months?|Years?)$/i', $sinceRaw, $sinceMatch);
-    $sinceNumber = $sinceMatch[1] ?? '';
-    $sinceUnit = isset($sinceMatch[2]) ? ucfirst(strtolower($sinceMatch[2])) : 'Days';
-    $sinceUnit = rtrim($sinceUnit, 's').'s';
+$sinceRaw = old('exam_data.complaint_duration', $ed['complaint_duration'] ?? '');
+preg_match('/^(\d+)\s*(Days?|Weeks?|Months?|Years?)$/i', $sinceRaw, $sinceMatch);
+$sinceNumber = $sinceMatch[1] ?? '';
+$sinceUnit = isset($sinceMatch[2]) ? ucfirst(strtolower($sinceMatch[2])) : 'Days';
+$sinceUnit = rtrim($sinceUnit, 's') . 's';
 
-    $initialMedicines = collect(old('medicines', ($initialMedicines ?? collect())->toArray()));
+$initialMedicines = collect(old('medicines', ($initialMedicines ?? collect())->toArray()));
 @endphp
 
 @php
-    $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
+$isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
 @endphp
 
 
@@ -545,24 +545,24 @@
         </style>
 
         @php
-            $sWGreen    = (int) hospital_setting('wait_green_max',    30);
-            $sWOrange   = (int) hospital_setting('wait_orange_max',   60);
-            $sWRed      = (int) hospital_setting('wait_red_max',     120);
-            $sWDGreen   = (int) hospital_setting('wait_d_green_max',  40);
-            $sWDOrange  = (int) hospital_setting('wait_d_orange_max', 90);
-            $sWDRed     = (int) hospital_setting('wait_d_red_max',   120);
-            $sWNdGreen  = (int) hospital_setting('wait_nd_green_max',  20);
-            $sWNdOrange = (int) hospital_setting('wait_nd_orange_max', 45);
-            $sWNdRed    = (int) hospital_setting('wait_nd_red_max',    90);
-            $sRMins     = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
-            $sRCls      = $sRMins < $sWGreen ? 'wait-green' : ($sRMins < $sWOrange ? 'wait-orange' : ($sRMins < $sWRed ? 'wait-red' : 'wait-fire'));
-            $sRFmt      = $sRMins < 60 ? $sRMins.'m' : floor($sRMins/60).'h'.($sRMins%60 > 0 ? ' '.($sRMins%60).'m' : '');
-            $sPExam2    = $patient->primaryExamination ?? null;
-            $sIsDil2    = $sPExam2 && ($sPExam2->exam_data['dilate'] ?? 'No') === 'Yes';
-            $sPrimeMins2 = $sPExam2 ? (int) \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
-            $sPrimeFmt2  = $sPrimeMins2 < 60 ? $sPrimeMins2.'m' : floor($sPrimeMins2/60).'h'.($sPrimeMins2%60 > 0 ? ' '.($sPrimeMins2%60).'m' : '');
-            $sDClass2   = $sPrimeMins2 < $sWDGreen  ? 'wait-green' : ($sPrimeMins2 < $sWDOrange  ? 'wait-orange' : ($sPrimeMins2 < $sWDRed  ? 'wait-red' : 'wait-fire'));
-            $sNdClass2  = $sPrimeMins2 < $sWNdGreen ? 'wait-green' : ($sPrimeMins2 < $sWNdOrange ? 'wait-orange' : ($sPrimeMins2 < $sWNdRed ? 'wait-red' : 'wait-fire'));
+    $sWGreen = (int) hospital_setting('wait_green_max', 30);
+    $sWOrange = (int) hospital_setting('wait_orange_max', 60);
+    $sWRed = (int) hospital_setting('wait_red_max', 120);
+    $sWDGreen = (int) hospital_setting('wait_d_green_max', 40);
+    $sWDOrange = (int) hospital_setting('wait_d_orange_max', 90);
+    $sWDRed = (int) hospital_setting('wait_d_red_max', 120);
+    $sWNdGreen = (int) hospital_setting('wait_nd_green_max', 20);
+    $sWNdOrange = (int) hospital_setting('wait_nd_orange_max', 45);
+    $sWNdRed = (int) hospital_setting('wait_nd_red_max', 90);
+    $sRMins = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+    $sRCls = $sRMins < $sWGreen ? 'wait-green' : ($sRMins < $sWOrange ? 'wait-orange' : ($sRMins < $sWRed ? 'wait-red' : 'wait-fire'));
+    $sRFmt = $sRMins < 60 ? $sRMins . 'm' : floor($sRMins / 60) . 'h' . ($sRMins % 60 > 0 ? ' ' . ($sRMins % 60) . 'm' : '');
+    $sPExam2 = $patient->primaryExamination ?? null;
+    $sIsDil2 = $sPExam2 && ($sPExam2->exam_data['dilate'] ?? 'No') === 'Yes';
+    $sPrimeMins2 = $sPExam2 ? (int) \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+    $sPrimeFmt2 = $sPrimeMins2 < 60 ? $sPrimeMins2 . 'm' : floor($sPrimeMins2 / 60) . 'h' . ($sPrimeMins2 % 60 > 0 ? ' ' . ($sPrimeMins2 % 60) . 'm' : '');
+    $sDClass2 = $sPrimeMins2 < $sWDGreen ? 'wait-green' : ($sPrimeMins2 < $sWDOrange ? 'wait-orange' : ($sPrimeMins2 < $sWDRed ? 'wait-red' : 'wait-fire'));
+    $sNdClass2 = $sPrimeMins2 < $sWNdGreen ? 'wait-green' : ($sPrimeMins2 < $sWNdOrange ? 'wait-orange' : ($sPrimeMins2 < $sWNdRed ? 'wait-red' : 'wait-fire'));
         @endphp
         {{-- Patient Info Bar --}}
         <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
@@ -679,24 +679,24 @@
         </div>
     @else
         @php
-            $sWGreen    = (int) hospital_setting('wait_green_max',    30);
-            $sWOrange   = (int) hospital_setting('wait_orange_max',   60);
-            $sWRed      = (int) hospital_setting('wait_red_max',     120);
-            $sWDGreen   = (int) hospital_setting('wait_d_green_max',  40);
-            $sWDOrange  = (int) hospital_setting('wait_d_orange_max', 90);
-            $sWDRed     = (int) hospital_setting('wait_d_red_max',   120);
-            $sWNdGreen  = (int) hospital_setting('wait_nd_green_max',  20);
-            $sWNdOrange = (int) hospital_setting('wait_nd_orange_max', 45);
-            $sWNdRed    = (int) hospital_setting('wait_nd_red_max',    90);
-            $sRMins     = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
-            $sRCls      = $sRMins < $sWGreen ? 'wait-green' : ($sRMins < $sWOrange ? 'wait-orange' : ($sRMins < $sWRed ? 'wait-red' : 'wait-fire'));
-            $sRFmt      = $sRMins < 60 ? $sRMins.'m' : floor($sRMins/60).'h'.($sRMins%60 > 0 ? ' '.($sRMins%60).'m' : '');
-            $sPExam2    = $patient->primaryExamination ?? null;
-            $sIsDil2    = $sPExam2 && ($sPExam2->exam_data['dilate'] ?? 'No') === 'Yes';
-            $sPrimeMins2 = $sPExam2 ? (int) \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
-            $sPrimeFmt2  = $sPrimeMins2 < 60 ? $sPrimeMins2.'m' : floor($sPrimeMins2/60).'h'.($sPrimeMins2%60 > 0 ? ' '.($sPrimeMins2%60).'m' : '');
-            $sDClass2   = $sPrimeMins2 < $sWDGreen  ? 'wait-green' : ($sPrimeMins2 < $sWDOrange  ? 'wait-orange' : ($sPrimeMins2 < $sWDRed  ? 'wait-red' : 'wait-fire'));
-            $sNdClass2  = $sPrimeMins2 < $sWNdGreen ? 'wait-green' : ($sPrimeMins2 < $sWNdOrange ? 'wait-orange' : ($sPrimeMins2 < $sWNdRed ? 'wait-red' : 'wait-fire'));
+    $sWGreen = (int) hospital_setting('wait_green_max', 30);
+    $sWOrange = (int) hospital_setting('wait_orange_max', 60);
+    $sWRed = (int) hospital_setting('wait_red_max', 120);
+    $sWDGreen = (int) hospital_setting('wait_d_green_max', 40);
+    $sWDOrange = (int) hospital_setting('wait_d_orange_max', 90);
+    $sWDRed = (int) hospital_setting('wait_d_red_max', 120);
+    $sWNdGreen = (int) hospital_setting('wait_nd_green_max', 20);
+    $sWNdOrange = (int) hospital_setting('wait_nd_orange_max', 45);
+    $sWNdRed = (int) hospital_setting('wait_nd_red_max', 90);
+    $sRMins = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
+    $sRCls = $sRMins < $sWGreen ? 'wait-green' : ($sRMins < $sWOrange ? 'wait-orange' : ($sRMins < $sWRed ? 'wait-red' : 'wait-fire'));
+    $sRFmt = $sRMins < 60 ? $sRMins . 'm' : floor($sRMins / 60) . 'h' . ($sRMins % 60 > 0 ? ' ' . ($sRMins % 60) . 'm' : '');
+    $sPExam2 = $patient->primaryExamination ?? null;
+    $sIsDil2 = $sPExam2 && ($sPExam2->exam_data['dilate'] ?? 'No') === 'Yes';
+    $sPrimeMins2 = $sPExam2 ? (int) \Carbon\Carbon::parse($sPExam2->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
+    $sPrimeFmt2 = $sPrimeMins2 < 60 ? $sPrimeMins2 . 'm' : floor($sPrimeMins2 / 60) . 'h' . ($sPrimeMins2 % 60 > 0 ? ' ' . ($sPrimeMins2 % 60) . 'm' : '');
+    $sDClass2 = $sPrimeMins2 < $sWDGreen ? 'wait-green' : ($sPrimeMins2 < $sWDOrange ? 'wait-orange' : ($sPrimeMins2 < $sWDRed ? 'wait-red' : 'wait-fire'));
+    $sNdClass2 = $sPrimeMins2 < $sWNdGreen ? 'wait-green' : ($sPrimeMins2 < $sWNdOrange ? 'wait-orange' : ($sPrimeMins2 < $sWNdRed ? 'wait-red' : 'wait-fire'));
         @endphp
         {{-- Patient Info Bar --}}
         <div class="d-print-none mb-2 px-3 py-2 rounded border d-flex flex-wrap align-items-center gap-3"
@@ -924,14 +924,14 @@
                                     <td>
                                         <select name="exam_data[co_rows][{{ $ri }}][since]" class="form-select form-select-sm">
                                             <option value="">-</option>
-                                            @foreach(range(1,10) as $n)
+                                            @foreach(range(1, 10) as $n)
                                                 <option value="{{ $n }}" {{ ($row['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="exam_data[co_rows][{{ $ri }}][unit]" class="form-select form-select-sm">
-                                            @foreach(['Days','Weeks','Months','Years','Longtime'] as $u)
+                                            @foreach(['Days', 'Weeks', 'Months', 'Years', 'Longtime'] as $u)
                                                 <option value="{{ $u }}" {{ ($row['unit'] ?? 'Days') === $u ? 'selected' : '' }}>{{ $u }}</option>
                                             @endforeach
                                         </select>
@@ -939,7 +939,7 @@
                                     <td>
                                         <select name="exam_data[co_rows][{{ $ri }}][eye]" class="form-select form-select-sm">
                                             <option value="">-</option>
-                                            @foreach(['RE'=>'Right','LE'=>'Left','Both'=>'Both','OU'=>'OU'] as $val => $lbl)
+                                            @foreach(['RE' => 'Right', 'LE' => 'Left', 'Both' => 'Both', 'OU' => 'OU'] as $val => $lbl)
                                                 <option value="{{ $val }}" {{ ($row['eye'] ?? '') === $val ? 'selected' : '' }}>{{ $lbl }}</option>
                                             @endforeach
                                         </select>
@@ -1001,14 +1001,14 @@
                                     <td>
                                         <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
                                             <option value="">-</option>
-                                            @foreach(range(1,10) as $n)
+                                            @foreach(range(1, 10) as $n)
                                                 <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
                                             @endforeach
                                         </select>
                                     </td>
                                     <td>
                                         <select name="exam_data[kco_rows][{{ $ki }}][unit]" class="form-select form-select-sm">
-                                            @foreach(['Days','Weeks','Months','Years','Longtime'] as $u)
+                                            @foreach(['Days', 'Weeks', 'Months', 'Years', 'Longtime'] as $u)
                                                 <option value="{{ $u }}" {{ ($krow['unit'] ?? 'Years') === $u ? 'selected' : '' }}>{{ $u }}</option>
                                             @endforeach
                                         </select>
@@ -1068,11 +1068,11 @@
                 <div class="modal-body p-3">
 
                     @php
-                        $vnCols = [
-                            ['abbr' => 'VN',   'full' => 'Distance Vision', 'master' => 'vn',   'field_re' => 'vn_re',   'field_le' => 'vn_le'],
-                            ['abbr' => 'PnVn', 'full' => 'Pinhole',         'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
-                            ['abbr' => 'NrVn', 'full' => 'Near Vision',     'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
-                        ];
+$vnCols = [
+    ['abbr' => 'VN', 'full' => 'Distance Vision', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
+    ['abbr' => 'PnVn', 'full' => 'Pinhole', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
+    ['abbr' => 'NrVn', 'full' => 'Near Vision', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
+];
                     @endphp
 
                     @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
@@ -1138,30 +1138,30 @@
                 </div>
                 <div class="modal-body p-3">
                     @php
-                        $pgMasterOpts = [
-                            'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
-                            'axis' => collect($masters['axis'])->map(fn ($o) => ltrim(trim($o->value), '+-'))->reject(fn ($v) => $v === '')->unique()->values()->all(),
-                            'vn'   => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
-                            'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
-                        ];
+$pgMasterOpts = [
+    'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
+    'axis' => collect($masters['axis'])->map(fn($o) => ltrim(trim($o->value), '+-'))->reject(fn($v) => $v === '')->unique()->values()->all(),
+    'vn' => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
+    'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
+];
                     @endphp
 
                     @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
                     @php
-                        $pgRows = [
-                            'DISTANCE' => [
-                                'sph' => ['key' => 'ds',      'val' => $pg[$eye]['ds']      ?? ''],
-                                'cyl' => ['key' => 'dc',      'val' => $pg[$eye]['dc']      ?? ''],
-                                'ax'  => ['key' => 'ax',      'val' => $pg[$eye]['ax']      ?? ''],
-                                'vn'  => ['key' => 'vn',      'val' => $pg[$eye]['vn']      ?? '', 'master' => 'vn'],
-                            ],
-                            'NEAR' => [
-                                'sph' => ['key' => 'ns',      'val' => $pg[$eye]['ns']      ?? ''],
-                                'cyl' => ['key' => 'nc',      'val' => $pg[$eye]['nc']      ?? ''],
-                                'ax'  => ['key' => 'na',      'val' => $pg[$eye]['na']      ?? ''],
-                                'vn'  => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
-                            ],
-                        ];
+    $pgRows = [
+        'DISTANCE' => [
+            'sph' => ['key' => 'ds', 'val' => $pg[$eye]['ds'] ?? ''],
+            'cyl' => ['key' => 'dc', 'val' => $pg[$eye]['dc'] ?? ''],
+            'ax' => ['key' => 'ax', 'val' => $pg[$eye]['ax'] ?? ''],
+            'vn' => ['key' => 'vn', 'val' => $pg[$eye]['vn'] ?? '', 'master' => 'vn'],
+        ],
+        'NEAR' => [
+            'sph' => ['key' => 'ns', 'val' => $pg[$eye]['ns'] ?? ''],
+            'cyl' => ['key' => 'nc', 'val' => $pg[$eye]['nc'] ?? ''],
+            'ax' => ['key' => 'na', 'val' => $pg[$eye]['na'] ?? ''],
+            'vn' => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+        ],
+    ];
                     @endphp
                     <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
@@ -1287,20 +1287,20 @@
 
                     @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
                     @php
-                        $stRows = [
-                            'DISTANCE' => [
-                                'sph' => ['key' => 'ds',      'val' => $st[$eye]['ds']      ?? ''],
-                                'cyl' => ['key' => 'dc',      'val' => $st[$eye]['dc']      ?? ''],
-                                'ax'  => ['key' => 'ax',      'val' => $st[$eye]['ax']      ?? ''],
-                                'vn'  => ['key' => 'vn',      'val' => $st[$eye]['vn']      ?? '', 'master' => 'vn'],
-                            ],
-                            'NEAR' => [
-                                'sph' => ['key' => 'ns',      'val' => $st[$eye]['ns']      ?? ''],
-                                'cyl' => ['key' => 'nc',      'val' => $st[$eye]['nc']      ?? ''],
-                                'ax'  => ['key' => 'na',      'val' => $st[$eye]['na']      ?? ''],
-                                'vn'  => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
-                            ],
-                        ];
+    $stRows = [
+        'DISTANCE' => [
+            'sph' => ['key' => 'ds', 'val' => $st[$eye]['ds'] ?? ''],
+            'cyl' => ['key' => 'dc', 'val' => $st[$eye]['dc'] ?? ''],
+            'ax' => ['key' => 'ax', 'val' => $st[$eye]['ax'] ?? ''],
+            'vn' => ['key' => 'vn', 'val' => $st[$eye]['vn'] ?? '', 'master' => 'vn'],
+        ],
+        'NEAR' => [
+            'sph' => ['key' => 'ns', 'val' => $st[$eye]['ns'] ?? ''],
+            'cyl' => ['key' => 'nc', 'val' => $st[$eye]['nc'] ?? ''],
+            'ax' => ['key' => 'na', 'val' => $st[$eye]['na'] ?? ''],
+            'vn' => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+        ],
+    ];
                     @endphp
                     <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
@@ -1336,12 +1336,14 @@
                                         </td>
                                         @else
                                         @php
-                                            $stAddVal = old('exam_data.st.'.$eye.'.add', $st[$eye]['add'] ?? '');
-                                            $stNsVal  = old('exam_data.st.'.$eye.'.ns',  $st[$eye]['ns']  ?? '');
+            $stAddVal = old('exam_data.st.' . $eye . '.add', $st[$eye]['add'] ?? '');
+            $stNsVal = old('exam_data.st.' . $eye . '.ns', $st[$eye]['ns'] ?? '');
                                         @endphp
                                         <td class="text-center py-2">
                                             <div class="d-flex align-items-center justify-content-center gap-1">
+                                                @if(!($eye == 're' && $rowLabel == 'NEAR'))
                                                 <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                @endif
                                                 <div class="pg-select-wrap" style="width:88px;">
                                                     <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $stNsVal }}">
                                                     <input type="hidden" name="exam_data[st][{{ $eye }}][add]" value="{{ $stAddVal }}">
@@ -1415,12 +1417,12 @@
                     <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:#fafbfc;">
                         <div class="d-flex flex-wrap gap-4">
                             @foreach([
-                                'bifocal'       => 'Bifocal',
-                                'nd_separate'   => 'Near & Distance Separate',
-                                'progressive'   => 'Progressive',
-                                'computer_uses' => 'Computer Uses',
-                            ] as $cbKey => $cbLabel)
-                            @php $cbVal = old('exam_data.st.'.$cbKey, $st[$cbKey] ?? false); @endphp
+    'bifocal' => 'Bifocal',
+    'nd_separate' => 'Near & Distance Separate',
+    'progressive' => 'Progressive',
+    'computer_uses' => 'Computer Uses',
+] as $cbKey => $cbLabel)
+                            @php $cbVal = old('exam_data.st.' . $cbKey, $st[$cbKey] ?? false); @endphp
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>
                                 <label class="form-check-label fw-semibold" for="st_{{ $cbKey }}" style="font-size:13px;color:#334155;">{{ $cbLabel }}</label>
@@ -1470,7 +1472,7 @@
                                             <div style="font-size:11px;color:#94a3b8;font-weight:500;">mmHg</div>
                                         </td>
                                         @foreach(['re', 'le'] as $eye)
-                                        @php $sv = old('exam_data.nct.iop_'.$eye, $nct['iop_'.$eye] ?? ''); @endphp
+                                        @php $sv = old('exam_data.nct.iop_' . $eye, $nct['iop_' . $eye] ?? ''); @endphp
                                         <td class="text-center py-3">
                                             <div class="nct-select-wrap" style="max-width:160px;margin:auto;">
                                                 <input type="text" class="form-control form-control-sm nct-inp text-center fw-semibold"
@@ -1526,28 +1528,28 @@
                 </div>
                 <div class="modal-body p-3">
                     @php
-                        $oeFieldMeta = [
-                            'sac'       => ['label' => 'SAC',       'full' => 'Sac',              'master' => 'sac',         'fav' => 'sac'],
-                            'lid'       => ['label' => 'LID',       'full' => 'Lid',              'master' => 'lid',         'fav' => 'lid'],
-                            'conj'      => ['label' => 'CONJ',      'full' => 'Conjunctiva',      'master' => 'conj',        'fav' => 'conj'],
-                            'cornea'    => ['label' => 'CORNEA',    'full' => 'Cornea',           'master' => 'cornea',      'fav' => 'cornea'],
-                            'ac'        => ['label' => 'AC',        'full' => 'Anterior Chamber', 'master' => 'ac',          'fav' => 'ac'],
-                            'iris'      => ['label' => 'IRIS',      'full' => 'Iris',             'master' => 'iris',        'fav' => 'iris'],
-                            'pupil'     => ['label' => 'PUPIL',     'full' => 'Pupil',            'master' => 'pupil',       'fav' => 'pupil'],
-                            'lens'      => ['label' => 'LENS',      'full' => 'Lens',             'master' => 'lens_master', 'fav' => 'lens'],
-                            'em'        => ['label' => 'EM',        'full' => 'Extraocular Mov.', 'master' => 'em',          'fav' => 'em'],
-                            'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test',       'master' => 'covertest',   'fav' => 'covertest'],
-                        ];
-                        $oeMasterData = [];
-                        foreach ($oeFieldMeta as $meta) {
-                            if (! isset($oeMasterData[$meta['master']])) {
-                                $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn ($o) => [
-                                    'id'           => $o->id,
-                                    'value'        => $o->value,
-                                    'is_favourite' => (bool) ($o->is_favourite ?? false),
-                                ])->values()->all();
-                            }
-                        }
+$oeFieldMeta = [
+    'sac' => ['label' => 'SAC', 'full' => 'Sac', 'master' => 'sac', 'fav' => 'sac'],
+    'lid' => ['label' => 'LID', 'full' => 'Lid', 'master' => 'lid', 'fav' => 'lid'],
+    'conj' => ['label' => 'CONJ', 'full' => 'Conjunctiva', 'master' => 'conj', 'fav' => 'conj'],
+    'cornea' => ['label' => 'CORNEA', 'full' => 'Cornea', 'master' => 'cornea', 'fav' => 'cornea'],
+    'ac' => ['label' => 'AC', 'full' => 'Anterior Chamber', 'master' => 'ac', 'fav' => 'ac'],
+    'iris' => ['label' => 'IRIS', 'full' => 'Iris', 'master' => 'iris', 'fav' => 'iris'],
+    'pupil' => ['label' => 'PUPIL', 'full' => 'Pupil', 'master' => 'pupil', 'fav' => 'pupil'],
+    'lens' => ['label' => 'LENS', 'full' => 'Lens', 'master' => 'lens_master', 'fav' => 'lens'],
+    'em' => ['label' => 'EM', 'full' => 'Extraocular Mov.', 'master' => 'em', 'fav' => 'em'],
+    'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test', 'master' => 'covertest', 'fav' => 'covertest'],
+];
+$oeMasterData = [];
+foreach ($oeFieldMeta as $meta) {
+    if (!isset($oeMasterData[$meta['master']])) {
+        $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn($o) => [
+            'id' => $o->id,
+            'value' => $o->value,
+            'is_favourite' => (bool) ($o->is_favourite ?? false),
+        ])->values()->all();
+    }
+}
                     @endphp
                     <div class="rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="table-responsive">
@@ -1567,7 +1569,7 @@
                                             <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">{{ $meta['full'] }}</div>
                                         </td>
                                         @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
-                                        @php $sv = old('exam_data.oe.'.$key.'_'.$eye, $oe[$key.'_'.$eye] ?? ''); @endphp
+                                        @php $sv = old('exam_data.oe.' . $key . '_' . $eye, $oe[$key . '_' . $eye] ?? ''); @endphp
                                         <td class="{{ $cellCls }} py-2 px-3">
                                             <div class="oe-select-wrap">
                                                 <input type="text" class="form-control form-control-sm oe-inp"
@@ -1580,7 +1582,7 @@
                                                 <i class="bi bi-chevron-down oe-inp-chevron"></i>
                                             </div>
                                             @if($key === 'lens')
-                                            @php $pseudo = old('exam_data.oe.pseudophakia_'.$eye, $oe['pseudophakia_'.$eye] ?? []); @endphp
+                                            @php $pseudo = old('exam_data.oe.pseudophakia_' . $eye, $oe['pseudophakia_' . $eye] ?? []); @endphp
                                             <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_type]" value="{{ $pseudo['operation_type'] ?? '' }}" class="pseudo-op-type" data-eye="{{ $eye }}">
                                             <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][operation_expense]" value="{{ $pseudo['operation_expense'] ?? '' }}" class="pseudo-op-expense" data-eye="{{ $eye }}">
                                             <input type="hidden" name="exam_data[oe][pseudophakia_{{ $eye }}][hospital_name]" value="{{ $pseudo['hospital_name'] ?? '' }}" class="pseudo-hospital" data-eye="{{ $eye }}">
@@ -1598,7 +1600,7 @@
                                         @foreach(['re' => ['cls' => 'oe-cell-re', 'ph' => 'Right eye findings...'], 'le' => ['cls' => 'oe-cell-le', 'ph' => 'Left eye findings...']] as $eye => $em)
                                         <td class="{{ $em['cls'] }} py-2 px-3">
                                             <input type="text" name="exam_data[oe][other_{{ $eye }}]"
-                                                value="{{ old('exam_data.oe.other_'.$eye, $oe['other_'.$eye] ?? '') }}"
+                                                value="{{ old('exam_data.oe.other_' . $eye, $oe['other_' . $eye] ?? '') }}"
                                                 class="form-control form-control-sm exam-plain-inp"
                                                 style="border-color:#1B4F72;"
                                                 placeholder="{{ $em['ph'] }}" autocomplete="off">
@@ -1671,67 +1673,52 @@
                 </div>
                 <div class="modal-body p-3">
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
-                    <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
-                        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
-                            <i class="bi bi-eye-fill text-white"></i>
-                            <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                    <div class="row g-3">
+                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                        <div class="col-md-6">
+                            <div class="rounded-3 overflow-hidden h-100" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
+                                <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
+                                    <i class="bi bi-eye-fill text-white"></i>
+                                    <span class="fw-semibold text-white" style="font-size:14px;">{{ $eyeLabel }}</span>
+                                </div>
+                                <div class="p-3">
+                                    <div class="mb-3">
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">DISC <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">CDR / Appearance</span></label>
+                                        <div class="fundus-dd-wrap" style="position:relative;">
+                                            <input type="text" class="form-control form-control-sm fundus-dd-inp"
+                                                placeholder="Search or select..." autocomplete="off"
+                                                data-dd-type="disc"
+                                                value="{{ $fundus['disc_' . $eye] ?? '' }}"
+                                                style="padding-right:28px;border-color:#1B4F72;">
+                                            <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
+                                            <input type="hidden" name="exam_data[fundus][disc_{{ $eye }}]" value="{{ $fundus['disc_' . $eye] ?? '' }}">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">FR <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">Foveal Reflex</span></label>
+                                        <div class="fundus-dd-wrap" style="position:relative;">
+                                            <input type="text" class="form-control form-control-sm fundus-dd-inp"
+                                                placeholder="Search or select..." autocomplete="off"
+                                                data-dd-type="fr"
+                                                value="{{ $fundus['fr_' . $eye] ?? '' }}"
+                                                style="padding-right:28px;border-color:#1B4F72;">
+                                            <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
+                                            <input type="hidden" name="exam_data[fundus][fr_{{ $eye }}]" value="{{ $fundus['fr_' . $eye] ?? '' }}">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">COMMENT <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">Additional findings</span></label>
+                                        <textarea name="exam_data[fundus][comment_{{ $eye }}]"
+                                            class="form-control form-control-sm"
+                                            rows="3"
+                                            placeholder="{{ $eyeLabel }} findings / notes..."
+                                            style="resize:none;border-color:#1B4F72;font-size:12px;">{{ old('exam_data.fundus.comment_' . $eye, $fundus['comment_' . $eye] ?? '') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle mb-0" style="font-size:13px;">
-                                <thead style="background:#f0f4f8;">
-                                    <tr>
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            Disc
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">CDR / Appearance</div>
-                                        </th>
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            FR
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">Foveal Reflex</div>
-                                        </th>
-                                        <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
-                                            Comment
-                                            <div style="font-size:10px;font-weight:500;color:#64748b;letter-spacing:.03em;text-transform:none;margin-top:1px;">Additional findings</div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr style="background:white;">
-                                        <td class="text-center py-2 px-3">
-                                            <div class="fundus-dd-wrap" style="position:relative;max-width:200px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm fundus-dd-inp text-center"
-                                                    placeholder="Search or select..." autocomplete="off"
-                                                    data-dd-type="disc"
-                                                    value="{{ $fundus['disc_'.$eye] ?? '' }}"
-                                                    style="padding-right:24px;border-color:#1B4F72;">
-                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
-                                                <input type="hidden" name="exam_data[fundus][disc_{{ $eye }}]" value="{{ $fundus['disc_'.$eye] ?? '' }}">
-                                            </div>
-                                        </td>
-                                        <td class="text-center py-2 px-3">
-                                            <div class="fundus-dd-wrap" style="position:relative;max-width:200px;margin:auto;">
-                                                <input type="text" class="form-control form-control-sm fundus-dd-inp text-center"
-                                                    placeholder="Search or select..." autocomplete="off"
-                                                    data-dd-type="fr"
-                                                    value="{{ $fundus['fr_'.$eye] ?? '' }}"
-                                                    style="padding-right:24px;border-color:#1B4F72;">
-                                                <i class="bi bi-chevron-down" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);color:#1B4F72;pointer-events:none;font-size:11px;"></i>
-                                                <input type="hidden" name="exam_data[fundus][fr_{{ $eye }}]" value="{{ $fundus['fr_'.$eye] ?? '' }}">
-                                            </div>
-                                        </td>
-                                        <td class="py-2 px-3" style="vertical-align:top;">
-                                            <textarea name="exam_data[fundus][comment_{{ $eye }}]"
-                                                class="form-control form-control-sm"
-                                                rows="2"
-                                                placeholder="{{ $eyeLabel }} findings / notes..."
-                                                style="resize:none;border-color:#1B4F72;font-size:12px;">{{ old('exam_data.fundus.comment_'.$eye, $fundus['comment_'.$eye] ?? '') }}</textarea>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        @endforeach
                     </div>
-                    @endforeach
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
@@ -1766,16 +1753,17 @@
                     </div>
                     <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
                         @php
-                            $dxGroupCount  = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
-                            $dxAdviceCount = [];
-                            foreach ($masters['advices'] as $_a) {
-                                foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
-                                    $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
-                                }
-                            }
+$dxGroupCount = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
+$dxAdviceCount = [];
+foreach ($masters['advices'] as $_a) {
+    foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
+        $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
+    }
+}
                         @endphp
                         @foreach($masters['diagnoses'] as $d)
-                            @php $gc = $dxGroupCount[$d->id] ?? 0; $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
+                            @php $gc = $dxGroupCount[$d->id] ?? 0;
+    $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
                             <div class="dx-tag-wrap">
                                 <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}" data-name="{{ $d->diagnosis }}"
                                     {{ in_array($d->id, $ed['diagnoses'] ?? []) ? 'checked' : '' }}>
@@ -1937,9 +1925,9 @@
 
     {{-- MODAL: Advice --}}
     @php
-        $favAdvices    = collect($masters['advices'] ?? [])->filter(fn($a) =>  $a->is_favourite && ($a->advice ?? ''))->values();
-        $nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values();
-        $allAdvices    = collect($masters['advices'] ?? [])->filter(fn($a) => ($a->advice ?? ''))->values();
+$favAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => $a->is_favourite && ($a->advice ?? ''))->values();
+$nonFavAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => !$a->is_favourite && ($a->advice ?? ''))->values();
+$allAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => ($a->advice ?? ''))->values();
     @endphp
     <div class="modal fade" id="modalAdvice" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -2065,11 +2053,11 @@
 
 <datalist id="sph_cyl_list">
     @php
-        $uniqueSphCyl = collect($masters['sph_cyl'])
-            ->map(fn ($o) => ltrim(trim($o->value), '+-'))
-            ->reject(fn ($v) => $v === '')
-            ->unique()
-            ->values();
+$uniqueSphCyl = collect($masters['sph_cyl'])
+    ->map(fn($o) => ltrim(trim($o->value), '+-'))
+    ->reject(fn($v) => $v === '')
+    ->unique()
+    ->values();
     @endphp
     @foreach($uniqueSphCyl as $cleanVal)
         @if(in_array((string) $cleanVal, ['0', '0.00', 'Plano', 'PL']))
@@ -2097,7 +2085,7 @@
 </datalist>
 
 {{-- MODAL: Exam Save Confirmation --}}
-<div class="modal fade" id="modalExamConfirm" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+<!-- <div class="modal fade" id="modalExamConfirm" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered" style="max-width:420px;">
         <div class="modal-content" style="border:none;border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);">
             <div class="modal-header border-0 pb-0 pt-4 px-4">
@@ -2124,7 +2112,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 <script>
     function formatOpto(val) {
@@ -2139,18 +2127,18 @@ document.addEventListener('DOMContentLoaded', function () {
     const rxBody = document.getElementById('rxBody');
 
     let rxRowIndex = {{ count(old('medicines', ($initialMedicines ?? collect())->toArray())) }};
-    const dosagesJson = @json($masters['dosages']->pluck('dosage','id'));
+    const dosagesJson = @json($masters['dosages']->pluck('dosage', 'id'));
     const durationsJson = @json($masters['durations']->pluck('duration')->values());
     @php
-        $medicinesForJs = $masters['medicines']->map(fn($m) => [
-            'id'           => $m->id,
-            'name'         => $m->name ?? '',
-            'brand_name'   => $m->brand_name ?? '',
-            'dosage_id'    => $m->dosage_id,
-            'dosage_label' => $m->dosage?->dosage ?? '',
-            'duration'     => $m->duration ?? '',
-            'qty'          => $m->qty ?? '',
-        ])->values();
+$medicinesForJs = $masters['medicines']->map(fn($m) => [
+    'id' => $m->id,
+    'name' => $m->name ?? '',
+    'brand_name' => $m->brand_name ?? '',
+    'dosage_id' => $m->dosage_id,
+    'dosage_label' => $m->dosage?->dosage ?? '',
+    'duration' => $m->duration ?? '',
+    'qty' => $m->qty ?? '',
+])->values();
     @endphp
     const allMedicinesData = @json($medicinesForJs);
 
@@ -2205,7 +2193,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    const coFavBase = '{{ url($slug."/masters/detail/complaints") }}';
+    const coFavBase = '{{ url($slug . "/masters/detail/complaints") }}';
     const coCsrf    = '{{ csrf_token() }}';
 
     function positionCoDropdown() {
@@ -2398,7 +2386,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!kcoSearch || !kcoDropdown) { return; }
 
         const kcoItems   = @json($masters['kcos']); // {id, kco, is_favourite}
-        const kcoFavBase = '{{ url($slug."/masters/detail/kcos") }}';
+        const kcoFavBase = '{{ url($slug . "/masters/detail/kcos") }}';
         let activeKcoInput = null;
         let kcoRowIndex    = document.querySelectorAll('#kcoBody .kco-row').length;
 
@@ -2574,7 +2562,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const hnoDropdown = document.getElementById('hnoDropdown');
         if (!hnoSearch || !hnoDropdown) { return; }
 
-        const hnoItems   = @json(collect($masters['hnos'] ?? [])->map(fn($o) => ['id' => $o->id, 'hno' => $o->hno, 'is_favourite' => (bool)($o->is_favourite ?? false)])->values());
+        const hnoItems   = @json(collect($masters['hnos'] ?? [])->map(fn($o) => ['id' => $o->id, 'hno' => $o->hno, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
         const hnoFavBase = '{{ url("$slug/masters/detail/hno") }}';
         const escA = typeof escapeAttr === 'function' ? escapeAttr : (v) => String(v || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
@@ -3178,8 +3166,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     @php
-        $__dxGroups  = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
-        $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_ids' => $a->diagnosis_ids ?? []])->values();
+$__dxGroups = $masters['med_groups']->map(fn($g) => ['id' => $g->id, 'name' => $g->name, 'diagnosis_id' => $g->diagnosis_id, 'item_count' => $g->items->count()])->values();
+$__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $a->advice ?? '', 'diagnosis_ids' => $a->diagnosis_ids ?? []])->values();
     @endphp
     // ── Diagnosis → Suggested Groups & Advice ────────────────────────────
     (function () {
@@ -3420,7 +3408,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Advice favourite toggle in More dropdown
     (function () {
-        const advFavBase = '{{ url($slug."/masters/detail/advice") }}';
+        const advFavBase = '{{ url($slug . "/masters/detail/advice") }}';
         const csrf       = '{{ csrf_token() }}';
 
         document.addEventListener('click', function (e) {
@@ -4004,7 +3992,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── O/E custom dropdowns (favourites + search) ────────────────────────────
     (function () {
         const oeMasters = @json($oeMasterData ?? []);
-        const oeFavBase = '{{ url($slug."/masters/detail") }}';
+        const oeFavBase = '{{ url($slug . "/masters/detail") }}';
 
         const odd = document.createElement('div');
         odd.className = 'co-dropdown';
@@ -4123,9 +4111,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Fundus custom dropdowns (Disc + FR — favourites, search, A-Z) ─────────
     (function () {
-        const discItems = @json(collect($masters['disc'])->map(fn ($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
-        const frItems   = @json(collect($masters['fr'])->map(fn ($o)   => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
-        const favBase   = '{{ url($slug."/masters/detail") }}';
+        const discItems = @json(collect($masters['disc'])->map(fn($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+        const frItems   = @json(collect($masters['fr'])->map(fn($o) => ['id' => $o->id, 'value' => $o->value, 'is_favourite' => (bool) ($o->is_favourite ?? false)])->values());
+        const favBase   = '{{ url($slug . "/masters/detail") }}';
 
         let activeFInp = null, activeFType = null;
 
@@ -4444,23 +4432,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     form.addEventListener('input', saveDraft);
     form.addEventListener('change', saveDraft);
+    form.addEventListener('submit', function () {
+    try {
+        localStorage.removeItem(draftKey);
+    } catch (_) {}
+    }); 
+    // let _examConfirmed = false;
+    // form.addEventListener('submit', function (e) {
+    //     if (!_examConfirmed) {
+    //         e.preventDefault();
+    //         bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).show();
+    //         return;
+    //     }
+    //     _examConfirmed = false;
+    //     try { localStorage.removeItem(draftKey); } catch (_) { /* ignore */ }
+    // });
 
-    let _examConfirmed = false;
-    form.addEventListener('submit', function (e) {
-        if (!_examConfirmed) {
-            e.preventDefault();
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).show();
-            return;
-        }
-        _examConfirmed = false;
-        try { localStorage.removeItem(draftKey); } catch (_) { /* ignore */ }
-    });
-
-    document.getElementById('examConfirmYes')?.addEventListener('click', function () {
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).hide();
-        _examConfirmed = true;
-        form.requestSubmit();
-    });
+    // document.getElementById('examConfirmYes')?.addEventListener('click', function () {
+    //     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExamConfirm')).hide();
+    //     _examConfirmed = true;
+    //     form.requestSubmit();
+    // });
 
     setTimeout(loadDraft, 300);
 })();

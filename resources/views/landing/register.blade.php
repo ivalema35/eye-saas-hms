@@ -207,15 +207,15 @@
                 <div class="reg-form-body">
 
                     <!-- @if($errors->any())
-                                                                                        <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
-                                                                                            <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
-                                                                                            <div style="font-size:.875rem">
-                                                                                                @foreach($errors->all() as $error)
-                                                                                                    <div>{{ $error }}</div>
-                                                                                                @endforeach
-                                                                                            </div>
-                                                                                        </div>
-                                                                                    @endif -->
+                                                                                                                    <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
+                                                                                                                        <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
+                                                                                                                        <div style="font-size:.875rem">
+                                                                                                                            @foreach($errors->all() as $error)
+                                                                                                                                <div>{{ $error }}</div>
+                                                                                                                            @endforeach
+                                                                                                                        </div>
+                                                                                                                    </div>
+                                                                                                                @endif -->
 
                     <form method="POST" action="{{ route('register.store') }}" id="registerForm">
                         @csrf
@@ -277,7 +277,7 @@
                                 <div class="hms-form-group">
                                     <label>Country</label>
                                     <select name="country" id="regCountry" class="hms-select">
-                                        <option value="">-- Select Country --</option>
+                                        <option value="">Search or Add Country</option>
                                         @foreach($countries as $c)
                                             <option value="{{ $c->name }}" data-id="{{ $c->id }}" {{ old('country') === $c->name ? 'selected' : '' }}>
                                                 {{ $c->name }}
@@ -288,7 +288,7 @@
                                 <div class="hms-form-group">
                                     <label>State</label>
                                     <select name="state" id="regState" class="hms-select" disabled>
-                                        <option value="">-- Select State --</option>
+                                        <option value="">Search or Add State</option>
                                     </select>
                                 </div>
                             </div>
@@ -296,13 +296,13 @@
                                 <div class="hms-form-group">
                                     <label>District</label>
                                     <select name="district" id="regDistrict" class="hms-select" disabled>
-                                        <option value="">-- Select District --</option>
+                                        <option value="">Search or Add District</option>
                                     </select>
                                 </div>
                                 <div class="hms-form-group">
                                     <label>City</label>
                                     <select name="city" id="regCity" class="hms-select" disabled>
-                                        <option value="">-- Select City --</option>
+                                        <option value="">Search or Add City</option>
                                     </select>
                                 </div>
                             </div>
@@ -571,22 +571,39 @@
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
     <script>
         (function () {
-            // Country name → ID map for cascade (IDs come from server-rendered options)
+            var CSRF = '{{ csrf_token() }}';
+
+            // Country name → ID map for cascade (populated from server-rendered options)
             var countryIdMap = {
                 @foreach($countries as $c)
                     '{{ addslashes($c->name) }}': {{ $c->id }},
                 @endforeach
-                                                                    };
+                                                };
 
-        function initTs(id, placeholder, disabled) {
-            var ts = new TomSelect(id, {
-                placeholder: placeholder,
-                allowEmptyOption: true,
-                create: false,
-                maxOptions: 300,
-            });
-            if (disabled) ts.disable();
-            return ts;
+        // Track active parent IDs so child create callbacks know where to attach
+        var activeCountryId = null;
+        var activeStateId = null;
+        var activeDistrictId = null;
+
+        function postCreate(url, body, callback) {
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify(body),
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (data && data.id) {
+                        callback({ value: data.name, text: data.name, locId: data.id });
+                    } else {
+                        callback(false);
+                    }
+                })
+                .catch(function () { callback(false); });
         }
 
         function resetTs(ts) {
@@ -599,7 +616,7 @@
             ts.addOptions(items.map(function (item) {
                 return { value: item.name, text: item.name, locId: item.id };
             }));
-            if (items.length > 0) ts.enable();
+            // enable/disable is managed by the change handlers, not here
         }
 
         function cascadeFetch(url, params, callback) {
@@ -612,17 +629,66 @@
                 .catch(function () { });
         }
 
-        var tsCountry = initTs('#regCountry', '-- Select Country --', false);
-        var tsState = initTs('#regState', '-- Select State --', true);
-        var tsDistrict = initTs('#regDistrict', '-- Select District --', true);
-        var tsCity = initTs('#regCity', '-- Select City --', true);
+        var tsCountry = new TomSelect('#regCountry', {
+            placeholder: 'Search or Add Country',
+            allowEmptyOption: true,
+            maxOptions: 300,
+            createOnBlur: false,
+            create: function (input, callback) {
+                postCreate('{{ route("location.create-country") }}', { name: input }, function (opt) {
+                    if (opt) countryIdMap[opt.value] = opt.locId;
+                    callback(opt || false);
+                });
+            },
+        });
+
+        var tsState = new TomSelect('#regState', {
+            placeholder: 'Search or Add State',
+            allowEmptyOption: true,
+            maxOptions: 300,
+            createOnBlur: false,
+            create: function (input, callback) {
+                if (!activeCountryId) { callback(false); return; }
+                postCreate('{{ route("location.create-state") }}', { name: input, country_id: activeCountryId }, callback);
+            },
+        });
+        tsState.disable();
+
+        var tsDistrict = new TomSelect('#regDistrict', {
+            placeholder: 'Search or Add District',
+            allowEmptyOption: true,
+            maxOptions: 300,
+            createOnBlur: false,
+            create: function (input, callback) {
+                if (!activeStateId) { callback(false); return; }
+                postCreate('{{ route("location.create-district") }}', { name: input, state_id: activeStateId }, callback);
+            },
+        });
+        tsDistrict.disable();
+
+        var tsCity = new TomSelect('#regCity', {
+            placeholder: 'Search or Add City',
+            allowEmptyOption: true,
+            maxOptions: 300,
+            createOnBlur: false,
+            create: function (input, callback) {
+                if (!activeDistrictId || !activeStateId) { callback(false); return; }
+                postCreate('{{ route("location.create-city") }}', { name: input, district_id: activeDistrictId, state_id: activeStateId }, callback);
+            },
+        });
+        tsCity.disable();
 
         tsCountry.on('change', function (name) {
             resetTs(tsState);
             resetTs(tsDistrict);
             resetTs(tsCity);
+            activeCountryId = null;
+            activeStateId = null;
+            activeDistrictId = null;
             var id = name ? countryIdMap[name] : null;
             if (!id) return;
+            activeCountryId = id;
+            tsState.enable(); // enable immediately — user can type/create even if no states exist yet
             cascadeFetch('{{ route("location.states") }}', { country_id: id }, function (data) {
                 populateTs(tsState, data);
             });
@@ -631,8 +697,12 @@
         tsState.on('change', function (name) {
             resetTs(tsDistrict);
             resetTs(tsCity);
+            activeStateId = null;
+            activeDistrictId = null;
             var opt = name ? tsState.options[name] : null;
             if (!opt) return;
+            activeStateId = opt.locId;
+            tsDistrict.enable(); // enable immediately
             cascadeFetch('{{ route("location.districts") }}', { state_id: opt.locId }, function (data) {
                 populateTs(tsDistrict, data);
             });
@@ -640,13 +710,16 @@
 
         tsDistrict.on('change', function (name) {
             resetTs(tsCity);
+            activeDistrictId = null;
             var opt = name ? tsDistrict.options[name] : null;
             if (!opt) return;
+            activeDistrictId = opt.locId;
+            tsCity.enable(); // enable immediately
             cascadeFetch('{{ route("location.cities") }}', { district_id: opt.locId }, function (data) {
                 populateTs(tsCity, data);
             });
         });
-                                                                }());
+                                            }());
     </script>
 @endpush
 
