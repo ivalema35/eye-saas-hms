@@ -56,8 +56,9 @@ class RegisterController extends Controller
             'hospital_code' => [
                 'required',
                 'string',
-                'size:3',
-                'regex:/^[A-Za-z]{3}$/',
+                'min:3',
+                'max:4',
+                'regex:/^[A-Za-z]{3,4}$/',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (Tenant::where('hospital_code', strtoupper($value))->exists()) {
                         $fail('This hospital code is already taken by another hospital.');
@@ -154,8 +155,11 @@ class RegisterController extends Controller
     {
         $code = strtoupper(preg_replace('/[^a-zA-Z]/', '', $request->input('code', '')));
 
-        if (strlen($code) !== 3) {
-            return response()->json(['available' => false, 'message' => 'Code must be exactly 3 letters']);
+        if (strlen($code) < 3 || strlen($code) > 4) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Code must be 3 or 4 letters'
+            ]);
         }
 
         $exists = Tenant::where('hospital_code', $code)->exists();

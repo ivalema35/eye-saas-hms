@@ -100,6 +100,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('hospitals.extend');
         Route::post('hospitals/{tenant}/reactivate', [TenantController::class, 'reactivate'])
             ->name('hospitals.reactivate');
+        Route::post('hospitals/{tenant}/reseed-masters', [TenantController::class, 'reseedMasters'])
+            ->name('hospitals.reseed-masters');
 
 
         // Payments

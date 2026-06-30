@@ -207,15 +207,15 @@
                 <div class="reg-form-body">
 
                     <!-- @if($errors->any())
-                                            <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
-                                                <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
-                                                <div style="font-size:.875rem">
-                                                    @foreach($errors->all() as $error)
-                                                        <div>{{ $error }}</div>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endif -->
+                                                                                        <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
+                                                                                            <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
+                                                                                            <div style="font-size:.875rem">
+                                                                                                @foreach($errors->all() as $error)
+                                                                                                    <div>{{ $error }}</div>
+                                                                                                @endforeach
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    @endif -->
 
                     <form method="POST" action="{{ route('register.store') }}" id="registerForm">
                         @csrf
@@ -254,12 +254,14 @@
 
                             <div class="hms-form-group">
                                 <label>Hospital Code * <span
-                                        style="font-weight:400;color:var(--hms-text-muted);font-size:.8rem">(3 letters —
+                                        style="font-weight:400;color:var(--hms-text-muted);font-size:.8rem">(3 or 4 letters
+                                        —
                                         prefix for all patient MRD numbers)</span></label>
                                 <div style="display:flex;align-items:center;gap:.75rem">
                                     <input type="text" name="hospital_code" id="hospitalCodeInput"
                                         class="hms-input @error('hospital_code') is-invalid @enderror"
-                                        value="{{ old('hospital_code') }}" placeholder="e.g. MAI" required maxlength="3"
+                                        value="{{ old('hospital_code') }}"
+                                        placeholder="e.g. MAI or MAIN"" required maxlength=" 4"
                                         style="width:7rem;text-transform:uppercase;letter-spacing:.1rem;font-size:1rem">
                                     <span style="color:var(--hms-text-muted);font-size:.85rem">MRD preview: <strong
                                             id="mrdPreview" style="color:var(--hms-primary)">---0001</strong></span>
@@ -458,21 +460,23 @@
 
             // ── hospital code helpers ─────────────────────────────────────
             function toCode(str) {
-                return str.replace(/[^a-zA-Z]/g, '').substring(0, 3).toUpperCase();
+                return str.replace(/[^a-zA-Z]/g, '').substring(0, 4).toUpperCase();
             }
 
             function updateMrdPreview(code) {
-                mrdPreview.textContent = (code.length === 3 ? code : '---') + '0001';
+                mrdPreview.textContent = (code.length >= 3 ? code : '----') + '0001';
             }
 
             function checkCode(code) {
                 clearTimeout(codeTimer);
                 updateMrdPreview(code);
-                if (code.length !== 3) {
-                    codeStatus.innerHTML = 'Must be exactly 3 letters';
+
+                if (code.length < 3 || code.length > 4) {
+                    codeStatus.innerHTML = 'Must be 3 or 4 letters';
                     codeStatus.className = 'slug-status slug-taken';
                     return;
                 }
+
                 codeStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Checking...';
                 codeStatus.className = 'slug-status slug-checking';
 
@@ -484,11 +488,15 @@
                                 codeStatus.innerHTML = '<i class="fa-solid fa-circle-check"></i> Available';
                                 codeStatus.className = 'slug-status slug-ok';
                             } else {
-                                codeStatus.innerHTML = '<i class="fa-solid fa-circle-xmark"></i> ' + (data.message || 'Already taken');
+                                codeStatus.innerHTML =
+                                    '<i class="fa-solid fa-circle-xmark"></i> ' +
+                                    (data.message || 'Already taken');
                                 codeStatus.className = 'slug-status slug-taken';
                             }
                         })
-                        .catch(function () { codeStatus.textContent = ''; });
+                        .catch(function () {
+                            codeStatus.textContent = '';
+                        });
                 }, 400);
             }
 
@@ -501,12 +509,12 @@
 
             // Manual edit of code field
             codeInput.addEventListener('input', function () {
-                this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 3);
+                this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 4);
                 checkCode(this.value);
             });
 
             // Initial preview if old() value present
-            if (codeInput.value.length === 3) { checkCode(codeInput.value); }
+            if (codeInput.value.length >= 3) { checkCode(codeInput.value); }
 
             // ── slug helpers ──────────────────────────────────────────────
             function toSlug(str) {
@@ -568,7 +576,7 @@
                 @foreach($countries as $c)
                     '{{ addslashes($c->name) }}': {{ $c->id }},
                 @endforeach
-                        };
+                                                                    };
 
         function initTs(id, placeholder, disabled) {
             var ts = new TomSelect(id, {
@@ -638,7 +646,7 @@
                 populateTs(tsCity, data);
             });
         });
-                    }());
+                                                                }());
     </script>
 @endpush
 
