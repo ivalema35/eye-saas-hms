@@ -22,18 +22,17 @@ class SystemRolesSeeder extends Seeder
 
     private array $defaultPermissions = [
         'doctor' => [
-            'master.case types crud',
-            'master.eye exam master crud',
-            'master.medication master crud',
-            'master.location master crud',
-            'master.customer role management',
+            'master.case_types',
+            'master.eye_exam',
+            'master.medicines',
+            'master.locations',
+            'master.roles',
             'opd.patient.view',
             'opd.exam.primary',
             'opd.exam.secondary',
             'opd.exam.history',
             'opd.prescription.print',
             'opd.foc.create',
-            'opd.View Patient Exam History',
             'reports.view',
         ],
         'receptionist' => [
