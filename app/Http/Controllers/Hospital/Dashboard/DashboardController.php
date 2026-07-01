@@ -147,6 +147,45 @@ class DashboardController extends Controller
                     $p->all_patient_ids = $allIdsByContact->get($p->contact_no) ?? (string) $p->id;
                     return $p;
                 });
+
+                // Determine which patients have any exam history (used to show/hide the View button)
+                $allQueueIds = $primaryQueue
+                    ->flatMap(fn($p) => array_filter(array_map('intval', explode(',', $p->all_patient_ids))))
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                $idsWithExams = PrimaryExamination::whereIn('patient_id', $allQueueIds)->pluck('patient_id')
+                    ->merge(SecondaryExamination::whereIn('patient_id', $allQueueIds)->pluck('patient_id'))
+                    ->unique();
+
+                // Also check partner hospitals for same contact_no
+                $contactNosWithPartnerHistory = collect();
+                $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($tenant) {
+                    $q->where('from_tenant_id', $tenant->id)->orWhere('to_tenant_id', $tenant->id);
+                })->where('status', 'accepted')->get()
+                    ->map(fn($r) => $r->from_tenant_id === $tenant->id ? $r->to_tenant_id : $r->from_tenant_id)
+                    ->toArray();
+
+                if (!empty($partnerTenantIds) && !empty($contactNos)) {
+                    $contactNosWithPartnerHistory = Patient::withoutTenantScope()
+                        ->whereIn('tenant_id', $partnerTenantIds)
+                        ->whereIn('contact_no', $contactNos)
+                        ->where(fn($q) => $q
+                            ->whereExists(fn($sq) => $sq->selectRaw('1')->from('primary_examinations')->whereColumn('primary_examinations.patient_id', 'patients.id'))
+                            ->orWhereExists(fn($sq) => $sq->selectRaw('1')->from('secondary_examinations')->whereColumn('secondary_examinations.patient_id', 'patients.id'))
+                        )
+                        ->pluck('contact_no')
+                        ->unique();
+                }
+
+                $primaryQueue = $primaryQueue->map(function (Patient $p) use ($idsWithExams, $contactNosWithPartnerHistory): Patient {
+                    $ids = array_filter(array_map('intval', explode(',', $p->all_patient_ids)));
+                    $hasOwn     = collect($ids)->contains(fn($id) => $idsWithExams->contains($id));
+                    $hasPartner = $p->contact_no && $contactNosWithPartnerHistory->contains($p->contact_no);
+                    $p->has_history = $hasOwn || $hasPartner;
+                    return $p;
+                });
             }
 
             // Queue counts for the admin dashboard card (all doctors, no take() limit)

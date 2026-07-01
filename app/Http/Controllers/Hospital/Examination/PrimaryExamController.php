@@ -111,10 +111,10 @@ class PrimaryExamController extends Controller
         );
 
         $user = Auth::guard('hospital_user')->user();
-        
+
         if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
             return redirect()
-                ->route('hospital.dashboard', ['slug' => $slug]) 
+                ->route('hospital.exam.primary.print', ['slug' => $slug, 'id' => $id])
                 ->with('success', 'Primary examination saved successfully.');
         }
 
@@ -154,9 +154,14 @@ class PrimaryExamController extends Controller
             ->orderBy('id')
             ->get(['id', DB::raw('value as kco')]));
 
+        $user = Auth::guard('hospital_user')->user();
+        $backUrl = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)
+            ? route('hospital.dashboard', ['slug' => $slug])
+            : 'javascript:history.back()';
+
         return view('hospital.exam.print', compact(
             'patient', 'exam', 'tenant', 'slug',
-            'diagnosisMasters', 'adviceMasters', 'complaintMasters', 'kcoMasters'
+            'diagnosisMasters', 'adviceMasters', 'complaintMasters', 'kcoMasters', 'backUrl'
         ));
     }
 

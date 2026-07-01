@@ -7,6 +7,7 @@ use App\Models\Hospital\Dosage;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
+use App\Models\Platform\HospitalShareRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -31,8 +32,45 @@ class PatientHistoryController extends Controller
             $search       = null;
             $historyRoute = route('hospital.patients.history', ['slug' => $slug]);
 
+            // Load history from connected partner hospitals for the same contact_no
+            $partnerHistoryGroups = collect();
+            if ($patient && $patient->contact_no) {
+                $currentTenant    = app('tenant');
+                $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
+                    $q->where('from_tenant_id', $currentTenant->id)
+                        ->orWhere('to_tenant_id', $currentTenant->id);
+                })
+                    ->where('status', 'accepted')
+                    ->get()
+                    ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
+                    ->toArray();
+
+                if (!empty($partnerTenantIds)) {
+                    $partnerPatients = Patient::withoutTenantScope()
+                        ->whereIn('tenant_id', $partnerTenantIds)
+                        ->where('contact_no', $patient->contact_no)
+                        ->with(['tenant:id,name,city,state'])
+                        ->get();
+
+                    foreach ($partnerPatients->groupBy('tenant_id') as $partnerTenantId => $group) {
+                        $partnerExamHistory = $this->loadPartnerExamHistoryForIds($group->pluck('id')->all());
+                        if ($partnerExamHistory->isNotEmpty()) {
+                            $partnerDiagnosisMasters = DB::table('tbl_master_diagnosis')
+                                ->where('tenant_id', $partnerTenantId)
+                                ->orderBy('id')
+                                ->get(['id', DB::raw('value as diagnosis')]);
+                            $partnerHistoryGroups->push([
+                                'tenant'          => $group->first()->tenant,
+                                'history'         => $partnerExamHistory,
+                                'diagnosisMasters' => $partnerDiagnosisMasters,
+                            ]);
+                        }
+                    }
+                }
+            }
+
             return view('hospital.patient.history',
-                compact('patient', 'history', 'search', 'slug', 'nameGroups', 'historyRoute') + $masters
+                compact('patient', 'history', 'search', 'slug', 'nameGroups', 'historyRoute', 'partnerHistoryGroups') + $masters
             );
         }
 
@@ -119,6 +157,37 @@ class PatientHistoryController extends Controller
      * Accepts an array so same-name groups (multiple registrations of one person)
      * can be combined into a single timeline without merging unrelated patients.
      */
+    private function loadPartnerExamHistoryForIds(array $patientIds): Collection
+    {
+        $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
+            ->with([
+                'doctor'                   => fn($q) => $q->withoutGlobalScopes(),
+                'prescriptions.medicine'   => fn($q) => $q->withoutGlobalScopes(),
+                'prescriptions.dosage',
+            ])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(function (PrimaryExamination $exam): PrimaryExamination {
+                $exam->type  = 'Primary Exam';
+                $exam->color = 'primary';
+                $exam->icon  = 'bi-clipboard2-pulse';
+                return $exam;
+            });
+
+        $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
+            ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(function (SecondaryExamination $exam): SecondaryExamination {
+                $exam->type  = 'Secondary Exam';
+                $exam->color = 'secondary';
+                $exam->icon  = 'bi-clipboard2-check';
+                return $exam;
+            });
+
+        return $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
+    }
+
     private function loadExamHistoryForIds(array $patientIds): Collection
     {
         $primaryExams = PrimaryExamination::with(['doctor', 'prescriptions.medicine', 'prescriptions.dosage'])

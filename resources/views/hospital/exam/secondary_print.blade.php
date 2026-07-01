@@ -528,12 +528,21 @@
 
 <body>
 
+    <script>
+        var _backUrl = {!! json_encode($backUrl ?? 'javascript:history.back()') !!};
+        function _doPrint() {
+            if (_backUrl !== 'javascript:history.back()') {
+                window.onafterprint = function () { window.location.href = _backUrl; };
+            }
+            window.print();
+        }
+    </script>
     <div class="no-print" style="background:#f0f0f0;padding:8px 12mm;display:flex;gap:12px;align-items:center">
-        <button onclick="window.print()"
+        <button onclick="_doPrint()"
             style="background:#1B3A5C;color:#fff;border:none;padding:6px 18px;border-radius:5px;cursor:pointer;font-size:13px">
             Print
         </button>
-        <a href="javascript:history.back()" style="color:#1B3A5C;font-size:13px;text-decoration:none">← Back</a>
+        <a href="{{ $backUrl ?? 'javascript:history.back()' }}" style="color:#1B3A5C;font-size:13px;text-decoration:none">← Back</a>
     </div>
 
     @php

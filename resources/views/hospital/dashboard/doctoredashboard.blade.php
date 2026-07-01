@@ -563,10 +563,12 @@ a.doc-profile-card.doc-selected { border:2px solid #1B4F72 !important; backgroun
                                                     class="btn btn-sm text-white px-3 fw-semibold" style="background-color: #1B4F72; border-radius: 4px;">
                                                         Examine
                                                     </a>
+                                                    @if($patient->has_history ?? false)
                                                     <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids ?? $patient->id }}"
                                                     class="btn btn-sm px-3 fw-semibold" style="background-color: #0d9488; color:#fff; border-radius: 4px;" target="_blank" title="View Patient History">
                                                         <i class="bi bi-clock-history"></i> View
                                                     </a>
+                                                    @endif
                                                     <button type="button"
                                                         class="btn btn-sm px-2 fw-semibold"
                                                         style="background-color: #f59e0b; color:#fff; border-radius: 4px; border:none;"
