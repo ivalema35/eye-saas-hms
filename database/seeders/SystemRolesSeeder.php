@@ -45,6 +45,7 @@ class SystemRolesSeeder extends Seeder
             'opd.foc.accept',
             'reports.view',
             'master.receptions',
+            'master.locations',
         ],
 
         // ── OT Roles ──────────────────────────────────────────────────
@@ -149,7 +150,7 @@ class SystemRolesSeeder extends Seeder
 
         $grantedActions = $this->defaultPermissions[$role->slug] ?? [];
         foreach ($grantedActions as $action) {
-            if (!$allPermissions->has($action)) {
+            if (! $allPermissions->has($action)) {
                 Log::warning("SystemRolesSeeder: unknown permission action [{$action}] for role [{$role->slug}].");
             }
         }
@@ -164,7 +165,7 @@ class SystemRolesSeeder extends Seeder
     private function applyPermissions(Role $role, $allPermissions, array $permissionMap): void
     {
         foreach ($permissionMap as $action => $isGranted) {
-            if (!$allPermissions->has($action)) {
+            if (! $allPermissions->has($action)) {
                 continue;
             }
             RolePermission::updateOrCreate(
@@ -174,4 +175,3 @@ class SystemRolesSeeder extends Seeder
         }
     }
 }
-

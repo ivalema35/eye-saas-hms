@@ -111,7 +111,7 @@
                     <td>{{ $patient->patient_code ?: '-' }}</td>
                     <td>{{ $patient->full_name }}</td>
                     <td>{{ $patient->contact_no ?: '-' }}</td>
-                    <td>{{ $patient->location?->city ?? $patient->masterCity?->name ?: '-' }}</td>
+                    <td>{{ $patient->cityName ?: '-' }}</td>
                     <td>{{ $patient->age ?: '-' }}</td>
                     <td>{{ $patient->doctor?->name ?: '-' }}</td>
                     <td>{{ $patient->reception?->name ?: '-' }}</td>

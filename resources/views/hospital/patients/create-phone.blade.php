@@ -1113,6 +1113,7 @@
                     var district = newDistrict.value.trim();
                     var state = newState.value.trim();
                     if (!city) { addLocErrors.textContent = 'City is required.'; return; }
+                    if (!state) { addLocErrors.textContent = 'State is required.'; return; }
 
                     var url = '{{ route("hospital.masters.basic.ajax.store", ["slug" => $slug, "type" => "locations"]) }}';
                     var token = '{{ csrf_token() }}';

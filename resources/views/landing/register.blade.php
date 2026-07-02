@@ -719,7 +719,7 @@
                 populateTs(tsCity, data);
             });
         });
-                                            }());
+        }());
     </script>
 @endpush
 

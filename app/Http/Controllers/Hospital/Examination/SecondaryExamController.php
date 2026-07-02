@@ -149,7 +149,7 @@ class SecondaryExamController extends Controller
 
         if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
             return redirect()
-                ->route('hospital.dashboard', ['slug' => $slug]) 
+                ->route('hospital.exam.secondary.print', ['slug' => $slug, 'id' => $id])
                 ->with('success', 'Secondary examination saved successfully.');
         }
 
@@ -188,9 +188,14 @@ class SecondaryExamController extends Controller
 
         $dosages = \App\Models\Hospital\Dosage::orderBy('dosage')->get(['id', 'dosage']);
 
+        $user = Auth::guard('hospital_user')->user();
+        $backUrl = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)
+            ? route('hospital.dashboard', ['slug' => $slug])
+            : 'javascript:history.back()';
+
         return view('hospital.exam.secondary_print', compact(
             'patient', 'exam', 'tenant', 'slug',
-            'diagnosisMasters', 'complaintMasters', 'kcoMasters', 'dosages'
+            'diagnosisMasters', 'complaintMasters', 'kcoMasters', 'dosages', 'backUrl'
         ));
     }
 

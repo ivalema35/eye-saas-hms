@@ -7,12 +7,11 @@ use App\Http\Requests\Hospital\Patient\PatientPhoneStoreRequest;
 use App\Http\Requests\Hospital\Patient\PatientStoreRequest;
 use App\Http\Requests\Hospital\Patient\PatientUpdateRequest;
 use App\Models\Hospital\HospitalUser;
-use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\Referrer;
 use App\Models\Platform\HospitalShareRequest;
-use App\Services\Hospital\PatientService;
 use App\Models\Platform\MasterCity;
+use App\Services\Hospital\PatientService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,9 +32,7 @@ use Illuminate\View\View;
  */
 class PatientController extends Controller
 {
-    public function __construct(private PatientService $patientService)
-    {
-    }
+    public function __construct(private PatientService $patientService) {}
 
     public function index(Request $request): View
     {
@@ -44,7 +41,7 @@ class PatientController extends Controller
         $role = $user?->role?->slug;
         $today = now()->toDateString();
 
-        $query = Patient::with(['doctor:id,name', 'reception:id,name', 'primaryExamination', 'secondaryExamination', 'location:id,city,district,state', 'masterCity:id,name', 'caseType:id,case_type', 'referrer:id,name']);
+        $query = Patient::with(['doctor:id,name', 'reception:id,name', 'primaryExamination', 'secondaryExamination', 'location:id,city,district,state', 'masterCity:id,state_id,district_id,name', 'masterCity.district:id,name', 'masterCity.state:id,name', 'caseType:id,case_type', 'referrer:id,name']);
 
         // Doctors see only their assigned patients
         if ($role === 'doctor') {
@@ -53,7 +50,7 @@ class PatientController extends Controller
 
         // Toggle today/all
         $showAll = $request->boolean('all');
-        if (!$showAll) {
+        if (! $showAll) {
             $query->whereDate('appointment_date', $today);
         }
 
@@ -84,9 +81,9 @@ class PatientController extends Controller
         $localPatients = Patient::where('contact_no', $contact)
             ->latest()
             ->get()
-            ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
+            ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
 
-        $localMapped = $localPatients->values()->map(fn($p) => [
+        $localMapped = $localPatients->values()->map(fn ($p) => [
             'type' => 'local',
             'first_name' => $p->first_name,
             'middle_name' => $p->middle_name,
@@ -107,22 +104,22 @@ class PatientController extends Controller
         })
             ->where('status', 'accepted')
             ->get()
-            ->map(fn($r) => $r->from_tenant_id === $currentTenant->id
+            ->map(fn ($r) => $r->from_tenant_id === $currentTenant->id
                 ? $r->to_tenant_id
                 : $r->from_tenant_id)
             ->toArray();
 
         $sharedMapped = collect();
-        if (!empty($partnerTenantIds)) {
+        if (! empty($partnerTenantIds)) {
             $sharedPatients = Patient::withoutTenantScope()
                 ->with('tenant:id,name')
                 ->whereIn('tenant_id', $partnerTenantIds)
                 ->where('contact_no', $contact)
                 ->latest()
                 ->get()
-                ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
+                ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
 
-            $sharedMapped = $sharedPatients->values()->map(fn($p) => [
+            $sharedMapped = $sharedPatients->values()->map(fn ($p) => [
                 'type' => 'shared',
                 'hospital_name' => $p->tenant?->name ?? 'Partner Hospital',
                 'first_name' => $p->first_name,
@@ -166,7 +163,7 @@ class PatientController extends Controller
         $locations = MasterCity::with([
             'district',
             'state',
-            'state.country'
+            'state.country',
         ])
             ->whereHas('state.country', function ($q) use ($hospitalCountry) {
                 $q->where('name', $hospitalCountry);
@@ -222,7 +219,7 @@ class PatientController extends Controller
         $locations = MasterCity::with([
             'district',
             'state',
-            'state.country'
+            'state.country',
         ])
             ->whereHas('state.country', function ($q) use ($hospitalCountry) {
                 $q->where('name', $hospitalCountry);
@@ -278,7 +275,7 @@ class PatientController extends Controller
             ->withQueryString();
 
         $groupedPatients = $patients->getCollection()->groupBy(
-            fn(Patient $patient): string => $patient->appointment_date
+            fn (Patient $patient): string => $patient->appointment_date
             ? now()->parse((string) $patient->appointment_date)->format('Y-m-d')
             : $patient->created_at->format('Y-m-d')
         );
@@ -314,7 +311,7 @@ class PatientController extends Controller
         $locations = MasterCity::with([
             'district',
             'state',
-            'state.country'
+            'state.country',
         ])
             ->whereHas('state.country', function ($q) use ($hospitalCountry) {
                 $q->where('name', $hospitalCountry);
@@ -359,7 +356,7 @@ class PatientController extends Controller
             ->where('tenant_id', $tenantId)
             ->where(function ($q) {
                 $q->whereNotNull('doctor_type')
-                    ->orWhereHas('role', fn($r) => $r->where(function ($i) {
+                    ->orWhereHas('role', fn ($r) => $r->where(function ($i) {
                         $i->whereIn('slug', ['doctor', 'ot_doctor'])
                             ->orWhereIn('name', ['doctor', 'ot_doctor']);
                     }));
@@ -372,7 +369,7 @@ class PatientController extends Controller
         $locations = MasterCity::with([
             'district',
             'state',
-            'state.country'
+            'state.country',
         ])
             ->whereHas('state.country', function ($q) use ($hospitalCountry) {
                 $q->where('name', $hospitalCountry);

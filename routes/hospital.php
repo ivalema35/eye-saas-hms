@@ -33,11 +33,11 @@ use App\Http\Controllers\Hospital\Master\OT\OtLensOptionController;
 use App\Http\Controllers\Hospital\Master\OT\OtSlotController;
 use App\Http\Controllers\Hospital\Master\OT\OtSurgeryTypeController;
 use App\Http\Controllers\Hospital\Master\OT\OtTypeController;
+use App\Http\Controllers\Hospital\Medicine\MedicineCategoryController;
 use App\Http\Controllers\Hospital\Medicine\MedicineController;
 use App\Http\Controllers\Hospital\Medicine\MedicineDosageController;
 use App\Http\Controllers\Hospital\Medicine\MedicineGroupController;
 use App\Http\Controllers\Hospital\Medicine\MedicineInstructionController;
-use App\Http\Controllers\Hospital\Medicine\MedicineCategoryController;
 use App\Http\Controllers\Hospital\Medicine\MedicineRouteController;
 use App\Http\Controllers\Hospital\Medicine\MedicineTypeController;
 use App\Http\Controllers\Hospital\OT\OtAccountantController;
@@ -66,7 +66,7 @@ Route::prefix('{slug}')
         // ================================================================
         // Login / Logout — no hospital auth required
         // ================================================================
-    
+
         // Hospital login page: hmssaas.com/{slug}/login
         Route::get('/login', [LoginController::class, 'show'])
             ->middleware('redirect.inactive')
@@ -87,7 +87,7 @@ Route::prefix('{slug}')
         // ================================================================
         // Authenticated Hospital Routes
         // ================================================================
-    
+
         Route::middleware(['auth.hospital', 'subscription.active', 'grace.check'])
             ->group(function () {
 
@@ -269,33 +269,33 @@ Route::prefix('{slug}')
                 // Masters Management — Basic & Detail (Phase 6)
                 // ============================================================
                 Route::prefix('masters')->name('masters.')->group(function () {
-                    Route::get('/', [BasicMasterController::class, 'landing'])->name('index')->middleware('permission:master.case_types|master.eye_exam');
+                    Route::get('/', [BasicMasterController::class, 'landing'])->name('index')->middleware('permission:master.case_types|master.eye_exam|master.locations');
 
                     // Basic Masters: cases, locations, referrers, durations
                     Route::prefix('basic')->name('basic.')
-                        ->middleware('permission:master.case_types')
+                        ->middleware('permission:master.case_types|master.locations')
                         ->group(function () {
-                        Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
-                        Route::post('{type}', [BasicMasterController::class, 'store'])->middleware('permission:master.case_types')->name('store');
-                        // AJAX create for masters from forms (e.g. add city inline)
-                        Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
-                            ->withoutMiddleware('permission:master.case_types')
-                            ->name('ajax.store');
-                        Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->middleware('permission:master.case_types')->name('update')->whereNumber('id');
-                        Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->middleware('permission:master.case_types')->name('destroy')->whereNumber('id');
-                    });
+                            Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
+                            Route::post('{type}', [BasicMasterController::class, 'store'])->middleware('permission:master.case_types|master.locations')->name('store');
+                            // AJAX create for masters from forms (e.g. add city inline)
+                            Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
+                                ->withoutMiddleware('permission:master.case_types|master.locations')
+                                ->name('ajax.store');
+                            Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->middleware('permission:master.case_types|master.locations')->name('update')->whereNumber('id');
+                            Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->middleware('permission:master.case_types|master.locations')->name('destroy')->whereNumber('id');
+                        });
 
                     // Detail (Eye-Exam) Masters: vn, pnvn, sph_cyl, axis, complaints, etc.
                     Route::prefix('detail')->name('detail.')
                         ->middleware('permission:master.eye_exam')
                         ->group(function () {
-                        Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
-                        Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:master.eye_exam')->name('store');
-                        Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:master.eye_exam')->name('sync-by-diagnosis');
-                        Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:master.eye_exam')->name('update')->whereNumber('id');
-                        Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:master.eye_exam')->name('toggle-favourite')->whereNumber('id');
-                        Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:master.eye_exam')->name('destroy')->whereNumber('id');
-                    });
+                            Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
+                            Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:master.eye_exam')->name('store');
+                            Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:master.eye_exam')->name('sync-by-diagnosis');
+                            Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:master.eye_exam')->name('update')->whereNumber('id');
+                            Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:master.eye_exam')->name('toggle-favourite')->whereNumber('id');
+                            Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:master.eye_exam')->name('destroy')->whereNumber('id');
+                        });
 
                     Route::prefix('ot')->name('ot.')->middleware('role:admin')->group(function () {
                         Route::get('lens-options', [OtLensOptionController::class, 'index'])->name('lens-options.index');
@@ -483,5 +483,5 @@ Route::prefix('{slug}')
                     ->where('step', '[1-4]');
 
             }); // end authenticated group
-    
+
     }); // end {slug} prefix

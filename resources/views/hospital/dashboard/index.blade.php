@@ -1890,7 +1890,7 @@
                                     </div>
                                 </td>
                                 <td class="tap-meta">
-                                    <strong>{{ $patient->location?->city ?? $patient->masterCity?->name ?? '—' }}</strong><br>
+                                    <strong>{{ $patient->cityName ?: '—' }}</strong><br>
                                     <span>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</span>
                                 </td>
                                 <td class="tap-slot">

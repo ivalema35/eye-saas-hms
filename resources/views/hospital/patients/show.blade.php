@@ -61,7 +61,7 @@
                 </div>
                 <div>
                     <div style="font-size:.72rem;color:#94A3B8;font-weight:600">City</div>
-                    <div style="font-weight:600;color:#1A202C">{{ $patient->location?->city ?? $patient->masterCity?->name ?: '—' }}</div>
+                    <div style="font-weight:600;color:#1A202C">{{ $patient->cityName ?: '—' }}</div>
                 </div>
             </div>
         </div>

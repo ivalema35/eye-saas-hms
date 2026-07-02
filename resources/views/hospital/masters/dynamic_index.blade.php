@@ -5,9 +5,11 @@
 @section('content')
 
     @php
-        $masterPermissionKey = str_contains($routeGroup, '.detail.') ? 'master.eye_exam' : 'master.case_types';
-        $canWrite = auth('hospital_user')->user()?->role?->is_super
-            || app(\App\Services\Auth\RolePermissionService::class)->can($masterPermissionKey);
+        $permService = app(\App\Services\Auth\RolePermissionService::class);
+        $isSuper = auth('hospital_user')->user()?->role?->is_super;
+        $canWrite = $isSuper || (str_contains($routeGroup, '.detail.')
+            ? $permService->can('master.eye_exam')
+            : $permService->canAny(['master.case_types', 'master.locations']));
         $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'hno', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
         $useModalLayout = in_array($type, $modalMasterTypes, true);
         $showBackButton = in_array($type, $modalMasterTypes, true);
@@ -31,9 +33,11 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 @if($showBackButton)
                     @php
-                        $backUrl = auth('hospital_user')->user()?->role?->slug === 'doctor'
-                            ? route('hospital.dashboard', ['slug' => $slug])
-                            : route('hospital.masters.index', ['slug' => $slug]);
+                        $backUrl = match (auth('hospital_user')->user()?->role?->slug) {
+                            'doctor' => route('hospital.dashboard', ['slug' => $slug]),
+                            'receptionist' => route('hospital.profile.show', ['slug' => $slug]),
+                            default => route('hospital.masters.index', ['slug' => $slug]),
+                        };
                     @endphp
                     <a href="{{ $backUrl }}" class="btn btn-light case-master-back-btn">
                         <i class="bi bi-arrow-left me-1"></i> Back
@@ -77,15 +81,21 @@
                                 <input type="hidden" name="_edit_id" id="editId" value="{{ old('_edit_id') }}">
 
                                 @foreach($columns as $col)
+                                    @php $isOptionalField = $type === 'locations' && $col === 'district'; @endphp
                                     <div class="mb-3">
                                         <label class="form-label text-muted small fw-bold text-uppercase"
                                             style="letter-spacing: 0.5px;">
-                                            {{ Str::headline($col) }} <span class="text-danger">*</span>
+                                            {{ Str::headline($col) }}
+                                            @if($isOptionalField)
+                                                <span class="text-muted fw-normal">(optional)</span>
+                                            @else
+                                                <span class="text-danger">*</span>
+                                            @endif
                                         </label>
                                         <input type="text" name="{{ $col }}" id="input-{{ $col }}"
                                             class="form-control form-control-lg bg-light border-0" style="font-size: 15px;"
                                             placeholder="Enter {{ strtolower(Str::headline($col)) }}..." value="{{ old($col) }}"
-                                            required>
+                                            @if(!$isOptionalField) required @endif>
                                     </div>
                                 @endforeach
 
@@ -117,7 +127,6 @@
                                         <th width="8%" class="text-center py-3 text-muted small fw-bold font-monospace">#
                                         </th>
                                         @if($type == 'locations')
-
                                             <th>CITY</th>
                                             <th>DISTRICT</th>
                                             <th>STATE</th>
@@ -153,9 +162,15 @@
                                             <td class="text-center text-muted small font-monospace">{{ $index + 1 }}</td>
                                             @if($type == 'locations')
 
-                                                <td>{{ $record->name }}</td>
-                                                <td>{{ $record->district?->name }}</td>
-                                                <td>{{ $record->state?->name }}</td>
+                                                @php
+                                                    $districtValue = $record->district;
+                                                    $stateValue = $record->state;
+                                                    $usesRelations = is_object($districtValue) || is_object($stateValue);
+                                                @endphp
+
+                                                <td>{{ $usesRelations ? ($record->name ?? $record->city) : $record->city }}</td>
+                                                <td>{{ $usesRelations ? ($districtValue?->name ?? '') : $record->district }}</td>
+                                                <td>{{ $usesRelations ? ($stateValue?->name ?? '') : $record->state }}</td>
 
                                             @else
 
@@ -270,15 +285,21 @@
 
                             <div class="modal-body">
                                 @foreach($columns as $col)
+                                    @php $isOptionalField = $type === 'locations' && $col === 'district'; @endphp
                                     <div class="mb-3">
                                         <label class="form-label text-muted small fw-bold text-uppercase"
                                             style="letter-spacing: 0.5px;">
-                                            {{ Str::headline($col) }} <span class="text-danger">*</span>
+                                            {{ Str::headline($col) }}
+                                            @if($isOptionalField)
+                                                <span class="text-muted fw-normal">(optional)</span>
+                                            @else
+                                                <span class="text-danger">*</span>
+                                            @endif
                                         </label>
                                         <input type="text" name="{{ $col }}" id="input-{{ $col }}"
                                             class="form-control form-control-lg case-master-input" style="font-size: 15px;"
                                             placeholder="Enter {{ strtolower(Str::headline($col)) }}..." value="{{ old($col) }}"
-                                            required>
+                                            @if(!$isOptionalField) required @endif>
                                     </div>
                                 @endforeach
 
@@ -504,8 +525,18 @@
 
                 for (const [key, value] of Object.entries(record)) {
                     const field = document.getElementById('input-' + key);
-                    if (field) { field.value = value ?? ''; }
+                    if (field && typeof value !== 'object') { field.value = value ?? ''; }
                 }
+
+                @if($type === 'locations')
+                // Location records come from MasterCity (name/state{obj}/district{obj})
+                const cityFld = document.getElementById('input-city');
+                const stateFld = document.getElementById('input-state');
+                const distFld = document.getElementById('input-district');
+                if (cityFld) cityFld.value = record.name ?? '';
+                if (stateFld) stateFld.value = (record.state && typeof record.state === 'object') ? (record.state.name ?? '') : (record.state ?? '');
+                if (distFld) distFld.value = (record.district && typeof record.district === 'object') ? (record.district.name ?? '') : (record.district ?? '');
+                @endif
 
                 // Diagnosis multi-select (advice type)
                 const $diagSel = $('#input-diagnosis_ids');
@@ -519,7 +550,7 @@
                 @else
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 @endif
-                    }
+                            }
             window.editRecord = editRecord;
 
             // Heart / favourite toggle
@@ -578,7 +609,7 @@
                     @if($useModalLayout)
                         bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
                     @endif
-                            });
+                                        });
             @endif
 
             @if($showDiagnosis)
