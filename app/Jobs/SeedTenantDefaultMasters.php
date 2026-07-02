@@ -44,6 +44,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'seedAc', 'seedIris', 'seedPupil', 'seedLens',
             'seedEm', 'seedCovertest', 'seedDisc', 'seedFr',
             'seedAdvice', 'seedDiagnosis', 'seedMedicineInstructions', 'seedOtChargeHeads',
+            'seedDosages', 'seedMedicineTypes', 'seedMedicineCategories', 'seedMedicineRoutes',
         ];
 
         $errors = [];
@@ -623,6 +624,47 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'At bedtime',
             'Shake well before use',
         ]));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // Medicine Masters
+    // ─────────────────────────────────────────────────────────────────
+
+    private function seedDosages(): void
+    {
+        $this->insertIfEmpty('dosages', $this->valueRows([
+            '1-0-0', '0-1-0', '0-0-1', '1-1-0', '1-0-1',
+            '0-1-1', '1-1-1', '2-0-0', '0-2-0', '0-0-2', '2-2-2',
+        ], 'dosage'));
+    }
+
+    private function seedMedicineTypes(): void
+    {
+        $this->insertIfEmpty('medicine_types', $this->valueRows([
+            'Tablet', 'Capsule', 'Syrup', 'Suspension', 'Injection',
+            'Eye Drop', 'Eye Ointment', 'Eye Gel', 'Eye Lotion',
+            'Eye Wash', 'Eye Solution', 'Eye Suspension',
+        ], 'name'));
+    }
+
+    private function seedMedicineCategories(): void
+    {
+        $this->insertIfEmpty('medicine_categories', $this->valueRows([
+            'Antibiotic', 'Antibiotic + Steroid', 'Steroid', 'NSAID',
+            'Lubricant / Artificial Tears', 'Anti-Allergic', 'Anti-Glaucoma',
+            'Mydriatic', 'Cycloplegic', 'Miotic', 'Anti-Viral', 'Anti-Fungal',
+            'Diagnostic Agent', 'Local Anesthetic', 'Vitamin & Supplement',
+            'OT / Surgical Medicine', 'Others',
+        ], 'name'));
+    }
+
+    private function seedMedicineRoutes(): void
+    {
+        $this->insertIfEmpty('medicine_routes', $this->valueRows([
+            'Oral', 'Left Eye (OS)', 'Right Eye (OD)', 'Both Eyes (OU)',
+            'Topical', 'Intravenous (IV)', 'Intramuscular (IM)', 'Intravitreal',
+            'Subconjunctival', 'Intracameral', 'Peribulbar', 'Retrobulbar', 'Others',
+        ], 'name'));
     }
 
     private function seedOtChargeHeads(): void

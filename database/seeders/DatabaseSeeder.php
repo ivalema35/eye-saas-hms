@@ -19,6 +19,10 @@ class DatabaseSeeder extends Seeder
             PermissionsSeeder::class,
             PlatformAdminSeeder::class,
             MasterSphCylSeeder::class,
+            DosageSeeder::class,
+            MedicineTypeSeeder::class,
+            MedicineCategorySeeder::class,
+            MedicineRouteSeeder::class,
         ]);
     }
 }

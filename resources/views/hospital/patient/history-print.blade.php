@@ -402,7 +402,7 @@
                     'slug' => $slug,
                     'patient_ids' => $patient->id,
                 ]) }}" class="print-btn">
-                    <i class="bi bi-arrow-left"></i> Back
+                     Back
                 </a>
             </div>
         </div>

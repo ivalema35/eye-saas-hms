@@ -4,7 +4,7 @@
 
 @section('page-actions')
     <a href="{{ route('hospital.ot.bookings.index', ['slug' => $slug]) }}" class="btn btn-outline-secondary btn-sm ot-back-bookings-btn">
-        <i class="bi bi-arrow-left me-1"></i> Back to Bookings
+         Back to Bookings
     </a>
 @endsection
 

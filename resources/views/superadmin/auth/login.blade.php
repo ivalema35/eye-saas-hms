@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,8 +10,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        *, *::before, *::after { box-sizing: border-box; }
-        body, html {
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
             min-height: 100%;
             margin: 0;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -34,7 +41,7 @@
             width: 260px;
             height: 260px;
             border-radius: 50%;
-            background: rgba(27,79,114,.06);
+            background: rgba(27, 79, 114, .06);
             filter: blur(1px);
             animation: floatOrb 12s ease-in-out infinite;
         }
@@ -56,17 +63,19 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(255,255,255,.82);
-            border: 1px solid rgba(41,128,185,.16);
+            background: rgba(255, 255, 255, .82);
+            border: 1px solid rgba(41, 128, 185, .16);
             color: #1B4F72;
-            box-shadow: 0 10px 28px rgba(13,33,55,.14);
+            box-shadow: 0 10px 28px rgba(13, 33, 55, .14);
             z-index: 1;
             animation: bubbleRise var(--dur, 24s) linear infinite;
             backdrop-filter: blur(1px);
             pointer-events: none;
         }
 
-        .page-bubble i { opacity: .85; }
+        .page-bubble i {
+            opacity: .85;
+        }
 
         .page-bubble.b1 {
             width: 92px;
@@ -194,9 +203,9 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             background: #fff;
-            border: 1.5px solid rgba(41,128,185,.12);
+            border: 1.5px solid rgba(41, 128, 185, .12);
             border-radius: 48px;
-            box-shadow: 0 24px 60px rgba(13,33,55,.16);
+            box-shadow: 0 24px 60px rgba(13, 33, 55, .16);
             position: relative;
             z-index: 2;
             overflow: hidden;
@@ -210,7 +219,7 @@
             bottom: 0;
             left: 50%;
             width: 1px;
-            background: rgba(27,79,114,.12);
+            background: rgba(27, 79, 114, .12);
             pointer-events: none;
         }
 
@@ -221,7 +230,7 @@
             align-items: center;
             padding: 44px;
             overflow: hidden;
-            background: linear-gradient(180deg, rgba(235,245,251,.85) 0%, rgba(255,255,255,.96) 100%);
+            background: linear-gradient(180deg, rgba(235, 245, 251, .85) 0%, rgba(255, 255, 255, .96) 100%);
         }
 
         .banner-content {
@@ -236,17 +245,25 @@
             width: 95px;
             height: 95px;
             border-radius: 24px;
-            background: rgba(255,255,255,.95);
+            background: rgba(255, 255, 255, .95);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 8px 20px rgba(13,33,55,.14);
+            box-shadow: 0 8px 20px rgba(13, 33, 55, .14);
             overflow: hidden;
         }
 
-        .banner-logo img { width: 100%; height: 100%; object-fit: contain; }
-        .banner-logo i { font-size: 2rem; color: #1B4F72; }
+        .banner-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .banner-logo i {
+            font-size: 2rem;
+            color: #1B4F72;
+        }
 
         .hero-pet {
             width: 210px;
@@ -257,7 +274,7 @@
             justify-content: center;
             align-items: center;
             background: linear-gradient(145deg, #fff 0%, #EBF5FB 100%);
-            box-shadow: inset 0 2px 0 rgba(255,255,255,.9), 0 12px 24px rgba(13,33,55,.12);
+            box-shadow: inset 0 2px 0 rgba(255, 255, 255, .9), 0 12px 24px rgba(13, 33, 55, .12);
             animation: breathe 5s ease-in-out infinite;
         }
 
@@ -285,7 +302,7 @@
             transform: translate(-50%, -48%);
             font-size: 2.6rem;
             color: #ffffff;
-            filter: drop-shadow(0 1px 3px rgba(13,33,55,.22));
+            filter: drop-shadow(0 1px 3px rgba(13, 33, 55, .22));
             animation: spinSlow 14s linear infinite;
         }
 
@@ -298,12 +315,17 @@
             border-radius: 50%;
             background: #27AE60;
             border: 3px solid #fff;
-            box-shadow: 0 2px 6px rgba(39,174,96,.4);
+            box-shadow: 0 2px 6px rgba(39, 174, 96, .4);
         }
 
         @keyframes spinSlow {
-            from { transform: translate(-50%, -48%) rotate(0deg); }
-            to   { transform: translate(-50%, -48%) rotate(360deg); }
+            from {
+                transform: translate(-50%, -48%) rotate(0deg);
+            }
+
+            to {
+                transform: translate(-50%, -48%) rotate(360deg);
+            }
         }
 
         .banner-content h1 {
@@ -339,7 +361,12 @@
             padding: .3rem 0;
         }
 
-        .banner-features li i { color: #2980B9; font-size: .8rem; width: 14px; text-align: center; }
+        .banner-features li i {
+            color: #2980B9;
+            font-size: .8rem;
+            width: 14px;
+            text-align: center;
+        }
 
         .floating-chip {
             position: absolute;
@@ -349,19 +376,44 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: rgba(255,255,255,.88);
-            border: 1px solid rgba(41,128,185,.2);
+            background: rgba(255, 255, 255, .88);
+            border: 1px solid rgba(41, 128, 185, .2);
             color: #1B4F72;
             font-size: 1.3rem;
-            box-shadow: 0 10px 22px rgba(13,33,55,.14);
+            box-shadow: 0 10px 22px rgba(13, 33, 55, .14);
             animation: bob 6s ease-in-out infinite;
             z-index: 1;
         }
 
-        .chip-1 { top: 16%; left: 11%; animation-delay: -1s; }
-        .chip-2 { right: 13%; top: 27%; width: 62px; height: 62px; animation-delay: -2.2s; }
-        .chip-3 { left: 14%; bottom: 24%; width: 58px; height: 58px; animation-delay: -3.2s; }
-        .chip-4 { right: 21%; bottom: 18%; width: 54px; height: 54px; animation-delay: -4.1s; }
+        .chip-1 {
+            top: 16%;
+            left: 11%;
+            animation-delay: -1s;
+        }
+
+        .chip-2 {
+            right: 13%;
+            top: 27%;
+            width: 62px;
+            height: 62px;
+            animation-delay: -2.2s;
+        }
+
+        .chip-3 {
+            left: 14%;
+            bottom: 24%;
+            width: 58px;
+            height: 58px;
+            animation-delay: -3.2s;
+        }
+
+        .chip-4 {
+            right: 21%;
+            bottom: 18%;
+            width: 54px;
+            height: 54px;
+            animation-delay: -4.1s;
+        }
 
         .auth-form-side {
             display: flex;
@@ -388,9 +440,13 @@
             transition: color .2s;
         }
 
-        .back-link:hover { color: #1B4F72; }
+        .back-link:hover {
+            color: #1B4F72;
+        }
 
-        .form-header { margin-bottom: 1.4rem; }
+        .form-header {
+            margin-bottom: 1.4rem;
+        }
 
         .form-header h2 {
             font-size: 2rem;
@@ -413,7 +469,7 @@
             justify-content: center;
             gap: .5rem;
             background: #EBF5FB;
-            border: 1px solid rgba(27,79,114,.12);
+            border: 1px solid rgba(27, 79, 114, .12);
             border-radius: 999px;
             padding: .56rem 1rem;
             font-size: .8rem;
@@ -422,7 +478,9 @@
             margin-bottom: 1.4rem;
         }
 
-        .form-group { margin-bottom: 1rem; }
+        .form-group {
+            margin-bottom: 1rem;
+        }
 
         .form-label {
             display: block;
@@ -432,7 +490,9 @@
             margin-bottom: .38rem;
         }
 
-        .input-wrap { position: relative; }
+        .input-wrap {
+            position: relative;
+        }
 
         .input-icon {
             position: absolute;
@@ -459,11 +519,13 @@
 
         .form-input:focus {
             border-color: #2980B9;
-            box-shadow: 0 0 0 3px rgba(41,128,185,.12);
+            box-shadow: 0 0 0 3px rgba(41, 128, 185, .12);
             transform: translateY(-1px);
         }
 
-        .form-input.is-error { border-color: #C0392B; }
+        .form-input.is-error {
+            border-color: #C0392B;
+        }
 
         .form-error {
             font-size: .75rem;
@@ -481,8 +543,15 @@
             margin-bottom: .375rem;
         }
 
-        .forgot-link { font-size: .82rem; color: #2980B9; text-decoration: none; }
-        .forgot-link:hover { color: #154360; text-decoration: underline; }
+        .forgot-link {
+            font-size: .82rem;
+            color: #2980B9;
+            text-decoration: none;
+        }
+
+        .forgot-link:hover {
+            color: #154360;
+        }
 
         .remember-row {
             display: flex;
@@ -498,7 +567,11 @@
             cursor: pointer;
         }
 
-        .remember-row label { font-size: .96rem; color: #4A5568; cursor: pointer; }
+        .remember-row label {
+            font-size: .96rem;
+            color: #4A5568;
+            cursor: pointer;
+        }
 
         .btn-login {
             width: 100%;
@@ -514,17 +587,19 @@
             align-items: center;
             justify-content: center;
             gap: .5rem;
-            box-shadow: 0 10px 22px rgba(27,79,114,.34);
+            box-shadow: 0 10px 22px rgba(27, 79, 114, .34);
             transition: background .15s, box-shadow .15s, transform .12s;
         }
 
         .btn-login:hover {
             background: #154360;
-            box-shadow: 0 14px 28px rgba(27,79,114,.38);
+            box-shadow: 0 14px 28px rgba(27, 79, 114, .38);
             transform: translateY(-1px);
         }
 
-        .btn-login:active { transform: translateY(1px); }
+        .btn-login:active {
+            transform: translateY(1px);
+        }
 
         .form-footer {
             text-align: center;
@@ -533,37 +608,82 @@
             color: #9CA3AF;
         }
 
-        .form-footer a { color: #2980B9; text-decoration: none; }
-        .form-footer a:hover { text-decoration: underline; }
+        .form-footer a {
+            color: #2980B9;
+            text-decoration: none;
+        }
+
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(24px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(24px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @keyframes shellIn {
-            from { opacity: 0; transform: translateY(24px) scale(.985); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from {
+                opacity: 0;
+                transform: translateY(24px) scale(.985);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         @keyframes floatOrb {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-18px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-18px);
+            }
         }
 
         @keyframes bob {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         @keyframes breathe {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.04); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.04);
+            }
         }
 
         @keyframes bubbleRise {
@@ -571,15 +691,19 @@
                 transform: translate(0, 0) scale(.88);
                 opacity: 0;
             }
+
             12% {
                 opacity: .92;
             }
+
             40% {
                 transform: translate(calc(var(--drift-x, 0vw) * .35), calc(var(--rise, 124vh) * -.38)) scale(1);
             }
+
             70% {
                 transform: translate(calc(var(--drift-x, 0vw) * -.18), calc(var(--rise, 124vh) * -.72)) scale(1.05);
             }
+
             100% {
                 transform: translate(var(--drift-x, 0vw), calc(var(--rise, 124vh) * -1));
                 opacity: 0;
@@ -587,29 +711,72 @@
         }
 
         @media (max-width: 1024px) {
-            .auth-shell { border-radius: 32px; min-height: auto; }
+            .auth-shell {
+                border-radius: 32px;
+                min-height: auto;
+            }
+
             .auth-banner,
-            .auth-form-side { padding: 32px; }
-            .auth-shell::before { display: none; }
-            .auth-shell { grid-template-columns: 1fr; }
-            .auth-banner { border-bottom: 1px solid rgba(27,79,114,.12); }
+            .auth-form-side {
+                padding: 32px;
+            }
+
+            .auth-shell::before {
+                display: none;
+            }
+
+            .auth-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-banner {
+                border-bottom: 1px solid rgba(27, 79, 114, .12);
+            }
         }
 
         @media (max-width: 768px) {
-            .split-layout { padding: 16px; }
-            .auth-shell { border-radius: 22px; }
-            .auth-banner { display: none; }
-            .auth-form-side { padding: 28px 18px; }
-            .form-header h2 { font-size: 1.6rem; }
-            .role-badge { font-size: .73rem; }
-            .page-bubble { opacity: .55; --rise: 112vh; --drift-x: 5vw; }
+            .split-layout {
+                padding: 16px;
+            }
+
+            .auth-shell {
+                border-radius: 22px;
+            }
+
+            .auth-banner {
+                display: none;
+            }
+
+            .auth-form-side {
+                padding: 28px 18px;
+            }
+
+            .form-header h2 {
+                font-size: 1.6rem;
+            }
+
+            .role-badge {
+                font-size: .73rem;
+            }
+
+            .page-bubble {
+                opacity: .55;
+                --rise: 112vh;
+                --drift-x: 5vw;
+            }
+
             .page-bubble.b1,
             .page-bubble.b4,
             .page-bubble.b6,
-            .page-bubble.b8 { display: none; }
+            .page-bubble.b8 {
+                display: none;
+            }
+
             .page-bubble.b3,
             .page-bubble.b7,
-            .page-bubble.b9 { --drift-x: -6vw; }
+            .page-bubble.b9 {
+                --drift-x: -6vw;
+            }
         }
 
         .eye-toggle {
@@ -626,121 +793,138 @@
             line-height: 1;
             transition: color .2s;
         }
-        .eye-toggle:hover { color: #1B4F72; }
+
+        .eye-toggle:hover {
+            color: #1B4F72;
+        }
     </style>
 </head>
+
 <body>
 
-<div class="split-layout">
-    <div class="page-bubble b1"><i class="bi bi-circle-fill"></i></div>
-    <div class="page-bubble b2"><i class="bi bi-circle-fill"></i></div>
-    <div class="page-bubble b3"><i class="bi bi-shield-fill"></i></div>
-    <div class="page-bubble b4"><i class="bi bi-lock-fill"></i></div>
-    <div class="page-bubble b5"><i class="bi bi-key-fill"></i></div>
-    <div class="page-bubble b6"><i class="bi bi-diagram-3-fill"></i></div>
-    <div class="page-bubble b7"><i class="bi bi-circle-fill"></i></div>
-    <div class="page-bubble b8"><i class="bi bi-heart-fill"></i></div>
-    <div class="page-bubble b9"><i class="bi bi-tools"></i></div>
-    <div class="page-bubble b10"><i class="bi bi-briefcase-fill"></i></div>
-    <div class="page-bubble b11"><i class="bi bi-plus-lg"></i></div>
-    <div class="page-bubble b12"><i class="bi bi-check-circle-fill"></i></div>
+    <div class="split-layout">
+        <div class="page-bubble b1"><i class="bi bi-circle-fill"></i></div>
+        <div class="page-bubble b2"><i class="bi bi-circle-fill"></i></div>
+        <div class="page-bubble b3"><i class="bi bi-shield-fill"></i></div>
+        <div class="page-bubble b4"><i class="bi bi-lock-fill"></i></div>
+        <div class="page-bubble b5"><i class="bi bi-key-fill"></i></div>
+        <div class="page-bubble b6"><i class="bi bi-diagram-3-fill"></i></div>
+        <div class="page-bubble b7"><i class="bi bi-circle-fill"></i></div>
+        <div class="page-bubble b8"><i class="bi bi-heart-fill"></i></div>
+        <div class="page-bubble b9"><i class="bi bi-tools"></i></div>
+        <div class="page-bubble b10"><i class="bi bi-briefcase-fill"></i></div>
+        <div class="page-bubble b11"><i class="bi bi-plus-lg"></i></div>
+        <div class="page-bubble b12"><i class="bi bi-check-circle-fill"></i></div>
 
-    <div class="auth-shell">
+        <div class="auth-shell">
 
-        <div class="auth-banner">
-            <div class="floating-chip chip-1"><i class="bi bi-shield-fill"></i></div>
-            <div class="floating-chip chip-2"><i class="bi bi-lock-fill"></i></div>
-            <div class="floating-chip chip-3"><i class="bi bi-diagram-3-fill"></i></div>
-            <div class="floating-chip chip-4"><i class="bi bi-gear-wide-connected"></i></div>
+            <div class="auth-banner">
+                <div class="floating-chip chip-1"><i class="bi bi-shield-fill"></i></div>
+                <div class="floating-chip chip-2"><i class="bi bi-lock-fill"></i></div>
+                <div class="floating-chip chip-3"><i class="bi bi-diagram-3-fill"></i></div>
+                <div class="floating-chip chip-4"><i class="bi bi-gear-wide-connected"></i></div>
 
-            <div class="banner-content">
-                <div class="banner-logo">
-                    <img src="{{ platform_logo_url() }}" alt="Eye HMS Logo">
+                <div class="banner-content">
+                    <div class="banner-logo">
+                        <img src="{{ platform_logo_url() }}" alt="Eye HMS Logo">
+                    </div>
+                    <div class="hero-pet">
+                        <span class="admin-hero-icon">
+                            <i class="bi bi-shield-fill hero-shield"></i>
+                            <i class="bi bi-gear-fill hero-gear"></i>
+                            <span class="hero-dot" title="System Online"></span>
+                        </span>
+                    </div>
+                    <h1>Master Control Panel</h1>
+                    <p>System administration and tenant management.</p>
+                    <ul class="banner-features">
+                        <li><i class="bi bi-check-circle-fill"></i> Tenant Management</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Subscription Control</li>
+                        <li><i class="bi bi-check-circle-fill"></i> Platform Monitoring</li>
+                        <li><i class="bi bi-check-circle-fill"></i> System Configuration</li>
+                    </ul>
                 </div>
-                <div class="hero-pet">
-                    <span class="admin-hero-icon">
-                        <i class="bi bi-shield-fill hero-shield"></i>
-                        <i class="bi bi-gear-fill hero-gear"></i>
-                        <span class="hero-dot" title="System Online"></span>
-                    </span>
-                </div>
-                <h1>Master Control Panel</h1>
-                <p>System administration and tenant management.</p>
-                <ul class="banner-features">
-                    <li><i class="bi bi-check-circle-fill"></i> Tenant Management</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Subscription Control</li>
-                    <li><i class="bi bi-check-circle-fill"></i> Platform Monitoring</li>
-                    <li><i class="bi bi-check-circle-fill"></i> System Configuration</li>
-                </ul>
             </div>
-        </div>
 
-        <div class="auth-form-side">
-            <div class="auth-form-box">
+            <div class="auth-form-side">
+                <div class="auth-form-box">
 
-                <a href="{{ route('home') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Eye HMS</a>
+                    <a href="{{ route('home') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Eye HMS</a>
 
-                <div class="form-header">
-                    <h2>Platform Admin</h2>
-                    <p>Super Admin access only.</p>
-                </div>
-
-                <div class="role-badge"><i class="bi bi-lock-fill"></i> Restricted Area &mdash; Authorized Personnel Only</div>
-
-                <form method="POST" action="{{ route('superadmin.login.post') }}">
-                    @csrf
-
-                    <div class="form-group">
-                        <label class="form-label" for="email">Email Address</label>
-                        <div class="input-wrap">
-                            <i class="bi bi-envelope-fill input-icon"></i>
-                            <input type="email" id="email" name="email" class="hms-input form-input @error('email') is-error @enderror" value="{{ old('email') }}" placeholder="admin@eyehms.com" required autofocus autocomplete="email">
-                        </div>
-                        @error('email')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i> {{ $message }}</div>@enderror
+                    <div class="form-header">
+                        <h2>Platform Admin</h2>
+                        <p>Super Admin access only.</p>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" for="password">Password</label>
-                        <div class="input-wrap">
-                            <i class="bi bi-lock-fill input-icon"></i>
-                            <input type="password" id="password" name="password" class="hms-input form-input @error('password') is-error @enderror" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required autocomplete="current-password" style="padding-right:2.5rem">
-                            <button type="button" class="eye-toggle" id="togglePassword" aria-label="Toggle password visibility">
-                                <i class="bi bi-eye-fill" id="eyeIcon"></i>
-                            </button>
+                    <div class="role-badge"><i class="bi bi-lock-fill"></i> Restricted Area &mdash; Authorized Personnel
+                        Only</div>
+
+                    <form method="POST" action="{{ route('superadmin.login.post') }}">
+                        @csrf
+
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email Address</label>
+                            <div class="input-wrap">
+                                <i class="bi bi-envelope-fill input-icon"></i>
+                                <input type="email" id="email" name="email"
+                                    class="hms-input form-input @error('email') is-error @enderror"
+                                    value="{{ old('email') }}" placeholder="admin@eyehms.com" required autofocus
+                                    autocomplete="email">
+                            </div>
+                            @error('email')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i>
+                            {{ $message }}</div>@enderror
                         </div>
-                        @error('password')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i> {{ $message }}</div>@enderror
-                    </div>
 
-                    <button type="submit" class="btn-login hms-btn hms-btn-primary"><i class="bi bi-box-arrow-in-right"></i> Sign In to Platform</button>
-                </form>
+                        <div class="form-group">
+                            <label class="form-label" for="password">Password</label>
+                            <div class="input-wrap">
+                                <i class="bi bi-lock-fill input-icon"></i>
+                                <input type="password" id="password" name="password"
+                                    class="hms-input form-input @error('password') is-error @enderror"
+                                    placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" required
+                                    autocomplete="current-password" style="padding-right:2.5rem">
+                                <button type="button" class="eye-toggle" id="togglePassword"
+                                    aria-label="Toggle password visibility">
+                                    <i class="bi bi-eye-fill" id="eyeIcon"></i>
+                                </button>
+                            </div>
+                            @error('password')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i>
+                            {{ $message }}</div>@enderror
+                        </div>
 
-                <div class="form-footer"><a href="{{ route('home') }}"><i class="bi bi-arrow-left"></i> Back to Eye HMS</a></div>
+                        <button type="submit" class="btn-login hms-btn hms-btn-primary"><i
+                                class="bi bi-box-arrow-in-right"></i> Sign In to Platform</button>
+                    </form>
 
+                    <div class="form-footer"><a href="{{ route('home') }}"><i class="bi bi-arrow-left"></i> Back to Eye
+                            HMS</a></div>
+
+                </div>
             </div>
-        </div>
 
+        </div>
     </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 4000, timerProgressBar: true });
         @if(session('error')) Toast.fire({ icon: 'error', title: @json(session('error')) }); @endif
-        @if(session('success')) Toast.fire({ icon: 'success', title: @json(session('success')) }); @endif
+            @if(session('success')) Toast.fire({ icon: 'success', title: @json(session('success')) }); @endif
 
         const togglePassword = document.getElementById('togglePassword');
-        const passwordInput  = document.getElementById('password');
-        const eyeIcon        = document.getElementById('eyeIcon');
-        if (togglePassword && passwordInput) {
-            togglePassword.addEventListener('click', function () {
-                const isPassword = passwordInput.getAttribute('type') === 'password';
-                passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
-                eyeIcon.classList.toggle('bi-eye-fill');
-                eyeIcon.classList.toggle('bi-eye-slash-fill');
-            });
-        }
-    });
-</script>
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function () {
+                    const isPassword = passwordInput.getAttribute('type') === 'password';
+                    passwordInput.setAttribute('type', isPassword ? 'text' : 'password');
+                    eyeIcon.classList.toggle('bi-eye-fill');
+                    eyeIcon.classList.toggle('bi-eye-slash-fill');
+                });
+            }
+        });
+    </script>
 
 </body>
+
 </html>

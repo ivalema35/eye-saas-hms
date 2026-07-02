@@ -40,14 +40,14 @@
                         };
                     @endphp
                     <a href="{{ $backUrl }}" class="btn btn-light case-master-back-btn">
-                        <i class="bi bi-arrow-left me-1"></i> Back
+                        Back
                     </a>
                 @endif
                 <p class="text-muted small mb-0">Keep your hospital's master data organized and up-to-date.</p>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 @if($canWrite && $showDiagnosis)
-                    <button type="button" class="btn btn-outline-secondary"
+                    <button type="button" class="btn btn-outline-secondary case-master-diagnosis-btn"
                         style="border-radius:12px;font-weight:700;border-color:rgba(27,79,114,.3);color:#1B4F72;"
                         data-bs-toggle="modal" data-bs-target="#linkByDiagnosisModal">
                         <i class="bi bi-diagram-3 me-1"></i> Link by Diagnosis
@@ -529,17 +529,17 @@
                 }
 
                 @if($type === 'locations')
-                // Location records come from MasterCity (name/state{obj}/district{obj})
-                const cityFld = document.getElementById('input-city');
-                const stateFld = document.getElementById('input-state');
-                const distFld = document.getElementById('input-district');
-                if (cityFld) cityFld.value = record.name ?? '';
-                if (stateFld) stateFld.value = (record.state && typeof record.state === 'object') ? (record.state.name ?? '') : (record.state ?? '');
-                if (distFld) distFld.value = (record.district && typeof record.district === 'object') ? (record.district.name ?? '') : (record.district ?? '');
+                    // Location records come from MasterCity (name/state{obj}/district{obj})
+                    const cityFld = document.getElementById('input-city');
+                    const stateFld = document.getElementById('input-state');
+                    const distFld = document.getElementById('input-district');
+                    if (cityFld) cityFld.value = record.name ?? '';
+                    if (stateFld) stateFld.value = (record.state && typeof record.state === 'object') ? (record.state.name ?? '') : (record.state ?? '');
+                    if (distFld) distFld.value = (record.district && typeof record.district === 'object') ? (record.district.name ?? '') : (record.district ?? '');
                 @endif
 
-                // Diagnosis multi-select (advice type)
-                const $diagSel = $('#input-diagnosis_ids');
+                                        // Diagnosis multi-select (advice type)
+                                        const $diagSel = $('#input-diagnosis_ids');
                 if ($diagSel.length) {
                     const ids = (record.diagnoses || []).map(d => String(d.id));
                     $diagSel.val(ids).trigger('change');
@@ -550,7 +550,7 @@
                 @else
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 @endif
-                            }
+                                                    }
             window.editRecord = editRecord;
 
             // Heart / favourite toggle
@@ -609,7 +609,7 @@
                     @if($useModalLayout)
                         bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
                     @endif
-                                        });
+                                                                            });
             @endif
 
             @if($showDiagnosis)
@@ -719,6 +719,25 @@
                 border-radius: 12px;
                 font-weight: 900;
                 box-shadow: 0 12px 26px rgba(27, 79, 114, .16);
+            }
+
+            .case-master-diagnosis-btn {
+                border-radius: 12px;
+                font-weight: 700;
+                border-color: rgba(27, 79, 114, .3) !important;
+                color: #1B4F72 !important;
+                background: #fff !important;
+                transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+            }
+
+            .case-master-diagnosis-btn:hover,
+            .case-master-diagnosis-btn:focus {
+                background: #e0f0ff !important;
+                border-color: #1B4F72 !important;
+                color: #1B4F72 !important;
+                box-shadow: 0 10px 22px rgba(27, 79, 114, .10);
+                transform: translateY(-1px);
+                text-decoration: none !important;
             }
 
             .case-master-back-btn {

@@ -681,16 +681,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                                                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                                        <i class="bi bi-list-task"></i> Basic Master
-                                                                                    </a>
-                                                                                    <ul class="dropdown-menu">
-                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                                    </ul>
-                                                                                </div> -->
+                                                                                        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                                            <i class="bi bi-list-task"></i> Basic Master
+                                                                                        </a>
+                                                                                        <ul class="dropdown-menu">
+                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                                        </ul>
+                                                                                    </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
@@ -1250,7 +1250,7 @@
                         )
                         <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-light me-2"
                             style="border-radius:8px; border:1px solid #cde5f5; color:#1B4F72;">
-                            <i class="bi bi-arrow-left me-1"></i> Back
+                            Back
                         </a>
                     @endif
                     <h1 style="font-weight:900!important;color:#0D2137!important;letter-spacing:-.015em">
