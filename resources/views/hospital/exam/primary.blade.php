@@ -3,7 +3,7 @@
     @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
         <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
            class="btn secondary-exam-back-btn btn-sm">
-            <i class="bi bi-arrow-left"></i> Back to Patient
+            Back to Patient
         </a>
     @endif
         @if($exam)

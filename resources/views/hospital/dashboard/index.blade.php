@@ -2119,6 +2119,18 @@
                         <span>Settings</span>
                     </a>
                 @endhaspermission
+                @haspermission('medicine.hospital')
+                    <a href="{{ route('hospital.medicines.index', $slug) }}" class="qa-pill">
+                        <i class="fa-solid fa-pills" style="font-size:24px;color:#34495E"></i>
+                        <span>Medicine</span>
+                    </a>
+                @endhaspermission
+                @haspermission('masters.hospital')
+                    <a href="{{ route('hospital.masters.index', $slug) }}" class="qa-pill">
+                        <i class="fa-solid fa-database" style="font-size:24px;color:#34495E"></i>
+                        <span>Masters</span>
+                    </a>
+@endhaspermission
             </div>
         </div>
     </div>

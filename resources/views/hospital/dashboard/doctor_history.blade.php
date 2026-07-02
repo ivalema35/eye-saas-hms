@@ -182,7 +182,7 @@
             </h5>
             <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary px-3"
                 style="border-radius: 6px;">
-                <i class="bi bi-arrow-left"></i> Back to Dashboard
+                 Back to Dashboard
             </a>
         </div>
 
@@ -232,12 +232,12 @@
                     <div class="col-12 col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-sm w-100 fw-bold"
                             style="background:#1B4F72; color:#fff; border-radius:8px;">
-                            <i class="bi bi-search me-1"></i> Filter
+                             Filter
                         </button>
                         @if(request('patient_name') || request('doctor_name') || request('contact_no') || request('date'))
                             <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" class="btn btn-sm w-100 fw-bold"
                                 style="background:#e2e8f0; color:#1B4F72; border-radius:8px;">
-                                <i class="bi bi-x-lg"></i>
+                                Clear
                             </a>
                         @endif
                     </div>
@@ -310,8 +310,8 @@
                 @if($historyPatients->hasPages())
                     <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
                     {{ $historyPatients->appends(request()->except('patient_page'))->appends([
-                            '_tab' => 'patient'
-                        ])->links() }}
+        '_tab' => 'patient'
+    ])->links() }}
                                         </div>
                 @endif
             </div>
@@ -353,12 +353,12 @@
                     <div class="col-12 col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-sm w-100 fw-bold"
                             style="background:#1B4F72; color:#fff; border-radius:8px;">
-                            <i class="bi bi-search me-1"></i>Filter
+                            Filter
                         </button>
                         @if(request('hosp_name') || request('hosp_city') || request('hosp_district') || request('hosp_state'))
                             <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}#hospital"
-                                class="btn btn-sm fw-bold" style="background:#e2e8f0; color:#1B4F72; border-radius:8px;">
-                                <i class="bi bi-x-lg"></i>
+                                class="btn btn-sm w-100 fw-bold" style="background:#e2e8f0; color:#1B4F72; border-radius:8px;">
+                                Clear
                             </a>
                         @endif
                     </div>
@@ -426,8 +426,8 @@
                                          <td>
                                         <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
                                         <button type="button" class="btn btn-sm btn-outline-primary view-hosp-btn"
-                                            style="border-radius:8px;" data-id="{{ $hospital->id }}">
-                                            <i class="bi bi-eye"></i>
+                                            style="border-radius:8px; color:#000; background:#f6c23e; border:none; font-weight:600;" data-id="{{ $hospital->id }}">
+                                            <i class="bi bi-eye-fill"></i> View
                                         </button>
 
                                         @if(!$reqInfo)
@@ -442,17 +442,17 @@
                                             <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
-                                                    style="border-radius:8px;"
-                                                    onclick="return confirm('Connection remove karna chahte ho?')">
-                                                    <i class="bi bi-x-lg"></i>
+                                                    style="border-radius:8px; color:white; background:#dc3545;"
+                                                    onclick="return confirm('Do you want to remove this connection?')">
+                                                   Cancel
                                                 </button>
                                             </form>
                                         @elseif($reqInfo['direction'] === 'sent')
                                             <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold"
-                                                    style="border-radius:8px;">
-                                                    <i class="bi bi-x-lg"></i> Cancel
+                                                    style="border-radius:8px; color:#000; background:#dc3545;">
+                                                     Cancel
                                                 </button>
                                             </form>
                                         @else
@@ -593,7 +593,7 @@
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
                                                 style="border-radius:8px;min-width:80px;"
-                                                onclick="return confirm('Request remove karna chahte ho?')">
+                                                onclick="return confirm('Do you want to remove this request?')">
                                                 <i class="bi bi-x-lg me-1"></i>Remove
                                             </button>
                                         </form>
@@ -663,9 +663,9 @@
                                             @csrf @method('DELETE')
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
-                                                style="border-radius:8px;"
-                                                onclick="return confirm('Remove karna chahte ho?')">
-                                                <i class="bi bi-x-lg"></i>
+                                                style="border-radius:8px; background:#dc3545; color:#fff;"
+                                                onclick="return confirm('Do you want to remove it?')">
+                                                Cancel
                                             </button>
                                         </form>
                                     </td>

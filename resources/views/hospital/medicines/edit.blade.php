@@ -4,7 +4,7 @@
 
 @section('page-actions')
     <a href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i> Back to List
+         Back to List
     </a>
 @endsection
 

@@ -48,6 +48,7 @@
             font-weight: 600;
             font-size: 13px;
             transition: .2s;
+
         }
 
         .btn-view-partner:hover {
@@ -73,7 +74,7 @@
             </div>
             <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}#request"
                 class="btn btn-sm btn-outline-secondary px-3" style="border-radius:6px;">
-                <i class="bi bi-arrow-left me-1"></i> Back
+                Back
             </a>
         </div>
 
@@ -96,9 +97,8 @@
                 </div>
                 <div class="col-12 col-md-2">
                     <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Contact No.</label>
-                    <input type="text" name="contact_no" value="{{ $contactNo ?? '' }}"
-                        class="form-control form-control-sm" placeholder="Search contact..."
-                        maxlength="15" style="border-radius:8px;border:1px solid #cbd5e1;">
+                    <input type="text" name="contact_no" value="{{ $contactNo ?? '' }}" class="form-control form-control-sm"
+                        placeholder="Search contact..." maxlength="15" style="border-radius:8px;border:1px solid #cbd5e1;">
                 </div>
                 <div class="col-12 col-md-2">
                     <label class="form-label fw-semibold mb-1" style="color:#1B4F72;font-size:13px;">Date</label>

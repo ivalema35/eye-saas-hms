@@ -602,7 +602,7 @@
                 </div>
                 <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
                     class="btn btn-sm btn-outline-secondary px-3" style="border-radius:6px;">
-                    <i class="bi bi-arrow-left me-1"></i> Back to Patients
+                     Back to Patients
                 </a>
             </div>
 
@@ -748,7 +748,6 @@
                     <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
                         class="btn btn-outline-secondary d-flex align-items-center gap-2"
                         style="border-color: var(--history-secondary); color: var(--history-secondary);">
-                        <i class="bi bi-arrow-left"></i>
                         <span>Back to Patients</span>
                     </a>
                 </div>
