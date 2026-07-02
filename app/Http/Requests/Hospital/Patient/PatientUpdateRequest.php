@@ -28,7 +28,7 @@ class PatientUpdateRequest extends FormRequest
             'occupation' => ['nullable', 'string', 'max:100'],
             'contact_no' => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
             'whatsapp_no' => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
-            'location_id' => ['required', 'integer', 'exists:tbl_locations,id'],
+            'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
             'doctor_id' => ['required', 'integer', 'exists:hospital_users,id'],

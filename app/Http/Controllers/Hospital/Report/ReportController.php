@@ -112,7 +112,7 @@ class ReportController extends Controller
 
     private function buildQuery(Request $request): Builder
     {
-        $query = Patient::query()->with(['doctor', 'reception', 'location', 'masterCity', 'caseType']);
+        $query = Patient::query()->with(['doctor', 'reception', 'location', 'masterCity.district', 'masterCity.state', 'caseType']);
 
         $query->when($request->filled('reception_id'), function (Builder $builder) use ($request): void {
             $builder->where('reception_id', (int) $request->input('reception_id'));

@@ -848,7 +848,7 @@
                                     </li>
                                     <li class="list-group-item px-0 py-2 border-0">
                                         <i class="bi bi-geo-alt text-muted me-2"></i>
-                                        {{ $patient->location->name ?? 'N/A' }}
+                                        {{ $patient->locationLabel }}
                                     </li>
                                     <li class="list-group-item px-0 py-2 border-0">
                                         <i class="bi bi-calendar-plus text-muted me-2"></i>

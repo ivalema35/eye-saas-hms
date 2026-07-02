@@ -660,7 +660,8 @@
                     </div>
                     <div class="stat-info">
                         <h3 class="stat-value">
-                            {{ $patients->where('secondary_done_at', null)->where('primary_done_at', null)->count() }}</h3>
+                            {{ $patients->where('secondary_done_at', null)->where('primary_done_at', null)->count() }}
+                        </h3>
                         <p class="stat-label">Waiting</p>
                     </div>
                 </div>
@@ -819,9 +820,8 @@
                                             data-name="{{ $p->full_name }}" data-age="{{ $p->age }}"
                                             data-gender="{{ ucfirst($p->gender ?? '') }}" data-contact="{{ $p->contact_no }}"
                                             data-whatsapp="{{ $p->whatsapp_no }}" data-occupation="{{ $p->occupation }}"
-                                            data-city="{{ $p->location?->city ?? $p->masterCity?->name }}"
-                                            data-district="{{ $p->location?->district }}"
-                                            data-state="{{ $p->location?->state }}" data-doctor="{{ $p->doctor?->name }}"
+                                            data-city="{{ $p->cityName }}" data-district="{{ $p->districtName }}"
+                                            data-state="{{ $p->stateName }}" data-doctor="{{ $p->doctor?->name }}"
                                             data-case="{{ $p->caseType?->case_type ?? '' }}"
                                             data-fee="{{ number_format($p->case_fee, 0) }}"
                                             data-referrer="{{ $p->referrer?->name }}"
@@ -882,9 +882,9 @@
 
                                         {{-- Delete --}}
                                         <!-- <form method="POST" action="{{ route('hospital.patients.destroy', ['slug' => $slug, 'patient' => $p->id]) }}" class="d-contents delete-form">
-                                                @csrf @method('DELETE')
-                                                <button type="button" class="pta pta-delete delete-btn" title="Delete"><i class="bi bi-trash3-fill"></i></button>
-                                            </form> -->
+                                                        @csrf @method('DELETE')
+                                                        <button type="button" class="pta pta-delete delete-btn" title="Delete"><i class="bi bi-trash3-fill"></i></button>
+                                                    </form> -->
 
                                         {{-- Check-in (phone only) --}}
                                         @if($p->type === 'phone' && !$p->case_id)

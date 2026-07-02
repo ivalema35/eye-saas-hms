@@ -15,7 +15,6 @@
 namespace App\Models\Hospital;
 
 use App\Models\Hospital\OT\OtBooking;
-use App\Models\Hospital\Referrer;
 use App\Models\Platform\MasterCity;
 use App\Models\Platform\Tenant;
 use App\Traits\BelongsToTenant;
@@ -109,6 +108,36 @@ class Patient extends Model
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
+    }
+
+    /** City name — prefers MasterCity over old Location */
+    public function getCityNameAttribute(): string
+    {
+        return $this->masterCity?->name ?? $this->location?->city ?? '';
+    }
+
+    /** District name — prefers MasterCity over old Location */
+    public function getDistrictNameAttribute(): string
+    {
+        return $this->masterCity?->district?->name ?? $this->location?->district ?? '';
+    }
+
+    /** State name — prefers MasterCity over old Location */
+    public function getStateNameAttribute(): string
+    {
+        return $this->masterCity?->state?->name ?? $this->location?->state ?? '';
+    }
+
+    /** Full location label: "City, District, State" */
+    public function getLocationLabelAttribute(): string
+    {
+        $parts = array_filter([
+            $this->getCityNameAttribute(),
+            $this->getDistrictNameAttribute(),
+            $this->getStateNameAttribute(),
+        ]);
+
+        return $parts ? implode(', ', $parts) : 'N/A';
     }
 
     public function otBookings()
