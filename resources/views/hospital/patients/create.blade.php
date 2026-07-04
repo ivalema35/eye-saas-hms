@@ -296,20 +296,13 @@
                 if (genderEl && p.gender) { genderEl.value = p.gender; }
 
                 var locEl = document.getElementById('locationSelect');
-                if (locEl && p.location_id) {
+                if (locEl && p.location_id && locEl.querySelector('option[value="' + p.location_id + '"]')) {
                     locEl.value = p.location_id;
                     if (typeof $ !== 'undefined') {
                         $(locEl).trigger('change');
                     } else {
                         locEl.dispatchEvent(new Event('change'));
                     }
-                }
-                // Shared patients have location_id = null (belongs to partner hospital's DB).
-                // Clear the field so the receptionist fills it manually.
-                if (p.type === 'shared' && locEl) {
-                    locEl.value = '';
-                    if (typeof $ !== 'undefined') { $(locEl).trigger('change'); }
-                    else { locEl.dispatchEvent(new Event('change')); }
                 }
 
                 var oldPatientCb = document.getElementById('isOldPatient');
