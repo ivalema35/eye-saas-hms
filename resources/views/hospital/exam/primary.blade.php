@@ -991,7 +991,7 @@ $vnCols = [
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Done
+                        Done
                     </button>
                 </div>
             </div>
@@ -1104,7 +1104,7 @@ $pgMasterOpts = [
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Save
+                    Save
                     </button>
                 </div>
             </div>
@@ -1127,8 +1127,8 @@ $pgMasterOpts = [
                             <span id="pgPickerCurrent" class="fw-bold px-3 py-1 rounded-2 text-center" style="font-size:18px;color:white;background:#1B4F72;min-width:80px;letter-spacing:.02em;">—</span>
                         </div>
                         <div style="width:1px;height:44px;background:#e2e8f0;"></div>
-                        <button type="button" class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1" id="pgPickerClear" style="border-radius:8px;font-size:12px;font-weight:600;padding:6px 14px;">
-                            <i class="bi bi-x-circle"></i> Clear
+                        <button type="button" class="btn btn-sm btn-danger d-flex align-items-center gap-1" id="pgPickerClear" style="border-radius:8px;font-size:12px;font-weight:600;padding:6px 14px;">
+                             Clear
                         </button>
                         <div class="ms-auto d-flex align-items-center gap-2">
                             <div class="input-group" style="width:200px;">
@@ -1136,7 +1136,7 @@ $pgMasterOpts = [
                                 <input type="number" id="pgPickerManual" class="form-control" step="0.25" style="border-color:#1B4F72;font-size:13px;font-weight:600;" placeholder="e.g. −3.75">
                             </div>
                             <button type="button" class="btn btn-primary d-flex align-items-center gap-1 px-3" id="pgPickerSaveManual" style="background:#1B4F72;border-color:#1B4F72;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap;">
-                                <i class="bi bi-check-lg"></i> Apply
+                                 Apply
                             </button>
                         </div>
                     </div>
@@ -1321,7 +1321,7 @@ $pgMasterOpts = [
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Save
+                        Save
                     </button>
                 </div>
             </div>
@@ -1396,7 +1396,7 @@ $pgMasterOpts = [
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Done
+                        Done
                     </button>
                 </div>
             </div>
@@ -1501,7 +1501,7 @@ foreach ($oeFieldMeta as $meta) {
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Done
+                       Done
                     </button>
                 </div>
             </div>
@@ -1610,7 +1610,7 @@ foreach ($oeFieldMeta as $meta) {
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg me-1"></i>Done
+                        Done
                     </button>
                 </div>
             </div>
@@ -1918,13 +1918,13 @@ $allAdvices = collect($masters['advices'] ?? [])->filter(fn($a) => ($a->advice ?
 
                 </div>
                 <div class="modal-footer justify-content-between" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-sm btn-outline-danger"
+                    <button type="button" class="btn btn-sm btn-danger"
                             onclick="document.getElementById('advice_textarea').value=''; document.getElementById('adviceCharCount').textContent='0 / 2000'; if(typeof updateLivePreview==='function') updateLivePreview();">
-                        <i class="bi bi-x-circle me-1"></i>Clear
+                        Clear
                     </button>
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal"
                             style="background:#1B4F72;border-color:#1B4F72;">
-                        <i class="bi bi-check-lg me-1"></i>Done
+                       Done
                     </button>
                 </div>
             </div>
@@ -2588,11 +2588,11 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                         item.quantity || '',
                         item.route_id || ''
                     ));
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Added'; btn.classList.replace('btn-primary', 'btn-success'); }
+                    if (btn) { btn.disabled = false; btn.innerHTML = 'Added'; btn.classList.replace('btn-primary', 'btn-success'); }
                     updateLivePreview();
                 })
                 .catch(() => {
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-plus-lg me-1"></i>Add All'; }
+                    if (btn) { btn.disabled = false; btn.innerHTML = 'Add All'; }
                     alert('Could not load medicine group.');
                 });
         };
@@ -2603,7 +2603,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             const ta = document.getElementById('advice_textarea');
             if (!ta) return;
             const cur = ta.value.trim();
-            ta.value = cur ? cur + '\n' + text : text;
+            ta.value = cur ? cur + ', ' + text : text;
             if (typeof updateLivePreview === 'function') updateLivePreview();
         };
 
@@ -2627,7 +2627,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                             const text = adviceMap[a.id] || '';
                             if (!text) return;
                             if (!ta.value.includes(text)) {
-                                ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+                                ta.value = ta.value.trim() ? ta.value.trim() + ', ' + text : text;
                             }
                         });
                         ta.dispatchEvent(new Event('input'));
@@ -3172,7 +3172,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         if (!text) return;
         const ta = document.getElementById('advice_textarea');
         if (!ta) return;
-        ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+        ta.value = ta.value.trim() ? ta.value.trim() + ', ' + text : text;
         ta.dispatchEvent(new Event('input'));
         checkProgress();
         if (typeof updateLivePreview === 'function') updateLivePreview();
@@ -3274,7 +3274,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         function appendToTextarea(text) {
             const ta = document.getElementById('advice_textarea');
             if (!ta) return;
-            ta.value = ta.value.trim() ? ta.value.trim() + '\n' + text : text;
+            ta.value = ta.value.trim() ? ta.value.trim() + ', ' + text : text;
             ta.dispatchEvent(new Event('input'));
             if (typeof updateLivePreview === 'function') updateLivePreview();
         }
