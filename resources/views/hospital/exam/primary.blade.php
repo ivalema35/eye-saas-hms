@@ -532,7 +532,12 @@ $prescriptions = $exam?->prescriptions ?? collect();
             <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
             <div class="d-flex align-items-center gap-1">
                 <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
-                <span class="fw-semibold ms-1" style="color:#1e293b;">{{ $patient->full_name }}</span>
+                <span class="fw-semibold ms-1 editable-patient-name" id="patientNameDisplay"
+                      style="color:#1e293b;cursor:pointer;border-bottom:1px dashed #94a3b8;"
+                      title="Click to edit name"
+                      data-update-url="{{ route('hospital.patients.quick-name', ['slug' => $slug, 'patient' => $patient->id]) }}">{{ $patient->full_name }}</span>
+                <input type="text" id="patientNameInput" class="form-control form-control-sm ms-1 d-none"
+                       style="width:180px;" value="{{ $patient->full_name }}">
             </div>
             <span style="width:1px;height:16px;background:#cbd5e1;display:inline-block;"></span>
             <div class="d-flex align-items-center gap-1">
@@ -553,6 +558,13 @@ $prescriptions = $exam?->prescriptions ?? collect();
                     <span class="wp-r">R</span>
                     <span class="wp-time">{{ $pWFmt }}</span>
                 </span>
+                <button type="button" class="btn btn-sm px-2 fw-semibold ms-1 d-print-none"
+                    style="background-color: #f59e0b; color:#fff; border-radius: 50px; border:none;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#patientInfoModalExam"
+                    title="Patient Details">
+                    <i class="bi bi-person-lines-fill"></i>
+                </button>
             </div>
         </div>
 
@@ -646,6 +658,13 @@ $prescriptions = $exam?->prescriptions ?? collect();
                     <span class="wp-r">R</span>
                     <span class="wp-time">{{ $pWFmt }}</span>
                 </span>
+                <!-- <button type="button" class="btn btn-sm px-2 fw-semibold ms-1 d-print-none"
+                    style="background-color: #f59e0b; color:#fff; border-radius: 50px; border:none;"
+                    data-bs-toggle="modal"
+                    data-bs-target="#patientInfoModalExam"
+                    title="Patient Details">
+                    <i class="bi bi-person-lines-fill"></i>
+                </button> -->
             </div>
         </div>
 
@@ -4544,6 +4563,231 @@ if (document.documentElement.classList.contains('exam-inline')) {
     }
     // Fallback: run after draft-restore timer (300ms) completes
     setTimeout(initCanvas, 400);
+})();
+</script>
+
+{{-- Patient Info Modal --}}
+<div class="modal fade d-print-none" id="patientInfoModalExam" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content"
+            style="border-radius:14px; overflow:hidden; border:none; box-shadow:0 20px 60px rgba(0,0,0,.18);">
+
+            {{-- Header --}}
+            <div class="modal-header text-white py-3 px-4" style="background:#1B4F72;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-person-badge-fill fs-5"></i>
+                    <div>
+                        <div class="fw-bold fs-6">{{ $patient->first_name }} {{ $patient->middle_name }}
+                            {{ $patient->last_name }}</div>
+                        <small style="opacity:.8;">MRD: {{ $patient->patient_code ?? '—' }}</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            {{-- Body --}}
+            <div class="modal-body p-4" style="background:#f8fafc;">
+                <div class="row g-3">
+
+                    {{-- Personal Info --}}
+                    <div class="col-12">
+                        <div class="fw-bold mb-2"
+                            style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
+                            <i class="bi bi-person-fill me-1"></i> Personal Information
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Full Name</div>
+                                    <div class="fw-semibold">
+                                        {{ trim($patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Age</div>
+                                    <div class="fw-semibold">{{ $patient->age ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Gender</div>
+                                    <div class="fw-semibold">{{ ucfirst($patient->gender ?? '—') }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Occupation</div>
+                                    <div class="fw-semibold">{{ $patient->occupation ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Contact No.</div>
+                                    <div class="fw-semibold">{{ $patient->contact_no ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">WhatsApp No.</div>
+                                    <div class="fw-semibold">{{ $patient->whatsapp_no ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">City</div>
+                                    <div class="fw-semibold">{{ $patient->cityName ?: '—' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Appointment Info --}}
+                    <div class="col-12">
+                        <div class="fw-bold mb-2"
+                            style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
+                            <i class="bi bi-calendar2-check-fill me-1"></i> Appointment Information
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Appointment Date</div>
+                                    <div class="fw-semibold">
+                                        {{ $patient->appointment_date ? $patient->appointment_date->format('d M, Y') : '—' }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Type</div>
+                                    <div class="fw-semibold">
+                                        @if($patient->type === 'walkin')
+                                            <span class="badge" style="background:#dcfce7; color:#166534;">Walk-in</span>
+                                        @elseif($patient->type === 'phone')
+                                            <span class="badge" style="background:#dbeafe; color:#1e40af;">Phone</span>
+                                        @else
+                                            {{ ucfirst($patient->type ?? '—') }}
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Patient Status</div>
+                                    <div class="fw-semibold">
+                                        @if($patient->is_old_patient)
+                                            <span class="badge" style="background:#fef3c7; color:#92400e;">Old
+                                                Patient</span>
+                                        @else
+                                            <span class="badge" style="background:#d1fae5; color:#065f46;">New
+                                                Patient</span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Doctor</div>
+                                    <div class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Case Type</div>
+                                    <div class="fw-semibold">{{ $patient->caseType->case_type ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Case Fee</div>
+                                    <div class="fw-semibold">₹ {{ number_format($patient->case_fee ?? 0, 2) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Receptionist</div>
+                                    <div class="fw-semibold">{{ $patient->reception->name ?? '—' }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
+                                    <div class="text-muted" style="font-size:11px;">Referrer</div>
+                                    <div class="fw-semibold">{{ $patient->referrer->name ?? '—' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            {{-- Footer --}}
+            <div class="modal-footer px-4 py-3" style="background:#fff; border-top:1px solid #e2e8f0;">
+                <button type="button" class="btn btn-sm px-4" data-bs-dismiss="modal"
+                    style="background:#e2e8f0; color:#475569; border-radius:8px; font-weight:600; border:none;">
+                    Close
+                </button>
+                <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                    class="btn btn-sm px-4 text-white fw-semibold"
+                    style="background:#1B4F72; border-radius:8px; border:none;">
+                    <i class="bi bi-pencil-fill me-1"></i> Edit Patient
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var display = document.getElementById('patientNameDisplay');
+    var input = document.getElementById('patientNameInput');
+    if (!display || !input) { return; }
+
+    function startEdit() {
+        input.value = display.textContent.trim();
+        display.classList.add('d-none');
+        input.classList.remove('d-none');
+        input.focus();
+        input.select();
+    }
+
+    function cancelEdit() {
+        input.classList.add('d-none');
+        display.classList.remove('d-none');
+    }
+
+    function saveEdit() {
+        var newName = input.value.trim();
+        if (!newName || newName === display.textContent.trim()) { cancelEdit(); return; }
+
+        fetch(display.dataset.updateUrl, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ full_name: newName }),
+        })
+            .then(function (res) { return res.ok ? res.json() : Promise.reject(res); })
+            .then(function (data) {
+                display.textContent = data.full_name;
+                cancelEdit();
+            })
+            .catch(function () {
+                alert('Could not update name. Please try again.');
+                cancelEdit();
+            });
+    }
+
+    display.addEventListener('click', startEdit);
+    input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); saveEdit(); }
+        else if (e.key === 'Escape') { e.preventDefault(); cancelEdit(); }
+    });
+    input.addEventListener('blur', cancelEdit);
 })();
 </script>
 

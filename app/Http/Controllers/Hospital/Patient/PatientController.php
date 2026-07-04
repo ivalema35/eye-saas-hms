@@ -129,7 +129,7 @@ class PatientController extends Controller
                 'gender' => $p->gender,
                 'whatsapp_no' => $p->whatsapp_no,
                 'occupation' => $p->occupation,
-                'location_id' => null,
+                'location_id' => $p->location_id,
             ]);
         }
 
@@ -335,6 +335,30 @@ class PatientController extends Controller
 
         return redirect()->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Patient updated.');
+    }
+
+    public function quickUpdateName(Request $request, string $slug, Patient $patient): JsonResponse
+    {
+        abort_unless(Auth::guard('hospital_user')->user()?->role?->slug === 'doctor', 403);
+
+        $data = $request->validate([
+            'full_name' => ['required', 'string', 'max:150'],
+        ]);
+
+        $parts = preg_split('/\s+/', trim($data['full_name']));
+        $firstName = array_shift($parts);
+        $lastName = count($parts) ? array_pop($parts) : '';
+        $middleName = count($parts) ? implode(' ', $parts) : '';
+
+        $patient->update([
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'last_name' => $lastName,
+        ]);
+
+        return response()->json([
+            'full_name' => $patient->fresh()->full_name,
+        ]);
     }
 
     public function destroy(string $slug, Patient $patient): RedirectResponse

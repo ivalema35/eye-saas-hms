@@ -45,6 +45,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'seedEm', 'seedCovertest', 'seedDisc', 'seedFr',
             'seedAdvice', 'seedDiagnosis', 'seedMedicineInstructions', 'seedOtChargeHeads',
             'seedDosages', 'seedMedicineTypes', 'seedMedicineCategories', 'seedMedicineRoutes',
+            'seedHno',
         ];
 
         $errors = [];
@@ -665,6 +666,16 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'Topical', 'Intravenous (IV)', 'Intramuscular (IM)', 'Intravitreal',
             'Subconjunctival', 'Intracameral', 'Peribulbar', 'Retrobulbar', 'Others',
         ], 'name'));
+    }
+
+    private function seedHno(): void
+    {
+        $this->insertIfEmpty('tbl_master_hno', $this->valueRows([
+            'Diabetes Mellitus (DM)', 'Hypertension (HTN)', 'Asthma', 'COPD',
+            'Thyroid Disorder', 'Cardiac Disease', 'Kidney Disease (CKD)',
+            'Liver Disease', 'Stroke (CVA)', 'Epilepsy', 'Tuberculosis (TB)',
+            'Hepatitis', 'HIV', 'Bleeding Disorder', 'Anemia',
+        ]));
     }
 
     private function seedOtChargeHeads(): void
