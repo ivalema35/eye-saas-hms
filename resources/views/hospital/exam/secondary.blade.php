@@ -98,7 +98,7 @@
         background: #fff;
         transition: border-color .15s, box-shadow .15s;
     }
-    .pg-select-wrap .pg-inp { padding-right: 28px; }
+    .pg-select-wrap .pg-inp { padding-right: 12px; }
     .pg-select-wrap .pg-inp:focus,
     .exam-plain-inp:focus {
         border-color: #1B4F72;
