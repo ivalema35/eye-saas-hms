@@ -451,7 +451,7 @@
                                             <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold"
-                                                    style="border-radius:8px; color:#000; background:#dc3545;">
+                                                    style="border-radius:8px; color:#fff; background:#dc3545;">
                                                      Cancel
                                                 </button>
                                             </form>
@@ -585,16 +585,16 @@
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm fw-bold"
                                                 style="background:#16a34a;color:#fff;border-radius:8px;min-width:80px;">
-                                                <i class="bi bi-check-lg me-1"></i>Accept
+                                                Accept
                                             </button>
                                         </form>
                                         <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf @method('DELETE')
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
-                                                style="border-radius:8px;min-width:80px;"
+                                                style="border-radius:8px;min-width:80px;color:#fff; background:#dc3545;"
                                                 onclick="return confirm('Do you want to remove this request?')">
-                                                <i class="bi bi-x-lg me-1"></i>Remove
+                                                Remove
                                             </button>
                                         </form>
                                     </td>
