@@ -87,7 +87,7 @@
         background: #fff;
         transition: border-color .15s, box-shadow .15s;
     }
-    .pg-select-wrap .pg-inp { padding-right: 28px; }
+    .pg-select-wrap .pg-inp { padding-right: 12px; }
     .pg-select-wrap .pg-inp:focus,
     .exam-plain-inp:focus {
         border-color: #1B4F72;
@@ -816,7 +816,7 @@ $prescriptions = $exam?->prescriptions ?? collect();
                                             </select>
                                         </td>
                                         <td><input type="text" name="exam_data[co_rows][{{ $ri }}][comment]" value="{{ $row['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                        <td class="text-center"><button type="button" class="btn btn-sm btn-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -886,7 +886,7 @@ $prescriptions = $exam?->prescriptions ?? collect();
                                             </select>
                                         </td>
                                         <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][comment]" value="{{ $krow['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                        <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                        <td class="text-center"><button type="button" class="btn btn-sm btn-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -2965,7 +2965,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             <td><select name="exam_data[co_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
             <td><select name="exam_data[co_rows][${i}][eye]" class="form-select form-select-sm">${eyeOpts}</select></td>
             <td><input type="text" name="exam_data[co_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
+            <td class="text-center"><button type="button" class="btn btn-sm btn-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
         document.getElementById('coBody').appendChild(tr);
         const msg = document.getElementById('coEmptyMsg');
         if (msg) { msg.style.display = 'none'; }
@@ -3104,7 +3104,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 <td><select name="exam_data[kco_rows][${i}][since]" class="form-select form-select-sm">${sinceOpts}</select></td>
                 <td><select name="exam_data[kco_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
                 <td><input type="text" name="exam_data[kco_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
+                <td class="text-center"><button type="button" class="btn btn-sm btn-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
             document.getElementById('kcoBody').appendChild(tr);
             const msg = document.getElementById('kcoEmptyMsg');
             if (msg) { msg.style.display = 'none'; }
