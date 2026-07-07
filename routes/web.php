@@ -29,6 +29,7 @@ use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
 use App\Http\Controllers\SuperAdmin\LocationMasterController;
+use App\Http\Controllers\SuperAdmin\MedicineMasterController;
 use App\Http\Controllers\SuperAdmin\TimezoneMasterController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use Illuminate\Support\Facades\Route;
@@ -184,6 +185,41 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::put('/locations/cities/{city}', [LocationMasterController::class, 'updateCity'])->name('locations.cities.update');
         Route::delete('/locations/cities/{city}', [LocationMasterController::class, 'destroyCity'])->name('locations.cities.destroy');
         Route::patch('/locations/cities/{city}/toggle', [LocationMasterController::class, 'toggleCity'])->name('locations.cities.toggle');
+
+        // Medicine Master — global catalog (no medicine groups)
+        Route::get('/medicine-master', [MedicineMasterController::class, 'index'])->name('medicine-master.index');
+
+        // Dosages
+        Route::post('/medicine-master/dosages', [MedicineMasterController::class, 'storeDosage'])->name('medicine-master.dosages.store');
+        Route::put('/medicine-master/dosages/{dosage}', [MedicineMasterController::class, 'updateDosage'])->name('medicine-master.dosages.update');
+        Route::delete('/medicine-master/dosages/{dosage}', [MedicineMasterController::class, 'destroyDosage'])->name('medicine-master.dosages.destroy');
+        Route::patch('/medicine-master/dosages/{dosage}/toggle', [MedicineMasterController::class, 'toggleDosage'])->name('medicine-master.dosages.toggle');
+
+        // Medicine Types
+        Route::post('/medicine-master/types', [MedicineMasterController::class, 'storeType'])->name('medicine-master.types.store');
+        Route::put('/medicine-master/types/{type}', [MedicineMasterController::class, 'updateType'])->name('medicine-master.types.update');
+        Route::delete('/medicine-master/types/{type}', [MedicineMasterController::class, 'destroyType'])->name('medicine-master.types.destroy');
+        Route::patch('/medicine-master/types/{type}/toggle', [MedicineMasterController::class, 'toggleType'])->name('medicine-master.types.toggle');
+
+        // Medicine Categories
+        Route::post('/medicine-master/categories', [MedicineMasterController::class, 'storeCategory'])->name('medicine-master.categories.store');
+        Route::put('/medicine-master/categories/{category}', [MedicineMasterController::class, 'updateCategory'])->name('medicine-master.categories.update');
+        Route::delete('/medicine-master/categories/{category}', [MedicineMasterController::class, 'destroyCategory'])->name('medicine-master.categories.destroy');
+        Route::patch('/medicine-master/categories/{category}/toggle', [MedicineMasterController::class, 'toggleCategory'])->name('medicine-master.categories.toggle');
+
+        // Medicine Routes (root of administration)
+        Route::post('/medicine-master/routes', [MedicineMasterController::class, 'storeRoute'])->name('medicine-master.routes.store');
+        Route::put('/medicine-master/routes/{route}', [MedicineMasterController::class, 'updateRoute'])->name('medicine-master.routes.update');
+        Route::delete('/medicine-master/routes/{route}', [MedicineMasterController::class, 'destroyRoute'])->name('medicine-master.routes.destroy');
+        Route::patch('/medicine-master/routes/{route}/toggle', [MedicineMasterController::class, 'toggleRoute'])->name('medicine-master.routes.toggle');
+
+        // Medicines
+        Route::post('/medicine-master/medicines', [MedicineMasterController::class, 'storeMedicine'])->name('medicine-master.medicines.store');
+        Route::put('/medicine-master/medicines/{medicine}', [MedicineMasterController::class, 'updateMedicine'])->name('medicine-master.medicines.update');
+        Route::delete('/medicine-master/medicines/{medicine}', [MedicineMasterController::class, 'destroyMedicine'])->name('medicine-master.medicines.destroy');
+        Route::patch('/medicine-master/medicines/{medicine}/toggle', [MedicineMasterController::class, 'toggleMedicine'])->name('medicine-master.medicines.toggle');
+        Route::post('/medicine-master/medicines/import', [MedicineMasterController::class, 'importMedicines'])->name('medicine-master.medicines.import');
+        Route::get('/medicine-master/medicines/sample', [MedicineMasterController::class, 'downloadSampleMedicine'])->name('medicine-master.medicines.sample');
     });
 });
 
