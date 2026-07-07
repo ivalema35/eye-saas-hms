@@ -777,7 +777,7 @@
                                     <div class="pta-divider"></div>
 
                                     {{-- History --}}
-                                    <a href="{{ route('hospital.patients.history', ['slug' => $slug, 'search' => $p->patient_code]) }}"
+                                    <a href="{{ route('hospital.patients.history', ['slug' => $slug, 'patient_ids' => $p->id]) }}"
                                        class="pta pta-util" title="History"><i class="bi bi-clock-history"></i></a>
 
                                     {{-- Print --}}

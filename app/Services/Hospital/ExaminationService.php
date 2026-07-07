@@ -29,13 +29,23 @@ class ExaminationService
         ?int $dilationTime = null
     ): PrimaryExamination {
         return DB::transaction(function () use ($patient, $doctorId, $examData, $medicines, $tenantId, $dilationTime) {
+            // Merge with existing exam_data so a per-step save never wipes other sections
+            $existing = PrimaryExamination::where([
+                'patient_id' => $patient->id,
+                'tenant_id'  => $tenantId,
+            ])->first();
+            $mergedData = array_merge(
+                is_array($existing?->exam_data) ? $existing->exam_data : [],
+                $examData
+            );
+
             $exam = PrimaryExamination::updateOrCreate(
                 ['patient_id' => $patient->id, 'tenant_id' => $tenantId],
                 [
-                    'doctor_id' => $doctorId,
-                    'exam_data' => $examData,
+                    'doctor_id'     => $doctorId,
+                    'exam_data'     => $mergedData,
                     'dilation_time' => $dilationTime,
-                    'examined_at' => now(),
+                    'examined_at'   => now(),
                 ]
             );
 
@@ -83,12 +93,22 @@ class ExaminationService
         ?string $advice = null
     ): SecondaryExamination {
         return DB::transaction(function () use ($patient, $doctorId, $examData, $medicines, $tenantId, $advice) {
+            // Merge with existing exam_data so a per-step save never wipes other sections
+            $existingSec = SecondaryExamination::where([
+                'patient_id' => $patient->id,
+                'tenant_id'  => $tenantId,
+            ])->first();
+            $mergedSecData = array_merge(
+                is_array($existingSec?->exam_data) ? $existingSec->exam_data : [],
+                $examData
+            );
+
             $exam = SecondaryExamination::updateOrCreate(
                 ['patient_id' => $patient->id, 'tenant_id' => $tenantId],
                 [
-                    'doctor_id' => $doctorId,
-                    'exam_data' => $examData,
-                    'advice' => $advice,
+                    'doctor_id'  => $doctorId,
+                    'exam_data'  => $mergedSecData,
+                    'advice'     => $advice,
                     'examined_at' => now(),
                 ]
             );
