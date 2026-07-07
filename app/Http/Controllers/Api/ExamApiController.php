@@ -67,7 +67,7 @@ class ExamApiController extends Controller
     public function showSecondary(string $slug, int $patientId): JsonResponse
     {
         $patient = Patient::findOrFail($patientId);
-        $exam = $patient->secondaryExamination()->first();
+        $exam = $patient->secondaryExamination()->with('prescriptions.medicine', 'prescriptions.dosage')->first();
 
         if (! $exam) {
             return response()->json([
@@ -93,13 +93,17 @@ class ExamApiController extends Controller
         $tenantId = app('tenant')->id;
         $validated = $request->validated();
 
+        $examData = $validated['exam_data'] ?? [];
+        // Mobile sends advice inside exam_data; fall back to that if no top-level field
+        $advice = $validated['advice'] ?? ($examData['advice'] ?? null);
+
         $exam = $this->examinationService->saveSecondaryExam(
             $patient,
             (int) $validated['doctor_id'],
-            $validated['exam_data'] ?? [],
+            $examData,
             $validated['medicines'] ?? [],
             $tenantId,
-            $validated['advice'] ?? null
+            $advice
         );
 
         return response()->json([
