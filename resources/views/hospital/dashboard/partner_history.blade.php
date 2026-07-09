@@ -170,7 +170,7 @@
                         @empty
                             <tr>
                                 <td colspan="9" class="py-5 text-muted">
-                                    <i class="bi bi-person-slash me-2"></i>Koi patient history nahi mili.
+                                    <i class="bi bi-person-slash me-2"></i>Not Found Patient History Records.
                                 </td>
                             </tr>
                         @endforelse
