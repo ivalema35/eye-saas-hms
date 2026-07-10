@@ -32,25 +32,29 @@ class PatientHistoryController extends Controller
             $search = null;
             $historyRoute = route('hospital.patients.history', ['slug' => $slug]);
 
-            // Load history from connected partner hospitals for the same contact_no
+            // Load history from connected partner hospitals for this same patient
+            // (matched by name + contact_no — a shared mobile number alone does not
+            // mean it's the same person, so it must never merge in someone else's history).
             $partnerHistoryGroups = collect();
             if ($patient && $patient->contact_no) {
                 $currentTenant = app('tenant');
+                $patientNameKey = mb_strtolower(trim($patient->first_name . ' ' . $patient->last_name));
                 $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
                     $q->where('from_tenant_id', $currentTenant->id)
                         ->orWhere('to_tenant_id', $currentTenant->id);
                 })
                     ->where('status', 'accepted')
                     ->get()
-                    ->map(fn ($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
+                    ->map(fn($r) => $r->from_tenant_id === $currentTenant->id ? $r->to_tenant_id : $r->from_tenant_id)
                     ->toArray();
 
-                if (! empty($partnerTenantIds)) {
+                if (!empty($partnerTenantIds)) {
                     $partnerPatients = Patient::withoutTenantScope()
                         ->whereIn('tenant_id', $partnerTenantIds)
                         ->where('contact_no', $patient->contact_no)
                         ->with(['tenant:id,name,city,state'])
-                        ->get();
+                        ->get()
+                        ->filter(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) === $patientNameKey);
 
                     foreach ($partnerPatients->groupBy('tenant_id') as $partnerTenantId => $group) {
                         $partnerExamHistory = $this->loadPartnerExamHistoryForIds($group->pluck('id')->all());
@@ -69,7 +73,8 @@ class PatientHistoryController extends Controller
                 }
             }
 
-            return view('hospital.patient.history',
+            return view(
+                'hospital.patient.history',
                 compact('patient', 'history', 'search', 'slug', 'nameGroups', 'historyRoute', 'partnerHistoryGroups') + $masters
             );
         }
@@ -84,21 +89,21 @@ class PatientHistoryController extends Controller
             ->where(function ($q) {
                 $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at');
             })
-            ->when($patientName, fn ($q) => $q->where(function ($q2) use ($patientName) {
+            ->when($patientName, fn($q) => $q->where(function ($q2) use ($patientName) {
                 $q2->where('first_name', 'like', "%{$patientName}%")
                     ->orWhere('last_name', 'like', "%{$patientName}%");
             }))
-            ->when($doctorName, fn ($q) => $q->whereHas(
+            ->when($doctorName, fn($q) => $q->whereHas(
                 'doctor',
-                fn ($q2) => $q2->where('name', 'like', "%{$doctorName}%")
+                fn($q2) => $q2->where('name', 'like', "%{$doctorName}%")
             ))
-            ->when($contactNo, fn ($q) => $q->where('contact_no', 'like', "%{$contactNo}%"))
-            ->when($date, fn ($q) => $q->whereDate('appointment_date', $date))
+            ->when($contactNo, fn($q) => $q->where('contact_no', 'like', "%{$contactNo}%"))
+            ->when($date, fn($q) => $q->whereDate('appointment_date', $date))
             ->latest('appointment_date')
             ->get();
 
         $grouped = $allPatients
-            ->groupBy(fn ($p) => mb_strtolower(trim($p->first_name.' '.$p->last_name)).'|'.$p->contact_no)
+            ->groupBy(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no)
             ->map(function ($group) {
                 $rep = $group->sortByDesc('id')->first();
                 $rep->all_patient_ids = $group->pluck('id')->implode(',');
@@ -117,7 +122,8 @@ class PatientHistoryController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        return view('hospital.patient.history',
+        return view(
+            'hospital.patient.history',
             compact('slug', 'patients', 'patientName', 'doctorName', 'contactNo', 'date')
         );
     }
@@ -142,10 +148,10 @@ class PatientHistoryController extends Controller
 
         $patients = Patient::where('contact_no', $phone)
             ->get(['id', 'patient_code', 'first_name', 'last_name', 'age', 'gender'])
-            ->map(fn ($p) => [
+            ->map(fn($p) => [
                 'id' => $p->id,
                 'patient_code' => $p->patient_code,
-                'name' => trim($p->first_name.' '.$p->last_name),
+                'name' => trim($p->first_name . ' ' . $p->last_name),
                 'age' => $p->age,
                 'gender' => $p->gender,
             ]);
@@ -162,8 +168,8 @@ class PatientHistoryController extends Controller
     {
         $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
             ->with([
-                'doctor' => fn ($q) => $q->withoutGlobalScopes(),
-                'prescriptions.medicine' => fn ($q) => $q->withoutGlobalScopes(),
+                'doctor' => fn($q) => $q->withoutGlobalScopes(),
+                'prescriptions.medicine' => fn($q) => $q->withoutGlobalScopes(),
                 'prescriptions.dosage',
             ])
             ->whereIn('patient_id', $patientIds)
@@ -174,10 +180,11 @@ class PatientHistoryController extends Controller
                 $exam->icon = 'bi-clipboard2-pulse';
 
                 return $exam;
-            });
+            })
+            ->keyBy('patient_id');
 
         $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
-            ->with(['doctor' => fn ($q) => $q->withoutGlobalScopes()])
+            ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
             ->whereIn('patient_id', $patientIds)
             ->get()
             ->map(function (SecondaryExamination $exam): SecondaryExamination {
@@ -186,9 +193,12 @@ class PatientHistoryController extends Controller
                 $exam->icon = 'bi-clipboard2-check';
 
                 return $exam;
-            });
+            })
+            ->keyBy('patient_id');
 
-        return $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
+        // One exam per visit: secondary once done, primary until then.
+        // (union, not merge — merge() re-indexes integer keys via array_merge and would keep both)
+        return $secondaryExams->union($primaryExams)->values()->sortByDesc('examined_at');
     }
 
     private function loadExamHistoryForIds(array $patientIds): Collection
@@ -202,7 +212,8 @@ class PatientHistoryController extends Controller
                 $exam->icon = 'bi-clipboard2-pulse';
 
                 return $exam;
-            });
+            })
+            ->keyBy('patient_id');
 
         $secondaryExams = SecondaryExamination::with('doctor')
             ->whereIn('patient_id', $patientIds)
@@ -213,9 +224,12 @@ class PatientHistoryController extends Controller
                 $exam->icon = 'bi-clipboard2-check';
 
                 return $exam;
-            });
+            })
+            ->keyBy('patient_id');
 
-        return $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
+        // One exam per visit: secondary once done, primary until then.
+        // (union, not merge — merge() re-indexes integer keys via array_merge and would keep both)
+        return $secondaryExams->union($primaryExams)->values()->sortByDesc('examined_at');
     }
 
     private function loadMasters(int $tenantId): array

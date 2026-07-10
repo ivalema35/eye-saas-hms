@@ -1826,10 +1826,10 @@
             <div class="tap-header">
                 <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
                 
-                <form method="GET" action="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="d-flex gap-2">
+                <form method="GET" action="{{ route('hospital.dashboard', ['slug' => $slug]) }}" id="today-patients-form" class="d-flex gap-2">
                     <div class="input-group" style="width: 250px;">
-                        <input type="text" name="search_contact" value="{{ request('search_contact') }}" 
-                            class="form-control form-control-sm" placeholder="Search by mobile..." 
+                        <input type="text" name="search_contact" value="{{ request('search_contact') }}"
+                            class="form-control form-control-sm" placeholder="Search by mobile..."
                             maxlength="10">
                         <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
                         @if(request('search_contact'))
@@ -1838,136 +1838,130 @@
                     </div>
                 </form>
 
-                <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+                <span class="tap-count" id="today-patients-count">{{ $receptionistTodayPatients->count() }} today</span>
             </div>
-            
-            <div class="table-responsive">
-                <table class="tap-table">
-                    <thead>
-                        <tr>
-                            <th style="width:40px">#</th>
-                            <th>MRD</th>
-                            <th>Patient</th>
-                            <th>City / Age</th>
-                            <th>Contact</th>
-                            <th>Doctor</th>
-                            <th>DR Index</th>
-                            <th>Status</th>
-                            <th style="text-align:center">Wait</th>
-                            <th style="text-align:center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($receptionistTodayPatients as $index => $patient)
-                            @php
-                                $hasPrimaryDone   = $patient->primary_done_at !== null;
-                                $hasSecondaryDone = $patient->secondary_done_at !== null;
-                                $waitMins  = (int) ($patient->checked_in_at ?? $patient->created_at)->diffInMinutes(now());
-                                $waitClass = $waitMins < $wGreen ? 'wait-green' : ($waitMins < $wOrange ? 'wait-orange' : ($waitMins < $wRed ? 'wait-red' : 'wait-fire'));
-                                $waitFmt   = $waitMins < 60 ? $waitMins.'m' : floor($waitMins/60).'h'.($waitMins%60 > 0 ? ' '.($waitMins%60).'m' : '');
-                                $pExam     = $patient->primaryExamination;
-                                $isDilated = $pExam && ($pExam->exam_data['dilate'] ?? 'No') === 'Yes';
-                                $isNotDil  = $pExam && ($pExam->exam_data['dilate'] ?? 'No') !== 'Yes';
-                                $primeMins = $pExam ? (int) \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->diffInMinutes(now()) : 0;
-                                $primeFmt  = $primeMins < 60 ? $primeMins.'m' : floor($primeMins/60).'h'.($primeMins%60 > 0 ? ' '.($primeMins%60).'m' : '');
-                                $dClass    = $primeMins < $wDGreen  ? 'wait-green' : ($primeMins < $wDOrange  ? 'wait-orange' : ($primeMins < $wDRed  ? 'wait-red' : 'wait-fire'));
-                                $ndClass   = $primeMins < $wNdGreen ? 'wait-green' : ($primeMins < $wNdOrange ? 'wait-orange' : ($primeMins < $wNdRed ? 'wait-red' : 'wait-fire'));
-                                $initials  = strtoupper(substr($patient->first_name, 0, 1) . substr($patient->last_name, 0, 1));
-                            @endphp
-                            <tr>
-                                <td style="color:#94a3b8; font-size:12px; font-weight:600;">{{ $index + 1 }}</td>
-                                <td><span class="tap-mrd">{{ $patient->patient_code }}</span></td>
-                                <td>
-                                    <div class="tap-patient-cell">
-                                        <div class="tap-avatar">{{ $initials }}</div>
-                                        <div>
-                                            <div class="tap-name">{{ $patient->full_name }}</div>
-                                            <span class="tap-type-pill {{ $patient->type === 'phone' ? 'tap-type-phone' : 'tap-type-walkin' }}">
-                                                <i class="bi bi-{{ $patient->type === 'phone' ? 'phone' : 'person-walking' }}" style="font-size:9px;"></i>
-                                                {{ ucfirst($patient->type) }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="tap-meta">
-                                    <strong>{{ $patient->cityName ?: '—' }}</strong><br>
-                                    <span>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</span>
-                                </td>
-                                <td class="tap-slot">
-                                    @if($patient->contact_no)
-                                        {{ $patient->contact_no }}
-                                    @else
-                                        <span style="color:#cbd5e1">—</span>
-                                    @endif
-                                </td>
-                                <td style="font-size:13px; color:#334155; font-weight:500;">{{ $patient->doctor?->name ?? '—' }}</td>
-                                <td>
-                                    @if($patient->doctor_patient_no)
-                                        <span class="tap-dr-index">{{ ($patient->doctor?->doctor_prefix ?? '') ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) : '#'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) }}</span>
-                                    @else
-                                        <span style="color:#cbd5e1">—</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($hasSecondaryDone)
-                                        <span class="tap-status-done"><i class="bi bi-check2-circle"></i> Done</span>
-                                    @elseif($hasPrimaryDone)
-                                        <span class="tap-status-primary"><i class="bi bi-arrow-repeat"></i> Primary Done</span>
-                                    @else
-                                        <span class="tap-status-waiting"><i class="bi bi-clock-history"></i> Waiting</span>
-                                    @endif
-                                </td>
-                                <td style="text-align:center">
-                                    @if($hasSecondaryDone)
-                                        <span style="color:#16a34a; font-size:11px; font-weight:700;"><i class="bi bi-check2-circle"></i> Done</span>
-                                    @elseif($patient->type === 'phone' && !$patient->checked_in_at)
-                                        <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                           style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:#1B4F72;color:#fff;border-radius:20px;font-size:.7rem;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px rgba(27,79,114,.35);animation:checkin-pulse 1.4s ease-in-out infinite alternate;">
-                                            <i class="bi bi-box-arrow-in-right"></i> Check In
-                                        </a>
-                                    @else
-                                        <div class="d-flex flex-column align-items-center gap-1">
-                                            <span class="wait-pill {{ $waitClass }}" data-wait-from="{{ ($patient->checked_in_at ?? $patient->created_at)->toIso8601String() }}" data-badge="R">
-                                                <span class="wp-r">R</span>
-                                                <span class="wp-time">{{ $waitFmt }}</span>
-                                            </span>
-                                            @if($isDilated)
-                                                <span class="wait-pill {{ $dClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="D" data-thresholds="{{ $wDGreen }},{{ $wDOrange }},{{ $wDRed }}">
-                                                    <span class="wp-r">D</span>
-                                                    <span class="wp-time">{{ $primeFmt }}</span>
-                                                </span>
-                                            @elseif($isNotDil)
-                                                <span class="wait-pill {{ $ndClass }}" data-wait-from="{{ \Carbon\Carbon::parse($pExam->examined_at ?? $patient->primary_done_at)->toIso8601String() }}" data-badge="ND" data-thresholds="{{ $wNdGreen }},{{ $wNdOrange }},{{ $wNdRed }}">
-                                                    <span class="wp-r" style="font-size:.58rem;">ND</span>
-                                                    <span class="wp-time">{{ $primeFmt }}</span>
-                                                </span>
-                                            @endif
-                                        </div>
-                                    @endif
-                                </td>
-                                <td style="text-align:center">
-                                    <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                       class="tap-print-btn" title="Print">
-                                        <i class="bi bi-printer" style="font-size:14px;"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="10" class="tap-empty">
-                                    <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:8px; opacity:.4;"></i>
-                                    No patients added today
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+
+            <div id="today-patients-results">
+                @include('hospital.dashboard.partials.receptionist-today-patients-table')
             </div>
         </div>
     </div>
 </div>
 
 @endif
+
+@push('scripts')
+<script>
+    // ─────────────────────────────────────────────────────────────────
+    // AJAX mobile-number search for the receptionist "Today Added
+    // Patients" widget. Only #today-patients-results is ever replaced —
+    // the search input (in #today-patients-form) and the count badge
+    // live outside it and are never touched directly, so the input
+    // never loses focus while the user types.
+    //
+    // The AJAX endpoint returns the rendered partial as plain HTML
+    // (no JSON envelope). The count badge is kept in sync by reading
+    // the `data-patient-count` attribute the partial's root element
+    // carries — see partials/receptionist-today-patients-table.blade.php.
+    // ─────────────────────────────────────────────────────────────────
+    (function () {
+        'use strict';
+
+        function init() {
+            var form = document.getElementById('today-patients-form');
+            var results = document.getElementById('today-patients-results');
+            var countEl = document.getElementById('today-patients-count');
+            if (!form || !results) return;
+
+            var DEBOUNCE_MS = 500;
+            var debounceTimer = null;
+            var abortController = null;
+
+            function updateCountBadge() {
+                if (!countEl) return;
+                var marker = results.querySelector('[data-patient-count]');
+                var count = marker ? marker.getAttribute('data-patient-count') : '0';
+                countEl.textContent = count + ' today';
+            }
+
+            function showError() {
+                results.insertAdjacentHTML(
+                    'afterbegin',
+                    '<div class="alert alert-danger m-3" role="alert">' +
+                        'Could not load results. Please check your connection and try again.' +
+                    '</div>'
+                );
+            }
+
+            async function loadResults(params, pushToHistory) {
+                if (abortController) abortController.abort();
+                abortController = new AbortController();
+
+                var basePath = form.getAttribute('action');
+                var displayUrl = basePath + (params.toString() ? '?' + params.toString() : '');
+
+                var fetchParams = new URLSearchParams(params.toString());
+                fetchParams.set('section', 'today_patients');
+
+                try {
+                    var res = await fetch(basePath + '?' + fetchParams.toString(), {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        credentials: 'same-origin',
+                        signal: abortController.signal,
+                    });
+
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+                    results.innerHTML = await res.text();
+                    updateCountBadge();
+
+                    if (pushToHistory) {
+                        history.pushState({ todayPatients: true }, '', displayUrl + window.location.hash);
+                    }
+                } catch (err) {
+                    if (err.name === 'AbortError') return;
+                    showError();
+                    console.error('[today-patients-filter]', err);
+                }
+            }
+
+            function currentParams() {
+                return new URLSearchParams(new FormData(form));
+            }
+
+            function scheduleFilter() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () {
+                    loadResults(currentParams(), true);
+                }, DEBOUNCE_MS);
+            }
+
+            var searchInput = form.elements.namedItem('search_contact');
+            if (searchInput) {
+                searchInput.addEventListener('input', scheduleFilter);
+            }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                loadResults(currentParams(), true);
+            });
+
+            window.addEventListener('popstate', function () {
+                var params = new URLSearchParams(window.location.search);
+                if (searchInput) searchInput.value = params.get('search_contact') || '';
+                loadResults(params, false);
+            });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+</script>
+@endpush
 
 <!-- @if($pendingFocRequests->isNotEmpty() || $hasFocAlert)
 <div class="row g-4 mb-4">

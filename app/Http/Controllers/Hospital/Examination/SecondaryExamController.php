@@ -28,7 +28,9 @@ use Illuminate\View\View;
  */
 class SecondaryExamController extends Controller
 {
-    public function __construct(private ExaminationService $examinationService) {}
+    public function __construct(private ExaminationService $examinationService)
+    {
+    }
 
     public function show(string $slug, int $id): View|RedirectResponse
     {
@@ -43,7 +45,7 @@ class SecondaryExamController extends Controller
             ->first();
 
         // Dilation lock: block only if exam not yet saved and timer still running (bypass with ?force=1)
-        if (! $secondaryExam && $primaryExam && ($primaryExam->exam_data['dilate'] ?? 'No') === 'Yes' && $primaryExam->dilation_time && ! request()->boolean('force')) {
+        if (!$secondaryExam && $primaryExam && ($primaryExam->exam_data['dilate'] ?? 'No') === 'Yes' && $primaryExam->dilation_time && !request()->boolean('force')) {
             $unlockTime = $primaryExam->updated_at->addMinutes($primaryExam->dilation_time);
             if (now()->lessThan($unlockTime)) {
                 $minutesLeft = (int) now()->diffInMinutes($unlockTime) + 1;
@@ -71,7 +73,7 @@ class SecondaryExamController extends Controller
         $focReceptionists = HospitalUser::query()
             ->where('tenant_id', $tenantId)
             ->active()
-            ->whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
+            ->whereHas('role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -102,8 +104,17 @@ class SecondaryExamController extends Controller
             : ($secondaryMedicines->isNotEmpty() ? $secondaryMedicines : $primaryMedicines);
 
         return view('hospital.exam.secondary', compact(
-            'patient', 'primaryExam', 'secondaryExam', 'exam', 'ed', 'slug',
-            'doctors', 'currentDoctorId', 'masters', 'focReceptionists', 'initialMedicines'
+            'patient',
+            'primaryExam',
+            'secondaryExam',
+            'exam',
+            'ed',
+            'slug',
+            'doctors',
+            'currentDoctorId',
+            'masters',
+            'focReceptionists',
+            'initialMedicines'
         ));
     }
 
@@ -113,9 +124,9 @@ class SecondaryExamController extends Controller
         $tenant = app('tenant');
         $data = $request->validated();
         $medicines = collect($data['medicines'] ?? [])
-            ->filter(fn (array $m): bool => ! empty($m['name']))
+            ->filter(fn(array $m): bool => !empty($m['name']))
             ->map(function (array $medicine) use ($tenant): array {
-                if (! empty($medicine['medicine_id']) || empty($medicine['name'])) {
+                if (!empty($medicine['medicine_id']) || empty($medicine['name'])) {
                     return $medicine;
                 }
 
@@ -164,7 +175,7 @@ class SecondaryExamController extends Controller
     public function printRx(string $slug, int $id): View
     {
         $patient = Patient::findOrFail($id);
-        $tenant  = app('tenant');
+        $tenant = app('tenant');
 
         $exam = SecondaryExamination::where('patient_id', $id)
             ->where('tenant_id', $tenant->id)
@@ -194,8 +205,15 @@ class SecondaryExamController extends Controller
             : 'javascript:history.back()';
 
         return view('hospital.exam.secondary_print', compact(
-            'patient', 'exam', 'tenant', 'slug',
-            'diagnosisMasters', 'complaintMasters', 'kcoMasters', 'dosages', 'backUrl'
+            'patient',
+            'exam',
+            'tenant',
+            'slug',
+            'diagnosisMasters',
+            'complaintMasters',
+            'kcoMasters',
+            'dosages',
+            'backUrl'
         ));
     }
 
@@ -204,7 +222,7 @@ class SecondaryExamController extends Controller
      */
     private function loadMasters(int $tenantId): array
     {
-        $q = fn (string $table) => DB::table($table)
+        $q = fn(string $table) => DB::table($table)
             ->where('tenant_id', $tenantId)
             ->orderBy('id')
             ->get();
@@ -235,10 +253,10 @@ class SecondaryExamController extends Controller
                 ->orderByDesc('is_favourite')
                 ->orderBy('id')
                 ->get(['id', 'value', 'is_favourite'])
-                ->map(fn($a) => (object)[
-                    'id'            => $a->id,
-                    'advice'        => $a->value,
-                    'is_favourite'  => $a->is_favourite,
+                ->map(fn($a) => (object) [
+                    'id' => $a->id,
+                    'advice' => $a->value,
+                    'is_favourite' => $a->is_favourite,
                     'diagnosis_ids' => $a->diagnoses->pluck('id')->all(),
                 ]),
             'durations' => $q('tbl_durations'),
