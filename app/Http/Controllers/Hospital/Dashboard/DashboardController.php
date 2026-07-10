@@ -136,16 +136,20 @@ class DashboardController extends Controller
                 ->take(20)
                 ->values();
 
-            // Attach all_patient_ids so the View button shows complete history (all old visits)
+            // Attach all_patient_ids so the View button shows this patient's own visit
+            // history (all old visits by this same person). Grouped by name+contact_no,
+            // not contact_no alone — a shared household mobile number must never pull
+            // in another patient's exam history.
             if ($primaryQueue->isNotEmpty()) {
                 $contactNos = $primaryQueue->pluck('contact_no')->filter()->unique()->values()->all();
-                $allIdsByContact = Patient::whereIn('contact_no', $contactNos)
-                    ->get(['id', 'contact_no'])
-                    ->groupBy('contact_no')
+                $allIdsByNameContact = Patient::whereIn('contact_no', $contactNos)
+                    ->get(['id', 'contact_no', 'first_name', 'last_name'])
+                    ->groupBy(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no)
                     ->map(fn($g) => $g->pluck('id')->implode(','));
 
-                $primaryQueue = $primaryQueue->map(function (Patient $p) use ($allIdsByContact): Patient {
-                    $p->all_patient_ids = $allIdsByContact->get($p->contact_no) ?? (string) $p->id;
+                $primaryQueue = $primaryQueue->map(function (Patient $p) use ($allIdsByNameContact): Patient {
+                    $key = mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no;
+                    $p->all_patient_ids = $allIdsByNameContact->get($key) ?? (string) $p->id;
 
                     return $p;
                 });
@@ -161,8 +165,10 @@ class DashboardController extends Controller
                     ->merge(SecondaryExamination::whereIn('patient_id', $allQueueIds)->pluck('patient_id'))
                     ->unique();
 
-                // Also check partner hospitals for same contact_no
-                $contactNosWithPartnerHistory = collect();
+                // Also check partner hospitals for this same patient (name + contact_no,
+                // not contact_no alone — otherwise a shared mobile number would make the
+                // View button appear for a patient who has no history of their own).
+                $partnerHistoryKeys = collect();
                 $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($tenant) {
                     $q->where('from_tenant_id', $tenant->id)->orWhere('to_tenant_id', $tenant->id);
                 })->where('status', 'accepted')->get()
@@ -170,7 +176,7 @@ class DashboardController extends Controller
                     ->toArray();
 
                 if (!empty($partnerTenantIds) && !empty($contactNos)) {
-                    $contactNosWithPartnerHistory = Patient::withoutTenantScope()
+                    $partnerHistoryKeys = Patient::withoutTenantScope()
                         ->whereIn('tenant_id', $partnerTenantIds)
                         ->whereIn('contact_no', $contactNos)
                         ->where(
@@ -178,14 +184,16 @@ class DashboardController extends Controller
                                 ->whereExists(fn($sq) => $sq->selectRaw('1')->from('primary_examinations')->whereColumn('primary_examinations.patient_id', 'patients.id'))
                                 ->orWhereExists(fn($sq) => $sq->selectRaw('1')->from('secondary_examinations')->whereColumn('secondary_examinations.patient_id', 'patients.id'))
                         )
-                        ->pluck('contact_no')
+                        ->get(['contact_no', 'first_name', 'last_name'])
+                        ->map(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no)
                         ->unique();
                 }
 
-                $primaryQueue = $primaryQueue->map(function (Patient $p) use ($idsWithExams, $contactNosWithPartnerHistory): Patient {
+                $primaryQueue = $primaryQueue->map(function (Patient $p) use ($idsWithExams, $partnerHistoryKeys): Patient {
                     $ids = array_filter(array_map('intval', explode(',', $p->all_patient_ids)));
                     $hasOwn = collect($ids)->contains(fn($id) => $idsWithExams->contains($id));
-                    $hasPartner = $p->contact_no && $contactNosWithPartnerHistory->contains($p->contact_no);
+                    $key = mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) . '|' . $p->contact_no;
+                    $hasPartner = $p->contact_no && $partnerHistoryKeys->contains($key);
                     $p->has_history = $hasOwn || $hasPartner;
 
                     return $p;

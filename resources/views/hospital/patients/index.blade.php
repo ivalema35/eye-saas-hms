@@ -771,8 +771,8 @@
         }
 
         .search-clear-btn {
-            height: 45px;
-            padding: 0 20px;
+            height: 43px;
+            padding: 0 10px;
 
             border: #dfe8f3 1px solid;
 

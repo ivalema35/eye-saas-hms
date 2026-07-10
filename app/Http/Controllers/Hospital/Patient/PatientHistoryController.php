@@ -32,10 +32,13 @@ class PatientHistoryController extends Controller
             $search = null;
             $historyRoute = route('hospital.patients.history', ['slug' => $slug]);
 
-            // Load history from connected partner hospitals for the same contact_no
+            // Load history from connected partner hospitals for this same patient
+            // (matched by name + contact_no — a shared mobile number alone does not
+            // mean it's the same person, so it must never merge in someone else's history).
             $partnerHistoryGroups = collect();
             if ($patient && $patient->contact_no) {
                 $currentTenant = app('tenant');
+                $patientNameKey = mb_strtolower(trim($patient->first_name . ' ' . $patient->last_name));
                 $partnerTenantIds = HospitalShareRequest::where(function ($q) use ($currentTenant) {
                     $q->where('from_tenant_id', $currentTenant->id)
                         ->orWhere('to_tenant_id', $currentTenant->id);
@@ -50,7 +53,8 @@ class PatientHistoryController extends Controller
                         ->whereIn('tenant_id', $partnerTenantIds)
                         ->where('contact_no', $patient->contact_no)
                         ->with(['tenant:id,name,city,state'])
-                        ->get();
+                        ->get()
+                        ->filter(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) === $patientNameKey);
 
                     foreach ($partnerPatients->groupBy('tenant_id') as $partnerTenantId => $group) {
                         $partnerExamHistory = $this->loadPartnerExamHistoryForIds($group->pluck('id')->all());
