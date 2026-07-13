@@ -86,7 +86,7 @@ class FocApiController extends Controller
 
         $doctorId = ($authUser && $authUser->doctor_type !== null)
             ? $authUser->id
-            : $request->integer('doctor_id', 0) ?: null;
+            : ($request->integer('doctor_id', 0) ?: null);
 
         $foc = Foc::create([
             'tenant_id'  => $tenantId,
