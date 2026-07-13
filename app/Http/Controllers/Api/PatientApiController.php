@@ -22,6 +22,9 @@ class PatientApiController extends Controller
         $showAll = $request->boolean('all');
         $search = trim((string) $request->input('search', ''));
 
+        $authUser = auth('sanctum')->user();
+        $doctorUserId = ($authUser && $authUser->doctor_type !== null) ? $authUser->id : null;
+
         $query = Patient::with([
             'doctor:id,name',
             'location:id,city,district,state',
@@ -44,6 +47,10 @@ class PatientApiController extends Controller
             });
         }
 
+        if ($doctorUserId !== null) {
+            $query->where('doctor_id', $doctorUserId);
+        }
+
         $patients = $query->paginate(25);
 
         // Stats for current filter (today or all)
@@ -58,6 +65,10 @@ class PatientApiController extends Controller
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('contact_no', 'like', "%{$search}%");
             });
+        }
+
+        if ($doctorUserId !== null) {
+            $statsQuery->where('doctor_id', $doctorUserId);
         }
 
         $allInFilter = $statsQuery->get(['primary_done_at', 'secondary_done_at']);

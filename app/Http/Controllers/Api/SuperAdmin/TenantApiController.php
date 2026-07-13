@@ -15,6 +15,11 @@ class TenantApiController extends Controller
 {
     public function index(): JsonResponse
     {
+        $user = auth('sanctum')->user();
+        if (!$user || !$user->role?->is_super) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         $tenants = Tenant::latest()->paginate(25);
 
         return response()->json(['success' => true, 'data' => $tenants]);
@@ -22,6 +27,11 @@ class TenantApiController extends Controller
 
     public function show(int $id): JsonResponse
     {
+        $user = auth('sanctum')->user();
+        if (!$user || !$user->role?->is_super) {
+            return response()->json(['success' => false, 'message' => 'Forbidden.'], 403);
+        }
+
         $tenant = Tenant::with('subscriptions')->findOrFail($id);
 
         return response()->json(['success' => true, 'data' => $tenant]);

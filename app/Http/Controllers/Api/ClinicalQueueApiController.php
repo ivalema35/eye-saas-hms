@@ -17,6 +17,14 @@ class ClinicalQueueApiController extends Controller
         $filterDate = $request->input('date', Carbon::today()->toDateString());
         $selectedDoctorId = $request->input('doctor_id') ? (int) $request->input('doctor_id') : null;
 
+        // Auto-scope to own patients when the authenticated user is a doctor
+        if ($selectedDoctorId === null) {
+            $authUser = auth('sanctum')->user();
+            if ($authUser && $authUser->doctor_type !== null) {
+                $selectedDoctorId = $authUser->id;
+            }
+        }
+
         // ── Doctors ───────────────────────────────────────────────────────────
         $doctorModels = HospitalUser::query()
             ->where('tenant_id', $tenantId)

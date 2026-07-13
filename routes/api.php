@@ -32,6 +32,9 @@ use App\Http\Controllers\Api\ReportsApiController;
 use App\Http\Controllers\Api\PatientHistoryApiController;
 use App\Http\Controllers\Api\ShareHistoryApiController;
 use App\Http\Controllers\Api\UserApiController;
+use App\Http\Controllers\Api\FocApiController;
+use App\Http\Controllers\Api\RoleApiController;
+use App\Http\Controllers\Api\DoctorDashboardApiController;
 use App\Http\Controllers\Api\SuperAdmin\TenantApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -92,6 +95,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // Dashboard
                     Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])
                         ->name('admin.dashboard');
+                    Route::get('/dashboard/doctor', [DoctorDashboardApiController::class, 'dashboard'])
+                        ->name('dashboard.doctor')
+                        ->middleware('permission:opd.exam.primary|opd.exam.secondary');
 
                     // Current user
                     Route::get('/auth/me', [AuthController::class, 'me'])->name('auth.me');
@@ -288,6 +294,39 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->where('id', '[0-9]+');
                     Route::patch('config/users/{id}/toggle-status', [UserApiController::class, 'toggleStatus'])
                         ->where('id', '[0-9]+');
+
+                    // FOC (Free of Charge)
+                    Route::prefix('foc')->name('foc.')->group(function () {
+                        Route::get('/', [FocApiController::class, 'index'])->name('index')
+                            ->middleware('permission:opd.foc.create|opd.foc.accept');
+                        Route::post('/', [FocApiController::class, 'store'])->name('store')
+                            ->middleware('permission:opd.foc.create');
+                        Route::post('/{id}/accept', [FocApiController::class, 'accept'])->name('accept')
+                            ->middleware('permission:opd.foc.accept')
+                            ->where('id', '[0-9]+');
+                        Route::post('/{id}/reject', [FocApiController::class, 'reject'])->name('reject')
+                            ->middleware('permission:opd.foc.accept')
+                            ->where('id', '[0-9]+');
+                    });
+
+                    // Roles & Permissions
+                    Route::prefix('config/roles')->name('config.roles.')->group(function () {
+                        Route::get('/permissions', [RoleApiController::class, 'permissions'])->name('permissions')
+                            ->middleware('permission:master.roles');
+                        Route::get('/', [RoleApiController::class, 'index'])->name('index')
+                            ->middleware('permission:master.roles');
+                        Route::post('/', [RoleApiController::class, 'store'])->name('store')
+                            ->middleware('permission:master.roles');
+                        Route::get('/{id}', [RoleApiController::class, 'show'])->name('show')
+                            ->middleware('permission:master.roles')
+                            ->where('id', '[0-9]+');
+                        Route::put('/{id}', [RoleApiController::class, 'update'])->name('update')
+                            ->middleware('permission:master.roles')
+                            ->where('id', '[0-9]+');
+                        Route::delete('/{id}', [RoleApiController::class, 'destroy'])->name('destroy')
+                            ->middleware('permission:master.roles')
+                            ->where('id', '[0-9]+');
+                    });
 
                     // Share History
                     Route::prefix('share-history')->name('share-history.')->group(function () {

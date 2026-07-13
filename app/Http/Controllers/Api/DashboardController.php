@@ -23,6 +23,9 @@ class DashboardController extends Controller
     {
         $tenant = app('tenant');
 
+        $authUser = auth('sanctum')->user();
+        $isDoctor = $authUser && $authUser->doctor_type !== null;
+
         // ── OPD Stats ──────────────────────────────────────────────────
         $todayPatients = Patient::whereDate('appointment_date', today())->count();
 
@@ -75,26 +78,30 @@ class DashboardController extends Controller
             }
         } catch (\Throwable) {}
 
-        // ── Primary Queue (top 20) ─────────────────────────────────────
-        $primaryQueue = Patient::with(['doctor:id,name,doctor_prefix'])
+        // ── Primary Queue (top 20; scoped to own patients for doctors) ────
+        $primaryQueueQuery = Patient::with(['doctor:id,name,doctor_prefix'])
             ->whereDate('appointment_date', today())
             ->whereNull('primary_done_at')
             ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
             ->orderBy('doctor_patient_no')
-            ->take(20)
-            ->get()
-            ->map(fn ($p) => [
-                'id'               => $p->id,
-                'patient_code'     => $p->patient_code,
-                'full_name'        => $p->full_name,
-                'age'              => $p->age,
-                'gender'           => $p->gender,
-                'doctor_patient_no' => $p->doctor_patient_no,
-                'checked_in_at'    => $p->checked_in_at?->toISOString(),
-                'registered_at'    => $p->created_at?->toISOString(),
-                'doctor_name'      => $p->doctor?->name,
-                'doctor_prefix'    => $p->doctor?->doctor_prefix,
-            ]);
+            ->take(20);
+
+        if ($isDoctor) {
+            $primaryQueueQuery->where('doctor_id', $authUser->id);
+        }
+
+        $primaryQueue = $primaryQueueQuery->get()->map(fn ($p) => [
+            'id'               => $p->id,
+            'patient_code'     => $p->patient_code,
+            'full_name'        => $p->full_name,
+            'age'              => $p->age,
+            'gender'           => $p->gender,
+            'doctor_patient_no' => $p->doctor_patient_no,
+            'checked_in_at'    => $p->checked_in_at?->toISOString(),
+            'registered_at'    => $p->created_at?->toISOString(),
+            'doctor_name'      => $p->doctor?->name,
+            'doctor_prefix'    => $p->doctor?->doctor_prefix,
+        ]);
 
         // ── Receptionists Performance ──────────────────────────────────
         $receptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
@@ -131,10 +138,31 @@ class DashboardController extends Controller
             'r_red'    => (int) HospitalSetting::get('wait_red_max', 120),
         ];
 
+        // ── Doctor-specific stats ───────────────────────────────────────
+        $myTodayPatients  = 0;
+        $myPrimaryPending = 0;
+        $mySecondaryPending = 0;
+
+        if ($isDoctor) {
+            $myTodayPatients = Patient::whereDate('appointment_date', today())
+                ->where('doctor_id', $authUser->id)->count();
+            $myPrimaryPending = Patient::whereDate('appointment_date', today())
+                ->where('doctor_id', $authUser->id)
+                ->whereNull('primary_done_at')->count();
+            $mySecondaryPending = Patient::whereDate('appointment_date', today())
+                ->where('doctor_id', $authUser->id)
+                ->whereNotNull('primary_done_at')
+                ->whereNull('secondary_done_at')->count();
+        }
+
         return response()->json([
             'success' => true,
             'data'    => [
                 'subscription_days_left' => $subscriptionDaysLeft,
+                'is_doctor'              => $isDoctor,
+                'my_today_patients'      => $myTodayPatients,
+                'my_primary_pending'     => $myPrimaryPending,
+                'my_secondary_pending'   => $mySecondaryPending,
                 'today_patients'         => $todayPatients,
                 'primary_queue_count'    => $primaryQueueCount,
                 'secondary_queue_count'  => $secondaryQueueCount,
