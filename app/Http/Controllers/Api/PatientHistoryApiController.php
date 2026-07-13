@@ -14,6 +14,29 @@ use Illuminate\Support\Facades\DB;
 
 class PatientHistoryApiController extends Controller
 {
+    /**
+     * Re-index list fields inside exam_data so they always JSON-encode as arrays [],
+     * not objects {}.  When a doctor deletes a row in the exam form, PHP may store
+     * co_rows as [1 => {...}, 2 => {...}] (non-sequential).  json_encode sees a
+     * non-sequential array and emits {"1":{...},"2":{...}}, which Dart parses as a
+     * Map — breaking Flutter's `as List?` cast and silently showing empty data.
+     * array_values() re-indexes to 0,1,2… so json_encode emits a proper JSON array.
+     * Also guards against null exam_data being sent as [] (a JSON array), which would
+     * break Flutter's `j['exam_data'] as Map<String,dynamic>?` cast.
+     */
+    private function normalizeExamData(mixed $raw): array|\stdClass
+    {
+        if (! is_array($raw) || count($raw) === 0) {
+            return new \stdClass(); // {} not [] — Flutter expects a Map, not a List
+        }
+        foreach (['co_rows', 'kco_rows', 'diagnoses', 'rx'] as $field) {
+            if (isset($raw[$field]) && is_array($raw[$field])) {
+                $raw[$field] = array_values($raw[$field]);
+            }
+        }
+        return $raw;
+    }
+
     public function history(string $slug, Patient $patient): JsonResponse
     {
         try {
@@ -33,21 +56,47 @@ class PatientHistoryApiController extends Controller
         // Pre-load dosage masters — used to resolve secondary exam rx dosage_id
         $dosageMasters = Dosage::all(['id', 'dosage'])->keyBy('id');
 
-        // ── Primary exams ──────────────────────────────────────────────────────
+        // ── Collect all patient_ids for this person ────────────────────────────
+        // A person can be registered multiple times (common when staff creates a
+        // new record on each visit). We merge all registrations so the timeline
+        // shows the complete clinical history, matching the web behaviour.
+        $patientNameKey = mb_strtolower(trim($patient->first_name . ' ' . $patient->last_name));
+        $allPatientIds  = [$patient->id];
+
+        if ($patient->contact_no) {
+            // Mirror the web list's filter: only consider other registrations that were
+            // actually examined (primary_done_at or secondary_done_at set on the patients
+            // row).  Without this, orphaned patients — those with exam records in the
+            // secondary/primary_examinations table but whose patients.secondary_done_at is
+            // still NULL — would be picked up and their exams incorrectly shown, while the
+            // web search list never sees those patients and therefore never merges them.
+            $related = Patient::where('contact_no', $patient->contact_no)
+                ->where('id', '!=', $patient->id)
+                ->where(function ($q) {
+                    $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at');
+                })
+                ->get(['id', 'first_name', 'last_name'])
+                ->filter(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) === $patientNameKey)
+                ->pluck('id')
+                ->all();
+            $allPatientIds = array_merge($allPatientIds, $related);
+        }
+
+        // ── Primary exams (all registrations) ─────────────────────────────────
         $primaryExams = PrimaryExamination::with([
             'doctor:id,name',
             'prescriptions.medicine',
             'prescriptions.dosage',
         ])
-            ->where('patient_id', $patient->id)
-            ->orderByDesc('examined_at')
+            ->whereIn('patient_id', $allPatientIds)
             ->get()
             ->map(fn($exam) => [
+                'patient_id'  => $exam->patient_id,
                 'id'          => $exam->id,
                 'type'        => 'primary',
                 'examined_at' => $exam->examined_at?->toISOString(),
                 'doctor'      => $exam->doctor?->name,
-                'exam_data'   => $exam->exam_data ?? [],
+                'exam_data'   => $this->normalizeExamData($exam->exam_data),
                 'prescriptions' => $exam->prescriptions->map(fn($rx) => [
                     'medicine_name' => $rx->medicine?->brand_name ?: ($rx->medicine?->name ?? '-'),
                     'dosage'        => $rx->dosage?->dosage ?? '-',
@@ -56,12 +105,11 @@ class PatientHistoryApiController extends Controller
                 ])->values()->all(),
             ]);
 
-        // ── Secondary exams ────────────────────────────────────────────────────
+        // ── Secondary exams (all registrations) ───────────────────────────────
         // rx is stored inside exam_data['rx']; dosage_id resolved here so Flutter
         // always receives pre-resolved prescriptions for both exam types.
         $secondaryExams = SecondaryExamination::with('doctor:id,name')
-            ->where('patient_id', $patient->id)
-            ->orderByDesc('examined_at')
+            ->whereIn('patient_id', $allPatientIds)
             ->get()
             ->map(function ($exam) use ($dosageMasters) {
                 $prescriptions = collect($exam->exam_data['rx'] ?? [])
@@ -77,17 +125,22 @@ class PatientHistoryApiController extends Controller
                     ->all();
 
                 return [
+                    'patient_id'    => $exam->patient_id,
                     'id'            => $exam->id,
                     'type'          => 'secondary',
                     'examined_at'   => $exam->examined_at?->toISOString(),
                     'doctor'        => $exam->doctor?->name,
-                    'exam_data'     => $exam->exam_data ?? [],
+                    'exam_data'     => $this->normalizeExamData($exam->exam_data),
                     'prescriptions' => $prescriptions,
                 ];
             });
 
-        // Merge and sort newest-first
-        $allExams = $primaryExams->concat($secondaryExams)
+        // One exam per visit (patient_id): secondary once done, primary until then.
+        // Mirrors web PatientHistoryController::loadExamHistoryForIds().
+        // ->values() must come AFTER ->sortByDesc() to guarantee sequential 0,1,2…
+        // keys; otherwise json_encode() serialises it as an object {}, not an array [].
+        $allExams = $secondaryExams->keyBy('patient_id')
+            ->union($primaryExams->keyBy('patient_id'))
             ->sortByDesc('examined_at')
             ->values()
             ->all();
@@ -124,7 +177,8 @@ class PatientHistoryApiController extends Controller
                     ->whereIn('tenant_id', $partnerTenantIds)
                     ->where('contact_no', $patient->contact_no)
                     ->with(['tenant:id,name,city,state'])
-                    ->get();
+                    ->get()
+                    ->filter(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) === $patientNameKey);
 
                 foreach ($partnerPatients->groupBy('tenant_id') as $partnerTenantId => $group) {
                     $pIds = $group->pluck('id')->all();
@@ -136,14 +190,14 @@ class PatientHistoryApiController extends Controller
                             'prescriptions.dosage',
                         ])
                         ->whereIn('patient_id', $pIds)
-                        ->orderByDesc('examined_at')
                         ->get()
                         ->map(fn($exam) => [
+                            'patient_id'    => $exam->patient_id,
                             'id'            => $exam->id,
                             'type'          => 'primary',
                             'examined_at'   => $exam->examined_at?->toISOString(),
                             'doctor'        => $exam->doctor?->name,
-                            'exam_data'     => $exam->exam_data ?? [],
+                            'exam_data'     => $this->normalizeExamData($exam->exam_data),
                             'prescriptions' => $exam->prescriptions->map(fn($rx) => [
                                 'medicine_name' => $rx->medicine?->brand_name ?: ($rx->medicine?->name ?? '-'),
                                 'dosage'        => $rx->dosage?->dosage ?? '-',
@@ -155,7 +209,6 @@ class PatientHistoryApiController extends Controller
                     $pSecondary = SecondaryExamination::withoutGlobalScope('tenant')
                         ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()->select(['id', 'name'])])
                         ->whereIn('patient_id', $pIds)
-                        ->orderByDesc('examined_at')
                         ->get()
                         ->map(function ($exam) use ($dosageMasters) {
                             $prescriptions = collect($exam->exam_data['rx'] ?? [])
@@ -169,16 +222,19 @@ class PatientHistoryApiController extends Controller
                                 ])->values()->all();
 
                             return [
+                                'patient_id'    => $exam->patient_id,
                                 'id'            => $exam->id,
                                 'type'          => 'secondary',
                                 'examined_at'   => $exam->examined_at?->toISOString(),
                                 'doctor'        => $exam->doctor?->name,
-                                'exam_data'     => $exam->exam_data ?? [],
+                                'exam_data'     => $this->normalizeExamData($exam->exam_data),
                                 'prescriptions' => $prescriptions,
                             ];
                         });
 
-                    $partnerExams = $pPrimary->concat($pSecondary)
+                    // One exam per visit: secondary once done, primary until then.
+                    $partnerExams = $pSecondary->keyBy('patient_id')
+                        ->union($pPrimary->keyBy('patient_id'))
                         ->sortByDesc('examined_at')
                         ->values()
                         ->all();

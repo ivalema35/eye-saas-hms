@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
@@ -17,32 +18,43 @@ class DoctorDashboardApiController extends Controller
     {
         $authUser = auth('sanctum')->user();
         $today    = now()->toDateString();
+        $isOtDoctor = $authUser?->role?->slug === 'ot_doctor';
 
         // ── Resolve target doctor (self or viewed) ───────────────────────────
         $targetDoctorId = $authUser->id;
         $viewingDoctor  = null;
 
-        $viewDoctorId = (int) $request->query('view_doctor_id', 0);
-        if ($viewDoctorId && $viewDoctorId !== $authUser->id) {
-            $vd = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))
-                ->find($viewDoctorId);
-            if ($vd) {
-                $viewingDoctor  = $vd;
-                $targetDoctorId = $vd->id;
+        // OT doctors can only view their own dashboard — no cross-doctor switching
+        if (! $isOtDoctor) {
+            $viewDoctorId = (int) $request->query('view_doctor_id', 0);
+            if ($viewDoctorId && $viewDoctorId !== $authUser->id) {
+                $vd = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))
+                    ->find($viewDoctorId);
+                if ($vd) {
+                    $viewingDoctor  = $vd;
+                    $targetDoctorId = $vd->id;
+                }
             }
         }
 
         // ── Stats ─────────────────────────────────────────────────────────────
-        $assignedToday = Patient::where('doctor_id', $targetDoctorId)
-            ->whereDate('appointment_date', $today)->count();
+        if ($isOtDoctor) {
+            $assignedToday = OtBooking::where('ot_doctor_id', $targetDoctorId)
+                ->whereDate('surgery_date', $today)->count();
+            $primaryDone   = 0;
+            $secondaryDone = 0;
+        } else {
+            $assignedToday = Patient::where('doctor_id', $targetDoctorId)
+                ->whereDate('appointment_date', $today)->count();
 
-        $primaryDone = Patient::where('doctor_id', $targetDoctorId)
-            ->whereDate('appointment_date', $today)
-            ->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count();
+            $primaryDone = Patient::where('doctor_id', $targetDoctorId)
+                ->whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count();
 
-        $secondaryDone = Patient::where('doctor_id', $targetDoctorId)
-            ->whereDate('appointment_date', $today)
-            ->whereNotNull('secondary_done_at')->count();
+            $secondaryDone = Patient::where('doctor_id', $targetDoctorId)
+                ->whereDate('appointment_date', $today)
+                ->whereNotNull('secondary_done_at')->count();
+        }
 
         // ── Doctor cards (all OPD doctors, skip OT Doctor) ────────────────────
         $doctorCards = HospitalUser::with('role')
@@ -74,73 +86,79 @@ class DoctorDashboardApiController extends Controller
             return $prefix ? "{$prefix}-{$padded}" : "#{$padded}";
         };
 
-        // ── Primary queue ──────────────────────────────────────────────────────
-        $primaryPatients = Patient::with(['doctor:id,name,doctor_prefix', 'masterCity', 'location'])
-            ->where('doctor_id', $targetDoctorId)
-            ->whereDate('appointment_date', $today)
-            ->whereNull('primary_done_at')
-            ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
-            ->orderBy('doctor_patient_no')
-            ->take(20)
-            ->get();
+        // OT Doctors do not have OPD primary/secondary queues
+        $primaryQueue   = collect();
+        $secondaryQueue = collect();
 
-        // Batch has_history for primary queue
-        $primaryContactHistory = $this->resolveContactHistory($primaryPatients->pluck('contact_no'));
+        if (! $isOtDoctor) {
+            // ── Primary queue ──────────────────────────────────────────────────
+            $primaryPatients = Patient::with(['doctor:id,name,doctor_prefix', 'masterCity', 'location'])
+                ->where('doctor_id', $targetDoctorId)
+                ->whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+                ->orderBy('doctor_patient_no')
+                ->take(20)
+                ->get();
 
-        $primaryQueue = $primaryPatients->map(fn ($p) => [
-            'id'           => $p->id,
-            'patient_code' => $p->patient_code,
-            'doctor_id'    => $p->doctor_id,
-            'patient_name' => $p->full_name,
-            'dr_index_no'  => $buildIndex($p),
-            'age'          => $p->age,
-            'city'         => $p->city_name,
-            'registered_at'=> $p->created_at?->toISOString(),
-            'has_history'  => isset($primaryContactHistory[$p->contact_no]),
-        ])->values();
+            $primaryContactHistory = $this->resolveContactHistory($primaryPatients->pluck('contact_no'));
 
-        // ── Secondary queue ────────────────────────────────────────────────────
-        $dilationLockMinutes = (int) HospitalSetting::get('wait_d_green_max', 40);
+            $primaryQueue = $primaryPatients->map(fn ($p) => [
+                'id'           => $p->id,
+                'patient_code' => $p->patient_code,
+                'doctor_id'    => $p->doctor_id,
+                'patient_name' => $p->full_name,
+                'dr_index_no'  => $buildIndex($p),
+                'age'          => $p->age,
+                'city'         => $p->city_name,
+                'registered_at'=> $p->created_at?->toISOString(),
+                'has_history'  => isset($primaryContactHistory[$p->contact_no]),
+            ])->values();
 
-        $secondaryPatients = Patient::with(['doctor:id,name,doctor_prefix', 'masterCity', 'location', 'primaryExamination'])
-            ->where('doctor_id', $targetDoctorId)
-            ->whereDate('appointment_date', $today)
-            ->whereNotNull('primary_done_at')
-            ->whereNull('secondary_done_at')
-            ->orderBy('doctor_patient_no')
-            ->take(20)
-            ->get();
+            // ── Secondary queue ────────────────────────────────────────────────
+            $dilationLockMinutes = (int) HospitalSetting::get('wait_d_green_max', 40);
 
-        $secondaryContactHistory = $this->resolveContactHistory($secondaryPatients->pluck('contact_no'));
+            $secondaryPatients = Patient::with(['doctor:id,name,doctor_prefix', 'masterCity', 'location', 'primaryExamination'])
+                ->where('doctor_id', $targetDoctorId)
+                ->whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')
+                ->whereNull('secondary_done_at')
+                ->orderBy('doctor_patient_no')
+                ->take(20)
+                ->get();
 
-        $secondaryQueue = $secondaryPatients->map(function ($p) use ($buildIndex, $dilationLockMinutes, $secondaryContactHistory) {
-            $examData  = [];
-            if ($p->primaryExamination) {
-                $examData = is_array($p->primaryExamination->exam_data)
-                    ? $p->primaryExamination->exam_data
-                    : (json_decode($p->primaryExamination->exam_data ?? '{}', true) ?? []);
-            }
-            $isDilated = ($examData['dilate'] ?? '') === 'Yes';
+            $secondaryContactHistory = $this->resolveContactHistory($secondaryPatients->pluck('contact_no'));
 
-            return [
-                'id'                    => $p->id,
-                'patient_code'          => $p->patient_code,
-                'doctor_id'             => $p->doctor_id,
-                'patient_name'          => $p->full_name,
-                'dr_index_no'           => $buildIndex($p),
-                'age'                   => $p->age,
-                'city'                  => $p->city_name,
-                'registered_at'         => $p->created_at?->toISOString(),
-                'primary_done_at'       => $p->primary_done_at?->toISOString(),
-                'is_dilated'            => $isDilated,
-                'dilation_lock_minutes' => $dilationLockMinutes,
-                'has_history'           => isset($secondaryContactHistory[$p->contact_no]),
-            ];
-        })->values();
+            $secondaryQueue = $secondaryPatients->map(function ($p) use ($buildIndex, $dilationLockMinutes, $secondaryContactHistory) {
+                $examData = [];
+                if ($p->primaryExamination) {
+                    $examData = is_array($p->primaryExamination->exam_data)
+                        ? $p->primaryExamination->exam_data
+                        : (json_decode($p->primaryExamination->exam_data ?? '{}', true) ?? []);
+                }
+                $isDilated = ($examData['dilate'] ?? '') === 'Yes';
+
+                return [
+                    'id'                    => $p->id,
+                    'patient_code'          => $p->patient_code,
+                    'doctor_id'             => $p->doctor_id,
+                    'patient_name'          => $p->full_name,
+                    'dr_index_no'           => $buildIndex($p),
+                    'age'                   => $p->age,
+                    'city'                  => $p->city_name,
+                    'registered_at'         => $p->created_at?->toISOString(),
+                    'primary_done_at'       => $p->primary_done_at?->toISOString(),
+                    'is_dilated'            => $isDilated,
+                    'dilation_lock_minutes' => $dilationLockMinutes,
+                    'has_history'           => isset($secondaryContactHistory[$p->contact_no]),
+                ];
+            })->values();
+        }
 
         return response()->json([
             'success' => true,
             'data' => [
+                'is_ot_doctor' => $isOtDoctor,
                 'stats' => [
                     'assigned_today' => $assignedToday,
                     'primary_done'   => $primaryDone,
