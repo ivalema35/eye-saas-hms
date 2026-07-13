@@ -32,7 +32,9 @@ use Illuminate\View\View;
  */
 class PatientController extends Controller
 {
-    public function __construct(private PatientService $patientService) {}
+    public function __construct(private PatientService $patientService)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -50,7 +52,7 @@ class PatientController extends Controller
 
         // Toggle today/all
         $showAll = $request->boolean('all');
-        if (! $showAll) {
+        if (!$showAll) {
             $query->whereDate('appointment_date', $today);
         }
 
@@ -64,9 +66,20 @@ class PatientController extends Controller
             });
         }
 
+        $stats = [
+            'waiting' => (clone $query)->whereNull('primary_done_at')->whereNull('secondary_done_at')->count(),
+            'primary_done' => (clone $query)->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count(),
+            'completed' => (clone $query)->whereNotNull('secondary_done_at')->count(),
+        ];
+
         $patients = $query->latest()->paginate((int) config('app.pagination_limit', 25))->withQueryString();
 
-        return view('hospital.patients.index', compact('patients', 'slug', 'showAll'));
+        // Live search: return just the table/pagination markup, no layout.
+        if ($request->ajax()) {
+            return view('hospital.patients.partials.table', compact('patients', 'slug', 'showAll'));
+        }
+
+        return view('hospital.patients.index', compact('patients', 'slug', 'showAll', 'stats'));
     }
 
     public function searchByContact(Request $request): JsonResponse
@@ -81,9 +94,9 @@ class PatientController extends Controller
         $localPatients = Patient::where('contact_no', $contact)
             ->latest()
             ->get()
-            ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
+            ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
 
-        $localMapped = $localPatients->values()->map(fn ($p) => [
+        $localMapped = $localPatients->values()->map(fn($p) => [
             'type' => 'local',
             'first_name' => $p->first_name,
             'middle_name' => $p->middle_name,
@@ -104,22 +117,22 @@ class PatientController extends Controller
         })
             ->where('status', 'accepted')
             ->get()
-            ->map(fn ($r) => $r->from_tenant_id === $currentTenant->id
+            ->map(fn($r) => $r->from_tenant_id === $currentTenant->id
                 ? $r->to_tenant_id
                 : $r->from_tenant_id)
             ->toArray();
 
         $sharedMapped = collect();
-        if (! empty($partnerTenantIds)) {
+        if (!empty($partnerTenantIds)) {
             $sharedPatients = Patient::withoutTenantScope()
                 ->with('tenant:id,name')
                 ->whereIn('tenant_id', $partnerTenantIds)
                 ->where('contact_no', $contact)
                 ->latest()
                 ->get()
-                ->unique(fn ($p) => strtolower(trim($p->first_name.'|'.$p->last_name)));
+                ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
 
-            $sharedMapped = $sharedPatients->values()->map(fn ($p) => [
+            $sharedMapped = $sharedPatients->values()->map(fn($p) => [
                 'type' => 'shared',
                 'hospital_name' => $p->tenant?->name ?? 'Partner Hospital',
                 'first_name' => $p->first_name,
@@ -275,7 +288,7 @@ class PatientController extends Controller
             ->withQueryString();
 
         $groupedPatients = $patients->getCollection()->groupBy(
-            fn (Patient $patient): string => $patient->appointment_date
+            fn(Patient $patient): string => $patient->appointment_date
             ? now()->parse((string) $patient->appointment_date)->format('Y-m-d')
             : $patient->created_at->format('Y-m-d')
         );
@@ -380,7 +393,7 @@ class PatientController extends Controller
             ->where('tenant_id', $tenantId)
             ->where(function ($q) {
                 $q->whereNotNull('doctor_type')
-                    ->orWhereHas('role', fn ($r) => $r->where(function ($i) {
+                    ->orWhereHas('role', fn($r) => $r->where(function ($i) {
                         $i->whereIn('slug', ['doctor', 'ot_doctor'])
                             ->orWhereIn('name', ['doctor', 'ot_doctor']);
                     }));

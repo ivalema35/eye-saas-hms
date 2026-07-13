@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,6 +28,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Proxy/CDN ke pichhal deploy hone par bhi route()/url() https generate kare,
+        // taaki https page se ajax/fetch calls http:// URL par mixed-content block na ho
+        if (!$this->app->environment('local')) {
+            URL::forceScheme('https');
+        }
+
         // Custom Blade directive: @haspermission('opd.patient.view') ... @endhaspermission
         Blade::if('haspermission', function (string $permissionKey): bool {
             return auth('hospital_user')->user()?->role?->is_super
@@ -41,9 +48,9 @@ class AppServiceProvider extends ServiceProvider
             $hospitalFullAddress = $hospitalSettings['hospital_address'] ?? '';
             $hospitalOfficialEmail = $hospitalSettings['hospital_email'] ?? (app('tenant')?->admin_email ?? '');
             $hospitalContactNumber = $hospitalSettings['hospital_phone'] ?? (app('tenant')?->admin_phone ?? '');
-            $hospitalLogoPath       = $hospitalSettings['hospital_logo'] ?? null;
-            $hospitalLogoNobgPath   = $hospitalSettings['hospital_logo_nobg'] ?? null;
-            $logoSidebarStyle       = $hospitalSettings['logo_sidebar_style'] ?? 'white';
+            $hospitalLogoPath = $hospitalSettings['hospital_logo'] ?? null;
+            $hospitalLogoNobgPath = $hospitalSettings['hospital_logo_nobg'] ?? null;
+            $logoSidebarStyle = $hospitalSettings['logo_sidebar_style'] ?? 'white';
 
             // Sidebar uses bg-removed version when white style + nobg exists
             $sidebarLogoPath = ($logoSidebarStyle === 'white' && $hospitalLogoNobgPath)
@@ -58,7 +65,7 @@ class AppServiceProvider extends ServiceProvider
                 'hospitalContactNumber' => $hospitalContactNumber,
                 'hospitalLogo' => $hospitalLogoPath,
                 'hospitalLogoUrl' => $sidebarLogoPath
-                    ? asset('storage/'.$sidebarLogoPath)
+                    ? asset('storage/' . $sidebarLogoPath)
                     : platform_logo_url(),
                 'hospitalLogoSidebarStyle' => $logoSidebarStyle,
             ]);

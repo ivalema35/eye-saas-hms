@@ -1247,8 +1247,10 @@ $pgMasterOpts = [
                                                     @endphp
                                                     <td class="text-center py-2">
                                                         <div class="d-flex align-items-center justify-content-center gap-1">
-                                                            @if(!($eye == 're' && $rowLabel == 'NEAR'))
+                                                            @if($rowLabel !== 'NEAR')
                                                             <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                            @else
+                                                            <span style="width:32px;height:32px;display:inline-block;"></span>
                                                             @endif
                                                             <div class="pg-select-wrap" style="width:88px;">
                                                                 <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $stNsVal }}">
@@ -1323,11 +1325,11 @@ $pgMasterOpts = [
                     <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:#fafbfc;">
                         <div class="d-flex flex-wrap gap-4">
                             @foreach([
-    'bifocal' => 'Bifocal',
-    'nd_separate' => 'Near & Distance Separate',
-    'progressive' => 'Progressive',
-    'computer_uses' => 'Computer Uses',
-] as $cbKey => $cbLabel)
+                                    'bifocal' => 'Bifocal',
+                                    'nd_separate' => 'Near & Distance Separate',
+                                    'progressive' => 'Progressive',
+                                    'computer_uses' => 'Computer Uses',
+                                ] as $cbKey => $cbLabel)
                                 @php $cbVal = old('exam_data.st.' . $cbKey, $st[$cbKey] ?? false); @endphp
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>

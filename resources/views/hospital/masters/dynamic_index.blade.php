@@ -102,12 +102,12 @@
                                 <div class="mt-4 pt-2">
                                     <button type="submit" id="submitBtn"
                                         class="btn btn-primary w-100 py-2 fw-semibold rounded-3 mb-2">
-                                        <i class="bi bi-check2 me-1"></i> Save Record
+                                        Save Record
                                     </button>
                                     <button type="button" id="cancelBtn"
                                         class="btn btn-light w-100 py-2 fw-medium rounded-3 d-none text-muted"
                                         onclick="resetForm()">
-                                        <i class="bi bi-x me-1"></i> Cancel Edit
+                                        Cancel Edit
                                     </button>
                                 </div>
                             </form>
@@ -323,10 +323,10 @@
                             <div class="modal-footer border-0 gap-2">
                                 <button type="button" id="cancelBtn" class="btn btn-outline-secondary rounded-3"
                                     data-bs-dismiss="modal">
-                                    <i class="bi bi-x me-1"></i> Cancel
+                                    Cancel
                                 </button>
                                 <button type="submit" id="submitBtn" class="btn btn-primary fw-semibold rounded-3">
-                                    <i class="bi bi-check2 me-1"></i> Save Record
+                                    Save Record
                                 </button>
                             </div>
                         </form>
@@ -489,7 +489,7 @@
                 form.action = storeUrl;
 
                 const submitBtn = document.getElementById('submitBtn');
-                submitBtn.innerHTML = '<i class="bi bi-check2 me-1"></i> Save Record';
+                submitBtn.innerHTML = 'Save Record';
                 submitBtn.classList.replace('btn-success', 'btn-primary');
 
                 document.getElementById('cancelBtn')?.classList.add('d-none');
@@ -512,7 +512,7 @@
                 document.getElementById('masterForm').action = updateBase.replace('__ID__', record.id);
 
                 const submitBtn = document.getElementById('submitBtn');
-                submitBtn.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Update Record';
+                submitBtn.innerHTML = 'Update Record';
                 submitBtn.classList.replace('btn-primary', 'btn-success');
 
                 document.getElementById('cancelBtn')?.classList.remove('d-none');
@@ -538,8 +538,8 @@
                     if (distFld) distFld.value = (record.district && typeof record.district === 'object') ? (record.district.name ?? '') : (record.district ?? '');
                 @endif
 
-                                        // Diagnosis multi-select (advice type)
-                                        const $diagSel = $('#input-diagnosis_ids');
+                                                                                                // Diagnosis multi-select (advice type)
+                                                                                                const $diagSel = $('#input-diagnosis_ids');
                 if ($diagSel.length) {
                     const ids = (record.diagnoses || []).map(d => String(d.id));
                     $diagSel.val(ids).trigger('change');
@@ -550,7 +550,7 @@
                 @else
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 @endif
-                                                    }
+                                                                                                            }
             window.editRecord = editRecord;
 
             // Heart / favourite toggle
@@ -609,7 +609,7 @@
                     @if($useModalLayout)
                         bootstrap.Modal.getOrCreateInstance(document.getElementById('masterFormModal')).show();
                     @endif
-                                                                            });
+                                                                                                                                                                });
             @endif
 
             @if($showDiagnosis)

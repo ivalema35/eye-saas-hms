@@ -244,6 +244,59 @@
             cursor: pointer;
         }
 
+        .search-btn:disabled {
+            opacity: .75;
+            cursor: default;
+        }
+
+        .search-btn .spin-icon {
+            animation: patients-spin .7s linear infinite;
+        }
+
+        @keyframes patients-spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .search-form {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .search-clear-btn {
+            background: var(--patients-surface);
+            border: 1px solid var(--patients-border-strong);
+            color: var(--patients-muted);
+            padding: 11px 18px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .search-clear-btn:hover {
+            background: var(--patients-surface-muted);
+            color: var(--patients-primary);
+            border-color: var(--patients-primary);
+        }
+
+        #patientsTableContainer.is-loading .table-wrapper {
+            opacity: .5;
+            pointer-events: none;
+            transition: opacity .15s ease;
+        }
+
         /* Table Styles */
         .table-wrapper {
             overflow-x: auto;
@@ -635,6 +688,111 @@
         .patients-index-page .modern-table button:hover {
             transform: translateY(-1px);
         }
+
+        .patient-search-container {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .search-wrapper {
+            display: flex;
+            align-items: center;
+            width: 400px;
+            max-width: 100%;
+            height: 45px;
+
+            background: #fff;
+            border: 1px solid #dfe8f3;
+            border-radius: 16px;
+
+            padding: 0 8px 0 18px;
+
+            box-shadow:
+                0 8px 25px rgba(25, 118, 210, .06),
+                0 2px 6px rgba(0, 0, 0, .03);
+
+            transition: .25s;
+        }
+
+        .search-wrapper:hover {
+            border-color: #0d6efd55;
+        }
+
+        .search-wrapper:focus-within {
+            border-color: #0d6efd;
+            box-shadow:
+                0 0 0 4px rgba(13, 110, 253, .12),
+                0 10px 30px rgba(13, 110, 253, .12);
+        }
+
+        .search-icon {
+            font-size: 22px;
+            color: #8ca0b3;
+            margin-right: 14px;
+        }
+
+        .search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            background: transparent;
+            color: #1f2937;
+        }
+
+        .search-input::placeholder {
+            color: #94a3b8;
+        }
+
+        .search-btn {
+            width: 40px;
+            height: 35px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0f3853, #1b4f72);
+            color: #fff;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            padding: 0;
+            transition: .25s;
+        }
+
+        .search-btn i {
+            font-size: 18px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-clear-btn {
+            height: 43px;
+            padding: 0 10px;
+
+            border: #dfe8f3 1px solid;
+
+            background: #fff;
+            color: #64748b;
+
+            border-radius: 16px;
+
+            font-weight: 600;
+
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            box-shadow:
+                0 8px 25px rgba(25, 118, 210, .06),
+                0 2px 6px rgba(0, 0, 0, .03);
+
+            transition: .25s;
+        }
     </style>
 @endpush
 
@@ -659,9 +817,7 @@
                         <i class="bi bi-hourglass-split"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 class="stat-value">
-                            {{ $patients->where('secondary_done_at', null)->where('primary_done_at', null)->count() }}
-                        </h3>
+                        <h3 class="stat-value">{{ $stats['waiting'] }}</h3>
                         <p class="stat-label">Waiting</p>
                     </div>
                 </div>
@@ -672,9 +828,7 @@
                         <i class="bi bi-clipboard2-check"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 class="stat-value">
-                            {{ $patients->where('primary_done_at', '!=', null)->where('secondary_done_at', null)->count() }}
-                        </h3>
+                        <h3 class="stat-value">{{ $stats['primary_done'] }}</h3>
                         <p class="stat-label">Primary Done</p>
                     </div>
                 </div>
@@ -685,7 +839,7 @@
                         <i class="bi bi-check2-all"></i>
                     </div>
                     <div class="stat-info">
-                        <h3 class="stat-value">{{ $patients->where('secondary_done_at', '!=', null)->count() }}</h3>
+                        <h3 class="stat-value">{{ $stats['completed'] }}</h3>
                         <p class="stat-label">Completed</p>
                     </div>
                 </div>
@@ -721,198 +875,35 @@
 
             <!-- Search Bar -->
             <div class="search-section">
-                <form method="GET" action="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="search-form">
+                <form method="GET" action="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="search-form"
+                    id="patientSearchForm">
                     @if($showAll)
-                        <input type="hidden" name="all" value="1">
+                        <input type="hidden" name="all" value="1" id="patientSearchAllFlag">
                     @endif
-                    <div class="search-wrapper">
-                        <i class="bi bi-search search-icon"></i>
-                        <input type="text" name="search" value="{{ request('search') }}" class="search-input"
-                            placeholder="Search by name, MRD number, or contact...">
-                        <button type="submit" class="search-btn">
-                            <i class="bi bi-search"></i> Search
+                    <div class="patient-search-container">
+                        <div class="search-wrapper">
+                            <i class="bi bi-search search-icon"></i>
+
+                            <input type="text" name="search" value="{{ request('search') }}" class="search-input"
+                                id="patientSearchInput" placeholder="Search patient by Name, MRD or Mobile..."
+                                autocomplete="off">
+
+                            <button type="submit" class="search-btn" id="patientSearchBtn">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+
+                        <button type="button" class="search-clear-btn" id="patientSearchClear">
+                            Clear
                         </button>
                     </div>
                 </form>
             </div>
 
             <!-- Patients Table -->
-            <div class="table-wrapper">
-                <table class="modern-table">
-                    <thead>
-                        <tr>
-                            <th style="width:44px">#</th>
-                            <th style="width:110px">MRD</th>
-                            <th>Patient</th>
-                            <th style="width:130px">Doctor</th>
-                            <th style="width:110px">Fee / Type</th>
-                            <th style="width:150px">Status</th>
-                            <th style="width:220px">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($patients as $i => $p)
-                            @php
-                                $primary = $p->primaryExamination;
-                                $secondary = $p->secondaryExamination;
-                                $isPrimaryDone = $primary !== null;
-                                $isSecondaryDone = $secondary !== null;
-                                $unlockTimeMs = null;
-                                $isDilating = false;
-
-                                if ($primary && ($primary->exam_data['dilate'] ?? 'No') === 'Yes' && $primary->dilation_time && !$isSecondaryDone) {
-                                    $expectedUnlock = $primary->updated_at->copy()->addMinutes($primary->dilation_time);
-                                    if (now()->lessThan($expectedUnlock)) {
-                                        $isDilating = true;
-                                        $unlockTimeMs = $expectedUnlock->timestamp * 1000;
-                                    }
-                                }
-                            @endphp
-                            <tr class="pt-row">
-                                {{-- # --}}
-                                <td class="serial">{{ $patients->firstItem() + $i }}</td>
-
-                                {{-- MRD --}}
-                                <td><span class="mrd-badge">{{ $p->patient_code }}</span></td>
-
-                                {{-- Patient: name + meta --}}
-                                <td>
-                                    <div class="pt-info">
-                                        <div class="pt-avatar">{{ strtoupper(substr($p->first_name, 0, 1)) }}</div>
-                                        <div>
-                                            <div class="pt-name">{{ $p->full_name }}</div>
-                                            <div class="pt-meta">
-                                                {{ $p->age }}y · {{ ucfirst($p->gender) }}
-                                                @if($p->contact_no) · {{ $p->contact_no }} @endif
-                                                @if($p->created_at) · {{ $p->created_at->format('h:i A') }} @endif
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-
-                                {{-- Doctor --}}
-                                <td class="pt-doctor">{{ $p->doctor?->name ?? '—' }}</td>
-
-                                {{-- Fee / Type --}}
-                                <td>
-                                    <div class="pt-fee">₹{{ number_format($p->case_fee, 0) }}</div>
-                                    <span class="type-badge">{{ ucfirst($p->type) }}</span>
-                                </td>
-
-                                {{-- Status --}}
-                                <td>
-                                    @if($p->secondary_done_at)
-                                        <span class="status-badge completed"><i class="bi bi-check2-all"></i> Completed</span>
-                                    @elseif($p->primary_done_at)
-                                        <span class="status-badge in-progress"><i class="bi bi-clipboard2-check"></i> Primary
-                                            Done</span>
-                                    @else
-                                        <span class="status-badge waiting"><i class="bi bi-hourglass-split"></i> Waiting</span>
-                                    @endif
-                                </td>
-
-                                {{-- Actions --}}
-                                <td>
-                                    <div class="pt-actions">
-                                        {{-- View --}}
-                                        <button type="button" class="pta pta-view view-patient-btn" title="View Patient"
-                                            data-id="{{ $p->id }}" data-mrd="{{ $p->patient_code }}"
-                                            data-name="{{ $p->full_name }}" data-age="{{ $p->age }}"
-                                            data-gender="{{ ucfirst($p->gender ?? '') }}" data-contact="{{ $p->contact_no }}"
-                                            data-whatsapp="{{ $p->whatsapp_no }}" data-occupation="{{ $p->occupation }}"
-                                            data-city="{{ $p->cityName }}" data-district="{{ $p->districtName }}"
-                                            data-state="{{ $p->stateName }}" data-doctor="{{ $p->doctor?->name }}"
-                                            data-case="{{ $p->caseType?->case_type ?? '' }}"
-                                            data-fee="{{ number_format($p->case_fee, 0) }}"
-                                            data-referrer="{{ $p->referrer?->name }}"
-                                            data-appt="{{ $p->appointment_date?->format('d M Y') }}"
-                                            data-registered="{{ $p->created_at->format('d M Y, h:i A') }}"
-                                            data-status="{{ $p->secondary_done_at ? 'Secondary Done' : ($p->primary_done_at ? 'Primary Done' : 'Waiting') }}"
-                                            data-primary-at="{{ $p->primary_done_at?->format('d M Y, h:i A') }}"
-                                            data-secondary-at="{{ $p->secondary_done_at?->format('d M Y, h:i A') }}"
-                                            data-edit-url="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $p->id]) }}">
-                                            <i class="bi bi-info-circle-fill"></i>
-                                        </button>
-
-                                        <div class="pta-divider"></div>
-
-                                        {{-- Primary Exam --}}
-                                        @if($isPrimaryDone)
-                                            <span class="pta pta-done" title="Primary Done"><i
-                                                    class="bi bi-clipboard2-check-fill"></i></span>
-                                        @else
-                                            <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $p->id]) }}"
-                                                class="pta pta-primary" title="Primary Exam">
-                                                <i class="bi bi-clipboard2-pulse"></i>
-                                            </a>
-                                        @endif
-
-                                        {{-- Secondary Exam --}}
-                                        @if(!$isPrimaryDone)
-                                            <span class="pta pta-locked" title="Complete Primary First"><i
-                                                    class="bi bi-lock-fill"></i></span>
-                                        @elseif($isSecondaryDone)
-                                            <span class="pta pta-done" title="Secondary Done"><i class="bi bi-check-all"></i></span>
-                                        @elseif($isDilating)
-                                            <span class="pta pta-timer dilation-timer-btn" data-unlock-time="{{ $unlockTimeMs }}"
-                                                id="sec-btn-{{ $p->id }}">
-                                                <i class="bi bi-hourglass-top"></i><span class="timer-text"
-                                                    style="font-size:10px;font-weight:700"> --:--</span>
-                                            </span>
-                                        @else
-                                            <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $p->id]) }}"
-                                                class="pta pta-secondary" title="Secondary Exam">
-                                                <i class="bi bi-file-earmark-medical"></i>
-                                            </a>
-                                        @endif
-
-                                        <div class="pta-divider"></div>
-
-                                        {{-- History --}}
-                                        <a href="{{ route('hospital.patients.history', ['slug' => $slug, 'patient_ids' => $p->id]) }}"
-                                            class="pta pta-util" title="History"><i class="bi bi-clock-history"></i></a>
-
-                                        {{-- Print --}}
-                                        <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $p->id, 'auto_print' => 1, 'return_to' => 'back']) }}"
-                                            class="pta pta-util" title="Print"><i class="bi bi-printer-fill"></i></a>
-
-                                        {{-- Edit --}}
-                                        <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $p->id]) }}"
-                                            class="pta pta-edit" title="Edit"><i class="bi bi-pencil-fill"></i></a>
-
-                                        {{-- Delete --}}
-                                        <!-- <form method="POST" action="{{ route('hospital.patients.destroy', ['slug' => $slug, 'patient' => $p->id]) }}" class="d-contents delete-form">
-                                                        @csrf @method('DELETE')
-                                                        <button type="button" class="pta pta-delete delete-btn" title="Delete"><i class="bi bi-trash3-fill"></i></button>
-                                                    </form> -->
-
-                                        {{-- Check-in (phone only) --}}
-                                        @if($p->type === 'phone' && !$p->case_id)
-                                            <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $p->id]) }}"
-                                                class="pta pta-checkin" title="Check In"><i class="bi bi-person-check-fill"></i></a>
-                                        @endif
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="empty-state">
-                                    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
-                                    <h5>No patients found</h5>
-                                    <p>{{ request('search') ? 'No results match your search.' : ($showAll ? 'No patients registered yet.' : 'No patients registered today.') }}
-                                    </p>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div id="patientsTableContainer">
+                @include('hospital.patients.partials.table', ['patients' => $patients, 'slug' => $slug, 'showAll' => $showAll])
             </div>
-
-            @if($patients->hasPages())
-                <div class="pagination-modern">
-                    {{ $patients->links('pagination::bootstrap-5') }}
-                </div>
-            @endif
         </div>
     </div>
 
@@ -1490,6 +1481,112 @@
                 }
 
                 new bootstrap.Modal(document.getElementById('patientViewModal')).show();
+            });
+        });
+    </script>
+
+    {{-- Live patient search: AJAX-filters the table as the user types, with
+    debounce + request-sequencing so a slow earlier response can never
+    clobber a later one. Only #patientsTableContainer's HTML is swapped;
+    the search input itself is never re-rendered, so focus/cursor are
+    naturally preserved without extra work. --}}
+    <script>
+        $(function () {
+            var $input = $('#patientSearchInput');
+            var $form = $('#patientSearchForm');
+            var $clearBtn = $('#patientSearchClear');
+            var $searchBtn = $('#patientSearchBtn');
+            var $container = $('#patientsTableContainer');
+            var searchUrl = @json(route('hospital.patients.index', ['slug' => $slug]));
+            var showAll = @json($showAll);
+
+            var debounceTimer = null;
+            var currentXhr = null;
+            var requestSeq = 0;
+
+            function setLoading(isLoading) {
+                $searchBtn.prop('disabled', isLoading);
+                $searchBtn.find('i').toggleClass('bi-search', !isLoading).toggleClass('bi-arrow-repeat spin-icon', isLoading);
+                $container.toggleClass('is-loading', isLoading);
+            }
+
+            function focusInput() {
+                var pos = $input.val().length;
+                $input.trigger('focus');
+                if ($input[0].setSelectionRange) {
+                    $input[0].setSelectionRange(pos, pos);
+                }
+            }
+
+            function fetchPatients(page) {
+                var value = $input.val();
+
+                // Abort any in-flight request so a slow earlier response
+                // can never overwrite the result of a newer one.
+                if (currentXhr) {
+                    currentXhr.abort();
+                }
+
+                var seq = ++requestSeq;
+                setLoading(true);
+
+                var params = { search: value };
+                if (showAll) {
+                    params.all = 1;
+                }
+                if (page && page > 1) {
+                    params.page = page;
+                }
+
+                currentXhr = $.ajax({
+                    url: searchUrl,
+                    method: 'GET',
+                    data: params,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function (html) {
+                        if (seq !== requestSeq) {
+                            return; // stale response — a newer request is already in flight
+                        }
+                        $container.html(html);
+                    },
+                    complete: function () {
+                        if (seq !== requestSeq) {
+                            return;
+                        }
+                        setLoading(false);
+                        currentXhr = null;
+                        focusInput();
+                    }
+                });
+            }
+
+            $input.on('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function () {
+                    fetchPatients();
+                }, 400);
+            });
+
+            $form.on('submit', function (e) {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                fetchPatients();
+            });
+
+            $clearBtn.on('click', function () {
+                clearTimeout(debounceTimer);
+                $input.val('');
+                focusInput();
+                fetchPatients();
+            });
+
+            // Keep pagination inside the table AJAX-driven too, so paging
+            // through search results never triggers a full page reload.
+            $(document).on('click', '#patientsTableContainer .pagination-modern a', function (e) {
+                e.preventDefault();
+                var href = $(this).attr('href') || '';
+                var match = href.match(/[?&]page=(\d+)/);
+                fetchPatients(match ? parseInt(match[1], 10) : 1);
             });
         });
     </script>

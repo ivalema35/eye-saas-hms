@@ -59,6 +59,10 @@ class DatabaseSeeder extends Seeder
             MedicineTypeSeeder::class,
             MedicineCategorySeeder::class,
             MedicineRouteSeeder::class,
+            MasterDosageSeeder::class,
+            MasterMedicineTypeSeeder::class,
+            MasterMedicineCategorySeeder::class,
+            MasterMedicineRouteSeeder::class,
         ]);
     }
 }

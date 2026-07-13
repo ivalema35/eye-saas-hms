@@ -182,7 +182,7 @@
             </h5>
             <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary px-3"
                 style="border-radius: 6px;">
-                 Back to Dashboard
+                Back to Dashboard
             </a>
         </div>
 
@@ -203,26 +203,31 @@
         <div class="history-tab-pane active" id="tab-patient-history">
 
             {{-- Filter Form --}}
-            <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" class="card mb-4 p-3"
+            <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" id="patient-history-form"
+                class="card mb-4 p-3 js-auto-filter-form"
                 style="border-radius:14px; border:1px solid #e2e8f0; background:#ffffff;">
+                <input type="hidden" name="_tab" value="patient">
                 <div class="row g-2 align-items-end">
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Patient Name</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Patient
+                            Name</label>
                         <input type="text" name="patient_name" value="{{ request('patient_name') }}"
                             class="form-control form-control-sm" placeholder="Search patient..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Doctor Name</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Doctor
+                            Name</label>
                         <input type="text" name="doctor_name" value="{{ request('doctor_name') }}"
                             class="form-control form-control-sm" placeholder="Search doctor..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Contact No.</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Contact
+                            No.</label>
                         <input type="text" name="contact_no" value="{{ request('contact_no') }}"
-                            class="form-control form-control-sm" placeholder="Search contact..."
-                            maxlength="15" style="border-radius:8px; border:1px solid #cbd5e1;">
+                            class="form-control form-control-sm" placeholder="Search contact..." maxlength="15"
+                            style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2">
                         <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Date</label>
@@ -232,7 +237,7 @@
                     <div class="col-12 col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-sm w-100 fw-bold"
                             style="background:#1B4F72; color:#fff; border-radius:8px;">
-                             Filter
+                            Filter
                         </button>
                         @if(request('patient_name') || request('doctor_name') || request('contact_no') || request('date'))
                             <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" class="btn btn-sm w-100 fw-bold"
@@ -244,76 +249,8 @@
                 </div>
             </form>
 
-            <div class="card custom-history-card">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle text-center mb-0" style="font-size: 14px;">
-                        <thead>
-                            <tr>
-                                <th style="width:60px;">#</th>
-                                <th>MRD No.</th>
-                                <th class="text-start">Patient Name</th>
-                                <th>Hospital</th>
-                                <th>Doctor Name</th>
-                                <th>Date</th>
-                                <th>Contact</th>
-                                <th>Age</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($historyPatients as $i => $patient)
-                                <tr>
-                                    <td>{{ $historyPatients->firstItem() + $i }}</td>
-                                    <td><span class="badge bg-light text-dark border">{{ $patient->patient_code ?? '—' }}</span></td>
-                                    <td class="text-start fw-semibold" style="color:#1B4F72;">
-                                        {{ $patient->first_name ?? '' }} {{ $patient->last_name ?? '' }}
-                                    </td>
-                                    <td>
-                                        @if($patient->tenant_id === $currentTenant->id)
-                                            <span style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">
-                                                <i class="bi bi-house-fill me-1"></i>Own
-                                            </span>
-                                        @else
-                                            <span style="background:#f0fdf4;color:#166534;font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;">
-                                                <i class="bi bi-building me-1"></i>{{ $patient->tenant->name ?? '—' }}
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</td>
-                                    <td>{{ \Carbon\Carbon::parse($patient->appointment_date)->format('d M, Y') }}</td>
-                                    <td>{{ $patient->contact_no ?? '-' }}</td>
-                                    <td>{{ $patient->age ?? '-' }}</td>
-                                    <td>
-                                        @if($patient->tenant_id === $currentTenant->id)
-                                            <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids }}"
-                                                class="btn btn-sm btn-view-history" title="View Details" target="_blank">
-                                                <i class="bi bi-eye-fill"></i> View
-                                            </a>
-                                        @else
-                                            <a href="{{ route('hospital.shared.patient.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids }}"
-                                                class="btn btn-sm fw-bold" target="_blank"
-                                                style="background:#0d9488;color:#fff;border-radius:8px;padding:5px 12px;">
-                                                <i class="bi bi-eye-fill"></i> View
-                                            </a>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="9" class="py-5 text-muted">No history found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                @if($historyPatients->hasPages())
-                    <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
-                    {{ $historyPatients->appends(request()->except('patient_page'))->appends([
-        '_tab' => 'patient'
-    ])->links() }}
-                                        </div>
-                @endif
+            <div id="patient-history-results">
+                @include('hospital.dashboard.partials.patient-history-results')
             </div>
 
         </div>{{-- end tab-patient-history --}}
@@ -322,12 +259,14 @@
         <div class="history-tab-pane" id="tab-hospital-history">
 
             {{-- Filter Form --}}
-            <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}"
-                class="card mb-4 p-3" style="border-radius:14px; border:1px solid #e2e8f0; background:#ffffff;">
+            <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" id="hospital-history-form"
+                class="card mb-4 p-3 js-auto-filter-form"
+                style="border-radius:14px; border:1px solid #e2e8f0; background:#ffffff;">
                 <input type="hidden" name="_tab" value="hospital">
                 <div class="row g-2 align-items-end">
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Hospital Name</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Hospital
+                            Name</label>
                         <input type="text" name="hosp_name" value="{{ request('hosp_name') }}"
                             class="form-control form-control-sm" placeholder="Search hospital..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
@@ -365,131 +304,8 @@
                 </div>
             </form>
 
-            <div class="mb-3">
-                <span class="fw-semibold" style="color:#1B4F72; font-size:14px;">
-                    <i class="bi bi-hospitals me-1"></i>
-                    Total: <strong>{{ $hospitals->total() }}</strong> hospitals
-                </span>
-            </div>
-
-            <div class="card custom-history-card">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle text-center mb-0" style="font-size:14px;">
-                        <thead>
-                            <tr>
-                                <th style="width:55px;">#</th>
-                                <th style="width:65px;">Logo</th>
-                                <th class="text-start">Hospital Name</th>
-                                <th>City</th>
-                                <th>District</th>
-                                <th>State</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($hospitals as $i => $hospital)
-                                @php $reqInfo = $requestMap[$hospital->id] ?? null; @endphp
-                                <tr>
-                                    <td>{{ $hospitals->firstItem() + $i }}</td>
-                                    <td>
-                                        @if($hospital->logo_path)
-                                            <img src="{{ asset('storage/' . $hospital->logo_path) }}" alt="{{ $hospital->name }}" class="hosp-logo">
-                                        @else
-                                            <span class="hosp-logo-placeholder">
-                                                <i class="bi bi-hospital" style="color:#1B4F72; font-size:18px;"></i>
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="text-start fw-semibold" style="color:#1B4F72;">{{ $hospital->name }}</td>
-                                    <td class="location-tag"><i class="bi bi-geo-alt-fill me-1"></i>{{ $hospital->city ?? '—' }}</td>
-                                    <td class="location-tag"><i class="bi bi-map me-1"></i>{{ $hospital->district ?? '—' }}</td>
-                                    <td class="location-tag"><i class="bi bi-globe me-1"></i>{{ $hospital->state ?? '—' }}</td>
-                                    <td>
-                                        @if(!$reqInfo)
-                                            <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;">
-                                                —
-                                            </span>
-                                        @elseif($reqInfo['status'] === 'accepted')
-                                            <span class="badge-active"><i class="bi bi-check2-circle me-1"></i>Connected</span>
-                                        @elseif($reqInfo['direction'] === 'sent')
-                                            <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">
-                                                <i class="bi bi-clock me-1"></i>Requested
-                                            </span>
-                                        @else
-                                            <span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">
-                                                <i class="bi bi-bell me-1"></i>Incoming
-                                            </span>
-                                        @endif
-                                    </td>
-
-                                         <td>
-                                        <div class="d-flex justify-content-center align-items-center gap-1 flex-nowrap"> 
-                                        <button type="button" class="btn btn-sm btn-outline-primary view-hosp-btn"
-                                            style="border-radius:8px; color:#000; background:#f6c23e; border:none; font-weight:600;" data-id="{{ $hospital->id }}">
-                                            <i class="bi bi-eye-fill"></i> View
-                                        </button>
-
-                                        @if(!$reqInfo)
-                                            <form method="POST" action="{{ route('hospital.hospital.share.send', ['slug' => $slug, 'toTenantId' => $hospital->id]) }}">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm fw-bold"
-                                                    style="background:#1B4F72;color:#fff;border-radius:8px;">
-                                                    <i class="bi bi-send me-1"></i>Request
-                                                </button>
-                                            </form>
-                                        @elseif($reqInfo['status'] === 'accepted')
-                                            <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
-                                                    style="border-radius:8px; color:white; background:#dc3545;"
-                                                    onclick="return confirm('Do you want to remove this connection?')">
-                                                   Cancel
-                                                </button>
-                                            </form>
-                                        @elseif($reqInfo['direction'] === 'sent')
-                                            <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-secondary fw-bold"
-                                                    style="border-radius:8px; color:#fff; background:#dc3545;">
-                                                     Cancel
-                                                </button>
-                                            </form>
-                                        @else
-                                            {{-- Incoming: Accept or Remove from hospital tab too --}}
-                                            <form method="POST" action="{{ route('hospital.hospital.share.accept', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}" class="d-inline">
-                                                @csrf
-                                                <button type="submit" class="btn btn-sm fw-bold"
-                                                    style="background:#16a34a;color:#fff;border-radius:8px;">
-                                                    <i class="bi bi-check-lg"></i>
-                                                </button>
-                                            </form>
-                                            <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $reqInfo['id']]) }}" class="d-inline">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" style="border-radius:8px;">
-                                                    <i class="bi bi-x-lg"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="8" class="py-5 text-muted">
-                                        <i class="bi bi-building-slash me-2"></i>No active hospitals found.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                @if($hospitals->hasPages())
-                <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
-                {{ $hospitals->appends(request()->except('hospital_page'))->appends(['_tab' => 'hospital'])->links() }}
-                </div>
-                @endif
+            <div id="hospital-history-results">
+                @include('hospital.dashboard.partials.hospital-history-results')
             </div>
 
         </div>{{-- end tab-hospital-history --}}
@@ -513,42 +329,45 @@
 
             {{-- ── Connected Hospitals ── --}}
             @if($acceptedConnections->count())
-            <h6 class="fw-bold mb-3" style="color:#1B4F72;">
-                <i class="bi bi-link-45deg me-2"></i>Connected Hospitals
-            </h6>
-            <div class="row g-3 mb-4">
-                @foreach($acceptedConnections as $conn)
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card h-100 p-3" style="border-radius:14px;border:2px solid #0d9488;background:#f0fdfa;">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width:46px;height:46px;border-radius:12px;background:#0d9488;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                <i class="bi bi-building" style="color:#fff;font-size:20px;"></i>
-                            </div>
-                            <div class="flex-grow-1 min-width-0">
-                                <div class="fw-bold text-truncate" style="color:#0f766e;font-size:14px;">{{ $conn->partner->name ?? '—' }}</div>
-                                <div class="text-muted" style="font-size:12px;">
-                                    <i class="bi bi-geo-alt me-1"></i>{{ $conn->partner->city ?? '' }}{{ $conn->partner->state ? ', ' . $conn->partner->state : '' }}
+                <h6 class="fw-bold mb-3" style="color:#1B4F72;">
+                    <i class="bi bi-link-45deg me-2"></i>Connected Hospitals
+                </h6>
+                <div class="row g-3 mb-4">
+                    @foreach($acceptedConnections as $conn)
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="card h-100 p-3" style="border-radius:14px;border:2px solid #0d9488;background:#f0fdfa;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div
+                                        style="width:46px;height:46px;border-radius:12px;background:#0d9488;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="bi bi-building" style="color:#fff;font-size:20px;"></i>
+                                    </div>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <div class="fw-bold text-truncate" style="color:#0f766e;font-size:14px;">
+                                            {{ $conn->partner->name ?? '—' }}</div>
+                                        <div class="text-muted" style="font-size:12px;">
+                                            <i
+                                                class="bi bi-geo-alt me-1"></i>{{ $conn->partner->city ?? '' }}{{ $conn->partner->state ? ', ' . $conn->partner->state : '' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $conn->partner->id]) }}"
+                                        class="btn btn-sm w-100 fw-bold" style="background:#0d9488;color:#fff;border-radius:8px;">
+                                        <i class="bi bi-person-lines-fill me-1"></i>View Patient History
+                                    </a>
                                 </div>
                             </div>
                         </div>
-                        <div class="mt-3">
-                            <a href="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $conn->partner->id]) }}"
-                                class="btn btn-sm w-100 fw-bold"
-                                style="background:#0d9488;color:#fff;border-radius:8px;">
-                                <i class="bi bi-person-lines-fill me-1"></i>View Patient History
-                            </a>
-                        </div>
-                    </div>
+                    @endforeach
                 </div>
-                @endforeach
-            </div>
             @endif
 
             {{-- ── Incoming Requests ── --}}
             <h6 class="fw-bold mb-3" style="color:#1B4F72;">
                 <i class="bi bi-inbox me-2"></i>Incoming Requests
                 @if($incomingRequests->count())
-                    <span style="background:#dc2626;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:4px;">
+                    <span
+                        style="background:#dc2626;color:#fff;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:4px;">
                         {{ $incomingRequests->count() }}
                     </span>
                 @endif
@@ -580,7 +399,8 @@
                                         {{ $req->created_at->format('d M, Y') }}
                                     </td>
                                     <td class="d-flex gap-2 justify-content-center">
-                                        <form method="POST" action="{{ route('hospital.hospital.share.accept', ['slug' => $slug, 'requestId' => $req->id]) }}">
+                                        <form method="POST"
+                                            action="{{ route('hospital.hospital.share.accept', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm fw-bold"
@@ -588,7 +408,8 @@
                                                 Accept
                                             </button>
                                         </form>
-                                        <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
+                                        <form method="POST"
+                                            action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf @method('DELETE')
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
@@ -644,7 +465,8 @@
                                         @if($req->status === 'accepted')
                                             <span class="badge-active"><i class="bi bi-check2-circle me-1"></i>Connected</span>
                                         @elseif($req->status === 'pending')
-                                            <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">
+                                            <span
+                                                style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">
                                                 <i class="bi bi-clock me-1"></i>Pending
                                             </span>
                                         @else
@@ -654,12 +476,12 @@
                                     <td class="d-flex gap-1 justify-content-center">
                                         @if($req->status === 'accepted')
                                             <a href="{{ route('hospital.partner.history', ['slug' => $slug, 'partnerTenantId' => $req->toTenant->id]) }}"
-                                                class="btn btn-sm fw-bold"
-                                                style="background:#0d9488;color:#fff;border-radius:8px;">
+                                                class="btn btn-sm fw-bold" style="background:#0d9488;color:#fff;border-radius:8px;">
                                                 <i class="bi bi-person-lines-fill me-1"></i>View History
                                             </a>
                                         @endif
-                                        <form method="POST" action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
+                                        <form method="POST"
+                                            action="{{ route('hospital.hospital.share.remove', ['slug' => $slug, 'requestId' => $req->id]) }}">
                                             @csrf @method('DELETE')
                                             <input type="hidden" name="_from_tab" value="request">
                                             <button type="submit" class="btn btn-sm btn-outline-danger fw-bold"
@@ -690,7 +512,7 @@
         <script>
             // Global tab switch — callable from anywhere (View History button etc.)
             function historyTabSwitch(name) {
-                var btns  = document.querySelectorAll('.history-tab-btn');
+                var btns = document.querySelectorAll('.history-tab-btn');
                 var panes = document.querySelectorAll('.history-tab-pane');
                 btns.forEach(function (b) {
                     b.classList.toggle('active', b.getAttribute('data-tab') === name);
@@ -704,11 +526,11 @@
             }
 
             document.addEventListener('DOMContentLoaded', function () {
-                var hash    = window.location.hash;
-                var urlTab  = new URLSearchParams(window.location.search).get('_tab');
+                var hash = window.location.hash;
+                var urlTab = new URLSearchParams(window.location.search).get('_tab');
                 var activeTab = (hash === '#hospital' || urlTab === 'hospital') ? 'hospital-history'
-                              : (hash === '#request'  || urlTab === 'request')  ? 'request-history'
-                              : 'patient-history';
+                    : (hash === '#request' || urlTab === 'request') ? 'request-history'
+                        : 'patient-history';
 
                 historyTabSwitch(activeTab);
 
@@ -718,9 +540,16 @@
                     });
                 });
 
-                document.querySelectorAll('.view-hosp-btn').forEach(function (btn) {
-                    btn.addEventListener('click', function () {
-                        var hospId = this.getAttribute('data-id');
+                // Delegated (not bound per-button) because #hospital-history-results is
+                // re-rendered by the AJAX filter below — direct listeners would be lost
+                // every time the table refreshes.
+                var hospitalResults = document.getElementById('hospital-history-results');
+                if (hospitalResults) {
+                    hospitalResults.addEventListener('click', function (e) {
+                        var btn = e.target.closest('.view-hosp-btn');
+                        if (!btn) return;
+
+                        var hospId = btn.getAttribute('data-id');
                         var modalEl = document.getElementById('hospDetailModal');
                         document.getElementById('hospModalBody').innerHTML = '<div class="text-center py-4">Loading details...</div>';
                         var modal = new bootstrap.Modal(modalEl);
@@ -734,9 +563,9 @@
                                     '<p class="small text-muted mb-3">' + data.city + ', ' + data.state + '</p>' +
                                     '<hr>' +
                                     '<div class="row text-center">' +
-                                        '<div class="col-4"><strong>' + data.doctors_count + '</strong><br><small>Doctors</small></div>' +
-                                        '<div class="col-4"><strong>' + data.receptionists_count + '</strong><br><small>Staff</small></div>' +
-                                        '<div class="col-4"><strong>' + data.patients_count + '</strong><br><small>Patients</small></div>' +
+                                    '<div class="col-4"><strong>' + data.doctors_count + '</strong><br><small>Doctors</small></div>' +
+                                    '<div class="col-4"><strong>' + data.receptionists_count + '</strong><br><small>Staff</small></div>' +
+                                    '<div class="col-4"><strong>' + data.patients_count + '</strong><br><small>Patients</small></div>' +
                                     '</div>' +
                                     '<div class="mt-3 small"><strong>Admin Email:</strong> ' + data.admin_email + '</div>';
                             })
@@ -744,8 +573,190 @@
                                 document.getElementById('hospModalBody').innerHTML = '<div class="text-danger text-center py-3">Failed to load details.</div>';
                             });
                     });
-                });
+                }
             });
+        </script>
+
+        <script>
+            // ─────────────────────────────────────────────────────────────────
+            // Reusable AJAX filter + pagination engine for GET-based history
+            // filter forms (Patient History / Hospital History tabs).
+            //
+            // Design notes:
+            //  - Only the #…-results container is ever replaced. The <form> and
+            //    its inputs are never touched, so the focused input never loses
+            //    focus/cursor position while the debounced search fires.
+            //  - Every request is sent to the *same* route the form already
+            //    posts to (no new routes), with an extra `section` query param
+            //    so the controller knows which partial to render, plus the
+            //    `X-Requested-With` header so Laravel's $request->ajax() is true.
+            //  - Filter submissions push a real, shareable URL (identical to the
+            //    one a full GET submission would produce, minus `section`), so
+            //    Back/Forward and page refresh keep working.
+            // ─────────────────────────────────────────────────────────────────
+            (function () {
+                'use strict';
+
+                var DEBOUNCE_MS = 500;
+                var controllers = [];
+
+                function debounce(fn, wait) {
+                    var timer = null;
+                    return function () {
+                        clearTimeout(timer);
+                        timer = setTimeout(fn, wait);
+                    };
+                }
+
+                function createAjaxHistoryFilter(config) {
+                    var form = document.querySelector(config.formSelector);
+                    var results = document.querySelector(config.resultsSelector);
+                    if (!form || !results) return null;
+
+                    var section = config.section;
+                    var pageParam = config.pageParam;
+                    var fieldNames = config.fieldNames;
+                    var abortController = null;
+
+                    function formParams() {
+                        return new URLSearchParams(new FormData(form));
+                    }
+
+                    // Start from the address bar so the *other* tab's filters/page
+                    // are preserved untouched, then overlay this section's own
+                    // current field values on top.
+                    function mergedParams() {
+                        var params = new URLSearchParams(window.location.search);
+                        fieldNames.concat(['_tab']).forEach(function (name) { params.delete(name); });
+                        if (pageParam) params.delete(pageParam);
+
+                        formParams().forEach(function (value, key) {
+                            if (value !== '') params.set(key, value);
+                        });
+
+                        return params;
+                    }
+
+                    function render(params, pushToHistory) {
+                        if (abortController) abortController.abort();
+                        abortController = new AbortController();
+
+                        var basePath = form.getAttribute('action');
+                        var displayUrl = basePath + '?' + params.toString();
+
+                        var fetchParams = new URLSearchParams(params.toString());
+                        fetchParams.set('section', section);
+                        var fetchUrl = basePath + '?' + fetchParams.toString();
+
+                        fetch(fetchUrl, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                            credentials: 'same-origin',
+                            signal: abortController.signal,
+                        })
+                            .then(function (res) {
+                                if (!res.ok) throw new Error('HTTP ' + res.status);
+                                return res.text();
+                            })
+                            .then(function (html) {
+                                results.innerHTML = html;
+
+                                if (pushToHistory) {
+                                    history.pushState(
+                                        { historyFilter: section },
+                                        '',
+                                        displayUrl + window.location.hash
+                                    );
+                                }
+                            })
+                            .catch(function (err) {
+                                if (err.name === 'AbortError') return;
+                                results.insertAdjacentHTML(
+                                    'afterbegin',
+                                    '<div class="alert alert-danger m-3" role="alert">' +
+                                    'Could not load results. Please check your connection and try again.' +
+                                    '</div>'
+                                );
+                                console.error('[history-filter:' + section + ']', err);
+                            });
+                    }
+
+                    var runFilter = debounce(function () {
+                        render(mergedParams(), true);
+                    }, DEBOUNCE_MS);
+
+                    fieldNames.forEach(function (name) {
+                        var input = form.elements.namedItem(name);
+                        if (input) input.addEventListener('input', runFilter);
+                    });
+
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        render(mergedParams(), true);
+                    });
+
+                    // Pagination links are re-rendered every time `results` is
+                    // replaced, so listen on the container (delegation) instead
+                    // of on the links themselves.
+                    results.addEventListener('click', function (e) {
+                        var link = e.target.closest('.hms-pagination a[href]');
+                        if (!link) return;
+                        e.preventDefault();
+                        var linkUrl = new URL(link.href, window.location.origin);
+                        render(linkUrl.searchParams, true);
+                        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    });
+
+                    return {
+                        refresh: function () {
+                            render(mergedParams(), false);
+                        },
+                        syncFieldsFromUrl: function () {
+                            var params = new URLSearchParams(window.location.search);
+                            fieldNames.forEach(function (name) {
+                                var input = form.elements.namedItem(name);
+                                if (input) input.value = params.get(name) || '';
+                            });
+                        },
+                    };
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    [
+                        createAjaxHistoryFilter({
+                            formSelector: '#patient-history-form',
+                            resultsSelector: '#patient-history-results',
+                            section: 'patient',
+                            pageParam: 'patient_page',
+                            fieldNames: ['patient_name', 'doctor_name', 'contact_no', 'date'],
+                        }),
+                        createAjaxHistoryFilter({
+                            formSelector: '#hospital-history-form',
+                            resultsSelector: '#hospital-history-results',
+                            section: 'hospital',
+                            pageParam: 'hospital_page',
+                            fieldNames: ['hosp_name', 'hosp_city', 'hosp_district', 'hosp_state'],
+                        }),
+                    ].forEach(function (controller) {
+                        if (controller) controllers.push(controller);
+                    });
+
+                    // Back/Forward: re-sync both forms + both result panels from
+                    // the restored URL, then show whichever tab it points at.
+                    window.addEventListener('popstate', function () {
+                        controllers.forEach(function (controller) {
+                            controller.syncFieldsFromUrl();
+                            controller.refresh();
+                        });
+
+                        var hash = window.location.hash;
+                        var urlTab = new URLSearchParams(window.location.search).get('_tab');
+                        var activeTab = (hash === '#hospital' || urlTab === 'hospital') ? 'hospital-history'
+                            : (hash === '#request' || urlTab === 'request') ? 'request-history'
+                                : 'patient-history';
+                        historyTabSwitch(activeTab);
+                    });
+                });
+            })();
         </script>
     @endpush
 
