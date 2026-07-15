@@ -48,6 +48,8 @@
             font-weight: 600;
             font-size: 13px;
             transition: .2s;
+            text-decoration: none;
+            display: inline-block;
 
         }
 
@@ -55,6 +57,7 @@
             background: #0f766e;
             transform: scale(1.04);
             color: #fff;
+            text-decoration: none;
         }
     </style>
 
