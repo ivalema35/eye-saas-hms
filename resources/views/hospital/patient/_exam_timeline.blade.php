@@ -87,61 +87,146 @@
                                 <div class="collapse mt-3" id="{{ $collapseId }}">
                                     @php
                                         $cv = fn($v) => (isset($v) && $v !== '' && $v !== null) ? $v : '-';
+                                        $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
                                         $dxNames = $diagnosisMasters->whereIn('id', (array) $dxIds)->pluck('diagnosis')->implode(', ');
-                                        $dilate = $data['dilate'] ?? 'No';
-                                        $stBadges = array_filter([
-                                            ($data['st']['bifocal'] ?? false) ? 'Bifocal' : '',
-                                            ($data['st']['nd_separate'] ?? false) ? 'N&D Separate' : '',
-                                            ($data['st']['progressive'] ?? false) ? 'Progressive' : '',
-                                            ($data['st']['computer_uses'] ?? false) ? 'Computer Uses' : '',
-                                        ]);
+                                        $hnoList = array_filter(array_map('trim', explode(',', $data['history'] ?? '')));
+                                        $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds'])
+                                            || !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
+                                        $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds'])
+                                            || !empty($st['re']['ns']) || !empty($st['le']['ns']);
+                                        $hasVision = !empty($vision['vn_re']) || !empty($vision['vn_le'])
+                                            || !empty($vision['pnvn_re']) || !empty($vision['pnvn_le'])
+                                            || !empty($vision['nrvn_re']) || !empty($vision['nrvn_le'])
+                                            || !empty($nct['iop_re']) || !empty($nct['iop_le']);
+                                        $oeFields = [
+                                            'sac' => 'SAC', 'lid' => 'LID', 'conj' => 'CONJ', 'cornea' => 'CORNEA',
+                                            'ac' => 'AC', 'iris' => 'IRIS', 'pupil' => 'PUPIL', 'lens' => 'LENS',
+                                            'em' => 'EM', 'covertest' => 'COVERTEST', 'other' => 'OTHER',
+                                        ];
+                                        $hasOe = collect(array_keys($oeFields))
+                                            ->contains(fn($k) => !empty($oe[$k . '_re']) || !empty($oe[$k . '_le']));
+                                        $hasFundus = !empty($fundus['disc_re']) || !empty($fundus['disc_le'])
+                                            || !empty($fundus['fr_re']) || !empty($fundus['fr_le'])
+                                            || !empty($fundus['comment_re']) || !empty($fundus['comment_le']);
+                                        $hasRx = $rxLines instanceof \Illuminate\Support\Collection
+                                            ? $rxLines->isNotEmpty()
+                                            : (is_countable($rxLines) && count($rxLines) > 0);
                                     @endphp
 
                                     <div class="row g-2">
 
-                                        {{-- LEFT COL: History+Vision & ST+Diagnosis+Rx --}}
+                                        {{-- LEFT: Medicine / PG / ST / K/C/O --}}
                                         <div class="col-md-6 d-flex flex-column gap-2">
 
-                                            {{-- BOX 1: History & Vision --}}
-                                            <div class="cv-box">
-                                                <div class="cv-title">History &amp; Vision</div>
-
-                                                {{-- C/O table --}}
-                                                <table class="cv-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th colspan="4">C/O</th>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>Complaint</th>
-                                                            <th>Since</th>
-                                                            <th>Eye</th>
-                                                            <th>Comment</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($coRows as $cr)
+                                            @if(!$isPrimary && $hasRx)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">Medicine</div>
+                                                    <table class="cv-table">
+                                                        <thead class="cv-rx-hd">
                                                             <tr>
-                                                                <td style="text-align:left">{{ $cr['complaint'] }}</td>
-                                                                <td>{{ !empty($cr['since']) ? $cr['since'] . ' ' . ($cr['unit'] ?? '') : '-' }}</td>
-                                                                <td>{{ $cr['eye'] ?? '-' }}</td>
-                                                                <td style="text-align:left">{{ $cr['comment'] ?? '-' }}</td>
+                                                                <th>Medicine</th>
+                                                                <th>Dosage</th>
+                                                                <th>Days</th>
+                                                                <th>Eye</th>
                                                             </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="4" style="text-align:center;color:#94a3b8">—</td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($rxLines as $rx)
+                                                                @php
+                                                                    $rx = (array) $rx;
+                                                                    $mName = $rx['name'] ?? '-';
+                                                                    $mDose = isset($rx['dosage_id'])
+                                                                        ? ($dosageMasters[$rx['dosage_id']]?->dosage ?? '-')
+                                                                        : ($rx['dosage'] ?? '-');
+                                                                    $mDays = !empty($rx['duration']) ? $rx['duration'] . ' D' : '-';
+                                                                    $mEye = $rx['eye'] ?? '-';
+                                                                @endphp
+                                                                <tr>
+                                                                    <td style="text-align:left;font-weight:600">{{ $mName }}</td>
+                                                                    <td>{{ $mDose }}</td>
+                                                                    <td>{{ $mDays }}</td>
+                                                                    <td>{{ $mEye }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
 
-                                                {{-- K/C/O table (only if exists) --}}
-                                                @if(count($kcoRows))
+                                            @if($hasPg)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">PG</div>
+                                                    <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;font-size:11px;">
+                                                        <span class="cv-vn-line" style="align-items:flex-start;">
+                                                            <strong>PG</strong>&nbsp;&lt;&nbsp;
+                                                            <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                <span>{{ $pgFmt($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') }}</span>
+                                                                <span>{{ $pgFmt($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') }}</span>
+                                                            </span>
+                                                        </span>
+                                                        <span class="cv-vn-line" style="align-items:flex-start;">
+                                                            <strong>NrPG</strong>&nbsp;&lt;&nbsp;
+                                                            <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                <span>{{ $pgFmt($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') }}</span>
+                                                                <span>{{ $pgFmt($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') }}</span>
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if($hasSt)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">ST</div>
                                                     <table class="cv-table">
                                                         <thead>
                                                             <tr>
-                                                                <th colspan="3">K/C/O</th>
+                                                                <th style="width:18px"></th>
+                                                                <th colspan="3">RIGHT EYE (RE)</th>
+                                                                <th colspan="3">LEFT EYE (LE)</th>
                                                             </tr>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th>SPH</th><th>CYL</th><th>AXIS</th>
+                                                                <th>SPH</th><th>CYL</th><th>AXIS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <th>D</th>
+                                                                <td>{{ $cv($st['re']['ds'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['dc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['ax'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['ds'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['dc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['ax'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>N</th>
+                                                                <td>{{ $cv($st['re']['ns'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['nc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['na'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['ns'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['nc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['na'] ?? '') }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    @if(!empty($st['re']['add']) || !empty($st['le']['add']))
+                                                        <div style="font-size:10px;color:#475569;margin:3px 0">
+                                                            <span style="color:#1B4F72;font-weight:700;">ADD</span>&emsp;RE:
+                                                            <strong>{{ $st['re']['add'] ?? '-' }}</strong>&emsp;LE:
+                                                            <strong>{{ $st['le']['add'] ?? '-' }}</strong>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            @if(count($kcoRows))
+                                                <div class="cv-box">
+                                                    <div class="cv-title">K/C/O</div>
+                                                    <table class="cv-table">
+                                                        <thead>
                                                             <tr>
                                                                 <th>Condition</th>
                                                                 <th>Since</th>
@@ -158,231 +243,135 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
-                                                @endif
-
-                                                {{-- Vision + IOP inline row --}}
-                                                <div style="border-top:1px solid #dee2e6;padding-top:4px;margin-top:3px;display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:11px;">
-                                                    <span class="cv-vn-line"><strong>Vn</strong>&nbsp;{{ $cv($vision['vn_re'] ?? '') }}/{{ $cv($vision['vn_le'] ?? '') }}</span>
-                                                    <span class="cv-vn-line"><strong>PH</strong>&nbsp;{{ $cv($vision['pnvn_re'] ?? '') }}/{{ $cv($vision['pnvn_le'] ?? '') }}</span>
-                                                    <span class="cv-vn-line"><strong>NrVn</strong>&nbsp;{{ $cv($vision['nrvn_re'] ?? '') }}/{{ $cv($vision['nrvn_le'] ?? '') }}</span>
-                                                    <span class="cv-vn-line"><strong>IOP:</strong>&nbsp;{{ $cv($nct['iop_re'] ?? '') }}/{{ $cv($nct['iop_le'] ?? '') }}</span>
                                                 </div>
-
-                                                {{-- PG table --}}
-                                                <table class="cv-table" style="margin-top:4px">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style="width:18px"></th>
-                                                            <th colspan="4">RIGHT EYE (RE)</th>
-                                                            <th colspan="4">LEFT EYE (LE)</th>
-                                                        </tr>
-                                                        <tr>
-                                                            <th></th>
-                                                            <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                            <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <th>D</th>
-                                                            <td>{{ $cv($pg['re']['ds'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['re']['dc'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['re']['ax'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['re']['vn'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['ds'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['dc'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['ax'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['vn'] ?? '') }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>N</th>
-                                                            <td>{{ $cv($pg['re']['ns'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['re']['nc'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['re']['na'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['re']['near_vn'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['ns'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['nc'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['na'] ?? '') }}</td>
-                                                            <td>{{ $cv($pg['le']['near_vn'] ?? '') }}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-
-                                            {{-- BOX 2: ST + Diagnosis & Rx --}}
-                                            <div class="cv-box">
-                                                <div class="cv-title">ST</div>
-
-                                                <table class="cv-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style="width:18px"></th>
-                                                            <th colspan="4">RIGHT EYE (RE)</th>
-                                                            <th colspan="4">LEFT EYE (LE)</th>
-                                                        </tr>
-                                                        <tr>
-                                                            <th></th>
-                                                            <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                            <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <th>D</th>
-                                                            <td>{{ $cv($st['re']['ds'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['re']['dc'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['re']['ax'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['re']['vn'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['le']['ds'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['le']['dc'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['le']['ax'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['le']['vn'] ?? '') }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th>N</th>
-                                                            <td>{{ $cv($st['re']['ns'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['re']['nc'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['re']['na'] ?? '') }}</td>
-                                                            <td>-</td>
-                                                            <td>{{ $cv($st['le']['ns'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['le']['nc'] ?? '') }}</td>
-                                                            <td>{{ $cv($st['le']['na'] ?? '') }}</td>
-                                                            <td>-</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-
-                                                @if(!empty($st['re']['add']) || !empty($st['le']['add']))
-                                                    <div style="font-size:10px;color:#475569;margin:3px 0">
-                                                        <span style="color:#1B4F72;font-weight:700;">ADD</span>&emsp;RE:
-                                                        <strong>{{ $st['re']['add'] ?? '-' }}</strong>&emsp;LE:
-                                                        <strong>{{ $st['le']['add'] ?? '-' }}</strong>
-                                                    </div>
-                                                @endif
-                                                @if(count($stBadges))
-                                                    <div style="margin-bottom:4px">
-                                                        @foreach($stBadges as $b)<span class="cv-badge">{{ $b }}</span>@endforeach
-                                                    </div>
-                                                @endif
-
-                                                <div class="cv-title mt-2">Diagnosis &amp; Rx</div>
-
-                                                <div style="font-size:10px;margin-bottom:4px">
-                                                    <strong>Dx:</strong> {{ $dxNames ?: '-' }} &nbsp;
-                                                    <strong>Dilate:</strong> {{ $dilate }}
-                                                </div>
-
-                                                <table class="cv-table">
-                                                    <thead class="cv-rx-hd">
-                                                        <tr>
-                                                            <th>Medicine</th>
-                                                            <th>Dosage</th>
-                                                            <th>Days</th>
-                                                            <th>Eye</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @forelse($rxLines as $rx)
-                                                            @php
-                                                                if ($isPrimary) {
-                                                                    $mName = $rx->medicine?->brand_name ?: ($rx->medicine?->name ?? '-');
-                                                                    $mDose = $rx->dosage?->dosage ?? '-';
-                                                                    $mDays = $rx->duration ? $rx->duration . ' D' : '-';
-                                                                    $mEye = $rx->eye ?? '-';
-                                                                } else {
-                                                                    $rx = (array) $rx;
-                                                                    $mName = $rx['name'] ?? '-';
-                                                                    $mDose = isset($rx['dosage_id']) ? ($dosageMasters[$rx['dosage_id']]?->dosage ?? '-') : '-';
-                                                                    $mDays = !empty($rx['duration']) ? $rx['duration'] . ' D' : '-';
-                                                                    $mEye = $rx['eye'] ?? '-';
-                                                                }
-                                                            @endphp
-                                                            <tr>
-                                                                <td style="text-align:left;font-weight:600">{{ $mName }}</td>
-                                                                <td>{{ $mDose }}</td>
-                                                                <td>{{ $mDays }}</td>
-                                                                <td>{{ $mEye }}</td>
-                                                            </tr>
-                                                        @empty
-                                                            <tr>
-                                                                <td colspan="4" style="text-align:center;color:#94a3b8">No medicines</td>
-                                                            </tr>
-                                                        @endforelse
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                            @endif
 
                                         </div>{{-- /left col --}}
 
-                                        {{-- RIGHT COL: O/E & Fundus --}}
+                                        {{-- RIGHT: Complaint / H/O / Vision / O/E / Fundus / Diagnosis / Advice --}}
                                         <div class="col-md-6 d-flex flex-column gap-2">
 
-                                            {{-- BOX 3: O/E --}}
-                                            <div class="cv-box">
-                                                <div class="cv-title">O/E</div>
-                                                <table class="cv-table">
-                                                    <thead class="cv-oe-hd">
-                                                        <tr>
-                                                            <th style="text-align:left">O/E</th>
-                                                            <th>RIGHT</th>
-                                                            <th>LEFT</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach(['sac' => 'SAC', 'lid' => 'LID', 'conj' => 'CONJ', 'cornea' => 'CORNEA', 'ac' => 'AC', 'iris' => 'IRIS', 'pupil' => 'PUPIL', 'lens' => 'LENS', 'em' => 'EM', 'covertest' => 'COVERTEST', 'other' => 'OTHER'] as $k => $lbl)
+                                            @if(count($coRows))
+                                                <div class="cv-box">
+                                                    <div class="cv-title">Complaint</div>
+                                                    <table class="cv-table">
+                                                        <thead>
                                                             <tr>
-                                                                <th style="text-align:left;background:#f0f4f8;color:#1B4F72">{{ $lbl }}</th>
-                                                                <td>{{ $cv($oe[$k . '_re'] ?? '') }}</td>
-                                                                <td>{{ $cv($oe[$k . '_le'] ?? '') }}</td>
+                                                                <th>Complaint</th>
+                                                                <th>Since</th>
+                                                                <th>Eye</th>
+                                                                <th>Comment</th>
                                                             </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($coRows as $cr)
+                                                                <tr>
+                                                                    <td style="text-align:left">{{ $cr['complaint'] }}</td>
+                                                                    <td>{{ !empty($cr['since']) ? $cr['since'] . ' ' . ($cr['unit'] ?? '') : '-' }}</td>
+                                                                    <td>{{ $cr['eye'] ?? '-' }}</td>
+                                                                    <td style="text-align:left">{{ $cr['comment'] ?? '-' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
 
-                                            {{-- BOX 4: Fundus --}}
-                                            <div class="cv-box">
-                                                <div class="cv-title">Fundus</div>
-                                                <table class="cv-table">
-                                                    <thead class="cv-oe-hd">
-                                                        <tr>
-                                                            <th style="text-align:left">Fundus</th>
-                                                            <th>RIGHT</th>
-                                                            <th>LEFT</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        <tr>
-                                                            <th style="text-align:left;background:#f0f4f8;color:#1B4F72">DISC</th>
-                                                            <td>{{ $cv($fundus['disc_re'] ?? '') }}</td>
-                                                            <td>{{ $cv($fundus['disc_le'] ?? '') }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th style="text-align:left;background:#f0f4f8;color:#1B4F72">FR</th>
-                                                            <td>{{ $cv($fundus['fr_re'] ?? '') }}</td>
-                                                            <td>{{ $cv($fundus['fr_le'] ?? '') }}</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <th style="text-align:left;background:#f0f4f8;color:#1B4F72">COMMENT</th>
-                                                            <td>{{ $cv($fundus['comment_re'] ?? '') }}</td>
-                                                            <td>{{ $cv($fundus['comment_le'] ?? '') }}</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
-                                            </div>
+                                            @if(count($hnoList))
+                                                <div class="cv-box">
+                                                    <div class="cv-title">H/O</div>
+                                                    <div>
+                                                        @foreach($hnoList as $hv)
+                                                            <span class="cv-badge">{{ $hv }}</span>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if($hasVision)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">Vision</div>
+                                                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-size:11px;">
+                                                        <span class="cv-vn-line"><strong>Vn</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['vn_re'] ?? '') }}/{{ $cv($vision['vn_le'] ?? '') }}</span>
+                                                        <span class="cv-vn-line"><strong>PH</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['pnvn_re'] ?? '') }}/{{ $cv($vision['pnvn_le'] ?? '') }}</span>
+                                                        <span class="cv-vn-line"><strong>NrVn</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['nrvn_re'] ?? '') }}/{{ $cv($vision['nrvn_le'] ?? '') }}</span>
+                                                        <span class="cv-vn-line"><strong>IOP:</strong>&nbsp;{{ $cv($nct['iop_re'] ?? '') }}/{{ $cv($nct['iop_le'] ?? '') }}</span>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if($hasOe)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">O/E</div>
+                                                    <table class="cv-table">
+                                                        <thead class="cv-oe-hd">
+                                                            <tr>
+                                                                <th style="text-align:left">O/E</th>
+                                                                <th>RIGHT</th>
+                                                                <th>LEFT</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($oeFields as $k => $lbl)
+                                                                <tr>
+                                                                    <th style="text-align:left;background:#f0f4f8;color:#1B4F72">{{ $lbl }}</th>
+                                                                    <td>{{ $cv($oe[$k . '_re'] ?? '') }}</td>
+                                                                    <td>{{ $cv($oe[$k . '_le'] ?? '') }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+
+                                            @if($hasFundus)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">Fundus</div>
+                                                    <table class="cv-table">
+                                                        <thead class="cv-oe-hd">
+                                                            <tr>
+                                                                <th style="text-align:left">Fundus</th>
+                                                                <th>RIGHT</th>
+                                                                <th>LEFT</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <th style="text-align:left;background:#f0f4f8;color:#1B4F72">DISC</th>
+                                                                <td>{{ $cv($fundus['disc_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['disc_le'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th style="text-align:left;background:#f0f4f8;color:#1B4F72">FR</th>
+                                                                <td>{{ $cv($fundus['fr_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['fr_le'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th style="text-align:left;background:#f0f4f8;color:#1B4F72">COMMENT</th>
+                                                                <td>{{ $cv($fundus['comment_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['comment_le'] ?? '') }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+
+                                            @if(!$isPrimary && $dxNames)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">Diagnosis</div>
+                                                    <div style="font-size:12px;line-height:1.5">{{ $dxNames }}</div>
+                                                </div>
+                                            @endif
+
+                                            @if(!$isPrimary && $advTxt)
+                                                <div class="cv-box">
+                                                    <div class="cv-title">Advice</div>
+                                                    <div style="font-size:12px;white-space:pre-line;line-height:1.6">{{ $advTxt }}</div>
+                                                </div>
+                                            @endif
 
                                         </div>{{-- /right col --}}
                                     </div>{{-- /row --}}
-
-                                    {{-- Advice (full width) --}}
-                                    @if($advTxt)
-                                        <div class="cv-box mt-2">
-                                            <div class="cv-title">Advice</div>
-                                            <div style="font-size:12px;white-space:pre-line;line-height:1.6">
-                                                {{ $advTxt }}
-                                            </div>
-                                        </div>
-                                    @endif
 
                                 </div>{{-- /collapse --}}
                             </div>

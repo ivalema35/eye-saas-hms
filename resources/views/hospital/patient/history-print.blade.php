@@ -215,7 +215,62 @@
         }
 
         .exam-section {
-            margin-top: 1rem;
+            margin-top: 0;
+        }
+
+        .exam-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-top: 0.75rem;
+            align-items: start;
+        }
+
+        .exam-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .exam-section .exam-table {
+            margin-bottom: 0;
+        }
+
+        .exam-section .advice-box,
+        .exam-section .exam-plain {
+            border: 1px solid #d9e6f2;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 0.75rem;
+            background: #fff;
+            font-size: 0.9rem;
+            line-height: 1.55;
+            white-space: pre-line;
+        }
+
+        .exam-vn-line {
+            display: inline-flex;
+            align-items: flex-start;
+            gap: 0.25rem;
+            margin-right: 0.75rem;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .exam-badge-chip {
+            display: inline-block;
+            background: #1B4F72;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            margin: 2px 4px 2px 0;
+        }
+
+        @media print {
+            .exam-columns {
+                gap: 0.5rem;
+            }
         }
 
         .exam-section-title {
@@ -364,7 +419,8 @@
         @media (max-width: 992px) {
 
             .patient-summary,
-            .detail-grid {
+            .detail-grid,
+            .exam-columns {
                 grid-template-columns: 1fr;
             }
 
@@ -502,7 +558,9 @@
 
                                 @if(!empty($data))
                                     @php
+                                        $isPrimary = ($exam->type ?? '') === 'Primary Exam';
                                         $cv = fn($v) => (isset($v) && $v !== '' && $v !== null) ? $v : '-';
+                                        $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
                                         $coRows = array_filter($data['co_rows'] ?? [], fn($r) => !empty($r['complaint']));
                                         $kcoRows = array_filter($data['kco_rows'] ?? [], fn($r) => !empty($r['condition']));
                                         $vision = $data['vision'] ?? [];
@@ -512,270 +570,283 @@
                                         $oe = $data['oe'] ?? [];
                                         $fundus = $data['fundus'] ?? [];
                                         $advTxt = trim($data['advice'] ?? '');
+                                        $hnoList = array_filter(array_map('trim', explode(',', $data['history'] ?? '')));
+                                        $dxIds = $data['diagnoses'] ?? [];
+                                        $dxNames = collect($diagnosisMasters ?? [])->whereIn('id', (array) $dxIds)->pluck('diagnosis')->implode(', ');
+                                        $rxLines = $isPrimary
+                                            ? collect($exam->prescriptions ?? [])
+                                            : collect($data['rx'] ?? []);
+                                        $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds'])
+                                            || !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
+                                        $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds'])
+                                            || !empty($st['re']['ns']) || !empty($st['le']['ns']);
+                                        $hasVision = !empty($vision['vn_re']) || !empty($vision['vn_le'])
+                                            || !empty($vision['pnvn_re']) || !empty($vision['pnvn_le'])
+                                            || !empty($vision['nrvn_re']) || !empty($vision['nrvn_le'])
+                                            || !empty($nct['iop_re']) || !empty($nct['iop_le']);
+                                        $oeFields = [
+                                            'sac' => 'SAC', 'lid' => 'LID', 'conj' => 'CONJ', 'cornea' => 'CORNEA',
+                                            'ac' => 'AC', 'iris' => 'IRIS', 'pupil' => 'PUPIL', 'lens' => 'LENS',
+                                            'em' => 'EM', 'covertest' => 'COVERTEST', 'other' => 'OTHER',
+                                        ];
+                                        $hasOe = collect(array_keys($oeFields))
+                                            ->contains(fn($k) => !empty($oe[$k . '_re']) || !empty($oe[$k . '_le']));
+                                        $hasFundus = !empty($fundus['disc_re']) || !empty($fundus['disc_le'])
+                                            || !empty($fundus['fr_re']) || !empty($fundus['fr_le'])
+                                            || !empty($fundus['comment_re']) || !empty($fundus['comment_le']);
+                                        $hasRx = $rxLines->isNotEmpty();
                                     @endphp
 
-                                    {{-- HISTORY & VISION --}}
-                                    <div class="exam-section">
-                                        <div class="exam-section-title">History &amp; Vision</div>
-                                        <table class="exam-table">
-                                            <thead>
-                                                <tr>
-                                                    <th colspan="4">C/O</th>
-                                                </tr>
-                                                <tr>
-                                                    <th>Complaint</th>
-                                                    <th>Since</th>
-                                                    <th>Eye</th>
-                                                    <th>Comment</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @forelse($coRows as $cr)
-                                                    <tr>
-                                                        <td>{{ $cr['complaint'] }}</td>
-                                                        <td>{{ !empty($cr['since']) ? $cr['since'] . ' ' . ($cr['unit'] ?? '') : '-' }}</td>
-                                                        <td>{{ $cr['eye'] ?? '-' }}</td>
-                                                        <td>{{ $cr['comment'] ?? '-' }}</td>
-                                                    </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="4" style="text-align: center;">—</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
-                                        </table>
+                                    <div class="exam-columns">
+                                        <div class="exam-stack">
+                                            @if(!$isPrimary && $hasRx)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Medicine</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Medicine</th>
+                                                                <th>Dosage</th>
+                                                                <th>Days</th>
+                                                                <th>Eye</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($rxLines as $rx)
+                                                                @php
+                                                                    $rx = (array) $rx;
+                                                                    $mName = $rx['name'] ?? '-';
+                                                                    $mDose = isset($rx['dosage_id'])
+                                                                        ? (($dosageMasters[$rx['dosage_id']]->dosage ?? null) ?? '-')
+                                                                        : ($rx['dosage'] ?? '-');
+                                                                    $mDays = !empty($rx['duration']) ? $rx['duration'] . ' D' : '-';
+                                                                    $mEye = $rx['eye'] ?? '-';
+                                                                @endphp
+                                                                <tr>
+                                                                    <td>{{ $mName }}</td>
+                                                                    <td>{{ $mDose }}</td>
+                                                                    <td>{{ $mDays }}</td>
+                                                                    <td>{{ $mEye }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
 
-                                        @if(count($kcoRows))
-                                            <table class="exam-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th colspan="3">K/C/O</th>
-                                                    </tr>
-                                                    <tr>
-                                                        <th>Condition</th>
-                                                        <th>Since</th>
-                                                        <th>Comment</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($kcoRows as $kr)
-                                                        <tr>
-                                                            <td>{{ $kr['condition'] }}</td>
-                                                            <td>{{ !empty($kr['since']) ? $kr['since'] . ' ' . ($kr['unit'] ?? '') : '-' }}</td>
-                                                            <td>{{ $kr['comment'] ?? '-' }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        @endif
+                                            @if($hasPg)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">PG</div>
+                                                    <div class="exam-plain" style="white-space:normal;display:flex;flex-wrap:wrap;gap:0.75rem;">
+                                                        <span class="exam-vn-line">
+                                                            <strong>PG</strong>&nbsp;&lt;
+                                                            <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                <span>{{ $pgFmt($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') }}</span>
+                                                                <span>{{ $pgFmt($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') }}</span>
+                                                            </span>
+                                                        </span>
+                                                        <span class="exam-vn-line">
+                                                            <strong>NrPG</strong>&nbsp;&lt;
+                                                            <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                <span>{{ $pgFmt($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') }}</span>
+                                                                <span>{{ $pgFmt($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') }}</span>
+                                                            </span>
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            @endif
 
-                                        <div style="border-top:1px solid #d9e6f2; padding-top:0.75rem; margin-top:0.75rem; display:flex; flex-wrap:wrap; gap:0.5rem; font-size:0.85rem;">
-                                            <span><strong>Vn</strong>&nbsp;{{ $cv($vision['vn_re'] ?? '') }}/{{ $cv($vision['vn_le'] ?? '') }}</span>
-                                            <span><strong>PH</strong>&nbsp;{{ $cv($vision['pnvn_re'] ?? '') }}/{{ $cv($vision['pnvn_le'] ?? '') }}</span>
-                                            <span><strong>NrVn</strong>&nbsp;{{ $cv($vision['nrvn_re'] ?? '') }}/{{ $cv($vision['nrvn_le'] ?? '') }}</span>
-                                            <span><strong>IOP:</strong>&nbsp;{{ $cv($nct['iop_re'] ?? '') }}/{{ $cv($nct['iop_le'] ?? '') }}</span>
+                                            @if($hasSt)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">ST</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width:20px"></th>
+                                                                <th colspan="3" style="text-align:center;">RIGHT EYE (RE)</th>
+                                                                <th colspan="3" style="text-align:center;">LEFT EYE (LE)</th>
+                                                            </tr>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th>SPH</th><th>CYL</th><th>AXIS</th>
+                                                                <th>SPH</th><th>CYL</th><th>AXIS</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <th>D</th>
+                                                                <td>{{ $cv($st['re']['ds'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['dc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['ax'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['ds'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['dc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['ax'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <th>N</th>
+                                                                <td>{{ $cv($st['re']['ns'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['nc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['re']['na'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['ns'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['nc'] ?? '') }}</td>
+                                                                <td>{{ $cv($st['le']['na'] ?? '') }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    @if(!empty($st['re']['add']) || !empty($st['le']['add']))
+                                                        <div class="exam-plain" style="white-space:normal;border-top:none;margin-top:-1px;">
+                                                            <strong>ADD</strong>&emsp;RE: {{ $st['re']['add'] ?? '-' }}&emsp;LE: {{ $st['le']['add'] ?? '-' }}
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            @if(count($kcoRows))
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">K/C/O</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Condition</th>
+                                                                <th>Since</th>
+                                                                <th>Comment</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($kcoRows as $kr)
+                                                                <tr>
+                                                                    <td>{{ $kr['condition'] }}</td>
+                                                                    <td>{{ !empty($kr['since']) ? $kr['since'] . ' ' . ($kr['unit'] ?? '') : '-' }}</td>
+                                                                    <td>{{ $kr['comment'] ?? '-' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
                                         </div>
 
-                                        {{-- PG Table --}}
-                                        <table class="exam-table" style="margin-top: 0.75rem;">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width:20px"></th>
-                                                    <th colspan="4" style="text-align: center;">RIGHT EYE (RE)</th>
-                                                    <th colspan="4" style="text-align: center;">LEFT EYE (LE)</th>
-                                                </tr>
-                                                <tr>
-                                                    <th></th>
-                                                    <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                    <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <th>D</th>
-                                                    <td>{{ $cv($pg['re']['ds'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['re']['dc'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['re']['ax'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['re']['vn'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['ds'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['dc'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['ax'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['vn'] ?? '') }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>N</th>
-                                                    <td>{{ $cv($pg['re']['ns'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['re']['nc'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['re']['na'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['re']['near_vn'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['ns'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['nc'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['na'] ?? '') }}</td>
-                                                    <td>{{ $cv($pg['le']['near_vn'] ?? '') }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <div class="exam-stack">
+                                            @if(count($coRows))
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Complaint</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Complaint</th>
+                                                                <th>Since</th>
+                                                                <th>Eye</th>
+                                                                <th>Comment</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($coRows as $cr)
+                                                                <tr>
+                                                                    <td>{{ $cr['complaint'] }}</td>
+                                                                    <td>{{ !empty($cr['since']) ? $cr['since'] . ' ' . ($cr['unit'] ?? '') : '-' }}</td>
+                                                                    <td>{{ $cr['eye'] ?? '-' }}</td>
+                                                                    <td>{{ $cr['comment'] ?? '-' }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+
+                                            @if(count($hnoList))
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">H/O</div>
+                                                    <div class="exam-plain" style="white-space:normal;">
+                                                        @foreach($hnoList as $hv)
+                                                            <span class="exam-badge-chip">{{ $hv }}</span>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if($hasVision)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Vision</div>
+                                                    <div class="exam-plain" style="white-space:normal;">
+                                                        <span class="exam-vn-line"><strong>Vn</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['vn_re'] ?? '') }}/{{ $cv($vision['vn_le'] ?? '') }}</span>
+                                                        <span class="exam-vn-line"><strong>PH</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['pnvn_re'] ?? '') }}/{{ $cv($vision['pnvn_le'] ?? '') }}</span>
+                                                        <span class="exam-vn-line"><strong>NrVn</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['nrvn_re'] ?? '') }}/{{ $cv($vision['nrvn_le'] ?? '') }}</span>
+                                                        <span class="exam-vn-line"><strong>IOP:</strong>&nbsp;{{ $cv($nct['iop_re'] ?? '') }}/{{ $cv($nct['iop_le'] ?? '') }}</span>
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if($hasOe)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">O/E</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>O/E</th>
+                                                                <th>RIGHT</th>
+                                                                <th>LEFT</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($oeFields as $k => $lbl)
+                                                                <tr>
+                                                                    <td>{{ $lbl }}</td>
+                                                                    <td>{{ $cv($oe[$k . '_re'] ?? '') }}</td>
+                                                                    <td>{{ $cv($oe[$k . '_le'] ?? '') }}</td>
+                                                                </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+
+                                            @if($hasFundus)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Fundus</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Fundus</th>
+                                                                <th>RIGHT</th>
+                                                                <th>LEFT</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>DISC</td>
+                                                                <td>{{ $cv($fundus['disc_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['disc_le'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>FR</td>
+                                                                <td>{{ $cv($fundus['fr_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['fr_le'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>COMMENT</td>
+                                                                <td>{{ $cv($fundus['comment_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['comment_le'] ?? '') }}</td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+
+                                            @if(!$isPrimary && $dxNames)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Diagnosis</div>
+                                                    <div class="exam-plain">{{ $dxNames }}</div>
+                                                </div>
+                                            @endif
+
+                                            @if(!$isPrimary && $advTxt)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Advice</div>
+                                                    <div class="advice-box">{{ $advTxt }}</div>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
-
-                                    {{-- O/E SECTION --}}
-                                    @if(!empty($oe))
-                                        <div class="exam-section">
-                                            <div class="exam-section-title">O/E</div>
-                                            <table class="exam-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>O/E</th>
-                                                        <th>RIGHT</th>
-                                                        <th>LEFT</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($oe as $param => $values)
-                                                        <tr>
-                                                            <td>{{ \Illuminate\Support\Str::headline($param) }}</td>
-                                                            <td>{{ $values['right'] ?? '-' }}</td>
-                                                            <td>{{ $values['left'] ?? '-' }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @endif
-
-                                    {{-- ST (SPECTACLES TEST) --}}
-                                    <div class="exam-section">
-                                        <div class="exam-section-title">ST</div>
-                                        <table class="exam-table">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width:20px"></th>
-                                                    <th colspan="4" style="text-align: center;">RIGHT EYE (RE)</th>
-                                                    <th colspan="4" style="text-align: center;">LEFT EYE (LE)</th>
-                                                </tr>
-                                                <tr>
-                                                    <th></th>
-                                                    <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                    <th>SPH</th><th>CYL</th><th>AXIS</th><th>VN</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <th>D</th>
-                                                    <td>{{ $cv($st['re']['ds'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['re']['dc'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['re']['ax'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['re']['vn'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['le']['ds'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['le']['dc'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['le']['ax'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['le']['vn'] ?? '') }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <th>N</th>
-                                                    <td>{{ $cv($st['re']['ns'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['re']['nc'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['re']['na'] ?? '') }}</td>
-                                                    <td>-</td>
-                                                    <td>{{ $cv($st['le']['ns'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['le']['nc'] ?? '') }}</td>
-                                                    <td>{{ $cv($st['le']['na'] ?? '') }}</td>
-                                                    <td>-</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                        @if(!empty($st['re']['add']) || !empty($st['le']['add']))
-                                            <div style="font-size:0.85rem; color:#1B4F72; font-weight:700; margin-top:0.5rem;">
-                                                ADD &emsp; RE: <strong>{{ $st['re']['add'] ?? '-' }}</strong> &emsp; LE: <strong>{{ $st['le']['add'] ?? '-' }}</strong>
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    {{-- FUNDUS SECTION --}}
-                                    @if(!empty($fundus))
-                                        <div class="exam-section">
-                                            <div class="exam-section-title">Fundus</div>
-                                            <table class="exam-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Fundus</th>
-                                                        <th>RIGHT</th>
-                                                        <th>LEFT</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($fundus as $param => $values)
-                                                        <tr>
-                                                            <td>{{ \Illuminate\Support\Str::headline($param) }}</td>
-                                                            <td>{{ $values['right'] ?? '-' }}</td>
-                                                            <td>{{ $values['left'] ?? '-' }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @endif
-
-                                    {{-- DIAGNOSIS & RX --}}
-                                    <div class="exam-section">
-                                        <div class="exam-section-title">Diagnosis &amp; Rx</div>
-                                        <div style="padding: 0.75rem; background: #f8fbfe; border: 1px solid #d9e6f2; border-top: none; border-radius: 0 0 8px 8px; margin-bottom: 1rem;">
-                                            <div style="font-size: 0.85rem; margin-bottom: 0.5rem;">
-                                                <strong>Dx:</strong> {{ isset($data['diagnoses']) && $data['diagnoses'] ? implode(', ', (array)$data['diagnoses']) : '-' }}&nbsp;&nbsp;
-                                                <strong>Dilate:</strong> {{ $data['dilate'] ?? 'No' }}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {{-- MEDICINES/RX TABLE --}}
-                                    @php
-                                        $rxLines = collect($data['rx'] ?? []);
-                                    @endphp
-                                    @if($rxLines->isNotEmpty())
-                                        <div class="exam-section">
-                                            <div class="exam-section-title">Medicines</div>
-                                            <table class="exam-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Medicine</th>
-                                                        <th>Dosage</th>
-                                                        <th>Days</th>
-                                                        <th>Eye</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @forelse($rxLines as $rx)
-                                                        @php
-                                                            $rx = (array) $rx;
-                                                            $mName = $rx['name'] ?? '-';
-                                                            $mDose = $rx['dosage'] ?? '-';
-                                                            $mDays = !empty($rx['duration']) ? $rx['duration'] . ' D' : '-';
-                                                            $mEye = $rx['eye'] ?? '-';
-                                                        @endphp
-                                                        <tr>
-                                                            <td>{{ $mName }}</td>
-                                                            <td>{{ $mDose }}</td>
-                                                            <td>{{ $mDays }}</td>
-                                                            <td>{{ $mEye }}</td>
-                                                        </tr>
-                                                    @empty
-                                                        <tr>
-                                                            <td colspan="4" style="text-align: center; color: #6b7f93;">No medicines prescribed</td>
-                                                        </tr>
-                                                    @endforelse
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    @endif
-
-                                    {{-- ADVICE SECTION --}}
-                                    @if(!empty($advTxt))
-                                        <div class="exam-section">
-                                            <div class="exam-section-title">Advice</div>
-                                            <div class="advice-box">
-                                                {{ $advTxt }}
-                                            </div>
-                                        </div>
-                                    @endif
                                 @else
                                     <div class="empty-state mt-3 mb-0">No structured data recorded.</div>
                                 @endif
