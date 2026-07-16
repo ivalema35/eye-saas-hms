@@ -11,6 +11,7 @@ use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\MedicineRoute;
 use App\Models\Hospital\Patient;
+use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use App\Services\Hospital\ExaminationService;
 use Illuminate\Http\RedirectResponse;
@@ -182,6 +183,11 @@ class SecondaryExamController extends Controller
             ->with('doctor')
             ->firstOrFail();
 
+        $secondaryDoctorName = $exam->doctor?->name;
+        $primaryDoctorName = PrimaryExamination::where('patient_id', $id)
+            ->with('doctor')
+            ->first()?->doctor?->name;
+
         $diagnosisMasters = collect(DB::table('tbl_master_diagnosis')
             ->where('tenant_id', $tenant->id)
             ->orderBy('id')
@@ -213,7 +219,9 @@ class SecondaryExamController extends Controller
             'complaintMasters',
             'kcoMasters',
             'dosages',
-            'backUrl'
+            'backUrl',
+            'primaryDoctorName',
+            'secondaryDoctorName'
         ));
     }
 

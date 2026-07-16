@@ -585,10 +585,10 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
 
-                <div class="step-group-label">Secondary Exam</div>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+                <div class="step-group-label d-none">Secondary Exam</div>
+                <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
 
                 <hr>
                 <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
@@ -599,17 +599,20 @@ $prescriptions = $exam?->prescriptions ?? collect();
                     <div class="row g-2 clinical-grid-container" style="font-size:13px;">
 
                         <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                            <div class="canvas-box"><div class="canvas-section-title">History &amp; Vision</div><div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div><div id="canvas_vision" class="mt-1"></div></div>
-                            <div class="canvas-box"><div class="canvas-section-title">ST</div><div id="canvas_st" class="mb-1"></div><div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div><div id="canvas_rx"></div></div>
+                            <div class="canvas-box d-none"><div class="canvas-section-title">Medicine</div><div id="canvas_medicine"><em class="text-muted" style="font-size:11px;">Enter medicines...</em></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">PG</div><div id="canvas_pg"></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">ST</div><div id="canvas_st"></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">K/C/O</div><div id="canvas_kco"></div></div>
                         </div>
                         <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                            <div class="canvas-box"><div class="canvas-section-title">Complaint</div><div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">H/O</div><div id="canvas_hno"></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">Vision</div><div id="canvas_vision_line"></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">O/E</div><div id="canvas_oe"></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
+                            <div class="canvas-box d-none"><div class="canvas-section-title">Diagnosis</div><div id="canvas_diagnosis"></div></div>
+                            <div class="canvas-box d-none"><div class="canvas-section-title">Advice</div><div id="canvas_advice"></div></div>
                         </div>
-                    </div>
-                    <div class="canvas-box mt-2">
-                        <div class="canvas-section-title">Advice</div>
-                        <div id="canvas_advice"></div>
                     </div>
                 </div>
             </div>
@@ -680,10 +683,10 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
-                <span class="step-group-tag ms-1">Secondary</span>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+                <span class="step-group-tag ms-1 d-none">Secondary</span>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
             <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
         </div>
@@ -736,19 +739,28 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 {{-- LEFT COLUMN --}}
                 <div class="col-6 col-md-6 d-flex flex-column gap-2">
 
-                    {{-- Box 1: History & Vision --}}
-                    <div class="canvas-box">
-                        <div class="canvas-section-title">History &amp; Vision</div>
-                        <div id="canvas_history"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
-                        <div id="canvas_vision" class="mt-1"></div>
+                    {{-- Box 1: Medicine --}}
+                    <div class="canvas-box d-none">
+                        <div class="canvas-section-title">Medicine</div>
+                        <div id="canvas_medicine"><em class="text-muted" style="font-size:11px;">Enter medicines to see them here...</em></div>
                     </div>
 
-                    {{-- Box 2: ST & Rx --}}
+                    {{-- Box 2: PG --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">PG</div>
+                        <div id="canvas_pg"></div>
+                    </div>
+
+                    {{-- Box 3: ST --}}
                     <div class="canvas-box">
                         <div class="canvas-section-title">ST</div>
-                        <div id="canvas_st" class="mb-1"></div>
-                        <div class="canvas-section-title mt-1">Diagnosis &amp; Rx</div>
-                        <div id="canvas_rx"></div>
+                        <div id="canvas_st"></div>
+                    </div>
+
+                    {{-- Box 5: K/C/O --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">K/C/O</div>
+                        <div id="canvas_kco"></div>
                     </div>
 
                 </div>
@@ -756,23 +768,49 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 {{-- RIGHT COLUMN --}}
                 <div class="col-6 col-md-6 d-flex flex-column gap-2">
 
-                    {{-- Box 3: O/E --}}
+                    {{-- Box 1: Complaint --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">Complaint</div>
+                        <div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
+                    </div>
+
+                    {{-- Box 2: H/O --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">H/O</div>
+                        <div id="canvas_hno"></div>
+                    </div>
+
+                    {{-- Box 3: Vision --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">Vision</div>
+                        <div id="canvas_vision_line"></div>
+                    </div>
+
+                    {{-- Box 4: O/E --}}
                     <div class="canvas-box">
                         <div class="canvas-section-title">O/E</div>
                         <div id="canvas_oe"></div>
                     </div>
 
-                    {{-- Box 4: Fundus --}}
+                    {{-- Box 5: Fundus --}}
                     <div class="canvas-box">
                         <div class="canvas-section-title">Fundus</div>
                         <div id="canvas_fundus"></div>
                     </div>
 
+                    {{-- Box 6: Diagnosis --}}
+                    <div class="canvas-box d-none">
+                        <div class="canvas-section-title">Diagnosis</div>
+                        <div id="canvas_diagnosis"></div>
+                    </div>
+
+                    {{-- Box 7: Advice --}}
+                    <div class="canvas-box d-none">
+                        <div class="canvas-section-title">Advice</div>
+                        <div id="canvas_advice"></div>
+                    </div>
+
                 </div>
-            </div>
-            <div class="canvas-box mt-2">
-                <div class="canvas-section-title">Advice</div>
-                <div id="canvas_advice"></div>
             </div>
         </div>
 @endif
@@ -2306,100 +2344,75 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             `<tr style="background:#eef4f9;">${cols.map(c => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 5px;font-weight:600;">${c}</th>`).join('')}</tr>` +
             `</thead><tbody>${rows}</tbody></table>`;
 
-        let historyHtml = '';
-
-        // C/O table
-        historyHtml += cvTable('C/O', ['Complaint', 'Since', 'Eye', 'Comment'],
+        // Complaint (C/O) table
+        const coHtml = cvTable('C/O', ['Complaint', 'Since', 'Eye', 'Comment'],
             coData.length
                 ? coData.map(d => `<tr>${cvTd(d.complaint)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.eye)}${cvTd(d.comment)}</tr>`).join('')
                 : `<tr><td colspan="4" class="text-center" style="font-size:10px;padding:3px;color:#94a3b8;">—</td></tr>`
         );
+        document.getElementById('canvas_co').innerHTML = coHtml;
 
         // K/C/O table
-        if (kcoData.length) {
-            historyHtml += cvTable('K/C/O', ['Condition', 'Since', 'Comment'],
+        const kcoHtml = kcoData.length
+            ? cvTable('K/C/O', ['Condition', 'Since', 'Comment'],
                 kcoData.map(d => `<tr>${cvTd(d.condition)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.comment)}</tr>`).join('')
-            );
-        }
+              )
+            : '';
+        document.getElementById('canvas_kco').innerHTML = kcoHtml;
 
         // H/O pills
-        if (hnoList.length) {
-            historyHtml +=
-                `<div style="font-size:10px;font-weight:700;color:#1B4F72;letter-spacing:.06em;margin-bottom:3px;">H/O</div>` +
-                `<div style="margin-bottom:5px;">${hnoList.map(pill).join('')}</div>`;
-        }
+        const hnoHtml = hnoList.length
+            ? `<div style="margin-bottom:2px;">${hnoList.map(pill).join('')}</div>`
+            : '';
+        document.getElementById('canvas_hno').innerHTML = hnoHtml;
 
         // Vision data
-        historyHtml +=
-            `<div class="d-flex flex-wrap align-items-center" style="border-top:1px solid #dde3ea;padding-top:4px;margin-top:2px;">` +
+        const visionLineHtml =
+            `<div class="d-flex flex-wrap align-items-center">` +
             makeVn('Vn', vnRe, vnLe) +
             makeVn('PH', phRe, phLe) +
             makeVn('NrVn', nrRe, nrLe) +
             `<div class="d-inline-flex align-items-center me-2 mb-1" style="font-size:11px;"><strong>IOP:</strong>&nbsp;${iopRe}/${iopLe}</div>` +
             `</div>`;
-        document.getElementById('canvas_history').innerHTML = historyHtml;
+        document.getElementById('canvas_vision_line').innerHTML = visionLineHtml;
 
-        // BOX 1 lower: PG table (navy theme)
-        const pgCell  = (v) => `<td class="text-center" style="padding:2px;">${v}</td>`;
-        const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
+        // BOX 1 lower: PG (Distance & Near) — SPH / CYL X Axis, no VN
+        const pgFmt = (sph, cyl, ax) => `${sph} / ${cyl} X ${ax}`;
+        const pgReDist = pgFmt(val('exam_data[pg][re][ds]'), val('exam_data[pg][re][dc]'), val('exam_data[pg][re][ax]'));
+        const pgLeDist = pgFmt(val('exam_data[pg][le][ds]'), val('exam_data[pg][le][dc]'), val('exam_data[pg][le][ax]'));
+        const pgReNear = pgFmt(val('exam_data[pg][re][ns]'), val('exam_data[pg][re][nc]'), val('exam_data[pg][re][na]'));
+        const pgLeNear = pgFmt(val('exam_data[pg][le][ns]'), val('exam_data[pg][le][nc]'), val('exam_data[pg][le][na]'));
         const visionHtml =
-            `<table class="table table-sm table-bordered mb-0" style="font-size:11px;">` +
-            `<thead>` +
-            `<tr>` +
-              `<th style="background:#1B4F72;color:#fff;width:22px;padding:2px;border-color:#1B4F72;"></th>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
-            `</tr>` +
-            `<tr style="background:#eef4f9;">${pgSubTh('')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}</tr>` +
-            `</thead><tbody>` +
-            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">D</th>` +
-              `${pgCell(val('exam_data[pg][re][ds]'))}${pgCell(val('exam_data[pg][re][dc]'))}${pgCell(val('exam_data[pg][re][ax]'))}${pgCell(val('exam_data[pg][re][vn]'))}` +
-              `${pgCell(val('exam_data[pg][le][ds]'))}${pgCell(val('exam_data[pg][le][dc]'))}${pgCell(val('exam_data[pg][le][ax]'))}${pgCell(val('exam_data[pg][le][vn]'))}` +
-            `</tr>` +
-            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">N</th>` +
-              `${pgCell(val('exam_data[pg][re][ns]'))}${pgCell(val('exam_data[pg][re][nc]'))}${pgCell(val('exam_data[pg][re][na]'))}${pgCell(val('exam_data[pg][re][near_vn]'))}` +
-              `${pgCell(val('exam_data[pg][le][ns]'))}${pgCell(val('exam_data[pg][le][nc]'))}${pgCell(val('exam_data[pg][le][na]'))}${pgCell(val('exam_data[pg][le][near_vn]'))}` +
-            `</tr>` +
-            `</tbody></table>`;
-        document.getElementById('canvas_vision').innerHTML = visionHtml;
+            `<div class="d-flex flex-wrap align-items-start">${makeVn('PG', pgReDist, pgLeDist)}${makeVn('NrPG', pgReNear, pgLeNear)}</div>`;
+        document.getElementById('canvas_pg').innerHTML = visionHtml;
 
-        // BOX 2 top: ST table (navy theme, Near VN removed, ADD + badges below)
-        const stBadges = [
-            form.querySelector('[name="exam_data[st][bifocal]"]')?.checked       ? 'Bifocal'        : '',
-            form.querySelector('[name="exam_data[st][nd_separate]"]')?.checked   ? 'N&D Separate'   : '',
-            form.querySelector('[name="exam_data[st][progressive]"]')?.checked   ? 'Progressive'    : '',
-            form.querySelector('[name="exam_data[st][computer_uses]"]')?.checked ? 'Computer Uses'  : '',
-        ].filter(Boolean);
+        // BOX 2 top: ST table (VN removed, ADD below)
         const stReAdd = val('exam_data[st][re][add]');
         const stLeAdd = val('exam_data[st][le][add]');
         const stCell  = (v, dim) => `<td class="text-center" style="padding:2px;${dim ? 'color:#94a3b8;' : ''}">${v}</td>`;
+        const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
 
         let stHtml =
             `<table class="table table-sm table-bordered mb-1" style="font-size:11px;">` +
             `<thead>` +
             `<tr>` +
               `<th style="background:#1B4F72;color:#fff;width:22px;padding:2px;border-color:#1B4F72;"></th>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
+              `<th colspan="3" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
+              `<th colspan="3" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
             `</tr>` +
-            `<tr style="background:#eef4f9;">${pgSubTh('')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('VN')}</tr>` +
+            `<tr style="background:#eef4f9;">${pgSubTh('')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}</tr>` +
             `</thead><tbody>` +
             `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">D</th>` +
-              `${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stCell(val('exam_data[st][re][ax]'))}${stCell(val('exam_data[st][re][vn]'))}` +
-              `${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stCell(val('exam_data[st][le][ax]'))}${stCell(val('exam_data[st][le][vn]'))}` +
+              `${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stCell(val('exam_data[st][re][ax]'))}` +
+              `${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stCell(val('exam_data[st][le][ax]'))}` +
             `</tr>` +
             `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">N</th>` +
-              `${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stCell(val('exam_data[st][re][na]'))}${stCell('—', true)}` +
-              `${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}${stCell('—', true)}` +
+              `${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stCell(val('exam_data[st][re][na]'))}` +
+              `${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}` +
             `</tr>` +
             `</tbody></table>`;
         if (stReAdd !== '-' || stLeAdd !== '-') {
             stHtml += `<div style="font-size:10px;color:#475569;margin-bottom:3px;"><span style="color:#1B4F72;font-weight:700;">ADD</span>&emsp;RE: <strong>${stReAdd}</strong>&emsp;LE: <strong>${stLeAdd}</strong></div>`;
-        }
-        if (stBadges.length) {
-            stHtml += `<div class="d-flex flex-wrap gap-1">` +
-                stBadges.map(b => `<span style="font-size:10px;background:#1B4F72;color:#fff;padding:1px 8px;border-radius:10px;">${b}</span>`).join('') +
-                `</div>`;
         }
         document.getElementById('canvas_st').innerHTML = stHtml;
 
@@ -2456,13 +2469,15 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             return `<tr><td>${name}</td><td>${dosage}</td><td>${duration}</td><td>${qty}</td><td>${route}</td></tr>`;
         }).filter(Boolean).join('');
 
-        const rxHtml =
-            `<div class="mb-1" style="font-size:11px;"><strong>Dx:</strong> ${diagnosisText} &nbsp; <strong>Dilate:</strong> ${dilateVal}</div>` +
+        const diagnosisHtml = `<div style="font-size:11px;"><strong>Dx:</strong> ${diagnosisText} &nbsp; <strong>Dilate:</strong> ${dilateVal}</div>`;
+        document.getElementById('canvas_diagnosis').innerHTML = diagnosisHtml;
+
+        const medicineHtml =
             `<table class="table table-sm table-bordered border-dark mb-0" style="font-size:11px;">` +
             `<thead><tr><th class="bg-dark text-white">Medicine</th><th class="bg-dark text-white">Dosage</th><th class="bg-dark text-white">Days</th><th class="bg-dark text-white">QTY</th><th class="bg-dark text-white">Route</th></tr></thead>` +
             `<tbody>${rxBodyHtml || '<tr><td colspan="5" class="text-center text-muted">No medicines</td></tr>'}</tbody>` +
             `</table>`;
-        document.getElementById('canvas_rx').innerHTML = rxHtml;
+        document.getElementById('canvas_medicine').innerHTML = medicineHtml;
 
         const adviceText = (document.getElementById('advice_textarea')?.value || '').trim();
         const adviceEl = document.getElementById('canvas_advice');

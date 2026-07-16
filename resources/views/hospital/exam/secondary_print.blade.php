@@ -262,6 +262,34 @@
             color: var(--navy);
         }
 
+        /* ── PG / NrPG bracket lines ── */
+        .bracket-line {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 14px;
+            margin-bottom: 4px;
+        }
+
+        .bracket-line__label {
+            font-weight: 700;
+            font-size: 10.5px;
+            margin-right: 3px;
+        }
+
+        .bracket-line__mark {
+            font-weight: 300;
+            font-size: 1.3rem;
+            line-height: .5;
+            margin: 0 4px;
+        }
+
+        .bracket-line__values {
+            display: flex;
+            flex-direction: column;
+            font-size: 10.5px;
+            line-height: 1.3;
+        }
+
         /* ── Eye band (PG / ST headers) ── */
         .eye-band {
             background: var(--navy);
@@ -337,16 +365,7 @@
             color: #667;
         }
 
-        /* ── Advice (full-width) ── */
-        .advice-card {
-            border: 1px solid var(--line);
-            border-radius: 9px;
-            overflow: hidden;
-            margin-top: 12px;
-            break-inside: avoid;
-            page-break-inside: avoid;
-        }
-
+        /* ── Advice ── */
         .advice-list {
             list-style: none;
             padding-left: 2px;
@@ -415,7 +434,38 @@
             }
 
             .sheet {
-                padding: 8mm 8mm 6mm;
+                padding: 6mm 7mm 5mm;
+            }
+
+            .doc-head {
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+            }
+
+            .patient-strip {
+                margin-bottom: 8px;
+                padding: 6px 12px;
+            }
+
+            .rx-columns {
+                gap: 10px;
+            }
+
+            .rx-stack {
+                gap: 7px;
+            }
+
+            .card__body {
+                padding: 6px 9px;
+            }
+
+            .sign-off {
+                margin-top: 8px;
+                padding-top: 6px;
+            }
+
+            .sign-off__line {
+                margin: 16px 0 3px auto;
             }
 
             * {
@@ -480,7 +530,15 @@
             <div class="doc-head">
                 <div></div>
                 <div class="doc-head__doctor">
-                    <strong>{{ $exam->doctor?->name ?? '—' }}</strong>
+                    @if($primaryDoctorName)
+                        <strong>P: {{ $primaryDoctorName }}</strong>
+                    @endif
+                    @if($secondaryDoctorName)
+                        <strong>S: {{ $secondaryDoctorName }}</strong>
+                    @endif
+                    @if(!$primaryDoctorName && !$secondaryDoctorName)
+                        <strong>—</strong>
+                    @endif
                     @if($exam->doctor?->designation ?? null)
                         <span style="display:block">{{ $exam->doctor->designation }}</span>
                     @endif
@@ -508,7 +566,15 @@
                     </div>
                 </div>
                 <div class="doc-head__doctor">
-                    <strong>{{ $exam->doctor?->name ?? '—' }}</strong>
+                    @if($primaryDoctorName)
+                        <strong>P: {{ $primaryDoctorName }}</strong>
+                    @endif
+                    @if($secondaryDoctorName)
+                        <strong>S: {{ $secondaryDoctorName }}</strong>
+                    @endif
+                    @if(!$primaryDoctorName && !$secondaryDoctorName)
+                        <strong>—</strong>
+                    @endif
                     @if($exam->doctor?->designation ?? null)
                         <span style="display:block">{{ $exam->doctor->designation }}</span>
                     @endif
@@ -547,7 +613,7 @@
         {{-- ── Two-column layout ── --}}
         <div class="rx-columns">
 
-            {{-- ══ LEFT COLUMN: Medicine / PG / ST / Lens Type / K-C-O ══ --}}
+            {{-- ══ LEFT COLUMN: Medicine / PG / ST / K-C-O ══ --}}
             <div class="rx-stack">
 
                 {{-- Medicine --}}
@@ -590,44 +656,28 @@
                 @php
                     $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds']) ||
                         !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
+                    $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
                 @endphp
                 @if($hasPg)
                     <article class="card">
                         <div class="card__title">PG</div>
-                        <div class="card__body">
-                            @foreach(['re' => 'RIGHT EYE (RE)', 'le' => 'LEFT EYE (LE)'] as $eye => $eLabel)
-                                @if(!empty($pg[$eye]['ds']) || !empty($pg[$eye]['ns']))
-                                    <div class="eye-band" style="margin-top:{{ $loop->first ? '0' : '6px' }}">{{ $eLabel }}
-                                    </div>
-                                    <table class="dtable">
-                                        <thead>
-                                            <tr>
-                                                <th style="width:22px"></th>
-                                                <th>SPH</th>
-                                                <th>CYL</th>
-                                                <th>AXIS</th>
-                                                <th>VN</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="row-tag">D</td>
-                                                <td>{{ secRxVal($pg[$eye]['ds'] ?? '') }}</td>
-                                                <td>{{ secRxVal($pg[$eye]['dc'] ?? '') }}</td>
-                                                <td>{{ secRxVal($pg[$eye]['ax'] ?? '') }}</td>
-                                                <td>{{ secRxVal($pg[$eye]['vn'] ?? '') }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="row-tag">N</td>
-                                                <td>{{ secRxVal($pg[$eye]['ns'] ?? '') }}</td>
-                                                <td>{{ secRxVal($pg[$eye]['nc'] ?? '') }}</td>
-                                                <td>{{ secRxVal($pg[$eye]['na'] ?? '') }}</td>
-                                                <td>{{ secRxVal($pg[$eye]['near_vn'] ?? '') }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                @endif
-                            @endforeach
+                        <div class="card__body" style="display:flex;flex-wrap:wrap;align-items:flex-start;">
+                            <div class="bracket-line">
+                                <span class="bracket-line__label">PG</span>
+                                <span class="bracket-line__mark">&lt;</span>
+                                <div class="bracket-line__values">
+                                    <span>{{ $pgFmt($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') }}</span>
+                                    <span>{{ $pgFmt($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') }}</span>
+                                </div>
+                            </div>
+                            <div class="bracket-line">
+                                <span class="bracket-line__label">NrPG</span>
+                                <span class="bracket-line__mark">&lt;</span>
+                                <div class="bracket-line__values">
+                                    <span>{{ $pgFmt($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') }}</span>
+                                    <span>{{ $pgFmt($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') }}</span>
+                                </div>
+                            </div>
                         </div>
                     </article>
                 @endif
@@ -647,19 +697,17 @@
                                 <thead>
                                     <tr>
                                         <td style="border:none;"></td>
-                                        <th colspan="4" class="eye-band">RIGHT EYE (RE)</th>
-                                        <th colspan="4" class="eye-band">LEFT EYE (LE)</th>
+                                        <th colspan="3" class="eye-band">RIGHT EYE (RE)</th>
+                                        <th colspan="3" class="eye-band">LEFT EYE (LE)</th>
                                     </tr>
                                     <tr>
                                         <td style="border:none;width:18px;"></td>
                                         <th>SPH</th>
                                         <th>CYL</th>
                                         <th>AXIS</th>
-                                        <th>VN</th>
                                         <th>SPH</th>
                                         <th>CYL</th>
                                         <th>AXIS</th>
-                                        <th>VN</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -668,22 +716,18 @@
                                         <td>{{ secRxVal($st['re']['ds'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['dc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['ax'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['vn'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['ds'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['dc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['ax'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['vn'] ?? '') }}</td>
                                     </tr>
                                     <tr>
                                         <td class="row-tag">N</td>
                                         <td>{{ secRxVal($st['re']['ns'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['nc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['na'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['near_vn'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['ns'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['nc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['na'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['near_vn'] ?? '') }}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -694,16 +738,6 @@
                                     LE: {{ $addLe ?: $dash }}
                                 </div>
                             @endif
-                        </div>
-                    </article>
-                @endif
-
-                {{-- Lens Type --}}
-                @if(!empty($st['lens_type']))
-                    <article class="card">
-                        <div class="card__title">Lens Type</div>
-                        <div class="card__body">
-                            {{ $st['lens_type'] }}
                         </div>
                     </article>
                 @endif
@@ -892,66 +926,66 @@
                     </div>
                 </article>
 
+                {{-- Diagnosis --}}
+                @php
+                    $dxNames = $diagnosisMasters->filter(fn($d) => in_array($d->id, $diagnoses));
+                    $dilate = $ed['dilate'] ?? $ed['dilation'] ?? null;
+                @endphp
+                @if($dxNames->isNotEmpty() || $dilate)
+                    <article class="card">
+                        <div class="card__title">Diagnosis</div>
+                        <div class="card__body">
+                            @if($dxNames->isNotEmpty())
+                                <div class="chip-row">
+                                    @foreach($dxNames as $d)
+                                        <span class="chip">{{ $d->diagnosis }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if($dilate)
+                                <div class="dx-line" style="margin-top:{{ $dxNames->isNotEmpty() ? '5px' : '0' }}">
+                                    <b>Dilate:</b> {{ ucfirst($dilate) }}
+                                </div>
+                            @endif
+                        </div>
+                    </article>
+                @endif
+
+                {{-- Advice --}}
+                @php $showFollowup = !empty($ed['followup_date']) || !empty($ed['followup_duration']); @endphp
+                @if($adviceText || $showFollowup)
+                    <article class="card">
+                        <div class="card__title">Advice</div>
+                        <div class="card__body">
+                            @if($adviceText)
+                                <ul class="advice-list">
+                                    @foreach(array_filter(array_map('trim', explode("\n", $adviceText))) as $line)
+                                        <li
+                                            style="{{ str_starts_with(strtolower($line), 'cold') || str_starts_with(strtolower($line), "don't") ? 'color:#173A5E;' : '' }}">
+                                            {{ $line }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            @if($showFollowup)
+                                <div style="font-size:10.5px;margin-top:{{ $adviceText ? '5px' : '0' }}">
+                                    <b style="color:#173A5E">Follow-up:</b>
+                                    @if(!empty($ed['followup_date']))
+                                        {{ \Carbon\Carbon::parse($ed['followup_date'])->format('d M Y') }}
+                                    @endif
+                                    @if(!empty($ed['followup_duration']))
+                                        ({{ $ed['followup_duration'] }})
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </article>
+                @endif
+
             </div>{{-- /RIGHT COLUMN --}}
 
         </div>{{-- /rx-columns --}}
-
-        {{-- ── Diagnosis (full width) ── --}}
-        @php
-            $dxNames = $diagnosisMasters->filter(fn($d) => in_array($d->id, $diagnoses));
-            $dilate = $ed['dilate'] ?? $ed['dilation'] ?? null;
-        @endphp
-        @if($dxNames->isNotEmpty() || $dilate)
-            <article class="card" style="margin-top:12px">
-                <div class="card__title">Diagnosis</div>
-                <div class="card__body">
-                    @if($dxNames->isNotEmpty())
-                        <div class="chip-row">
-                            @foreach($dxNames as $d)
-                                <span class="chip">{{ $d->diagnosis }}</span>
-                            @endforeach
-                        </div>
-                    @endif
-                    @if($dilate)
-                        <div class="dx-line" style="margin-top:{{ $dxNames->isNotEmpty() ? '5px' : '0' }}">
-                            <b>Dilate:</b> {{ ucfirst($dilate) }}
-                        </div>
-                    @endif
-                </div>
-            </article>
-        @endif
-
-        {{-- ── Advice (full width) ── --}}
-        @php $showFollowup = !empty($ed['followup_date']) || !empty($ed['followup_duration']); @endphp
-        @if($adviceText || $showFollowup)
-            <article class="card" style="margin-top:12px">
-                <div class="card__title">Advice</div>
-                <div class="card__body">
-                    @if($adviceText)
-                        <ul class="advice-list">
-                            @foreach(array_filter(array_map('trim', explode("\n", $adviceText))) as $line)
-                                <li
-                                    style="{{ str_starts_with(strtolower($line), 'cold') || str_starts_with(strtolower($line), "don't") ? 'color:#173A5E;' : '' }}">
-                                    {{ $line }}
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
-
-                    @if($showFollowup)
-                        <div style="font-size:10.5px;margin-top:{{ $adviceText ? '5px' : '0' }}">
-                            <b style="color:#173A5E">Follow-up:</b>
-                            @if(!empty($ed['followup_date']))
-                                {{ \Carbon\Carbon::parse($ed['followup_date'])->format('d M Y') }}
-                            @endif
-                            @if(!empty($ed['followup_duration']))
-                                ({{ $ed['followup_duration'] }})
-                            @endif
-                        </div>
-                    @endif
-                </div>
-            </article>
-        @endif
 
         {{-- ── Signature ── --}}
         <div class="sign-off">
