@@ -7,11 +7,11 @@
     <title>Secondary Rx — {{ $patient->full_name }}</title>
     <style>
         :root {
-            --ink: #101828;
-            --navy: #173A5E;
-            --accent-soft: #EAF1FC;
-            --line: #C9D9F2;
-            --line-soft: #E3EAF6;
+            --ink: #1a1a1a;
+            --navy: #1B4F72;
+            --accent-soft: #eef4f9;
+            --line: #343a40;
+            --line-soft: #343a40;
             --muted: #64748B;
         }
 
@@ -23,8 +23,8 @@
 
         body {
             font-family: 'Segoe UI', system-ui, Arial, sans-serif;
-            font-size: 12.5px;
-            line-height: 1.45;
+            font-size: 12px;
+            line-height: 1.4;
             color: var(--ink);
             background: #fff;
         }
@@ -33,7 +33,7 @@
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 12mm 11mm 10mm;
+            padding: 10mm 8mm 8mm;
         }
 
         /* ── Header ── */
@@ -108,12 +108,12 @@
         .patient-strip {
             display: flex;
             flex-wrap: wrap;
-            gap: 22px;
-            background: var(--accent-soft);
-            border: 1px solid var(--line);
-            border-radius: 10px;
-            padding: 9px 16px;
-            margin-bottom: 14px;
+            gap: 18px;
+            background: #eef4f9;
+            border: 1px solid #343a40;
+            border-radius: 4px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
         }
 
         .patient-strip__item label {
@@ -121,12 +121,12 @@
             font-size: 8.5px;
             text-transform: uppercase;
             letter-spacing: .08em;
-            color: #5b7bab;
+            color: #1B4F72;
             margin-bottom: 2px;
         }
 
         .patient-strip__item span {
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 700;
             color: #15202b;
         }
@@ -134,44 +134,46 @@
         /* ── Two-column layout ── */
         .rx-columns {
             display: grid;
-            grid-template-columns: 1.12fr 1fr;
-            gap: 16px;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
             align-items: start;
         }
 
         .rx-stack {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 8px;
         }
 
-        /* ── Cards ── */
+        /* ── Cards (match exam canvas-box) ── */
         .card {
-            border: 1px solid var(--line);
-            border-radius: 9px;
+            border: 1px solid #343a40;
+            border-radius: 4px;
             overflow: hidden;
             background: #fff;
+            padding: 6px;
             break-inside: avoid;
             page-break-inside: avoid;
         }
 
         .card__title {
-            background: var(--navy);
+            background: #1B4F72;
             color: #fff;
-            font-size: 10.5px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: .08em;
-            padding: 7px 11px;
+            letter-spacing: .04em;
+            padding: 2px 6px;
+            margin-bottom: 4px;
         }
 
         .card__title--soft {
-            background: var(--accent-soft);
-            color: var(--navy);
+            background: #eef4f9;
+            color: #1B4F72;
         }
 
         .card__body {
-            padding: 9px 11px;
+            padding: 0;
         }
 
         .field-label {
@@ -191,39 +193,53 @@
         table.dtable {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10.5px;
+            font-size: 10px;
+            margin-bottom: 0;
         }
 
         table.dtable th {
-            background: var(--accent-soft);
-            color: var(--navy);
+            background: #eef4f9;
+            color: #1B4F72;
             font-weight: 600;
-            font-size: 9.5px;
-            padding: 4px 6px;
-            border: 1px solid var(--line-soft);
+            font-size: 10px;
+            padding: 2px 5px;
+            border: 1px solid #343a40;
             text-align: center;
         }
 
+        table.dtable th.sub-band,
+        table.dtable th.eye-band {
+            background: #1B4F72;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            border: 1px solid #1B4F72;
+            padding: 2px;
+        }
+
         table.dtable td {
-            padding: 4px 6px;
-            border: 1px solid var(--line-soft);
+            padding: 2px 5px;
+            border: 1px solid #343a40;
             text-align: center;
+            font-size: 10px;
         }
 
         table.dtable th:first-child,
         table.dtable td:first-child {
-            text-align: left;
+            text-align: center;
         }
 
         table.dtable + table.dtable {
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         .row-tag {
             font-weight: 700;
-            font-size: 9.5px;
-            background: #F1F5FC;
-            color: #42546b;
+            font-size: 10px;
+            background: #f0f4f8;
+            color: #1B4F72;
             text-align: center;
             width: 22px;
         }
@@ -232,53 +248,74 @@
         .chip-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
-            margin: 5px 0;
+            gap: 3px;
+            margin: 2px 0;
         }
 
         .chip {
-            background: rgba(23, 58, 94, .08);
-            border: 1px solid rgba(23, 58, 94, .2);
-            color: var(--navy);
-            border-radius: 999px;
+            background: #eef4f9;
+            border: none;
+            color: #1B4F72;
+            border-radius: 8px;
             font-size: 10px;
             font-weight: 600;
-            padding: 2px 10px;
+            padding: 1px 8px;
         }
 
-        /* ── Vision strip ── */
-        .vision-strip {
+        .chip--dx {
+            background: #fde8e8;
+            border: 1px solid #e57373;
+            color: #b71c1c;
+        }
+
+        .sub-band {
+            background: #1B4F72;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            text-align: center;
+            padding: 2px 6px;
+        }
+
+        .sub-band--soft {
+            background: #eef4f9;
+            color: #1B4F72;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+            text-align: center;
+            padding: 2px 6px;
+            margin-bottom: 4px;
+        }
+
+        /* ── Vision / PG bracket (match canvas makeVn) ── */
+        .vision-strip,
+        .pg-strip {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            font-size: 10.5px;
-            border-top: 1px dashed var(--line);
-            padding-top: 7px;
-            margin-top: 7px;
+            align-items: flex-start;
+            gap: 0;
         }
 
-        .vision-strip b {
-            color: var(--navy);
-        }
-
-        /* ── PG / NrPG bracket lines ── */
         .bracket-line {
             display: inline-flex;
             align-items: center;
-            margin-right: 14px;
-            margin-bottom: 4px;
+            margin-right: 12px;
+            margin-bottom: 2px;
         }
 
         .bracket-line__label {
             font-weight: 700;
-            font-size: 10.5px;
-            margin-right: 3px;
+            font-size: 11px;
+            margin-right: 4px;
         }
 
         .bracket-line__mark {
             font-weight: 300;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             line-height: .5;
             margin: 0 4px;
         }
@@ -286,43 +323,62 @@
         .bracket-line__values {
             display: flex;
             flex-direction: column;
-            font-size: 10.5px;
+            font-size: 11px;
             line-height: 1.3;
         }
 
-        /* ── Eye band (PG / ST headers) ── */
+        .vision-strip b {
+            color: #1B4F72;
+        }
+
+        /* ── Eye band ── */
         .eye-band {
-            background: var(--navy);
+            background: #1B4F72;
             color: #fff;
             text-align: center;
             font-size: 10px;
             font-weight: 700;
-            letter-spacing: .05em;
-            padding: 4px 8px;
+            letter-spacing: .06em;
+            padding: 2px;
         }
 
         .st-add {
-            font-size: 10.5px;
-            margin-top: 5px;
-            color: var(--navy);
+            font-size: 10px;
+            margin-top: 3px;
+            color: #475569;
         }
 
-        /* ── O/E & Fundus tables ── */
+        .st-add b {
+            color: #1B4F72;
+        }
+
+        /* ── O/E & Fundus ── */
+        table.exam-table thead th {
+            background: #343a40 !important;
+            color: #fff !important;
+            border-color: #343a40 !important;
+            font-weight: 700;
+            font-size: 10px;
+            padding: 2px 5px;
+        }
+
+        table.exam-table tbody th,
         table.exam-table td:first-child {
-            background: #F1F5FC;
+            background: #f0f4f8;
+            color: #1B4F72;
             font-weight: 700;
             font-size: 10px;
             text-align: left;
-            padding-left: 10px;
-            width: 78px;
+            padding: 2px 5px;
+            width: auto;
         }
 
         table.exam-table tr:nth-child(even) td {
-            background: #F8FAFE;
+            background: #fff;
         }
 
         table.exam-table tr:nth-child(even) td:first-child {
-            background: #EDF2FA;
+            background: #f0f4f8;
         }
 
         /* ── Diagnosis ── */
@@ -335,29 +391,42 @@
         table.meds {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10.5px;
-            margin-top: 5px;
+            font-size: 10px;
+            margin-top: 0;
         }
 
-        table.meds th {
-            background: var(--navy);
+        table.meds thead tr:first-child th {
+            background: #343a40;
             color: #fff;
-            font-size: 9.5px;
+            font-size: 10px;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            padding: 2px 5px;
+            border: 1px solid #343a40;
+        }
+
+        table.meds thead tr:nth-child(2) th {
+            background: #eef4f9;
+            color: #1B4F72;
+            font-size: 10px;
             font-weight: 600;
             text-align: left;
-            padding: 5px 8px;
+            padding: 2px 5px;
+            border: 1px solid #343a40;
         }
 
         table.meds td {
-            padding: 5px 8px;
-            border-bottom: 1px solid var(--line-soft);
+            padding: 2px 5px;
+            border: 1px solid #343a40;
             vertical-align: top;
             break-inside: avoid;
             page-break-inside: avoid;
         }
 
         table.meds tr:nth-child(even) td {
-            background: #F8FAFE;
+            background: #fff;
         }
 
         .med-sub {
@@ -620,11 +689,13 @@
                 @if(!empty($rxMeds))
                     <article class="card">
                         <div class="card__title">Medicine</div>
-                        <div class="card__body">
+                        <div class="card__body" style="padding:0">
                             <table class="meds">
                                 <thead>
                                     <tr>
-                                        <th>#</th>
+                                        <th colspan="5">Prescription (Rx)</th>
+                                    </tr>
+                                    <tr>
                                         <th>Medicine</th>
                                         <th>Dose</th>
                                         <th>Days</th>
@@ -633,14 +704,13 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($rxMeds as $i => $med)
+                                    @foreach($rxMeds as $med)
                                         @if(!empty($med['name']))
                                             <tr>
-                                                <td style="text-align:center">{{ $i + 1 }}</td>
                                                 <td><span style="font-weight:600">{{ $med['name'] }}</span></td>
                                                 <td>{{ !empty($med['dosage_id']) ? ($dosageMap[$med['dosage_id']]->dosage ?? '—') : '—' }}
                                                 </td>
-                                                <td>{{ $med['duration'] ?? '—' }}</td>
+                                                <td>{{ !empty($med['duration']) ? $med['duration'] . (is_numeric($med['duration']) ? ' Days' : '') : '—' }}</td>
                                                 <td>{{ $med['eye'] ?? '—' }}</td>
                                                 <td>{{ $med['instructions'] ?? '—' }}</td>
                                             </tr>
@@ -696,15 +766,15 @@
                             <table class="dtable">
                                 <thead>
                                     <tr>
-                                        <td style="border:none;"></td>
-                                        <th colspan="3" class="eye-band">RIGHT EYE (RE)</th>
-                                        <th colspan="3" class="eye-band">LEFT EYE (LE)</th>
+                                        <th colspan="4" class="eye-band">RIGHT EYE (RE)</th>
+                                        <th colspan="4" class="eye-band">LEFT EYE (LE)</th>
                                     </tr>
                                     <tr>
-                                        <td style="border:none;width:18px;"></td>
+                                        <th>{{ $st['re']['vn'] ?? '' }}</th>
                                         <th>SPH</th>
                                         <th>CYL</th>
                                         <th>AXIS</th>
+                                        <th>{{ $st['le']['vn'] ?? '' }}</th>
                                         <th>SPH</th>
                                         <th>CYL</th>
                                         <th>AXIS</th>
@@ -716,6 +786,7 @@
                                         <td>{{ secRxVal($st['re']['ds'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['dc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['ax'] ?? '') }}</td>
+                                        <td class="row-tag">D</td>
                                         <td>{{ secRxVal($st['le']['ds'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['dc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['ax'] ?? '') }}</td>
@@ -725,6 +796,7 @@
                                         <td>{{ secRxVal($st['re']['ns'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['nc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['na'] ?? '') }}</td>
+                                        <td class="row-tag">N</td>
                                         <td>{{ secRxVal($st['le']['ns'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['nc'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['na'] ?? '') }}</td>
@@ -779,9 +851,12 @@
                 @if(!empty($coRows))
                     <article class="card">
                         <div class="card__title">Complaint</div>
-                        <div class="card__body">
+                        <div class="card__body" style="padding:0">
                             <table class="dtable">
                                 <thead>
+                                    <tr>
+                                        <th colspan="4" class="sub-band" style="border:none;">C/O</th>
+                                    </tr>
                                     <tr>
                                         <th>Complaint</th>
                                         <th>Since</th>
@@ -806,43 +881,67 @@
                 @endif
 
                 {{-- H/O --}}
-                @if(!empty($hnoList))
-                    <article class="card">
-                        <div class="card__title">H/O</div>
-                        <div class="card__body">
+                <article class="card">
+                    <div class="card__title">H/O</div>
+                    <div class="card__body" style="min-height:18px;">
+                        @if(!empty($hnoList))
                             <div class="chip-row">
                                 @foreach($hnoList as $hv)
                                     <span class="chip">{{ $hv }}</span>
                                 @endforeach
                             </div>
-                        </div>
-                    </article>
-                @endif
+                        @endif
+                    </div>
+                </article>
 
                 {{-- Vision --}}
                 @php
-                    $vnRe = secRxVal($vision['vn_re'] ?? '');
-                    $vnLe = secRxVal($vision['vn_le'] ?? '');
-                    $phRe = secRxVal($vision['pnvn_re'] ?? '');
-                    $phLe = secRxVal($vision['pnvn_le'] ?? '');
-                    $nrRe = secRxVal($vision['nrvn_re'] ?? '');
-                    $nrLe = secRxVal($vision['nrvn_le'] ?? '');
-                    $iopRe = secRxVal($nct['iop_re'] ?? '');
-                    $iopLe = secRxVal($nct['iop_le'] ?? '');
-                    $hasVn = ($vnRe !== $dash || $vnLe !== $dash || $phRe !== $dash || $nrRe !== $dash);
+                    $vnRe = secRxVal($vision['vn_re'] ?? '', '-');
+                    $vnLe = secRxVal($vision['vn_le'] ?? '', '-');
+                    $phRe = secRxVal($vision['pnvn_re'] ?? '', '-');
+                    $phLe = secRxVal($vision['pnvn_le'] ?? '', '-');
+                    $nrRe = secRxVal($vision['nrvn_re'] ?? '', '-');
+                    $nrLe = secRxVal($vision['nrvn_le'] ?? '', '-');
+                    $iopRe = secRxVal($nct['iop_re'] ?? '', '-');
+                    $iopLe = secRxVal($nct['iop_le'] ?? '', '-');
+                    $hasVn = ($vnRe !== '-' || $vnLe !== '-' || $phRe !== '-' || $phLe !== '-' || $nrRe !== '-' || $nrLe !== '-');
+                    $hasIop = ($iopRe !== '-' || $iopLe !== '-');
                 @endphp
-                @if($hasVn || ($iopRe !== $dash || $iopLe !== $dash))
+                @if($hasVn || $hasIop)
                     <article class="card">
                         <div class="card__title">Vision</div>
                         <div class="card__body">
                             <div class="vision-strip">
                                 @if($hasVn)
-                                    <span><b>Vn</b> &lt; {{ $vnRe }}&nbsp;/&nbsp;{{ $vnLe }}</span>
-                                    <span><b>PH</b> &lt; {{ $phRe }}&nbsp;/&nbsp;{{ $phLe }}</span>
-                                    <span><b>NrVn</b> &lt; {{ $nrRe }}&nbsp;/&nbsp;{{ $nrLe }}</span>
+                                    <div class="bracket-line">
+                                        <span class="bracket-line__label">Vn</span>
+                                        <span class="bracket-line__mark">&lt;</span>
+                                        <div class="bracket-line__values">
+                                            <span>{{ $vnRe }}</span>
+                                            <span>{{ $vnLe }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-line">
+                                        <span class="bracket-line__label">PH</span>
+                                        <span class="bracket-line__mark">&lt;</span>
+                                        <div class="bracket-line__values">
+                                            <span>{{ $phRe }}</span>
+                                            <span>{{ $phLe }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-line">
+                                        <span class="bracket-line__label">NrVn</span>
+                                        <span class="bracket-line__mark">&lt;</span>
+                                        <div class="bracket-line__values">
+                                            <span>{{ $nrRe }}</span>
+                                            <span>{{ $nrLe }}</span>
+                                        </div>
+                                    </div>
                                 @endif
-                                @if($iopRe !== $dash || $iopLe !== $dash)
-                                    <span><b>IOP:</b>&nbsp;{{ $iopRe }}/{{ $iopLe }}</span>
+                                @if($hasIop)
+                                    <div class="bracket-line" style="font-size:11px;">
+                                        <strong>IOP:</strong>&nbsp;{{ $iopRe }}/{{ $iopLe }}
+                                    </div>
                                 @endif
                             </div>
                         </div>
@@ -852,7 +951,7 @@
                 {{-- O/E --}}
                 <article class="card">
                     <div class="card__title">O/E</div>
-                    <div class="card__body" style="padding:0">
+                    <div class="card__body">
                         @php
                             $oeFields = [
                                 'sac' => 'SAC',
@@ -871,21 +970,17 @@
                         <table class="dtable exam-table">
                             <thead>
                                 <tr>
-                                    <th style="width:78px">O/E</th>
+                                    <th>O/E</th>
                                     <th>RIGHT</th>
                                     <th>LEFT</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($oeFields as $key => $label)
-                                    @php
-                                        $reVal = $oe[$key . '_re'] ?? '';
-                                        $leVal = $oe[$key . '_le'] ?? '';
-                                    @endphp
                                     <tr>
-                                        <td>{{ $label }}</td>
-                                        <td>{{ $reVal !== '' ? $reVal : '-' }}</td>
-                                        <td>{{ $leVal !== '' ? $leVal : '-' }}</td>
+                                        <th>{{ $label }}</th>
+                                        <td>{{ secRxVal($oe[$key . '_re'] ?? '', '-') }}</td>
+                                        <td>{{ secRxVal($oe[$key . '_le'] ?? '', '-') }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -896,30 +991,30 @@
                 {{-- Fundus --}}
                 <article class="card">
                     <div class="card__title">Fundus</div>
-                    <div class="card__body" style="padding:0">
+                    <div class="card__body">
                         <table class="dtable exam-table">
                             <thead>
                                 <tr>
-                                    <th style="width:78px">Fundus</th>
+                                    <th>Fundus</th>
                                     <th>RIGHT</th>
                                     <th>LEFT</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>DISC</td>
-                                    <td>{{ $fundus['disc_re'] ?? '-' }}</td>
-                                    <td>{{ $fundus['disc_le'] ?? '-' }}</td>
+                                    <th>DISC</th>
+                                    <td>{{ secRxVal($fundus['disc_re'] ?? '', '-') }}</td>
+                                    <td>{{ secRxVal($fundus['disc_le'] ?? '', '-') }}</td>
                                 </tr>
                                 <tr>
-                                    <td>FR</td>
-                                    <td>{{ $fundus['fr_re'] ?? '-' }}</td>
-                                    <td>{{ $fundus['fr_le'] ?? '-' }}</td>
+                                    <th>FR</th>
+                                    <td>{{ secRxVal($fundus['fr_re'] ?? '', '-') }}</td>
+                                    <td>{{ secRxVal($fundus['fr_le'] ?? '', '-') }}</td>
                                 </tr>
                                 <tr>
-                                    <td>COMMENT</td>
-                                    <td>{{ $fundus['comment_re'] ?? '-' }}</td>
-                                    <td>{{ $fundus['comment_le'] ?? '-' }}</td>
+                                    <th>COMMENT</th>
+                                    <td>{{ secRxVal($fundus['comment_re'] ?? '', '-') }}</td>
+                                    <td>{{ secRxVal($fundus['comment_le'] ?? '', '-') }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -938,7 +1033,7 @@
                             @if($dxNames->isNotEmpty())
                                 <div class="chip-row">
                                     @foreach($dxNames as $d)
-                                        <span class="chip">{{ $d->diagnosis }}</span>
+                                        <span class="chip chip--dx">{{ $d->diagnosis }}</span>
                                     @endforeach
                                 </div>
                             @endif
@@ -956,6 +1051,7 @@
                 @if($adviceText || $showFollowup)
                     <article class="card">
                         <div class="card__title">Advice</div>
+                        <div class="sub-band sub-band--soft">Clinical Advice &amp; Instructions</div>
                         <div class="card__body">
                             @if($adviceText)
                                 <ul class="advice-list">
