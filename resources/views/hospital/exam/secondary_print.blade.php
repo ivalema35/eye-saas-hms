@@ -6,6 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secondary Rx — {{ $patient->full_name }}</title>
     <style>
+        :root {
+            --ink: #101828;
+            --navy: #173A5E;
+            --accent-soft: #EAF1FC;
+            --line: #C9D9F2;
+            --line-soft: #E3EAF6;
+            --muted: #64748B;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -13,496 +22,406 @@
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 12px;
-            color: #1a1a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            font-size: 12.5px;
+            line-height: 1.45;
+            color: var(--ink);
             background: #fff;
         }
 
-        .page {
+        .sheet {
             width: 210mm;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 10mm 12mm 10mm;
+            padding: 12mm 11mm 10mm;
         }
 
         /* ── Header ── */
-        .rx-header {
+        .doc-head {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
-            border-bottom: 2px solid #1B3A5C;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            gap: 16px;
+            border-bottom: 3px solid var(--navy);
+            padding-bottom: 10px;
+            margin-bottom: 14px;
         }
 
-        .rx-logo {
-            width: 64px;
-            height: 64px;
-            border-radius: 10px;
-            background: #F8FAFC;
-            border: 1px solid #E5E7EB;
+        .doc-head__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .doc-head__mark {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            background: #F5F8FC;
+            border: 1px solid #E1E7F0;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin-right: 10px;
+            flex-shrink: 0;
         }
 
-        .rx-logo img {
+        .doc-head__mark img {
             width: 100%;
             height: 100%;
             object-fit: contain;
             padding: 6px;
         }
 
-        .rx-logo span {
-            font-size: 26px;
-            color: #1B3A5C;
+        .doc-head__mark span {
+            font-size: 24px;
+            color: var(--navy);
         }
 
-        .rx-header-hospital h1 {
-            font-size: 18px;
-            font-weight: 700;
-            color: #1B3A5C;
+        .doc-head__hospital h1 {
+            font-size: 19px;
+            font-weight: 800;
+            color: var(--navy);
+            letter-spacing: .01em;
         }
 
-        .rx-header-hospital p {
-            font-size: 10px;
-            color: #555;
-            margin-top: 2px;
+        .doc-head__hospital p {
+            font-size: 10.5px;
+            color: var(--muted);
+            margin-top: 3px;
         }
 
-        .rx-header-doctor {
+        .doc-head__doctor {
             text-align: right;
-            font-size: 10px;
-            color: #444;
+            font-size: 10.5px;
+            color: #475467;
+            line-height: 1.6;
         }
 
-        .rx-header-doctor strong {
-            font-size: 12px;
-            color: #1B3A5C;
+        .doc-head__doctor strong {
             display: block;
+            font-size: 13px;
+            color: var(--navy);
         }
 
-        /* ── Patient Info ── */
-        .rx-patient {
-            background: #eef3fb;
-            border: 1px solid #c7d9f5;
-            border-radius: 6px;
-            padding: 6px 12px;
-            margin-bottom: 10px;
+        /* ── Patient strip ── */
+        .patient-strip {
             display: flex;
             flex-wrap: wrap;
-            gap: 14px;
+            gap: 22px;
+            background: var(--accent-soft);
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 9px 16px;
+            margin-bottom: 14px;
         }
 
-        .rx-patient-field label {
+        .patient-strip__item label {
+            display: block;
             font-size: 8.5px;
             text-transform: uppercase;
-            letter-spacing: .06em;
-            color: #666;
-            display: block;
+            letter-spacing: .08em;
+            color: #5b7bab;
+            margin-bottom: 2px;
         }
 
-        .rx-patient-field span {
+        .patient-strip__item span {
+            font-size: 12.5px;
             font-weight: 700;
-            font-size: 12px;
+            color: #15202b;
         }
 
-        /* ── Two-column grid ── */
-        .rx-grid {
-            display: flex;
-            gap: 8px;
-            align-items: flex-start;
+        /* ── Two-column layout ── */
+        .rx-columns {
+            display: grid;
+            grid-template-columns: 1.12fr 1fr;
+            gap: 16px;
+            align-items: start;
         }
 
-        .rx-col {
-            flex: 1;
-            min-width: 0;
+        .rx-stack {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 12px;
         }
 
-        /* ── Section boxes ── */
-        .rx-box {
-            border: 1px solid #bfcfe8;
-            border-radius: 4px;
+        /* ── Cards ── */
+        .card {
+            border: 1px solid var(--line);
+            border-radius: 9px;
             overflow: hidden;
+            background: #fff;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
-        .rx-box-title {
-            background: #1B3A5C;
+        .card__title {
+            background: var(--navy);
             color: #fff;
-            font-size: 10px;
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            padding: 7px 11px;
+        }
+
+        .card__title--soft {
+            background: var(--accent-soft);
+            color: var(--navy);
+        }
+
+        .card__body {
+            padding: 9px 11px;
+        }
+
+        .field-label {
+            font-size: 9.5px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: .07em;
-            padding: 4px 8px;
+            color: var(--navy);
+            margin: 9px 0 3px;
         }
 
-        .rx-box-body {
-            padding: 6px 8px;
-        }
-
-        /* ── C/O & K/C/O tables ── */
-        .cv-label {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .07em;
-            color: #1B3A5C;
-            margin-bottom: 2px;
-            margin-top: 4px;
-        }
-
-        .cv-label:first-child {
+        .field-label:first-child {
             margin-top: 0;
         }
 
-        table.cv-table {
+        /* ── Generic data table ── */
+        table.dtable {
             width: 100%;
             border-collapse: collapse;
             font-size: 10.5px;
-            margin-bottom: 3px;
         }
 
-        table.cv-table thead tr {
-            background: #eef3fb;
-        }
-
-        table.cv-table th {
-            padding: 2px 5px;
-            text-align: center;
-            border: 1px solid #c7d9f5;
+        table.dtable th {
+            background: var(--accent-soft);
+            color: var(--navy);
             font-weight: 600;
             font-size: 9.5px;
-            color: #1B3A5C;
-        }
-
-        table.cv-table td {
-            padding: 2px 5px;
-            border: 1px solid #c7d9f5;
+            padding: 4px 6px;
+            border: 1px solid var(--line-soft);
             text-align: center;
         }
 
-        table.cv-table td:first-child {
+        table.dtable td {
+            padding: 4px 6px;
+            border: 1px solid var(--line-soft);
+            text-align: center;
+        }
+
+        table.dtable th:first-child,
+        table.dtable td:first-child {
             text-align: left;
         }
 
-        /* ── H/O chips ── */
-        .hno-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            margin: 3px 0;
+        table.dtable + table.dtable {
+            margin-top: 6px;
         }
 
-        .hno-chip {
-            background: rgba(27, 58, 92, .08);
-            border: 1px solid rgba(27, 58, 92, .18);
-            color: #1B3A5C;
+        .row-tag {
+            font-weight: 700;
+            font-size: 9.5px;
+            background: #F1F5FC;
+            color: #42546b;
+            text-align: center;
+            width: 22px;
+        }
+
+        /* ── Chips ── */
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 5px 0;
+        }
+
+        .chip {
+            background: rgba(23, 58, 94, .08);
+            border: 1px solid rgba(23, 58, 94, .2);
+            color: var(--navy);
             border-radius: 999px;
             font-size: 10px;
             font-weight: 600;
-            padding: 1px 8px;
+            padding: 2px 10px;
         }
 
-        /* ── Vision summary line ── */
-        .vn-line {
+        /* ── Vision strip ── */
+        .vision-strip {
             display: flex;
             flex-wrap: wrap;
+            gap: 10px;
             align-items: center;
-            gap: 6px;
             font-size: 10.5px;
-            border-top: 1px solid #dde3ea;
-            padding-top: 4px;
-            margin-top: 4px;
+            border-top: 1px dashed var(--line);
+            padding-top: 7px;
+            margin-top: 7px;
         }
 
-        .vn-item strong {
-            color: #1B3A5C;
+        .vision-strip b {
+            color: var(--navy);
         }
 
-        /* ── PG table ── */
-        .pg-eye-header {
-            background: #1B3A5C;
+        /* ── PG / NrPG bracket lines ── */
+        .bracket-line {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 14px;
+            margin-bottom: 4px;
+        }
+
+        .bracket-line__label {
+            font-weight: 700;
+            font-size: 10.5px;
+            margin-right: 3px;
+        }
+
+        .bracket-line__mark {
+            font-weight: 300;
+            font-size: 1.3rem;
+            line-height: .5;
+            margin: 0 4px;
+        }
+
+        .bracket-line__values {
+            display: flex;
+            flex-direction: column;
+            font-size: 10.5px;
+            line-height: 1.3;
+        }
+
+        /* ── Eye band (PG / ST headers) ── */
+        .eye-band {
+            background: var(--navy);
             color: #fff;
+            text-align: center;
             font-size: 10px;
             font-weight: 700;
             letter-spacing: .05em;
-            padding: 3px 6px;
-            text-align: center;
-        }
-
-        table.pg-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10.5px;
-        }
-
-        table.pg-table th {
-            background: #eef3fb;
-            padding: 2px 4px;
-            text-align: center;
-            border: 1px solid #c7d9f5;
-            font-weight: 600;
-            font-size: 9.5px;
-            color: #1B3A5C;
-        }
-
-        table.pg-table td {
-            padding: 2px 4px;
-            border: 1px solid #c7d9f5;
-            text-align: center;
-        }
-
-        table.pg-table td.row-label {
-            font-weight: 700;
-            font-size: 9.5px;
-            background: #f5f8ff;
-            color: #475569;
-            text-align: center;
-        }
-
-        /* ── ST table ── */
-        table.st-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10.5px;
-        }
-
-        table.st-table .eye-header {
-            background: #1B3A5C;
-            color: #fff;
-            text-align: center;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 3px 4px;
-        }
-
-        table.st-table th {
-            background: #eef3fb;
-            padding: 2px 4px;
-            text-align: center;
-            border: 1px solid #c7d9f5;
-            font-weight: 600;
-            font-size: 9.5px;
-            color: #1B3A5C;
-        }
-
-        table.st-table td {
-            padding: 2px 4px;
-            border: 1px solid #c7d9f5;
-            text-align: center;
-        }
-
-        table.st-table td.row-label {
-            font-weight: 700;
-            font-size: 9.5px;
-            color: #475569;
-            background: #f5f8ff;
-            width: 18px;
+            padding: 4px 8px;
         }
 
         .st-add {
             font-size: 10.5px;
-            margin-top: 3px;
-            color: #1B3A5C;
+            margin-top: 5px;
+            color: var(--navy);
         }
 
-        /* ── O/E table ── */
-        table.oe-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10.5px;
-        }
-
-        table.oe-table thead tr {
-            background: #eef3fb;
-        }
-
-        table.oe-table th {
-            padding: 3px 6px;
-            border: 1px solid #c7d9f5;
-            font-weight: 700;
-            font-size: 9.5px;
-            color: #1B3A5C;
-            text-align: center;
-        }
-
-        table.oe-table th:first-child {
-            text-align: left;
-        }
-
-        table.oe-table td {
-            padding: 2px 6px;
-            border: 1px solid #c7d9f5;
-            text-align: center;
-        }
-
-        table.oe-table td:first-child {
-            text-align: left;
+        /* ── O/E & Fundus tables ── */
+        table.exam-table td:first-child {
+            background: #F1F5FC;
             font-weight: 700;
             font-size: 10px;
-            background: #f5f8ff;
-            padding-left: 8px;
-        }
-
-        table.oe-table tr:nth-child(even) td {
-            background: #f8faff;
-        }
-
-        table.oe-table tr:nth-child(even) td:first-child {
-            background: #f0f4f8;
-        }
-
-        /* ── Fundus table ── */
-        table.fundus-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10.5px;
-        }
-
-        table.fundus-table thead tr {
-            background: #eef3fb;
-        }
-
-        table.fundus-table th {
-            padding: 3px 6px;
-            border: 1px solid #c7d9f5;
-            font-weight: 700;
-            font-size: 9.5px;
-            color: #1B3A5C;
-            text-align: center;
-        }
-
-        table.fundus-table td {
-            padding: 2px 6px;
-            border: 1px solid #c7d9f5;
-            text-align: center;
-        }
-
-        table.fundus-table td:first-child {
             text-align: left;
-            font-weight: 700;
-            font-size: 10px;
-            background: #f5f8ff;
-            padding-left: 8px;
+            padding-left: 10px;
+            width: 78px;
+        }
+
+        table.exam-table tr:nth-child(even) td {
+            background: #F8FAFE;
+        }
+
+        table.exam-table tr:nth-child(even) td:first-child {
+            background: #EDF2FA;
         }
 
         /* ── Diagnosis ── */
-        .rx-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 3px;
-            margin-top: 3px;
-        }
-
-        .rx-tag {
-            background: #eef3fb;
-            border: 1px solid #c7d9f5;
-            border-radius: 99px;
-            padding: 1px 9px;
-            font-size: 10px;
-        }
-
-        .rx-sub-title {
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            color: #1B3A5C;
-            margin: 5px 0 2px;
-        }
-
         .dx-line {
             font-size: 11px;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
-        /* ── Medicine table ── */
-        table.rx-medicines {
+        /* ── Medicines ── */
+        table.meds {
             width: 100%;
             border-collapse: collapse;
             font-size: 10.5px;
-            margin-top: 3px;
+            margin-top: 5px;
         }
 
-        table.rx-medicines th {
-            background: #1B3A5C;
+        table.meds th {
+            background: var(--navy);
             color: #fff;
-            padding: 3px 6px;
             font-size: 9.5px;
             font-weight: 600;
             text-align: left;
+            padding: 5px 8px;
         }
 
-        table.rx-medicines td {
-            padding: 3px 6px;
-            border-bottom: 1px solid #e0e8f5;
+        table.meds td {
+            padding: 5px 8px;
+            border-bottom: 1px solid var(--line-soft);
             vertical-align: top;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
 
-        table.rx-medicines tr:nth-child(even) td {
-            background: #f8faff;
+        table.meds tr:nth-child(even) td {
+            background: #F8FAFE;
         }
 
-        .med-brand {
+        .med-sub {
             font-size: 9px;
-            color: #666;
+            color: #667;
         }
 
-        /* ── Advice (full-width) ── */
-        .advice-box {
-            border: 1px solid #bfcfe8;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 6px;
-        }
-
+        /* ── Advice ── */
         .advice-list {
             list-style: none;
-            padding: 6px 10px;
+            padding-left: 2px;
             font-size: 11px;
-            line-height: 1.8;
+            line-height: 1.9;
         }
 
         .advice-list li::before {
             content: '• ';
-            color: #1B3A5C;
+            color: var(--navy);
             font-weight: 700;
         }
 
         /* ── Footer ── */
-        .rx-footer {
-            border-top: 1px solid #c7d9f5;
-            margin-top: 12px;
-            padding-top: 8px;
+        .sign-off {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
+            border-top: 1px solid var(--line);
+            margin-top: 16px;
+            padding-top: 11px;
         }
 
-        .rx-followup {
-            font-size: 10.5px;
-            color: #333;
-        }
-
-        .rx-followup strong {
-            color: #1B3A5C;
-        }
-
-        .rx-signature {
+        .sign-off__box {
             text-align: right;
             font-size: 10.5px;
         }
 
-        .rx-signature .sig-line {
+        .sign-off__line {
+            width: 140px;
             border-top: 1px solid #333;
-            width: 130px;
-            margin: 28px 0 3px auto;
+            margin: 32px 0 4px auto;
+        }
+
+        .toolbar {
+            background: #f0f0f0;
+            padding: 8px 12mm;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toolbar__print {
+            background: var(--navy);
+            color: #fff;
+            border: none;
+            padding: 6px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toolbar__back {
+            color: var(--navy);
+            font-size: 13px;
+            text-decoration: none;
         }
 
         @media print {
@@ -514,14 +433,50 @@
                 display: none !important;
             }
 
-            .page {
-                padding: 6mm 10mm;
+            .sheet {
+                padding: 6mm 7mm 5mm;
+            }
+
+            .doc-head {
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+            }
+
+            .patient-strip {
+                margin-bottom: 8px;
+                padding: 6px 12px;
+            }
+
+            .rx-columns {
+                gap: 10px;
+            }
+
+            .rx-stack {
+                gap: 7px;
+            }
+
+            .card__body {
+                padding: 6px 9px;
+            }
+
+            .sign-off {
+                margin-top: 8px;
+                padding-top: 6px;
+            }
+
+            .sign-off__line {
+                margin: 16px 0 3px auto;
             }
 
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
+        }
+
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
         }
     </style>
 </head>
@@ -537,12 +492,9 @@
             window.print();
         }
     </script>
-    <div class="no-print" style="background:#f0f0f0;padding:8px 12mm;display:flex;gap:12px;align-items:center">
-        <button onclick="_doPrint()"
-            style="background:#1B3A5C;color:#fff;border:none;padding:6px 18px;border-radius:5px;cursor:pointer;font-size:13px">
-            Print
-        </button>
-        <a href="{{ $backUrl ?? 'javascript:history.back()' }}" style="color:#1B3A5C;font-size:13px;text-decoration:none">← Back</a>
+    <div class="no-print toolbar">
+        <button class="toolbar__print" onclick="_doPrint()">Print</button>
+        <a class="toolbar__back" href="{{ $backUrl ?? 'javascript:history.back()' }}">← Back</a>
     </div>
 
     @php
@@ -569,16 +521,24 @@
         }
     @endphp
 
-    <div class="page">
+    <div class="sheet">
 
         {{-- ── Header ── --}}
         @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
 
         @if($letterPad === 'available')
-            <div class="rx-header">
+            <div class="doc-head">
                 <div></div>
-                <div class="rx-header-doctor">
-                    <strong>{{ $exam->doctor?->name ?? '—' }}</strong>
+                <div class="doc-head__doctor">
+                    @if($primaryDoctorName)
+                        <strong>P: {{ $primaryDoctorName }}</strong>
+                    @endif
+                    @if($secondaryDoctorName)
+                        <strong>S: {{ $secondaryDoctorName }}</strong>
+                    @endif
+                    @if(!$primaryDoctorName && !$secondaryDoctorName)
+                        <strong>—</strong>
+                    @endif
                     @if($exam->doctor?->designation ?? null)
                         <span style="display:block">{{ $exam->doctor->designation }}</span>
                     @endif
@@ -587,16 +547,16 @@
                 </div>
             </div>
         @else
-            <div class="rx-header">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="rx-logo">
+            <div class="doc-head">
+                <div class="doc-head__brand">
+                    <div class="doc-head__mark">
                         @if(hospital_logo_url())
                             <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
                         @else
                             <span>👁</span>
                         @endif
                     </div>
-                    <div class="rx-header-hospital">
+                    <div class="doc-head__hospital">
                         <h1>{{ hospital_name() }}</h1>
                         <p>
                             @if(hospital_full_address()) {{ hospital_full_address() }} @endif
@@ -605,8 +565,16 @@
                         </p>
                     </div>
                 </div>
-                <div class="rx-header-doctor">
-                    <strong>{{ $exam->doctor?->name ?? '—' }}</strong>
+                <div class="doc-head__doctor">
+                    @if($primaryDoctorName)
+                        <strong>P: {{ $primaryDoctorName }}</strong>
+                    @endif
+                    @if($secondaryDoctorName)
+                        <strong>S: {{ $secondaryDoctorName }}</strong>
+                    @endif
+                    @if(!$primaryDoctorName && !$secondaryDoctorName)
+                        <strong>—</strong>
+                    @endif
                     @if($exam->doctor?->designation ?? null)
                         <span style="display:block">{{ $exam->doctor->designation }}</span>
                     @endif
@@ -616,259 +584,44 @@
             </div>
         @endif
 
-        {{-- ── Patient Info ── --}}
-        <div class="rx-patient">
-            <div class="rx-patient-field">
+        {{-- ── Patient strip ── --}}
+        <div class="patient-strip">
+            <div class="patient-strip__item">
                 <label>Patient</label>
                 <span>{{ $patient->full_name }}</span>
             </div>
-            <div class="rx-patient-field">
+            <div class="patient-strip__item">
                 <label>MRD</label>
                 <span>{{ $patient->patient_code }}</span>
             </div>
-            <div class="rx-patient-field">
+            <div class="patient-strip__item">
                 <label>Age / Gender</label>
                 <span>{{ $patient->age }}y / {{ ucfirst($patient->gender) }}</span>
             </div>
             @if($patient->contact_no)
-                <div class="rx-patient-field">
+                <div class="patient-strip__item">
                     <label>Contact</label>
                     <span>{{ $patient->contact_no }}</span>
                 </div>
             @endif
-            <div class="rx-patient-field">
+            <div class="patient-strip__item">
                 <label>Visit Date</label>
                 <span>{{ $patient->appointment_date?->format('d M Y') ?? $exam->examined_at?->format('d M Y') ?? '—' }}</span>
             </div>
         </div>
 
-        {{-- ── Two-column grid ── --}}
-        <div class="rx-grid">
+        {{-- ── Two-column layout ── --}}
+        <div class="rx-columns">
 
-            {{-- ══ LEFT COLUMN ══ --}}
-            <div class="rx-col">
+            {{-- ══ LEFT COLUMN: Medicine / PG / ST / K-C-O ══ --}}
+            <div class="rx-stack">
 
-                {{-- Box 1: History & Vision --}}
-                <div class="rx-box">
-                    <div class="rx-box-title">History &amp; Vision</div>
-                    <div class="rx-box-body">
-
-                        @if(!empty($coRows))
-                            <div class="cv-label">C/O</div>
-                            <table class="cv-table">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:left">Complaint</th>
-                                        <th>Since</th>
-                                        <th>Eye</th>
-                                        <th>Comment</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($coRows as $row)
-                                        <tr>
-                                            <td>{{ $row['complaint'] ?? $dash }}</td>
-                                            <td>{{ ($row['since'] ?? '') ? ($row['since'] . ' ' . ($row['unit'] ?? '')) : $dash }}
-                                            </td>
-                                            <td>{{ $row['eye'] ?? $dash }}</td>
-                                            <td>{{ $row['comment'] ?? $dash }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @endif
-
-                        @if(!empty($kcoRows))
-                            <div class="cv-label">K/C/O</div>
-                            <table class="cv-table">
-                                <thead>
-                                    <tr>
-                                        <th style="text-align:left">Condition</th>
-                                        <th>Since</th>
-                                        <th>Comment</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($kcoRows as $krow)
-                                        <tr>
-                                            <td>{{ $krow['condition'] ?? $dash }}</td>
-                                            <td>{{ ($krow['since'] ?? '') ? ($krow['since'] . ' ' . ($krow['unit'] ?? '')) : $dash }}
-                                            </td>
-                                            <td>{{ $krow['comment'] ?? $dash }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        @endif
-
-                        @if(!empty($hnoList))
-                            <div class="cv-label">H/O</div>
-                            <div class="hno-chips">
-                                @foreach($hnoList as $hv)
-                                    <span class="hno-chip">{{ $hv }}</span>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        @php
-                            $vnRe = secRxVal($vision['vn_re'] ?? '');
-                            $vnLe = secRxVal($vision['vn_le'] ?? '');
-                            $phRe = secRxVal($vision['pnvn_re'] ?? '');
-                            $phLe = secRxVal($vision['pnvn_le'] ?? '');
-                            $nrRe = secRxVal($vision['nrvn_re'] ?? '');
-                            $nrLe = secRxVal($vision['nrvn_le'] ?? '');
-                            $iopRe = secRxVal($nct['iop_re'] ?? '');
-                            $iopLe = secRxVal($nct['iop_le'] ?? '');
-                            $hasVn = ($vnRe !== $dash || $vnLe !== $dash || $phRe !== $dash || $nrRe !== $dash);
-                        @endphp
-                        @if($hasVn || ($iopRe !== $dash || $iopLe !== $dash))
-                            <div class="vn-line">
-                                @if($hasVn)
-                                    <span class="vn-item"><strong>Vn</strong> &lt; {{ $vnRe }}&nbsp;/&nbsp;{{ $vnLe }}</span>
-                                    <span class="vn-item"><strong>PH</strong> &lt; {{ $phRe }}&nbsp;/&nbsp;{{ $phLe }}</span>
-                                    <span class="vn-item"><strong>NrVn</strong> &lt; {{ $nrRe }}&nbsp;/&nbsp;{{ $nrLe }}</span>
-                                @endif
-                                @if($iopRe !== $dash || $iopLe !== $dash)
-                                    <span class="vn-item"><strong>IOP:</strong>&nbsp;{{ $iopRe }}/{{ $iopLe }}</span>
-                                @endif
-                            </div>
-                        @endif
-
-                        @php
-                            $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds']) ||
-                                !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
-                        @endphp
-                        @if($hasPg)
-                            <div style="margin-top:5px">
-                                @foreach(['re' => 'RIGHT EYE (RE)', 'le' => 'LEFT EYE (LE)'] as $eye => $eLabel)
-                                    @if(!empty($pg[$eye]['ds']) || !empty($pg[$eye]['ns']))
-                                        <div class="pg-eye-header" style="margin-top:{{ $loop->first ? '0' : '4px' }}">{{ $eLabel }}
-                                        </div>
-                                        <table class="pg-table">
-                                            <thead>
-                                                <tr>
-                                                    <th style="width:22px"></th>
-                                                    <th>SPH</th>
-                                                    <th>CYL</th>
-                                                    <th>AXIS</th>
-                                                    <th>VN</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td class="row-label">D</td>
-                                                    <td>{{ secRxVal($pg[$eye]['ds'] ?? '') }}</td>
-                                                    <td>{{ secRxVal($pg[$eye]['dc'] ?? '') }}</td>
-                                                    <td>{{ secRxVal($pg[$eye]['ax'] ?? '') }}</td>
-                                                    <td>{{ secRxVal($pg[$eye]['vn'] ?? '') }}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td class="row-label">N</td>
-                                                    <td>{{ secRxVal($pg[$eye]['ns'] ?? '') }}</td>
-                                                    <td>{{ secRxVal($pg[$eye]['nc'] ?? '') }}</td>
-                                                    <td>{{ secRxVal($pg[$eye]['na'] ?? '') }}</td>
-                                                    <td>{{ secRxVal($pg[$eye]['near_vn'] ?? '') }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    @endif
-                                @endforeach
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-
-                {{-- Box 2: ST + Diagnosis & Rx --}}
-                <div class="rx-box">
-                    <div class="rx-box-title">ST</div>
-                    <div class="rx-box-body">
-
-                        @php
-                            $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds']) ||
-                                !empty($st['re']['ns']) || !empty($st['le']['ns']);
-                        @endphp
-                        @if($hasSt)
-                            <table class="st-table">
-                                <thead>
-                                    <tr>
-                                        <td style="border:none;"></td>
-                                        <th colspan="4" class="eye-header">RIGHT EYE (RE)</th>
-                                        <th colspan="4" class="eye-header">LEFT EYE (LE)</th>
-                                    </tr>
-                                    <tr>
-                                        <td style="border:none;width:16px;"></td>
-                                        <th>SPH</th>
-                                        <th>CYL</th>
-                                        <th>AXIS</th>
-                                        <th>VN</th>
-                                        <th>SPH</th>
-                                        <th>CYL</th>
-                                        <th>AXIS</th>
-                                        <th>VN</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="row-label">D</td>
-                                        <td>{{ secRxVal($st['re']['ds'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['dc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['ax'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['vn'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['ds'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['dc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['ax'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['vn'] ?? '') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="row-label">N</td>
-                                        <td>{{ secRxVal($st['re']['ns'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['nc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['na'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['near_vn'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['ns'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['nc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['na'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['near_vn'] ?? '') }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            @php
-                                $addRe = $st['re']['add'] ?? '';
-                                $addLe = $st['le']['add'] ?? '';
-                            @endphp
-                            @if($addRe || $addLe || !empty($st['add']))
-                                <div class="st-add">
-                                    <strong>ADD</strong>&nbsp;
-                                    RE: {{ $addRe ?: ($st['add'] ?? $dash) }}&nbsp;&nbsp;
-                                    LE: {{ $addLe ?: $dash }}
-                                    @if(!empty($st['lens_type'])) &nbsp;|&nbsp; {{ $st['lens_type'] }} @endif
-                                </div>
-                            @endif
-                        @endif
-
-                    </div>
-
-                    <div class="rx-box-title">Diagnosis &amp; Rx</div>
-                    <div class="rx-box-body">
-
-                        @php
-                            $dxNames = $diagnosisMasters->filter(fn($d) => in_array($d->id, $diagnoses));
-                            $dilate = $ed['dilate'] ?? $ed['dilation'] ?? null;
-                        @endphp
-
-                        @if($dxNames->isNotEmpty())
-                            <div class="rx-sub-title">Diagnosis</div>
-                            <div class="rx-tags">
-                                @foreach($dxNames as $d)
-                                    <span class="rx-tag">{{ $d->diagnosis }}</span>
-                                @endforeach
-                            </div>
-                        @endif
-
-                        @if(!empty($rxMeds))
-                            <div class="rx-sub-title">Prescription (Rx)</div>
-                            <table class="rx-medicines">
+                {{-- Medicine --}}
+                @if(!empty($rxMeds))
+                    <article class="card">
+                        <div class="card__title">Medicine</div>
+                        <div class="card__body">
+                            <table class="meds">
                                 <thead>
                                     <tr>
                                         <th>#</th>
@@ -895,32 +648,211 @@
                                     @endforeach
                                 </tbody>
                             </table>
-                        @endif
+                        </div>
+                    </article>
+                @endif
 
-                        @if(!empty($ed['followup_date']) || !empty($ed['followup_duration']))
-                            <div style="font-size:10.5px;margin-top:4px;">
-                                <strong style="color:#1B3A5C">Follow-up:</strong>
-                                @if(!empty($ed['followup_date']))
-                                    {{ \Carbon\Carbon::parse($ed['followup_date'])->format('d M Y') }}
-                                @endif
-                                @if(!empty($ed['followup_duration']))
-                                    ({{ $ed['followup_duration'] }})
-                                @endif
+                {{-- PG --}}
+                @php
+                    $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds']) ||
+                        !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
+                    $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
+                @endphp
+                @if($hasPg)
+                    <article class="card">
+                        <div class="card__title">PG</div>
+                        <div class="card__body" style="display:flex;flex-wrap:wrap;align-items:flex-start;">
+                            <div class="bracket-line">
+                                <span class="bracket-line__label">PG</span>
+                                <span class="bracket-line__mark">&lt;</span>
+                                <div class="bracket-line__values">
+                                    <span>{{ $pgFmt($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') }}</span>
+                                    <span>{{ $pgFmt($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') }}</span>
+                                </div>
                             </div>
-                        @endif
+                            <div class="bracket-line">
+                                <span class="bracket-line__label">NrPG</span>
+                                <span class="bracket-line__mark">&lt;</span>
+                                <div class="bracket-line__values">
+                                    <span>{{ $pgFmt($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') }}</span>
+                                    <span>{{ $pgFmt($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                @endif
 
-                    </div>
-                </div>
+                {{-- ST --}}
+                @php
+                    $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds']) ||
+                        !empty($st['re']['ns']) || !empty($st['le']['ns']);
+                    $addRe = $st['re']['add'] ?? '';
+                    $addLe = $st['le']['add'] ?? '';
+                @endphp
+                @if($hasSt)
+                    <article class="card">
+                        <div class="card__title">ST</div>
+                        <div class="card__body">
+                            <table class="dtable">
+                                <thead>
+                                    <tr>
+                                        <td style="border:none;"></td>
+                                        <th colspan="3" class="eye-band">RIGHT EYE (RE)</th>
+                                        <th colspan="3" class="eye-band">LEFT EYE (LE)</th>
+                                    </tr>
+                                    <tr>
+                                        <td style="border:none;width:18px;"></td>
+                                        <th>SPH</th>
+                                        <th>CYL</th>
+                                        <th>AXIS</th>
+                                        <th>SPH</th>
+                                        <th>CYL</th>
+                                        <th>AXIS</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="row-tag">D</td>
+                                        <td>{{ secRxVal($st['re']['ds'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['re']['dc'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['re']['ax'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['le']['ds'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['le']['dc'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['le']['ax'] ?? '') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="row-tag">N</td>
+                                        <td>{{ secRxVal($st['re']['ns'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['re']['nc'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['re']['na'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['le']['ns'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['le']['nc'] ?? '') }}</td>
+                                        <td>{{ secRxVal($st['le']['na'] ?? '') }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            @if($addRe || $addLe || !empty($st['add']))
+                                <div class="st-add">
+                                    <b>ADD</b>&nbsp;
+                                    RE: {{ $addRe ?: ($st['add'] ?? $dash) }}&nbsp;&nbsp;
+                                    LE: {{ $addLe ?: $dash }}
+                                </div>
+                            @endif
+                        </div>
+                    </article>
+                @endif
+
+                {{-- K/C/O --}}
+                @if(!empty($kcoRows))
+                    <article class="card">
+                        <div class="card__title">K/C/O</div>
+                        <div class="card__body">
+                            <table class="dtable">
+                                <thead>
+                                    <tr>
+                                        <th>Condition</th>
+                                        <th>Since</th>
+                                        <th>Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($kcoRows as $krow)
+                                        <tr>
+                                            <td>{{ $krow['condition'] ?? $dash }}</td>
+                                            <td>{{ ($krow['since'] ?? '') ? ($krow['since'] . ' ' . ($krow['unit'] ?? '')) : $dash }}
+                                            </td>
+                                            <td>{{ $krow['comment'] ?? $dash }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                @endif
 
             </div>{{-- /LEFT COLUMN --}}
 
-            {{-- ══ RIGHT COLUMN ══ --}}
-            <div class="rx-col">
+            {{-- ══ RIGHT COLUMN: Complaint / H-O / Vision / O-E / Fundus / Diagnosis / Advice ══ --}}
+            <div class="rx-stack">
 
-                {{-- Box 3: On Examination (O/E) --}}
-                <div class="rx-box">
-                    <div class="rx-box-title">O/E</div>
-                    <div class="rx-box-body" style="padding:0">
+                {{-- Complaint --}}
+                @if(!empty($coRows))
+                    <article class="card">
+                        <div class="card__title">Complaint</div>
+                        <div class="card__body">
+                            <table class="dtable">
+                                <thead>
+                                    <tr>
+                                        <th>Complaint</th>
+                                        <th>Since</th>
+                                        <th>Eye</th>
+                                        <th>Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($coRows as $row)
+                                        <tr>
+                                            <td>{{ $row['complaint'] ?? $dash }}</td>
+                                            <td>{{ ($row['since'] ?? '') ? ($row['since'] . ' ' . ($row['unit'] ?? '')) : $dash }}
+                                            </td>
+                                            <td>{{ $row['eye'] ?? $dash }}</td>
+                                            <td>{{ $row['comment'] ?? $dash }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </article>
+                @endif
+
+                {{-- H/O --}}
+                @if(!empty($hnoList))
+                    <article class="card">
+                        <div class="card__title">H/O</div>
+                        <div class="card__body">
+                            <div class="chip-row">
+                                @foreach($hnoList as $hv)
+                                    <span class="chip">{{ $hv }}</span>
+                                @endforeach
+                            </div>
+                        </div>
+                    </article>
+                @endif
+
+                {{-- Vision --}}
+                @php
+                    $vnRe = secRxVal($vision['vn_re'] ?? '');
+                    $vnLe = secRxVal($vision['vn_le'] ?? '');
+                    $phRe = secRxVal($vision['pnvn_re'] ?? '');
+                    $phLe = secRxVal($vision['pnvn_le'] ?? '');
+                    $nrRe = secRxVal($vision['nrvn_re'] ?? '');
+                    $nrLe = secRxVal($vision['nrvn_le'] ?? '');
+                    $iopRe = secRxVal($nct['iop_re'] ?? '');
+                    $iopLe = secRxVal($nct['iop_le'] ?? '');
+                    $hasVn = ($vnRe !== $dash || $vnLe !== $dash || $phRe !== $dash || $nrRe !== $dash);
+                @endphp
+                @if($hasVn || ($iopRe !== $dash || $iopLe !== $dash))
+                    <article class="card">
+                        <div class="card__title">Vision</div>
+                        <div class="card__body">
+                            <div class="vision-strip">
+                                @if($hasVn)
+                                    <span><b>Vn</b> &lt; {{ $vnRe }}&nbsp;/&nbsp;{{ $vnLe }}</span>
+                                    <span><b>PH</b> &lt; {{ $phRe }}&nbsp;/&nbsp;{{ $phLe }}</span>
+                                    <span><b>NrVn</b> &lt; {{ $nrRe }}&nbsp;/&nbsp;{{ $nrLe }}</span>
+                                @endif
+                                @if($iopRe !== $dash || $iopLe !== $dash)
+                                    <span><b>IOP:</b>&nbsp;{{ $iopRe }}/{{ $iopLe }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </article>
+                @endif
+
+                {{-- O/E --}}
+                <article class="card">
+                    <div class="card__title">O/E</div>
+                    <div class="card__body" style="padding:0">
                         @php
                             $oeFields = [
                                 'sac' => 'SAC',
@@ -936,10 +868,10 @@
                                 'other' => 'OTHER',
                             ];
                         @endphp
-                        <table class="oe-table">
+                        <table class="dtable exam-table">
                             <thead>
                                 <tr>
-                                    <th style="width:70px">O/E</th>
+                                    <th style="width:78px">O/E</th>
                                     <th>RIGHT</th>
                                     <th>LEFT</th>
                                 </tr>
@@ -959,16 +891,16 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </article>
 
-                {{-- Box 4: Fundus --}}
-                <div class="rx-box">
-                    <div class="rx-box-title">Fundus</div>
-                    <div class="rx-box-body" style="padding:0">
-                        <table class="fundus-table">
+                {{-- Fundus --}}
+                <article class="card">
+                    <div class="card__title">Fundus</div>
+                    <div class="card__body" style="padding:0">
+                        <table class="dtable exam-table">
                             <thead>
                                 <tr>
-                                    <th style="width:70px">Fundus</th>
+                                    <th style="width:78px">Fundus</th>
                                     <th>RIGHT</th>
                                     <th>LEFT</th>
                                 </tr>
@@ -992,44 +924,80 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
+                </article>
+
+                {{-- Diagnosis --}}
+                @php
+                    $dxNames = $diagnosisMasters->filter(fn($d) => in_array($d->id, $diagnoses));
+                    $dilate = $ed['dilate'] ?? $ed['dilation'] ?? null;
+                @endphp
+                @if($dxNames->isNotEmpty() || $dilate)
+                    <article class="card">
+                        <div class="card__title">Diagnosis</div>
+                        <div class="card__body">
+                            @if($dxNames->isNotEmpty())
+                                <div class="chip-row">
+                                    @foreach($dxNames as $d)
+                                        <span class="chip">{{ $d->diagnosis }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
+                            @if($dilate)
+                                <div class="dx-line" style="margin-top:{{ $dxNames->isNotEmpty() ? '5px' : '0' }}">
+                                    <b>Dilate:</b> {{ ucfirst($dilate) }}
+                                </div>
+                            @endif
+                        </div>
+                    </article>
+                @endif
+
+                {{-- Advice --}}
+                @php $showFollowup = !empty($ed['followup_date']) || !empty($ed['followup_duration']); @endphp
+                @if($adviceText || $showFollowup)
+                    <article class="card">
+                        <div class="card__title">Advice</div>
+                        <div class="card__body">
+                            @if($adviceText)
+                                <ul class="advice-list">
+                                    @foreach(array_filter(array_map('trim', explode("\n", $adviceText))) as $line)
+                                        <li
+                                            style="{{ str_starts_with(strtolower($line), 'cold') || str_starts_with(strtolower($line), "don't") ? 'color:#173A5E;' : '' }}">
+                                            {{ $line }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+
+                            @if($showFollowup)
+                                <div style="font-size:10.5px;margin-top:{{ $adviceText ? '5px' : '0' }}">
+                                    <b style="color:#173A5E">Follow-up:</b>
+                                    @if(!empty($ed['followup_date']))
+                                        {{ \Carbon\Carbon::parse($ed['followup_date'])->format('d M Y') }}
+                                    @endif
+                                    @if(!empty($ed['followup_duration']))
+                                        ({{ $ed['followup_duration'] }})
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    </article>
+                @endif
 
             </div>{{-- /RIGHT COLUMN --}}
 
-        </div>{{-- /rx-grid --}}
-
-        {{-- ── Advice (full width below grid) ── --}}
-        @if($adviceText)
-            <div class="advice-box">
-                <div class="rx-box-title">Advice</div>
-                <div class="rx-box-body" style="padding:0">
-                    <div class="rx-box-title"
-                        style="background:#eef3fb;color:#1B3A5C;font-size:9.5px;letter-spacing:.06em;">
-                        CLINICAL ADVICE &amp; INSTRUCTIONS
-                    </div>
-                    <ul class="advice-list">
-                        @foreach(array_filter(array_map('trim', explode("\n", $adviceText))) as $line)
-                            <li
-                                style="{{ str_starts_with(strtolower($line), 'cold') || str_starts_with(strtolower($line), "don't") ? 'color:#1B3A5C;' : '' }}">
-                                {{ $line }}
-                            </li>
-                        @endforeach
-                    </ul>
-                </div>
-            </div>
-        @endif
+        </div>{{-- /rx-columns --}}
 
         {{-- ── Signature ── --}}
-        <div class="rx-footer">
+        <div class="sign-off">
             <div></div>
-            <div class="rx-signature">
-                <div class="sig-line"></div>
+            <div class="sign-off__box">
+                <div class="sign-off__line"></div>
                 <div>{{ $exam->doctor?->name ?? '' }}</div>
                 <div style="font-size:9px;color:#666">Signature / Stamp</div>
             </div>
         </div>
 
-    </div>
+    </div>{{-- /sheet --}}
 
 </body>
 

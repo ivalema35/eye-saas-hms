@@ -26,6 +26,24 @@ class PatientHistoryController extends Controller
         // ── Detail mode: show clinical timeline for a specific patient ────────
         if ($patientIds) {
             $patient = Patient::with(['location', 'masterCity.district', 'masterCity.state'])->find($patientIds[0]);
+
+            // Merge in this person's other registrations (same hospital, same name +
+            // contact, already examined) so the timeline isn't limited to the single
+            // patient_id that was passed in — mirrors the mobile app's history lookup.
+            if ($patient && $patient->contact_no) {
+                $patientNameKey = mb_strtolower(trim($patient->first_name . ' ' . $patient->last_name));
+                $sameRegistrationIds = Patient::where('contact_no', $patient->contact_no)
+                    ->where(function ($q) {
+                        $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at');
+                    })
+                    ->get(['id', 'first_name', 'last_name'])
+                    ->filter(fn($p) => mb_strtolower(trim($p->first_name . ' ' . $p->last_name)) === $patientNameKey)
+                    ->pluck('id')
+                    ->all();
+
+                $patientIds = array_values(array_unique(array_merge($patientIds, $sameRegistrationIds)));
+            }
+
             $history = $this->loadExamHistoryForIds($patientIds);
             $masters = $this->loadMasters($tenantId);
             $nameGroups = collect();
