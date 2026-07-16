@@ -2386,29 +2386,31 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             `<div class="d-flex flex-wrap align-items-start">${makeVn('PG', pgReDist, pgLeDist)}${makeVn('NrPG', pgReNear, pgLeNear)}</div>`;
         document.getElementById('canvas_pg').innerHTML = visionHtml;
 
-        // BOX 2 top: ST table (VN removed, ADD below)
+        // BOX 2 top: ST table (VN C ST above D/N per eye, ADD below)
         const stReAdd = val('exam_data[st][re][add]');
         const stLeAdd = val('exam_data[st][le][add]');
+        const stVnRe  = (() => { const v = val('exam_data[st][re][vn]'); return v === '-' ? '' : v; })();
+        const stVnLe  = (() => { const v = val('exam_data[st][le][vn]'); return v === '-' ? '' : v; })();
         const stCell  = (v, dim) => `<td class="text-center" style="padding:2px;${dim ? 'color:#94a3b8;' : ''}">${v}</td>`;
         const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
+        const stRowTag = (t) => `<th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">${t}</th>`;
 
         let stHtml =
             `<table class="table table-sm table-bordered mb-1" style="font-size:11px;">` +
             `<thead>` +
             `<tr>` +
-              `<th style="background:#1B4F72;color:#fff;width:22px;padding:2px;border-color:#1B4F72;"></th>` +
-              `<th colspan="3" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
-              `<th colspan="3" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
             `</tr>` +
-            `<tr style="background:#eef4f9;">${pgSubTh('')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}</tr>` +
+            `<tr style="background:#eef4f9;">${pgSubTh(stVnRe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh(stVnLe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}</tr>` +
             `</thead><tbody>` +
-            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">D</th>` +
-              `${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stCell(val('exam_data[st][re][ax]'))}` +
-              `${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stCell(val('exam_data[st][le][ax]'))}` +
+            `<tr>` +
+              `${stRowTag('D')}${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stCell(val('exam_data[st][re][ax]'))}` +
+              `${stRowTag('D')}${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stCell(val('exam_data[st][le][ax]'))}` +
             `</tr>` +
-            `<tr><th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">N</th>` +
-              `${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stCell(val('exam_data[st][re][na]'))}` +
-              `${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}` +
+            `<tr>` +
+              `${stRowTag('N')}${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stCell(val('exam_data[st][re][na]'))}` +
+              `${stRowTag('N')}${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}` +
             `</tr>` +
             `</tbody></table>`;
         if (stReAdd !== '-' || stLeAdd !== '-') {

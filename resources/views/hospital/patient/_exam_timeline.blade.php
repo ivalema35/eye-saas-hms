@@ -181,13 +181,13 @@
                                                     <table class="cv-table">
                                                         <thead>
                                                             <tr>
-                                                                <th style="width:18px"></th>
-                                                                <th colspan="3">RIGHT EYE (RE)</th>
-                                                                <th colspan="3">LEFT EYE (LE)</th>
+                                                                <th colspan="4">RIGHT EYE (RE)</th>
+                                                                <th colspan="4">LEFT EYE (LE)</th>
                                                             </tr>
                                                             <tr>
-                                                                <th></th>
+                                                                <th>{{ $st['re']['vn'] ?? '' }}</th>
                                                                 <th>SPH</th><th>CYL</th><th>AXIS</th>
+                                                                <th>{{ $st['le']['vn'] ?? '' }}</th>
                                                                 <th>SPH</th><th>CYL</th><th>AXIS</th>
                                                             </tr>
                                                         </thead>
@@ -197,6 +197,7 @@
                                                                 <td>{{ $cv($st['re']['ds'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['re']['dc'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['re']['ax'] ?? '') }}</td>
+                                                                <th>D</th>
                                                                 <td>{{ $cv($st['le']['ds'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['le']['dc'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['le']['ax'] ?? '') }}</td>
@@ -206,6 +207,7 @@
                                                                 <td>{{ $cv($st['re']['ns'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['re']['nc'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['re']['na'] ?? '') }}</td>
+                                                                <th>N</th>
                                                                 <td>{{ $cv($st['le']['ns'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['le']['nc'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['le']['na'] ?? '') }}</td>
