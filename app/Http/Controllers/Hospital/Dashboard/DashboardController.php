@@ -972,18 +972,6 @@ class DashboardController extends Controller
 
     private function loadSharedExamHistoryForIds(array $patientIds): Collection
     {
-        $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
-            ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
-            ->whereIn('patient_id', $patientIds)
-            ->get()
-            ->map(function ($exam) {
-                $exam->type = 'Primary Exam';
-                $exam->color = 'primary';
-                $exam->icon = 'bi-clipboard2-pulse';
-
-                return $exam;
-            });
-
         $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
             ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
             ->whereIn('patient_id', $patientIds)
@@ -995,6 +983,26 @@ class DashboardController extends Controller
 
                 return $exam;
             });
+
+        // Per visit/registration: if a secondary exam exists for that patient_id,
+        // suppress the primary exam so only the most advanced exam is shown.
+        $idsWithSecondary = $secondaryExams->pluck('patient_id')->unique()->all();
+        $primaryOnlyIds = array_diff($patientIds, $idsWithSecondary);
+
+        $primaryExams = collect();
+        if (!empty($primaryOnlyIds)) {
+            $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
+                ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+                ->whereIn('patient_id', $primaryOnlyIds)
+                ->get()
+                ->map(function ($exam) {
+                    $exam->type = 'Primary Exam';
+                    $exam->color = 'primary';
+                    $exam->icon = 'bi-clipboard2-pulse';
+
+                    return $exam;
+                });
+        }
 
         return $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
     }

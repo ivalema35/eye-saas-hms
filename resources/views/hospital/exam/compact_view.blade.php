@@ -25,6 +25,22 @@
         'em' => 'E.M.',
         'covertest' => 'COVER TEST',
     ];
+
+    $lensOeVal = function ($oe, $eye) {
+        $base = $oe['lens_' . $eye] ?? '';
+        if ($base === null || $base === '') {
+            return '';
+        }
+
+        $pseudo = $oe['pseudophakia_' . $eye] ?? [];
+        $extras = array_filter([
+            $pseudo['operation_type'] ?? '',
+            !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+            $pseudo['hospital_name'] ?? '',
+        ], fn($v) => $v !== '' && $v !== null);
+
+        return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -745,11 +761,11 @@
                                 <tr>
                                     <td class="row-lbl">{{ $label }}</td>
                                     <td>
-                                        @php $val = $oe[$key . '_re'] ?? ''; @endphp
+                                        @php $val = $key === 'lens' ? $lensOeVal($oe, 're') : ($oe[$key . '_re'] ?? ''); @endphp
                                         @if($val) {{ $val }} @else <span class="dash">—</span> @endif
                                     </td>
                                     <td>
-                                        @php $val = $oe[$key . '_le'] ?? ''; @endphp
+                                        @php $val = $key === 'lens' ? $lensOeVal($oe, 'le') : ($oe[$key . '_le'] ?? ''); @endphp
                                         @if($val) {{ $val }} @else <span class="dash">—</span> @endif
                                     </td>
                                 </tr>

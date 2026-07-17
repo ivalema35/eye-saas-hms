@@ -232,7 +232,7 @@
             text-align: center;
         }
 
-        table.dtable + table.dtable {
+        table.dtable+table.dtable {
             margin-top: 4px;
         }
 
@@ -531,7 +531,10 @@
     </script>
     <div class="no-print toolbar">
         <button class="toolbar__print" onclick="_doPrint()">Print</button>
-        <a class="toolbar__back" href="{{ $backUrl ?? 'javascript:history.back()' }}">← Back</a>
+
+        <a class="toolbar__back" href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}">
+            Back
+        </a>
     </div>
 
     @php
@@ -573,6 +576,23 @@
         function rxVal($v, $dash = '—')
         {
             return ($v !== null && $v !== '') ? $v : $dash;
+        }
+
+        function lensOeVal($oe, $eye, $dash = '—')
+        {
+            $base = $oe['lens_' . $eye] ?? '';
+            if ($base === null || $base === '') {
+                return $dash;
+            }
+
+            $pseudo = $oe['pseudophakia_' . $eye] ?? [];
+            $extras = array_filter([
+                $pseudo['operation_type'] ?? '',
+                !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+                $pseudo['hospital_name'] ?? '',
+            ], fn($v) => $v !== '' && $v !== null);
+
+            return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
         }
     @endphp
 
@@ -929,8 +949,13 @@
                                 @foreach($oeFields as $key => $label)
                                     <tr>
                                         <th>{{ $label }}</th>
-                                        <td>{{ rxVal($oe[$key . '_re'] ?? '', '-') }}</td>
-                                        <td>{{ rxVal($oe[$key . '_le'] ?? '', '-') }}</td>
+                                        @if($key === 'lens')
+                                            <td>{{ lensOeVal($oe, 're', '-') }}</td>
+                                            <td>{{ lensOeVal($oe, 'le', '-') }}</td>
+                                        @else
+                                            <td>{{ rxVal($oe[$key . '_re'] ?? '', '-') }}</td>
+                                            <td>{{ rxVal($oe[$key . '_le'] ?? '', '-') }}</td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
