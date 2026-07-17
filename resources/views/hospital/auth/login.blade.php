@@ -753,6 +753,11 @@
         .eye-toggle:hover {
             color: #1B4F72;
         }
+
+        input[type="password"]::-ms-reveal,
+        input[type="password"]::-ms-clear {
+            display: none;
+        }
     </style>
 </head>
 
