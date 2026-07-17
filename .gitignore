@@ -22,3 +22,6 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+eye_hms_saas.sql
+vendor/
+public/env
