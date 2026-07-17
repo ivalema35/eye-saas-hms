@@ -87,6 +87,21 @@
                                 <div class="collapse mt-3" id="{{ $collapseId }}">
                                     @php
                                         $cv = fn($v) => (isset($v) && $v !== '' && $v !== null) ? $v : '-';
+                                        $lensCv = function ($oe, $eye) use ($cv) {
+                                            $base = $oe['lens_' . $eye] ?? '';
+                                            if ($base === null || $base === '') {
+                                                return $cv(null);
+                                            }
+
+                                            $pseudo = $oe['pseudophakia_' . $eye] ?? [];
+                                            $extras = array_filter([
+                                                $pseudo['operation_type'] ?? '',
+                                                !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+                                                $pseudo['hospital_name'] ?? '',
+                                            ], fn($v) => $v !== '' && $v !== null);
+
+                                            return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
+                                        };
                                         $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
                                         $dxNames = $diagnosisMasters->whereIn('id', (array) $dxIds)->pluck('diagnosis')->implode(', ');
                                         $hnoList = array_filter(array_map('trim', explode(',', $data['history'] ?? '')));
@@ -317,8 +332,13 @@
                                                             @foreach($oeFields as $k => $lbl)
                                                                 <tr>
                                                                     <th style="text-align:left;background:#f0f4f8;color:#1B4F72">{{ $lbl }}</th>
-                                                                    <td>{{ $cv($oe[$k . '_re'] ?? '') }}</td>
-                                                                    <td>{{ $cv($oe[$k . '_le'] ?? '') }}</td>
+                                                                    @if($k === 'lens')
+                                                                        <td>{{ $lensCv($oe, 're') }}</td>
+                                                                        <td>{{ $lensCv($oe, 'le') }}</td>
+                                                                    @else
+                                                                        <td>{{ $cv($oe[$k . '_re'] ?? '') }}</td>
+                                                                        <td>{{ $cv($oe[$k . '_le'] ?? '') }}</td>
+                                                                    @endif
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>

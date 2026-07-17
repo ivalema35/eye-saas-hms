@@ -231,7 +231,7 @@
             text-align: center;
         }
 
-        table.dtable + table.dtable {
+        table.dtable+table.dtable {
             margin-top: 4px;
         }
 
@@ -563,7 +563,10 @@
     </script>
     <div class="no-print toolbar">
         <button class="toolbar__print" onclick="_doPrint()">Print</button>
-        <a class="toolbar__back" href="{{ $backUrl ?? 'javascript:history.back()' }}">← Back</a>
+
+        <a class="toolbar__back" href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}">
+            Back
+        </a>
     </div>
 
     @php
@@ -587,6 +590,23 @@
         function secRxVal($v, $d = '—')
         {
             return ($v !== null && $v !== '') ? $v : $d;
+        }
+
+        function secLensOeVal($oe, $eye, $d = '—')
+        {
+            $base = $oe['lens_' . $eye] ?? '';
+            if ($base === null || $base === '') {
+                return $d;
+            }
+
+            $pseudo = $oe['pseudophakia_' . $eye] ?? [];
+            $extras = array_filter([
+                $pseudo['operation_type'] ?? '',
+                !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+                $pseudo['hospital_name'] ?? '',
+            ], fn($v) => $v !== '' && $v !== null);
+
+            return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
         }
     @endphp
 
@@ -710,7 +730,8 @@
                                                 <td><span style="font-weight:600">{{ $med['name'] }}</span></td>
                                                 <td>{{ !empty($med['dosage_id']) ? ($dosageMap[$med['dosage_id']]->dosage ?? '—') : '—' }}
                                                 </td>
-                                                <td>{{ !empty($med['duration']) ? $med['duration'] . (is_numeric($med['duration']) ? ' Days' : '') : '—' }}</td>
+                                                <td>{{ !empty($med['duration']) ? $med['duration'] . (is_numeric($med['duration']) ? ' Days' : '') : '—' }}
+                                                </td>
                                                 <td>{{ $med['eye'] ?? '—' }}</td>
                                                 <td>{{ $med['instructions'] ?? '—' }}</td>
                                             </tr>
@@ -979,8 +1000,13 @@
                                 @foreach($oeFields as $key => $label)
                                     <tr>
                                         <th>{{ $label }}</th>
-                                        <td>{{ secRxVal($oe[$key . '_re'] ?? '', '-') }}</td>
-                                        <td>{{ secRxVal($oe[$key . '_le'] ?? '', '-') }}</td>
+                                        @if($key === 'lens')
+                                            <td>{{ secLensOeVal($oe, 're', '-') }}</td>
+                                            <td>{{ secLensOeVal($oe, 'le', '-') }}</td>
+                                        @else
+                                            <td>{{ secRxVal($oe[$key . '_re'] ?? '', '-') }}</td>
+                                            <td>{{ secRxVal($oe[$key . '_le'] ?? '', '-') }}</td>
+                                        @endif
                                     </tr>
                                 @endforeach
                             </tbody>
