@@ -35,7 +35,18 @@ use App\Http\Controllers\Api\UserApiController;
 use App\Http\Controllers\Api\FocApiController;
 use App\Http\Controllers\Api\RoleApiController;
 use App\Http\Controllers\Api\DoctorDashboardApiController;
-use App\Http\Controllers\Api\SuperAdmin\TenantApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformAuthController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformDashboardApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformHospitalApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformPaymentApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformSubscriptionApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformAuditLogApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformNotificationApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformPlanApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformSettingsApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformProfileApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformLocationApiController;
+use App\Http\Controllers\Api\SuperAdmin\PlatformMedicineApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -57,17 +68,135 @@ Route::get('/health', function () {
 Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // ----------------------------------------------------------------
-    // Platform SuperAdmin API (No slug needed)
+    // Platform Super Admin API (No slug — platform-wide)
     // ----------------------------------------------------------------
-    Route::prefix('super')
-        ->name('super.')
-        ->middleware('auth:sanctum')
-        ->group(function () {
+    Route::prefix('super')->name('super.')->group(function () {
 
-            Route::get('/tenants', [TenantApiController::class, 'index'])->name('tenants.index');
-            Route::get('/tenants/{id}', [TenantApiController::class, 'show'])->name('tenants.show');
+        // Public — no token required
+        Route::post('/auth/login', [PlatformAuthController::class, 'login'])->name('auth.login');
 
+        // Protected — valid PlatformAdmin token required
+        Route::middleware(['auth:platform_api', 'platform.admin'])->group(function () {
+            Route::post('/auth/logout', [PlatformAuthController::class, 'logout'])->name('auth.logout');
+            Route::get('/auth/me',      [PlatformAuthController::class, 'me'])->name('auth.me');
+
+            // Phase 2 — Dashboard + Hospitals
+            Route::get('/dashboard', [PlatformDashboardApiController::class, 'index'])->name('dashboard');
+
+            Route::prefix('hospitals')->name('hospitals.')->group(function () {
+                Route::get('/',                     [PlatformHospitalApiController::class, 'index'])->name('index');
+                Route::post('/',                    [PlatformHospitalApiController::class, 'store'])->name('store');
+                Route::get('/{id}',                 [PlatformHospitalApiController::class, 'show'])->name('show');
+                Route::put('/{id}',                 [PlatformHospitalApiController::class, 'update'])->name('update');
+                Route::delete('/{id}',              [PlatformHospitalApiController::class, 'destroy'])->name('destroy');
+                Route::post('/{id}/activate',       [PlatformHospitalApiController::class, 'activate'])->name('activate');
+                Route::post('/{id}/suspend',        [PlatformHospitalApiController::class, 'suspend'])->name('suspend');
+                Route::post('/{id}/reactivate',     [PlatformHospitalApiController::class, 'reactivate'])->name('reactivate');
+                Route::post('/{id}/extend',         [PlatformHospitalApiController::class, 'extend'])->name('extend');
+                Route::post('/{id}/reseed-masters', [PlatformHospitalApiController::class, 'reseedMasters'])->name('reseed');
+            });
+
+            // Phase 3 — Billing
+            Route::prefix('payments')->name('payments.')->group(function () {
+                Route::get('/tenant-options',  [PlatformPaymentApiController::class, 'tenantOptions'])->name('tenant-options');
+                Route::get('/',                [PlatformPaymentApiController::class, 'index'])->name('index');
+                Route::post('/offline',        [PlatformPaymentApiController::class, 'storeOffline'])->name('offline');
+                Route::get('/{id}/invoice',    [PlatformPaymentApiController::class, 'downloadInvoice'])->name('invoice');
+            });
+
+            Route::get('/subscriptions', [PlatformSubscriptionApiController::class, 'index'])->name('subscriptions.index');
+
+            // Phase 4 — Oversight
+            Route::get('/audit-logs', [PlatformAuditLogApiController::class, 'index'])->name('audit-logs.index');
+
+            Route::prefix('notifications')->name('notifications.')->group(function () {
+                Route::get('/',      [PlatformNotificationApiController::class, 'index'])->name('index');
+                Route::post('/send', [PlatformNotificationApiController::class, 'send'])->name('send');
+            });
+
+            // Phase 5 — Config
+            Route::prefix('plans')->name('plans.')->group(function () {
+                Route::get('/', [PlatformPlanApiController::class, 'index'])->name('index');
+                Route::put('/', [PlatformPlanApiController::class, 'update'])->name('update');
+            });
+
+            Route::prefix('settings')->name('settings.')->group(function () {
+                Route::get('/', [PlatformSettingsApiController::class, 'index'])->name('index');
+                Route::put('/', [PlatformSettingsApiController::class, 'update'])->name('update');
+            });
+
+            Route::prefix('profile')->name('profile.')->group(function () {
+                Route::get('/',         [PlatformProfileApiController::class, 'show'])->name('show');
+                Route::put('/',         [PlatformProfileApiController::class, 'update'])->name('update');
+                Route::put('/password', [PlatformProfileApiController::class, 'changePassword'])->name('password');
+            });
+
+            // Phase 7 — Location Master
+            Route::prefix('location-master')->name('location-master.')->group(function () {
+                Route::get('/dropdown-data', [PlatformLocationApiController::class, 'dropdownData'])->name('dropdown-data');
+
+                Route::get('/countries',               [PlatformLocationApiController::class, 'countries'])->name('countries.index');
+                Route::post('/countries',              [PlatformLocationApiController::class, 'storeCountry'])->name('countries.store');
+                Route::put('/countries/{id}',          [PlatformLocationApiController::class, 'updateCountry'])->name('countries.update');
+                Route::delete('/countries/{id}',       [PlatformLocationApiController::class, 'destroyCountry'])->name('countries.destroy');
+                Route::patch('/countries/{id}/toggle', [PlatformLocationApiController::class, 'toggleCountry'])->name('countries.toggle');
+
+                Route::get('/states',               [PlatformLocationApiController::class, 'states'])->name('states.index');
+                Route::post('/states',              [PlatformLocationApiController::class, 'storeState'])->name('states.store');
+                Route::put('/states/{id}',          [PlatformLocationApiController::class, 'updateState'])->name('states.update');
+                Route::delete('/states/{id}',       [PlatformLocationApiController::class, 'destroyState'])->name('states.destroy');
+                Route::patch('/states/{id}/toggle', [PlatformLocationApiController::class, 'toggleState'])->name('states.toggle');
+
+                Route::get('/districts',               [PlatformLocationApiController::class, 'districts'])->name('districts.index');
+                Route::post('/districts',              [PlatformLocationApiController::class, 'storeDistrict'])->name('districts.store');
+                Route::put('/districts/{id}',          [PlatformLocationApiController::class, 'updateDistrict'])->name('districts.update');
+                Route::delete('/districts/{id}',       [PlatformLocationApiController::class, 'destroyDistrict'])->name('districts.destroy');
+                Route::patch('/districts/{id}/toggle', [PlatformLocationApiController::class, 'toggleDistrict'])->name('districts.toggle');
+
+                Route::get('/cities',               [PlatformLocationApiController::class, 'cities'])->name('cities.index');
+                Route::post('/cities',              [PlatformLocationApiController::class, 'storeCity'])->name('cities.store');
+                Route::put('/cities/{id}',          [PlatformLocationApiController::class, 'updateCity'])->name('cities.update');
+                Route::delete('/cities/{id}',       [PlatformLocationApiController::class, 'destroyCity'])->name('cities.destroy');
+                Route::patch('/cities/{id}/toggle', [PlatformLocationApiController::class, 'toggleCity'])->name('cities.toggle');
+            });
+
+            // Phase 7 — Medicine Master
+            Route::prefix('medicine-master')->name('medicine-master.')->group(function () {
+                Route::get('/form-data', [PlatformMedicineApiController::class, 'formData'])->name('form-data');
+
+                Route::get('/dosages',               [PlatformMedicineApiController::class, 'dosages'])->name('dosages.index');
+                Route::post('/dosages',              [PlatformMedicineApiController::class, 'storeDosage'])->name('dosages.store');
+                Route::put('/dosages/{id}',          [PlatformMedicineApiController::class, 'updateDosage'])->name('dosages.update');
+                Route::delete('/dosages/{id}',       [PlatformMedicineApiController::class, 'destroyDosage'])->name('dosages.destroy');
+                Route::patch('/dosages/{id}/toggle', [PlatformMedicineApiController::class, 'toggleDosage'])->name('dosages.toggle');
+
+                Route::get('/types',               [PlatformMedicineApiController::class, 'types'])->name('types.index');
+                Route::post('/types',              [PlatformMedicineApiController::class, 'storeType'])->name('types.store');
+                Route::put('/types/{id}',          [PlatformMedicineApiController::class, 'updateType'])->name('types.update');
+                Route::delete('/types/{id}',       [PlatformMedicineApiController::class, 'destroyType'])->name('types.destroy');
+                Route::patch('/types/{id}/toggle', [PlatformMedicineApiController::class, 'toggleType'])->name('types.toggle');
+
+                Route::get('/categories',               [PlatformMedicineApiController::class, 'categories'])->name('categories.index');
+                Route::post('/categories',              [PlatformMedicineApiController::class, 'storeCategory'])->name('categories.store');
+                Route::put('/categories/{id}',          [PlatformMedicineApiController::class, 'updateCategory'])->name('categories.update');
+                Route::delete('/categories/{id}',       [PlatformMedicineApiController::class, 'destroyCategory'])->name('categories.destroy');
+                Route::patch('/categories/{id}/toggle', [PlatformMedicineApiController::class, 'toggleCategory'])->name('categories.toggle');
+
+                Route::get('/routes',               [PlatformMedicineApiController::class, 'routes'])->name('routes.index');
+                Route::post('/routes',              [PlatformMedicineApiController::class, 'storeRoute'])->name('routes.store');
+                Route::put('/routes/{id}',          [PlatformMedicineApiController::class, 'updateRoute'])->name('routes.update');
+                Route::delete('/routes/{id}',       [PlatformMedicineApiController::class, 'destroyRoute'])->name('routes.destroy');
+                Route::patch('/routes/{id}/toggle', [PlatformMedicineApiController::class, 'toggleRoute'])->name('routes.toggle');
+
+                Route::get('/medicines',               [PlatformMedicineApiController::class, 'medicines'])->name('medicines.index');
+                Route::post('/medicines',              [PlatformMedicineApiController::class, 'storeMedicine'])->name('medicines.store');
+                Route::put('/medicines/{id}',          [PlatformMedicineApiController::class, 'updateMedicine'])->name('medicines.update');
+                Route::delete('/medicines/{id}',       [PlatformMedicineApiController::class, 'destroyMedicine'])->name('medicines.destroy');
+                Route::patch('/medicines/{id}/toggle', [PlatformMedicineApiController::class, 'toggleMedicine'])->name('medicines.toggle');
+            });
         });
+
+    });
 
     // ----------------------------------------------------------------
     // Public — no slug, no auth needed

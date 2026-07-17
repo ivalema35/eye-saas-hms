@@ -39,6 +39,12 @@ return [
             'driver' => 'sanctum',
             'provider' => 'hospital_users',
         ],
+
+        // ── Platform Admin API (Sanctum token — separate from hospital users) ─
+        'platform_api' => [
+            'driver' => 'sanctum',
+            'provider' => 'platform_admins',
+        ],
     ],
 
     'providers' => [
