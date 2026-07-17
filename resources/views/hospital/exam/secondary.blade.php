@@ -1400,8 +1400,10 @@ $pgMasterOpts = [
                                         @endphp
                                         <td class="text-center py-2">
                                             <div class="d-flex align-items-center justify-content-center gap-1">
-                                                @if(!($eye == 're' && $rowLabel == 'NEAR'))
+                                                @if($rowLabel !== 'NEAR')
                                                 <button type="button" class="btn btn-danger pg-pick-btn" data-sign="neg" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">−</button>
+                                                @else
+                                                <span style="width:32px;height:32px;display:inline-block;"></span>
                                                 @endif
                                                 <div class="pg-select-wrap" style="width:88px;">
                                                     <input type="text" class="form-control form-control-sm pg-inp text-center fw-semibold" style="font-size:13px;border-color:#1B4F72;cursor:pointer;" placeholder="0.00" autocomplete="off" data-master="sph_cyl" data-no-drop="1" readonly value="{{ $stNsVal }}">
