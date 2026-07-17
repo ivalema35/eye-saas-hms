@@ -36,8 +36,17 @@ class CheckPermission
             return $next($request);
         }
 
-        // Hospital User check
+        // Hospital User check — session guard first, then Sanctum token guard for API
         $user = auth('hospital_user')->user();
+
+        if (! $user) {
+            $apiUser = $request->user();
+            if ($apiUser instanceof \App\Models\Hospital\HospitalUser) {
+                $user = $apiUser;
+                // Bind onto session guard so RolePermissionService resolves correctly
+                auth('hospital_user')->setUser($user);
+            }
+        }
 
         if (! $user) {
             if ($request->expectsJson()) {

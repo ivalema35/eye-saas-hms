@@ -4,6 +4,7 @@ use App\Http\Middleware\CheckGracePeriod;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckSubscriptionActive;
+use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\HospitalAuth;
 use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\RedirectIfInactive;
@@ -32,6 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'redirect.inactive' => RedirectIfInactive::class,
             'permission' => CheckPermission::class,
             'role' => CheckRole::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
         ]);
 
         // Razorpay webhook ko CSRF se exempt karo

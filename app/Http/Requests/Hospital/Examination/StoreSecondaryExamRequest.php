@@ -19,6 +19,7 @@ class StoreSecondaryExamRequest extends FormRequest
     {
         return [
             'doctor_id' => ['required', 'integer', 'exists:hospital_users,id'],
+            'advice'    => ['nullable', 'string', 'max:2000'],
             'exam_data' => ['required', 'array'],
             'exam_data.complaints' => ['nullable', 'array'],
             'exam_data.history'    => ['nullable', 'string', 'max:2000'],
