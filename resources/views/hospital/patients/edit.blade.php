@@ -68,7 +68,7 @@
                             <div class="form-group">
                                 <label class="form-label">Contact Number <span style="color:#e74c3c">*</span></label>
                                 <input type="text" name="contact_no" id="contactNo" class="form-control hms-input @error('contact_no') is-invalid @enderror"
-                                       maxlength="10" required value="{{ old('contact_no', $patient->contact_no) }}">
+                                       data-intl-phone required value="{{ old('contact_no', $patient->contact_no) }}">
                                 @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
 
@@ -76,7 +76,7 @@
                             <div class="form-group">
                                 <label class="form-label">WhatsApp No</label>
                                 <input type="text" name="whatsapp_no" id="whatsappNo" class="form-control hms-input"
-                                       maxlength="10" placeholder="Same if blank" value="{{ old('whatsapp_no', $patient->whatsapp_no) }}">
+                                       data-intl-phone placeholder="Same if blank" value="{{ old('whatsapp_no', $patient->whatsapp_no) }}">
                             </div>
 
                             {{-- First Name --}}
@@ -243,20 +243,11 @@
                 setTimeout(function () { toast.style.display = 'none'; }, 3500);
             }
 
-            // Numbers only
-            function blockNonNumeric(input) {
-                if (!input) { return; }
-                input.addEventListener('keypress', function (e) {
-                    if (!/[0-9]/.test(String.fromCharCode(e.which))) { e.preventDefault(); }
-                });
-                input.addEventListener('paste', function (e) {
-                    e.preventDefault();
-                    var text = (e.clipboardData || window.clipboardData).getData('text');
-                    if (/^\d+$/.test(text)) { this.value = text; }
-                });
+            // International phone inputs
+            if (window.HmsIntlPhone) {
+                HmsIntlPhone.bind(document.getElementById('contactNo'));
+                HmsIntlPhone.bind(document.getElementById('whatsappNo'));
             }
-            blockNonNumeric(document.getElementById('contactNo'));
-            blockNonNumeric(document.getElementById('whatsappNo'));
 
             // Case type → fee
             var caseSelect = document.getElementById('caseSelect');

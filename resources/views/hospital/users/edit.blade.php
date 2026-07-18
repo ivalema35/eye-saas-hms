@@ -53,7 +53,8 @@
                 <div class="hms-form-group">
                     <label>Contact</label>
                     <input type="text" name="contact" value="{{ old('contact', $user->contact) }}"
-                           class="hms-input @error('contact') is-invalid @enderror" maxlength="15">
+                           class="hms-input @error('contact') is-invalid @enderror" data-intl-phone
+                           placeholder="+919876543210">
                     @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
 

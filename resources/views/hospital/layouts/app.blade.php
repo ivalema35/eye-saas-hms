@@ -1368,6 +1368,7 @@
     </div>
 
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('js/intl-phone-input.js') }}"></script>
     <script>
         if (typeof window.bootstrap === 'undefined') {
             var fallbackScript = document.createElement('script');

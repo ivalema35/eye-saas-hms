@@ -25,6 +25,7 @@ use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantService;
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -94,9 +95,7 @@ class RegisterController extends Controller
                 },
             ],
             'admin_phone' => [
-                'required',
-                'string',
-                'regex:/^[0-9]{10}$/',
+                ...PhoneRules::required(),
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $existsInTenants = Tenant::where('admin_phone', $value)->exists();
                     if ($existsInTenants) {
@@ -118,7 +117,7 @@ class RegisterController extends Controller
             'city' => ['nullable', 'string', 'max:150'],
             'plan' => ['required', 'in:monthly,quarterly,yearly'],
             'start_trial' => ['nullable', 'in:1'],
-        ], EmailRules::messages('admin_email'));
+        ], array_merge(EmailRules::messages('admin_email'), PhoneRules::messages('admin_phone')));
 
         $tenant = $this->tenantService->createTenant($validated);
 

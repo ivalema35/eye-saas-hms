@@ -12,6 +12,7 @@ use App\Models\Hospital\Referrer;
 use App\Models\Platform\HospitalShareRequest;
 use App\Models\Platform\MasterCity;
 use App\Services\Hospital\PatientService;
+use App\Support\PhoneRules;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -438,8 +439,8 @@ class PatientController extends Controller
             'age' => ['required', 'integer', 'min:0', 'max:150'],
             'gender' => ['required', 'in:male,female,other'],
             'occupation' => ['nullable', 'string', 'max:100'],
-            'contact_no' => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
-            'whatsapp_no' => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
+            'contact_no' => PhoneRules::required(),
+            'whatsapp_no' => PhoneRules::nullable(),
             'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
@@ -447,7 +448,7 @@ class PatientController extends Controller
             'case_id' => ['required', 'integer', 'exists:tbl_cases,id'],
             'case_fee' => ['required', 'numeric', 'min:0'],
             'referrer_id' => ['nullable', 'integer', 'exists:tbl_referrers,id'],
-        ]);
+        ], array_merge(PhoneRules::messages('contact_no'), PhoneRules::messages('whatsapp_no')));
 
         DB::transaction(function () use ($request, $patient) {
             $patient->update(array_merge(

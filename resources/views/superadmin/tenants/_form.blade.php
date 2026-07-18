@@ -55,7 +55,7 @@
             <input type="text" name="admin_phone"
                    class="hms-input @error('admin_phone') is-invalid @enderror"
                    value="{{ old('admin_phone', $tenant->admin_phone) }}"
-                   maxlength="10" pattern="[0-9]{10}" required>
+                   data-intl-phone placeholder="+919876543210" required>
             @error('admin_phone') <span class="hms-error">{{ $message }}</span> @enderror
         </div>
     </div>

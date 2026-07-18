@@ -526,7 +526,7 @@
                             <input type="text" name="hospital_phone"
                                    class="form-control clinical-input @error('hospital_phone') is-invalid @enderror"
                                    value="{{ old('hospital_phone', $settings['hospital_phone'] ?? '') }}"
-                                   placeholder="+91 98765 43210" required>
+                                   placeholder="+919876543210" required data-intl-phone>
                             @error('hospital_phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

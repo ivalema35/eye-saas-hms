@@ -61,7 +61,7 @@
                         <div class="form-group position-relative">
                             <label class="form-label">Contact Number</label>
                             <input type="text" name="contact_no" id="contactNo" class="form-control hms-input"
-                                maxlength="10" required placeholder="10-digit number">
+                                data-intl-phone required placeholder="+919876543210">
                             <div id="patientSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
                                 style="z-index:1050; border:1px solid #E2E8F0; top:100%; margin-top:4px"></div>
                         </div>
@@ -70,7 +70,7 @@
                         <div class="form-group">
                             <label class="form-label">WhatsApp No</label>
                             <input type="text" name="whatsapp_no" id="whatsappNo" class="form-control hms-input"
-                                maxlength="10" placeholder="Same if blank">
+                                data-intl-phone placeholder="Same if blank">
                         </div>
 
                         {{-- 4, 5, 6 Name Fields --}}
@@ -239,41 +239,10 @@
             var patientSuggestions = document.getElementById('patientSuggestions');
             var foundPatientsList = [];
 
-            // ── Contact No: Only Numbers Allowed ──────────────────────────
-            if (contactInput) {
-                contactInput.addEventListener('keypress', function (e) {
-                    var char = String.fromCharCode(e.which);
-                    if (!/[0-9]/.test(char)) {
-                        e.preventDefault();
-                    }
-                });
-
-                contactInput.addEventListener('paste', function (e) {
-                    e.preventDefault();
-                    var pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                    if (/^\d+$/.test(pastedText)) {
-                        this.value = pastedText;
-                    }
-                });
-            }
-
-            // ── WhatsApp No: Only Numbers Allowed ──────────────────────────
-            var whatsappInput = document.getElementById('whatsappNo');
-            if (whatsappInput) {
-                whatsappInput.addEventListener('keypress', function (e) {
-                    var char = String.fromCharCode(e.which);
-                    if (!/[0-9]/.test(char)) {
-                        e.preventDefault();
-                    }
-                });
-
-                whatsappInput.addEventListener('paste', function (e) {
-                    e.preventDefault();
-                    var pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                    if (/^\d+$/.test(pastedText)) {
-                        this.value = pastedText;
-                    }
-                });
+            // ── Contact / WhatsApp: international phone input ─────────────
+            if (window.HmsIntlPhone) {
+                HmsIntlPhone.bind(contactInput);
+                HmsIntlPhone.bind(document.getElementById('whatsappNo'));
             }
 
             window.fillSelectedPatient = function (index) {

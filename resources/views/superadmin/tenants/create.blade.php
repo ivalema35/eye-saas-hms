@@ -75,8 +75,8 @@
                     <label>Admin Phone <span style="color:var(--hms-danger)">*</span></label>
                     <input type="text" name="admin_phone"
                            class="hms-input @error('admin_phone') is-invalid @enderror"
-                           value="{{ old('admin_phone') }}" maxlength="10"
-                           pattern="[0-9]{10}" placeholder="10 digit mobile" required>
+                           value="{{ old('admin_phone') }}" data-intl-phone
+                           placeholder="+919876543210" required>
                     @error('admin_phone') <span class="hms-error">{{ $message }}</span> @enderror
                 </div>
                 <div class="hms-form-group">

@@ -7,6 +7,7 @@ use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -109,7 +110,7 @@ class SetupWizardController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
-            'admin_phone' => ['nullable', 'string', 'max:15'],
+            'admin_phone' => PhoneRules::nullable(),
             'hospital_address' => ['nullable', 'string', 'max:500'],
         ]);
 
@@ -136,8 +137,7 @@ class SetupWizardController extends Controller
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'contact' => [
-                'nullable',
-                'regex:/^\d{10}$/',
+                ...PhoneRules::nullable(),
                 Rule::unique('hospital_users', 'contact')
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
@@ -145,7 +145,7 @@ class SetupWizardController extends Controller
             // 'doctor_type' => ['nullable', 'in:primary,secondary'],
         ], [
             ...EmailRules::messages('email'),
-            'contact.regex' => 'Contact number must be exactly 10 digits.',
+            ...PhoneRules::messages('contact'),
             'email.unique' => 'This email is already registered.',
             'contact.unique' => 'This phone number is already registered.',
         ]);
@@ -177,15 +177,14 @@ class SetupWizardController extends Controller
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'contact' => [
-                'nullable',
-                'regex:/^\d{10}$/',
+                ...PhoneRules::nullable(),
                 Rule::unique('hospital_users', 'contact')
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
             'password' => ['required', 'string', 'min:8'],
         ], [
             ...EmailRules::messages('email'),
-            'contact.regex' => 'Contact number must be exactly 10 digits.',
+            ...PhoneRules::messages('contact'),
             'email.unique' => 'This email is already registered.',
             'contact.unique' => 'This phone number is already registered.',
         ]);

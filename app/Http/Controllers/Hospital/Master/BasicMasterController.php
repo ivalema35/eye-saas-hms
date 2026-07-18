@@ -14,6 +14,7 @@ use App\Models\Platform\MasterCountry;
 use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
 use App\Services\Auth\RolePermissionService;
+use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -100,7 +101,7 @@ class BasicMasterController extends Controller
         $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
         $rules = [];
         foreach ($columns as $col) {
-            $rules[$col] = $col === 'contact' ? ['required', 'digits:10'] : ['required', 'string', 'max:255'];
+            $rules[$col] = $col === 'contact' ? PhoneRules::required() : ['required', 'string', 'max:255'];
         }
         $validated = $request->validate($rules);
 
@@ -193,7 +194,7 @@ class BasicMasterController extends Controller
             $rules[$col] = $isNullable ? ['nullable'] : ['required'];
 
             if ($col === 'contact') {
-                $rules[$col][] = 'digits:10';
+                $rules[$col] = $isNullable ? PhoneRules::nullable() : PhoneRules::required();
             } elseif (str_contains($col, 'fee') || str_contains($col, 'percentage')) {
                 $rules[$col][] = 'numeric';
             } else {
@@ -284,7 +285,7 @@ class BasicMasterController extends Controller
         $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
         $rules = [];
         foreach ($columns as $col) {
-            $rules[$col] = $col === 'contact' ? ['required', 'digits:10'] : ['required', 'string', 'max:255'];
+            $rules[$col] = $col === 'contact' ? PhoneRules::required() : ['required', 'string', 'max:255'];
         }
         $validated = $request->validate($rules);
 

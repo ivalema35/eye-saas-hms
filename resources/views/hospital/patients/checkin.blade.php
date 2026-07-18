@@ -58,15 +58,15 @@
                                 Contact No <span style="color:#C0392B;font-weight:700">*</span>
                             </label>
                             <input type="text" name="contact_no" id="contactNo"
-                                value="{{ old('contact_no', $patient->contact_no) }}" maxlength="15"
+                                value="{{ old('contact_no', $patient->contact_no) }}" data-intl-phone
                                 class="form-control hms-input @error('contact_no') is-invalid @enderror"
-                                placeholder="e.g. 9876543210" required>
+                                placeholder="+919876543210" required>
                             @error('contact_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
                         <div class="form-group">
                             <label class="form-label fw-600">WhatsApp No</label>
-                            <input type="text" name="whatsapp_no" value="{{ old('whatsapp_no', $patient->whatsapp_no) }}"
-                                maxlength="15" class="form-control hms-input @error('whatsapp_no') is-invalid @enderror"
+                            <input type="text" name="whatsapp_no" id="whatsappNo" value="{{ old('whatsapp_no', $patient->whatsapp_no) }}"
+                                data-intl-phone class="form-control hms-input @error('whatsapp_no') is-invalid @enderror"
                                 placeholder="Same if blank">
                             @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
