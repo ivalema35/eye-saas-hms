@@ -17,9 +17,9 @@ class ShareHistoryApiController extends Controller
 
     public function patients(Request $request): JsonResponse
     {
-        $currentTenant  = app('tenant');
-        $partnerIds     = $this->partnerTenantIds($currentTenant);
-        $tenantIds      = array_merge([$currentTenant->id], $partnerIds);
+        $currentTenant = app('tenant');
+        $partnerIds    = $this->partnerTenantIds($currentTenant);
+        $tenantIds     = array_merge([$currentTenant->id], $partnerIds);
 
         $query = Patient::withoutTenantScope()
             ->with([
@@ -27,7 +27,8 @@ class ShareHistoryApiController extends Controller
                 'tenant:id,name',
             ])
             ->whereIn('tenant_id', $tenantIds)
-            ->where(fn($q) => $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at'));
+            ->where(fn($q) => $q->whereNotNull('primary_done_at')->orWhereNotNull('secondary_done_at'))
+            ->whereHas('doctor.role', fn($q) => $q->withoutGlobalScope('tenant')->where('slug', 'doctor'));
 
         if ($v = $request->input('patient_name')) {
             $query->where(fn($q) => $q->where('first_name', 'like', "%{$v}%")->orWhere('last_name', 'like', "%{$v}%"));
@@ -355,6 +356,7 @@ class ShareHistoryApiController extends Controller
             ->map(function ($group) {
                 $rep = $group->sortByDesc('id')->first();
                 $rep->all_patient_ids = $group->pluck('id')->implode(',');
+                $rep->is_own          = false;
                 return $rep;
             })
             ->values();
