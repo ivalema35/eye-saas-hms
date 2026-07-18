@@ -81,7 +81,10 @@
                                 <input type="hidden" name="_edit_id" id="editId" value="{{ old('_edit_id') }}">
 
                                 @foreach($columns as $col)
-                                    @php $isOptionalField = $type === 'locations' && $col === 'district'; @endphp
+                                    @php
+                                        $isOptionalField = $type === 'locations' && $col === 'district';
+                                        $isContactField = $col === 'contact';
+                                    @endphp
                                     <div class="mb-3">
                                         <label class="form-label text-muted small fw-bold text-uppercase"
                                             style="letter-spacing: 0.5px;">
@@ -93,8 +96,10 @@
                                             @endif
                                         </label>
                                         <input type="text" name="{{ $col }}" id="input-{{ $col }}"
-                                            class="form-control form-control-lg bg-light border-0" style="font-size: 15px;"
+                                            class="form-control form-control-lg bg-light border-0 {{ $isContactField ? 'contact-input' : '' }}"
+                                            style="font-size: 15px;"
                                             placeholder="Enter {{ strtolower(Str::headline($col)) }}..." value="{{ old($col) }}"
+                                            @if($isContactField) inputmode="numeric" pattern="[0-9]{10}" maxlength="10" title="Enter a 10 digit contact number" @endif
                                             @if(!$isOptionalField) required @endif>
                                     </div>
                                 @endforeach
@@ -285,7 +290,10 @@
 
                             <div class="modal-body">
                                 @foreach($columns as $col)
-                                    @php $isOptionalField = $type === 'locations' && $col === 'district'; @endphp
+                                    @php
+                                        $isOptionalField = $type === 'locations' && $col === 'district';
+                                        $isContactField = $col === 'contact';
+                                    @endphp
                                     <div class="mb-3">
                                         <label class="form-label text-muted small fw-bold text-uppercase"
                                             style="letter-spacing: 0.5px;">
@@ -297,8 +305,10 @@
                                             @endif
                                         </label>
                                         <input type="text" name="{{ $col }}" id="input-{{ $col }}"
-                                            class="form-control form-control-lg case-master-input" style="font-size: 15px;"
+                                            class="form-control form-control-lg case-master-input {{ $isContactField ? 'contact-input' : '' }}"
+                                            style="font-size: 15px;"
                                             placeholder="Enter {{ strtolower(Str::headline($col)) }}..." value="{{ old($col) }}"
+                                            @if($isContactField) inputmode="numeric" pattern="[0-9]{10}" maxlength="10" title="Enter a 10 digit contact number" @endif
                                             @if(!$isOptionalField) required @endif>
                                     </div>
                                 @endforeach
@@ -479,6 +489,12 @@
                         width: '100%',
                     });
                 }
+            });
+
+            // Contact fields (e.g. Referrer contact): digits only, max 10 chars.
+            document.addEventListener('input', function (e) {
+                if (!e.target.classList.contains('contact-input')) return;
+                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
             });
 
             function resetForm() {

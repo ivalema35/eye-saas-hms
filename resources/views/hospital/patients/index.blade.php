@@ -1590,4 +1590,52 @@
             });
         });
     </script>
+
+    {{-- Live dilation countdown: the "Secondary Exam" slot shows an
+    hourglass with a live MM:SS timer while a patient is dilating. The
+    table markup only carries the unlock timestamp (data-unlock-time);
+    this ticks the visible text every second, and re-queries the DOM
+    each tick so it keeps working after the AJAX search swaps the
+    table's HTML. When the timer reaches zero the row is reloaded so the
+    slot flips into the real "Secondary Exam" link/button. --}}
+    <script>
+        (function () {
+            var reloadedForZero = false;
+
+            function updateDilationTimers() {
+                document.querySelectorAll('.dilation-timer-btn').forEach(function (el) {
+                    var unlockMs = parseInt(el.getAttribute('data-unlock-time'), 10);
+                    var textEl = el.querySelector('.timer-text');
+                    if (!unlockMs || !textEl) { return; }
+
+                    var diff = unlockMs - Date.now();
+                    if (diff <= 0) {
+                        textEl.textContent = ' 00:00';
+                        if (!reloadedForZero) {
+                            reloadedForZero = true;
+                            var $container = $('#patientsTableContainer');
+                            if ($container.length) {
+                                $container.trigger('dilation-timer-elapsed');
+                            }
+                        }
+                        return;
+                    }
+
+                    var m = Math.floor(diff / 60000);
+                    var s = Math.floor((diff % 60000) / 1000);
+                    textEl.textContent = ' ' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                });
+            }
+
+            updateDilationTimers();
+            setInterval(updateDilationTimers, 1000);
+
+            // Once a dilation timer hits zero, silently refresh the table so
+            // the row unlocks into the real Secondary Exam action.
+            $('#patientsTableContainer').on('dilation-timer-elapsed', function () {
+                reloadedForZero = false;
+                $('#patientSearchForm').trigger('submit');
+            });
+        })();
+    </script>
 @endpush
