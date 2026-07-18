@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Setting;
 
 use App\Http\Controllers\Controller;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -36,7 +37,7 @@ class DoctorProfileController extends Controller
         ];
 
         if (!$isReception) {
-            $rules['email'] = ['required', 'email', 'max:255'];
+            $rules['email'] = EmailRules::required();
         }
 
         if ($isDoctor) {
@@ -46,7 +47,7 @@ class DoctorProfileController extends Controller
             $rules['profile_photo'] = ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, EmailRules::messages('email'));
 
         $updateData = ['name' => $validated['name']];
 

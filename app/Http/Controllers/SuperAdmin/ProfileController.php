@@ -16,6 +16,7 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -37,8 +38,11 @@ class ProfileController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:150', 'unique:platform_admins,email,'.$admin->id],
-        ]);
+            'email' => [
+                ...EmailRules::required(150),
+                'unique:platform_admins,email,'.$admin->id,
+            ],
+        ], EmailRules::messages('email'));
 
         $admin->update($validated);
 

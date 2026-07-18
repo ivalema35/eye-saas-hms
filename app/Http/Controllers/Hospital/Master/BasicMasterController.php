@@ -98,7 +98,11 @@ class BasicMasterController extends Controller
 
         $modelClass = $this->resolveModel($type);
         $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
-        $validated = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+        $rules = [];
+        foreach ($columns as $col) {
+            $rules[$col] = $col === 'contact' ? ['required', 'digits:10'] : ['required', 'string', 'max:255'];
+        }
+        $validated = $request->validate($rules);
 
         $modelClass::create($validated);
 
@@ -188,7 +192,9 @@ class BasicMasterController extends Controller
             $isNullable = in_array($col, $nullableCols, true);
             $rules[$col] = $isNullable ? ['nullable'] : ['required'];
 
-            if (str_contains($col, 'fee') || str_contains($col, 'percentage')) {
+            if ($col === 'contact') {
+                $rules[$col][] = 'digits:10';
+            } elseif (str_contains($col, 'fee') || str_contains($col, 'percentage')) {
                 $rules[$col][] = 'numeric';
             } else {
                 $rules[$col][] = 'string';
@@ -276,7 +282,11 @@ class BasicMasterController extends Controller
         $modelClass = $this->resolveModel($type);
         $record = $modelClass::findOrFail($id);
         $columns = array_values(array_diff((new $modelClass)->getFillable(), ['tenant_id']));
-        $validated = $request->validate(array_fill_keys($columns, ['required', 'string', 'max:255']));
+        $rules = [];
+        foreach ($columns as $col) {
+            $rules[$col] = $col === 'contact' ? ['required', 'digits:10'] : ['required', 'string', 'max:255'];
+        }
+        $validated = $request->validate($rules);
 
         $record->update($validated);
 

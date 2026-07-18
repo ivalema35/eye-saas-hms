@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Hospital\User;
 
+use App\Support\EmailRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,9 +22,7 @@ class HospitalUserUpdateRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required',
-                'email',
-                'max:255',
+                ...EmailRules::required(),
                 Rule::unique('hospital_users', 'email')
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id')))
                     ->ignore($userId),
@@ -52,6 +51,7 @@ class HospitalUserUpdateRequest extends FormRequest
     public function messages(): array
     {
         return [
+            ...EmailRules::messages('email'),
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'Selected role is invalid for this hospital.',
         ];

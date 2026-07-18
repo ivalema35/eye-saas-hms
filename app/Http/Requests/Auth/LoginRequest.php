@@ -13,6 +13,9 @@ use Illuminate\Validation\ValidationException;
  *
  * Validates login credentials for all guards (hospital + superadmin).
  * Includes rate limiting: 5 failed attempts per email+slug+IP per minute.
+ *
+ * The "email" field stays a plain string (not EmailRules) because hospital
+ * and landing login accept either an email address or a phone number.
  */
 class LoginRequest extends FormRequest
 {

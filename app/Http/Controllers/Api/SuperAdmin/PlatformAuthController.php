@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\PlatformAdmin;
+use App\Support\EmailRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -14,9 +15,9 @@ class PlatformAuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'    => ['required', 'email'],
+            'email'    => EmailRules::required(),
             'password' => ['required', 'string'],
-        ]);
+        ], EmailRules::messages('email'));
 
         $admin = PlatformAdmin::where('email', $request->email)->first();
 

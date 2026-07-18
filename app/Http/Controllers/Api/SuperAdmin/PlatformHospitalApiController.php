@@ -7,6 +7,7 @@ use App\Jobs\SeedTenantDefaultMasters;
 use App\Models\Platform\AuditLog;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantService;
+use App\Support\EmailRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,7 +81,8 @@ class PlatformHospitalApiController extends Controller
             ],
             'admin_name'  => ['required', 'string', 'max:100'],
             'admin_email' => [
-                'required', 'email', 'unique:tenants,admin_email',
+                ...EmailRules::required(),
+                'unique:tenants,admin_email',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (DB::table('hospital_users')->where('email', $value)->exists()) {
                         $fail('This email is already registered to a staff account.');
@@ -102,7 +104,7 @@ class PlatformHospitalApiController extends Controller
             'city'     => ['nullable', 'string', 'max:100'],
             'state'    => ['nullable', 'string', 'max:100'],
             'plan'     => ['nullable', 'in:monthly,quarterly,yearly'],
-        ]);
+        ], EmailRules::messages('admin_email'));
 
         // Auto-generate hospital_code — not collected from mobile UI
         $validated['hospital_code'] = $this->generateHospitalCode($validated['hospital_name']);

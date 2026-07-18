@@ -7,6 +7,7 @@ use App\Jobs\SeedTenantDefaultMasters;
 use App\Models\Platform\AuditLog;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantService;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -90,8 +91,7 @@ class TenantController extends Controller
             ],
             'admin_name' => ['required', 'string', 'max:100'],
             'admin_email' => [
-                'required',
-                'email',
+                ...EmailRules::required(),
                 'unique:tenants,admin_email',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $existsInUsers = DB::table('hospital_users')
@@ -125,7 +125,7 @@ class TenantController extends Controller
             'state' => ['nullable', 'string', 'max:100'],
             'plan' => ['nullable', 'in:monthly,quarterly,yearly'],
             'start_trial' => ['nullable', 'in:1'],
-        ]);
+        ], EmailRules::messages('admin_email'));
 
         $validated['plan'] = $validated['plan'] ?? 'monthly';
         $validated['start_trial'] = '1';
