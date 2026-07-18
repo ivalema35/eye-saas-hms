@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,8 +32,8 @@ class PasswordResetController extends Controller
     public function sendResetLink(Request $request, string $slug): RedirectResponse
     {
         $request->validate([
-            'email' => ['required', 'email'],
-        ]);
+            'email' => EmailRules::required(),
+        ], EmailRules::messages('email'));
 
         $status = Password::broker('hospital_users')->sendResetLink(
             $request->only('email')
@@ -59,9 +60,9 @@ class PasswordResetController extends Controller
     {
         $request->validate([
             'token' => ['required'],
-            'email' => ['required', 'email'],
+            'email' => EmailRules::required(),
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ], EmailRules::messages('email'));
 
         $status = Password::broker('hospital_users')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),

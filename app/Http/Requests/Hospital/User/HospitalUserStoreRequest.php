@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Hospital\User;
 
+use App\Support\EmailRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,9 +20,7 @@ class HospitalUserStoreRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required',
-                'email',
-                'max:255',
+                ...EmailRules::required(),
                 Rule::unique('hospital_users', 'email')
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id'))),
             ],
@@ -55,6 +54,7 @@ class HospitalUserStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
+            ...EmailRules::messages('email'),
             'email.unique' => 'This email is already registered.',
             'contact.regex' => 'Contact number must be exactly 10 digits.',
             'contact.unique' => 'This phone number is already registered.',

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Patient;
 
+use App\Support\EmailRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,7 +24,7 @@ class PatientStoreRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'phone' => ['required', 'string', 'max:15', 'regex:/^[6-9]\d{9}$/'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => EmailRules::nullable(),
             'dob' => ['nullable', 'date', 'before:today'],
             'gender' => ['required', 'in:male,female,other'],
             'address' => ['nullable', 'string', 'max:500'],
@@ -35,6 +36,7 @@ class PatientStoreRequest extends FormRequest
     public function messages(): array
     {
         return [
+            ...EmailRules::messages('email'),
             'name.required' => 'Patient name is required.',
             'phone.required' => 'Mobile number is required.',
             'phone.regex' => 'Please enter a valid 10-digit Indian mobile number.',

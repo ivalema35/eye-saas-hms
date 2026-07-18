@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Support\EmailRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -40,7 +41,7 @@ class ProfileApiController extends Controller
         $rules = [
             'name'  => ['required', 'string', 'max:255'],
             'email' => [
-                'required', 'email', 'max:255',
+                ...EmailRules::required(),
                 Rule::unique('hospital_users', 'email')
                     ->where('tenant_id', $user->tenant_id)
                     ->ignore($user->id)
@@ -56,7 +57,7 @@ class ProfileApiController extends Controller
             $rules['experience_years'] = ['nullable', 'integer', 'min:0', 'max:60'];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, EmailRules::messages('email'));
 
         // Verify current password manually before updating (Sanctum doesn't auto-check)
         if ($request->filled('new_password')) {

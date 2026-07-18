@@ -10,6 +10,7 @@ use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -104,7 +105,7 @@ class HospitalSettingController extends Controller
 
         $validated = $request->validate([
             'hospital_name'     => ['required', 'string', 'max:255'],
-            'hospital_email'    => ['required', 'email', 'max:255'],
+            'hospital_email'    => EmailRules::required(),
             'hospital_phone'    => ['required', 'string', 'max:20'],
             'hospital_address'  => ['required', 'string'],
             'hospital_country'  => ['nullable', 'string', 'max:100'],
@@ -133,7 +134,7 @@ class HospitalSettingController extends Controller
             'hospital_logo'     => ['nullable', 'image', 'mimes:jpg,jpeg,png,svg,webp', 'max:2048'],
             'current_password'  => ['nullable', 'string', 'required_with:new_password'],
             'new_password'      => ['nullable', 'string', 'min:8', 'confirmed'],
-        ]);
+        ], EmailRules::messages('hospital_email'));
 
         DB::transaction(function () use ($request, $validated, $tenantId): void {
             $settingsData = collect($validated)

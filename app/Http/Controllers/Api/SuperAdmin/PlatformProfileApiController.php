@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Support\EmailRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -24,8 +25,11 @@ class PlatformProfileApiController extends Controller
 
         $validated = $request->validate([
             'name'  => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:100', 'unique:platform_admins,email,' . $admin->id],
-        ]);
+            'email' => [
+                ...EmailRules::required(100),
+                'unique:platform_admins,email,' . $admin->id,
+            ],
+        ], EmailRules::messages('email'));
 
         $admin->update($validated);
 

@@ -15,6 +15,7 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\PlatformSetting;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,7 +33,7 @@ class SettingsController extends Controller
     {
         $validated = $request->validate([
             'platform_name' => ['required', 'string', 'max:100'],
-            'support_email' => ['required', 'email', 'max:100'],
+            'support_email' => EmailRules::required(100),
             'trial_days' => ['required', 'integer', 'min:1', 'max:90'],
             'razorpay_key' => ['nullable', 'string', 'max:255'],
             'razorpay_secret' => ['nullable', 'string', 'max:255'],
@@ -42,10 +43,13 @@ class SettingsController extends Controller
             'mail_username' => ['nullable', 'string', 'max:255'],
             'mail_password' => ['nullable', 'string', 'max:255'],
             'mail_from_name' => ['nullable', 'string', 'max:100'],
-            'mail_from_email' => ['nullable', 'email', 'max:100'],
+            'mail_from_email' => EmailRules::nullable(100),
             'monthly_price' => ['nullable', 'integer', 'min:1'],
             'quarterly_discount' => ['nullable', 'integer', 'min:0', 'max:50'],
             'yearly_discount' => ['nullable', 'integer', 'min:0', 'max:70'],
+        ], [
+            ...EmailRules::messages('support_email'),
+            ...EmailRules::messages('mail_from_email'),
         ]);
 
         $encryptedKeys = ['razorpay_key', 'razorpay_secret', 'razorpay_webhook_secret', 'mail_password'];

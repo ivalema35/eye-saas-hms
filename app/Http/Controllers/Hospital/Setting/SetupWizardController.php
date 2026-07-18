@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
+use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -130,9 +131,7 @@ class SetupWizardController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required',
-                'email',
-                'max:255',
+                ...EmailRules::required(),
                 Rule::unique('hospital_users', 'email')
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
@@ -145,6 +144,7 @@ class SetupWizardController extends Controller
             'password' => ['required', 'string', 'min:8'],
             // 'doctor_type' => ['nullable', 'in:primary,secondary'],
         ], [
+            ...EmailRules::messages('email'),
             'contact.regex' => 'Contact number must be exactly 10 digits.',
             'email.unique' => 'This email is already registered.',
             'contact.unique' => 'This phone number is already registered.',
@@ -172,9 +172,7 @@ class SetupWizardController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
-                'required',
-                'email',
-                'max:255',
+                ...EmailRules::required(),
                 Rule::unique('hospital_users', 'email')
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
@@ -186,6 +184,7 @@ class SetupWizardController extends Controller
             ],
             'password' => ['required', 'string', 'min:8'],
         ], [
+            ...EmailRules::messages('email'),
             'contact.regex' => 'Contact number must be exactly 10 digits.',
             'email.unique' => 'This email is already registered.',
             'contact.unique' => 'This phone number is already registered.',
