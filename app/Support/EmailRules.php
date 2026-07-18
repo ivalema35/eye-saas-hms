@@ -7,11 +7,9 @@ use Closure;
 /**
  * Shared email validation rules and messages for the whole app.
  *
- * Uses PHP FILTER_VALIDATE_EMAIL (Laravel "email:filter") so formats like
- * abc@gmail, abc@@gmail.com, and emails with spaces are rejected while
- * normal addresses (user@gmail.com, user@company.in) remain valid.
- *
- * Also rejects near-miss typos of popular providers (e.g. gmailll.com).
+ * - Format: PHP FILTER_VALIDATE_EMAIL (Laravel "email:filter")
+ * - Typos: rejects near-misses of popular providers (e.g. gmailll.com)
+ * - Case: use normalize() / NormalizeEmailInput so values are stored lowercase
  *
  * Do NOT use these rules on login fields that also accept phone numbers.
  */
@@ -20,6 +18,19 @@ final class EmailRules
     public const RULE = 'email:filter';
 
     public const MESSAGE = 'Please enter a valid email address.';
+
+    /**
+     * Known request field names that hold email addresses.
+     *
+     * @var list<string>
+     */
+    public const INPUT_KEYS = [
+        'email',
+        'admin_email',
+        'hospital_email',
+        'support_email',
+        'mail_from_email',
+    ];
 
     /**
      * Well-known consumer / free-mail domains. Exact matches are always allowed.
@@ -49,6 +60,19 @@ final class EmailRules
         'gmx.com',
         'yandex.com',
     ];
+
+    /**
+     * Trim + lowercase so User@Gmail.COM becomes user@gmail.com.
+     * Safe for login "email" fields that may contain a phone number.
+     */
+    public static function normalize(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        return strtolower(trim($value));
+    }
 
     /**
      * @return list<string|Closure>
