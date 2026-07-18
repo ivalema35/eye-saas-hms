@@ -47,42 +47,42 @@ class MasterApiController extends Controller
     {
         return [
             // Clinical
-            'complaints'       => ChiefComplaint::class,
+            'complaints' => ChiefComplaint::class,
             'chief-complaints' => ChiefComplaint::class,
-            'kcos'             => Kco::class,
-            'hno'              => MasterHno::class,
-            'diagnoses'        => MasterDiagnosis::class,
-            'diagnosis'        => MasterDiagnosis::class,
-            'advices'          => MasterAdvice::class,
-            'advice'           => MasterAdvice::class,
+            'kcos' => Kco::class,
+            'hno' => MasterHno::class,
+            'diagnoses' => MasterDiagnosis::class,
+            'diagnosis' => MasterDiagnosis::class,
+            'advices' => MasterAdvice::class,
+            'advice' => MasterAdvice::class,
             // Vision
-            'vn'               => MasterVn::class,
-            'vngl'             => MasterVngl::class,
-            'vnst'             => MasterVnst::class,
-            'pnvn'             => MasterPnvn::class,
-            'nrvn'             => MasterNrvn::class,
-            'sph_cyl'          => MasterSphCyl::class,
-            'axis'             => MasterAxis::class,
-            'nct'              => MasterNct::class,
+            'vn' => MasterVn::class,
+            'vngl' => MasterVngl::class,
+            'vnst' => MasterVnst::class,
+            'pnvn' => MasterPnvn::class,
+            'nrvn' => MasterNrvn::class,
+            'sph_cyl' => MasterSphCyl::class,
+            'axis' => MasterAxis::class,
+            'nct' => MasterNct::class,
             // Posterior
-            'disc'             => MasterDisc::class,
-            'fr'               => MasterFr::class,
+            'disc' => MasterDisc::class,
+            'fr' => MasterFr::class,
             // Anterior
-            'sac'              => MasterSac::class,
-            'lid'              => MasterLid::class,
-            'conj'             => MasterConj::class,
-            'cornea'           => MasterCornea::class,
-            'ac'               => MasterAc::class,
-            'iris'             => MasterIris::class,
-            'pupil'            => MasterPupil::class,
-            'lens'             => MasterLens::class,
-            'em'               => MasterEm::class,
-            'covertest'        => MasterCovertest::class,
+            'sac' => MasterSac::class,
+            'lid' => MasterLid::class,
+            'conj' => MasterConj::class,
+            'cornea' => MasterCornea::class,
+            'ac' => MasterAc::class,
+            'iris' => MasterIris::class,
+            'pupil' => MasterPupil::class,
+            'lens' => MasterLens::class,
+            'em' => MasterEm::class,
+            'covertest' => MasterCoverTest::class,
             // Basic masters
-            'durations'        => Duration::class,
+            'durations' => Duration::class,
             // OT masters
-            'lens-options'     => OtLensOption::class,
-            'ot-types'         => OtType::class,
+            'lens-options' => OtLensOption::class,
+            'ot-types' => OtType::class,
         ];
     }
 
@@ -93,27 +93,43 @@ class MasterApiController extends Controller
     private function valueField(string $type): string
     {
         return match ($type) {
-            'durations'    => 'duration',
+            'durations' => 'duration',
             'lens-options' => 'name',
-            'ot-types'     => 'name',
-            default        => 'value',
+            'ot-types' => 'name',
+            default => 'value',
         };
     }
 
     private function hasFavourite(string $type): bool
     {
         return in_array($type, [
-            'complaints', 'chief-complaints', 'kcos', 'hno',
-            'diagnoses', 'diagnosis', 'advices', 'advice',
-            'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest',
-            'disc', 'fr',
+            'complaints',
+            'chief-complaints',
+            'kcos',
+            'hno',
+            'diagnoses',
+            'diagnosis',
+            'advices',
+            'advice',
+            'sac',
+            'lid',
+            'conj',
+            'cornea',
+            'ac',
+            'iris',
+            'pupil',
+            'lens',
+            'em',
+            'covertest',
+            'disc',
+            'fr',
         ], true);
     }
 
     private function resolveDetail(string $type): string
     {
         $map = $this->detailMap();
-        abort_if(! array_key_exists($type, $map), 404, "Master type '$type' not found.");
+        abort_if(!array_key_exists($type, $map), 404, "Master type '$type' not found.");
         return $map[$type];
     }
 
@@ -140,20 +156,20 @@ class MasterApiController extends Controller
 
     public function detailIndex(string $slug, string $type): JsonResponse
     {
-        $model      = $this->resolveDetail($type);
-        $hasFav     = $this->hasFavourite($type);
-        $valField   = $this->valueField($type);
+        $model = $this->resolveDetail($type);
+        $hasFav = $this->hasFavourite($type);
+        $valField = $this->valueField($type);
 
         $query = $model::query();
         $hasFav
             ? $query->orderByDesc('is_favourite')->orderBy($valField)
             : $query->orderBy('id'); // preserve seeder insertion order (clinical/numeric order)
 
-        $data = $query->get()->map(fn ($r) => [
-            'id'           => $r->id,
-            'value'        => $r->{$valField},
+        $data = $query->get()->map(fn($r) => [
+            'id' => $r->id,
+            'value' => $r->{$valField},
             'is_favourite' => $hasFav ? (bool) $r->is_favourite : null,
-            'is_seeded'    => $this->isSeeded($r),
+            'is_seeded' => $this->isSeeded($r),
         ]);
 
         return $this->ok($data);
@@ -161,8 +177,8 @@ class MasterApiController extends Controller
 
     public function detailStore(Request $request, string $slug, string $type): JsonResponse
     {
-        $model    = $this->resolveDetail($type);
-        $hasFav   = $this->hasFavourite($type);
+        $model = $this->resolveDetail($type);
+        $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
 
         $request->validate(['value' => ['required', 'string', 'max:255']]);
@@ -175,19 +191,19 @@ class MasterApiController extends Controller
         $record = $model::create($payload);
 
         return $this->ok([
-            'id'           => $record->id,
-            'value'        => $record->{$valField},
+            'id' => $record->id,
+            'value' => $record->{$valField},
             'is_favourite' => $hasFav ? (bool) $record->is_favourite : null,
-            'is_seeded'    => false,
+            'is_seeded' => false,
         ], 'Added successfully.', 201);
     }
 
     public function detailUpdate(Request $request, string $slug, string $type, int $id): JsonResponse
     {
-        $model    = $this->resolveDetail($type);
-        $hasFav   = $this->hasFavourite($type);
+        $model = $this->resolveDetail($type);
+        $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
-        $record   = $model::findOrFail($id);
+        $record = $model::findOrFail($id);
 
         if ($this->isSeeded($record)) {
             return $this->err('Seeded values cannot be edited.', 403);
@@ -203,16 +219,16 @@ class MasterApiController extends Controller
         $record->update($payload);
 
         return $this->ok([
-            'id'           => $record->id,
-            'value'        => $record->{$valField},
+            'id' => $record->id,
+            'value' => $record->{$valField},
             'is_favourite' => $hasFav ? (bool) $record->is_favourite : null,
-            'is_seeded'    => false,
+            'is_seeded' => false,
         ]);
     }
 
     public function detailDestroy(string $slug, string $type, int $id): JsonResponse
     {
-        $model  = $this->resolveDetail($type);
+        $model = $this->resolveDetail($type);
         $record = $model::findOrFail($id);
 
         if ($this->isSeeded($record)) {
@@ -229,7 +245,7 @@ class MasterApiController extends Controller
         abort_unless($this->hasFavourite($type), 404);
 
         $record = $this->resolveDetail($type)::findOrFail($id);
-        $record->update(['is_favourite' => ! $record->is_favourite]);
+        $record->update(['is_favourite' => !$record->is_favourite]);
 
         return $this->ok(['is_favourite' => (bool) $record->is_favourite]);
     }
@@ -239,10 +255,10 @@ class MasterApiController extends Controller
     public function caseTypeIndex(string $slug): JsonResponse
     {
         $data = CaseType::query()->orderBy('case_type')->get()
-            ->map(fn ($r) => [
-                'id'       => $r->id,
+            ->map(fn($r) => [
+                'id' => $r->id,
                 'case_type' => $r->case_type,
-                'case_fee'  => (float) $r->case_fee,
+                'case_fee' => (float) $r->case_fee,
             ]);
 
         return $this->ok($data);
@@ -252,18 +268,18 @@ class MasterApiController extends Controller
     {
         $request->validate([
             'case_type' => ['required', 'string', 'max:255'],
-            'case_fee'  => ['required', 'numeric', 'min:0'],
+            'case_fee' => ['required', 'numeric', 'min:0'],
         ]);
 
         $record = CaseType::create([
             'case_type' => trim($request->string('case_type')),
-            'case_fee'  => $request->input('case_fee'),
+            'case_fee' => $request->input('case_fee'),
         ]);
 
         return $this->ok([
-            'id'        => $record->id,
+            'id' => $record->id,
             'case_type' => $record->case_type,
-            'case_fee'  => (float) $record->case_fee,
+            'case_fee' => (float) $record->case_fee,
         ], 'Case type added.', 201);
     }
 
@@ -271,19 +287,19 @@ class MasterApiController extends Controller
     {
         $request->validate([
             'case_type' => ['required', 'string', 'max:255'],
-            'case_fee'  => ['required', 'numeric', 'min:0'],
+            'case_fee' => ['required', 'numeric', 'min:0'],
         ]);
 
         $record = CaseType::findOrFail($id);
         $record->update([
             'case_type' => trim($request->string('case_type')),
-            'case_fee'  => $request->input('case_fee'),
+            'case_fee' => $request->input('case_fee'),
         ]);
 
         return $this->ok([
-            'id'        => $record->id,
+            'id' => $record->id,
             'case_type' => $record->case_type,
-            'case_fee'  => (float) $record->case_fee,
+            'case_fee' => (float) $record->case_fee,
         ]);
     }
 
@@ -299,9 +315,9 @@ class MasterApiController extends Controller
     public function referrerIndex(string $slug): JsonResponse
     {
         $data = Referrer::query()->orderBy('name')->get()
-            ->map(fn ($r) => [
-                'id'      => $r->id,
-                'name'    => $r->name,
+            ->map(fn($r) => [
+                'id' => $r->id,
+                'name' => $r->name,
                 'contact' => $r->contact,
             ]);
 
@@ -311,18 +327,18 @@ class MasterApiController extends Controller
     public function referrerStore(Request $request, string $slug): JsonResponse
     {
         $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'contact' => ['nullable', 'string', 'max:50'],
         ]);
 
         $record = Referrer::create([
-            'name'    => trim($request->string('name')),
+            'name' => trim($request->string('name')),
             'contact' => $request->filled('contact') ? trim($request->string('contact')) : null,
         ]);
 
         return $this->ok([
-            'id'      => $record->id,
-            'name'    => $record->name,
+            'id' => $record->id,
+            'name' => $record->name,
             'contact' => $record->contact,
         ], 'Referrer added.', 201);
     }
@@ -330,19 +346,19 @@ class MasterApiController extends Controller
     public function referrerUpdate(Request $request, string $slug, int $id): JsonResponse
     {
         $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255'],
             'contact' => ['nullable', 'string', 'max:50'],
         ]);
 
         $record = Referrer::findOrFail($id);
         $record->update([
-            'name'    => trim($request->string('name')),
+            'name' => trim($request->string('name')),
             'contact' => $request->filled('contact') ? trim($request->string('contact')) : null,
         ]);
 
         return $this->ok([
-            'id'      => $record->id,
-            'name'    => $record->name,
+            'id' => $record->id,
+            'name' => $record->name,
             'contact' => $record->contact,
         ]);
     }
@@ -359,11 +375,11 @@ class MasterApiController extends Controller
     public function otSlotIndex(string $slug): JsonResponse
     {
         $data = OtSlot::query()->orderBy('slot_name')->get()
-            ->map(fn ($r) => [
-                'id'         => $r->id,
-                'slot_name'  => $r->slot_name,
+            ->map(fn($r) => [
+                'id' => $r->id,
+                'slot_name' => $r->slot_name,
                 'start_time' => $r->start_time,
-                'end_time'   => $r->end_time,
+                'end_time' => $r->end_time,
             ]);
 
         return $this->ok($data);
@@ -372,45 +388,45 @@ class MasterApiController extends Controller
     public function otSlotStore(Request $request, string $slug): JsonResponse
     {
         $request->validate([
-            'slot_name'  => ['required', 'string', 'max:255'],
+            'slot_name' => ['required', 'string', 'max:255'],
             'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time'   => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i'],
         ]);
 
         $record = OtSlot::create([
-            'slot_name'  => trim($request->string('slot_name')),
+            'slot_name' => trim($request->string('slot_name')),
             'start_time' => $request->input('start_time'),
-            'end_time'   => $request->input('end_time'),
+            'end_time' => $request->input('end_time'),
         ]);
 
         return $this->ok([
-            'id'         => $record->id,
-            'slot_name'  => $record->slot_name,
+            'id' => $record->id,
+            'slot_name' => $record->slot_name,
             'start_time' => $record->start_time,
-            'end_time'   => $record->end_time,
+            'end_time' => $record->end_time,
         ], 'OT slot added.', 201);
     }
 
     public function otSlotUpdate(Request $request, string $slug, int $id): JsonResponse
     {
         $request->validate([
-            'slot_name'  => ['required', 'string', 'max:255'],
+            'slot_name' => ['required', 'string', 'max:255'],
             'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time'   => ['nullable', 'date_format:H:i'],
+            'end_time' => ['nullable', 'date_format:H:i'],
         ]);
 
         $record = OtSlot::findOrFail($id);
         $record->update([
-            'slot_name'  => trim($request->string('slot_name')),
+            'slot_name' => trim($request->string('slot_name')),
             'start_time' => $request->input('start_time'),
-            'end_time'   => $request->input('end_time'),
+            'end_time' => $request->input('end_time'),
         ]);
 
         return $this->ok([
-            'id'         => $record->id,
-            'slot_name'  => $record->slot_name,
+            'id' => $record->id,
+            'slot_name' => $record->slot_name,
             'start_time' => $record->start_time,
-            'end_time'   => $record->end_time,
+            'end_time' => $record->end_time,
         ]);
     }
 
@@ -426,11 +442,11 @@ class MasterApiController extends Controller
     public function otChargeHeadIndex(string $slug): JsonResponse
     {
         $data = OtChargeHead::query()->orderBy('charge_name')->get()
-            ->map(fn ($r) => [
-                'id'          => $r->id,
+            ->map(fn($r) => [
+                'id' => $r->id,
                 'charge_name' => $r->charge_name,
-                'percentage'  => (float) $r->percentage,
-                'is_active'   => (bool) $r->is_active,
+                'percentage' => (float) $r->percentage,
+                'is_active' => (bool) $r->is_active,
             ]);
 
         return $this->ok($data);
@@ -440,21 +456,21 @@ class MasterApiController extends Controller
     {
         $request->validate([
             'charge_name' => ['required', 'string', 'max:255'],
-            'percentage'  => ['required', 'numeric', 'between:0,100'],
-            'is_active'   => ['boolean'],
+            'percentage' => ['required', 'numeric', 'between:0,100'],
+            'is_active' => ['boolean'],
         ]);
 
         $record = OtChargeHead::create([
             'charge_name' => trim($request->string('charge_name')),
-            'percentage'  => $request->input('percentage'),
-            'is_active'   => $request->boolean('is_active', true),
+            'percentage' => $request->input('percentage'),
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return $this->ok([
-            'id'          => $record->id,
+            'id' => $record->id,
             'charge_name' => $record->charge_name,
-            'percentage'  => (float) $record->percentage,
-            'is_active'   => (bool) $record->is_active,
+            'percentage' => (float) $record->percentage,
+            'is_active' => (bool) $record->is_active,
         ], 'Charge head added.', 201);
     }
 
@@ -462,22 +478,22 @@ class MasterApiController extends Controller
     {
         $request->validate([
             'charge_name' => ['required', 'string', 'max:255'],
-            'percentage'  => ['required', 'numeric', 'between:0,100'],
-            'is_active'   => ['boolean'],
+            'percentage' => ['required', 'numeric', 'between:0,100'],
+            'is_active' => ['boolean'],
         ]);
 
         $record = OtChargeHead::findOrFail($id);
         $record->update([
             'charge_name' => trim($request->string('charge_name')),
-            'percentage'  => $request->input('percentage'),
-            'is_active'   => $request->boolean('is_active', (bool) $record->is_active),
+            'percentage' => $request->input('percentage'),
+            'is_active' => $request->boolean('is_active', (bool) $record->is_active),
         ]);
 
         return $this->ok([
-            'id'          => $record->id,
+            'id' => $record->id,
             'charge_name' => $record->charge_name,
-            'percentage'  => (float) $record->percentage,
-            'is_active'   => (bool) $record->is_active,
+            'percentage' => (float) $record->percentage,
+            'is_active' => (bool) $record->is_active,
         ]);
     }
 
@@ -493,7 +509,7 @@ class MasterApiController extends Controller
     public function otTypesList(string $slug): JsonResponse
     {
         $data = OtType::query()->orderBy('name')->get()
-            ->map(fn ($r) => ['id' => $r->id, 'name' => $r->name]);
+            ->map(fn($r) => ['id' => $r->id, 'name' => $r->name]);
 
         return $this->ok($data);
     }
@@ -504,9 +520,9 @@ class MasterApiController extends Controller
             ->with('otType')
             ->orderBy('surgery_name')
             ->get()
-            ->map(fn ($r) => [
-                'id'           => $r->id,
-                'ot_type_id'   => $r->ot_type_id,
+            ->map(fn($r) => [
+                'id' => $r->id,
+                'ot_type_id' => $r->ot_type_id,
                 'ot_type_name' => $r->otType?->name ?? '',
                 'surgery_name' => $r->surgery_name,
             ]);
@@ -517,20 +533,20 @@ class MasterApiController extends Controller
     public function otSurgeryTypeStore(Request $request, string $slug): JsonResponse
     {
         $request->validate([
-            'ot_type_id'   => ['required', 'integer', 'exists:ot_types,id'],
+            'ot_type_id' => ['required', 'integer', 'exists:ot_types,id'],
             'surgery_name' => ['required', 'string', 'max:255'],
         ]);
 
         $record = OtSurgeryType::create([
-            'ot_type_id'   => $request->integer('ot_type_id'),
+            'ot_type_id' => $request->integer('ot_type_id'),
             'surgery_name' => trim($request->string('surgery_name')),
         ]);
 
         $record->load('otType');
 
         return $this->ok([
-            'id'           => $record->id,
-            'ot_type_id'   => $record->ot_type_id,
+            'id' => $record->id,
+            'ot_type_id' => $record->ot_type_id,
             'ot_type_name' => $record->otType?->name ?? '',
             'surgery_name' => $record->surgery_name,
         ], 'Surgery type added.', 201);
@@ -539,21 +555,21 @@ class MasterApiController extends Controller
     public function otSurgeryTypeUpdate(Request $request, string $slug, int $id): JsonResponse
     {
         $request->validate([
-            'ot_type_id'   => ['required', 'integer', 'exists:ot_types,id'],
+            'ot_type_id' => ['required', 'integer', 'exists:ot_types,id'],
             'surgery_name' => ['required', 'string', 'max:255'],
         ]);
 
         $record = OtSurgeryType::findOrFail($id);
         $record->update([
-            'ot_type_id'   => $request->integer('ot_type_id'),
+            'ot_type_id' => $request->integer('ot_type_id'),
             'surgery_name' => trim($request->string('surgery_name')),
         ]);
 
         $record->load('otType');
 
         return $this->ok([
-            'id'           => $record->id,
-            'ot_type_id'   => $record->ot_type_id,
+            'id' => $record->id,
+            'ot_type_id' => $record->ot_type_id,
             'ot_type_name' => $record->otType?->name ?? '',
             'surgery_name' => $record->surgery_name,
         ]);

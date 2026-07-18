@@ -15,6 +15,8 @@ namespace App\Models\Platform;
 
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Patient;
+use App\Support\EmailRules;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -50,6 +52,15 @@ class Tenant extends Model
         'is_setup_done' => 'boolean',
         'is_timezone_override' => 'boolean',
     ];
+
+    protected function adminEmail(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null && $value !== ''
+                ? EmailRules::normalize($value)
+                : $value,
+        );
+    }
 
     /** Effective timezone — falls back to country default if not overridden */
     public function effectiveTimezone(): string

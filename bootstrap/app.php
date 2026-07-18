@@ -7,6 +7,7 @@ use App\Http\Middleware\CheckSubscriptionActive;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\HospitalAuth;
 use App\Http\Middleware\IdentifyTenant;
+use App\Http\Middleware\NormalizeEmailInput;
 use App\Http\Middleware\RedirectIfInactive;
 use App\Http\Middleware\SetTenantScope;
 use App\Http\Middleware\SuperAdminAuth;
@@ -35,6 +36,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => CheckRole::class,
             'platform.admin' => EnsurePlatformAdmin::class,
         ]);
+
+        // Lowercase email fields on every web/API request before validation
+        $middleware->appendToGroup('web', NormalizeEmailInput::class);
+        $middleware->appendToGroup('api', NormalizeEmailInput::class);
 
         // Razorpay webhook ko CSRF se exempt karo
         $middleware->validateCsrfTokens(except: [

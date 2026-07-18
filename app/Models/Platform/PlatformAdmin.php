@@ -14,6 +14,8 @@
 
 namespace App\Models\Platform;
 
+use App\Support\EmailRules;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -43,4 +45,13 @@ class PlatformAdmin extends Authenticatable
         'last_login_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value) => $value !== null && $value !== ''
+                ? EmailRules::normalize($value)
+                : $value,
+        );
+    }
 }
