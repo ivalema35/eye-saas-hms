@@ -631,6 +631,7 @@
 
     @stack('scripts')
     @stack('modals')
+    <script src="{{ asset('js/intl-phone-input.js') }}"></script>
 </body>
 
 </html>

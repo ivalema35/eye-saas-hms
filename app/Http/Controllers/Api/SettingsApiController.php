@@ -10,6 +10,7 @@ use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use DateTimeZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -99,7 +100,7 @@ class SettingsApiController extends Controller
             // General
             'hospital_name'         => ['required', 'string', 'max:255'],
             'hospital_email'        => EmailRules::required(),
-            'hospital_phone'        => ['required', 'string', 'max:20'],
+            'hospital_phone'        => PhoneRules::required(),
             'hospital_address'      => ['required', 'string'],
             // Location
             'hospital_country'      => ['nullable', 'string', 'max:100'],
@@ -130,7 +131,7 @@ class SettingsApiController extends Controller
             'wait_nd_green_max'     => ['nullable', 'integer', 'min:1', 'max:999'],
             'wait_nd_orange_max'    => ['nullable', 'integer', 'min:1', 'max:999'],
             'wait_nd_red_max'       => ['nullable', 'integer', 'min:1', 'max:999'],
-        ], EmailRules::messages('hospital_email'));
+        ], array_merge(EmailRules::messages('hospital_email'), PhoneRules::messages('hospital_phone')));
 
         foreach ($validated as $key => $value) {
             if ($value !== null) {

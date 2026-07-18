@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Hospital\Patient;
 
+use App\Support\PhoneRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PatientUpdateRequest extends FormRequest
@@ -15,7 +16,7 @@ class PatientUpdateRequest extends FormRequest
     }
 
     /**
-     * @return array<string, array<int, string>>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
@@ -26,8 +27,8 @@ class PatientUpdateRequest extends FormRequest
             'age' => ['required', 'integer', 'min:0', 'max:150'],
             'gender' => ['required', 'in:male,female,other'],
             'occupation' => ['nullable', 'string', 'max:100'],
-            'contact_no' => ['required', 'string', 'max:15', 'regex:/^\d+$/'],
-            'whatsapp_no' => ['nullable', 'string', 'max:15', 'regex:/^\d+$/'],
+            'contact_no' => PhoneRules::required(),
+            'whatsapp_no' => PhoneRules::nullable(),
             'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id' => ['nullable', 'integer', 'exists:tbl_slots,id'],
@@ -51,8 +52,8 @@ class PatientUpdateRequest extends FormRequest
             'case_id.required' => 'Please select a case type.',
             'case_fee.required' => 'Case fee is required.',
             'contact_no.required' => 'Contact number is required.',
-            'contact_no.regex' => 'Contact number must contain only digits (0-9).',
-            'whatsapp_no.regex' => 'WhatsApp number must contain only digits (0-9).',
+            ...PhoneRules::messages('contact_no'),
+            ...PhoneRules::messages('whatsapp_no'),
         ];
     }
 }

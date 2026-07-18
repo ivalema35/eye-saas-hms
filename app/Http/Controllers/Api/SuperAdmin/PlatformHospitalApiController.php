@@ -8,6 +8,7 @@ use App\Models\Platform\AuditLog;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TenantService;
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -90,7 +91,7 @@ class PlatformHospitalApiController extends Controller
                 },
             ],
             'admin_phone' => [
-                'required', 'string', 'regex:/^[0-9]{10}$/',
+                ...PhoneRules::required(),
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (Tenant::where('admin_phone', $value)->exists()) {
                         $fail('This phone is already registered to another hospital.');
@@ -104,7 +105,7 @@ class PlatformHospitalApiController extends Controller
             'city'     => ['nullable', 'string', 'max:100'],
             'state'    => ['nullable', 'string', 'max:100'],
             'plan'     => ['nullable', 'in:monthly,quarterly,yearly'],
-        ], EmailRules::messages('admin_email'));
+        ], array_merge(EmailRules::messages('admin_email'), PhoneRules::messages('admin_phone')));
 
         // Auto-generate hospital_code — not collected from mobile UI
         $validated['hospital_code'] = $this->generateHospitalCode($validated['hospital_name']);
@@ -143,10 +144,10 @@ class PlatformHospitalApiController extends Controller
                 },
             ],
             'admin_name'  => ['required', 'string', 'max:100'],
-            'admin_phone' => ['required', 'string', 'regex:/^[0-9]{10}$/'],
+            'admin_phone' => PhoneRules::required(),
             'city'        => ['nullable', 'string', 'max:100'],
             'state'       => ['nullable', 'string', 'max:100'],
-        ]);
+        ], PhoneRules::messages('admin_phone'));
 
         $old = $tenant->only(['name', 'slug', 'admin_name', 'admin_phone', 'city', 'state']);
         $tenant->update($validated);

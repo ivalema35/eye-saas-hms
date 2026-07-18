@@ -1830,7 +1830,7 @@
                     <div class="input-group" style="width: 250px;">
                         <input type="text" name="search_contact" value="{{ request('search_contact') }}"
                             class="form-control form-control-sm" placeholder="Search by mobile..."
-                            maxlength="10">
+                            data-intl-phone>
                         <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
                         @if(request('search_contact'))
                             <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary">Clear</a>

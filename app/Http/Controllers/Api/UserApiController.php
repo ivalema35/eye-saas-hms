@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Role\Role;
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -108,7 +109,7 @@ class UserApiController extends Controller
         $validated = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
             'email'            => [...EmailRules::required(), 'unique:hospital_users,email'],
-            'contact'          => ['nullable', 'regex:/^[0-9]{10}$/'],
+            'contact'          => PhoneRules::nullable(),
             'role_id'          => ['required', 'integer', 'exists:roles,id'],
             'password'         => ['required', 'string', 'min:8', 'confirmed'],
             'status'           => ['required', 'in:active,inactive'],
@@ -121,7 +122,7 @@ class UserApiController extends Controller
             // Files
             'signature'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
-        ], EmailRules::messages('email'));
+        ], array_merge(EmailRules::messages('email'), PhoneRules::messages('contact')));
 
         $tenantId = (int) config('app.tenant_id');
 
@@ -168,7 +169,7 @@ class UserApiController extends Controller
         $validated = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
             'email'            => [...EmailRules::required(), Rule::unique('hospital_users', 'email')->ignore($user->id)],
-            'contact'          => ['nullable', 'string', 'max:15'],
+            'contact'          => PhoneRules::nullable(),
             'role_id'          => ['required', 'integer', 'exists:roles,id'],
             'password'         => ['nullable', 'string', 'min:8', 'confirmed'],
             'status'           => ['required', 'in:active,inactive'],
@@ -184,7 +185,7 @@ class UserApiController extends Controller
             // Explicit clear flags (mobile sends "1" to remove existing file)
             'clear_signature'    => ['nullable', 'boolean'],
             'clear_profile_photo'=> ['nullable', 'boolean'],
-        ], EmailRules::messages('email'));
+        ], array_merge(EmailRules::messages('email'), PhoneRules::messages('contact')));
 
         $tenantId = (int) config('app.tenant_id');
 

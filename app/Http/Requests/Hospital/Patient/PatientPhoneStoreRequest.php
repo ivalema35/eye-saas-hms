@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Hospital\Patient;
 
+use App\Support\PhoneRules;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PatientPhoneStoreRequest extends FormRequest
@@ -20,8 +21,8 @@ class PatientPhoneStoreRequest extends FormRequest
             'age'              => ['required', 'integer', 'min:0', 'max:150'],
             'gender'           => ['required', 'in:male,female,other'],
             'occupation'       => ['nullable', 'string', 'max:100'],
-            'contact_no'       => ['required', 'string', 'regex:/^\d{10}$/'],
-            'whatsapp_no'      => ['nullable', 'string', 'regex:/^\d{10}$/'],
+            'contact_no'       => PhoneRules::required(),
+            'whatsapp_no'      => PhoneRules::nullable(),
             'location_id'      => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'appointment_date' => ['required', 'date'],
             'slot_id'          => ['nullable', 'integer', 'exists:tbl_slots,id'],
@@ -40,8 +41,8 @@ class PatientPhoneStoreRequest extends FormRequest
             'last_name.required'   => 'Patient last name is required.',
             'doctor_id.required'   => 'Please select a doctor.',
             'contact_no.required'  => 'Contact number is required.',
-            'contact_no.regex'     => 'Contact number must be exactly 10 digits.',
-            'whatsapp_no.regex'    => 'WhatsApp number must be exactly 10 digits.',
+            ...PhoneRules::messages('contact_no'),
+            ...PhoneRules::messages('whatsapp_no'),
         ];
     }
 }

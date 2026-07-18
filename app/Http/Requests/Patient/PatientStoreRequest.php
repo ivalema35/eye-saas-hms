@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Patient;
 
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
 
@@ -23,7 +24,7 @@ class PatientStoreRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:15', 'regex:/^[6-9]\d{9}$/'],
+            'phone' => PhoneRules::required(),
             'email' => EmailRules::nullable(),
             'dob' => ['nullable', 'date', 'before:today'],
             'gender' => ['required', 'in:male,female,other'],
@@ -37,9 +38,9 @@ class PatientStoreRequest extends FormRequest
     {
         return [
             ...EmailRules::messages('email'),
+            ...PhoneRules::messages('phone'),
             'name.required' => 'Patient name is required.',
             'phone.required' => 'Mobile number is required.',
-            'phone.regex' => 'Please enter a valid 10-digit Indian mobile number.',
             'gender.required' => 'Please select patient gender.',
             'gender.in' => 'Invalid gender value.',
             'dob.before' => 'Date of birth must be in the past.',

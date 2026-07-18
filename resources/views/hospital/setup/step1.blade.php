@@ -36,7 +36,8 @@
             <div class="form-group">
                 <label class="form-label" for="admin_phone">Admin Phone</label>
                 <input type="text" id="admin_phone" name="admin_phone" class="form-input"
-                       value="{{ old('admin_phone', $tenant->admin_phone) }}" maxlength="15">
+                       value="{{ old('admin_phone', $tenant->admin_phone) }}" data-intl-phone
+                       placeholder="+919876543210">
                 @error('admin_phone') <div class="form-error">{{ $message }}</div> @enderror
             </div>
 

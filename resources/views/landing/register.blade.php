@@ -339,8 +339,8 @@
                                 <label>Phone Number *</label>
                                 <input type="tel" name="admin_phone"
                                     class="hms-input @error('admin_phone') is-invalid @enderror"
-                                    value="{{ old('admin_phone') }}" placeholder="9876543210" required maxlength="10"
-                                    oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                    value="{{ old('admin_phone') }}" placeholder="+919876543210" required
+                                    data-intl-phone>
                                 @error('admin_phone')
                                     <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
                                         {{ $message }}</span>

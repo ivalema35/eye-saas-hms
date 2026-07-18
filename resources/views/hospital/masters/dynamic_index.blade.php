@@ -99,7 +99,7 @@
                                             class="form-control form-control-lg bg-light border-0 {{ $isContactField ? 'contact-input' : '' }}"
                                             style="font-size: 15px;"
                                             placeholder="Enter {{ strtolower(Str::headline($col)) }}..." value="{{ old($col) }}"
-                                            @if($isContactField) inputmode="numeric" pattern="[0-9]{10}" maxlength="10" title="Enter a 10 digit contact number" @endif
+                                            @if($isContactField) data-intl-phone title="7–15 digits, optional leading +" @endif
                                             @if(!$isOptionalField) required @endif>
                                     </div>
                                 @endforeach
@@ -308,7 +308,7 @@
                                             class="form-control form-control-lg case-master-input {{ $isContactField ? 'contact-input' : '' }}"
                                             style="font-size: 15px;"
                                             placeholder="Enter {{ strtolower(Str::headline($col)) }}..." value="{{ old($col) }}"
-                                            @if($isContactField) inputmode="numeric" pattern="[0-9]{10}" maxlength="10" title="Enter a 10 digit contact number" @endif
+                                            @if($isContactField) data-intl-phone title="7–15 digits, optional leading +" @endif
                                             @if(!$isOptionalField) required @endif>
                                     </div>
                                 @endforeach
@@ -491,11 +491,19 @@
                 }
             });
 
-            // Contact fields (e.g. Referrer contact): digits only, max 10 chars.
+            // Contact fields (e.g. Referrer contact): international phone input.
             document.addEventListener('input', function (e) {
                 if (!e.target.classList.contains('contact-input')) return;
-                e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                if (window.HmsIntlPhone) {
+                    e.target.value = HmsIntlPhone.sanitize(e.target.value);
+                }
             });
+            if (window.HmsIntlPhone) {
+                document.querySelectorAll('.contact-input').forEach(function (el) {
+                    el.setAttribute('data-intl-phone', '');
+                    HmsIntlPhone.bind(el);
+                });
+            }
 
             function resetForm() {
                 const form = document.getElementById('masterForm');

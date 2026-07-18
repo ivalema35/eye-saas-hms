@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Hospital\User;
 
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -27,7 +28,7 @@ class HospitalUserUpdateRequest extends FormRequest
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id')))
                     ->ignore($userId),
             ],
-            'contact' => ['nullable', 'string', 'max:15'],
+            'contact' => PhoneRules::nullable(),
             'role_id' => [
                 'required',
                 'integer',
@@ -52,6 +53,7 @@ class HospitalUserUpdateRequest extends FormRequest
     {
         return [
             ...EmailRules::messages('email'),
+            ...PhoneRules::messages('contact'),
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'Selected role is invalid for this hospital.',
         ];

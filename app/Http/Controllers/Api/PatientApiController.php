@@ -8,6 +8,7 @@ use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
 use App\Models\Platform\HospitalShareRequest;
 use App\Services\Hospital\PatientService;
+use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -145,8 +146,8 @@ class PatientApiController extends Controller
     {
         $validated = $request->validate([
             'appointment_date' => ['required', 'date'],
-            'contact_no'       => ['required', 'string', 'max:15'],
-            'whatsapp_no'      => ['nullable', 'string', 'max:15'],
+            'contact_no'       => PhoneRules::required(),
+            'whatsapp_no'      => PhoneRules::nullable(),
             'first_name'       => ['required', 'string', 'max:100'],
             'last_name'        => ['required', 'string', 'max:100'],
             'middle_name'      => ['nullable', 'string', 'max:100'],
@@ -177,8 +178,8 @@ class PatientApiController extends Controller
     {
         $validated = $request->validate([
             'appointment_date' => ['required', 'date'],
-            'contact_no'       => ['required', 'string', 'max:15'],
-            'whatsapp_no'      => ['nullable', 'string', 'max:15'],
+            'contact_no'       => PhoneRules::required(),
+            'whatsapp_no'      => PhoneRules::nullable(),
             'first_name'       => ['required', 'string', 'max:100'],
             'last_name'        => ['required', 'string', 'max:100'],
             'middle_name'      => ['nullable', 'string', 'max:100'],
@@ -208,8 +209,8 @@ class PatientApiController extends Controller
     {
         $validated = $request->validate([
             'appointment_date' => ['sometimes', 'date'],
-            'contact_no'       => ['sometimes', 'string', 'max:15'],
-            'whatsapp_no'      => ['nullable', 'string', 'max:15'],
+            'contact_no'       => ['sometimes', 'string', 'max:'.PhoneRules::MAX, PhoneRules::RULE],
+            'whatsapp_no'      => PhoneRules::nullable(),
             'first_name'       => ['sometimes', 'string', 'max:100'],
             'last_name'        => ['sometimes', 'string', 'max:100'],
             'middle_name'      => ['nullable', 'string', 'max:100'],
@@ -326,8 +327,8 @@ class PatientApiController extends Controller
 
         $validated = $request->validate([
             'appointment_date' => ['required', 'date'],
-            'contact_no'       => ['required', 'string', 'max:15'],
-            'whatsapp_no'      => ['nullable', 'string', 'max:15'],
+            'contact_no'       => PhoneRules::required(),
+            'whatsapp_no'      => PhoneRules::nullable(),
             'first_name'       => ['required', 'string', 'max:100'],
             'last_name'        => ['required', 'string', 'max:100'],
             'middle_name'      => ['nullable', 'string', 'max:100'],

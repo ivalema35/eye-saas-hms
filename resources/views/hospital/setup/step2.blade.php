@@ -46,7 +46,7 @@
                 <div class="form-group">
                     <label class="form-label" for="contact">Contact Number</label>
                     <input type="text" id="contact" name="contact" class="form-input"
-                           value="{{ old('contact') }}" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" placeholder="9876543210">
+                           value="{{ old('contact') }}" data-intl-phone placeholder="+919876543210">
                     @error('contact') <div class="form-error">{{ $message }}</div> @enderror
                 </div>
             </div>

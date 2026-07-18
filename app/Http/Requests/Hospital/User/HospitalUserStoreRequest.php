@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Hospital\User;
 
 use App\Support\EmailRules;
+use App\Support\PhoneRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,9 +26,7 @@ class HospitalUserStoreRequest extends FormRequest
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id'))),
             ],
             'contact' => [
-                'nullable',
-                'string',
-                'regex:/^[0-9]{10}$/',
+                ...PhoneRules::nullable(),
                 Rule::unique('hospital_users', 'contact')
                     ->where(fn ($query) => $query->where('tenant_id', config('app.tenant_id'))),
             ],
@@ -55,8 +54,8 @@ class HospitalUserStoreRequest extends FormRequest
     {
         return [
             ...EmailRules::messages('email'),
+            ...PhoneRules::messages('contact'),
             'email.unique' => 'This email is already registered.',
-            'contact.regex' => 'Contact number must be exactly 10 digits.',
             'contact.unique' => 'This phone number is already registered.',
             'role_id.required' => 'Please select a role.',
             'role_id.exists' => 'Selected role is invalid for this hospital.',

@@ -34,6 +34,7 @@ use App\Models\Hospital\Referrer;
 use App\Models\Hospital\OT\OtChargeHead;
 use App\Models\Hospital\OT\OtLensOption;
 use App\Models\Hospital\OT\OtSlot;
+use App\Support\PhoneRules;
 use App\Models\Hospital\OT\OtSurgeryType;
 use App\Models\Hospital\OT\OtType;
 use Illuminate\Http\JsonResponse;
@@ -328,7 +329,7 @@ class MasterApiController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'contact' => ['nullable', 'string', 'max:50'],
+            'contact' => PhoneRules::nullable(),
         ]);
 
         $record = Referrer::create([
@@ -347,7 +348,7 @@ class MasterApiController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'contact' => ['nullable', 'string', 'max:50'],
+            'contact' => PhoneRules::nullable(),
         ]);
 
         $record = Referrer::findOrFail($id);

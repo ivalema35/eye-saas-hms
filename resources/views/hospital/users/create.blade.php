@@ -61,7 +61,8 @@
                         <div class="hms-form-group user-create-field">
                             <label>Contact</label>
                             <input type="text" name="contact" value="{{ old('contact') }}"
-                                   class="hms-input @error('contact') is-invalid @enderror" maxlength="10" inputmode="numeric" pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+                                   class="hms-input @error('contact') is-invalid @enderror" data-intl-phone
+                                   placeholder="+919876543210">
                             @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 

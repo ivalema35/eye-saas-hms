@@ -146,6 +146,7 @@
 
 {{-- Landing Page Animations --}}
 <script src="{{ asset('js/landing-animations.js') }}"></script>
+<script src="{{ asset('js/intl-phone-input.js') }}"></script>
 
 @stack('scripts')
 <script>

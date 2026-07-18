@@ -209,8 +209,7 @@
                             <label>Contact</label>
                             <input type="text" name="contact" id="user-contact" value="{{ old('contact') }}"
                                 class="hms-input @error('contact') is-invalid @enderror"
-                                placeholder="Enter contact number" maxlength="10" inputmode="numeric"
-                                pattern="[0-9]{10}" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)">
+                                placeholder="+919876543210" data-intl-phone>
                             @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
