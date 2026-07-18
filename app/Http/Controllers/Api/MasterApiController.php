@@ -11,7 +11,7 @@ use App\Models\Hospital\MasterAdvice;
 use App\Models\Hospital\MasterAxis;
 use App\Models\Hospital\MasterConj;
 use App\Models\Hospital\MasterCornea;
-use App\Models\Hospital\MasterCovertest;
+use App\Models\Hospital\MasterCoverTest;
 use App\Models\Hospital\MasterDiagnosis;
 use App\Models\Hospital\MasterDisc;
 use App\Models\Hospital\MasterEm;
