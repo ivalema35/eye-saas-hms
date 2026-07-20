@@ -871,12 +871,14 @@
                                     </a>
                                 </li>
                             @endif
-                            {{-- All roles: My Profile + Logout --}}
+                            {{-- My Profile: not for Hospital Admin --}}
+                            @unless($currentUser->role?->is_super)
                             <li>
                                 <a class="dropdown-item" href="{{ route('hospital.profile.show', ['slug' => $slug]) }}">
                                     <i class="bi bi-person-circle me-2"></i> My Profile
                                 </a>
                             </li>
+                            @endunless
                             <li>
                                 <form method="POST" action="{{ route('hospital.logout', ['slug' => $slug]) }}">
                                     @csrf
