@@ -34,7 +34,7 @@ class OtSlotController extends Controller
                 'string',
                 'max:100',
                 Rule::unique('tbl_ot_slots', 'slot_name')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+                    ->where(fn($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
@@ -64,7 +64,7 @@ class OtSlotController extends Controller
             ->where('id', $id)
             ->first();
 
-        abort_if(! $record, 404);
+        abort_if(!$record, 404);
 
         $validated = $request->validate([
             'slot_name' => [
@@ -73,7 +73,7 @@ class OtSlotController extends Controller
                 'max:100',
                 Rule::unique('tbl_ot_slots', 'slot_name')
                     ->ignore($id)
-                    ->where(fn ($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+                    ->where(fn($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
