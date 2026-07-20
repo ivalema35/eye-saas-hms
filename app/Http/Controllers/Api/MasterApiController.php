@@ -389,9 +389,9 @@ class MasterApiController extends Controller
     public function otSlotStore(Request $request, string $slug): JsonResponse
     {
         $request->validate([
-            'slot_name' => ['required', 'string', 'max:255'],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i'],
+            'slot_name'  => ['required', 'string', 'max:255'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time'   => ['required', 'date_format:H:i', 'after:start_time'],
         ]);
 
         $record = OtSlot::create([
@@ -411,9 +411,9 @@ class MasterApiController extends Controller
     public function otSlotUpdate(Request $request, string $slug, int $id): JsonResponse
     {
         $request->validate([
-            'slot_name' => ['required', 'string', 'max:255'],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i'],
+            'slot_name'  => ['required', 'string', 'max:255'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time'   => ['required', 'date_format:H:i', 'after:start_time'],
         ]);
 
         $record = OtSlot::findOrFail($id);
