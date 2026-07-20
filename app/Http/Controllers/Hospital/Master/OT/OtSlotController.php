@@ -36,8 +36,8 @@ class OtSlotController extends Controller
                 Rule::unique('tbl_ot_slots', 'slot_name')
                     ->where(fn ($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
         ]);
 
         $ts = now()->toDateTimeString();
@@ -75,8 +75,8 @@ class OtSlotController extends Controller
                     ->ignore($id)
                     ->where(fn ($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
-            'start_time' => ['nullable', 'date_format:H:i'],
-            'end_time' => ['nullable', 'date_format:H:i'],
+            'start_time' => ['required', 'date_format:H:i'],
+            'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
         ]);
 
         DB::table('tbl_ot_slots')

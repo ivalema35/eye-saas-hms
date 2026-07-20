@@ -96,13 +96,15 @@
                             <div class="mb-3">
                                 <label class="form-label text-muted small fw-bold text-uppercase">Start Time</label>
                                 <input type="time" name="start_time" id="start_time"
-                                    class="form-control form-control-lg ot-master-input" value="{{ old('start_time') }}">
+                                    class="form-control form-control-lg ot-master-input" value="{{ old('start_time') }}"
+                                    required>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label text-muted small fw-bold text-uppercase">End Time</label>
                                 <input type="time" name="end_time" id="end_time"
-                                    class="form-control form-control-lg ot-master-input" value="{{ old('end_time') }}">
+                                    class="form-control form-control-lg ot-master-input" value="{{ old('end_time') }}"
+                                    required>
                             </div>
                         </div>
 
