@@ -290,42 +290,66 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('masters/referrers', [MastersApiController::class, 'referrers'])->name('masters.referrers');
 
                     // Masters — detail CRUD (eye exam masters)
-                    Route::get('masters/detail/{type}',                        [MasterApiController::class, 'detailIndex']);
-                    Route::post('masters/detail/{type}',                       [MasterApiController::class, 'detailStore']);
-                    Route::put('masters/detail/{type}/{id}',                   [MasterApiController::class, 'detailUpdate']);
-                    Route::delete('masters/detail/{type}/{id}',                [MasterApiController::class, 'detailDestroy']);
-                    Route::post('masters/detail/{type}/{id}/toggle-favourite', [MasterApiController::class, 'detailToggleFavourite']);
+                    Route::get('masters/detail/{type}',                        [MasterApiController::class, 'detailIndex']); // open — used by exam screens
+                    Route::post('masters/detail/{type}',                       [MasterApiController::class, 'detailStore'])
+                        ->middleware('permission:master.eye_exam');
+                    Route::put('masters/detail/{type}/{id}',                   [MasterApiController::class, 'detailUpdate'])
+                        ->middleware('permission:master.eye_exam');
+                    Route::delete('masters/detail/{type}/{id}',                [MasterApiController::class, 'detailDestroy'])
+                        ->middleware('permission:master.eye_exam');
+                    Route::post('masters/detail/{type}/{id}/toggle-favourite', [MasterApiController::class, 'detailToggleFavourite']); // open — doctor favourites
 
                     // Masters — Case Types CRUD
-                    Route::get('masters/case-types',      [MasterApiController::class, 'caseTypeIndex']);
-                    Route::post('masters/case-types',     [MasterApiController::class, 'caseTypeStore']);
-                    Route::put('masters/case-types/{id}', [MasterApiController::class, 'caseTypeUpdate']);
-                    Route::delete('masters/case-types/{id}', [MasterApiController::class, 'caseTypeDestroy']);
+                    Route::get('masters/case-types',         [MasterApiController::class, 'caseTypeIndex'])
+                        ->middleware('permission:master.case_types');
+                    Route::post('masters/case-types',        [MasterApiController::class, 'caseTypeStore'])
+                        ->middleware('permission:master.case_types');
+                    Route::put('masters/case-types/{id}',    [MasterApiController::class, 'caseTypeUpdate'])
+                        ->middleware('permission:master.case_types');
+                    Route::delete('masters/case-types/{id}', [MasterApiController::class, 'caseTypeDestroy'])
+                        ->middleware('permission:master.case_types');
 
                     // Masters — Referrers CRUD (separate from dropdown GET masters/referrers)
-                    Route::get('masters/referrers-crud',      [MasterApiController::class, 'referrerIndex']);
-                    Route::post('masters/referrers-crud',     [MasterApiController::class, 'referrerStore']);
-                    Route::put('masters/referrers-crud/{id}', [MasterApiController::class, 'referrerUpdate']);
-                    Route::delete('masters/referrers-crud/{id}', [MasterApiController::class, 'referrerDestroy']);
+                    Route::get('masters/referrers-crud',         [MasterApiController::class, 'referrerIndex'])
+                        ->middleware('permission:master.locations');
+                    Route::post('masters/referrers-crud',        [MasterApiController::class, 'referrerStore'])
+                        ->middleware('permission:master.locations');
+                    Route::put('masters/referrers-crud/{id}',    [MasterApiController::class, 'referrerUpdate'])
+                        ->middleware('permission:master.locations');
+                    Route::delete('masters/referrers-crud/{id}', [MasterApiController::class, 'referrerDestroy'])
+                        ->middleware('permission:master.locations');
 
                     // Masters — OT Slots CRUD
-                    Route::get('masters/ot-slots',      [MasterApiController::class, 'otSlotIndex']);
-                    Route::post('masters/ot-slots',     [MasterApiController::class, 'otSlotStore']);
-                    Route::put('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotUpdate']);
-                    Route::delete('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotDestroy']);
+                    Route::get('masters/ot-slots',         [MasterApiController::class, 'otSlotIndex'])
+                        ->middleware('permission:master.ot_slots');
+                    Route::post('masters/ot-slots',        [MasterApiController::class, 'otSlotStore'])
+                        ->middleware('permission:master.ot_slots');
+                    Route::put('masters/ot-slots/{id}',    [MasterApiController::class, 'otSlotUpdate'])
+                        ->middleware('permission:master.ot_slots');
+                    Route::delete('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotDestroy'])
+                        ->middleware('permission:master.ot_slots');
 
                     // Masters — OT Charge Heads CRUD
-                    Route::get('masters/ot-charge-heads',      [MasterApiController::class, 'otChargeHeadIndex']);
-                    Route::post('masters/ot-charge-heads',     [MasterApiController::class, 'otChargeHeadStore']);
-                    Route::put('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadUpdate']);
-                    Route::delete('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadDestroy']);
+                    Route::get('masters/ot-charge-heads',         [MasterApiController::class, 'otChargeHeadIndex'])
+                        ->middleware('permission:master.ot_charges');
+                    Route::post('masters/ot-charge-heads',        [MasterApiController::class, 'otChargeHeadStore'])
+                        ->middleware('permission:master.ot_charges');
+                    Route::put('masters/ot-charge-heads/{id}',    [MasterApiController::class, 'otChargeHeadUpdate'])
+                        ->middleware('permission:master.ot_charges');
+                    Route::delete('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadDestroy'])
+                        ->middleware('permission:master.ot_charges');
 
                     // Masters — OT Surgery Types CRUD
-                    Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList']);
-                    Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex']);
-                    Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore']);
-                    Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate']);
-                    Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy']);
+                    Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList'])
+                        ->middleware('permission:master.ot_types');
+                    Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex'])
+                        ->middleware('permission:master.ot_types');
+                    Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore'])
+                        ->middleware('permission:master.ot_types');
+                    Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate'])
+                        ->middleware('permission:master.ot_types');
+                    Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy'])
+                        ->middleware('permission:master.ot_types');
 
                     // Examinations
                     Route::get('exams/primary/{patientId}', [ExamApiController::class, 'showPrimary'])
@@ -354,7 +378,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // Clinical Queue
                     Route::get('clinical-queue', [ClinicalQueueApiController::class, 'index'])
-                        ->name('clinical-queue');
+                        ->name('clinical-queue')
+                        ->middleware('permission:opd.exam.primary|opd.exam.secondary');
 
                     // Medicines
                     Route::prefix('medicines')->name('medicines.')->group(function () {
@@ -402,26 +427,38 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // Reports
                     Route::prefix('reports')->name('reports.')->group(function () {
-                        Route::get('/', [ReportsApiController::class, 'index'])->name('index');
-                        Route::get('filter-data', [ReportsApiController::class, 'filterData'])->name('filter-data');
-                        Route::get('export/excel', [ReportsApiController::class, 'exportExcel'])->name('export.excel');
-                        Route::get('export/pdf', [ReportsApiController::class, 'exportPdf'])->name('export.pdf');
+                        Route::get('/', [ReportsApiController::class, 'index'])
+                            ->name('index')
+                            ->middleware('permission:reports.view');
+                        Route::get('filter-data', [ReportsApiController::class, 'filterData'])
+                            ->name('filter-data')
+                            ->middleware('permission:reports.view');
+                        Route::get('export/excel', [ReportsApiController::class, 'exportExcel'])
+                            ->name('export.excel')
+                            ->middleware('permission:reports.export');
+                        Route::get('export/pdf', [ReportsApiController::class, 'exportPdf'])
+                            ->name('export.pdf')
+                            ->middleware('permission:reports.export');
                     });
 
                     // Config — Users (CRUD)
-                    Route::get('config/users/form-data', [UserApiController::class, 'formData']);
+                    Route::get('config/users/form-data', [UserApiController::class, 'formData'])
+                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff');
                     Route::get('config/users', [UserApiController::class, 'index'])
                         ->middleware('permission:master.doctors|master.receptions|master.ot_staff');
-                    Route::post('config/users', [UserApiController::class, 'store']);
+                    Route::post('config/users', [UserApiController::class, 'store'])
+                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff');
                     Route::get('config/users/{id}', [UserApiController::class, 'show'])
                         ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
                         ->where('id', '[0-9]+');
                     Route::post('config/users/{id}', [UserApiController::class, 'update'])
+                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
                         ->where('id', '[0-9]+');
                     Route::delete('config/users/{id}', [UserApiController::class, 'destroy'])
                         ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
                         ->where('id', '[0-9]+');
                     Route::patch('config/users/{id}/toggle-status', [UserApiController::class, 'toggleStatus'])
+                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
                         ->where('id', '[0-9]+');
 
                     // FOC (Free of Charge)
