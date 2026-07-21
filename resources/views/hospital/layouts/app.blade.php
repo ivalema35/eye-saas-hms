@@ -282,12 +282,16 @@
 
         .sidebar-brand-name {
             color: #fff;
-            font-size: 2rem;
+            font-size: clamp(1.05rem, calc(2.35rem - 0.05rem * var(--name-len, 10)), 2rem);
             font-weight: 900;
             letter-spacing: -.02em;
-            white-space: nowrap;
+            line-height: 1.08;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
             overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .sidebar-brand-tag {
@@ -927,7 +931,8 @@
                         @endif
                     </span>
                     <span class="sidebar-brand-copy">
-                        <span class="sidebar-brand-name">{{ $hospitalName }}</span>
+                        <span class="sidebar-brand-name" title="{{ $hospitalName }}"
+                            style="--name-len: {{ mb_strlen((string) $hospitalName) }};">{{ $hospitalName }}</span>
                         <span class="sidebar-brand-tag">Hospital Workspace</span>
                     </span>
                 </a>
