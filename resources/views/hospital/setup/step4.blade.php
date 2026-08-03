@@ -15,7 +15,7 @@
                     <tr>
                         <th style="text-align:left; font-size:.8125rem; font-weight:600; color:#374151; padding:.5rem .5rem .5rem 0; border-bottom:1.5px solid #E5E7EB">#</th>
                         <th style="text-align:left; font-size:.8125rem; font-weight:600; color:#374151; padding:.5rem; border-bottom:1.5px solid #E5E7EB">Case Name</th>
-                        <th style="text-align:left; font-size:.8125rem; font-weight:600; color:#374151; padding:.5rem; border-bottom:1.5px solid #E5E7EB; width:140px">Fee (₹)</th>
+                        <th style="text-align:left; font-size:.8125rem; font-weight:600; color:#374151; padding:.5rem; border-bottom:1.5px solid #E5E7EB; width:140px">Fee ({{ currency_symbol() }})</th>
                         <th style="width:44px; border-bottom:1.5px solid #E5E7EB"></th>
                     </tr>
                 </thead>

@@ -5,38 +5,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OT Invoice</title>
     <style>
+        @page {
+            size: A5 portrait;
+            margin: 8mm;
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
             background: #f5f6fa;
             color: #1f2937;
+            font-size: 12px;
         }
         .page {
-            width: 210mm;
-            min-height: 297mm;
+            width: 148mm;
+            min-height: 210mm;
             margin: 12px auto;
             background: #fff;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            padding: 20mm;
+            padding: 8mm;
             box-sizing: border-box;
         }
         .header {
             border-bottom: 2px solid #0f4c81;
-            padding-bottom: 12px;
-            margin-bottom: 18px;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
         }
 
         .print-logo {
-            width: 72px;
-            height: 72px;
-            border-radius: 12px;
+            width: 56px;
+            height: 56px;
+            border-radius: 10px;
             background: #F8FAFC;
             border: 1px solid #E5E7EB;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            margin-right: 12px;
+            margin-right: 10px;
         }
         .print-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
         .header h1 {
@@ -181,7 +186,7 @@
             <thead>
                 <tr>
                     <th style="width: 70%">Particulars</th>
-                    <th style="width: 30%">Amount (INR)</th>
+                    <th style="width: 30%">Amount ({{ currency_code() }})</th>
                 </tr>
             </thead>
             <tbody>
@@ -207,19 +212,19 @@
         <div class="totals">
             <div class="totals-row">
                 <span>Total</span>
-                <strong>INR {{ number_format((float) ($invoice->total_amount ?? 0), 2) }}</strong>
+                <strong>{{ money_code((float) ($invoice->total_amount ?? 0), 2) }}</strong>
             </div>
             <div class="totals-row">
                 <span>Tax</span>
-                <strong>INR {{ number_format((float) ($invoice->tax_amount ?? 0), 2) }}</strong>
+                <strong>{{ money_code((float) ($invoice->tax_amount ?? 0), 2) }}</strong>
             </div>
             <div class="totals-row">
                 <span>Discount</span>
-                <strong>INR {{ number_format((float) ($invoice->discount ?? 0), 2) }}</strong>
+                <strong>{{ money_code((float) ($invoice->discount ?? 0), 2) }}</strong>
             </div>
             <div class="totals-row net">
                 <span>Net Amount</span>
-                <strong>INR {{ number_format((float) ($invoice->net_amount ?? 0), 2) }}</strong>
+                <strong>{{ money_code((float) ($invoice->net_amount ?? 0), 2) }}</strong>
             </div>
         </div>
     </div>

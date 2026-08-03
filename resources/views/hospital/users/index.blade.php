@@ -1,7 +1,7 @@
 @extends('hospital.layouts.app')
 
-@section('title', 'Users')
-@section('page-header', 'Users')
+@section('title', $roleFilterLabel ? $roleFilterLabel : 'Users')
+@section('page-header', $roleFilterLabel ? $roleFilterLabel : 'Users')
 
 @section('page-actions')
     <button type="button"
@@ -25,9 +25,15 @@
                 </span>
                 <div>
                     <h3 class="hms-card-title users-title">
-                        Staff Users
+                        {{ $roleFilterLabel ? $roleFilterLabel : 'Staff Users' }}
                     </h3>
-                    <div class="users-subtitle">Review team accounts and keep access information current.</div>
+                    <div class="users-subtitle">
+                        @if(!empty($roleFilterLabel))
+                            Manage {{ strtolower($roleFilterLabel) }} — add, edit, password, activate/deactivate, delete.
+                        @else
+                            Review team accounts and keep access information current.
+                        @endif
+                    </div>
                 </div>
             </div>
             <span class="hms-badge hms-badge-info users-count-pill">{{ $users->total() }} total</span>
@@ -83,9 +89,12 @@
                                             </button>
                                         @endif
                                         @if(Route::has('hospital.users.destroy'))
-                                            <form method="POST" action="{{ route('hospital.users.destroy', ['slug' => $slug, 'id' => $user->id]) }}" onsubmit="return confirm('Delete this user?');">
+                                            <form method="POST" action="{{ route('hospital.users.destroy', array_filter(['slug' => $slug, 'id' => $user->id, 'role' => $roleFilterKey ?? null])) }}" onsubmit="return confirm('Delete this user?');">
                                                 @csrf
                                                 @method('DELETE')
+                                                @if(!empty($roleFilterKey))
+                                                    <input type="hidden" name="role" value="{{ $roleFilterKey }}">
+                                                @endif
                                                 <button type="submit" class="btn btn-sm btn-outline-danger users-action-btn users-delete-btn" title="Delete">
                                                     <i class="bi bi-trash3-fill"></i>
                                                 </button>

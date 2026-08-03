@@ -169,7 +169,7 @@ class BasicMasterController extends Controller
         $roleSlug = $user?->role?->slug;
 
         $allowedByRole = in_array($roleSlug, ['hospital_admin', 'reception', 'receptionist', 'receptionist_opd'], true);
-        $allowedByPermission = $this->perm->canAny(['opd.patient.register', 'opd.patient.register_phone', 'master.locations']);
+        $allowedByPermission = $this->perm->canAny(['opd.patient.register', 'opd.patient.register_phone', 'master.locations', 'ot.appointment.create', 'ot.appointment.edit']);
 
         if (! $allowedByRole && ! $allowedByPermission) {
             return response()->json(['success' => false, 'message' => 'Forbidden'], 403);

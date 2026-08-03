@@ -7,6 +7,7 @@ use App\Jobs\SendWelcomeEmail;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use App\Models\Role\Role;
+use App\Services\Platform\CurrencyService;
 use App\Services\Platform\TimezoneService;
 use Carbon\Carbon;
 use Database\Seeders\SystemRolesSeeder;
@@ -16,7 +17,10 @@ use Illuminate\Support\Facades\Log;
 
 class TenantService
 {
-    public function __construct(private readonly TimezoneService $timezoneService) {}
+    public function __construct(
+        private readonly TimezoneService $timezoneService,
+        private readonly CurrencyService $currencyService,
+    ) {}
 
     public function createTenant(array $data): Tenant
     {
@@ -35,6 +39,12 @@ class TenantService
             $timezone = $country
                 ? $this->timezoneService->getTimezoneForCountry($country)
                 : 'UTC';
+            $currency = $country
+                ? $this->currencyService->getCurrencyForCountry($country)
+                : [
+                    'code' => config('app.platform_currency_code', 'INR'),
+                    'symbol' => config('app.platform_currency_symbol', '₹'),
+                ];
 
             $tenant = Tenant::create([
                 'name' => $data['hospital_name'],
@@ -49,6 +59,9 @@ class TenantService
                 'city'     => $data['city'] ?? null,
                 'timezone' => $timezone,
                 'is_timezone_override' => false,
+                'currency_code' => $currency['code'],
+                'currency_symbol' => $currency['symbol'],
+                'is_currency_override' => false,
                 'status' => 'trial',
                 'trial_ends_at' => $trialEndsAt,
                 'is_setup_done' => false,

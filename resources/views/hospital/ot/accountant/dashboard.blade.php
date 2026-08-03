@@ -486,10 +486,10 @@
         </div>
         <div class="ota-head-actions">
             <div class="ota-filter-wrap" role="group" aria-label="OT accountant filter">
-                <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'all']) }}"
-                   class="ota-filter-btn {{ ($activeFilter ?? 'all') === 'all' ? 'active' : '' }}">All</a>
                 <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'today']) }}"
-                   class="ota-filter-btn {{ ($activeFilter ?? 'all') === 'today' ? 'active' : '' }}">Today</a>
+                   class="ota-filter-btn {{ ($activeFilter ?? 'today') === 'today' ? 'active' : '' }}">Today</a>
+                <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'completed']) }}"
+                   class="ota-filter-btn {{ ($activeFilter ?? 'today') === 'completed' ? 'active' : '' }}">Completed</a>
             </div>
             <span class="ota-total-pill">{{ $bookings->total() }} total</span>
         </div>
@@ -511,30 +511,55 @@
                 <tbody>
                     @forelse($bookings as $booking)
                         @php
-                            $status = strtoupper((string) $booking->ot_status);
-                            $statusLabel = $status === 'PAID' ? 'Payment Completed' : 'Payment Pending';
+                            // OT Workflow Upgrade — Phase 5: computed payment status
+                            // (paid/partially_paid/pending) replaces the raw ot_status
+                            // check here, which went stale once Phase 1 changed the
+                            // status flow (bookings never sit at 'booked' by the time
+                            // they reach this screen anymore).
+                            $paymentStatus = $booking->payment_status;
+                            $statusBadgeClass = match($paymentStatus) {
+                                'paid' => 'text-bg-success',
+                                'partially_paid' => 'text-bg-info',
+                                'unpriced' => 'text-bg-secondary',
+                                default => 'text-bg-warning',
+                            };
+                            $statusLabel = match($paymentStatus) {
+                                'paid' => 'Payment Completed',
+                                'partially_paid' => 'Partially Paid',
+                                'unpriced' => 'Package Not Set',
+                                default => 'Payment Pending',
+                            };
                         @endphp
                         <tr>
                             <td><span class="ota-patient-cell"><i class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span></td>
                             <td><span class="ota-phone-cell"><i class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span></td>
                             <td><span class="ota-date-cell"><i class="bi bi-calendar2-event"></i>{{ optional($booking->surgery_date)->format('d M Y') }}</span></td>
-                            <td><span class="ota-amount-pill"><i class="bi bi-currency-rupee"></i>INR {{ number_format((float) ($booking->package_amount ?? 0), 2) }}</span></td>
+                            <td><span class="ota-amount-pill"><i class="bi bi-cash-coin"></i>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</span></td>
                             <td>
-                                <span class="badge ota-status-badge {{ $status === 'PAID' ? 'text-bg-success' : 'text-bg-warning' }}">
+                                <span class="badge ota-status-badge {{ $statusBadgeClass }}">
                                     {{ $statusLabel }}
                                 </span>
+                                @if($paymentStatus === 'partially_paid')
+                                    <div class="small text-muted mt-1">Balance: {{ money_code($booking->remaining_balance, 2) }}</div>
+                                @endif
                             </td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-outline-secondary ota-view-btn me-2" data-bs-toggle="modal" data-bs-target="#otaDetailModal{{ $booking->id }}">
                                     <i class="bi bi-eye-fill me-1"></i> View
                                 </button>
-                                @if($status === 'BOOKED')
+                                @if(! in_array($paymentStatus, ['paid', 'unpriced'], true))
                                     <a href="{{ route('hospital.ot.payments.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                        class="btn btn-sm btn-primary ota-add-payment-btn">
-                                        <i class="bi bi-plus-circle me-1"></i> Add Payment
+                                        <i class="bi bi-plus-circle me-1"></i> {{ $paymentStatus === 'partially_paid' ? 'Add Balance Payment' : 'Add Payment' }}
                                     </a>
                                 @else
-                                    <span class="text-muted small ota-paid-note"><i class="bi bi-check2-circle"></i> Payment Completed</span>
+                                    <span class="text-muted small ota-paid-note me-2"><i class="bi bi-check2-circle"></i> Payment Completed</span>
+                                @endif
+                                @if($booking->payments->isNotEmpty())
+                                    <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
+                                       class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
+                                        <i class="bi bi-printer me-1"></i> Receipt
+                                    </a>
                                 @endif
                             </td>
                         </tr>
@@ -558,8 +583,13 @@
 
 @foreach($bookings as $booking)
     @php
-        $status = strtoupper((string) $booking->ot_status);
-        $statusLabel = $status === 'PAID' ? 'Payment Completed' : 'Payment Pending';
+        $paymentStatus = $booking->payment_status;
+        $statusLabel = match($paymentStatus) {
+            'paid' => 'Payment Completed',
+            'partially_paid' => 'Partially Paid',
+            'unpriced' => 'Package Not Set',
+            default => 'Payment Pending',
+        };
     @endphp
     <div class="modal fade ota-detail-modal" id="otaDetailModal{{ $booking->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
         <div class="modal-dialog modal-dialog-centered modal-xl">
@@ -610,12 +640,18 @@
                                 </div>
                                 <div class="ota-summary-box">
                                     <div class="ota-summary-label">Package Amount</div>
-                                    <div class="ota-summary-value">INR {{ number_format((float) ($booking->package_amount ?? 0), 2) }}</div>
+                                    <div class="ota-summary-value">{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</div>
                                 </div>
                                 <div class="ota-summary-box">
                                     <div class="ota-summary-label">Payment Status</div>
                                     <div class="ota-summary-value">{{ $statusLabel }}</div>
                                 </div>
+                                @if($paymentStatus === 'partially_paid')
+                                    <div class="ota-summary-box">
+                                        <div class="ota-summary-label">Remaining Balance</div>
+                                        <div class="ota-summary-value">{{ money_code($booking->remaining_balance, 2) }}</div>
+                                    </div>
+                                @endif
                                 <div class="ota-summary-box mb-0">
                                     <div class="ota-summary-label">Booking ID</div>
                                     <div class="ota-summary-value">#{{ $booking->id }}</div>

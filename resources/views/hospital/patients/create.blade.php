@@ -35,6 +35,25 @@
             <form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}"
                 class="patient-create-form">
                 @csrf
+                <input type="hidden" name="ot_appointment_id" id="otAppointmentId" value="{{ old('ot_appointment_id') }}">
+
+                {{-- OT Appointment Search — Reception check-in (OT Workflow Upgrade Phase 2) --}}
+                <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
+                    <div class="alert alert-info border-0 mb-3" style="background:rgba(27,79,114,.06);color:#1B4F72;border-radius:12px;">
+                        <i class="bi bi-hospital me-1"></i>
+                        <strong>OT walk-in / pre-booked patient?</strong>
+                        Search the OT appointment below first — form will auto-fill and today’s OPD visit will be linked to that appointment.
+                    </div>
+                    <div class="form-group position-relative" style="max-width:480px">
+                        <label class="form-label"><i class="bi bi-search me-1"></i> Search OT Appointment (Name / Mobile / APT-000123)</label>
+                        <input type="text" id="appointmentSearch" class="form-control hms-input" placeholder="Type name, mobile, or APT number for OT check-in...">
+                        <div id="appointmentSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
+                             style="z-index:1050; border:1px solid #E2E8F0; top:100%; margin-top:4px"></div>
+                        <div id="appointmentLinkedNote" class="small text-success mt-1 d-none">
+                            <i class="bi bi-check2-circle"></i> Linked to OT appointment <strong id="appointmentLinkedNumber"></strong> — continue with OPD fee / registration below.
+                        </div>
+                    </div>
+                </div>
 
                 {{-- MRD Number --}}
                 <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
@@ -100,7 +119,7 @@
 
                         {{-- 8. Case Fee --}}
                         <div class="form-group">
-                            <label class="form-label">Case Fee (₹)</label>
+                            <label class="form-label">Case Fee ({{ currency_symbol() }})</label>
                             <input type="number" name="case_fee" id="caseFee" class="form-control hms-input" required
                                 readonly>
                         </div>
@@ -108,7 +127,7 @@
                         {{-- 12. Doctor Name --}}
                         <div class="form-group">
                             <label class="form-label">Doctor Name</label>
-                            <select name="doctor_id" class="form-control select2 hms-select" required>
+                            <select name="doctor_id" id="doctorSelect" class="form-control select2 hms-select" required>
                                 <option value="">Select Doctor</option>
                                 @foreach($doctors as $doc)
                                     <option value="{{ $doc->id }}">{{ $doc->name }}</option>
@@ -183,7 +202,7 @@
                         {{-- 16. Referred By --}}
                         <div class="form-group">
                             <label class="form-label">Referred By</label>
-                            <select name="referrer_id" class="form-control select2 hms-select">
+                            <select name="referrer_id" id="referrerSelect" class="form-control select2 hms-select">
                                 <option value="">Select Referrer</option>
                                 @foreach($referrers as $r)
                                     <option value="{{ $r->id }}">{{ $r->name }}</option>
@@ -329,6 +348,104 @@
             document.addEventListener('click', function (e) {
                 if (patientSuggestions && contactInput && e.target !== contactInput && !patientSuggestions.contains(e.target)) {
                     patientSuggestions.classList.add('d-none');
+                }
+            });
+
+            // ── OT Appointment Search → Prefill (Reception check-in, Phase 2) ──
+            var appointmentSearchUrl = '{{ route('hospital.ot.appointments.search', ['slug' => $slug]) }}';
+            var appointmentInput = document.getElementById('appointmentSearch');
+            var appointmentSuggestions = document.getElementById('appointmentSuggestions');
+            var foundAppointmentsList = [];
+            var appointmentSearchTimer = null;
+
+            window.fillSelectedAppointment = function (index) {
+                if (index < 0 || index >= foundAppointmentsList.length) { return; }
+
+                var a = foundAppointmentsList[index];
+                var setVal = function (id, val) {
+                    var el = document.getElementById(id);
+                    if (el && val !== null && val !== undefined && val !== '') { el.value = val; }
+                };
+
+                setVal('firstName', a.patient_name);
+                setVal('lastName', a.surname);
+                setVal('middleName', a.middle_name);
+                setVal('whatsappNo', a.whatsapp_no);
+                setVal('age', a.age);
+                setVal('occupation', a.occupation);
+
+                var contactEl = document.getElementById('contactNo');
+                if (contactEl && a.mobile_no) { contactEl.value = a.mobile_no; }
+
+                var genderEl = document.getElementById('gender');
+                if (genderEl && a.gender) { genderEl.value = a.gender; }
+
+                var selectAndTrigger = function (el, value) {
+                    if (!el || !value || !el.querySelector('option[value="' + value + '"]')) { return; }
+                    el.value = value;
+                    if (typeof $ !== 'undefined') { $(el).trigger('change'); } else { el.dispatchEvent(new Event('change')); }
+                };
+
+                selectAndTrigger(document.getElementById('locationSelect'), a.location_id);
+                selectAndTrigger(document.getElementById('doctorSelect'), a.doctor_id);
+                selectAndTrigger(document.getElementById('referrerSelect'), a.referrer_id);
+
+                document.getElementById('otAppointmentId').value = a.id;
+                appointmentInput.value = a.appointment_number + ' — ' + a.patient_name;
+
+                var linkedNote = document.getElementById('appointmentLinkedNote');
+                document.getElementById('appointmentLinkedNumber').textContent = a.appointment_number;
+                linkedNote.classList.remove('d-none');
+
+                if (appointmentSuggestions) { appointmentSuggestions.classList.add('d-none'); }
+                showToast('Appointment ' + a.appointment_number + ' linked — details filled.');
+            };
+
+            if (appointmentInput && appointmentSuggestions) {
+                appointmentInput.addEventListener('input', function () {
+                    var term = this.value.trim();
+
+                    // Typing again after a previous link means the old link no longer applies.
+                    document.getElementById('otAppointmentId').value = '';
+                    document.getElementById('appointmentLinkedNote').classList.add('d-none');
+
+                    if (appointmentSearchTimer) { clearTimeout(appointmentSearchTimer); }
+                    if (term.length < 3) {
+                        appointmentSuggestions.classList.add('d-none');
+                        return;
+                    }
+
+                    appointmentSearchTimer = setTimeout(function () {
+                        fetch(appointmentSearchUrl + '?q=' + encodeURIComponent(term), {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                        })
+                            .then(function (res) { return res.json(); })
+                            .then(function (data) {
+                                if (!data.found || !data.appointments || data.appointments.length === 0) {
+                                    appointmentSuggestions.classList.add('d-none');
+                                    return;
+                                }
+
+                                foundAppointmentsList = data.appointments;
+                                var html = '';
+                                data.appointments.forEach(function (a, idx) {
+                                    html += '<div class="patient-suggestion-card" onclick="fillSelectedAppointment(' + idx + ')">' +
+                                        '<div class="fw-bold" style="color: var(--prim-blue-600, #1B4F72);">' + a.appointment_number + ' — ' + a.patient_name + '</div>' +
+                                        '<div class="small text-muted">' + a.mobile_no + (a.doctor_name ? ' | Dr. ' + a.doctor_name : '') + ' | ' + (a.appointment_date || '-') + '</div>' +
+                                        '</div>';
+                                });
+
+                                appointmentSuggestions.innerHTML = html;
+                                appointmentSuggestions.classList.remove('d-none');
+                            })
+                            .catch(function () { appointmentSuggestions.classList.add('d-none'); });
+                    }, 300);
+                });
+            }
+
+            document.addEventListener('click', function (e) {
+                if (appointmentSuggestions && appointmentInput && e.target !== appointmentInput && !appointmentSuggestions.contains(e.target)) {
+                    appointmentSuggestions.classList.add('d-none');
                 }
             });
 

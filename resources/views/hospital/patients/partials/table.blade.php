@@ -61,7 +61,7 @@
 
                     {{-- Fee / Type --}}
                     <td>
-                        <div class="pt-fee">₹{{ number_format($p->case_fee, 0) }}</div>
+                        <div class="pt-fee">{{ money($p->case_fee, 0) }}</div>
                         <span class="type-badge">{{ ucfirst($p->type) }}</span>
                     </td>
 

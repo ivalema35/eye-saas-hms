@@ -1,4 +1,4 @@
-﻿@extends('superadmin.layouts.app')
+@extends('superadmin.layouts.app')
 
 @section('title', $tenant->name)
 @section('page-header', $tenant->name)
@@ -47,11 +47,11 @@
         </div>
     </div>
     <div class="hms-stat-card">
-        <div class="hms-stat-icon hsi-green"><i class="bi bi-currency-rupee"></i></div>
+        <div class="hms-stat-icon hsi-green"><i class="bi bi-cash-coin"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Total Paid</div>
             <div class="hms-stat-value">
-                ₹{{ number_format($tenant->payments->where('status','success')->sum('amount')) }}
+                {{ platform_money($tenant->payments->where('status','success')->sum('amount')) }}
             </div>
         </div>
     </div>
@@ -196,7 +196,7 @@
                             <td>
                                 <span class="hms-badge hms-badge-info">{{ ucfirst($sub->cycle) }}</span>
                             </td>
-                            <td style="font-weight:600;color:#1A202C">₹{{ number_format($sub->price) }}</td>
+                            <td style="font-weight:600;color:#1A202C">{{ platform_money($sub->price) }}</td>
                             <td style="font-size:.85rem;color:#475569">{{ optional($sub->starts_at)->format('d M Y') ?? '—' }}</td>
                             <td style="font-size:.85rem;color:#475569">{{ optional($sub->ends_at)->format('d M Y') ?? '—' }}</td>
                             <td>
@@ -216,7 +216,7 @@
 <div class="hms-card" style="padding:0">
     <div class="hms-card-header">
         <h3 class="hms-card-title">
-            <i class="bi bi-currency-rupee" style="color:#27AE60"></i>
+            <i class="bi bi-cash-coin" style="color:#27AE60"></i>
             Payment History
         </h3>
         @if($tenant->payments->isNotEmpty())
@@ -243,7 +243,7 @@
                 <tbody>
                     @foreach($tenant->payments->sortByDesc('created_at') as $payment)
                         <tr>
-                            <td style="font-weight:600;color:#1A202C">₹{{ number_format($payment->amount) }}</td>
+                            <td style="font-weight:600;color:#1A202C">{{ platform_money($payment->amount) }}</td>
                             <td>{{ ucfirst($payment->method ?? '—') }}</td>
                             <td style="font-family:monospace;font-size:.8rem;color:#475569">{{ $payment->transaction_id ?? '—' }}</td>
                             <td>

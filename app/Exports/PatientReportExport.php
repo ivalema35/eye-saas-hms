@@ -32,7 +32,7 @@ class PatientReportExport implements FromCollection, WithHeadings, WithMapping
             'Doctor',
             'Receptionist',
             'Case Type',
-            'Fee (₹)',
+            'Fee (' . currency_symbol() . ')',
         ];
     }
 

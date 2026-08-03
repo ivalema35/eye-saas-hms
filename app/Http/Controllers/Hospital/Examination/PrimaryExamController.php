@@ -32,7 +32,11 @@ use Illuminate\View\View;
  */
 class PrimaryExamController extends Controller
 {
-    public function __construct(private ExaminationService $examinationService) {}
+    use LoadsOtRecommendContext;
+
+    public function __construct(private ExaminationService $examinationService)
+    {
+    }
 
     public function show(string $slug, int $id): View
     {
@@ -50,26 +54,41 @@ class PrimaryExamController extends Controller
                 $query->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($q) {
                         $q->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })
             ->orderBy('name')
             ->get(['id', 'name']);
-        $focReceptionists = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
+        $focReceptionists = HospitalUser::whereHas('role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
             ->active()->orderBy('name')->get(['id', 'name']);
 
-        $currentDoctorId = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)
+        $currentDoctorId = in_array($user?->role?->slug, ['doctor'], true)
             ? $user?->id
             : ($patient->doctor_id ?: $user?->id);
 
         $masters = $this->loadMasters($tenant->id);
         $masters['doctors'] = $doctors;
 
+        [$otSlots, $otSurgeryTypes, $existingOtRecommendation, $otDefaultSlotId, $otDefaultSurgeryDate, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenant->id, (int) $patient->id);
+
         return view('hospital.exam.primary', compact(
-            'patient', 'exam', 'slug', 'doctors',
-            'currentDoctorId', 'masters', 'focReceptionists'
+            'patient',
+            'exam',
+            'slug',
+            'doctors',
+            'currentDoctorId',
+            'masters',
+            'focReceptionists',
+            'otSlots',
+            'otSurgeryTypes',
+            'existingOtRecommendation',
+            'otDefaultSlotId',
+            'otDefaultSurgeryDate',
+            'otDefaultDiagnosisHint',
+            'otAssistants',
+            'otDoctors'
         ));
     }
 
@@ -80,9 +99,9 @@ class PrimaryExamController extends Controller
         $data = $request->validated();
         unset($data['exam_data']['advices']);
         $medicines = collect($data['medicines'] ?? [])
-            ->filter(fn (array $m): bool => ! empty($m['name']))
+            ->filter(fn(array $m): bool => !empty($m['name']))
             ->map(function (array $medicine) use ($tenant): array {
-                if (! empty($medicine['medicine_id']) || empty($medicine['name'])) {
+                if (!empty($medicine['medicine_id']) || empty($medicine['name'])) {
                     return $medicine;
                 }
 
@@ -108,19 +127,19 @@ class PrimaryExamController extends Controller
             $data['exam_data'] ?? [],
             $medicines,
             $tenant->id,
-            ! empty($data['dilation_time']) ? (int) $data['dilation_time'] : null
+            !empty($data['dilation_time']) ? (int) $data['dilation_time'] : null
         );
 
-        $user = Auth::guard('hospital_user')->user();
-
-        if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
+        // Not dilated → patient proceeds straight to Secondary Exam.
+        // Dilated → patient waits out the lock time, so send the exam back to the dashboard.
+        if (($data['exam_data']['dilate'] ?? 'No') === 'Yes') {
             return redirect()
-                ->route('hospital.exam.primary.print', ['slug' => $slug, 'id' => $id])
-                ->with('success', 'Primary examination saved successfully.');
+                ->route('hospital.dashboard', ['slug' => $slug])
+                ->with('success', 'Primary examination saved. Patient dilated — return after the lock time.');
         }
 
         return redirect()
-            ->route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $id])
+            ->route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $id])
             ->with('success', 'Primary examination saved successfully.');
     }
 
@@ -161,14 +180,22 @@ class PrimaryExamController extends Controller
             ->get(['id', DB::raw('value as kco')]));
 
         $user = Auth::guard('hospital_user')->user();
-        $backUrl = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)
-            ? route('hospital.dashboard', ['slug' => $slug])
+        $backUrl = $user?->role?->slug === 'doctor'
+            ? route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $id])
             : 'javascript:history.back()';
 
         return view('hospital.exam.print', compact(
-            'patient', 'exam', 'tenant', 'slug',
-            'diagnosisMasters', 'adviceMasters', 'complaintMasters', 'kcoMasters', 'backUrl',
-            'primaryDoctorName', 'secondaryDoctorName'
+            'patient',
+            'exam',
+            'tenant',
+            'slug',
+            'diagnosisMasters',
+            'adviceMasters',
+            'complaintMasters',
+            'kcoMasters',
+            'backUrl',
+            'primaryDoctorName',
+            'secondaryDoctorName'
         ));
     }
 
@@ -179,7 +206,7 @@ class PrimaryExamController extends Controller
     {
         $patient = Patient::findOrFail($id);
         $exam = PrimaryExamination::where('patient_id', $id)
-            ->with('prescriptions.medicine.medicineType', 'prescriptions.dosage', 'doctor')
+            ->with('prescriptions.medicine.medicineType', 'prescriptions.dosage', 'prescriptions.route', 'doctor')
             ->firstOrFail();
         $tenant = app('tenant');
 
@@ -200,8 +227,14 @@ class PrimaryExamController extends Controller
             ->get(['id', DB::raw('value as kco')]));
 
         return view('hospital.exam.compact_view', compact(
-            'patient', 'exam', 'tenant', 'slug',
-            'diagnosisMasters', 'adviceMasters', 'complaintMasters', 'kcoMasters'
+            'patient',
+            'exam',
+            'tenant',
+            'slug',
+            'diagnosisMasters',
+            'adviceMasters',
+            'complaintMasters',
+            'kcoMasters'
         ));
     }
 
@@ -256,8 +289,8 @@ class PrimaryExamController extends Controller
 
         $tenantId = app('tenant')->id;
         $advice = MasterAdvice::create([
-            'tenant_id'    => $tenantId,
-            'value'        => trim($validated['advice']),
+            'tenant_id' => $tenantId,
+            'value' => trim($validated['advice']),
             'is_favourite' => false,
         ]);
 
@@ -288,7 +321,7 @@ class PrimaryExamController extends Controller
      */
     private function loadMasters(int $tenantId): array
     {
-        $q = fn (string $table) => DB::table($table)
+        $q = fn(string $table) => DB::table($table)
             ->where('tenant_id', $tenantId)
             ->orderBy('id')
             ->get();
@@ -319,10 +352,10 @@ class PrimaryExamController extends Controller
                 ->orderByDesc('is_favourite')
                 ->orderBy('id')
                 ->get(['id', 'value', 'is_favourite'])
-                ->map(fn($a) => (object)[
-                    'id'            => $a->id,
-                    'advice'        => $a->value,
-                    'is_favourite'  => $a->is_favourite,
+                ->map(fn($a) => (object) [
+                    'id' => $a->id,
+                    'advice' => $a->value,
+                    'is_favourite' => $a->is_favourite,
                     'diagnosis_ids' => $a->diagnoses->pluck('id')->all(),
                 ]),
             'durations' => $q('tbl_durations'),
@@ -362,6 +395,7 @@ class PrimaryExamController extends Controller
                 ->get(['id', 'name', 'brand_name', 'dosage_id', 'duration', 'qty']),
             'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
+                ->whereIn('usage_scope', ['opd', 'both'])
                 ->orderBy('name')
                 ->get(),
             'routes' => MedicineRoute::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name']),

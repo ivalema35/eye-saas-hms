@@ -20,7 +20,7 @@ class PlatformLocationApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => [
-                'countries' => MasterCountry::orderBy('name')->get(['id', 'name', 'default_timezone']),
+                'countries' => MasterCountry::orderBy('name')->get(['id', 'name', 'country_code', 'default_timezone', 'currency_code', 'currency_symbol', 'currency_name', 'fx_inr_per_unit']),
                 'states'    => MasterState::with('country:id,name')->orderBy('name')->get(['id', 'country_id', 'name']),
                 'districts' => MasterDistrict::with('state:id,name')->orderBy('name')->get(['id', 'state_id', 'name']),
             ],
@@ -46,15 +46,37 @@ class PlatformLocationApiController extends Controller
     {
         $request->validate([
             'name'             => ['required', 'string', 'max:100'],
+            'country_code'     => ['required', 'string', 'size:2'],
             'default_timezone' => ['required', 'string', 'timezone'],
+            'currency_code'    => ['required', 'string', 'size:3'],
+            'currency_symbol'  => ['required', 'string', 'max:10'],
+            'currency_name'    => ['nullable', 'string', 'max:50'],
+            'fx_inr_per_unit'  => ['required', 'numeric', 'min:0.0001', 'max:999999'],
         ]);
         $name = MasterCountry::normalize($request->name);
+        $countryCode = strtoupper($request->country_code);
 
         if (MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($name)])->exists()) {
             return response()->json(['success' => false, 'message' => "Country \"{$name}\" already exists."], 422);
         }
 
-        $item = MasterCountry::create(['name' => $name, 'default_timezone' => $request->default_timezone, 'is_active' => true]);
+        if (MasterCountry::whereRaw('UPPER(country_code) = ?', [$countryCode])->exists()) {
+            return response()->json(['success' => false, 'message' => "Country code \"{$countryCode}\" already exists."], 422);
+        }
+
+        $code = strtoupper($request->currency_code);
+        $preset = \App\Services\Platform\CurrencyService::commonCurrencies()[$code] ?? null;
+
+        $item = MasterCountry::create([
+            'name' => $name,
+            'country_code' => $countryCode,
+            'default_timezone' => $request->default_timezone,
+            'currency_code' => $code,
+            'currency_symbol' => $request->currency_symbol ?: ($preset['symbol'] ?? '₹'),
+            'currency_name' => $request->currency_name ?: ($preset['name'] ?? null),
+            'fx_inr_per_unit' => (float) $request->fx_inr_per_unit,
+            'is_active' => true,
+        ]);
         return response()->json(['success' => true, 'message' => "Country \"{$name}\" added.", 'data' => $item]);
     }
 
@@ -63,19 +85,47 @@ class PlatformLocationApiController extends Controller
         $country = MasterCountry::findOrFail($id);
         $request->validate([
             'name'             => ['required', 'string', 'max:100'],
+            'country_code'     => ['required', 'string', 'size:2'],
             'default_timezone' => ['required', 'string', 'timezone'],
+            'currency_code'    => ['required', 'string', 'size:3'],
+            'currency_symbol'  => ['required', 'string', 'max:10'],
+            'currency_name'    => ['nullable', 'string', 'max:50'],
+            'fx_inr_per_unit'  => ['required', 'numeric', 'min:0.0001', 'max:999999'],
         ]);
         $name = MasterCountry::normalize($request->name);
+        $countryCode = strtoupper($request->country_code);
 
         if (MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($name)])->where('id', '!=', $id)->exists()) {
             return response()->json(['success' => false, 'message' => "Country \"{$name}\" already exists."], 422);
         }
 
-        $country->update(['name' => $name, 'default_timezone' => $request->default_timezone]);
+        if (MasterCountry::whereRaw('UPPER(country_code) = ?', [$countryCode])->where('id', '!=', $id)->exists()) {
+            return response()->json(['success' => false, 'message' => "Country code \"{$countryCode}\" already exists."], 422);
+        }
+
+        $code = strtoupper($request->currency_code);
+        $preset = \App\Services\Platform\CurrencyService::commonCurrencies()[$code] ?? null;
+        $symbol = $request->currency_symbol ?: ($preset['symbol'] ?? $country->currency_symbol);
+
+        $country->update([
+            'name' => $name,
+            'country_code' => $countryCode,
+            'default_timezone' => $request->default_timezone,
+            'currency_code' => $code,
+            'currency_symbol' => $symbol,
+            'currency_name' => $request->currency_name ?: ($preset['name'] ?? $country->currency_name),
+            'fx_inr_per_unit' => (float) $request->fx_inr_per_unit,
+        ]);
 
         // Cascade timezone to non-overridden tenants
         Tenant::where('country', $name)->where('is_timezone_override', false)
             ->update(['timezone' => $request->default_timezone]);
+
+        Tenant::where('country', $name)->where('is_currency_override', false)
+            ->update([
+                'currency_code' => $code,
+                'currency_symbol' => $symbol,
+            ]);
 
         return response()->json(['success' => true, 'message' => 'Country updated.', 'data' => $country->fresh()]);
     }

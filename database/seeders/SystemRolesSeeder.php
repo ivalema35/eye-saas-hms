@@ -14,10 +14,10 @@ class SystemRolesSeeder extends Seeder
         ['name' => 'Hospital Admin', 'slug' => 'hospital_admin', 'color' => '#1B4F72', 'is_super' => true, 'is_system' => true],
         ['name' => 'Doctor', 'slug' => 'doctor', 'color' => '#2980B9', 'is_super' => false, 'is_system' => false],
         ['name' => 'Receptionist', 'slug' => 'receptionist', 'color' => '#27AE60', 'is_super' => false, 'is_system' => false],
-        ['name' => 'OT Receptionist', 'slug' => 'ot_receptionist', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
         ['name' => 'Accountant', 'slug' => 'accountant', 'color' => '#117A65', 'is_super' => false, 'is_system' => true],
-        ['name' => 'OT Doctor', 'slug' => 'ot_doctor', 'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
+        ['name' => 'Ward Management', 'slug' => 'ward_management', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
         ['name' => 'OT Assistant', 'slug' => 'ot_assistant', 'color' => '#CA6F1E', 'is_super' => false, 'is_system' => true],
+        ['name' => 'Discharge Counter', 'slug' => 'discharge_counter', 'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
     ];
 
     private array $defaultPermissions = [
@@ -34,8 +34,11 @@ class SystemRolesSeeder extends Seeder
             'opd.exam.history',
             'opd.prescription.print',
             'opd.foc.create',
+            'ot.surgery.recommend',
             'reports.view',
         ],
+        // Reception — absorbs the old ot_receptionist + ot_counsellor roles (docs/tulsi.md §2):
+        // registration (unchanged) + OT Appointment booking + OT Counselling, all under one desk.
         'receptionist' => [
             'opd.patient.register',
             'opd.patient.register_phone',
@@ -47,53 +50,65 @@ class SystemRolesSeeder extends Seeder
             'reports.view',
             'master.receptions',
             'master.locations',
-        ],
-
-        // ── OT Roles ──────────────────────────────────────────────────
-        'ot_receptionist' => [
+            'ot.appointment.view',
+            'ot.appointment.create',
+            'ot.appointment.edit',
             'ot.booking.create',
             'ot.booking.modify',
             'ot.booking.cancel',
             'ot.counselling.fill',
+            'ot.consent.capture',
             'ot.patient.list',
             'ot.package.set',
             'ot.payment.record',
             'ot.payment.export',
             'ot.invoice.view',
             'ot.bill.print',
-            'reports.view',
         ],
+
+        // ── OT Roles ──────────────────────────────────────────────────
         'accountant' => [
             'ot.patient.list',
             'ot.payment.record',
             'ot.payment.export',
             'ot.invoice.view',
             'ot.invoice.edit',
+            'ot.billing.manage',
             'ot.bill.print',
             'reports.view',
             'reports.export',
         ],
-        'ot_doctor' => [
+        // Ward Management — new role (docs/tulsi.md §4). Split off the ward-half of the old
+        // ot_assistant role: pre-op vitals + eye-drop register. Receives the patient
+        // automatically once Accountant marks payment verified; forwards to OT Assistant
+        // on "Ready for OT".
+        'ward_management' => [
+            'ot.patient.list',
+            'ot.ward.entry',
+            'ot.preop.entry',
+            'ot.dilation.track',
+        ],
+        // OT Assistant — keeps its lens-recording job and absorbs the old ot_doctor role's
+        // Surgery Recording Form (docs/tulsi.md §5). Loses ward/pre-op/dilation permissions
+        // to the new Ward Management role above.
+        'ot_assistant' => [
             'ot.patient.list',
             'ot.surgery.ready',
             'ot.surgery.record',
             'ot.lens.record',
             'ot.lens.implant',
             'ot.meds.takehome',
+        ],
+        // Discharge Counter — new role (docs/tulsi.md §6). Owns "Discharge & Invoices" —
+        // the discharge/billing slice previously carried by the old ot_doctor role.
+        'discharge_counter' => [
             'ot.invoice.view',
+            'ot.invoice.edit',
+            'ot.billing.manage',
             'ot.discharge.generate',
             'ot.discharge.patient',
             'ot.certificate.print',
-            'reports.view',
-        ],
-        'ot_assistant' => [
-            'ot.patient.list',
-            'ot.ward.entry',
-            'ot.preop.entry',
-            'ot.dilation.track',
-            'ot.surgery.ready',
-            'ot.lens.record',
-            'ot.meds.takehome',
+            'ot.bill.print',
         ],
     ];
 

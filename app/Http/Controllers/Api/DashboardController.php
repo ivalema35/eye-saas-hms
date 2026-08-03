@@ -29,8 +29,8 @@ class DashboardController extends Controller
         $today    = now()->toDateString();
 
         $roleSlug    = $authUser?->role?->slug ?? '';
-        $isDoctor    = in_array($roleSlug, ['doctor', 'ot_doctor'], true);
-        $isOtDoctor  = $roleSlug === 'ot_doctor';
+        $isDoctor    = in_array($roleSlug, ['doctor', 'ot_assistant'], true);
+        $isOtDoctor  = $roleSlug === 'ot_assistant';
         $isReceptionist = in_array($roleSlug, ['receptionist', 'receptionist_opd'], true);
         $isAdmin     = (bool) ($authUser?->role?->is_super ?? false);
 
@@ -197,7 +197,7 @@ class DashboardController extends Controller
         $doctorCards = null;
         if (! $isDoctor) {
             $allDoctors = HospitalUser::with('role:id,slug')
-                ->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
+                ->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_assistant']))
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get(['id', 'role_id', 'name', 'doctor_type']);

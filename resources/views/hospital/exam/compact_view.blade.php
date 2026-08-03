@@ -35,7 +35,7 @@
         $pseudo = $oe['pseudophakia_' . $eye] ?? [];
         $extras = array_filter([
             $pseudo['operation_type'] ?? '',
-            !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+            !empty($pseudo['operation_expense']) ? currency_symbol() . $pseudo['operation_expense'] : '',
             $pseudo['hospital_name'] ?? '',
         ], fn($v) => $v !== '' && $v !== null);
 
@@ -711,11 +711,11 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Medicine</th>
-                                    <th>Dose</th>
-                                    <th>Dur.</th>
-                                    <th>Eye</th>
-                                    <th>Instr.</th>
+                                    <th>Medicine Name</th>
+                                    <th>Dosage</th>
+                                    <th>Days</th>
+                                    <th>QTY</th>
+                                    <th>Route of Administration</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -730,9 +730,9 @@
                                             @endif
                                         </td>
                                         <td>{{ $rx->dosage?->dosage ?? '—' }}</td>
-                                        <td style="white-space:nowrap">{{ $rx->duration ? $rx->duration . 'd' : '—' }}</td>
-                                        <td>{{ $rx->eye ?? '—' }}</td>
-                                        <td>{{ $rx->instructions ?? '—' }}</td>
+                                        <td style="white-space:nowrap">{{ $rx->duration ? $rx->duration . ' Days' : '—' }}</td>
+                                        <td>{{ $rx->quantity ?? '—' }}</td>
+                                        <td>{{ $rx->route?->name ?? '—' }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>

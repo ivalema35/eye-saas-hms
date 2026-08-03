@@ -38,3 +38,10 @@ Schedule::command(CleanInactiveTenantData::class, ['--days=90'])
     ->at('02:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// OT lens low-stock / near-expiry report: Daily at 07:00 AM
+Schedule::command(\App\Console\Commands\CheckLensExpiryStock::class)
+    ->dailyAt('07:00')
+    ->withoutOverlapping()
+    ->runInBackground()
+    ->onFailure(fn () => Log::error('ot:check-lens-stock scheduled job failed.'));

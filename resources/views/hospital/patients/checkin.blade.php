@@ -114,7 +114,7 @@
 
                         {{-- Case Fee --}}
                         <div class="form-group">
-                            <label class="form-label">Case Fee (₹) <span style="color:#C0392B">*</span></label>
+                            <label class="form-label">Case Fee ({{ currency_symbol() }}) <span style="color:#C0392B">*</span></label>
                             <input type="number" name="case_fee" id="caseFee"
                                 value="{{ old('case_fee', $patient->case_fee ?? '0') }}"
                                 class="form-control hms-input @error('case_fee') is-invalid @enderror" required readonly>

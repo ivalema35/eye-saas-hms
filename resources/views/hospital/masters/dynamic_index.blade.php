@@ -126,7 +126,8 @@
                     <div class="card-body p-0">
                         <div class="table-responsive {{ $useModalLayout ? 'case-master-table-wrap' : '' }}">
                             <table
-                                class="table table-hover align-middle mb-0 {{ $useModalLayout ? 'case-master-table' : '' }}">
+                                class="table table-hover align-middle mb-0 js-datatable {{ $useModalLayout ? 'case-master-table' : '' }}"
+                                style="width:100%">
                                 <thead class="bg-light">
                                     <tr>
                                         <th width="8%" class="text-center py-3 text-muted small fw-bold font-monospace">#

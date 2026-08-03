@@ -29,6 +29,8 @@ use Illuminate\View\View;
  */
 class SecondaryExamController extends Controller
 {
+    use LoadsOtRecommendContext;
+
     public function __construct(private ExaminationService $examinationService)
     {
     }
@@ -64,8 +66,8 @@ class SecondaryExamController extends Controller
                 $query->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($q) {
                         $q->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })
@@ -104,6 +106,8 @@ class SecondaryExamController extends Controller
             ? collect(old('medicines'))
             : ($secondaryMedicines->isNotEmpty() ? $secondaryMedicines : $primaryMedicines);
 
+        [$otSlots, $otSurgeryTypes, $existingOtRecommendation, $otDefaultSlotId, $otDefaultSurgeryDate, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenantId, (int) $patient->id);
+
         return view('hospital.exam.secondary', compact(
             'patient',
             'primaryExam',
@@ -115,7 +119,15 @@ class SecondaryExamController extends Controller
             'currentDoctorId',
             'masters',
             'focReceptionists',
-            'initialMedicines'
+            'initialMedicines',
+            'otSlots',
+            'otSurgeryTypes',
+            'existingOtRecommendation',
+            'otDefaultSlotId',
+            'otDefaultSurgeryDate',
+            'otDefaultDiagnosisHint',
+            'otAssistants',
+            'otDoctors'
         ));
     }
 
@@ -159,7 +171,7 @@ class SecondaryExamController extends Controller
 
         $user = Auth::guard('hospital_user')->user();
 
-        if (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
+        if (in_array($user?->role?->slug, ['doctor', 'ot_assistant'], true)) {
             return redirect()
                 ->route('hospital.exam.secondary.print', ['slug' => $slug, 'id' => $id])
                 ->with('success', 'Secondary examination saved successfully.');
@@ -204,10 +216,11 @@ class SecondaryExamController extends Controller
             ->get(['id', DB::raw('value as kco')]));
 
         $dosages = \App\Models\Hospital\Dosage::orderBy('dosage')->get(['id', 'dosage']);
+        $routes = \App\Models\Hospital\MedicineRoute::where('tenant_id', $tenant->id)->orderBy('name')->get(['id', 'name']);
 
         $user = Auth::guard('hospital_user')->user();
-        $backUrl = in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)
-            ? route('hospital.dashboard', ['slug' => $slug])
+        $backUrl = $user?->role?->slug === 'doctor'
+            ? route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $id])
             : 'javascript:history.back()';
 
         return view('hospital.exam.secondary_print', compact(
@@ -219,6 +232,7 @@ class SecondaryExamController extends Controller
             'complaintMasters',
             'kcoMasters',
             'dosages',
+            'routes',
             'backUrl',
             'primaryDoctorName',
             'secondaryDoctorName'
@@ -304,6 +318,7 @@ class SecondaryExamController extends Controller
                 ->get(['id', 'name', 'brand_name', 'dosage_id', 'duration', 'qty']),
             'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
+                ->whereIn('usage_scope', ['opd', 'both'])
                 ->orderBy('name')
                 ->get(),
             'routes' => MedicineRoute::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name']),

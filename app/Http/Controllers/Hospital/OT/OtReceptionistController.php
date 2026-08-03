@@ -14,6 +14,7 @@ class OtReceptionistController extends Controller
 
         $totalOtToday = DB::table('ot_bookings')
             ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
             ->whereDate('surgery_date', today())
             ->count();
 
@@ -30,6 +31,7 @@ class OtReceptionistController extends Controller
 
         $readyForSurgery = DB::table('ot_bookings')
             ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
             ->where('ot_status', 'ready')
             ->count();
 

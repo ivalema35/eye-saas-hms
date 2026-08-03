@@ -25,7 +25,7 @@
             <div class="hero-trust">
                 <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> No credit card</span>
                 <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> Free 14-day trial</span>
-                <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> ₹0 setup cost</span>
+                <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> {{ platform_currency_symbol() }}0 setup cost</span>
                 <span class="hero-trust-item"><i class="fa-solid fa-check-circle"></i> Cancel anytime</span>
             </div>
         </div>

@@ -32,10 +32,10 @@ class SyncTenantOTData extends Command
             ['name' => 'Hospital Admin', 'slug' => 'hospital_admin', 'color' => '#1B4F72', 'is_super' => true, 'is_system' => true],
             ['name' => 'Doctor', 'slug' => 'doctor', 'color' => '#2980B9', 'is_super' => false, 'is_system' => false],
             ['name' => 'Receptionist', 'slug' => 'receptionist', 'color' => '#27AE60', 'is_super' => false, 'is_system' => false],
-            ['name' => 'OT Receptionist', 'slug' => 'ot_receptionist', 'color' => '#7D3C98', 'is_super' => false],
             ['name' => 'Accountant', 'slug' => 'accountant', 'color' => '#117A65', 'is_super' => false],
-            ['name' => 'OT Doctor', 'slug' => 'ot_doctor', 'color' => '#2E86C1', 'is_super' => false],
+            ['name' => 'Ward Management', 'slug' => 'ward_management', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
             ['name' => 'OT Assistant', 'slug' => 'ot_assistant', 'color' => '#CA6F1E', 'is_super' => false],
+            ['name' => 'Discharge Counter', 'slug' => 'discharge_counter', 'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
         ];
 
         $defaultRoles = array_map(static function (array $role): array {
@@ -186,28 +186,55 @@ class SyncTenantOTData extends Command
     private function syncSection24PermissionMatrix(array $roleIdsBySlug): void
     {
         $matrix = [
-            'ot_receptionist' => [
+            // Reception absorbs the old ot_receptionist + ot_counsellor roles (docs/tulsi.md §2).
+            'receptionist' => [
+                'ot.appointment.*',
                 'ot.booking.*',
                 'ot.counselling.fill',
+                'ot.consent.capture',
                 'ot.patient.list',
+                'ot.package.set',
+                'ot.payment.record',
+                'ot.payment.export',
+                'ot.invoice.view',
+                'ot.bill.print',
                 'opd.patient.view',
                 'opd.exam.history',
+                'reports.view',
             ],
             'accountant' => [
+                'ot.patient.list',
                 'ot.package.set',
                 'ot.payment.*',
                 'ot.invoice.*',
                 'ot.billing.manage',
                 'ot.discharge.*',
+                'ot.bill.print',
+                'reports.view',
+                'reports.export',
             ],
-            'ot_doctor' => [
-                'ot.surgery.*',
-                'ot.meds.takehome',
-                'ot.lens.record',
+            // Ward Management — split off the ward-half of the old ot_assistant role (docs/tulsi.md §4).
+            'ward_management' => [
+                'ot.patient.list',
+                'ot.ward.entry',
+                'ot.preop.entry',
+                'ot.dilation.track',
             ],
+            // OT Assistant absorbs the old ot_doctor role's surgery recording (docs/tulsi.md §5).
             'ot_assistant' => [
+                'ot.patient.list',
+                'ot.surgery.ready',
+                'ot.surgery.record',
                 'ot.lens.*',
                 'ot.meds.takehome',
+            ],
+            // Discharge Counter — new role, owns Discharge & Invoices (docs/tulsi.md §6).
+            'discharge_counter' => [
+                'ot.invoice.*',
+                'ot.billing.manage',
+                'ot.discharge.*',
+                'ot.certificate.print',
+                'ot.bill.print',
             ],
         ];
 
@@ -235,13 +262,8 @@ class SyncTenantOTData extends Command
                 ->unique()
                 ->values();
 
-            DB::table('role_permissions')
-                ->where('role_id', $roleId)
-                ->update([
-                    'is_granted' => false,
-                    'updated_at' => $timestamp,
-                ]);
-
+            // SaaS-safe: only GRANT matrix permissions. Never mass-revoke —
+            // hospital admins may have added custom grants in the Roles UI.
             foreach ($permissionIds as $permissionId) {
                 DB::table('role_permissions')->updateOrInsert(
                     ['role_id' => $roleId, 'permission_id' => (int) $permissionId],

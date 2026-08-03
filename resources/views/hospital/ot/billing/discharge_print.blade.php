@@ -3,13 +3,19 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>OT Discharge Summary</title>
+    <title>Discharge Card</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 16mm 18mm;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             background: #f4f6fb;
-            color: #111827;
+            color: #111;
+            font-size: 14px;
+            line-height: 1.5;
         }
         .page {
             width: 210mm;
@@ -17,51 +23,97 @@
             margin: 12px auto;
             background: #fff;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            padding: 20mm;
+            padding: 18mm 20mm;
             box-sizing: border-box;
         }
-        .header {
-            border-bottom: 2px solid #0d5c63;
-            margin-bottom: 16px;
-            padding-bottom: 10px;
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            text-transform: uppercase;
+            margin: 0 0 22px;
         }
-        .header h1 {
+        .row {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 8px;
+        }
+        .field {
+            margin-bottom: 8px;
+        }
+        .field .k,
+        .row .k {
+            font-weight: 600;
+        }
+        .half {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        .clinical {
+            margin-top: 18px;
+        }
+        .clinical .field {
+            margin-bottom: 10px;
+        }
+        .rx-title {
+            margin: 22px 0 10px;
+            font-size: 16px;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .rx-list {
+            list-style: none;
             margin: 0;
-            color: #0d5c63;
-            font-size: 24px;
-        }
-        .header p {
-            margin: 4px 0 0;
-            color: #4b5563;
-            font-size: 13px;
-        }
-        .section {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 12px;
-        }
-        .section h3 {
-            margin: 0 0 8px;
-            font-size: 14px;
-            color: #0f172a;
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 8px 14px;
-            font-size: 13px;
-        }
-        .label {
-            color: #6b7280;
-        }
-        ul {
-            margin: 8px 0 0 18px;
             padding: 0;
-            font-size: 13px;
         }
-        li {
-            margin-bottom: 6px;
+        .rx-list li {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 3px 0;
+            border-bottom: 1px dotted #d1d5db;
+        }
+        .rx-list li:last-child {
+            border-bottom: 0;
+        }
+        .rx-qty {
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .muted {
+            color: #6b7280;
+            font-style: italic;
+        }
+        .sign-block {
+            margin-top: 56px;
+            width: 46%;
+            margin-left: auto;
+            text-align: center;
+        }
+        .sign-line {
+            min-height: 40px;
+            margin-bottom: 4px;
+        }
+        .sign-img {
+            max-height: 52px;
+            max-width: 160px;
+            object-fit: contain;
+        }
+        .doctor-name {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .doctor-meta {
+            font-size: 12px;
+            margin: 2px 0 0;
+            line-height: 1.4;
         }
         .print-btn {
             position: fixed;
@@ -73,11 +125,10 @@
             padding: 10px 14px;
             border-radius: 8px;
             cursor: pointer;
+            font-size: 13px;
         }
         @media print {
-            body {
-                background: #fff;
-            }
+            body { background: #fff; }
             .page {
                 width: 100%;
                 min-height: auto;
@@ -85,85 +136,154 @@
                 box-shadow: none;
                 padding: 0;
             }
-            .print-btn {
-                display: none;
-            }
+            .print-btn { display: none; }
         }
     </style>
 </head>
 <body>
-    <button class="print-btn" onclick="window.print()">Print</button>
+@php
+    $patient = $booking->patient;
+    $doctor = $booking->otDoctor;
+    $counselling = $booking->counselling;
 
-    <div class="page">
-        @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
-        @if($letterPad === 'available')
-        <div class="header" style="display:flex;justify-content:space-between;align-items:center;">
-            <h1>OT Discharge Summary</h1>
-            <p>Prepared: {{ now()->format('d M Y h:i A') }}</p>
-        </div>
-        @else
-        <div class="header">
-            <div style="display:flex;align-items:center;gap:12px;">
-                <div class="print-logo" style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;margin-right:12px;">
-                    @if(hospital_logo_url())
-                        <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo" style="width:100%;height:100%;object-fit:contain;padding:8px;">
-                    @else
-                        <span>👁</span>
+    $indoorNo = $patient?->patient_code ?? (string) $booking->id;
+    $cardDate = optional($booking->discharged_at)->format('d/m/Y')
+        ?? now()->format('d/m/Y');
+
+    $patientName = strtoupper(trim((string) ($patient?->full_name ?? '-')));
+    $address = strtoupper(trim((string) ($patient?->city_name ?: $patient?->location_label ?: '-')));
+    $age = $patient?->age !== null && $patient?->age !== '' ? (string) $patient->age : '—';
+
+    $genderRaw = strtoupper(trim((string) ($patient?->gender ?? '')));
+    $sex = match (true) {
+        in_array($genderRaw, ['F', 'FEMALE', 'WOMAN', 'GIRL'], true) => 'FEMALE',
+        in_array($genderRaw, ['M', 'MALE', 'MAN', 'BOY'], true) => 'MALE',
+        $genderRaw !== '' => $genderRaw,
+        default => '—',
+    };
+
+    $eyeRaw = strtoupper(trim((string) (optional($surgery)->eye_operated ?? $booking->eye ?? '')));
+    $eyeLabel = match (true) {
+        in_array($eyeRaw, ['RE', 'OD', 'RIGHT', 'R'], true) => 'RIGHT',
+        in_array($eyeRaw, ['LE', 'OS', 'LEFT', 'L'], true) => 'LEFT',
+        in_array($eyeRaw, ['BOTH', 'BE', 'BILATERAL'], true) => 'BOTH',
+        default => ($eyeRaw !== '' ? $eyeRaw : '—'),
+    };
+
+    $surgeryName = trim((string) (optional($surgery)->surgery_name ?? $booking->ot_type ?? 'cataract'));
+    $surgeryLower = mb_strtolower($surgeryName);
+    $diagnosisHint = trim((string) ($counselling?->diagnosis ?? ''));
+    $diagnosis = $diagnosisHint !== ''
+        ? strtoupper($eyeLabel.' Eye '.$diagnosisHint)
+        : strtoupper($eyeLabel.' Eye '.$surgeryLower);
+
+    $operativeNote = strtoupper($eyeLabel).' Eye '.$surgeryLower.' extraction with IOL implantation';
+    // If surgery name already mentions extraction/IOL, keep simpler operative wording.
+    if (stripos($surgeryName, 'iol') !== false || stripos($surgeryName, 'extraction') !== false) {
+        $operativeNote = strtoupper($eyeLabel).' Eye '.$surgeryName;
+    }
+
+    // Print times: always morning 9:00 AM → evening 5:00 PM (dates from actual records).
+    $admitDate = $booking->attended_at
+        ?? $booking->operated_at
+        ?? ($booking->surgery_date ? $booking->surgery_date->copy() : null);
+    $admittedAt = $admitDate ? $admitDate->copy()->setTime(9, 0) : null;
+
+    $dischargeDate = $booking->discharged_at
+        ?? ($booking->surgery_date ? $booking->surgery_date->copy() : now());
+    $dischargedAt = $dischargeDate->copy()->setTime(17, 0);
+
+    $fmtDate = fn ($dt) => $dt ? $dt->format('d/m/Y') : '—';
+    $fmtTime = fn ($dt) => $dt ? $dt->format('h:i A') : '—';
+
+    $doctorName = trim((string) ($doctor?->name ?? 'Medical Officer'));
+    if ($doctorName !== '' && ! str_starts_with(strtoupper($doctorName), 'DR')) {
+        $doctorDisplay = 'Dr '.$doctorName;
+    } else {
+        $doctorDisplay = $doctorName !== '' ? $doctorName : 'Medical Officer';
+    }
+    $regNo = trim((string) ($doctor?->registration_no ?? ''));
+    $signatureUrl = ! empty($doctor?->signature_path)
+        ? asset('storage/'.$doctor->signature_path)
+        : null;
+
+    $medicines = is_array($wardMedicines ?? null) ? $wardMedicines : [];
+@endphp
+
+<button class="print-btn" onclick="window.print()">Print</button>
+
+<div class="page">
+    <h1 class="title">Discharge Card</h1>
+
+    <div class="row">
+        <div class="half"><span class="k">Indoor No. :</span> {{ $indoorNo }}</div>
+        <div class="half" style="text-align:right;"><span class="k">DATE:</span> {{ $cardDate }}</div>
+    </div>
+
+    <div class="field"><span class="k">Name of Patient :</span> {{ $patientName }}</div>
+    <div class="field"><span class="k">Address :</span> {{ $address }}</div>
+
+    <div class="row">
+        <div class="half"><span class="k">Age :</span> {{ $age }}</div>
+        <div class="half"><span class="k">Sex:</span> {{ $sex }}</div>
+    </div>
+
+    <div class="row">
+        <div class="half"><span class="k">Date of admission :</span> {{ $fmtDate($admittedAt) }}</div>
+        <div class="half"><span class="k">Time:</span> {{ $fmtTime($admittedAt) }}</div>
+    </div>
+
+    <div class="row">
+        <div class="half"><span class="k">Date of discharge :</span> {{ $fmtDate($dischargedAt) }}</div>
+        <div class="half"><span class="k">Time :</span> {{ $fmtTime($dischargedAt) }}</div>
+    </div>
+
+    <div class="clinical">
+        <div class="field"><span class="k">Diagnosis :</span> {{ $diagnosis }}</div>
+        <div class="field"><span class="k">Operative Note :</span> {{ $operativeNote }}</div>
+    </div>
+
+    <div class="rx-title">Rx on Discharge:</div>
+    @if(count($medicines) > 0)
+        <ul class="rx-list">
+            @foreach($medicines as $medicine)
+                @php
+                    $medName = trim((string) ($medicine['medicine'] ?? 'Medicine'));
+                    $dose = trim((string) ($medicine['dose'] ?? ''));
+                    $qtyRaw = $medicine['quantity'] ?? null;
+                    $qty = $qtyRaw !== null && $qtyRaw !== ''
+                        ? str_pad((string) (int) $qtyRaw, 2, '0', STR_PAD_LEFT)
+                        : null;
+                    $label = $dose !== '' ? $medName.' — '.$dose : $medName;
+                @endphp
+                <li>
+                    <span>{{ $label }}</span>
+                    @if($qty !== null)
+                        <span class="rx-qty">({{ $qty }})</span>
                     @endif
-                </div>
-                <div>
-                    <h1>{{ hospital_name() }} - OT Discharge Summary</h1>
-                    <p>Tenant: {{ $slug }} | Prepared: {{ now()->format('d M Y h:i A') }}</p>
-                </div>
-            </div>
-        </div>
-        @endif
+                </li>
+            @endforeach
+        </ul>
+    @else
+        <p class="muted">No take-home medicines recorded.</p>
+    @endif
 
-        <div class="section">
-            <h3>Patient & Surgery Information</h3>
-            <div class="grid">
-                <div><span class="label">Patient Name:</span> {{ $booking->patient?->full_name ?? '-' }}</div>
-                <div><span class="label">Patient Code:</span> {{ $booking->patient?->patient_code ?? '-' }}</div>
-                <div><span class="label">Phone:</span> {{ $booking->patient?->contact_no ?? '-' }}</div>
-                <div><span class="label">Doctor:</span> {{ $booking->otDoctor?->name ?? '-' }}</div>
-                <div><span class="label">Date of Surgery:</span> {{ optional($booking->operated_at)->format('d M Y h:i A') ?? optional($booking->surgery_date)->format('d M Y') }}</div>
-                <div><span class="label">Eye Operated:</span> {{ optional($surgery)->eye_operated ?? $booking->eye ?? '-' }}</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>Clinical Notes</h3>
-            <div class="grid">
-                <div><span class="label">Complication Status:</span> {{ strtoupper((string) (optional($surgery)->complication_status ?? 'none')) }}</div>
-                <div><span class="label">Surgery Status:</span> {{ strtoupper((string) (optional($surgery)->surgery_status ?? $booking->ot_status)) }}</div>
-            </div>
-            <div style="margin-top:8px;font-size:13px;">
-                <span class="label">Complication Notes:</span>
-                <div>{{ optional($surgery)->complication_notes ?? optional($surgery)->complication ?? 'None' }}</div>
-            </div>
-        </div>
-
-        <div class="section">
-            <h3>Take-Home Medicines</h3>
-            @if(!empty($wardMedicines))
-                <ul>
-                    @foreach($wardMedicines as $medicine)
-                        <li>
-                            <strong>{{ $medicine['medicine'] ?? 'Medicine' }}</strong>
-                            @if(!empty($medicine['dose']))
-                                - {{ $medicine['dose'] }}
-                            @endif
-                        </li>
-                    @endforeach
-                </ul>
-            @else
-                <p style="margin:0;font-size:13px;color:#6b7280;">No ward medicines recorded.</p>
+    <div class="sign-block">
+        <div class="sign-line">
+            @if($signatureUrl)
+                <img src="{{ $signatureUrl }}" alt="Signature" class="sign-img">
             @endif
         </div>
-
-        <div style="margin-top:28px;font-size:12px;color:#6b7280;">
-            This discharge summary is generated digitally for OT completion records.
-        </div>
+        <p class="doctor-name">{{ strtoupper($doctorDisplay) }}</p>
+        <p class="doctor-meta">Medical Officer</p>
+        <p class="doctor-meta">{{ hospital_name() }}</p>
+        @if(hospital_full_address())
+            <p class="doctor-meta">{{ hospital_full_address() }}</p>
+        @endif
+        @if($regNo !== '')
+            <p class="doctor-meta">Reg.No.{{ $regNo }}</p>
+        @endif
     </div>
+</div>
 </body>
 </html>

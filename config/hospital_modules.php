@@ -24,7 +24,9 @@ return [
     ['key' => 'patient_history',    'label' => 'Patient History Search',     'actions' => ['view']],
 
     // ─── OT MODULE ───────────────────────────────────────────────────
+    ['key' => 'ot_appointment',     'label' => 'OT Appointments (Pre-Registration)', 'actions' => ['view', 'create', 'edit']],
     ['key' => 'ot_booking',         'label' => 'OT Booking & Counselling',   'actions' => ['view', 'create', 'edit', 'delete']],
+    ['key' => 'ot_consent',         'label' => 'OT Patient Consent',         'actions' => ['view', 'create']],
     ['key' => 'ot_package',         'label' => 'OT Package & Payment',       'actions' => ['view', 'create', 'edit']],
     ['key' => 'ot_payment_export',  'label' => 'OT Excel Export',            'actions' => ['view']],
     ['key' => 'ot_ward_entry',      'label' => 'Ward Admission & Pre-Op',    'actions' => ['view', 'create', 'edit']],

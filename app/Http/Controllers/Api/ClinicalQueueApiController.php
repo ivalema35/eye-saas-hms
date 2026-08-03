@@ -33,8 +33,8 @@ class ClinicalQueueApiController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($i) {
-                            $i->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $i->whereIn('slug', ['doctor', 'ot_assistant'])
+                                ->orWhereIn('name', ['doctor', 'ot_assistant']);
                         });
                     });
             })

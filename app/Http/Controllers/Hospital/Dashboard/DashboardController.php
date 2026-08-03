@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
 use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
@@ -355,29 +356,33 @@ class DashboardController extends Controller
                 ->sum('case_fee');
         }
 
-        // ── OT Data (ot.booking.view) ───────────────────────────────────────────
-        // Today's OT surgery schedule overview.
+        // ── OT Appointment card (ot.patient.list / ot.appointment.view) ─────
         $otToday = null;
         $otOperated = null;
         $otPending = null;
 
-        if ($this->perm->can('ot.patient.list')) {
-            $otToday = OtBooking::whereDate('surgery_date', $today)->count();
-            $otOperated = OtBooking::whereDate('surgery_date', $today)
-                ->where('ot_status', 'operated')
+        if ($this->perm->can('ot.patient.list') || $this->perm->can('ot.appointment.view')) {
+            $otToday = OtAppointment::whereDate('appointment_date', $today)->count();
+            $otOperated = OtAppointment::whereDate('appointment_date', $today)
+                ->where('status', OtAppointment::STATUS_CONFIRMED)
                 ->count();
-            $otPending = OtBooking::whereDate('surgery_date', $today)
-                ->whereNotIn('ot_status', ['operated', 'discharged'])
+            $otPending = OtAppointment::whereDate('appointment_date', $today)
+                ->where('status', OtAppointment::STATUS_BOOKED)
                 ->count();
         }
 
         // ── Incoming Share Requests (hospital admin only) ─────────────────────
         $pendingShareRequestsCount = null;
-        if ($user?->role?->is_super && $tenant) {
+        $isHospitalAdmin = (bool) ($user?->role?->is_super || $user?->role?->slug === 'hospital_admin');
+
+        if ($isHospitalAdmin && $tenant) {
             $pendingShareRequestsCount = HospitalShareRequest::where('to_tenant_id', $tenant->id)
                 ->where('status', 'pending')
                 ->count();
         }
+
+        // Dense OT lens overview cards not used on hospital admin home.
+        $otOverview = null;
 
         // ── FOC Approval Alerts (foc.approve) ────────────────────────────────
         // Pending FOC requests awaiting this approver's decision.
@@ -429,6 +434,22 @@ class DashboardController extends Controller
 
                     return $rec;
                 });
+        }
+
+        // Hospital admin home: metrics for the 8 slim cards only
+        $otTotalToday = null;
+        if ($isHospitalAdmin) {
+            $todayPatients = Patient::whereDate('appointment_date', $today)->count();
+            $todayPrimary = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')
+                ->count();
+            $todaySecondary = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('secondary_done_at')
+                ->count();
+            $revenueToday = (float) Patient::whereDate('appointment_date', $today)->sum('case_fee');
+            $totalDoctors = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
+            $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
+            $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
         }
 
         // Receptionist-only doctor strip (all doctors + per-doctor assigned today)
@@ -581,6 +602,7 @@ class DashboardController extends Controller
             'tenant',
             'isReceptionistUser',
             'isDoctorUser',
+            'isHospitalAdmin',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',
@@ -615,6 +637,7 @@ class DashboardController extends Controller
             'otToday',
             'otOperated',
             'otPending',
+            'otTotalToday',
             // FOC Approval
             'focAlerts',
             'pendingFocRequests',
@@ -629,6 +652,8 @@ class DashboardController extends Controller
             'receptionistTodayPatients',
             // Share requests (admin only)
             'pendingShareRequestsCount',
+            // OT Management Overview (admin only) — Phase 8
+            'otOverview',
         ));
     }
 

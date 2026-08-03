@@ -54,8 +54,8 @@ class ReportsApiController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function (Builder $r) {
                         $r->where(function (Builder $i) {
-                            $i->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $i->whereIn('slug', ['doctor', 'ot_assistant'])
+                                ->orWhereIn('name', ['doctor', 'ot_assistant']);
                         });
                     });
             })

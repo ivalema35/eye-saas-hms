@@ -39,13 +39,6 @@
                         </div>
 
                         <div class="hms-form-group user-create-field">
-                            <label>Email <span class="hms-required">*</span></label>
-                            <input type="email" name="email" value="{{ old('email') }}"
-                                   class="hms-input @error('email') is-invalid @enderror" required>
-                            @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
-                        </div>
-
-                        <div class="hms-form-group user-create-field">
                             <label>Role <span class="hms-required">*</span></label>
                             <select name="role_id" id="role_id" class="hms-select @error('role_id') is-invalid @enderror" required>
                                 <option value="">Select Role</option>
@@ -64,6 +57,40 @@
                                    class="hms-input @error('contact') is-invalid @enderror" data-intl-phone
                                    placeholder="+919876543210">
                             @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-create-field">
+                            <label>Email <span class="hms-required">*</span></label>
+                            <input type="email" name="email" value="{{ old('email') }}"
+                                   class="hms-input @error('email') is-invalid @enderror" required>
+                            @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-create-field">
+                            <label>Password <span class="hms-required">*</span></label>
+                            <div class="user-password-field-wrap">
+                                <input type="password" name="password" id="userCreatePassword" class="hms-input user-password-field-input @error('password') is-invalid @enderror" required>
+                                <button type="button" id="toggleUserCreatePassword" class="user-password-field-toggle" aria-label="Toggle password visibility">
+                                    <svg id="userCreatePasswordEye" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group user-create-field">
+                            <label>Confirm Password <span class="hms-required">*</span></label>
+                            <div class="user-password-field-wrap">
+                                <input type="password" name="password_confirmation" id="userCreatePasswordConfirm" class="hms-input user-password-field-input" required>
+                                <button type="button" id="toggleUserCreatePasswordConfirm" class="user-password-field-toggle" aria-label="Toggle confirm password visibility">
+                                    <svg id="userCreatePasswordConfirmEye" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="hms-form-group user-create-field">
@@ -103,33 +130,6 @@
                                 <span>Allow FOC Permission</span>
                             </label>
                         </div> -->
-
-                        <div class="hms-form-group user-create-field">
-                            <label>Password <span class="hms-required">*</span></label>
-                            <div class="user-password-field-wrap">
-                                <input type="password" name="password" id="userCreatePassword" class="hms-input user-password-field-input @error('password') is-invalid @enderror" required>
-                                <button type="button" id="toggleUserCreatePassword" class="user-password-field-toggle" aria-label="Toggle password visibility">
-                                    <svg id="userCreatePasswordEye" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
-                                    </svg>
-                                </button>
-                            </div>
-                            @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
-                        </div>
-
-                        <div class="hms-form-group user-create-field">
-                            <label>Confirm Password <span class="hms-required">*</span></label>
-                            <div class="user-password-field-wrap">
-                                <input type="password" name="password_confirmation" id="userCreatePasswordConfirm" class="hms-input user-password-field-input" required>
-                                <button type="button" id="toggleUserCreatePasswordConfirm" class="user-password-field-toggle" aria-label="Toggle confirm password visibility">
-                                    <svg id="userCreatePasswordConfirmEye" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
-                                        <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

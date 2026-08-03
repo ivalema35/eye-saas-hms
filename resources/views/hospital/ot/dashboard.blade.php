@@ -190,9 +190,11 @@
 @endpush
 
 @section('page-actions')
-    <a href="{{ route('hospital.ot.bookings.create', ['slug' => $slug]) }}" class="hms-btn hms-btn-primary">
-        <i class="bi bi-plus-circle"></i> New OT Booking
+    @haspermission('ot.appointment.create')
+    <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="hms-btn hms-btn-primary">
+        <i class="bi bi-plus-circle"></i> New OT Appointment
     </a>
+    @endhaspermission
 @endsection
 
 @section('content')
@@ -248,12 +250,21 @@
                 <i class="bi bi-kanban" aria-hidden="true"></i>
                 OT Workspace
             </h5>
-            <a href="{{ route('hospital.ot.bookings.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-                <i class="bi bi-list-check"></i> View Bookings
-            </a>
+            <div class="d-flex flex-wrap gap-2">
+                @haspermission('ot.appointment.view')
+                <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+                    <i class="bi bi-calendar2-week"></i> OT Appointments
+                </a>
+                @endhaspermission
+                @haspermission('ot.counselling.fill')
+                <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+                    <i class="bi bi-chat-left-heart"></i> Counselling Queue
+                </a>
+                @endhaspermission
+            </div>
         </div>
         <div class="ot-workspace-body">
-            <p class="ot-workspace-text">Manage OT bookings and counselling from a single workspace.</p>
+            <p class="ot-workspace-text">Book OT appointments, then continue counselling after the doctor recommends surgery. Manual OT booking is no longer used.</p>
         </div>
     </div>
 </div>

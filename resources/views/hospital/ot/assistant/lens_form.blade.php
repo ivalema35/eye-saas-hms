@@ -60,6 +60,35 @@
                         <form method="POST"
                             action="{{ route('hospital.ot.assistant.lens.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
                             @csrf
+                            <input type="hidden" name="lens_inventory_id" id="lens_inventory_id" value="{{ old('lens_inventory_id', $lensDetail?->lens_inventory_id) }}">
+
+                            @if($lensInventory->isNotEmpty())
+                                <div class="ot-lens-section mb-4">
+                                    <div class="ot-lens-section-header">
+                                        <h6 class="fw-bold mb-0"><i class="bi bi-box-seam me-1"></i> Pick from Stock (optional)</h6>
+                                    </div>
+                                    <div class="ot-lens-section-body">
+                                        <label class="form-label">Lens Inventory</label>
+                                        <select id="lensInventoryPicker" class="form-select">
+                                            <option value="">Select a stock unit to auto-fill below, or enter manually...</option>
+                                            @foreach($lensInventory as $item)
+                                                <option value="{{ $item->id }}"
+                                                    {{ (string) old('lens_inventory_id', $lensDetail?->lens_inventory_id) === (string) $item->id ? 'selected' : '' }}
+                                                    data-manufacturer="{{ $item->manufacturer }}"
+                                                    data-lens-name="{{ $item->lens_name }}"
+                                                    data-type="{{ $item->type }}"
+                                                    data-power="{{ $item->power }}"
+                                                    data-mrp="{{ $item->mrp }}"
+                                                    data-batch="{{ $item->batch_number }}"
+                                                    data-serial="{{ $item->serial_number }}"
+                                                    data-expiry="{{ optional($item->expiry_date)->format('Y-m-d') }}">
+                                                    {{ $item->lens_code }} — {{ $item->lens_name }} ({{ $item->available_stock }} in stock)
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                            @endif
 
                             <div class="ot-lens-section mb-4">
                                 <div class="ot-lens-section-header">
@@ -69,35 +98,73 @@
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label class="form-label">Lens Name <span class="text-danger">*</span></label>
-                                            <input type="text" name="lens_name" class="form-control"
+                                            <input type="text" name="lens_name" id="lens_name" class="form-control"
                                                 value="{{ old('lens_name', $lensDetail?->lens_name) }}" required>
                                         </div>
 
                                         <div class="col-md-6">
+                                            <label class="form-label">Manufacturer</label>
+                                            <input type="text" name="manufacturer" id="manufacturer" class="form-control"
+                                                value="{{ old('manufacturer', $lensDetail?->manufacturer) }}">
+                                        </div>
+
+                                        <div class="col-md-6">
                                             <label class="form-label">Lens Type <span class="text-danger">*</span></label>
-                                            <select name="lens_type" class="form-select" required>
+                                            <select name="lens_type" id="lens_type" class="form-select" required>
                                                 <option value="">Select type...</option>
                                                 @foreach($lensTypes as $type)
-                                                    <option value="{{ $type->name }}" {{ old('lens_type', $lensDetail?->lens_type) === $type->name ? 'selected' : '' }}>
-                                                        {{ $type->name }}</option>
+                                                    <option value="{{ $type }}" {{ old('lens_type', $lensDetail?->lens_type) === $type ? 'selected' : '' }}>
+                                                        {{ $type }}</option>
                                                 @endforeach
                                             </select>
                                         </div>
 
                                         <div class="col-md-6">
+                                            <label class="form-label">Axis (°)</label>
+                                            <input type="number" step="0.01" min="0" max="180" name="axis" class="form-control"
+                                                value="{{ old('axis', $lensDetail?->axis) }}" placeholder="0-180, for toric lenses">
+                                        </div>
+
+                                        <div class="col-md-6">
                                             <label class="form-label">Lens Power <span class="text-danger">*</span></label>
-                                            <input type="number" step="0.01" name="lens_power" class="form-control"
+                                            <input type="number" step="0.01" name="lens_power" id="lens_power" class="form-control"
                                                 value="{{ old('lens_power', $lensDetail?->lens_power) }}" required>
+                                            @if($lensPowers->isNotEmpty())
+                                                <div class="ot-lens-power-picks mt-2">
+                                                    @foreach($lensPowers as $power)
+                                                        <button type="button" class="ot-lens-power-chip {{ $power->is_favourite ? 'is-favourite' : '' }}" data-power="{{ $power->power }}">
+                                                            @if($power->is_favourite)<i class="bi bi-star-fill"></i>@endif
+                                                            +{{ number_format((float) $power->power, 2) }}D
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </div>
 
                                         <div class="col-md-6">
                                             <label class="form-label">Lens MRP <span class="text-danger">*</span></label>
                                             <div class="input-group">
-                                                <span class="input-group-text">INR</span>
-                                                <input type="number" step="0.01" min="0" name="lens_mrp"
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="lens_mrp" id="lens_mrp"
                                                     class="form-control"
                                                     value="{{ old('lens_mrp', $lensDetail?->lens_mrp) }}" required>
                                             </div>
+                                        </div>
+
+                                        <div class="col-md-4">
+                                            <label class="form-label">Batch Number</label>
+                                            <input type="text" name="batch_number" id="batch_number" class="form-control"
+                                                value="{{ old('batch_number', $lensDetail?->batch_number) }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Serial Number</label>
+                                            <input type="text" name="serial_number" id="serial_number" class="form-control"
+                                                value="{{ old('serial_number', $lensDetail?->serial_number) }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Expiry Date</label>
+                                            <input type="date" name="expiry_date" id="expiry_date" class="form-control"
+                                                value="{{ old('expiry_date', optional($lensDetail?->expiry_date)->format('Y-m-d')) }}">
                                         </div>
 
                                         <div class="col-md-12">
@@ -226,6 +293,37 @@
             margin-top: 0.25rem;
         }
 
+        .ot-lens-power-picks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+        }
+
+        .ot-lens-power-chip {
+            border: 1px solid rgba(27, 79, 114, 0.22);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--color-primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.3rem 0.65rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .ot-lens-power-chip.is-favourite {
+            border-color: rgba(230, 126, 34, 0.4);
+            color: #b9770e;
+        }
+
+        .ot-lens-power-chip:hover,
+        .ot-lens-power-chip.active {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: #fff;
+        }
+
         @media (max-width: 991.98px) {
             .ot-lens-card-header {
                 padding: 1rem;
@@ -246,4 +344,48 @@
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const lensPowerInput = document.getElementById('lens_power');
+            document.querySelectorAll('.ot-lens-power-chip').forEach(function (chip) {
+                chip.addEventListener('click', function () {
+                    lensPowerInput.value = this.dataset.power;
+                    document.querySelectorAll('.ot-lens-power-chip').forEach(function (c) { c.classList.remove('active'); });
+                    this.classList.add('active');
+                });
+            });
+
+            // ── Lens Inventory picker (Phase 7) — auto-fill from stock ──────
+            const inventoryPicker = document.getElementById('lensInventoryPicker');
+            if (inventoryPicker) {
+                inventoryPicker.addEventListener('change', function () {
+                    const selected = this.options[this.selectedIndex];
+                    document.getElementById('lens_inventory_id').value = this.value || '';
+
+                    if (!this.value) { return; }
+
+                    const setVal = function (id, val) {
+                        const el = document.getElementById(id);
+                        if (el && val) { el.value = val; }
+                    };
+
+                    setVal('manufacturer', selected.dataset.manufacturer);
+                    setVal('lens_name', selected.dataset.lensName);
+                    setVal('lens_power', selected.dataset.power);
+                    setVal('lens_mrp', selected.dataset.mrp);
+                    setVal('batch_number', selected.dataset.batch);
+                    setVal('serial_number', selected.dataset.serial);
+                    setVal('expiry_date', selected.dataset.expiry);
+
+                    const typeEl = document.getElementById('lens_type');
+                    if (typeEl && selected.dataset.type && typeEl.querySelector('option[value="' + selected.dataset.type + '"]')) {
+                        typeEl.value = selected.dataset.type;
+                    }
+                });
+            }
+        });
+    </script>
 @endpush

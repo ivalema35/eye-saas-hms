@@ -1,4 +1,4 @@
-﻿@extends('superadmin.layouts.app')
+@extends('superadmin.layouts.app')
 @section('title', 'Payments')
 @section('page-header', 'Payment Transactions')
 
@@ -13,17 +13,17 @@
 {{-- Stat Cards --}}
 <div class="hms-stats-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="hms-stat-card">
-        <div class="hms-stat-icon hsi-green"><i class="bi bi-currency-rupee"></i></div>
+        <div class="hms-stat-icon hsi-green"><i class="bi bi-cash-coin"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Total Revenue</div>
-            <div class="hms-stat-value">₹{{ number_format((float) $totalRevenue) }}</div>
+            <div class="hms-stat-value">{{ platform_money((float) $totalRevenue) }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-blue"><i class="bi bi-calendar-check-fill"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">This Month</div>
-            <div class="hms-stat-value">₹{{ number_format((float) $thisMonth) }}</div>
+            <div class="hms-stat-value">{{ platform_money((float) $thisMonth) }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
@@ -59,13 +59,19 @@
                 <option value="offline" {{ request('method')=='offline' ? 'selected':'' }}>Offline</option>
             </select>
         </div>
-        <div class="hms-form-group" style="margin-bottom:0">
-            <label class="hms-label">From Date</label>
-            <input type="date" name="from" class="hms-input" value="{{ request('from') }}" style="width:145px">
-        </div>
-        <div class="hms-form-group" style="margin-bottom:0">
-            <label class="hms-label">To Date</label>
-            <input type="date" name="to" class="hms-input" value="{{ request('to') }}" style="width:145px">
+        <div class="hms-form-group" style="margin-bottom:0;min-width:220px">
+            <label class="hms-label">Date range</label>
+            <input type="text" class="hms-input"
+                data-hms-date-range
+                data-start-name="from"
+                data-end-name="to"
+                data-start-value="{{ request('from') }}"
+                data-end-value="{{ request('to') }}"
+                data-auto-submit="1"
+                placeholder="Select start → end date"
+                autocomplete="off"
+                readonly
+                style="width:220px">
         </div>
         <div style="display:flex;gap:.5rem">
             <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm">
@@ -115,7 +121,7 @@
                             <span style="color:#94A3B8">Deleted Hospital</span>
                         @endif
                     </td>
-                    <td style="font-weight:700;color:#1A202C">₹{{ number_format((float) $payment->amount) }}</td>
+                    <td style="font-weight:700;color:#1A202C">{{ platform_money((float) $payment->amount) }}</td>
                     <td style="font-size:.85rem">{{ ucfirst($payment->cycle ?? '—') }}</td>
                     <td>
                         @if($payment->method === 'online')
@@ -201,15 +207,15 @@
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
                         <div class="hms-form-group">
-                            <label class="hms-label">Amount (₹) <span style="color:#C0392B">*</span></label>
+                            <label class="hms-label">Amount ({{ platform_currency_symbol() }}) <span style="color:#C0392B">*</span></label>
                             <input type="number" name="amount" class="hms-input" min="1" step="1" placeholder="e.g. 999" required>
                         </div>
                         <div class="hms-form-group">
                             <label class="hms-label">Billing Cycle <span style="color:#C0392B">*</span></label>
                             <select name="cycle" class="hms-select" required>
-                                <option value="monthly">Monthly (₹999)</option>
-                                <option value="quarterly">Quarterly (₹2,427)</option>
-                                <option value="yearly">Yearly (₹9,590)</option>
+                                <option value="monthly">Monthly ({{ platform_currency_symbol() }}999)</option>
+                                <option value="quarterly">Quarterly ({{ platform_currency_symbol() }}2,427)</option>
+                                <option value="yearly">Yearly ({{ platform_currency_symbol() }}9,590)</option>
                             </select>
                         </div>
                     </div>

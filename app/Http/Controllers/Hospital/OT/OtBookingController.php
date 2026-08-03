@@ -3,128 +3,75 @@
 namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
-use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtBooking;
-use App\Models\Hospital\OT\OtLensOption;
+use App\Models\Hospital\OT\OtCounselling;
 use App\Models\Hospital\Patient;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
-use Illuminate\View\View;
 
 class OtBookingController extends Controller
 {
-    public function index(Request $request, string $slug): View
+    public function index(Request $request, string $slug): RedirectResponse
     {
-        $filter = strtolower((string) $request->query('filter', 'all'));
-        if (! in_array($filter, ['all', 'today'], true)) {
-            $filter = 'all';
-        }
-
-        $bookingsQuery = OtBooking::query()
-            ->with([
-                'patient:id,first_name,middle_name,last_name,patient_code,contact_no',
-                'otDoctor:id,name',
-                'bookedBy:id,name',
-            ]);
-
-        if ($filter === 'today') {
-            $bookingsQuery->whereDate('surgery_date', today());
-        }
-
-        $bookings = $bookingsQuery
-            ->orderByDesc('surgery_date')
-            ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25))
-            ->appends($request->query());
-
-        return view('hospital.ot.bookings.index', [
-            'slug' => $slug,
-            'bookings' => $bookings,
-            'activeFilter' => $filter,
-        ]);
+        // Manual OT Bookings list removed — surgery cases come from Recommend Surgery → Counselling.
+        return redirect()
+            ->route('hospital.ot.counsellor.dashboard', ['slug' => $slug])
+            ->with('info', 'OT Bookings list is retired. Use OT Appointments and Counselling instead.');
     }
 
-    public function create(string $slug): View
+    public function create(string $slug): RedirectResponse
     {
-        $tenantId = (int) app('tenant')->id;
-
-        $doctors = HospitalUser::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'active')
-            ->whereHas('role', function ($query) {
-                $query->whereIn('slug', ['doctor', 'ot_doctor']);
-            })
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        $slots = DB::table('tbl_ot_slots')
-            ->where('tenant_id', $tenantId)
-            ->whereNull('deleted_at')
-            ->orderBy('start_time')
-            ->orderBy('slot_name')
-            ->get(['id', 'slot_name', 'start_time', 'end_time']);
-
-        $otTypes = DB::table('ot_types')
-            ->where('tenant_id', $tenantId)
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        $surgeryTypes = DB::table('ot_surgery_types')
-            ->where('tenant_id', $tenantId)
-            ->whereNull('deleted_at')
-            ->orderBy('surgery_name')
-            ->get(['id', 'ot_type_id', 'surgery_name']);
-
-        $lensOptions = OtLensOption::query()
-            ->where('tenant_id', $tenantId)
-            ->whereNull('deleted_at')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        $patients = Patient::query()
-            ->whereNotNull('secondary_done_at')
-            ->orderByDesc('secondary_done_at')
-            ->orderByDesc('id')
-            ->limit(500)
-            ->get(['id', 'patient_code', 'first_name', 'middle_name', 'last_name', 'contact_no']);
-
-        return view('hospital.ot.bookings.create', [
-            'slug' => $slug,
-            'doctors' => $doctors,
-            'slots' => $slots,
-            'otTypes' => $otTypes,
-            'surgeryTypes' => $surgeryTypes,
-            'lensOptions' => $lensOptions,
-            'patients' => $patients,
-        ]);
+        // Manual "New OT Booking" removed — use OT Appointment, then doctor Recommend Surgery.
+        return redirect()
+            ->route('hospital.ot.appointments.create', ['slug' => $slug])
+            ->with('info', 'Manual OT Booking is retired. Create an OT Appointment instead.');
     }
 
+    /**
+     * NOTE (OT Workflow Upgrade — Phase 1): Booking only captures scheduling data.
+     * Mediclaim, lens selection, package/cost estimate and consent are now the
+     * Counsellor's job (OtCounsellorController), entered AFTER this booking exists.
+     * See docs/OT_WORKFLOW_UPGRADE_PRD.md §1.
+     *
+     * Manual store disabled — bookings are created via recommendSurgery() from exam.
+     */
     public function store(Request $request, string $slug): RedirectResponse
     {
+        return redirect()
+            ->route('hospital.ot.appointments.index', ['slug' => $slug])
+            ->with('error', 'Manual OT Booking is disabled. Use OT Appointment + Doctor Recommend Surgery.');
+    }
+
+    /**
+     * OT 1.0 Remaining PRD — Phase A1.
+     * Doctor Exam → create/update OtBooking as surgery_recommended for Counsellor queue.
+     */
+    public function recommendSurgery(Request $request, string $slug, int $patientId): RedirectResponse
+    {
         $tenantId = (int) app('tenant')->id;
 
+        $patient = Patient::query()
+            ->where('tenant_id', $tenantId)
+            ->findOrFail($patientId);
+
         $validated = $request->validate([
-            'patient_id' => ['required', 'integer', Rule::exists('patients', 'id')],
-            'surgery_date' => ['required', 'date', 'after_or_equal:today'],
-            'slot_id' => ['required', 'integer', Rule::exists('tbl_ot_slots', 'id')],
-            'ot_doctor_id' => ['required', 'integer', Rule::exists('hospital_users', 'id')],
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
-            'ot_type_id' => ['required', 'integer', Rule::exists('ot_types', 'id')],
-            'ot_surgery_type_id' => ['required', 'integer', Rule::exists('ot_surgery_types', 'id')],
-            'mediclaim' => ['required', 'boolean'],
-            'lens_option' => [
-                'nullable',
-                Rule::exists('ot_lens_options', 'name')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')->where('is_active', true)),
+            // Doctor + OT Assistant are assigned later on Ward Patient Status.
+            'surgery_date' => ['required', 'date', 'after_or_equal:today'],
+            'slot_id' => [
+                'required',
+                'integer',
+                Rule::exists('tbl_ot_slots', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
-            'package_amount' => ['nullable', 'numeric', 'min:0'],
-            'payment_mode' => ['nullable', Rule::in(['Cash', 'Online'])],
-            'report_ok' => ['nullable', 'boolean'],
-            'notes' => ['nullable', 'string', 'max:2000'],
+            'ot_surgery_type_id' => [
+                'required',
+                'integer',
+                Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+            ],
+            'diagnosis_hint' => ['nullable', 'string', 'max:255'],
+            'return_to' => ['nullable', Rule::in(['primary', 'secondary'])],
         ]);
 
         $surgeryType = DB::table('ot_surgery_types')
@@ -134,43 +81,69 @@ class OtBookingController extends Controller
 
         abort_if(! $surgeryType, 422, 'Invalid surgery type for this tenant.');
 
-        DB::transaction(function () use ($validated, $tenantId, $surgeryType): void {
+        $terminalStatuses = [OtBooking::STATUS_OPERATED, OtBooking::STATUS_DISCHARGED];
+        $updatableStatuses = [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED];
+
+        $existing = OtBooking::query()
+            ->where('tenant_id', $tenantId)
+            ->where('patient_id', $patient->id)
+            ->whereNotIn('ot_status', $terminalStatuses)
+            ->orderByDesc('id')
+            ->first();
+
+        if ($existing && ! in_array($existing->ot_status, $updatableStatuses, true)) {
+            return redirect()
+                ->back()
+                ->with('error', 'This patient already has an active OT booking ('.$existing->ot_status.'). Complete or discharge it before recommending again.');
+        }
+
+        // Doctor / OT Assistant assigned later at Ward (Patient Status).
+        $payload = [
+            'surgery_date' => $validated['surgery_date'],
+            'slot_id' => (int) $validated['slot_id'],
+            'eye' => $validated['eye'],
+            'ot_type' => $surgeryType->surgery_name,
+            'ot_status' => OtBooking::STATUS_SURGERY_RECOMMENDED,
+        ];
+
+        if ($existing) {
+            $existing->update($payload);
+            $booking = $existing->fresh();
+            $message = 'Surgery recommendation updated. Patient is in the Counsellor queue.';
+        } else {
             $booking = OtBooking::create([
                 'tenant_id' => $tenantId,
-                'patient_id' => (int) $validated['patient_id'],
-                'ot_doctor_id' => (int) $validated['ot_doctor_id'],
+                'patient_id' => $patient->id,
                 'booked_by' => (int) auth('hospital_user')->id(),
-                'surgery_date' => $validated['surgery_date'],
-                'slot_id' => (int) $validated['slot_id'],
-                'eye' => $validated['eye'],
-                'ot_type' => $surgeryType->surgery_name,
-                'reports_ok' => (bool) ($validated['report_ok'] ?? false),
-                'has_mediclaim' => (bool) $validated['mediclaim'],
-                'lens_option' => $validated['lens_option'] ?? null,
-                'package_amount' => $validated['package_amount'] ?? null,
-                'payment_mode' => isset($validated['payment_mode'])
-                    ? strtolower((string) $validated['payment_mode'])
-                    : null,
-                'ot_status' => 'booked',
+                'ot_doctor_id' => null,
+                'ot_assistant_id' => null,
+                ...$payload,
             ]);
+            $message = 'Surgery recommended. Patient sent to Counsellor queue.';
+        }
 
-            DB::table('ot_counselling')->insert([
-                'tenant_id' => $tenantId,
-                'ot_booking_id' => $booking->id,
-                'mediclaim' => (bool) $validated['mediclaim'],
-                'lens_option' => $validated['lens_option'] ?? null,
-                'package_amount' => $validated['package_amount'] ?? null,
-                'payment_mode' => $validated['payment_mode'] ?? null,
-                'report_ok' => (bool) ($validated['report_ok'] ?? false),
-                'notes' => $validated['notes'] ?? null,
-                'created_by' => (int) auth('hospital_user')->id(),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        });
+        // Optional diagnosis hint → seed counselling row for counsellor form.
+        $hint = trim((string) ($validated['diagnosis_hint'] ?? ''));
+        if ($hint !== '') {
+            OtCounselling::query()->updateOrCreate(
+                [
+                    'tenant_id' => $tenantId,
+                    'ot_booking_id' => $booking->id,
+                ],
+                [
+                    'diagnosis' => $hint,
+                    'created_by' => (int) auth('hospital_user')->id(),
+                ]
+            );
+        }
+
+        $returnTo = $validated['return_to'] ?? 'secondary';
+        $route = $returnTo === 'primary'
+            ? 'hospital.exam.primary.show'
+            : 'hospital.exam.secondary.show';
 
         return redirect()
-            ->route('hospital.ot.bookings.index', ['slug' => $slug])
-            ->with('success', 'OT booking created successfully.');
+            ->route($route, ['slug' => $slug, 'id' => $patient->id])
+            ->with('success', $message);
     }
 }

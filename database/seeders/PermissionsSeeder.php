@@ -53,10 +53,14 @@ class PermissionsSeeder extends Seeder
         ['module' => 'opd', 'action' => 'opd.reports.export',         'label' => 'Export OPD Data to Excel'],
 
         // ── OT Module ───────────────────────────────────────────────
+        ['module' => 'ot', 'action' => 'ot.appointment.view',    'label' => 'View OT Appointments'],
+        ['module' => 'ot', 'action' => 'ot.appointment.create',  'label' => 'Book OT Appointment (Pre-Registration)'],
+        ['module' => 'ot', 'action' => 'ot.appointment.edit',    'label' => 'Edit/Confirm/Cancel OT Appointment'],
         ['module' => 'ot', 'action' => 'ot.booking.create',      'label' => 'Book OT Appointment'],
         ['module' => 'ot', 'action' => 'ot.booking.modify',      'label' => 'Modify OT Booking'],
         ['module' => 'ot', 'action' => 'ot.booking.cancel',      'label' => 'Cancel OT Booking'],
         ['module' => 'ot', 'action' => 'ot.counselling.fill',    'label' => 'Fill OT Counselling Form'],
+        ['module' => 'ot', 'action' => 'ot.consent.capture',     'label' => 'Capture Patient Consent & Signature'],
         ['module' => 'ot', 'action' => 'ot.patient.list',        'label' => 'View OT Patient List'],
         ['module' => 'ot', 'action' => 'ot.package.set',         'label' => 'Set Package Amount'],
         ['module' => 'ot', 'action' => 'ot.payment.record',      'label' => 'Record Payment and Receipt'],
@@ -64,6 +68,7 @@ class PermissionsSeeder extends Seeder
         ['module' => 'ot', 'action' => 'ot.ward.entry',          'label' => 'Ward Admission (Attend/Postpone)'],
         ['module' => 'ot', 'action' => 'ot.preop.entry',         'label' => 'Pre-Op Vitals Entry (BP/RBS etc.)'],
         ['module' => 'ot', 'action' => 'ot.dilation.track',      'label' => 'Dilation Drop Tracking'],
+        ['module' => 'ot', 'action' => 'ot.surgery.recommend',   'label' => 'Recommend Surgery from Exam (Refer to Counsellor)'],
         ['module' => 'ot', 'action' => 'ot.surgery.ready',       'label' => 'Mark Ready to Operate'],
         ['module' => 'ot', 'action' => 'ot.surgery.record',      'label' => 'Record Surgery Details'],
         ['module' => 'ot', 'action' => 'ot.lens.record',         'label' => 'Record Lens Details'],
@@ -75,6 +80,7 @@ class PermissionsSeeder extends Seeder
         ['module' => 'ot', 'action' => 'ot.discharge.patient',   'label' => 'Discharge Patient (Final)'],
         ['module' => 'ot', 'action' => 'ot.certificate.print',   'label' => 'Print Operation Certificate'],
         ['module' => 'ot', 'action' => 'ot.bill.print',          'label' => 'Print Bill of Summary'],
+        ['module' => 'ot', 'action' => 'ot.billing.manage',      'label' => 'Manage OT Billing Documents'],
 
         // ── Masters ─────────────────────────────────────────────────
         ['module' => 'master', 'action' => 'master.case_types',  'label' => 'Case Types CRUD'],

@@ -572,7 +572,6 @@ $prescriptions = $exam?->prescriptions ?? collect();
 
 
             <div class="doctor-stepper-sidebar">
-                <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
 
                 <div class="step-group-label first">Primary Exam</div>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
@@ -589,9 +588,6 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
-
-                <hr>
-                <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
             </div>
 
             <div class="main-canvas">
@@ -602,14 +598,14 @@ $prescriptions = $exam?->prescriptions ?? collect();
                             <div class="canvas-box d-none"><div class="canvas-section-title">Medicine</div><div id="canvas_medicine"><em class="text-muted" style="font-size:11px;">Enter medicines...</em></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">PG</div><div id="canvas_pg"></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">ST</div><div id="canvas_st"></div></div>
-                            <div class="canvas-box"><div class="canvas-section-title">K/C/O</div><div id="canvas_kco"></div></div>
+                            <div class="canvas-box"><div id="canvas_kco"></div></div>
+                            <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
                         </div>
                         <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                            <div class="canvas-box"><div class="canvas-section-title">Complaint</div><div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div></div>
+                            <div class="canvas-box"><div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints...</em></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">H/O</div><div id="canvas_hno"></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">Vision</div><div id="canvas_vision_line"></div></div>
                             <div class="canvas-box"><div class="canvas-section-title">O/E</div><div id="canvas_oe"></div></div>
-                            <div class="canvas-box"><div class="canvas-section-title">Fundus</div><div id="canvas_fundus"></div></div>
                             <div class="canvas-box d-none"><div class="canvas-section-title">Diagnosis</div><div id="canvas_diagnosis"></div></div>
                             <div class="canvas-box d-none"><div class="canvas-section-title">Advice</div><div id="canvas_advice"></div></div>
                         </div>
@@ -688,7 +684,6 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
-            <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
         </div>
 
 
@@ -759,8 +754,13 @@ $prescriptions = $exam?->prescriptions ?? collect();
 
                     {{-- Box 5: K/C/O --}}
                     <div class="canvas-box">
-                        <div class="canvas-section-title">K/C/O</div>
                         <div id="canvas_kco"></div>
+                    </div>
+
+                    {{-- Box 6: Fundus --}}
+                    <div class="canvas-box">
+                        <div class="canvas-section-title">Fundus</div>
+                        <div id="canvas_fundus"></div>
                     </div>
 
                 </div>
@@ -770,7 +770,6 @@ $prescriptions = $exam?->prescriptions ?? collect();
 
                     {{-- Box 1: Complaint --}}
                     <div class="canvas-box">
-                        <div class="canvas-section-title">Complaint</div>
                         <div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
                     </div>
 
@@ -792,13 +791,7 @@ $prescriptions = $exam?->prescriptions ?? collect();
                         <div id="canvas_oe"></div>
                     </div>
 
-                    {{-- Box 5: Fundus --}}
-                    <div class="canvas-box">
-                        <div class="canvas-section-title">Fundus</div>
-                        <div id="canvas_fundus"></div>
-                    </div>
-
-                    {{-- Box 6: Diagnosis --}}
+                    {{-- Box 5: Diagnosis --}}
                     <div class="canvas-box d-none">
                         <div class="canvas-section-title">Diagnosis</div>
                         <div id="canvas_diagnosis"></div>
@@ -930,8 +923,8 @@ $prescriptions = $exam?->prescriptions ?? collect();
                                         <td>
                                             <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
                                                 <option value="">-</option>
-                                                @foreach(range(1, 10) as $n)
-                                                    <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
+                                                @foreach(range(1, 30) as $n)
+                                                    <option value="{{ $n }}" {{ (string) ($krow['since'] ?? '') === (string) $n ? 'selected' : '' }}>{{ $n }}</option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -1004,7 +997,7 @@ $vnCols = [
 ];
                     @endphp
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                         <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                             <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
                                 <i class="bi bi-eye-fill text-white"></i>
@@ -1075,7 +1068,7 @@ $pgMasterOpts = [
 ];
                     @endphp
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                         @php
     $pgRows = [
         'DISTANCE' => [
@@ -1229,7 +1222,7 @@ $pgMasterOpts = [
                 </div>
                 <div class="modal-body p-3">
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                         @php
     $stRows = [
         'DISTANCE' => [
@@ -1296,7 +1289,6 @@ $pgMasterOpts = [
                                                             </div>
                                                             <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
                                                         </div>
-                                                        <div style="font-size:10px;color:#64748b;margin-top:3px;">ADD: <strong>{{ $stAddVal ?: '—' }}</strong></div>
                                                         <input type="hidden" name="exam_data[st][{{ $eye }}][ns]" value="{{ $stNsVal }}">
                                                     </td>
                                                 @endif
@@ -1318,7 +1310,6 @@ $pgMasterOpts = [
                                                             <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['cyl']['val'] }}">
                                                             <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
                                                         </div>
-                                                        <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
                                                     </td>
                                                 @endif
                                                 {{-- AXIS: dropdown for DISTANCE, read-only mirror for NEAR --}}
@@ -1336,7 +1327,6 @@ $pgMasterOpts = [
                                                             <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['ax']['val'] }}">
                                                             <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
                                                         </div>
-                                                        <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
                                                     </td>
                                                 @endif
                                                 {{-- VN C ST: only for DISTANCE row --}}
@@ -1404,7 +1394,7 @@ $pgMasterOpts = [
                                 <thead style="background:#f0f4f8;">
                                     <tr>
                                         <th style="width:140px;border-bottom:2px solid #1B4F72;"></th>
-                                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                                        @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                                             <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
                                                 <i class="bi bi-eye-fill me-1"></i>{{ $eyeLabel }}
                                             </th>
@@ -1438,7 +1428,7 @@ $pgMasterOpts = [
                     </div>
 
                     {{-- IOP indicator badges --}}
-                    <div class="d-flex gap-3 mt-3 px-1">
+                    <!-- <div class="d-flex gap-3 mt-3 px-1">
                         <div class="d-flex align-items-center gap-2">
                             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;"></span>
                             <span style="font-size:11px;color:#64748b;">Normal: 10–21 mmHg</span>
@@ -1451,7 +1441,7 @@ $pgMasterOpts = [
                             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;"></span>
                             <span style="font-size:11px;color:#64748b;">High: ≥25 mmHg</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
@@ -1503,8 +1493,8 @@ foreach ($oeFieldMeta as $meta) {
                                 <thead>
                                     <tr>
                                         <th style="width:140px;background:#f0f4f8;border-bottom:2px solid #1B4F72;"></th>
-                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Right Eye (RE)</th>
-                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Left Eye (LE)</th>
+                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Right Eye</th>
+                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Left Eye</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1620,7 +1610,7 @@ foreach ($oeFieldMeta as $meta) {
                 <div class="modal-body p-3">
 
                     <div class="row g-3">
-                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                        @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                         <div class="col-md-6">
                             <div class="rounded-3 overflow-hidden h-100" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                                 <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
@@ -1711,7 +1701,7 @@ foreach ($masters['advices'] as $_a) {
                             @php $gc = $dxGroupCount[$d->id] ?? 0;
     $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
                             <div class="dx-tag-wrap">
-                                <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}"
+                                <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}" data-name="{{ $d->diagnosis }}"
                                     {{ in_array($d->id, $ed['diagnoses'] ?? []) ? 'checked' : '' }}>
                                 <label class="btn btn-outline-danger rounded-pill btn-sm px-3" for="dx_{{ $d->id }}" style="font-size:12.5px;">
                                     {{ $d->diagnosis }}
@@ -1757,7 +1747,7 @@ foreach ($masters['advices'] as $_a) {
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer"><button type="button" id="dilateDoneBtn" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
             </div>
         </div>
     </div>
@@ -2291,40 +2281,57 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             const exp  = val(`exam_data[oe][pseudophakia_${eye}][operation_expense]`);
             const hosp = val(`exam_data[oe][pseudophakia_${eye}][hospital_name]`);
             if (base === '-') { return '-'; }
-            const extras = [type, exp !== '-' ? '₹' + exp : '', hosp].filter(v => v && v !== '-');
+            const extras = [type, exp !== '-' ? currencySymbol + exp : '', hosp].filter(v => v && v !== '-');
             return extras.length ? `${base} (${extras.join(', ')})` : base;
         };
 
         // Build C/O row data
+        const fieldBySuffix = (row, suffix) => {
+            const el = Array.from(row.querySelectorAll('input, select, textarea'))
+                .find((node) => typeof node.name === 'string' && node.name.endsWith(suffix));
+            return el ? String(el.value ?? '').trim() : '';
+        };
         const coRows = Array.from(document.querySelectorAll('#coBody .co-row'));
         const coData = coRows.map(row => ({
-            complaint : row.querySelector('[name*="[complaint]"]')?.value?.trim() || '',
-            since     : row.querySelector('[name*="[since]"]')?.value || '',
-            unit      : row.querySelector('[name*="[unit]"]')?.value || '',
-            eye       : row.querySelector('[name*="[eye]"]')?.value || '',
-            comment   : row.querySelector('[name*="[comment]"]')?.value?.trim() || '',
+            complaint : fieldBySuffix(row, '[complaint]'),
+            since     : fieldBySuffix(row, '[since]'),
+            unit      : fieldBySuffix(row, '[unit]'),
+            eye       : fieldBySuffix(row, '[eye]'),
+            comment   : fieldBySuffix(row, '[comment]'),
         })).filter(d => d.complaint);
 
         // Build K/C/O row data
         const kcoRows = Array.from(document.querySelectorAll('#kcoBody .kco-row'));
-        const kcoData = kcoRows.map(row => ({
-            condition : row.querySelector('[name*="[condition]"]')?.value?.trim() || '',
-            since     : row.querySelector('[name*="[since]"]')?.value || '',
-            unit      : row.querySelector('[name*="[unit]"]')?.value || '',
-            comment   : row.querySelector('[name*="[comment]"]')?.value?.trim() || '',
-        })).filter(d => d.condition);
+        const formatKcoSince = (since, unit) => {
+            const s = String(since ?? '').trim();
+            const u = String(unit ?? '').trim();
+            if (u === 'Longtime') return 'Longtime';
+            return [s, u].filter(Boolean).join(' ');
+        };
+        const kcoData = kcoRows.map(row => {
+            const cells = row.querySelectorAll('td');
+            const sinceFromCell = cells[1]?.querySelector('select, input')?.value ?? '';
+            const unitFromCell = cells[2]?.querySelector('select, input')?.value ?? '';
+            return {
+                condition : fieldBySuffix(row, '[condition]') || (cells[0]?.querySelector('input')?.value?.trim() || ''),
+                since     : fieldBySuffix(row, '[since]') || String(sinceFromCell).trim(),
+                unit      : fieldBySuffix(row, '[unit]') || String(unitFromCell).trim(),
+                comment   : fieldBySuffix(row, '[comment]') || (cells[3]?.querySelector('input')?.value?.trim() || ''),
+            };
+        }).filter(d => d.condition);
 
         // Build H/O pill list
         const hnoVal  = document.getElementById('hnoHidden')?.value?.trim() || '';
         const hnoList = hnoVal ? hnoVal.split(',').map(s => s.trim()).filter(Boolean) : [];
 
-        // V-notation block helper
+        // V-notation block helper — empty values stay blank (no "-")
+        const blankVn = (v) => (v && v !== '-') ? String(v) : '';
         const makeVn = (label, re, le) =>
             `<div class="d-inline-flex align-items-center me-3 mb-1">` +
             `<span class="fw-bold me-1" style="font-size:11px;">${label}</span>` +
-            `<span class="fw-light mx-1" style="font-size:1.4rem;line-height:0.5;">&lt;</span>` +
-            `<div class="d-flex flex-column" style="font-size:11px;line-height:1.3;">` +
-            `<span>${re}</span><span>${le}</span></div></div>`;
+            `<span class="fw-bold mx-1" style="font-size:1.55rem;line-height:0.5;color:#1B4F72;">&lt;</span>` +
+            `<div class="d-flex flex-column" style="font-size:11px;line-height:1.35;min-width:18px;">` +
+            `<span>${blankVn(re)}</span><span>${blankVn(le)}</span></div></div>`;
 
         const vnRe  = val('exam_data[vision][vn_re]');
         const vnLe  = val('exam_data[vision][vn_le]');
@@ -2334,13 +2341,17 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         const nrLe  = val('exam_data[vision][nrvn_le]');
         const iopRe = val('exam_data[nct][iop_re]');
         const iopLe = val('exam_data[nct][iop_le]');
+        const glVnRe = val('exam_data[pg][re][vn]');
+        const glVnLe = val('exam_data[pg][le][vn]');
+        const glNrRe = val('exam_data[pg][re][near_vn]');
+        const glNrLe = val('exam_data[pg][le][near_vn]');
 
         const cvTd   = (t) => `<td class="text-center" style="font-size:10px;padding:2px 5px;">${t || '—'}</td>`;
         const pill   = (t) => `<span style="background:#eef4f9;color:#1B4F72;padding:1px 8px;border-radius:8px;margin-right:3px;font-size:10px;">${t}</span>`;
-        const cvTable = (title, cols, rows) =>
+        const cvTable = (title, cols, rows, titleAlign = 'center') =>
             `<table class="table table-sm table-bordered mb-2" style="font-size:10px;">` +
             `<thead>` +
-            `<tr><th colspan="${cols.length}" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">${title}</th></tr>` +
+            `<tr><th colspan="${cols.length}" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px 6px;letter-spacing:.06em;border-color:#1B4F72;text-align:${titleAlign};">${title}</th></tr>` +
             `<tr style="background:#eef4f9;">${cols.map(c => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 5px;font-weight:600;">${c}</th>`).join('')}</tr>` +
             `</thead><tbody>${rows}</tbody></table>`;
 
@@ -2349,14 +2360,14 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             coData.length
                 ? coData.map(d => `<tr>${cvTd(d.complaint)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.eye)}${cvTd(d.comment)}</tr>`).join('')
                 : `<tr><td colspan="4" class="text-center" style="font-size:10px;padding:3px;color:#94a3b8;">—</td></tr>`
-        );
+        , 'left');
         document.getElementById('canvas_co').innerHTML = coHtml;
 
         // K/C/O table
         const kcoHtml = kcoData.length
-            ? cvTable('K/C/O', ['Condition', 'Since', 'Comment'],
-                kcoData.map(d => `<tr>${cvTd(d.condition)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.comment)}</tr>`).join('')
-              )
+            ? cvTable('K/C/O', ['Condition', 'Since/Duration', 'Comment'],
+                kcoData.map(d => `<tr>${cvTd(d.condition)}${cvTd(formatKcoSince(d.since, d.unit))}${cvTd(d.comment)}</tr>`).join('')
+              , 'left')
             : '';
         document.getElementById('canvas_kco').innerHTML = kcoHtml;
 
@@ -2366,18 +2377,33 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             : '';
         document.getElementById('canvas_hno').innerHTML = hnoHtml;
 
-        // Vision data
+        // Vision + NCT — 2×3 layout matching clinical slip
         const visionLineHtml =
-            `<div class="d-flex flex-wrap align-items-center">` +
-            makeVn('Vn', vnRe, vnLe) +
-            makeVn('PH', phRe, phLe) +
-            makeVn('NrVn', nrRe, nrLe) +
-            `<div class="d-inline-flex align-items-center me-2 mb-1" style="font-size:11px;"><strong>IOP:</strong>&nbsp;${iopRe}/${iopLe}</div>` +
+            `<div style="display:flex;flex-direction:column;gap:6px;">` +
+            `<div class="d-flex flex-wrap align-items-start">` +
+                makeVn('Vn', vnRe, vnLe) +
+                makeVn('Vn C GL', glVnRe, glVnLe) +
+                makeVn('Pn/Vn', phRe, phLe) +
+            `</div>` +
+            `<div class="d-flex flex-wrap align-items-start">` +
+                makeVn('Nr/Vn', nrRe, nrLe) +
+                makeVn('Nr/Vn C GL', glNrRe, glNrLe) +
+                makeVn('NCT', iopRe, iopLe) +
+            `</div>` +
             `</div>`;
         document.getElementById('canvas_vision_line').innerHTML = visionLineHtml;
 
         // BOX 1 lower: PG (Distance & Near) — SPH / CYL X Axis, no VN
-        const pgFmt = (sph, cyl, ax) => `${sph} / ${cyl} X ${ax}`;
+        // Skip "X" (and leave blank) when axis/fields are not filled.
+        const pgFmt = (sph, cyl, ax) => {
+            const s = (sph && sph !== '-') ? String(sph).trim() : '';
+            const c = (cyl && cyl !== '-') ? String(cyl).trim() : '';
+            const a = (ax && ax !== '-') ? String(ax).trim() : '';
+            if (!s && !c && !a) return '';
+            let out = (s || '-') + ' / ' + (c || '-');
+            if (a) out += ' X ' + a;
+            return out;
+        };
         const pgReDist = pgFmt(val('exam_data[pg][re][ds]'), val('exam_data[pg][re][dc]'), val('exam_data[pg][re][ax]'));
         const pgLeDist = pgFmt(val('exam_data[pg][le][ds]'), val('exam_data[pg][le][dc]'), val('exam_data[pg][le][ax]'));
         const pgReNear = pgFmt(val('exam_data[pg][re][ns]'), val('exam_data[pg][re][nc]'), val('exam_data[pg][re][na]'));
@@ -2386,21 +2412,28 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             `<div class="d-flex flex-wrap align-items-start">${makeVn('PG', pgReDist, pgLeDist)}${makeVn('NrPG', pgReNear, pgLeNear)}</div>`;
         document.getElementById('canvas_pg').innerHTML = visionHtml;
 
-        // BOX 2 top: ST table (VN C ST above D/N per eye, ADD below)
-        const stReAdd = val('exam_data[st][re][add]');
-        const stLeAdd = val('exam_data[st][le][add]');
+        // BOX 2 top: ST table (VN C ST above D/N per eye; selected options below)
         const stVnRe  = (() => { const v = val('exam_data[st][re][vn]'); return v === '-' ? '' : v; })();
         const stVnLe  = (() => { const v = val('exam_data[st][le][vn]'); return v === '-' ? '' : v; })();
         const stCell  = (v, dim) => `<td class="text-center" style="padding:2px;${dim ? 'color:#94a3b8;' : ''}">${v}</td>`;
         const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
         const stRowTag = (t) => `<th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">${t}</th>`;
+        const stOptLabels = [
+            { key: 'bifocal', label: 'Bifocal' },
+            { key: 'nd_separate', label: 'Near & Distance Separate' },
+            { key: 'progressive', label: 'Progressive' },
+            { key: 'computer_uses', label: 'Computer Uses' },
+        ].filter((opt) => {
+            const el = document.querySelector(`input[name="exam_data[st][${opt.key}]"]`);
+            return !!(el && el.checked);
+        }).map((opt) => opt.label);
 
         let stHtml =
             `<table class="table table-sm table-bordered mb-1" style="font-size:11px;">` +
             `<thead>` +
             `<tr>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE</th>` +
             `</tr>` +
             `<tr style="background:#eef4f9;">${pgSubTh(stVnRe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh(stVnLe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}</tr>` +
             `</thead><tbody>` +
@@ -2413,8 +2446,8 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
               `${stRowTag('N')}${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}` +
             `</tr>` +
             `</tbody></table>`;
-        if (stReAdd !== '-' || stLeAdd !== '-') {
-            stHtml += `<div style="font-size:10px;color:#475569;margin-bottom:3px;"><span style="color:#1B4F72;font-weight:700;">ADD</span>&emsp;RE: <strong>${stReAdd}</strong>&emsp;LE: <strong>${stLeAdd}</strong></div>`;
+        if (stOptLabels.length) {
+            stHtml += `<div style="margin-bottom:2px;">${stOptLabels.map(pill).join('')}</div>`;
         }
         document.getElementById('canvas_st').innerHTML = stHtml;
 
@@ -2474,11 +2507,12 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         const diagnosisHtml = `<div style="font-size:11px;"><strong>Dx:</strong> ${diagnosisText} &nbsp; <strong>Dilate:</strong> ${dilateVal}</div>`;
         document.getElementById('canvas_diagnosis').innerHTML = diagnosisHtml;
 
-        const medicineHtml =
-            `<table class="table table-sm table-bordered border-dark mb-0" style="font-size:11px;">` +
-            `<thead><tr><th class="bg-dark text-white">Medicine</th><th class="bg-dark text-white">Dosage</th><th class="bg-dark text-white">Days</th><th class="bg-dark text-white">QTY</th><th class="bg-dark text-white">Route</th></tr></thead>` +
-            `<tbody>${rxBodyHtml || '<tr><td colspan="5" class="text-center text-muted">No medicines</td></tr>'}</tbody>` +
-            `</table>`;
+        const medicineHtml = rxBodyHtml
+            ? `<table class="table table-sm table-bordered mb-0" style="font-size:10px;">` +
+              `<thead>` +
+              `<tr style="background:#eef4f9;"><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Medicine Name</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Dosage</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Days</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">QTY</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Route of Administration</th></tr>` +
+              `</thead><tbody>${rxBodyHtml}</tbody></table>`
+            : '';
         document.getElementById('canvas_medicine').innerHTML = medicineHtml;
 
         const adviceText = (document.getElementById('advice_textarea')?.value || '').trim();
@@ -2600,15 +2634,42 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 '<div class="p-3 rounded-3 mb-1" style="background:#f0f9ff;border:1px solid #bae6fd;">' +
                 '<div class="d-flex align-items-center gap-2 mb-2">' +
                 '<i class="bi bi-link-45deg" style="color:#1B4F72;font-size:14px;"></i>' +
-                '<span class="fw-semibold" style="font-size:11px;color:#1B4F72;text-transform:uppercase;letter-spacing:.07em;">Diagnosis-linked Advices</span>' +
-                '<span style="font-size:11px;color:#64748b;">— already added · click to re-append</span>' +
+                '<span class="fw-semibold" style="font-size:11px;color:#1B4F72;text-transform:uppercase;letter-spacing:.07em;">Suggested Advices</span>' +
+                '<span style="font-size:11px;color:#64748b;">— click to append · × to remove</span>' +
                 '</div>' +
                 '<div class="d-flex flex-wrap gap-2">' +
-                advices.map(a =>
-                    '<button type="button" class="advice-quick-btn" style="font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid #0ea5e9;background:white;color:#0369a1;font-weight:500;cursor:pointer;" data-advice="' + esc(a.advice) + '">' +
-                    '<i class="bi bi-check2 me-1" style="font-size:10px;"></i>' + esc(a.advice) + '</button>'
-                ).join('') +
+                advices.map(a => {
+                    const active = isAdviceInTextarea(a.advice);
+                    return '<span class="suggested-advice-chip d-inline-flex align-items-center" style="border-radius:20px;border:1px solid ' + (active ? '#166534' : '#86efac') + ';background:' + (active ? '#166534' : 'white') + ';overflow:hidden;">' +
+                        '<button type="button" class="btn btn-sm border-0" style="font-size:12px;padding:4px 8px 4px 12px;color:' + (active ? '#fff' : '#166534') + ';background:transparent;box-shadow:none;" onclick="appendSuggestedAdvice(' + a.id + ')">' +
+                        esc(a.advice) + '</button>' +
+                        '<button type="button" class="btn btn-sm border-0 suggested-advice-remove" title="Remove from advice text" style="font-size:12px;padding:4px 8px 4px 2px;line-height:1;color:' + (active ? 'rgba(255,255,255,.9)' : '#dc2626') + ';background:transparent;box-shadow:none;" onclick="removeSuggestedAdvice(' + a.id + ')">' +
+                        '<i class="bi bi-x-lg" style="font-size:10px;"></i></button>' +
+                        '</span>';
+                }).join('') +
                 '</div></div>';
+        }
+
+        function getAdviceParts() {
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return [];
+            return ta.value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        function isAdviceInTextarea(text) {
+            if (!text) return false;
+            return getAdviceParts().includes(String(text).trim());
+        }
+
+        function syncAdviceTextarea(parts) {
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return;
+            ta.value = parts.join(', ');
+            ta.dispatchEvent(new Event('input'));
+            const countEl = document.getElementById('adviceCharCount');
+            if (countEl) countEl.textContent = ta.value.length + ' / 2000';
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+            if (typeof checkProgress === 'function') checkProgress();
         }
 
         window.loadSuggestedGroup = function (id) {
@@ -2636,13 +2697,21 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         };
 
         window.appendSuggestedAdvice = function (id) {
-            const text = adviceMap[id] || '';
+            const text = (adviceMap[id] || '').trim();
             if (!text) return;
-            const ta = document.getElementById('advice_textarea');
-            if (!ta) return;
-            const cur = ta.value.trim();
-            ta.value = cur ? cur + ', ' + text : text;
-            if (typeof updateLivePreview === 'function') updateLivePreview();
+            const parts = getAdviceParts();
+            if (!parts.includes(text)) {
+                parts.push(text);
+                syncAdviceTextarea(parts);
+            }
+            update();
+        };
+
+        window.removeSuggestedAdvice = function (id) {
+            const text = (adviceMap[id] || '').trim();
+            if (!text) return;
+            syncAdviceTextarea(getAdviceParts().filter(p => p !== text));
+            update();
         };
 
         function update() {
@@ -2670,6 +2739,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                         });
                         ta.dispatchEvent(new Event('input'));
                         if (typeof updateLivePreview === 'function') updateLivePreview();
+                        update();
                     }
                 }
             }
@@ -2773,6 +2843,21 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
     dilateYes?.addEventListener('change', toggleDilationTime);
     dilateNo?.addEventListener('change', toggleDilationTime);
+
+    // Dilate modal now drives the actual save: "No" submits immediately
+    // (patient goes straight to Secondary Exam); "Done" (used after picking
+    // "Yes, Dilated" + a lock time) submits and sends the patient back to
+    // the dashboard to wait out the dilation time.
+    const primaryExamForm = document.getElementById('primaryExamForm');
+    const dilateDoneBtn = document.getElementById('dilateDoneBtn');
+
+    dilateNo?.addEventListener('click', function () {
+        primaryExamForm?.requestSubmit();
+    });
+
+    dilateDoneBtn?.addEventListener('click', function () {
+        primaryExamForm?.requestSubmit();
+    });
 
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => {
@@ -3133,8 +3218,8 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             const i  = kcoRowIndex++;
             const tr = document.createElement('tr');
             tr.className = 'kco-row';
-            const sinceOpts = ['-',...Array.from({length:10},(_,n)=>n+1)]
-                .map((n,idx) => `<option value="${idx===0?'':n}">${n}</option>`).join('');
+            const sinceOpts = ['-',...Array.from({length:30},(_,n)=>n+1)]
+                .map((n,idx) => `<option value="${idx===0?'':n}"${n===1?' selected':''}>${n}</option>`).join('');
             const unitOpts = ['Days','Weeks','Months','Years','Longtime']
                 .map(u => `<option value="${u}"${u==='Years'?' selected':''}>${u}</option>`).join('');
             tr.innerHTML = `
@@ -3170,9 +3255,16 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         });
         document.getElementById('kcoBody')?.addEventListener('input', function (e) {
             const input = e.target.closest('.row-kco-search');
-            if (!input) { return; }
-            activeKcoInput = input;
-            renderKcoDropdown();
+            if (input) {
+                activeKcoInput = input;
+                renderKcoDropdown();
+            }
+            checkProgress();
+            updateLivePreview();
+        });
+        document.getElementById('kcoBody')?.addEventListener('change', function () {
+            checkProgress();
+            updateLivePreview();
         });
 
         window.addEventListener('scroll', positionKcoDropdown, true);
@@ -3584,12 +3676,12 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 chip.textContent = fmt;
                 chip.dataset.val = fmt;
                 if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid #1B4F72;background:#fff;color:#1B4F72;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 } else {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#1B4F72;color:#fff;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 }
-                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#154360'; } });
-                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = '#1B4F72'; } });
+                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
+                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
                 grid.appendChild(chip);
             });
 
@@ -3602,12 +3694,12 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 chip.textContent = fmt;
                 chip.dataset.val = fmt;
                 if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid #64748b;background:#fff;color:#64748b;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 } else {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#475569;color:#fff;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 }
-                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#334155'; } });
-                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = '#475569'; } });
+                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
+                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
                 grid.appendChild(chip);
             })();
 
@@ -3751,9 +3843,9 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 btn.textContent = v + '°';
                 btn.dataset.val = String(v);
                 const isSel    = String(currentVal) === String(v);
-                btn.style.cssText = 'width:100%;padding:10px 4px;font-size:13px;font-weight:700;border-radius:8px;border:2px solid #1B4F72'
-                    + ';background:' + (isSel ? '#fff' : '#1B4F72')
-                    + ';color:' + (isSel ? '#1B4F72' : '#fff') + ';cursor:pointer;transition:background .12s,color .12s,border-color .12s;';
+                btn.style.cssText = 'width:100%;padding:10px 4px;font-size:13px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114)'
+                    + ';background:' + (isSel ? '#e8f1f8' : 'rgb(255,255,255)')
+                    + ';color:rgb(27,79,114);cursor:pointer;transition:background .12s,color .12s,border-color .12s;';
                 grid.appendChild(btn);
             });
         }
@@ -4135,7 +4227,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             const hosp = pseudoInput(eye, 'hospital')?.value || '';
             const parts = [];
             if (type) { parts.push(type); }
-            if (exp)  { parts.push('₹' + exp); }
+            if (exp)  { parts.push(currencySymbol + exp); }
             if (hosp) { parts.push(hosp); }
             if (parts.length) {
                 el.textContent = parts.join(' · ');
@@ -4163,7 +4255,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
         window.openPseudoModal = function (eye) {
             currentPseudoEye = eye;
-            document.getElementById('pseudoModalEyeLabel').textContent = eye === 're' ? 'Right Eye (RE)' : 'Left Eye (LE)';
+            document.getElementById('pseudoModalEyeLabel').textContent = eye === 're' ? 'Right Eye' : 'Left Eye';
             setOpTypeUI(pseudoInput(eye, 'op-type')?.value || '');
             document.getElementById('pseudoOpExpense').value = pseudoInput(eye, 'op-expense')?.value || '';
             document.getElementById('pseudoHospital').value = pseudoInput(eye, 'hospital')?.value || '';
@@ -4720,7 +4812,7 @@ if (document.documentElement.classList.contains('exam-inline')) {
                             <div class="col-6 col-md-3">
                                 <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
                                     <div class="text-muted" style="font-size:11px;">Case Fee</div>
-                                    <div class="fw-semibold">₹ {{ number_format($patient->case_fee ?? 0, 2) }}</div>
+                                    <div class="fw-semibold">{{ money($patient->case_fee ?? 0, 2) }}</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">

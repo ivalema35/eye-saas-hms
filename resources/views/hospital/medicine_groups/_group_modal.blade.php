@@ -279,6 +279,7 @@
 
             <form id="groupForm" action="{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}" method="POST">
                 @csrf
+                <input type="hidden" name="usage_scope" id="usage_scope" value="ot">
                 <input type="hidden" name="_method" id="groupFormMethod" value="POST">
                 <input type="hidden" name="group_id" id="group-id" value="{{ old('group_id') }}">
 
@@ -293,7 +294,7 @@
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-medium">Group Code</label>
+                            <label class="form-label fw-medium">Group Codee</label>
                             <input type="text" name="group_code" id="group-code"
                                    value="{{ old('group_code') }}"
                                    class="form-control clinical-input @error('group_code') is-invalid @enderror"
@@ -402,7 +403,7 @@ const groupStoreUrl = "{{ route('hospital.medicine-groups.store', ['slug' => $sl
 
 // Medicine data map for auto-fill
 @php
-$medicineMap = $medicines->keyBy('id')->map(function($m) {
+$medicineMap = $medicines->keyBy('id')->map(function ($m) {
     return ['dosage_id' => $m->dosage_id, 'duration' => $m->duration, 'qty' => $m->qty];
 });
 @endphp

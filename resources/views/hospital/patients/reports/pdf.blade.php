@@ -75,7 +75,7 @@
     </div>
 
     <div class="summary">
-        Total Collection (Walk-in): ₹ {{ number_format((float) $totalCollection, 2) }}
+        Total Collection (Walk-in): {{ money((float) $totalCollection, 2) }}
     </div>
 
     <table>
@@ -91,7 +91,7 @@
                 <th>Receptionist</th>
                 <th>Case Type</th>
                 <th>Type</th>
-                <th class="text-right">Fee (₹)</th>
+                <th class="text-right">Fee ({{ currency_symbol() }})</th>
             </tr>
         </thead>
         <tbody>

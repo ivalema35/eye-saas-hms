@@ -132,75 +132,11 @@
                         </div>
                     </section>
 
-                    <section class="ot-section ot-section-b ot-animate-in">
-                        <div class="ot-section-head">
-                            <div>
-                                <div class="ot-section-kicker">Section B</div>
-                                <h4 class="fw-bold mb-0">Counselling Details</h4>
-                            </div>
-                            <div class="ot-section-icon" aria-hidden="true">
-                                <i class="bi bi-chat-left-text"></i>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label d-block">Mediclaim <span class="text-danger">*</span></label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mediclaim" id="mediclaim_yes" value="1" {{ old('mediclaim', '0') === '1' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="mediclaim_yes">Yes</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="mediclaim" id="mediclaim_no" value="0" {{ old('mediclaim', '0') === '0' ? 'checked' : '' }}>
-                                <label class="form-check-label" for="mediclaim_no">No</label>
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Lens Option</label>
-                            <select name="lens_option" class="form-select">
-                                <option value="">Select lens option...</option>
-                                @foreach($lensOptions as $lensOption)
-                                    <option value="{{ $lensOption->name }}" {{ old('lens_option') === $lensOption->name ? 'selected' : '' }}>
-                                        {{ $lensOption->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label">Package Amount</label>
-                            <div class="input-group">
-                                <span class="input-group-text">INR</span>
-                                <input type="number" step="0.01" min="0" name="package_amount" class="form-control" value="{{ old('package_amount') }}" placeholder="0.00">
-                            </div>
-                        </div>
-
-                        <!-- <div class="col-md-4">
-                            <label class="form-label">Payment Mode</label>
-                            <select name="payment_mode" class="form-select">
-                                <option value="">Select payment mode...</option>
-                                @foreach(['Cash', 'Online'] as $paymentMode)
-                                    <option value="{{ $paymentMode }}" {{ old('payment_mode') === $paymentMode ? 'selected' : '' }}>
-                                        {{ $paymentMode }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div> -->
-
-                        <!-- <div class="col-md-4 d-flex align-items-end">
-                            <div class="form-check mt-2">
-                                <input class="form-check-input" type="checkbox" name="report_ok" id="report_ok" value="1" {{ old('report_ok') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="report_ok">Pre-Report OK?</label>
-                            </div>
-                        </div> -->
-
-                        <div class="col-md-12">
-                            <label class="form-label">Notes</label>
-                            <textarea name="notes" rows="3" class="form-control" placeholder="Optional counselling notes...">{{ old('notes') }}</textarea>
-                        </div>
-                        </div>
-                    </section>
+                    <div class="alert alert-info ot-animate-in ot-section-b" role="alert">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Mediclaim, lens selection, package cost and consent are collected next, on the
+                        <strong>Counselling</strong> screen, after this booking is saved.
+                    </div>
 
                     <div class="ot-actions d-flex justify-content-end gap-2">
                         <a href="{{ route('hospital.ot.bookings.index', ['slug' => $slug]) }}" class="btn btn-outline-secondary ot-btn">Cancel</a>

@@ -957,7 +957,7 @@
                         </div>
                         <div class="pvm-appt-divider"></div>
                         <div class="pvm-appt-item">
-                            <i class="bi bi-currency-rupee"></i>
+                            <i class="bi bi-cash-coin"></i>
                             <div>
                                 <div class="pvm-appt-lbl">Fee</div>
                                 <div id="pvmFee" class="pvm-appt-val pvm-fee"></div>
@@ -1431,7 +1431,7 @@
                 document.getElementById('pvmAppt').textContent = d.appt || '—';
                 document.getElementById('pvmDoctor').textContent = d.doctor || '—';
                 document.getElementById('pvmCase').textContent = d.case || '—';
-                document.getElementById('pvmFee').textContent = d.fee ? '₹' + d.fee : '—';
+                document.getElementById('pvmFee').textContent = d.fee ? currencySymbol + d.fee : '—';
 
                 // Personal card
                 document.getElementById('pvmOccupation').textContent = d.occupation || '—';

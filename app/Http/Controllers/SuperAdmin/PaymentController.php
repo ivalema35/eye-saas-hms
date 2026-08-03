@@ -106,14 +106,14 @@ class PaymentController extends Controller
             'admin_id' => auth('superadmin')->id(),
             'tenant_id' => $tenant->id,
             'action' => 'payment.offline.recorded',
-            'description' => "Offline payment of ₹{$validated['amount']} recorded for '{$tenant->name}'",
+            'description' => 'Offline payment of '.platform_money($validated['amount']).' recorded for \''.$tenant->name.'\'',
             'ip_address' => request()->ip(),
             'new_values' => ['amount' => $validated['amount'], 'cycle' => $validated['cycle']],
         ]);
 
         return back()->with(
             'success',
-            "Offline payment of ₹{$validated['amount']} recorded for '{$tenant->name}'. Hospital activated."
+            'Offline payment of '.platform_money($validated['amount']).' recorded for \''.$tenant->name.'\'. Hospital activated.'
         );
     }
 

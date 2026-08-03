@@ -279,6 +279,7 @@
                         <th>Phone</th>
                         <th>OT Date</th>
                         <th>Status</th>
+                        <th>Payment</th>
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
@@ -289,12 +290,25 @@
                             <td><span class="ward-phone-cell"><i class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span></td>
                             <td><span class="ward-date-cell"><i class="bi bi-calendar2-event"></i>{{ optional($booking->surgery_date)->format('d M Y') }}</span></td>
                             <td><span class="badge text-bg-secondary ward-status-badge">{{ strtoupper((string) $booking->ot_status) }}</span></td>
+                            <td>
+                                @if($booking->payment_status === 'paid')
+                                    <span class="badge bg-success-subtle text-success-emphasis">Paid</span>
+                                @elseif($booking->payment_status === 'partially_paid')
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">Partially Paid</span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger-emphasis">Pending</span>
+                                @endif
+                            </td>
                             <td class="text-end">
-                                @if(in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAID, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true))
+                                <a href="{{ route('hospital.ot.ward.show', ['slug' => $slug, 'booking' => $booking->id]) }}"
+                                   class="btn btn-sm btn-outline-secondary ward-send-btn me-2" style="background:transparent !important;color:var(--ward-secondary) !important;border-color:var(--ward-secondary-18) !important;box-shadow:none;">
+                                    <i class="bi bi-heart-pulse me-1"></i> Vitals &amp; Eye Drops
+                                </a>
+                                @if(in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAYMENT_VERIFIED, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true))
                                     <form method="POST" action="{{ route('hospital.ot.ward.ready', ['slug' => $slug, 'booking' => $booking->id]) }}" class="d-inline">
                                         @csrf
                                         <button type="submit" class="btn btn-sm btn-primary ward-send-btn">
-                                            <i class="bi bi-send-check me-1"></i> Send to OT Doctor
+                                            <i class="bi bi-send-check me-1"></i> Send to OT Assistant
                                         </button>
                                     </form>
                                 @else
@@ -304,7 +318,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4 ward-empty-cell">No records available for ward workflow.</td>
+                            <td colspan="6" class="text-center text-muted py-4 ward-empty-cell">No records available for ward workflow.</td>
                         </tr>
                     @endforelse
                 </tbody>

@@ -71,7 +71,7 @@
                 <div>
                     <div style="font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--hms-text-muted);margin-bottom:.25rem">FOC Fee Waived</div>
                     <div style="font-weight:600;font-size:1rem;color:var(--hms-success)">
-                        ₹{{ number_format($foc->foc_fee ?? 0, 2) }}
+                        {{ money($foc->foc_fee ?? 0, 2) }}
                     </div>
                 </div>
                 <div>

@@ -18,7 +18,7 @@ class DoctorDashboardApiController extends Controller
     {
         $authUser = auth('sanctum')->user();
         $today    = now()->toDateString();
-        $isOtDoctor = $authUser?->role?->slug === 'ot_doctor';
+        $isOtDoctor = $authUser?->role?->slug === 'ot_assistant';
 
         // ── Resolve target doctor (self or viewed) ───────────────────────────
         $targetDoctorId = $authUser->id;

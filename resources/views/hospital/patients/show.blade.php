@@ -109,7 +109,7 @@
                     <div>
                         <div style="font-size:.72rem;color:#94A3B8;font-weight:600">Case Fee</div>
                         <div style="font-weight:800;color:#27AE60;font-size:1.1rem">
-                            ₹{{ $patient->case_fee ? number_format((float) $patient->case_fee, 0) : '—' }}
+                            {{ $patient->case_fee ? money($patient->case_fee, 0) : '—' }}
                         </div>
                     </div>
                     <div>

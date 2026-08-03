@@ -86,29 +86,13 @@
             </div>
         </div>
         <div class="d-flex gap-2 align-items-center med-tools">
-            <form method="GET" action="{{ route('hospital.medicines.index', ['slug' => $slug]) }}"
-                  class="d-flex gap-2 med-search-form">
-                <div class="input-group med-search-box" style="min-width:240px">
-                    <span class="input-group-text bg-white border-end-0 text-muted">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="text" name="search" value="{{ request('search') }}"
-                           class="form-control border-start-0 ps-0 clinical-input"
-                           placeholder="Search name or brand...">
-                </div>
-                <button type="submit" class="btn btn-outline-primary text-nowrap med-search-btn">Search</button>
-                @if(request('search'))
-                    <a href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}"
-                       class="btn btn-outline-secondary text-nowrap med-clear-btn">Clear</a>
-                @endif
-            </form>
-            <span class="badge text-bg-light border med-total-pill">{{ $medicines->total() }} total</span>
+            <span class="badge text-bg-light border med-total-pill">{{ $medicines->count() }} total</span>
         </div>
     </div>
 
     <div class="card-body p-0">
         <div class="table-responsive med-table-wrap">
-            <table class="table premium-table table-hover align-middle mb-0 med-table">
+            <table class="table premium-table table-hover align-middle mb-0 med-table js-datatable" style="width:100%">
                 <thead>
                     <tr>
                         <th style="width:50px">#</th>
@@ -121,12 +105,12 @@
                 <tbody>
                     @forelse($medicines as $i => $med)
                     <tr>
-                        <td class="text-muted med-index-cell">{{ $medicines->firstItem() + $i }}</td>
+                        <td class="text-muted med-index-cell">{{ $i + 1 }}</td>
                         <td class="fw-semibold">
                             <span class="med-name-cell">{{ $med->name }}</span>
                         </td>
                         <td class="text-muted">{{ $med->dosage?->dosage ?? '—' }}</td>
-                        <td><span class="med-price-pill">{{ $med->price !== null ? '₹'.number_format($med->price, 2) : '—' }}</span></td>
+                        <td><span class="med-price-pill">{{ $med->price !== null ? money($med->price, 2) : '—' }}</span></td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-1 action-btn-group">
                                 <button type="button"
@@ -148,7 +132,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="text-center py-5 text-muted med-empty-cell">
+                        <td colspan="5" class="text-center py-5 text-muted med-empty-cell">
                             No medicines found.
                         </td>
                     </tr>
@@ -157,15 +141,6 @@
             </table>
         </div>
     </div>
-
-    @if($medicines->hasPages())
-    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center med-card-footer">
-        <small class="text-muted">
-            Showing {{ $medicines->firstItem() }}–{{ $medicines->lastItem() }} of {{ $medicines->total() }}
-        </small>
-        {{ $medicines->links() }}
-    </div>
-    @endif
 </div>
 </div>
 
@@ -262,9 +237,9 @@
 
                     {{-- Price --}}
                     <div class="mb-1">
-                        <label class="form-label fw-medium">Price (₹)</label>
+                        <label class="form-label fw-medium">Price ({{ currency_symbol() }})</label>
                         <div class="input-group">
-                            <span class="input-group-text">₹</span>
+                            <span class="input-group-text">{{ currency_symbol() }}</span>
                             <input type="number" name="price" id="input-price" step="0.01" min="0"
                                    value="{{ old('price', '0.00') }}"
                                    class="form-control clinical-input @error('price') is-invalid @enderror"

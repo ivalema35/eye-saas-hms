@@ -26,7 +26,7 @@
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-orange"><i class="fa-solid fa-scalpel"></i></div>
         <div class="hms-stat-body">
-            <div class="hms-stat-label">OT Bookings Today</div>
+            <div class="hms-stat-label">OT Scheduled Today</div>
             <div class="hms-stat-value">{{ $otBookingsToday }}</div>
             <div class="hms-stat-meta">Scheduled surgeries</div>
         </div>
@@ -60,10 +60,12 @@
                 <div class="hms-qa-icon qa-teal"><i class="fa-solid fa-users"></i></div>
                 <span>Patient List</span>
             </a>
-            <a href="{{ route('hospital.ot.index', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-orange"><i class="fa-solid fa-procedures"></i></div>
-                <span>OT Bookings</span>
+            @haspermission('ot.appointment.view')
+            <a href="{{ route('hospital.ot.appointments.index', $slug) }}" class="hms-qa-btn">
+                <div class="hms-qa-icon qa-orange"><i class="fa-solid fa-calendar-week"></i></div>
+                <span>OT Appointments</span>
             </a>
+            @endhaspermission
             <!-- <a href="{{ route('hospital.foc.index', $slug) }}" class="hms-qa-btn">
                 <div class="hms-qa-icon qa-green"><i class="fa-solid fa-gift"></i></div>
                 <span>FOC Cases</span>

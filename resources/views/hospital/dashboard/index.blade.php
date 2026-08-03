@@ -1277,6 +1277,8 @@
     $hasPerf      = $receptionists      !== null;
     $hasOt        = $otToday            !== null;
     $hasFocAlert  = $focAlerts          !== null;
+    $isHospitalAdmin = $isHospitalAdmin ?? false;
+    $otTotalToday = $otTotalToday ?? null;
     $focReceptionists = $focReceptionists ?? collect();
     $pendingFocRequests = $pendingFocRequests ?? collect();
     $doctorName = $doctorName ?? auth('hospital_user')->user()?->name;
@@ -1307,7 +1309,7 @@
         $doctorStripCards = $doctorCards->reject(fn ($doctor) => (int) $doctor->id === (int) auth('hospital_user')->id())->values();
     }
 
-    $hasAnyData   = $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert;
+    $hasAnyData   = $isHospitalAdmin || $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert;
     $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
 @endphp
 
@@ -1404,9 +1406,120 @@
 
 {{-- ════════════════════════════════════════════════════════════════════════
      BENTO GRID — ROW 1: Stat Metric Cards
-     Each card only renders when its permission gate was satisfied.
 ════════════════════════════════════════════════════════════════════════════ --}}
 <div class="bento-dashboard mb-4">
+
+@if($isHospitalAdmin)
+    {{-- Hospital admin: only these 8 cards --}}
+
+    <div class="bento-card span-3">
+        <div class="bento-stat">
+            <div class="bento-icon ig-blue">
+                <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">Total Today Patients</p>
+                <div class="metric-value">{{ $todayPatients ?? 0 }}</div>
+                <p class="metric-meta">{{ now()->format('d M Y') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}" class="bento-card span-3 text-decoration-none">
+        <div class="bento-stat">
+            <div class="bento-icon ig-green">
+                <i data-lucide="wallet" style="width:22px;height:22px;color:#27AE60;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">Total Collection</p>
+                <div class="metric-value">{{ money($revenueToday ?? 0, 0) }}</div>
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="bento-card span-3 text-decoration-none">
+        <div class="bento-stat">
+            <div class="bento-icon ig-indigo">
+                <i data-lucide="file-bar-chart" style="width:22px;height:22px;color:#34495E;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">Report</p>
+                <div class="metric-value" style="font-size:1.15rem">—</div>
+                <p class="metric-meta">Summary card</p>
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ route('hospital.users.index', ['slug' => $slug, 'role' => 'doctor']) }}" class="bento-card span-3 text-decoration-none">
+        <div class="bento-stat">
+            <div class="bento-icon ig-cobalt">
+                <i data-lucide="user-round" style="width:22px;height:22px;color:#2980B9;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">Doctor</p>
+                <div class="metric-value">{{ $totalDoctors ?? 0 }}</div>
+            </div>
+        </div>
+    </a>
+
+    <a href="{{ route('hospital.users.index', ['slug' => $slug, 'role' => 'receptionist']) }}" class="bento-card span-3 text-decoration-none">
+        <div class="bento-stat">
+            <div class="bento-icon" style="background:rgba(26,188,156,.12);">
+                <i data-lucide="headset" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">Reception</p>
+                <div class="metric-value">{{ $totalReceptions ?? 0 }}</div>
+            </div>
+        </div>
+    </a>
+
+    <div class="bento-card span-3">
+        <div class="bento-stat">
+            <div class="bento-icon ig-teal">
+                <i data-lucide="eye" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">Primary / Second</p>
+                <div class="metric-value">{{ $todayPrimary ?? 0 }}/{{ $todaySecondary ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}" class="bento-card span-3 text-decoration-none">
+        <div class="bento-stat">
+            <div class="bento-icon ig-purple">
+                <i data-lucide="activity" style="width:22px;height:22px;color:#8E44AD;stroke-width:1.75"></i>
+            </div>
+            <div>
+                <p class="metric-label">OT Total</p>
+                <div class="metric-value">{{ $otTotalToday ?? 0 }}</div>
+            </div>
+        </div>
+    </a>
+
+    @if(($pendingShareRequestsCount ?? null) !== null)
+        <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}?_tab=request"
+            class="bento-card span-3 text-decoration-none" style="position:relative;">
+            <div class="bento-stat">
+                <div class="bento-icon" style="background:rgba(13,148,136,.12);">
+                    <i data-lucide="send" style="width:22px;height:22px;color:#0d9488;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Incoming Requests</p>
+                    <div class="metric-value">{{ $pendingShareRequestsCount }}</div>
+                </div>
+            </div>
+            @if($pendingShareRequestsCount > 0)
+                <span style="position:absolute;top:12px;right:14px;background:#dc2626;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;">
+                    {{ $pendingShareRequestsCount }} New
+                </span>
+            @endif
+        </a>
+    @endif
+
+@else
+    {{-- Non-admin: existing card set (unchanged) --}}
 
     {{-- Doctor Summary (doctor / ot_doctor) --}}
     @if($isDoctorUser && $doctorAssignedPatients !== null)
@@ -1419,9 +1532,7 @@
                     <p class="metric-label">Doctor Dashboard</p>
                     <div class="metric-value" style="font-size:20px">{{ $doctorName }}</div>
                     <p class="metric-meta">
-                        Assigned: {{ $doctorAssignedPatients }} 
-                        <!-- Primary: {{ $doctorPrimaryDone }} &bull;
-                        Secondary: {{ $doctorSecondaryDone }} -->
+                        Assigned: {{ $doctorAssignedPatients }}
                     </p>
                 </div>
             </div>
@@ -1439,7 +1550,6 @@
                 <div>
                     <p class="metric-label">Incoming Requests</p>
                     <div class="metric-value">{{ $pendingShareRequestsCount }}</div>
-                    <p class="metric-meta">Hospital share requests pending</p>
                 </div>
             </div>
             @if($pendingShareRequestsCount > 0)
@@ -1448,6 +1558,74 @@
                 </span>
             @endif
         </a>
+    @endif
+
+    {{-- OT Management Overview (hospital admin only) — Phase 8 of OT Workflow Upgrade --}}
+    @if($otOverview ?? null)
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon ig-blue">
+                    <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Total Patients</p>
+                    <div class="metric-value">{{ $otOverview['total_patients'] }}</div>
+                    <p class="metric-meta">All-time, this hospital</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon" style="background:rgba(39,174,96,.12);">
+                    <i data-lucide="scissors" style="width:22px;height:22px;color:#27AE60;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Surgeries Completed</p>
+                    <div class="metric-value">{{ $otOverview['surgeries_completed'] }}</div>
+                    <p class="metric-meta">This month</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon" style="background:rgba(27,79,114,.12);">
+                    <i data-lucide="eye" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Lens Consumption</p>
+                    <div class="metric-value">{{ $otOverview['lens_consumption'] }}</div>
+                    <p class="metric-meta">Lenses implanted, this month</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon" style="background:rgba(230,126,34,.12);">
+                    <i data-lucide="package-minus" style="width:22px;height:22px;color:#E67E22;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Lens Low Stock</p>
+                    <div class="metric-value">{{ $otOverview['lens_low_stock'] ?? 0 }}</div>
+                    <p class="metric-meta">Stock ≤ 5 units</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-card span-3">
+            <div class="bento-stat">
+                <div class="bento-icon" style="background:rgba(192,57,43,.12);">
+                    <i data-lucide="calendar-clock" style="width:22px;height:22px;color:#C0392B;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Lens Near Expiry</p>
+                    <div class="metric-value">{{ $otOverview['lens_near_expiry'] ?? 0 }}</div>
+                    <p class="metric-meta">Expires within 30 days</p>
+                </div>
+            </div>
+        </div>
     @endif
 
     {{-- Today's Patients (exam.primary.view) --}}
@@ -1478,7 +1656,6 @@
                 </div>
             </div>
         </div>
-
         {{-- Primary & Secondary Queue --}}
         @php
             $cardPrimary   = $primaryQueueCount   ?? 0;
@@ -1545,27 +1722,28 @@
                 </div>
                 <div>
                     <p class="metric-label">Today Revenue</p>
-                    <div class="metric-value">₹{{ number_format($revenueToday, 0) }}</div>
-                    <p class="metric-meta">Month: ₹{{ number_format($revenueMonth, 0) }}</p>
+                    <div class="metric-value">{{ money($revenueToday, 0) }}</div>
+                    <p class="metric-meta">Month: {{ money($revenueMonth, 0) }}</p>
                 </div>
             </div>
         </div>
     @endif
 
-    {{-- OT Stats (ot.patient.list) --}}
+    {{-- OT Appointment (ot.patient.list / ot.appointment.view) --}}
     @if($hasOt)
-        <div class="bento-card span-3">
+        <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
+           class="bento-card span-3 text-decoration-none">
             <div class="bento-stat">
                 <div class="bento-icon ig-purple">
                     <i data-lucide="activity" style="width:22px;height:22px;color:#8E44AD;stroke-width:1.75"></i>
                 </div>
                 <div>
-                    <p class="metric-label">OT Today</p>
+                    <p class="metric-label">OT Appointment</p>
                     <div class="metric-value">{{ $otToday }}</div>
-                    <p class="metric-meta">Done: {{ $otOperated }} &bull; Pending: {{ $otPending }}</p>
+                    <p class="metric-meta">Confirmed: {{ $otOperated }} &bull; Booked: {{ $otPending }}</p>
                 </div>
             </div>
-        </div>
+        </a>
     @endif
 
     {{-- FOC Approval Alert (opd.foc.accept) --}}
@@ -1602,9 +1780,11 @@
             </div>
         </div>
     @endif
+
+@endif
 </div>
 
-@if(($isReceptionistUser || $isDoctorUser) && $doctorStripCards->isNotEmpty())
+@if($isDoctorUser && $doctorStripCards->isNotEmpty())
 <div class="mb-3 fw-bold" style="color:#1B4F72;font-size:1.05rem;letter-spacing:.02em">
     All Doctors
 </div>
@@ -1616,7 +1796,7 @@
                 $firstInitial = isset($nameParts[0]) ? substr($nameParts[0], 0, 1) : '';
                 $secondInitial = isset($nameParts[1]) ? substr($nameParts[1], 0, 1) : '';
                 $doctorInitials = strtoupper($firstInitial.$secondInitial);
-                $isOtDoctor = $doctor->role?->slug === 'ot_doctor';
+                $isOtDoctor = $doctor->role?->slug === 'ot_assistant';
                 $isPrimaryDoctor = $doctor->doctor_type === 'primary';
                 $isSecondaryDoctor = $doctor->doctor_type === 'secondary';
             @endphp
@@ -1804,15 +1984,15 @@
                     <div class="rev-grid">
                         <div class="rev-col">
                             <p class="rev-label">Today</p>
-                            <div class="rev-value">₹{{ number_format($revenueToday, 0) }}</div>
+                            <div class="rev-value">{{ money($revenueToday, 0) }}</div>
                         </div>
                         <div class="rev-col">
                             <p class="rev-label">This Month</p>
-                            <div class="rev-value">₹{{ number_format($revenueMonth, 0) }}</div>
+                            <div class="rev-value">{{ money($revenueMonth, 0) }}</div>
                         </div>
                         <div class="rev-col">
                             <p class="rev-label">This Year</p>
-                            <div class="rev-value">₹{{ number_format($revenueYear, 0) }}</div>
+                            <div class="rev-value">{{ money($revenueYear, 0) }}</div>
                         </div>
                     </div>
                 </div>
@@ -1830,7 +2010,7 @@
                                 <tr>
                                     <th>Receptionist</th>
                                     <th class="text-center">Walk-ins</th>
-                                    <th class="text-end">Net (₹)</th>
+                                    <th class="text-end">Net ({{ currency_symbol() }})</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1838,7 +2018,7 @@
                                     <tr>
                                         <td>{{ $rec->name }}</td>
                                         <td class="text-center">{{ $rec->today_count }}</td>
-                                        <td class="text-end"><strong>{{ number_format($rec->today_net, 0) }}</strong></td>
+                                        <td class="text-end"><strong>{{ money($rec->today_net, 0) }}</strong></td>
                                     </tr>
                                 @empty
                                     <tr>
