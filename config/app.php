@@ -69,6 +69,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Currency (tenant-aware)
+    |--------------------------------------------------------------------------
+    |
+    | Platform defaults used for SuperAdmin SaaS billing and as fallback.
+    | Hospital CRM currency is set per-request by SetTenantScope from the
+    | tenant record (copied from master country at register / settings).
+    |
+    */
+
+    'platform_currency_code' => env('PLATFORM_CURRENCY_CODE', 'INR'),
+    'platform_currency_symbol' => env('PLATFORM_CURRENCY_SYMBOL', '₹'),
+    'hospital_currency_code' => env('PLATFORM_CURRENCY_CODE', 'INR'),
+    'hospital_currency_symbol' => env('PLATFORM_CURRENCY_SYMBOL', '₹'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Tenant Context
     |--------------------------------------------------------------------------
     |

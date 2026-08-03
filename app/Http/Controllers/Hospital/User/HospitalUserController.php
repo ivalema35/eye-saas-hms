@@ -8,7 +8,9 @@ use App\Http\Requests\Hospital\User\HospitalUserUpdateRequest;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Role\Role;
 use App\Services\Auth\RolePermissionService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -17,19 +19,56 @@ class HospitalUserController extends Controller
 {
     public function __construct(private readonly RolePermissionService $permissionService) {}
 
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorizeUserManagement();
 
-        $slug = request()->route('slug');
-        $users = HospitalUser::with('role')->latest()->paginate((int) config('app.pagination_limit', 25));
+        $slug = $request->route('slug');
+        $roleFilter = $this->normalizeRoleFilter($request->query('role'));
+
+        $users = HospitalUser::with('role')
+            ->when($roleFilter, function (Builder $query) use ($roleFilter) {
+                $query->whereHas('role', fn (Builder $q) => $q->whereIn('slug', $roleFilter['slugs']));
+            })
+            ->latest()
+            ->paginate((int) config('app.pagination_limit', 25))
+            ->withQueryString();
+
         $roles = Role::query()
             ->whereNull('deleted_at')
             ->where('slug', '!=', 'hospital_admin')
             ->orderBy('name')
             ->get(['id', 'name', 'slug']);
 
-        return view('hospital.users.index', compact('users', 'slug', 'roles'));
+        $roleFilterKey = $roleFilter['key'] ?? null;
+        $roleFilterLabel = $roleFilter['label'] ?? null;
+
+        return view('hospital.users.index', compact('users', 'slug', 'roles', 'roleFilterKey', 'roleFilterLabel'));
+    }
+
+    /**
+     * @return array{key: string, label: string, slugs: list<string>}|null
+     */
+    private function normalizeRoleFilter(?string $role): ?array
+    {
+        return match ($role) {
+            'doctor' => [
+                'key' => 'doctor',
+                'label' => 'Doctors',
+                'slugs' => ['doctor', 'ot_doctor'],
+            ],
+            'receptionist', 'reception' => [
+                'key' => 'receptionist',
+                'label' => 'Reception',
+                'slugs' => ['receptionist', 'receptionist_opd'],
+            ],
+            'ot' => [
+                'key' => 'ot',
+                'label' => 'OT Staff',
+                'slugs' => ['ot_assistant', 'accountant', 'ward_management', 'discharge_counter'],
+            ],
+            default => null,
+        };
     }
 
     public function create(): View
@@ -81,7 +120,10 @@ class HospitalUserController extends Controller
         ]);
 
         return redirect()
-            ->route('hospital.users.index', ['slug' => $slug])
+            ->route('hospital.users.index', array_filter([
+                'slug' => $slug,
+                'role' => $request->input('role_filter'),
+            ]))
             ->with('success', 'User added successfully.');
     }
 
@@ -170,11 +212,14 @@ class HospitalUserController extends Controller
         $user->update($updateData);
 
         return redirect()
-            ->route('hospital.users.index', ['slug' => $slug])
+            ->route('hospital.users.index', array_filter([
+                'slug' => $slug,
+                'role' => $request->input('role_filter'),
+            ]))
             ->with('success', 'User updated successfully.');
     }
 
-    public function destroy(string $slug, string $id): RedirectResponse
+    public function destroy(Request $request, string $slug, string $id): RedirectResponse
     {
         $this->authorizeUserManagement();
 
@@ -191,7 +236,10 @@ class HospitalUserController extends Controller
         $user->delete();
 
         return redirect()
-            ->route('hospital.users.index', ['slug' => $slug])
+            ->route('hospital.users.index', array_filter([
+                'slug' => $slug,
+                'role' => $request->input('role') ?? $request->query('role'),
+            ]))
             ->with('success', 'User deleted successfully.');
     }
 }

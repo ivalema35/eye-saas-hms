@@ -48,7 +48,7 @@
         </div>
     </div>
     <div class="hms-stat-card">
-        <div class="hms-stat-icon hsi-teal"><i class="bi bi-currency-rupee"></i></div>
+        <div class="hms-stat-icon hsi-teal"><i class="bi bi-cash-coin"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Monthly Recurring Revenue</div>
             <div class="hms-stat-value">&#x20B9;{{ number_format($monthlyRevenue) }}</div>
@@ -252,7 +252,7 @@
             data: {
                 labels: months,
                 datasets: [{
-                    label: 'Revenue (₹)',
+                    label: 'Revenue ({{ platform_currency_symbol() }})',
                     data: amounts,
                     backgroundColor: 'rgba(27,79,114,.7)',
                     borderColor: '#1B4F72',
@@ -271,14 +271,14 @@
                         titleFont: { weight: '700' },
                         padding: 10,
                         cornerRadius: 8,
-                        callbacks: { label: ctx => ' ₹' + ctx.parsed.y.toLocaleString('en-IN') }
+                        callbacks: { label: ctx => ' ' + @json(platform_currency_symbol()) + ctx.parsed.y.toLocaleString('en-IN') }
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0,0,0,.04)', drawBorder: false },
-                        ticks: { callback: v => '₹' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v), font: { size: 11 }, color: '#94A3B8' }
+                        ticks: { callback: v => @json(platform_currency_symbol()) + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v), font: { size: 11 }, color: '#94A3B8' }
                     },
                     x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#94A3B8' } }
                 }

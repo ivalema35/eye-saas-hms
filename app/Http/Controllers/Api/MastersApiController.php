@@ -38,8 +38,8 @@ class MastersApiController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor', 'ot_assistant'])
+                                ->orWhereIn('name', ['doctor', 'ot_assistant']);
                         });
                     });
             })

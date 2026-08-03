@@ -537,6 +537,18 @@
     --ota2-secondary-12: rgba(27, 79, 114, .12);
     --ota2-secondary-18: rgba(27, 79, 114, .18);
     --ota2-secondary-24: rgba(27, 79, 114, .24);
+    /* The Surgery Queue table (top of this page) still uses the older
+       .otd-* classes carried over from the deleted OT Doctor dashboard —
+       those classes read --otd-* variables, which were only ever scoped
+       to .ot-doctor-page. Without them here, --otd-secondary resolves to
+       nothing, so .otd-operate-btn keeps its color:#fff !important but
+       loses its background/border, rendering as a near-invisible button. */
+    --otd-primary: #ebf5fbeb;
+    --otd-secondary: #1B4F72;
+    --otd-secondary-08: rgba(27, 79, 114, .08);
+    --otd-secondary-12: rgba(27, 79, 114, .12);
+    --otd-secondary-18: rgba(27, 79, 114, .18);
+    --otd-secondary-24: rgba(27, 79, 114, .24);
     color: var(--ota2-secondary);
     animation: ota2-page-in 420ms ease both;
 }
@@ -585,6 +597,65 @@
     font-size: .84rem;
     font-weight: 650;
     margin-top: .15rem;
+}
+
+.ota2-summary-card {
+    border: 1px solid var(--ota2-secondary-12) !important;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, .92);
+    box-shadow: 0 10px 28px rgba(27, 79, 114, .08) !important;
+}
+
+.ota2-summary-link {
+    color: var(--ota2-secondary);
+    transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.ota2-summary-link:hover {
+    color: var(--ota2-secondary);
+    transform: translateY(-2px);
+    border-color: var(--ota2-secondary-24) !important;
+    box-shadow: 0 14px 32px rgba(27, 79, 114, .14) !important;
+}
+
+.ota2-summary-label {
+    font-size: .78rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: rgba(27, 79, 114, .72);
+}
+
+.ota2-summary-value {
+    font-size: 1.85rem;
+    font-weight: 900;
+    line-height: 1.15;
+    color: var(--ota2-secondary);
+}
+
+.ota2-summary-meta {
+    font-size: .82rem;
+    font-weight: 650;
+    color: rgba(27, 79, 114, .65);
+}
+
+.ota2-summary-cta {
+    font-size: .82rem;
+    font-weight: 800;
+    color: rgba(27, 79, 114, .82);
+}
+
+.ota2-summary-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: rgba(27, 79, 114, .08);
+    color: var(--ota2-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex: 0 0 auto;
 }
 
 .ota2-total-pill {

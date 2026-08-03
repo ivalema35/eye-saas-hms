@@ -134,8 +134,10 @@
                             </td>
                             <td class="text-end">
                                 @if(!$hasInvoice)
-                                    <form method="POST" action="{{ route('hospital.ot.invoice.generate', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="d-inline">
+                                    <form method="POST" action="{{ route('hospital.ot.invoice.generate', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="d-inline-flex align-items-center gap-2">
                                         @csrf
+                                        <input type="date" name="follow_up_date" class="form-control form-control-sm" style="width:auto;"
+                                               value="{{ now()->addDays(7)->format('Y-m-d') }}" title="Follow-up date">
                                         <button type="submit" class="btn btn-sm btn-primary otb-generate-btn">
                                             <i class="bi bi-file-earmark-plus me-1"></i> Generate
                                         </button>
@@ -149,6 +151,27 @@
                                         </a>
                                         <a href="{{ route('hospital.ot.discharge.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn otb-print-btn-discharge">
                                             <i class="bi bi-file-medical"></i> Discharge
+                                        </a>
+                                        <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-receipt-cutoff"></i> Bill Summary
+                                        </a>
+                                        <a href="{{ route('hospital.ot.certificate.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-patch-check"></i> Certificate
+                                        </a>
+                                        <a href="{{ route('hospital.ot.prescription.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-capsule"></i> Prescription
+                                        </a>
+                                        <a href="{{ route('hospital.ot.lens-slip.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-eyeglasses"></i> Lens Slip
+                                        </a>
+                                        <a href="{{ route('hospital.ot.medicine-slip.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-prescription2"></i> Medicine Slip
+                                        </a>
+                                        <a href="{{ route('hospital.ot.followup-slip.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-calendar2-check"></i> Follow-up Slip
+                                        </a>
+                                        <a href="{{ route('hospital.ot.print-all', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn otb-print-btn-discharge" target="_blank">
+                                            <i class="bi bi-printer-fill"></i> Print All
                                         </a>
                                     </div>
                                 @endif

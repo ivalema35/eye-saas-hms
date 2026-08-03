@@ -127,14 +127,14 @@ class PlatformPaymentApiController extends Controller
             'admin_id'    => $request->user()->id,
             'tenant_id'   => $tenant->id,
             'action'      => 'payment.offline.recorded',
-            'description' => "Offline payment of ₹{$validated['amount']} recorded for '{$tenant->name}'",
+            'description' => 'Offline payment of '.platform_money($validated['amount']).' recorded for \''.$tenant->name.'\'',
             'ip_address'  => $request->ip(),
             'new_values'  => ['amount' => $validated['amount'], 'cycle' => $validated['cycle']],
         ]);
 
         return response()->json([
             'success' => true,
-            'message' => "Offline payment of ₹{$validated['amount']} recorded for '{$tenant->name}'. Hospital activated.",
+            'message' => 'Offline payment of '.platform_money($validated['amount']).' recorded for \''.$tenant->name.'\'. Hospital activated.',
             'data'    => $this->formatPayment($payment->load('tenant')),
         ], 201);
     }

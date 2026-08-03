@@ -26,18 +26,28 @@ class OtLensDetail extends Model
     protected $fillable = [
         'tenant_id',
         'ot_booking_id',
+        'lens_inventory_id',
         'lens_name',
+        'manufacturer',
         'lens_type',
         'lens_power',
+        'axis',
         'lens_mrp',
+        'batch_number',
+        'serial_number',
+        'expiry_date',
         'is_implanted',
+        'implanted_at',
         'entered_by',
     ];
 
     protected $casts = [
         'lens_power' => 'decimal:2',
+        'axis' => 'decimal:2',
         'lens_mrp' => 'decimal:2',
+        'expiry_date' => 'date',
         'is_implanted' => 'boolean',
+        'implanted_at' => 'datetime',
     ];
 
     public function booking()
@@ -48,5 +58,10 @@ class OtLensDetail extends Model
     public function enteredBy()
     {
         return $this->belongsTo(HospitalUser::class, 'entered_by');
+    }
+
+    public function inventoryItem()
+    {
+        return $this->belongsTo(LensInventory::class, 'lens_inventory_id');
     }
 }

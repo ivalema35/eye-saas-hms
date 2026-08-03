@@ -38,7 +38,7 @@
         <div class="hms-card position-relative h-100">
             <span class="hms-badge" style="background:rgba(27,79,114,.08);color:#1B4F72;display:inline-block;margin-bottom:1rem">Monthly</span>
             <div style="display:flex;align-items:baseline;gap:.25rem;margin-bottom:.25rem">
-                <span style="font-size:1.25rem;font-weight:700;color:#475569;margin-top:.5rem">₹</span>
+                <span style="font-size:1.25rem;font-weight:700;color:#475569;margin-top:.5rem">{{ platform_currency_symbol() }}</span>
                 <span style="font-size:2.75rem;font-weight:900;color:#0D2137;line-height:1;letter-spacing:-.03em">{{ number_format($monthlyPrice) }}</span>
                 <span style="font-size:.875rem;color:#64748B;font-weight:500">/month</span>
             </div>
@@ -63,16 +63,16 @@
             </div>
             <span class="hms-badge" style="background:rgba(27,79,114,.12);color:#1B4F72;display:inline-block;margin-bottom:1rem">Quarterly</span>
             <div style="display:flex;align-items:baseline;gap:.25rem;margin-bottom:.25rem">
-                <span style="font-size:1.25rem;font-weight:700;color:#475569;margin-top:.5rem">₹</span>
+                <span style="font-size:1.25rem;font-weight:700;color:#475569;margin-top:.5rem">{{ platform_currency_symbol() }}</span>
                 <span style="font-size:2.75rem;font-weight:900;color:#0D2137;line-height:1;letter-spacing:-.03em">{{ number_format($quarterlyPrice) }}</span>
                 <span style="font-size:.875rem;color:#64748B;font-weight:500">/3 months</span>
             </div>
             <div style="font-size:.8rem;font-weight:600;color:#27AE60;margin-bottom:.25rem;min-height:1.4em;display:flex;align-items:center;gap:.5rem">
-                Save ₹{{ number_format($quarterlyOriginal - $quarterlyPrice) }}
+                Save {{ platform_money($quarterlyOriginal - $quarterlyPrice) }}
                 <span style="font-size:.65rem;background:rgba(39,174,96,.12);color:#1A6F5B;border:1px solid rgba(39,174,96,.2);padding:.1rem .5rem;border-radius:999px;font-weight:700">{{ $quarterlyDiscount }}% OFF</span>
             </div>
             <div style="font-size:.78rem;color:#94A3B8">
-                <s style="color:#94A3B8">₹{{ number_format($quarterlyOriginal) }}</s> &nbsp;·&nbsp; Billed every 3 months
+                <s style="color:#94A3B8">{{ platform_money($quarterlyOriginal) }}</s> &nbsp;·&nbsp; Billed every 3 months
             </div>
             <hr style="border-color:rgba(27,79,114,.15);margin:1.25rem 0">
             <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem">
@@ -90,16 +90,16 @@
         <div class="hms-card position-relative h-100">
             <span class="hms-badge" style="background:rgba(39,174,96,.1);color:#1A6F5B;display:inline-block;margin-bottom:1rem">Best Value</span>
             <div style="display:flex;align-items:baseline;gap:.25rem;margin-bottom:.25rem">
-                <span style="font-size:1.25rem;font-weight:700;color:#475569;margin-top:.5rem">₹</span>
+                <span style="font-size:1.25rem;font-weight:700;color:#475569;margin-top:.5rem">{{ platform_currency_symbol() }}</span>
                 <span style="font-size:2.75rem;font-weight:900;color:#0D2137;line-height:1;letter-spacing:-.03em">{{ number_format($yearlyPrice) }}</span>
                 <span style="font-size:.875rem;color:#64748B;font-weight:500">/year</span>
             </div>
             <div style="font-size:.8rem;font-weight:600;color:#27AE60;margin-bottom:.25rem;min-height:1.4em;display:flex;align-items:center;gap:.5rem">
-                Save ₹{{ number_format($yearlyOriginal - $yearlyPrice) }}
+                Save {{ platform_money($yearlyOriginal - $yearlyPrice) }}
                 <span style="font-size:.65rem;background:rgba(39,174,96,.12);color:#1A6F5B;border:1px solid rgba(39,174,96,.2);padding:.1rem .5rem;border-radius:999px;font-weight:700">{{ $yearlyDiscount }}% OFF</span>
             </div>
             <div style="font-size:.78rem;color:#94A3B8">
-                <s style="color:#94A3B8">₹{{ number_format($yearlyOriginal) }}</s> &nbsp;·&nbsp; Billed annually
+                <s style="color:#94A3B8">{{ platform_money($yearlyOriginal) }}</s> &nbsp;·&nbsp; Billed annually
             </div>
             <hr style="border-color:#E2E8F0;margin:1.25rem 0">
             <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.625rem">
@@ -137,7 +137,7 @@
             <div class="row g-2" style="margin-bottom:.875rem">
                 <div class="col-4">
                     <div class="hms-form-group">
-                        <label class="hms-label">Monthly Price (₹)</label>
+                        <label class="hms-label">Monthly Price ({{ platform_currency_symbol() }})</label>
                         <input type="number" name="monthly_price" class="hms-input"
                                value="{{ $monthlyPrice }}" min="1" max="99999" required>
                     </div>

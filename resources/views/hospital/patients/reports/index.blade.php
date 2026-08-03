@@ -25,226 +25,118 @@
             <h6 class="text-success fw-bold mb-1 text-uppercase">Total Collection (Walk-in)</h6>
             <small class="text-muted">Based on currently applied filters</small>
         </div>
-        <h3 class="text-success fw-bold mb-0">₹ {{ number_format($totalCollection, 2) }}</h3>
+        <h3 class="text-success fw-bold mb-0">{{ money($totalCollection, 2) }}</h3>
     </div>
 </div>
 
-<div class="card premium-card border-0 shadow-sm mb-4">
-    <div class="card-header bg-white p-3 border-bottom fw-bold">
-        <i class="bi bi-funnel-fill text-primary me-2"></i> Report Filters
-    </div>
-    <div class="card-body p-4">
-        <form action="{{ route('hospital.reports.index', ['slug' => $slug]) }}" method="GET" id="filterForm">
-            <div class="row g-3">
-
-                <div class="col-md-4">
-                    <label class="form-label">Date Range</label>
-                    <input type="text" name="date_range" id="date_range" class="form-control clinical-input flatpickr" placeholder="Select dates" value="{{ request('date_range') }}" autocomplete="off" readonly>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Receptionist</label>
-                    <select name="reception_id" id="reception_id" class="form-select clinical-input">
-                        <option value="">All Receptionists</option>
-                        @foreach($receptions as $rec)
-                            <option value="{{ $rec->id }}" {{ (string) request('reception_id') === (string) $rec->id ? 'selected' : '' }}>{{ $rec->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Doctor</label>
-                    <select name="doctor_id" class="form-select clinical-input">
-                        <option value="">All Doctors</option>
-                        @foreach($doctors as $doc)
-                            <option value="{{ $doc->id }}" {{ (string) request('doctor_id') === (string) $doc->id ? 'selected' : '' }}>Dr. {{ $doc->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-4 filter-conditional">
-                    <label class="form-label">City / Location</label>
-                    <select name="location_id" id="location_id" class="form-select clinical-input">
-                        <option value="">All Cities</option>
-                        @foreach($locations as $loc)
-                            <option value="{{ $loc->id }}" {{ (string) request('location_id') === (string) $loc->id ? 'selected' : '' }}>
-                                {{ $loc->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-4 filter-conditional">
-                    <label class="form-label">Case Type</label>
-                    <select name="case_id" id="case_id" class="form-select clinical-input">
-                        <option value="">All Cases</option>
-                        @foreach($cases as $case)
-                            <option value="{{ $case->id }}" {{ (string) request('case_id') === (string) $case->id ? 'selected' : '' }}>{{ $case->case_type }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="col-md-4">
-                    <label class="form-label">Patient Type</label>
-                    <select name="type" class="form-select clinical-input">
-                        <option value="">All Types</option>
-                        <option value="walkin" {{ in_array((string) request('type'), ['walkin', '0'], true) ? 'selected' : '' }}>Walk-in</option>
-                        <option value="phone" {{ in_array((string) request('type'), ['phone', '1'], true) ? 'selected' : '' }}>Phone Appt</option>
-                    </select>
-                </div>
-
-                <div class="col-12 text-end mt-4">
-                    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="btn btn-light me-2">Clear Filters</a>
-                    <button type="submit" class="btn btn-primary px-4"><i class="bi bi-search"></i> Generate Report</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-
-<div class="card premium-card border-0 shadow-sm">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table premium-table mb-0 align-middle">
-                <thead>
-                    <tr>
-                        <th>Patient Name</th>
-                        <th>Receptionist</th>
-                        <th>Appointment Date / Time</th>
-                        <th>Contact No</th>
-                        <th>City</th>
-                        <th>Age</th>
-                        <th>Type</th>
-                        <th>Doctor</th>
-                        <th>Case Type</th>
-                        <th>Case Fees</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($patients as $patient)
-                    @php
-                        $patientTypeLabel = in_array((string) $patient->type, ['walkin', '0'], true) ? 'Walk-in' : 'Phone';
-                        $caseTypeValue = strtolower(trim((string) ($patient->caseType?->case_type ?? '')));
-                        $caseTypeLabel = match (true) {
-                            str_contains($caseTypeValue, 'general') => 'General',
-                            str_contains($caseTypeValue, 'old') => 'Old',
-                            str_contains($caseTypeValue, 'new') => 'New',
-                            default => $patient->caseType?->case_type ?: '-',
-                        };
-                    @endphp
-                    <tr>
-                        <td>{{ $patient->full_name }}</td>
-                        <td>{{ $patient->reception?->name ?: '-' }}</td>
-                        <td>{{ $patient->appointment_date?->format('d M, Y h:i A') ?? ($patient->created_at?->format('d M, Y h:i A') ?? '-') }}</td>
-                        <td>{{ $patient->contact_no ?: '-' }}</td>
-                        <td>{{ $patient->cityName ?: '-' }}</td>
-                        <td>{{ $patient->age ?: '-' }}</td>
-                        <td>{{ $patientTypeLabel }}</td>
-                        <td>Dr. {{ $patient->doctor?->name ?: '-' }}</td>
-                        <td>{{ $caseTypeLabel }}</td>
-                        <td class="fw-bold">₹{{ number_format((float) $patient->case_fee, 2) }}</td>
-                        
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="10" class="text-center py-4 text-muted">No records found for the selected filters.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
+@php
+    $channelCards = [
+        'ot_appointment' => ['label' => 'OT Appointment', 'icon' => 'bi-calendar2-week'],
+        'walkin' => ['label' => 'Walk-in', 'icon' => 'bi-person-walking'],
+        'phone' => ['label' => 'Phone Appointment', 'icon' => 'bi-telephone-fill'],
+    ];
+@endphp
+<div class="card ot-premium-card border-0 mb-4">
+    <div class="card-body">
+        <div class="ot-report-grid">
+            @foreach($channelCards as $channelKey => $card)
+                <a href="{{ route('hospital.reports.channel.show', ['slug' => $slug, 'channel' => $channelKey]) }}" class="ot-report-tile">
+                    <span class="ot-report-tile-icon"><i class="bi {{ $card['icon'] }}"></i></span>
+                    <span class="ot-report-tile-label">{{ $card['label'] }}</span>
+                    <span class="ot-report-tile-count">{{ $channelCounts[$channelKey] ?? 0 }}</span>
+                </a>
+            @endforeach
         </div>
     </div>
 </div>
 
-@if($patients->hasPages())
-    <div class="mt-3">
-        {{ $patients->links('pagination::bootstrap-5') }}
-    </div>
-@endif
-
 @endsection
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    flatpickr('#date_range', {
-        mode: 'range',
-        dateFormat: 'Y-m-d',
-    });
-
-    const receptionSelect = document.getElementById('reception_id');
-    const conditionalFilters = document.querySelectorAll('.filter-conditional');
-    const locationSelect = document.getElementById('location_id');
-    const caseSelect = document.getElementById('case_id');
-
-    function toggleFilters() {
-        const hasReception = receptionSelect.value !== '';
-
-        conditionalFilters.forEach((wrapper) => {
-            wrapper.style.opacity = hasReception ? '0.5' : '1';
-            wrapper.style.pointerEvents = hasReception ? 'none' : 'auto';
-        });
-
-        locationSelect.disabled = hasReception;
-        caseSelect.disabled = hasReception;
-
-        if (hasReception) {
-            locationSelect.value = '';
-            caseSelect.value = '';
-        }
+@push('styles')
+<style>
+    /* Channel cards — same tile style as the OT Reports page (hospital/reports/ot/index.blade.php) */
+    .ot-premium-card {
+        background: rgba(255, 255, 255, 0.84);
+        border: 1px solid rgba(27, 79, 114, 0.12) !important;
+        border-radius: 22px;
+        box-shadow: 0 18px 48px rgba(27, 79, 114, 0.10);
+        overflow: hidden;
     }
 
-    toggleFilters();
-    receptionSelect.addEventListener('change', toggleFilters);
-});
-</script>
+    .ot-report-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1.1rem;
+    }
+
+    .ot-report-tile {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .6rem;
+        min-height: 148px;
+        border: 1px solid rgba(27, 79, 114, 0.08);
+        border-radius: 20px;
+        padding: 1.5rem 1rem;
+        text-decoration: none;
+        color: #1B4F72;
+        font-weight: 800;
+        font-size: .92rem;
+        text-align: center;
+        background: #fff;
+        box-shadow: 0 6px 16px rgba(27, 79, 114, 0.05);
+        transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease;
+    }
+
+    .ot-report-tile-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(27, 79, 114, 0.08);
+        color: #1B4F72;
+        font-size: 1.4rem;
+    }
+
+    .ot-report-grid .ot-report-tile:nth-of-type(3n+1) .ot-report-tile-icon {
+        background: rgba(125, 60, 152, 0.12);
+        color: #7D3C98;
+    }
+    .ot-report-grid .ot-report-tile:nth-of-type(3n+2) .ot-report-tile-icon {
+        background: rgba(27, 79, 114, 0.10);
+        color: #1B4F72;
+    }
+    .ot-report-grid .ot-report-tile:nth-of-type(3n+3) .ot-report-tile-icon {
+        background: rgba(17, 122, 101, 0.12);
+        color: #117A65;
+    }
+
+    .ot-report-tile-label {
+        line-height: 1.3;
+    }
+
+    .ot-report-tile-count {
+        font-size: 1.3rem;
+        font-weight: 900;
+    }
+
+    .ot-report-tile:hover,
+    .ot-report-tile:focus {
+        text-decoration: none;
+        transform: translateY(-4px);
+        box-shadow: 0 18px 34px rgba(27, 79, 114, 0.14);
+        border-color: rgba(27, 79, 114, 0.18);
+        color: #1B4F72;
+    }
+
+    .ot-report-tile-active {
+        border-color: #1B4F72;
+        border-width: 2px;
+        background: rgba(27, 79, 114, 0.04);
+    }
+</style>
 @endpush
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-        // Modal iframe for patient history
-        const modalEl = document.createElement('div');
-        modalEl.innerHTML = `
-        <div class="modal fade" id="patientHistoryModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-xl modal-fullscreen-sm-down">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="patientHistoryModalLabel">Patient History</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body p-0" style="height:75vh;">
-                        <iframe id="historyIframe" src="about:blank" style="width:100%;height:100%;border:0;" title="Patient History"></iframe>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-
-        document.body.appendChild(modalEl);
-
-        const historyModalEl = document.getElementById('patientHistoryModal');
-        const historyIframe = document.getElementById('historyIframe');
-        const bsModal = new bootstrap.Modal(historyModalEl);
-
-        document.querySelectorAll('.btn-view-history').forEach(btn => {
-                btn.addEventListener('click', function (e) {
-                        const code = this.dataset.patientCode;
-                        const name = this.dataset.patientName || 'Patient History';
-                        const url = new URL("{{ route('hospital.patients.history', ['slug' => $slug]) }}", window.location.origin);
-                        url.searchParams.set('search', code);
-                        // Add flag so the history page can adapt (if needed)
-                        url.searchParams.set('embedded', '1');
-
-                        document.getElementById('patientHistoryModalLabel').textContent = name + ' — History';
-                        historyIframe.src = url.toString();
-                        bsModal.show();
-                });
-        });
-
-        // Clear iframe on modal hide
-        historyModalEl.addEventListener('hidden.bs.modal', function () {
-                historyIframe.src = 'about:blank';
-        });
-});
-</script>
-@endpush

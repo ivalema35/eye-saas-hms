@@ -26,7 +26,13 @@ class OtBooking extends Model
 
     public const STATUS_BOOKED = 'booked';
 
+    public const STATUS_SURGERY_RECOMMENDED = 'surgery_recommended';
+
+    public const STATUS_COUNSELLED = 'counselled';
+
     public const STATUS_PAID = 'paid';
+
+    public const STATUS_PAYMENT_VERIFIED = 'payment_verified';
 
     public const STATUS_IN_WARD = 'in_ward';
 
@@ -44,6 +50,7 @@ class OtBooking extends Model
         'tenant_id',
         'patient_id',
         'ot_doctor_id',
+        'ot_assistant_id',
         'booked_by',
         'surgery_date',
         'slot_id',
@@ -80,8 +87,60 @@ class OtBooking extends Model
         return $this->belongsTo(HospitalUser::class, 'ot_doctor_id');
     }
 
+    public function otAssistant()
+    {
+        return $this->belongsTo(HospitalUser::class, 'ot_assistant_id');
+    }
+
     public function bookedBy()
     {
         return $this->belongsTo(HospitalUser::class, 'booked_by');
+    }
+
+    public function counselling()
+    {
+        return $this->hasOne(OtCounselling::class, 'ot_booking_id');
+    }
+
+    public function consent()
+    {
+        return $this->hasOne(OtConsent::class, 'ot_booking_id');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(OtPayment::class, 'ot_booking_id');
+    }
+
+    /**
+     * Computed payment status — Paid / Partially Paid / Pending (PDF §5, Billing Module).
+     * Deliberately NOT a stored column: derived from `payments` sum vs. `package_amount`
+     * so it can never drift out of sync. See docs/OT_WORKFLOW_UPGRADE_PRD.md §5.
+     */
+    public function getPaymentStatusAttribute(): string
+    {
+        $required = (float) ($this->package_amount ?? 0);
+
+        // Zero / unset package is not billable yet (counsellor must set amount).
+        if ($required <= 0) {
+            return 'unpriced';
+        }
+
+        $paid = (float) $this->payments->sum('package_amount');
+
+        if ($paid <= 0) {
+            return 'pending';
+        }
+
+        return $paid >= $required ? 'paid' : 'partially_paid';
+    }
+
+    /** Amount still owed against the contracted package_amount. */
+    public function getRemainingBalanceAttribute(): float
+    {
+        $required = (float) ($this->package_amount ?? 0);
+        $paid = (float) $this->payments->sum('package_amount');
+
+        return max(0, round($required - $paid, 2));
     }
 }

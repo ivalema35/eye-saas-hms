@@ -117,9 +117,9 @@
 
                     {{-- Price --}}
                     <div class="mb-4">
-                        <label class="form-label fw-medium">Price (₹)</label>
+                        <label class="form-label fw-medium">Price ({{ currency_symbol() }})</label>
                         <div class="input-group">
-                            <span class="input-group-text">₹</span>
+                            <span class="input-group-text">{{ currency_symbol() }}</span>
                             <input type="number" name="price" step="0.01" min="0"
                                    value="{{ old('price', $medicine->price) }}"
                                    class="form-control clinical-input @error('price') is-invalid @enderror"

@@ -5,59 +5,105 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OPD Bill — {{ $patient->patient_code }}</title>
     <style>
+        @page { size: A4 portrait; margin: 15mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', Arial, sans-serif; color: #111827; background: #F4F6F9; }
-
-        .bill-container {
-            max-width: 600px; margin: 20px auto; background: #fff;
-            border: 1px solid #E5E7EB; border-radius: 8px; padding: 32px;
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000;
+            background: #F4F6F9;
         }
 
-        .bill-header { text-align: center; border-bottom: 2px solid #1B4F72; padding-bottom: 16px; margin-bottom: 20px; }
-        .bill-header h1 { font-size: 20px; font-weight: 800; color: #0D2137; margin-bottom: 4px; }
-        .bill-header p { font-size: 12px; color: #64748B; }
-        .bill-logo {
-            width: 72px;
-            height: 72px;
-            margin: 0 auto 8px;
-            border-radius: 18px;
-            background: #F8FAFC;
-            border: 1px solid #E5E7EB;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
+        .bill-page {
+            max-width: 700px;
+            margin: 20px auto;
         }
 
-        .bill-logo img {
+        .bill-box {
+            background: #fff;
+            border: 1.5px solid #000;
+            padding: 10px 14px 12px;
+        }
+
+        .bill-header {
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #000;
+        }
+        .bill-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
+        }
+        .bill-header p {
+            font-size: 12px;
+            font-weight: 400;
+            margin-top: 3px;
+            line-height: 1.35;
+        }
+
+        .bill-title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 8px 0;
+            border-bottom: 1px solid #000;
+        }
+
+        .bill-fields {
             width: 100%;
-            height: 100%;
-            object-fit: contain;
-            padding: 8px;
+            border-collapse: collapse;
+            margin: 0;
+        }
+        .bill-fields td {
+            width: 50%;
+            padding: 5px 4px;
+            font-size: 13px;
+            vertical-align: top;
+            line-height: 1.35;
+        }
+        .bill-fields td.right { text-align: right; }
+        .bill-fields strong { font-weight: 700; }
+
+        .bill-charge {
+            width: 100%;
+            border-collapse: collapse;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            margin-top: 4px;
+        }
+        .bill-charge td {
+            padding: 8px 4px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+        .bill-charge td.right {
+            text-align: right;
+            white-space: nowrap;
         }
 
-        .bill-logo span {
-            font-size: 28px;
-            color: #1B4F72;
+        .bill-signature {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+        .bill-signature td {
+            width: 50%;
+            font-size: 13px;
+            font-weight: 700;
+            vertical-align: bottom;
+        }
+        .bill-signature td.right { text-align: right; }
+
+        .bill-stamp {
+            font-size: 12px;
+            margin-top: 8px;
+            padding-left: 2px;
         }
 
-        .bill-title { text-align: center; font-size: 16px; font-weight: 700; color: #1B4F72; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
-
-        .bill-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; }
-        .bill-info-col { flex: 1; }
-        .bill-info-col dt { font-weight: 600; color: #64748B; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
-        .bill-info-col dd { margin-bottom: 8px; color: #111827; }
-
-        .bill-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .bill-table th { background: #F1F5F9; color: #374151; font-size: 11px; text-transform: uppercase; padding: 8px 12px; text-align: left; border-bottom: 2px solid #E5E7EB; }
-        .bill-table td { padding: 10px 12px; border-bottom: 1px solid #F1F5F9; font-size: 13px; }
-        .bill-table .total-row td { font-weight: 700; font-size: 14px; border-top: 2px solid #1B4F72; background: #F8FAFC; }
-
-        .bill-footer { margin-top: 40px; display: flex; justify-content: space-between; font-size: 12px; color: #64748B; }
-        .bill-signature { text-align: right; }
-        .bill-signature-line { width: 160px; border-top: 1px solid #111827; margin-bottom: 4px; margin-left: auto; }
-
-        .bill-actions { text-align: center; margin-top: 20px; }
+        .bill-actions { text-align: center; margin-top: 18px; }
         .btn-print {
             background: #1B4F72; color: #fff; border: none; padding: 10px 24px;
             border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
@@ -67,126 +113,99 @@
         .btn-outline {
             background: #fff; color: #1B4F72; border: 1.5px solid #1B4F72;
             padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 600;
-            cursor: pointer; text-decoration: none; margin: 0 4px;
+            cursor: pointer; text-decoration: none; margin: 0 4px; display: inline-block;
         }
 
         @media print {
             body { background: #fff; }
-            .bill-container { border: none; box-shadow: none; margin: 0; padding: 20px; max-width: 100%; }
+            .bill-page { margin: 0; width: 100%; }
             .bill-actions { display: none !important; }
         }
     </style>
 </head>
 <body>
+@php
+    // Ensure print uses this hospital's currency (tenant snapshot)
+    if (! empty($tenant?->currency_code)) {
+        config(['app.hospital_currency_code' => $tenant->currency_code]);
+    }
+    if (! empty($tenant?->currency_symbol)) {
+        config(['app.hospital_currency_symbol' => $tenant->currency_symbol]);
+    }
 
-<div class="bill-container">
-    {{-- Hospital Header --}}
-    @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
-    @if($letterPad === 'available')
-    <div class="bill-header">
-    </div>
-    @else
-    <div class="bill-header">
-        <div class="bill-logo">
-            @if(hospital_logo_url())
-                <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
-            @else
-                <span>👁</span>
+    $consultant = trim((string) ($patient->doctor?->doctor_prefix ?? ''));
+    if ($consultant === '') {
+        $consultant = $patient->doctor?->name ?? '—';
+    }
+    $sex = match (strtolower(trim((string) ($patient->gender ?? '')))) {
+        'm', 'male' => 'Male',
+        'f', 'female' => 'Female',
+        'o', 'other' => 'Other',
+        default => ($patient->gender ? ucfirst((string) $patient->gender) : ''),
+    };
+    $ageSex = trim(($patient->age !== null && $patient->age !== '' ? (string) $patient->age : '—').($sex !== '' ? ', '.$sex : ''));
+    $city = trim(collect([$patient->city_name, $patient->district_name])->filter()->implode(', ')) ?: '—';
+@endphp
+<div class="bill-page">
+    <div class="bill-box">
+        @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+        @if($letterPad !== 'available')
+        <div class="bill-header">
+            <h1>{{ hospital_name() }}</h1>
+            @if(hospital_full_address())
+                <p>{{ hospital_full_address() }}</p>
+            @endif
+            @if(hospital_contact_number())
+                <p>Phone No.: {{ hospital_contact_number() }}</p>
             @endif
         </div>
-        <h1>{{ hospital_name() }}</h1>
-        @if(hospital_full_address())
-            <p>{{ hospital_full_address() }}</p>
         @endif
-        <p>Phone: {{ hospital_contact_number() ?: '—' }} &bull; Email: {{ hospital_official_email() ?: '—' }}</p>
-    </div>
-    @endif
 
-    <div class="bill-title">OPD Bill / Receipt</div>
+        <div class="bill-title">OPD BILL</div>
 
-    {{-- Patient Info --}}
-    <div class="bill-info">
-        <div class="bill-info-col">
-            <dl>
-                <dt>MRD No.</dt>
-                <dd><strong>{{ $patient->patient_code }}</strong></dd>
-                <dt>Patient Name</dt>
-                <dd>{{ $patient->full_name }}</dd>
-                <dt>Age / Gender</dt>
-                <dd>{{ $patient->age }} yrs / {{ ucfirst($patient->gender) }}</dd>
-                <dt>Contact</dt>
-                <dd>{{ $patient->contact_no }}</dd>
-            </dl>
-        </div>
-        <div class="bill-info-col" style="text-align:right">
-            <dl style="text-align:right">
-                <dt>Date</dt>
-                <dd>{{ $patient->appointment_date?->format('d M Y') }}</dd>
-                <dt>Consultant</dt>
-                <dd>{{ $patient->doctor?->name ?? '—' }}</dd>
-                @if($patient->doctor_patient_no)
-                <dt>Doctor Serial No.</dt>
-                <dd><strong>{{ ($patient->doctor?->doctor_prefix ?? '') ? $patient->doctor->doctor_prefix.'-'.str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) : str_pad($patient->doctor_patient_no, 3, '0', STR_PAD_LEFT) }}</strong></dd>
-                @endif
-                <dt>Receptionist</dt>
-                <dd>{{ $patient->reception?->name ?? '—' }}</dd>
-                <dt>Type</dt>
-                <dd>{{ ucfirst($patient->type) }}</dd>
-            </dl>
-        </div>
-    </div>
-
-    {{-- Billing Table --}}
-    <table class="bill-table">
-        <thead>
+        <table class="bill-fields">
             <tr>
-                <th>#</th>
-                <th>Description</th>
-                <th style="text-align:right">Amount (₹)</th>
+                <td><strong>MRD No.:</strong> {{ $patient->patient_code }}</td>
+                <td class="right"><strong>Bill Date:</strong> {{ now()->format('d-m-Y H:i:s') }}</td>
             </tr>
-        </thead>
-        <tbody>
             <tr>
-                <td>1</td>
-                <td>OPD Consultation Fee</td>
-                <td style="text-align:right">{{ number_format($patient->case_fee, 2) }}</td>
+                <td><strong>Name:</strong> {{ strtoupper($patient->full_name) }}</td>
+                <td class="right"><strong>Phone No.:</strong> {{ $patient->contact_no }}</td>
             </tr>
-            <tr class="total-row">
-                <td colspan="2" style="text-align:right">Total Payable</td>
-                <td style="text-align:right">₹{{ number_format($patient->case_fee, 2) }}</td>
+            <tr>
+                <td><strong>Age, Sex:</strong> {{ $ageSex }}</td>
+                <td class="right"><strong>Consultant Name:</strong> {{ $consultant }}</td>
             </tr>
-        </tbody>
-    </table>
+            <tr>
+                <td><strong>City:</strong> {{ $city }}</td>
+                <td class="right"><strong>Index No.:</strong> {{ $patient->doctor_patient_no ?? '—' }}</td>
+            </tr>
+        </table>
 
-    {{-- Footer --}}
-    <div class="bill-footer">
-        <div>
-            <p>Generated: {{ now()->format('d M Y, h:i A') }}</p>
-            <p>{{ hospital_name() }}</p>
-        </div>
-        <div class="bill-signature">
-            <div class="bill-signature-line"></div>
-            <p>Authorized Signature</p>
-        </div>
+        <table class="bill-charge">
+            <tr>
+                <td>Consultation charge:</td>
+                <td class="right">{{ money($patient->case_fee ?? 0, 2) }}</td>
+            </tr>
+        </table>
+
+        <table class="bill-signature">
+            <tr>
+                <td>Signature: __________</td>
+                <td class="right">Receptionist Name: {{ $patient->reception?->name ?? '—' }}</td>
+            </tr>
+        </table>
     </div>
-</div>
 
-{{-- Action Buttons --}}
-<div class="bill-actions">
-    <button class="btn-print" onclick="window.print()">
-        🖨 Print Bill
-    </button>
-    <a href="{{ route('hospital.patients.bill-pdf', ['slug' => $slug, 'patient' => $patient->id]) }}"
-       class="btn-outline">
-        📄 Download PDF
-    </a>
-    <!-- <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
-       class="btn-outline"></a> -->
-    <a href="{{ route('hospital.ot.dashboard', ['slug' => $slug]) }}"
-       onclick="if (window.history.length > 1) { window.history.back(); return false; }"
-       class="btn-outline">
-        ← Back
-    </a>
+    <div class="bill-stamp">Date &amp; Time Stamp:</div>
+
+    <div class="bill-actions">
+        <button class="btn-print" type="button" onclick="window.print()">Print Bill</button>
+        <a href="{{ route('hospital.patients.bill-pdf', ['slug' => $slug, 'patient' => $patient->id]) }}" class="btn-outline">Download PDF</a>
+        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
+           onclick="if (window.history.length > 1) { window.history.back(); return false; }"
+           class="btn-outline">Back</a>
+    </div>
 </div>
 
 <script>
@@ -195,9 +214,7 @@
         const returnTo = urlParams.get('return_to');
 
         if (urlParams.has('auto_print') && urlParams.get('auto_print') == '1') {
-            setTimeout(function() {
-                window.print();
-            }, 300);
+            setTimeout(function() { window.print(); }, 300);
 
             window.onafterprint = function() {
                 if (returnTo === 'dashboard') {
@@ -213,6 +230,5 @@
         }
     });
 </script>
-
 </body>
 </html>

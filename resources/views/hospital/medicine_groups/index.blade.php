@@ -385,6 +385,11 @@
                                             <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
                                         </span>
                                     @endif
+                                    @if(($group->usage_scope ?? 'opd') !== 'opd')
+                                        <span class="badge {{ $group->usage_scope === 'ot' ? 'text-bg-warning' : 'text-bg-info' }} text-uppercase">
+                                            {{ $group->usage_scope === 'ot' ? 'OT only' : 'OPD + OT' }}
+                                        </span>
+                                    @endif
                                     <div class="gti-crud-wrap">
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-secondary group-icon-btn group-edit-btn edit-group-modal-btn"
@@ -426,6 +431,11 @@
                                     @if($group->diagnosis)
                                         <span class="gti-diagnosis-badge">
                                             <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
+                                        </span>
+                                    @endif
+                                    @if(($group->usage_scope ?? 'opd') !== 'opd')
+                                        <span class="badge {{ $group->usage_scope === 'ot' ? 'text-bg-warning' : 'text-bg-info' }} text-uppercase">
+                                            {{ $group->usage_scope === 'ot' ? 'OT only' : 'OPD + OT' }}
                                         </span>
                                     @endif
                                     <div class="gti-crud-wrap">

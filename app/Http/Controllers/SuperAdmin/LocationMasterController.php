@@ -100,17 +100,35 @@ class LocationMasterController extends Controller
     {
         $request->validate([
             'name'             => 'required|string|max:100',
+            'country_code'     => 'required|string|size:2',
             'default_timezone' => 'required|string|timezone',
+            'currency_code'    => 'required|string|size:3',
+            'currency_symbol'  => 'required|string|max:10',
+            'currency_name'    => 'nullable|string|max:50',
+            'fx_inr_per_unit'  => 'required|numeric|min:0.0001|max:999999',
         ]);
         $name = MasterCountry::normalize($request->name);
+        $countryCode = strtoupper($request->country_code);
 
         if (MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($name)])->exists()) {
             return back()->with('error', "Country \"{$name}\" already exists.")->withInput();
         }
 
+        if (MasterCountry::whereRaw('UPPER(country_code) = ?', [$countryCode])->exists()) {
+            return back()->with('error', "Country code \"{$countryCode}\" already exists.")->withInput();
+        }
+
+        $code = strtoupper($request->currency_code);
+        $preset = \App\Services\Platform\CurrencyService::commonCurrencies()[$code] ?? null;
+
         MasterCountry::create([
             'name'             => $name,
+            'country_code'     => $countryCode,
             'default_timezone' => $request->default_timezone,
+            'currency_code'    => $code,
+            'currency_symbol'  => $request->currency_symbol ?: ($preset['symbol'] ?? '₹'),
+            'currency_name'    => $request->currency_name ?: ($preset['name'] ?? null),
+            'fx_inr_per_unit'  => (float) $request->fx_inr_per_unit,
             'is_active'        => true,
         ]);
 
@@ -121,9 +139,15 @@ class LocationMasterController extends Controller
     {
         $request->validate([
             'name'             => 'required|string|max:100',
+            'country_code'     => 'required|string|size:2',
             'default_timezone' => 'required|string|timezone',
+            'currency_code'    => 'required|string|size:3',
+            'currency_symbol'  => 'required|string|max:10',
+            'currency_name'    => 'nullable|string|max:50',
+            'fx_inr_per_unit'  => 'required|numeric|min:0.0001|max:999999',
         ]);
         $name = MasterCountry::normalize($request->name);
+        $countryCode = strtoupper($request->country_code);
 
         $dup = MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($name)])
             ->where('id', '!=', $country->id)->exists();
@@ -132,17 +156,38 @@ class LocationMasterController extends Controller
             return back()->with('error', "Country \"{$name}\" already exists.")->withInput();
         }
 
+        $codeDup = MasterCountry::whereRaw('UPPER(country_code) = ?', [$countryCode])
+            ->where('id', '!=', $country->id)->exists();
+        if ($codeDup) {
+            return back()->with('error', "Country code \"{$countryCode}\" already exists.")->withInput();
+        }
+
+        $code = strtoupper($request->currency_code);
+        $preset = \App\Services\Platform\CurrencyService::commonCurrencies()[$code] ?? null;
+
         $country->update([
             'name'             => $name,
+            'country_code'     => $countryCode,
             'default_timezone' => $request->default_timezone,
+            'currency_code'    => $code,
+            'currency_symbol'  => $request->currency_symbol ?: ($preset['symbol'] ?? $country->currency_symbol),
+            'currency_name'    => $request->currency_name ?: ($preset['name'] ?? $country->currency_name),
+            'fx_inr_per_unit'  => (float) $request->fx_inr_per_unit,
         ]);
 
-        // Jo hospitals ne override nahi kiya unhe naya timezone cascade karo
+        // Jo hospitals ne override nahi kiya unhe naya timezone + currency cascade karo
         Tenant::where('country', $name)
             ->where('is_timezone_override', false)
             ->update(['timezone' => $request->default_timezone]);
 
-        return back()->with('success', 'Country updated. Timezone cascaded to non-overridden hospitals.')->with('open_tab', 'countries');
+        Tenant::where('country', $name)
+            ->where('is_currency_override', false)
+            ->update([
+                'currency_code' => $code,
+                'currency_symbol' => $request->currency_symbol ?: ($preset['symbol'] ?? '₹'),
+            ]);
+
+        return back()->with('success', 'Country updated. Timezone & currency cascaded to non-overridden hospitals.')->with('open_tab', 'countries');
     }
 
     public function destroyCountry(MasterCountry $country): RedirectResponse

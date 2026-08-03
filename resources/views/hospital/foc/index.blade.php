@@ -509,7 +509,7 @@
                             <td>{{ $i + 1 }}</td>
                             <td><span class="foc-person-cell"><i class="bi bi-person-fill"></i>{{ $foc->patient?->full_name ?? '—' }}</span></td>
                             <td><span class="foc-person-cell"><i class="bi bi-person-badge-fill"></i>{{ $foc->doctor?->name ?? '—' }}</span></td>
-                            <td><span class="foc-fee-pill"><i class="bi bi-currency-rupee"></i>{{ $foc->foc_fee ? '₹'.number_format($foc->foc_fee, 2) : '—' }}</span></td>
+                            <td><span class="foc-fee-pill"><i class="bi bi-cash-coin"></i>{{ $foc->foc_fee ? money($foc->foc_fee, 2) : '—' }}</span></td>
                             <td class="foc-actions-cell">
                                 @if($foc->isAccepted())
                                     <span class="foc-badge-accepted">Accepted</span>
@@ -582,8 +582,8 @@
                             <div class="foc-modal-field-value">{{ $foc->doctor?->name ?? '—' }}</div>
                         </div>
                         <div class="foc-modal-field foc-modal-fee">
-                            <div class="foc-modal-field-label"><i class="bi bi-currency-rupee"></i> Requested Fee</div>
-                            <div class="foc-modal-field-value">₹{{ number_format((float) $foc->foc_fee, 2) }}</div>
+                            <div class="foc-modal-field-label"><i class="bi bi-cash-coin"></i> Requested Fee</div>
+                            <div class="foc-modal-field-value">{{ money((float) $foc->foc_fee, 2) }}</div>
                         </div>
                         <div class="foc-modal-field">
                             <div class="foc-modal-field-label"><i class="bi bi-activity"></i> Status</div>

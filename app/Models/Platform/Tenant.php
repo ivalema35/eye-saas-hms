@@ -39,6 +39,9 @@ class Tenant extends Model
         'country',
         'timezone',
         'is_timezone_override',
+        'currency_code',
+        'currency_symbol',
+        'is_currency_override',
         'logo_path',
         'status',
         'trial_ends_at',
@@ -51,6 +54,7 @@ class Tenant extends Model
         'setup_completed_at' => 'datetime',
         'is_setup_done' => 'boolean',
         'is_timezone_override' => 'boolean',
+        'is_currency_override' => 'boolean',
     ];
 
     protected function adminEmail(): Attribute

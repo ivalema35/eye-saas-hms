@@ -446,6 +446,38 @@
         .wait-fire .wp-time {
             color: #dc2626;
         }
+
+        /* OT dashboard strip */
+        .ot-dash-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(123, 44, 191, 0.12);
+            color: #7b2cbf;
+            font-size: 15px;
+        }
+        .ot-summary-pill {
+            display: inline-flex;
+            align-items: center;
+            background: #fff;
+            border: 1px solid rgba(27, 79, 114, 0.14);
+            color: #1B4F72;
+            font-size: 12px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 999px;
+        }
+        .ot-summary-pill:hover {
+            background: #EBF5FB;
+            color: #1B4F72;
+        }
+        .ot-dash-card .doc-profile-card:hover {
+            border-color: #c4a3e0 !important;
+            background: #f3e9fb !important;
+        }
     </style>
 @endpush
 
@@ -548,11 +580,13 @@
         <div class="row g-4 mb-4">
             <div class="col-lg-12">
                 <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
-                    <h6 class="fw-bold mb-3" style="color: #1B4F72;">All Doctors</h6>
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                        <h6 class="fw-bold mb-0" style="color: #1B4F72;">OPD — All Doctors</h6>
+                    </div>
 
                     <div class="doctor-cards-container">
                         @forelse($doctorCards ?? [] as $doc)
-                            @if($doc->role?->slug === 'ot_doctor')
+                            @if($doc->role?->slug === 'ot_assistant')
                                 @continue
                             @endif
                             @php
@@ -581,32 +615,77 @@
                                         @endif
                                     </div>
 
-                                    @if($doc->role?->slug === 'ot_doctor')
-                                        <div class="doc-assigned">OT Doctor</div>
-                                    @else
-                                        <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
-                                    @endif
+                                    <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
 
-                                    @if($doc->role?->slug !== 'ot_doctor')
-                                        <div class="doc-badges">
-                                            <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
-                                                Primary Exam {{ $doc->primary_count ?? 0 }}
-                                            </span>
-                                            <span class="doc-badge {{ ($doc->secondary_count ?? 0) > 0 ? 'active' : '' }}">
-                                                Secondary Exam {{ $doc->secondary_count ?? 0 }}
-                                            </span>
-                                        </div>
-                                    @else
-                                        <div class="doc-badges">
-                                            <span class="doc-badge">
-                                                Assigned {{ $doc->assigned_today ?? 0 }}
-                                            </span>
-                                        </div>
-                                    @endif
+                                    <div class="doc-badges">
+                                        <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
+                                            Primary Exam {{ $doc->primary_count ?? 0 }}
+                                        </span>
+                                        <span class="doc-badge {{ ($doc->secondary_count ?? 0) > 0 ? 'active' : '' }}">
+                                            Secondary Exam {{ $doc->secondary_count ?? 0 }}
+                                        </span>
+                                    </div>
                                 </div>
                             </a>
                         @empty
                             <div class="text-muted small p-2">No other duty records live right now.</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- OT section — same doctors, counts from Recommend Surgery (ot_doctor_id) --}}
+        @php
+            $otDoctorCards = $otDoctorCards ?? collect();
+            $otSummary = $otSummary ?? ['total' => 0, 'pending' => 0, 'complete' => 0];
+        @endphp
+        <div class="row g-4 mb-4">
+            <div class="col-lg-12">
+                <div class="card border-0 shadow-sm p-3 h-100 ot-dash-card" style="border-radius: 12px; background: #f8f0fc;">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="ot-dash-icon"><i class="bi bi-hospital"></i></span>
+                            <h6 class="fw-bold mb-0" style="color: #1B4F72;">OT</h6>
+                        </div>
+                        <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}"
+                           class="ot-summary-pill text-decoration-none">
+                            OT — {{ $otSummary['total'] }}
+                            <span class="mx-1">|</span>
+                            Pending — {{ $otSummary['pending'] }}
+                            <span class="mx-1">|</span>
+                            Complete — {{ $otSummary['complete'] }}
+                            <i class="bi bi-arrow-right-short ms-1"></i>
+                        </a>
+                    </div>
+
+                    <div class="doctor-cards-container">
+                        @forelse($otDoctorCards as $doc)
+                            @php
+                                $otCardUrl = route('hospital.dashboard.doctor-ot', [
+                                    'slug' => $slug,
+                                    'doctor_id' => $doc->id,
+                                ]);
+                            @endphp
+                            <a href="{{ $otCardUrl }}" class="doc-profile-card">
+                                <div class="doc-avatar" style="background:#efe6f8;color:#7b2cbf;">
+                                    {{ substr($doc->name, 0, 1) }}
+                                </div>
+                                <div class="doc-info">
+                                    <div class="doc-name">{{ $doc->name }}</div>
+                                    <div class="doc-assigned">Total OT — {{ $doc->ot_total ?? 0 }}</div>
+                                    <div class="doc-badges">
+                                        <span class="doc-badge {{ ($doc->ot_pending ?? 0) > 0 ? 'active' : '' }}">
+                                            P — {{ $doc->ot_pending ?? 0 }}
+                                        </span>
+                                        <span class="doc-badge {{ ($doc->ot_complete ?? 0) > 0 ? 'active' : '' }}">
+                                            C — {{ $doc->ot_complete ?? 0 }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </a>
+                        @empty
+                            <div class="text-muted small p-2">No doctors found for OT counts.</div>
                         @endforelse
                     </div>
                 </div>

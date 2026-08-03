@@ -25,13 +25,19 @@
                 @endforeach
             </select>
         </div>
-        <div class="hms-form-group" style="margin-bottom:0">
-            <label class="hms-label">From</label>
-            <input type="date" name="from" class="hms-input" value="{{ request('from') }}" style="width:145px">
-        </div>
-        <div class="hms-form-group" style="margin-bottom:0">
-            <label class="hms-label">To</label>
-            <input type="date" name="to" class="hms-input" value="{{ request('to') }}" style="width:145px">
+        <div class="hms-form-group" style="margin-bottom:0;min-width:220px">
+            <label class="hms-label">Date range</label>
+            <input type="text" class="hms-input"
+                data-hms-date-range
+                data-start-name="from"
+                data-end-name="to"
+                data-start-value="{{ request('from') }}"
+                data-end-value="{{ request('to') }}"
+                data-auto-submit="1"
+                placeholder="Select start → end date"
+                autocomplete="off"
+                readonly
+                style="width:220px">
         </div>
         <div style="display:flex;gap:.5rem">
             <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm">

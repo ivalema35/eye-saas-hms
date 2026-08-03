@@ -20,7 +20,7 @@
         <div class="card border-0 shadow-sm rounded-4 ot-master-card">
             <div class="card-body p-0">
                 <div class="table-responsive ot-master-table-wrap">
-                    <table class="table table-hover align-middle mb-0 ot-master-table">
+                    <table class="table table-hover align-middle mb-0 ot-master-table js-datatable" style="width:100%">
                         <thead>
                             <tr>
                                 <th class="ps-4">#</th>

@@ -17,11 +17,8 @@ class MedicineController extends Controller
         $medicineTypes = MedicineType::orderBy('name')->get();
         $dosages       = Dosage::orderBy('dosage')->get();
         $medicines     = Medicine::with('medicineType', 'dosage')
-            ->when(request('search'), fn ($q, $s) => $q->where('name', 'like', "%{$s}%")
-                ->orWhere('brand_name', 'like', "%{$s}%"))
             ->latest()
-            ->paginate((int) config('app.pagination_limit', 25))
-            ->withQueryString();
+            ->get();
 
         return view('hospital.medicines.index', compact('slug', 'medicines', 'medicineTypes', 'dosages'));
     }

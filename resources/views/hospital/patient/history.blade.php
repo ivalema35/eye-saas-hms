@@ -734,7 +734,7 @@
             ══════════════════════════════════════════════════════════════════════ --}}
             @php
                 $user = Auth::guard('hospital_user')->user();
-                $isDoctor = in_array($user?->role?->slug, ['doctor', 'ot_doctor']);
+                $isDoctor = in_array($user?->role?->slug, ['doctor', 'ot_assistant']);
             @endphp
 
             @if(!$isDoctor)

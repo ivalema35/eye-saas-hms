@@ -30,6 +30,8 @@ class ExamPrescription extends Model
         'dosage_id',
         'frequency',
         'duration',
+        'quantity',
+        'route_id',
         'eye',
         'instructions',
         'sort_order',
@@ -37,6 +39,7 @@ class ExamPrescription extends Model
 
     protected $casts = [
         'sort_order' => 'integer',
+        'quantity' => 'integer',
     ];
 
     public function primaryExamination(): BelongsTo
@@ -52,5 +55,10 @@ class ExamPrescription extends Model
     public function dosage(): BelongsTo
     {
         return $this->belongsTo(Dosage::class);
+    }
+
+    public function route(): BelongsTo
+    {
+        return $this->belongsTo(MedicineRoute::class, 'route_id');
     }
 }

@@ -532,7 +532,8 @@
     <div class="no-print toolbar">
         <button class="toolbar__print" onclick="_doPrint()">Print</button>
 
-        <a class="toolbar__back" href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}">
+        <a class="toolbar__back"
+            href="{{ ($backUrl ?? null) && $backUrl !== 'javascript:history.back()' ? $backUrl : route('hospital.patients.index', ['slug' => request()->route('slug')]) }}">
             Back
         </a>
     </div>
@@ -566,7 +567,7 @@
         $oe = $ed['oe'] ?? [];
         $fundus = $ed['fundus'] ?? [];
         $coRows = $ed['co_rows'] ?? [];
-        $kcoRows = $ed['kco_rows'] ?? [];
+        $kcoRows = array_values(array_filter($ed['kco_rows'] ?? [], fn($r) => !empty($r['condition'])));
         $hnoList = array_filter(array_map('trim', explode(',', $ed['history'] ?? '')));
         $diagnoses = $ed['diagnoses'] ?? [];
         $advices = $ed['advices'] ?? [];
@@ -588,7 +589,7 @@
             $pseudo = $oe['pseudophakia_' . $eye] ?? [];
             $extras = array_filter([
                 $pseudo['operation_type'] ?? '',
-                !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+                !empty($pseudo['operation_expense']) ? currency_symbol() . $pseudo['operation_expense'] : '',
                 $pseudo['hospital_name'] ?? '',
             ], fn($v) => $v !== '' && $v !== null);
 
@@ -695,7 +696,20 @@
                 @php
                     $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds']) ||
                         !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
-                    $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
+                    $pgFmt = function ($s, $c, $a) {
+                        $s = trim((string) $s);
+                        $c = trim((string) $c);
+                        $a = trim((string) $a);
+                        if ($s === '' && $c === '' && $a === '') {
+                            return '';
+                        }
+                        $out = ($s !== '' ? $s : '-') . ' / ' . ($c !== '' ? $c : '-');
+                        if ($a !== '') {
+                            $out .= ' X ' . $a;
+                        }
+
+                        return $out;
+                    };
                 @endphp
                 @if($hasPg)
                     <article class="card">
@@ -724,9 +738,15 @@
                 {{-- ST --}}
                 @php
                     $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds']) ||
-                        !empty($st['re']['ns']) || !empty($st['le']['ns']);
-                    $addRe = $st['re']['add'] ?? '';
-                    $addLe = $st['le']['add'] ?? '';
+                        !empty($st['re']['ns']) || !empty($st['le']['ns']) ||
+                        !empty($st['bifocal']) || !empty($st['nd_separate']) ||
+                        !empty($st['progressive']) || !empty($st['computer_uses']);
+                    $stOptLabels = collect([
+                        'bifocal' => 'Bifocal',
+                        'nd_separate' => 'Near & Distance Separate',
+                        'progressive' => 'Progressive',
+                        'computer_uses' => 'Computer Uses',
+                    ])->filter(fn($label, $key) => !empty($st[$key]))->values()->all();
                 @endphp
                 @if($hasSt)
                     <article class="card">
@@ -735,8 +755,8 @@
                             <table class="dtable">
                                 <thead>
                                     <tr>
-                                        <th colspan="4" class="eye-band">RIGHT EYE (RE)</th>
-                                        <th colspan="4" class="eye-band">LEFT EYE (LE)</th>
+                                        <th colspan="4" class="eye-band">RIGHT EYE</th>
+                                        <th colspan="4" class="eye-band">LEFT EYE</th>
                                     </tr>
                                     <tr>
                                         <th>{{ $st['re']['vn'] ?? '' }}</th>
@@ -773,11 +793,9 @@
                                 </tbody>
                             </table>
 
-                            @if($addRe || $addLe || !empty($st['add']))
-                                <div class="st-add">
-                                    <b>ADD</b>&nbsp;
-                                    RE: {{ $addRe ?: ($st['add'] ?? $dash) }}&nbsp;&nbsp;
-                                    LE: {{ $addLe ?: $dash }}
+                            @if(!empty($stOptLabels))
+                                <div style="margin-top:4px;font-size:10px;color:#1B4F72;font-weight:600;">
+                                    {{ implode(' · ', $stOptLabels) }}
                                 </div>
                             @endif
                         </div>
@@ -787,22 +805,30 @@
                 {{-- K/C/O --}}
                 @if(!empty($kcoRows))
                     <article class="card">
-                        <div class="card__title">K/C/O</div>
-                        <div class="card__body">
+                        <div class="card__body" style="padding:0">
                             <table class="dtable">
                                 <thead>
                                     <tr>
+                                        <th colspan="3" class="sub-band" style="border:none;text-align:left;">K/C/O</th>
+                                    </tr>
+                                    <tr>
                                         <th>Condition</th>
-                                        <th>Since</th>
+                                        <th>Since/Duration</th>
                                         <th>Comment</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach($kcoRows as $krow)
+                                        @php
+                                            $kSince = trim((string) ($krow['since'] ?? ''));
+                                            $kUnit = trim((string) ($krow['unit'] ?? ''));
+                                            $kDuration = $kUnit === 'Longtime'
+                                                ? 'Longtime'
+                                                : trim($kSince . ($kSince !== '' && $kUnit !== '' ? ' ' : '') . $kUnit);
+                                        @endphp
                                         <tr>
                                             <td>{{ $krow['condition'] ?? $dash }}</td>
-                                            <td>{{ ($krow['since'] ?? '') ? ($krow['since'] . ' ' . ($krow['unit'] ?? '')) : $dash }}
-                                            </td>
+                                            <td>{{ $kDuration !== '' ? $kDuration : $dash }}</td>
                                             <td>{{ $krow['comment'] ?? $dash }}</td>
                                         </tr>
                                     @endforeach
@@ -812,20 +838,52 @@
                     </article>
                 @endif
 
+                {{-- Fundus --}}
+                <article class="card">
+                    <div class="card__title">Fundus</div>
+                    <div class="card__body">
+                        <table class="dtable exam-table">
+                            <thead>
+                                <tr>
+                                    <th>Fundus</th>
+                                    <th>RIGHT</th>
+                                    <th>LEFT</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <th>DISC</th>
+                                    <td>{{ rxVal($fundus['disc_re'] ?? '', '-') }}</td>
+                                    <td>{{ rxVal($fundus['disc_le'] ?? '', '-') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>FR</th>
+                                    <td>{{ rxVal($fundus['fr_re'] ?? '', '-') }}</td>
+                                    <td>{{ rxVal($fundus['fr_le'] ?? '', '-') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>COMMENT</th>
+                                    <td>{{ rxVal($fundus['comment_re'] ?? '', '-') }}</td>
+                                    <td>{{ rxVal($fundus['comment_le'] ?? '', '-') }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </article>
+
             </div>{{-- /LEFT COLUMN --}}
 
-            {{-- ══ RIGHT COLUMN: Complaint / H-O / Vision / O-E / Fundus ══ --}}
+            {{-- ══ RIGHT COLUMN: Complaint / H-O / Vision / O-E ══ --}}
             <div class="rx-stack">
 
                 {{-- Complaint --}}
                 @if(!empty($coRows))
                     <article class="card">
-                        <div class="card__title">Complaint</div>
                         <div class="card__body" style="padding:0">
                             <table class="dtable">
                                 <thead>
                                     <tr>
-                                        <th colspan="4" class="sub-band" style="border:none;">C/O</th>
+                                        <th colspan="4" class="sub-band" style="border:none;text-align:left;">C/O</th>
                                     </tr>
                                     <tr>
                                         <th>Complaint</th>
@@ -866,23 +924,29 @@
 
                 {{-- Vision --}}
                 @php
-                    $vnRe = rxVal($vision['vn_re'] ?? '', '-');
-                    $vnLe = rxVal($vision['vn_le'] ?? '', '-');
-                    $phRe = rxVal($vision['pnvn_re'] ?? '', '-');
-                    $phLe = rxVal($vision['pnvn_le'] ?? '', '-');
-                    $nrRe = rxVal($vision['nrvn_re'] ?? '', '-');
-                    $nrLe = rxVal($vision['nrvn_le'] ?? '', '-');
-                    $iopRe = rxVal($nct['iop_re'] ?? '', '-');
-                    $iopLe = rxVal($nct['iop_le'] ?? '', '-');
-                    $hasVision = ($vnRe !== '-' || $vnLe !== '-' || $phRe !== '-' || $phLe !== '-' || $nrRe !== '-' || $nrLe !== '-');
-                    $hasIop = ($iopRe !== '-' || $iopLe !== '-');
+                    $blankVn = fn($v) => ($v !== null && trim((string) $v) !== '') ? trim((string) $v) : '';
+                    $vnRe = $blankVn($vision['vn_re'] ?? '');
+                    $vnLe = $blankVn($vision['vn_le'] ?? '');
+                    $phRe = $blankVn($vision['pnvn_re'] ?? '');
+                    $phLe = $blankVn($vision['pnvn_le'] ?? '');
+                    $nrRe = $blankVn($vision['nrvn_re'] ?? '');
+                    $nrLe = $blankVn($vision['nrvn_le'] ?? '');
+                    $iopRe = $blankVn($nct['iop_re'] ?? '');
+                    $iopLe = $blankVn($nct['iop_le'] ?? '');
+                    $glVnRe = $blankVn($pg['re']['vn'] ?? '');
+                    $glVnLe = $blankVn($pg['le']['vn'] ?? '');
+                    $glNrRe = $blankVn($pg['re']['near_vn'] ?? '');
+                    $glNrLe = $blankVn($pg['le']['near_vn'] ?? '');
+                    $hasVision = ($vnRe !== '' || $vnLe !== '' || $phRe !== '' || $phLe !== '' || $nrRe !== '' || $nrLe !== ''
+                        || $glVnRe !== '' || $glVnLe !== '' || $glNrRe !== '' || $glNrLe !== '');
+                    $hasIop = ($iopRe !== '' || $iopLe !== '');
                 @endphp
                 @if($hasVision || $hasIop)
                     <article class="card">
                         <div class="card__title">Vision</div>
                         <div class="card__body">
-                            <div class="vision-strip">
-                                @if($hasVision)
+                            <div class="vision-strip" style="flex-direction:column;align-items:flex-start;gap:6px;">
+                                <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 18px;">
                                     <div class="bracket-line">
                                         <span class="bracket-line__label">Vn</span>
                                         <span class="bracket-line__mark">&lt;</span>
@@ -892,27 +956,48 @@
                                         </div>
                                     </div>
                                     <div class="bracket-line">
-                                        <span class="bracket-line__label">PH</span>
+                                        <span class="bracket-line__label">Vn C GL</span>
+                                        <span class="bracket-line__mark">&lt;</span>
+                                        <div class="bracket-line__values">
+                                            <span>{{ $glVnRe }}</span>
+                                            <span>{{ $glVnLe }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bracket-line">
+                                        <span class="bracket-line__label">Pn/Vn</span>
                                         <span class="bracket-line__mark">&lt;</span>
                                         <div class="bracket-line__values">
                                             <span>{{ $phRe }}</span>
                                             <span>{{ $phLe }}</span>
                                         </div>
                                     </div>
+                                </div>
+                                <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 18px;">
                                     <div class="bracket-line">
-                                        <span class="bracket-line__label">NrVn</span>
+                                        <span class="bracket-line__label">Nr/Vn</span>
                                         <span class="bracket-line__mark">&lt;</span>
                                         <div class="bracket-line__values">
                                             <span>{{ $nrRe }}</span>
                                             <span>{{ $nrLe }}</span>
                                         </div>
                                     </div>
-                                @endif
-                                @if($hasIop)
-                                    <div class="bracket-line" style="font-size:11px;">
-                                        <strong>IOP:</strong>&nbsp;{{ $iopRe }}/{{ $iopLe }}
+                                    <div class="bracket-line">
+                                        <span class="bracket-line__label">Nr/Vn C GL</span>
+                                        <span class="bracket-line__mark">&lt;</span>
+                                        <div class="bracket-line__values">
+                                            <span>{{ $glNrRe }}</span>
+                                            <span>{{ $glNrLe }}</span>
+                                        </div>
                                     </div>
-                                @endif
+                                    <div class="bracket-line">
+                                        <span class="bracket-line__label">NCT</span>
+                                        <span class="bracket-line__mark">&lt;</span>
+                                        <div class="bracket-line__values">
+                                            <span>{{ $iopRe }}</span>
+                                            <span>{{ $iopLe }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </article>
@@ -958,39 +1043,6 @@
                                         @endif
                                     </tr>
                                 @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </article>
-
-                {{-- Fundus --}}
-                <article class="card">
-                    <div class="card__title">Fundus</div>
-                    <div class="card__body">
-                        <table class="dtable exam-table">
-                            <thead>
-                                <tr>
-                                    <th>Fundus</th>
-                                    <th>RIGHT</th>
-                                    <th>LEFT</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <th>DISC</th>
-                                    <td>{{ rxVal($fundus['disc_re'] ?? '', '-') }}</td>
-                                    <td>{{ rxVal($fundus['disc_le'] ?? '', '-') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>FR</th>
-                                    <td>{{ rxVal($fundus['fr_re'] ?? '', '-') }}</td>
-                                    <td>{{ rxVal($fundus['fr_le'] ?? '', '-') }}</td>
-                                </tr>
-                                <tr>
-                                    <th>COMMENT</th>
-                                    <td>{{ rxVal($fundus['comment_re'] ?? '', '-') }}</td>
-                                    <td>{{ rxVal($fundus['comment_le'] ?? '', '-') }}</td>
-                                </tr>
                             </tbody>
                         </table>
                     </div>

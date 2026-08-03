@@ -33,6 +33,113 @@
     {{-- Flatpickr CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
+    {{-- DataTables (Bootstrap 5) --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" />
+    <style>
+        table.js-datatable {
+            width: 100% !important;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: .875rem;
+            color: #334155;
+            background-color: #fff;
+            padding: .35rem .65rem;
+            min-width: 12rem;
+        }
+        /*
+          Bootstrap form-select already draws a custom chevron.
+          Do NOT force appearance:menulist (double arrow / overlap).
+        */
+        .dataTables_wrapper .dataTables_length select.form-select,
+        .dataTables_wrapper .dataTables_length select {
+            min-width: 5.25rem !important;
+            width: auto !important;
+            display: inline-block;
+            vertical-align: middle;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: .875rem;
+            color: #334155;
+            background-color: #fff;
+            padding: .375rem 2.35rem .375rem .75rem !important;
+            line-height: 1.4;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            appearance: none !important;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%231B4F72' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+            background-repeat: no-repeat !important;
+            background-position: right .65rem center !important;
+            background-size: 14px 10px !important;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus,
+        .dataTables_wrapper .dataTables_length select:focus {
+            border-color: #1B4F72;
+            outline: none;
+            box-shadow: 0 0 0 .2rem rgba(27, 79, 114, .15);
+        }
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_paginate {
+            font-size: .85rem;
+            color: #64748b;
+            padding-top: .75rem;
+            padding-bottom: .25rem;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 6px !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #1B4F72 !important;
+            border-color: #1B4F72 !important;
+            color: #fff !important;
+        }
+        .card .dataTables_wrapper {
+            padding: 0 .75rem .75rem;
+        }
+        .card .dataTables_wrapper .row:first-child {
+            padding-top: .75rem;
+        }
+        /* Select2 height align with Bootstrap form-select */
+        .select2-container--default .select2-selection--single {
+            min-height: 38px;
+            padding: .25rem .25rem;
+            border: 1px solid rgba(27, 79, 114, 0.18);
+            border-radius: 8px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px;
+            padding-left: .5rem;
+            color: #1B4F72;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+        .select2-container--default.select2-container--focus .select2-selection--single,
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #1B4F72;
+        }
+        /* Flatpickr range highlight */
+        .flatpickr-day.inRange,
+        .flatpickr-day.nextMonthDay.inRange,
+        .flatpickr-day.prevMonthDay.inRange {
+            background: rgba(27, 79, 114, 0.12) !important;
+            border-color: transparent !important;
+            box-shadow: none !important;
+            color: #1B4F72 !important;
+        }
+        .flatpickr-day.selected.startRange,
+        .flatpickr-day.selected.endRange,
+        .flatpickr-day.startRange,
+        .flatpickr-day.endRange {
+            background: #1B4F72 !important;
+            border-color: #1B4F72 !important;
+            color: #fff !important;
+        }
+    </style>
+
     {{-- Hospital Shell (Navbar + Sidebar) Theme Overrides --}}
     <style>
         /*
@@ -834,6 +941,13 @@
                                 <span>PHONE</span>
                             </a>
                         @endif
+                        @if($permSvcTop->can('ot.appointment.create'))
+                            <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}"
+                                class="reception-register-btn">
+                                <i class="bi bi-calendar2-plus"></i>
+                                <span>OT APPOINTMENT</span>
+                            </a>
+                        @endif
                     </div>
                 @endif
 
@@ -1038,6 +1152,8 @@
                     ── --}}
                     @php
                         $showOt = $permSvc->can('ot.patient.list')
+                            || $permSvc->can('ot.appointment.view')
+                            || $permSvc->can('ot.counselling.fill')
                             || $permSvc->can('ot.payment.record')
                             || $permSvc->can('ot.ward.entry')
                             || $permSvc->can('ot.surgery.record')
@@ -1052,11 +1168,19 @@
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
                     <div class="hms-nav-group-items" id="nav-ot">
-                        @haspermission('ot.patient.list')
-                        <a href="{{ route('hospital.ot.index', ['slug' => request()->route('slug')]) }}"
-                            class="hms-nav-item {{ request()->routeIs('hospital.ot.dashboard') || request()->routeIs('hospital.ot.bookings.*') || request()->routeIs('hospital.ot.index') ? 'active' : '' }}">
-                            <i class="bi bi-heart-pulse-fill"></i>
-                            <span>OT Bookings</span>
+                        @haspermission('ot.appointment.view')
+                        <a href="{{ route('hospital.ot.appointments.index', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.appointments.*') ? 'active' : '' }}">
+                            <i class="bi bi-calendar2-week"></i>
+                            <span>OT Appointments</span>
+                        </a>
+                        @endhaspermission
+
+                        @haspermission('ot.counselling.fill')
+                        <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.counsellor.*') ? 'active' : '' }}">
+                            <i class="bi bi-chat-left-heart"></i>
+                            <span>OT Counselling</span>
                         </a>
                         @endhaspermission
 
@@ -1076,23 +1200,24 @@
                         </a>
                         @endhaspermission
 
-                        @haspermission('ot.surgery.record')
-                        <a href="{{ route('hospital.ot.doctor.dashboard', ['slug' => request()->route('slug')]) }}"
-                            class="hms-nav-item {{ request()->routeIs('hospital.ot.doctor.dashboard') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
-                            <i class="bi bi-heart-pulse"></i>
-                            <span>OT Doctor Dashboard</span>
-                        </a>
-                        @endhaspermission
-
-                        @haspermission('ot.lens.record')
+                        @php
+                            // OT Assistant now absorbs the old OT Doctor role's surgery
+                            // recording alongside its own lens-recording job (docs/tulsi.md §5).
+                            $showAssistant = $permSvc->can('ot.lens.record')
+                                || $permSvc->can('ot.lens.implant')
+                                || $permSvc->can('ot.surgery.ready')
+                                || $permSvc->can('ot.surgery.record');
+                        @endphp
+                        @if($showAssistant)
                         <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
-                            class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
                             <i class="bi bi-eyeglasses"></i>
                             <span>OT Assistant Dashboard</span>
                         </a>
-                        @endhaspermission
+                        @endif
 
-                        @haspermission('ot.billing.manage')
+                        {{-- Discharge Counter owns this desk (not Accountant). --}}
+                        @haspermission('ot.discharge.generate')
                         <a href="{{ route('hospital.ot.billing.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.ot.billing.index') || request()->routeIs('hospital.ot.invoice.*') || request()->routeIs('hospital.ot.discharge.*') || request()->routeIs('hospital.ot.summary-bill.*') || request()->routeIs('hospital.ot.certificate.*') || request()->routeIs('hospital.ot.medicine-slip.*') ? 'active' : '' }}">
                             <i class="bi bi-receipt-cutoff"></i>
@@ -1117,9 +1242,14 @@
                         </div>
                         <div class="hms-nav-group-items" id="nav-reports">
                             <a href="{{ route('hospital.reports.index', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.reports.*') ? 'active' : '' }}">
+                                class="hms-nav-item {{ request()->routeIs('hospital.reports.index') ? 'active' : '' }}">
                                 <i class="bi bi-bar-chart-line-fill"></i>
-                                <span>Reports</span>
+                                <span>OPD Reports</span>
+                            </a>
+                            <a href="{{ route('hospital.reports.ot.index', ['slug' => request()->route('slug')]) }}"
+                                class="hms-nav-item {{ request()->routeIs('hospital.reports.ot.*') ? 'active' : '' }}">
+                                <i class="bi bi-file-earmark-bar-graph"></i>
+                                <span>OT Reports</span>
                             </a>
                         </div>
                     @endif
@@ -1419,9 +1549,285 @@
 
     {{-- Select2 --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        /**
+         * Global Select2 for hospital CRM dropdowns.
+         * Skips: already inited, .no-select2, .form-select-sm (dense tables), DataTables length.
+         */
+        window.initHmsSelect2 = function (root) {
+            if (typeof jQuery === 'undefined' || !jQuery.fn.select2) {
+                return;
+            }
+
+            var $root = root ? jQuery(root) : jQuery(document);
+
+            $root.find('select.form-select, select.hms-select, select.js-select2, select.select2, select.clinical-input').each(function () {
+                var $el = jQuery(this);
+
+                if ($el.hasClass('select2-hidden-accessible')) {
+                    return;
+                }
+                if ($el.hasClass('no-select2') || $el.hasClass('form-select-sm')) {
+                    return;
+                }
+                if ($el.closest('.no-select2-scope').length) {
+                    return;
+                }
+                if ($el.closest('.dataTables_length').length) {
+                    return;
+                }
+                // Native multi-select without explicit opt-in can be awkward; allow if already classed select2/js-select2
+                if ($el.prop('multiple') && !$el.hasClass('select2') && !$el.hasClass('js-select2') && !$el.data('select2Multiple')) {
+                    return;
+                }
+
+                var $modal = $el.closest('.modal');
+                var placeholder = $el.data('placeholder')
+                    || jQuery.trim($el.find('option[value=""]').first().text())
+                    || 'Select...';
+                var allowClear = !$el.prop('required') && $el.find('option[value=""]').length > 0;
+
+                var options = {
+                    width: '100%',
+                    placeholder: placeholder,
+                    allowClear: allowClear,
+                    dropdownAutoWidth: false
+                };
+
+                if ($modal.length) {
+                    options.dropdownParent = $modal;
+                }
+
+                $el.select2(options);
+            });
+        };
+    </script>
 
     {{-- Flatpickr --}}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        /**
+         * Shared date-range filter (flatpickr range).
+         * Use on a text input:
+         *   data-hms-date-range
+         *   data-range-mode="split|combined"   default split
+         *   data-start-name / data-end-name    default start_date / end_date
+         *   data-start-value / data-end-value
+         *   data-auto-submit="1|0"             default 1 (submit form when range complete)
+         * combined mode posts the visible input value as "YYYY-MM-DD to YYYY-MM-DD"
+         */
+        window.initHmsDateRange = function (root) {
+            if (typeof flatpickr === 'undefined') {
+                return;
+            }
+
+            var scope = root || document;
+
+            scope.querySelectorAll('[data-hms-date-range]').forEach(function (el) {
+                if (el._hmsDateRangeInit) {
+                    return;
+                }
+                el._hmsDateRangeInit = true;
+
+                var mode = el.getAttribute('data-range-mode') || 'split';
+                var startName = el.getAttribute('data-start-name') || 'start_date';
+                var endName = el.getAttribute('data-end-name') || 'end_date';
+                var startVal = (el.getAttribute('data-start-value') || '').trim();
+                var endVal = (el.getAttribute('data-end-value') || '').trim();
+                var autoSubmit = el.getAttribute('data-auto-submit') !== '0';
+                var form = el.closest('form');
+                var isSubmitting = false;
+
+                // Parse existing combined value if present
+                if (mode === 'combined' && el.value && el.value.indexOf(' to ') !== -1) {
+                    var parts = el.value.split(' to ');
+                    startVal = (parts[0] || '').trim();
+                    endVal = (parts[1] || '').trim();
+                }
+
+                function ensureHidden(name, value) {
+                    if (!form || !name) {
+                        return null;
+                    }
+                    // Drop any non-hidden inputs with this name so only our values post
+                    form.querySelectorAll('input[name="' + name + '"]').forEach(function (node) {
+                        if (node !== el && node.type !== 'hidden') {
+                            node.remove();
+                        }
+                    });
+                    var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
+                    if (existing) {
+                        if (value !== undefined && value !== null && value !== '') {
+                            existing.value = value;
+                        }
+                        return existing;
+                    }
+                    var inp = document.createElement('input');
+                    inp.type = 'hidden';
+                    inp.name = name;
+                    inp.value = value || '';
+                    form.appendChild(inp);
+                    return inp;
+                }
+
+                var startInput = null;
+                var endInput = null;
+                if (mode === 'split') {
+                    el.removeAttribute('name');
+                    startInput = ensureHidden(startName, startVal);
+                    endInput = ensureHidden(endName, endVal || startVal);
+                }
+
+                var defaultDates = null;
+                if (startVal && endVal) {
+                    defaultDates = [startVal, endVal];
+                } else if (startVal) {
+                    defaultDates = [startVal, startVal];
+                }
+
+                function applyDates(selectedDates, instance) {
+                    if (!selectedDates || !selectedDates.length) {
+                        if (mode === 'combined') {
+                            el.value = '';
+                        } else {
+                            if (startInput) startInput.value = '';
+                            if (endInput) endInput.value = '';
+                        }
+                        return false;
+                    }
+
+                    var a = instance.formatDate(selectedDates[0], 'Y-m-d');
+                    var b = selectedDates.length > 1
+                        ? instance.formatDate(selectedDates[1], 'Y-m-d')
+                        : a;
+
+                    if (mode === 'combined') {
+                        el.value = a === b ? a : (a + ' to ' + b);
+                    } else {
+                        if (startInput) startInput.value = a;
+                        if (endInput) endInput.value = b;
+                    }
+                    return selectedDates.length >= 2 || selectedDates.length === 1;
+                }
+
+                function submitIfReady(selectedDates) {
+                    if (!autoSubmit || !form || isSubmitting) {
+                        return;
+                    }
+                    // Complete when user picked end date, or confirmed single day on close
+                    if (selectedDates.length >= 2 || selectedDates.length === 1) {
+                        isSubmitting = true;
+                        setTimeout(function () {
+                            if (typeof form.requestSubmit === 'function') {
+                                form.requestSubmit();
+                            } else {
+                                form.submit();
+                            }
+                        }, 30);
+                    }
+                }
+
+                flatpickr(el, {
+                    mode: 'range',
+                    dateFormat: 'Y-m-d',
+                    defaultDate: defaultDates,
+                    allowInput: false,
+                    clickOpens: true,
+                    onChange: function (selectedDates, _dateStr, instance) {
+                        applyDates(selectedDates, instance);
+                        // Auto-filter as soon as end date is chosen
+                        if (selectedDates.length === 2) {
+                            submitIfReady(selectedDates);
+                        }
+                    },
+                    onClose: function (selectedDates, _dateStr, instance) {
+                        // Single day: start only → treat as that day and filter
+                        if (selectedDates.length === 1) {
+                            applyDates(selectedDates, instance);
+                            submitIfReady(selectedDates);
+                        }
+                    }
+                });
+            });
+        };
+    </script>
+
+    {{-- DataTables --}}
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        window.initHmsDataTables = function (root) {
+            if (typeof jQuery === 'undefined' || !jQuery.fn.DataTable) {
+                return;
+            }
+
+            var $root = root ? jQuery(root) : jQuery(document);
+
+            $root.find('table.js-datatable').each(function () {
+                var table = this;
+                var $table = jQuery(table);
+
+                if (jQuery.fn.DataTable.isDataTable(table)) {
+                    return;
+                }
+
+                // Placeholder empty rows (colspan) break DataTables column count
+                $table.find('tbody tr').each(function () {
+                    var $cells = jQuery(this).children('td');
+                    if ($cells.length === 1 && $cells.first().attr('colspan')) {
+                        jQuery(this).remove();
+                    }
+                });
+
+                var headers = $table.find('thead th').map(function () {
+                    return jQuery(this).text().replace(/\s+/g, ' ').trim().toLowerCase();
+                }).get();
+
+                var nonInteractive = [];
+                headers.forEach(function (label, index) {
+                    if (label === '#' || label === 'actions' || label === 'favourite' || label === 'action') {
+                        nonInteractive.push(index);
+                    }
+                });
+
+                $table.DataTable({
+                    pageLength: 25,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                    order: headers[0] === '#' && headers.length > 1 ? [[1, 'asc']] : [[0, 'asc']],
+                    autoWidth: false,
+                    columnDefs: nonInteractive.length
+                        ? [{ orderable: false, searchable: false, targets: nonInteractive }]
+                        : [],
+                    language: {
+                        search: 'Search:',
+                        lengthMenu: 'Show _MENU_',
+                        info: 'Showing _START_ to _END_ of _TOTAL_',
+                        infoEmpty: 'Showing 0 entries',
+                        emptyTable: 'No records found.',
+                        zeroRecords: 'No matching records.'
+                    },
+                    drawCallback: function () {
+                        var api = this.api();
+                        if (headers[0] === '#') {
+                            var info = api.page.info();
+                            api.column(0, { search: 'applied', order: 'applied', page: 'current' })
+                                .nodes()
+                                .each(function (cell, i) {
+                                    cell.innerHTML = info.start + i + 1;
+                                });
+                        }
+                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                            window.lucide.createIcons();
+                        }
+                    }
+                });
+            });
+        };
+
+        jQuery(function () {
+            window.initHmsDataTables();
+        });
+    </script>
 
     {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -1503,8 +1909,34 @@
         });
     </script>
 
+    <script>
+        window.HMS_CURRENCY = {
+            code: @json(currency_code()),
+            symbol: @json(currency_symbol())
+        };
+        var currencyCode = window.HMS_CURRENCY.code;
+        var currencySymbol = window.HMS_CURRENCY.symbol;
+    </script>
+
     @stack('modals')
     @stack('scripts')
+
+    {{-- Global Select2 + date-range AFTER page scripts so page-specific inits win; then fill the rest --}}
+    <script>
+        jQuery(function () {
+            window.initHmsSelect2();
+            if (typeof window.initHmsDateRange === 'function') {
+                window.initHmsDateRange();
+            }
+        });
+
+        jQuery(document).on('shown.bs.modal', '.modal', function () {
+            window.initHmsSelect2(this);
+            if (typeof window.initHmsDateRange === 'function') {
+                window.initHmsDateRange(this);
+            }
+        });
+    </script>
 </body>
 
 </html>

@@ -25,7 +25,7 @@
         <div class="hms-stat-icon hsi-blue"><i class="fa-solid fa-indian-rupee-sign"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Gross Collection</div>
-            <div class="hms-stat-value">₹{{ number_format($todayGross, 2) }}</div>
+            <div class="hms-stat-value">{{ money($todayGross, 2) }}</div>
             <div class="hms-stat-meta">{{ now()->format('d M Y') }}</div>
         </div>
     </div>
@@ -33,14 +33,14 @@
         <div class="hms-stat-icon hsi-red"><i class="fa-solid fa-hand-holding-heart"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">FOC Deductions</div>
-            <div class="hms-stat-value">₹{{ number_format($todayFocAmount, 2) }}</div>
+            <div class="hms-stat-value">{{ money($todayFocAmount, 2) }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-green"><i class="fa-solid fa-wallet"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Net Collection</div>
-            <div class="hms-stat-value">₹{{ number_format($todayNet, 2) }}</div>
+            <div class="hms-stat-value">{{ money($todayNet, 2) }}</div>
         </div>
     </div>
 </div>
@@ -118,7 +118,7 @@
                     <th>Age / Gender</th>
                     <th>Contact</th>
                     <th>Doctor</th>
-                    <th>Fee (₹)</th>
+                    <th>Fee ({{ currency_symbol() }})</th>
                     <th>Type</th>
                     <th>Time</th>
                     <th>Action</th>
@@ -221,7 +221,7 @@
                         <td>{{ $foc->doctor?->name ?? '—' }}</td>
                         <td>{{ $foc->patient?->full_name ?? '—' }}</td>
                         <td>{{ $foc->patient?->patient_code ?? '—' }}</td>
-                        <td>₹{{ number_format((float) $foc->foc_fee, 2) }}</td>
+                        <td>{{ money((float) $foc->foc_fee, 2) }}</td>
                         <td>
                             <form method="POST" action="{{ route('hospital.foc.accept', ['slug' => $slug, 'id' => $foc->id]) }}" style="display:inline">
                                 @csrf

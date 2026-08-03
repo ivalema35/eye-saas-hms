@@ -22,6 +22,12 @@
 use App\Http\Controllers\Hospital\Auth\LoginController;
 use App\Http\Controllers\Hospital\Auth\PasswordResetController;
 use App\Http\Controllers\Hospital\Dashboard\DashboardController;
+use App\Http\Controllers\Hospital\Dashboard\AdminCollectionController;
+use App\Http\Controllers\Hospital\Dashboard\AdminDashboardPatientsController;
+use App\Http\Controllers\Hospital\Dashboard\AssistantOtListController;
+use App\Http\Controllers\Hospital\Dashboard\DoctorOtListController;
+use App\Http\Controllers\Hospital\Dashboard\OtAppointmentListController;
+use App\Http\Controllers\Hospital\Dashboard\ReceptionistTotalPatientsController;
 use App\Http\Controllers\Hospital\Examination\ClinicalQueueController;
 use App\Http\Controllers\Hospital\Examination\PrimaryExamController;
 use App\Http\Controllers\Hospital\Examination\SecondaryExamController;
@@ -30,6 +36,9 @@ use App\Http\Controllers\Hospital\Master\BasicMasterController;
 use App\Http\Controllers\Hospital\Master\DetailMasterController;
 use App\Http\Controllers\Hospital\Master\OT\OtChargeHeadController;
 use App\Http\Controllers\Hospital\Master\OT\OtLensOptionController;
+use App\Http\Controllers\Hospital\Master\OT\OtPackageMasterController;
+use App\Http\Controllers\Hospital\Master\OT\LensInventoryController;
+use App\Http\Controllers\Hospital\Master\OT\OtLensPowerController;
 use App\Http\Controllers\Hospital\Master\OT\OtSlotController;
 use App\Http\Controllers\Hospital\Master\OT\OtSurgeryTypeController;
 use App\Http\Controllers\Hospital\Master\OT\OtTypeController;
@@ -41,14 +50,17 @@ use App\Http\Controllers\Hospital\Medicine\MedicineInstructionController;
 use App\Http\Controllers\Hospital\Medicine\MedicineRouteController;
 use App\Http\Controllers\Hospital\Medicine\MedicineTypeController;
 use App\Http\Controllers\Hospital\OT\OtAccountantController;
+use App\Http\Controllers\Hospital\OT\OtAppointmentController;
 use App\Http\Controllers\Hospital\OT\OtAssistantController;
 use App\Http\Controllers\Hospital\OT\OtBookingController;
+use App\Http\Controllers\Hospital\OT\OtCounsellorController;
 use App\Http\Controllers\Hospital\OT\OtDischargeController;
-use App\Http\Controllers\Hospital\OT\OtDoctorController;
 use App\Http\Controllers\Hospital\OT\OtInvoiceController;
 use App\Http\Controllers\Hospital\OT\OtReceptionistController;
+use App\Http\Controllers\Hospital\OT\OtWardController;
 use App\Http\Controllers\Hospital\Patient\PatientController;
 use App\Http\Controllers\Hospital\Patient\PatientHistoryController;
+use App\Http\Controllers\Hospital\Report\OtReportController;
 use App\Http\Controllers\Hospital\Report\ReportController;
 use App\Http\Controllers\Hospital\Role\RoleController;
 use App\Http\Controllers\Hospital\Setting\DoctorProfileController;
@@ -93,6 +105,31 @@ Route::prefix('{slug}')
 
                 // Dashboard — role ke hisaab se alag content return karega
                 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+                Route::get('/receptionist/total-patients', [ReceptionistTotalPatientsController::class, 'index'])
+                    ->name('receptionist.total-patients')
+                    ->middleware('permission:opd.patient.view');
+                Route::get('/dashboard/admin-patients', [AdminDashboardPatientsController::class, 'index'])
+                    ->name('dashboard.admin-patients')
+                    ->middleware('permission:opd.patient.view|reports.view');
+                Route::get('/dashboard/admin-patients/export', [AdminDashboardPatientsController::class, 'export'])
+                    ->name('dashboard.admin-patients.export')
+                    ->middleware('permission:opd.patient.view|reports.view|reports.export');
+                Route::get('/dashboard/collection', [AdminCollectionController::class, 'index'])
+                    ->name('dashboard.collection')
+                    ->middleware('permission:opd.patient.view|reports.view|opd.reports.view');
+                Route::get('/dashboard/collection/{reception}', [AdminCollectionController::class, 'show'])
+                    ->whereNumber('reception')
+                    ->name('dashboard.collection.show')
+                    ->middleware('permission:opd.patient.view|reports.view|opd.reports.view');
+                Route::get('/dashboard/ot-appointments', [OtAppointmentListController::class, 'index'])
+                    ->name('dashboard.ot-appointments')
+                    ->middleware('permission:ot.appointment.view|ot.patient.list');
+                Route::get('/dashboard/doctor-ot', [DoctorOtListController::class, 'index'])
+                    ->name('dashboard.doctor-ot')
+                    ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                Route::get('/dashboard/assistant-ot', [AssistantOtListController::class, 'index'])
+                    ->name('dashboard.assistant-ot')
+                    ->middleware('permission:ot.patient.list|ot.surgery.record|ot.lens.record|ot.surgery.ready');
 
                 // ============================================================
                 // Patient Management
@@ -264,6 +301,16 @@ Route::prefix('{slug}')
                     Route::get('/', [ReportController::class, 'index'])->name('index')->middleware('permission:reports.view');
                     Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel')->middleware('permission:reports.export');
                     Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:reports.export');
+                    Route::get('/channel/{channel}', [ReportController::class, 'showChannel'])->name('channel.show')->middleware('permission:reports.view');
+
+                    // OT Reports — Phase 8 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §8)
+                    Route::prefix('ot')->name('ot.')->group(function () {
+                        Route::get('/', [OtReportController::class, 'index'])->name('index')->middleware('permission:reports.view');
+                        Route::get('/{type}', [OtReportController::class, 'show'])->name('show')->middleware('permission:reports.view');
+                        Route::get('/{type}/export', [OtReportController::class, 'export'])->name('export')->middleware('permission:reports.export');
+                        Route::get('/{type}/export-pdf', [OtReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:reports.export');
+                        Route::get('/prescription/{patient}/pdf', [OtReportController::class, 'patientPrescriptionPdf'])->name('prescription.pdf')->middleware('permission:reports.view');
+                    });
                 });
 
                 // ============================================================
@@ -323,6 +370,23 @@ Route::prefix('{slug}')
                         Route::post('charge-heads', [OtChargeHeadController::class, 'store'])->name('charge-heads.store');
                         Route::put('charge-heads/{id}', [OtChargeHeadController::class, 'update'])->name('charge-heads.update')->whereNumber('id');
                         Route::delete('charge-heads/{id}', [OtChargeHeadController::class, 'destroy'])->name('charge-heads.destroy')->whereNumber('id');
+
+                        Route::get('packages', [OtPackageMasterController::class, 'index'])->name('packages.index');
+                        Route::post('packages', [OtPackageMasterController::class, 'store'])->name('packages.store');
+                        Route::put('packages/{id}', [OtPackageMasterController::class, 'update'])->name('packages.update')->whereNumber('id');
+                        Route::delete('packages/{id}', [OtPackageMasterController::class, 'destroy'])->name('packages.destroy')->whereNumber('id');
+
+                        // Lens Power master — Phase 4 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §4)
+                        Route::get('lens-powers', [OtLensPowerController::class, 'index'])->name('lens-powers.index');
+                        Route::post('lens-powers', [OtLensPowerController::class, 'store'])->name('lens-powers.store');
+                        Route::put('lens-powers/{id}', [OtLensPowerController::class, 'update'])->name('lens-powers.update')->whereNumber('id');
+                        Route::delete('lens-powers/{id}', [OtLensPowerController::class, 'destroy'])->name('lens-powers.destroy')->whereNumber('id');
+
+                        // Lens Inventory (stock) master — Phase 7 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §7)
+                        Route::get('lens-inventory', [LensInventoryController::class, 'index'])->name('lens-inventory.index');
+                        Route::post('lens-inventory', [LensInventoryController::class, 'store'])->name('lens-inventory.store');
+                        Route::put('lens-inventory/{id}', [LensInventoryController::class, 'update'])->name('lens-inventory.update')->whereNumber('id');
+                        Route::delete('lens-inventory/{id}', [LensInventoryController::class, 'destroy'])->name('lens-inventory.destroy')->whereNumber('id');
                     });
                 });
 
@@ -377,7 +441,55 @@ Route::prefix('{slug}')
                 Route::prefix('ot')->name('ot.')->middleware(['auth.hospital'])->group(function () {
                     Route::get('/', function () {
                         return redirect()->route('hospital.ot.dashboard', ['slug' => request()->route('slug')]);
-                    })->name('index')->middleware('permission:ot.patient.list');
+                    })->name('index')->middleware('permission:ot.patient.list|ot.appointment.view|ot.counselling.fill');
+
+                    // ========================================================
+                    // OT Appointments — Phase 2 of OT Workflow Upgrade
+                    // (docs/OT_WORKFLOW_UPGRADE_PRD.md §2)
+                    // ========================================================
+                    Route::prefix('appointments')->name('appointments.')->group(function () {
+                        Route::get('/', [OtAppointmentController::class, 'index'])
+                            ->name('index')
+                            ->middleware('permission:ot.appointment.view');
+
+                        Route::get('/create', [OtAppointmentController::class, 'create'])
+                            ->name('create')
+                            ->middleware('permission:ot.appointment.create');
+
+                        Route::post('/', [OtAppointmentController::class, 'store'])
+                            ->name('store')
+                            ->middleware('permission:ot.appointment.create');
+
+                        Route::get('/{id}/edit', [OtAppointmentController::class, 'edit'])
+                            ->name('edit')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot.appointment.edit');
+
+                        Route::put('/{id}', [OtAppointmentController::class, 'update'])
+                            ->name('update')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot.appointment.edit');
+
+                        Route::post('/{id}/confirm', [OtAppointmentController::class, 'confirm'])
+                            ->name('confirm')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot.appointment.edit');
+
+                        Route::post('/{id}/cancel', [OtAppointmentController::class, 'cancel'])
+                            ->name('cancel')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot.appointment.edit');
+
+                        // Reception check-in also uses this (search by UHID/name/mobile/appointment
+                        // number) — allow either OT staff or OPD reception to hit it.
+                        Route::get('/search', [OtAppointmentController::class, 'search'])
+                            ->name('search')
+                            ->middleware('permission:ot.appointment.view|opd.patient.register');
+
+                        Route::get('/slot-appointments', [OtAppointmentController::class, 'slotAppointments'])
+                            ->name('slot-appointments')
+                            ->middleware('permission:ot.appointment.view|ot.appointment.create');
+                    });
 
                     Route::get('/ward', [OtAccountantController::class, 'wardIndex'])
                         ->name('ward.index')
@@ -387,6 +499,25 @@ Route::prefix('{slug}')
                         ->name('ward.ready')
                         ->whereNumber('booking')
                         ->middleware('permission:ot.ward.entry');
+
+                    // ========================================================
+                    // Ward vitals + eye-drop register — Phase 3 of OT Workflow Upgrade
+                    // (docs/OT_WORKFLOW_UPGRADE_PRD.md §3)
+                    // ========================================================
+                    Route::get('/ward/{booking}', [OtWardController::class, 'show'])
+                        ->name('ward.show')
+                        ->whereNumber('booking')
+                        ->middleware('permission:ot.ward.entry');
+
+                    Route::post('/ward/{booking}/vitals', [OtWardController::class, 'storeVitals'])
+                        ->name('ward.vitals.store')
+                        ->whereNumber('booking')
+                        ->middleware('permission:ot.preop.entry');
+
+                    Route::post('/ward/{booking}/eye-drops', [OtWardController::class, 'addEyeDrop'])
+                        ->name('ward.eye-drops.store')
+                        ->whereNumber('booking')
+                        ->middleware('permission:ot.dilation.track');
 
                     Route::get('/dashboard', [OtReceptionistController::class, 'dashboard'])
                         ->name('dashboard')
@@ -404,6 +535,12 @@ Route::prefix('{slug}')
                         ->name('bookings.store')
                         ->middleware('permission:ot.booking.create');
 
+                    // Phase A1 — Doctor Exam → Surgery Recommended (docs/OT_1.0_REMAINING_PRD.md)
+                    Route::post('/recommend-surgery/{patientId}', [OtBookingController::class, 'recommendSurgery'])
+                        ->name('recommend-surgery')
+                        ->whereNumber('patientId')
+                        ->middleware('permission:ot.surgery.recommend');
+
                     Route::prefix('accountant')->middleware('permission:ot.payment.record')->group(function () {
                         Route::get('/dashboard', [OtAccountantController::class, 'dashboard'])
                             ->name('accountant.dashboard');
@@ -415,24 +552,56 @@ Route::prefix('{slug}')
                         Route::post('/payments/{bookingId}', [OtAccountantController::class, 'storePayment'])
                             ->name('payments.store')
                             ->whereNumber('bookingId');
+
+                        Route::get('/payments/{paymentId}/receipt', [OtAccountantController::class, 'receiptPrint'])
+                            ->name('payments.receipt')
+                            ->whereNumber('paymentId');
                     });
 
-                    Route::prefix('doctor')->middleware('permission:ot.surgery.record')->group(function () {
-                        Route::get('/dashboard', [OtDoctorController::class, 'dashboard'])
-                            ->name('doctor.dashboard');
+                    // ========================================================
+                    // OT Counsellor — Phase 1 of OT Workflow Upgrade
+                    // (docs/OT_WORKFLOW_UPGRADE_PRD.md §1)
+                    // ========================================================
+                    Route::prefix('counsellor')->middleware('permission:ot.counselling.fill')->group(function () {
+                        Route::get('/dashboard', [OtCounsellorController::class, 'dashboard'])
+                            ->name('counsellor.dashboard');
 
-                        Route::get('/surgery/{bookingId}/create', [OtDoctorController::class, 'createSurgery'])
-                            ->name('surgery.create')
+                        Route::get('/package-lookup', [OtCounsellorController::class, 'lookupPackage'])
+                            ->name('counsellor.package-lookup');
+
+                        Route::get('/booking/{bookingId}', [OtCounsellorController::class, 'show'])
+                            ->name('counsellor.form')
                             ->whereNumber('bookingId');
 
-                        Route::post('/surgery/{bookingId}', [OtDoctorController::class, 'storeSurgery'])
-                            ->name('surgery.store')
+                        Route::post('/booking/{bookingId}/counselling', [OtCounsellorController::class, 'storeCounselling'])
+                            ->name('counsellor.counselling.store')
+                            ->whereNumber('bookingId');
+
+                        Route::post('/booking/{bookingId}/consent', [OtCounsellorController::class, 'storeConsent'])
+                            ->name('counsellor.consent.store')
+                            ->whereNumber('bookingId')
+                            ->middleware('permission:ot.consent.capture');
+
+                        Route::post('/booking/{bookingId}/send-to-billing', [OtCounsellorController::class, 'sendToBilling'])
+                            ->name('counsellor.send-to-billing')
                             ->whereNumber('bookingId');
                     });
 
-                    Route::prefix('assistant')->middleware('permission:ot.lens.record|ot.lens.implant|ot.patient.list')->group(function () {
+                    // OT Assistant — absorbs the old ot_doctor role's surgery recording
+                    // (docs/tulsi.md §5) alongside its own lens-recording job.
+                    Route::prefix('assistant')->middleware('permission:ot.lens.record|ot.lens.implant|ot.surgery.ready|ot.surgery.record|ot.patient.list')->group(function () {
                         Route::get('/dashboard', [OtAssistantController::class, 'dashboard'])
                             ->name('assistant.dashboard');
+
+                        Route::get('/surgery/{bookingId}/create', [OtAssistantController::class, 'createSurgery'])
+                            ->name('surgery.create')
+                            ->whereNumber('bookingId')
+                            ->middleware('permission:ot.surgery.record');
+
+                        Route::post('/surgery/{bookingId}', [OtAssistantController::class, 'storeSurgery'])
+                            ->name('surgery.store')
+                            ->whereNumber('bookingId')
+                            ->middleware('permission:ot.surgery.record');
 
                         Route::get('/lens/{bookingId}/edit', [OtAssistantController::class, 'editLens'])
                             ->name('assistant.lens.edit')
@@ -469,6 +638,23 @@ Route::prefix('{slug}')
 
                         Route::get('/medicine-slip/{bookingId}/print', [OtDischargeController::class, 'medicineSlipPrint'])
                             ->name('medicine-slip.print')
+                            ->whereNumber('bookingId');
+
+                        // Phase 6 — Discharge Module document completion (docs/OT_WORKFLOW_UPGRADE_PRD.md §6)
+                        Route::get('/prescription/{bookingId}/print', [OtDischargeController::class, 'prescriptionPrint'])
+                            ->name('prescription.print')
+                            ->whereNumber('bookingId');
+
+                        Route::get('/lens-slip/{bookingId}/print', [OtDischargeController::class, 'lensSlipPrint'])
+                            ->name('lens-slip.print')
+                            ->whereNumber('bookingId');
+
+                        Route::get('/followup-slip/{bookingId}/print', [OtDischargeController::class, 'followupSlipPrint'])
+                            ->name('followup-slip.print')
+                            ->whereNumber('bookingId');
+
+                        Route::get('/print-all/{bookingId}', [OtDischargeController::class, 'printAllBundle'])
+                            ->name('print-all')
                             ->whereNumber('bookingId');
                     });
                 });

@@ -30,13 +30,6 @@
                 </div>
 
                 <div class="hms-form-group">
-                    <label>Email <span class="hms-required">*</span></label>
-                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                           class="hms-input @error('email') is-invalid @enderror" required>
-                    @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="hms-form-group">
                     <label>Role <span class="hms-required">*</span></label>
                     <select name="role_id" id="role_id" class="hms-select @error('role_id') is-invalid @enderror" required>
                         <option value="">Select Role</option>
@@ -51,20 +44,18 @@
                 </div>
 
                 <div class="hms-form-group">
+                    <label>Email <span class="hms-required">*</span></label>
+                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
+                           class="hms-input @error('email') is-invalid @enderror" required>
+                    @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="hms-form-group">
                     <label>Contact</label>
                     <input type="text" name="contact" value="{{ old('contact', $user->contact) }}"
                            class="hms-input @error('contact') is-invalid @enderror" data-intl-phone
                            placeholder="+919876543210">
                     @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="hms-form-group">
-                    <label>Status <span class="hms-required">*</span></label>
-                    <select name="status" class="hms-select @error('status') is-invalid @enderror" required>
-                        <option value="active"   @selected(old('status', $user->status) === 'active')>Active</option>
-                        <option value="inactive" @selected(old('status', $user->status) === 'inactive')>Inactive</option>
-                    </select>
-                    @error('status')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="hms-form-group doctor-only" style="display:none">
@@ -106,6 +97,15 @@
                 <div class="hms-form-group">
                     <label>Confirm Password</label>
                     <input type="password" name="password_confirmation" class="hms-input">
+                </div>
+
+                <div class="hms-form-group">
+                    <label>Status <span class="hms-required">*</span></label>
+                    <select name="status" class="hms-select @error('status') is-invalid @enderror" required>
+                        <option value="active"   @selected(old('status', $user->status) === 'active')>Active</option>
+                        <option value="inactive" @selected(old('status', $user->status) === 'inactive')>Inactive</option>
+                    </select>
+                    @error('status')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
             </div>
         </div>

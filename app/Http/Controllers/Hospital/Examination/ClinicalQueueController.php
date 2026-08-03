@@ -25,8 +25,8 @@ class ClinicalQueueController extends Controller
                 $query->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($q) {
                         $q->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })
@@ -65,7 +65,7 @@ class ClinicalQueueController extends Controller
         $selectedDoctorId = null;
         if ($request->has('doctor_id') && $request->doctor_id) {
             $selectedDoctorId = (int) $request->doctor_id;
-        } elseif (in_array($user?->role?->slug, ['doctor', 'ot_doctor'], true)) {
+        } elseif ($user?->role?->slug === 'doctor') {
             $selectedDoctorId = $user->id;
         }
 

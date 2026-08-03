@@ -10,9 +10,21 @@ class MasterCountry extends Model
 {
     protected $table = 'tbl_master_countries';
 
-    protected $fillable = ['name', 'default_timezone', 'is_active'];
+    protected $fillable = [
+        'name',
+        'country_code',
+        'default_timezone',
+        'currency_code',
+        'currency_symbol',
+        'currency_name',
+        'fx_inr_per_unit',
+        'is_active',
+    ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active' => 'boolean',
+        'fx_inr_per_unit' => 'float',
+    ];
 
     public function states(): HasMany
     {

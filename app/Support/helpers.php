@@ -1,6 +1,60 @@
 <?php
 
 use App\Models\Hospital\HospitalSetting;
+use App\Services\Platform\CurrencyService;
+
+if (! function_exists('currency_code')) {
+    /** Active hospital currency ISO code (falls back to platform). */
+    function currency_code(): string
+    {
+        return CurrencyService::currentCode();
+    }
+}
+
+if (! function_exists('currency_symbol')) {
+    /** Active hospital currency symbol (falls back to platform). */
+    function currency_symbol(): string
+    {
+        return CurrencyService::currentSymbol();
+    }
+}
+
+if (! function_exists('money')) {
+    /** Format amount with hospital currency symbol, e.g. ₹1,250.00 */
+    function money(float|int|string|null $amount, int $decimals = 2): string
+    {
+        return CurrencyService::format($amount, $decimals);
+    }
+}
+
+if (! function_exists('money_code')) {
+    /** Format amount with currency code prefix, e.g. INR 1,250.00 */
+    function money_code(float|int|string|null $amount, int $decimals = 2): string
+    {
+        return CurrencyService::formatWithCode($amount, $decimals);
+    }
+}
+
+if (! function_exists('platform_currency_code')) {
+    function platform_currency_code(): string
+    {
+        return (string) config('app.platform_currency_code', 'INR');
+    }
+}
+
+if (! function_exists('platform_currency_symbol')) {
+    function platform_currency_symbol(): string
+    {
+        return (string) config('app.platform_currency_symbol', '₹');
+    }
+}
+
+if (! function_exists('platform_money')) {
+    function platform_money(float|int|string|null $amount, int $decimals = 0): string
+    {
+        return platform_currency_symbol().number_format((float) ($amount ?? 0), $decimals);
+    }
+}
 
 if (! function_exists('hospital_settings')) {
     function hospital_settings(): array

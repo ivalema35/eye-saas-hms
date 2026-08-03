@@ -183,15 +183,20 @@
 
             <form method="GET" class="phone-history-filter">
                 <div>
-                    <label class="form-label" for="from_date">From Date</label>
-                    <input type="date" id="from_date" name="from_date" value="{{ $fromDate }}" class="form-control">
+                    <label class="form-label" for="date_range">Date range</label>
+                    <input type="text" id="date_range" class="form-control"
+                        data-hms-date-range
+                        data-start-name="from_date"
+                        data-end-name="to_date"
+                        data-start-value="{{ $fromDate }}"
+                        data-end-value="{{ $toDate }}"
+                        data-auto-submit="1"
+                        placeholder="Select start → end date"
+                        autocomplete="off"
+                        readonly
+                        style="min-width:220px;">
                 </div>
                 <div>
-                    <label class="form-label" for="to_date">To Date</label>
-                    <input type="date" id="to_date" name="to_date" value="{{ $toDate }}" class="form-control">
-                </div>
-                <div>
-                    <button type="submit" class="btn btn-primary">Apply</button>
                     <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="btn btn-outline-secondary">Reset</a>
                 </div>
             </form>
@@ -228,7 +233,7 @@
                                     <td>
                                         @if($checkedIn)
                                             {{ $patient->caseType?->case_type ?? '—' }}
-                                            <div style="font-size:.75rem;color:#64748B">₹{{ number_format((float)$patient->case_fee, 0) }}</div>
+                                            <div style="font-size:.75rem;color:#64748B">{{ money((float)$patient->case_fee, 0) }}</div>
                                         @else
                                             <span style="color:#94A3B8;font-size:.8rem">—</span>
                                         @endif
@@ -259,7 +264,7 @@
                                             data-doctor="{{ $patient->doctor?->name ?? '—' }}"
                                             data-reception="{{ $patient->reception?->name ?? '—' }}"
                                             data-case="{{ $patient->caseType?->case_type ?? '—' }}"
-                                            data-fee="{{ $patient->case_fee ? '₹'.number_format((float)$patient->case_fee,0) : '—' }}"
+                                            data-fee="{{ $patient->case_fee ? money((float)$patient->case_fee, 0) : '—' }}"
                                             data-registered="{{ $patient->created_at?->format('d M Y, h:i A') }}"
                                             data-occupation="{{ $patient->occupation ?: '' }}"
                                             data-checkin-url="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"

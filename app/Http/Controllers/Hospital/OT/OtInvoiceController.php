@@ -63,50 +63,85 @@ class OtInvoiceController extends Controller
         $validated = $request->validate([
             'tax_amount' => ['nullable', 'numeric', 'min:0'],
             'discount' => ['nullable', 'numeric', 'min:0'],
+            'follow_up_date' => ['nullable', 'date', 'after_or_equal:today'],
         ]);
 
         $packageAmount = (float) ($counselling?->package_amount
             ?? $booking->package_amount
             ?? 0);
         $lensMrp = (float) ($lensDetail?->lens_mrp ?? 0);
-        $remainingAmount = max(0, round($packageAmount - $lensMrp, 2));
+
+        // OT Workflow Upgrade — Phase 5: prefer the Counsellor's itemized cost
+        // breakdown (Phase 1) when it was actually filled in; fall back to the
+        // old charge-head percentage split for bookings counselled before that
+        // existed. See docs/OT_WORKFLOW_UPGRADE_PRD.md §5.
+        $hasCounsellingBreakdown = $counselling && (
+            (float) ($counselling->lens_cost ?? 0) > 0
+            || (float) ($counselling->ot_charges ?? 0) > 0
+            || (float) ($counselling->surgeon_charges ?? 0) > 0
+            || (float) ($counselling->nursing_charges ?? 0) > 0
+            || (float) ($counselling->consumables_charges ?? 0) > 0
+        );
 
         $lineItems = [];
-        if ($lensMrp > 0) {
-            $lineItems[] = [
-                'head' => 'Lens Charges',
-                'percentage' => null,
-                'amount' => round($lensMrp, 2),
+
+        if ($hasCounsellingBreakdown) {
+            $breakdown = [
+                'Lens Charges' => (float) ($counselling->lens_cost ?? $lensMrp),
+                'OT Charges' => (float) ($counselling->ot_charges ?? 0),
+                'Surgeon Charges' => (float) ($counselling->surgeon_charges ?? 0),
+                'Nursing Charges' => (float) ($counselling->nursing_charges ?? 0),
+                'Consumables' => (float) ($counselling->consumables_charges ?? 0),
             ];
-        }
 
-        if ($remainingAmount > 0) {
-            if ($chargeHeads->isNotEmpty()) {
-                $distributed = 0.0;
-                $lastIndex = $chargeHeads->count() - 1;
-
-                foreach ($chargeHeads as $index => $chargeHead) {
-                    $percentage = (float) $chargeHead->percentage;
-
-                    if ($index === $lastIndex) {
-                        $headAmount = max(0, round($remainingAmount - $distributed, 2));
-                    } else {
-                        $headAmount = round($remainingAmount * ($percentage / 100), 2);
-                        $distributed += $headAmount;
-                    }
-
+            foreach ($breakdown as $head => $amount) {
+                if ($amount > 0) {
                     $lineItems[] = [
-                        'head' => $chargeHead->charge_name,
-                        'percentage' => $percentage,
-                        'amount' => $headAmount,
+                        'head' => $head,
+                        'percentage' => null,
+                        'amount' => round($amount, 2),
                     ];
                 }
-            } else {
+            }
+        } else {
+            $remainingAmount = max(0, round($packageAmount - $lensMrp, 2));
+
+            if ($lensMrp > 0) {
                 $lineItems[] = [
-                    'head' => 'OT Remaining Charges',
+                    'head' => 'Lens Charges',
                     'percentage' => null,
-                    'amount' => $remainingAmount,
+                    'amount' => round($lensMrp, 2),
                 ];
+            }
+
+            if ($remainingAmount > 0) {
+                if ($chargeHeads->isNotEmpty()) {
+                    $distributed = 0.0;
+                    $lastIndex = $chargeHeads->count() - 1;
+
+                    foreach ($chargeHeads as $index => $chargeHead) {
+                        $percentage = (float) $chargeHead->percentage;
+
+                        if ($index === $lastIndex) {
+                            $headAmount = max(0, round($remainingAmount - $distributed, 2));
+                        } else {
+                            $headAmount = round($remainingAmount * ($percentage / 100), 2);
+                            $distributed += $headAmount;
+                        }
+
+                        $lineItems[] = [
+                            'head' => $chargeHead->charge_name,
+                            'percentage' => $percentage,
+                            'amount' => $headAmount,
+                        ];
+                    }
+                } else {
+                    $lineItems[] = [
+                        'head' => 'OT Remaining Charges',
+                        'percentage' => null,
+                        'amount' => $remainingAmount,
+                    ];
+                }
             }
         }
 
@@ -129,7 +164,9 @@ class OtInvoiceController extends Controller
 
         $invoiceNumber = $existingInvoice?->invoice_number ?: $this->generateUniqueInvoiceNumber($tenantId);
 
-        DB::transaction(function () use ($tenantId, $booking, $invoiceNumber, $lineItems, $totalAmount, $taxAmount, $discount, $netAmount, $existingInvoice): void {
+        $followUpDate = $validated['follow_up_date'] ?? $existingInvoice?->follow_up_date ?? now()->addDays(7)->toDateString();
+
+        DB::transaction(function () use ($tenantId, $booking, $invoiceNumber, $lineItems, $totalAmount, $taxAmount, $discount, $netAmount, $followUpDate, $existingInvoice): void {
             $payload = [
                 'invoice_number' => $invoiceNumber,
                 'line_items' => json_encode($lineItems, JSON_UNESCAPED_UNICODE),
@@ -137,6 +174,7 @@ class OtInvoiceController extends Controller
                 'tax_amount' => $taxAmount,
                 'discount' => $discount,
                 'net_amount' => $netAmount,
+                'follow_up_date' => $followUpDate,
                 'is_finalized' => true,
                 'generated_by' => (int) auth('hospital_user')->id(),
                 'updated_at' => now(),
@@ -199,7 +237,12 @@ class OtInvoiceController extends Controller
         $tenantId = (int) app('tenant')->id;
 
         $booking = OtBooking::query()
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name'])
+            ->with([
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no,location_id',
+                'patient.masterCity:id,name',
+                'patient.location:id,city,district,state',
+                'otDoctor:id,name',
+            ])
             ->findOrFail($bookingId);
 
         $invoice = DB::table('ot_invoices')

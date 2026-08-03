@@ -34,18 +34,27 @@
             @csrf @method('PUT')
 
             <div class="row mb-4 g-3">
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
                     <input type="text" name="name" value="{{ old('name', $group->name) }}"
                            class="form-control clinical-input @error('name') is-invalid @enderror" required>
                     @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label class="form-label fw-medium">Group Code</label>
                     <input type="text" name="group_code" value="{{ old('group_code', $group->group_code) }}"
                            class="form-control clinical-input @error('group_code') is-invalid @enderror"
                            placeholder="e.g. CAT-001">
                     @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-medium">Used In <span class="text-danger">*</span></label>
+                    <select name="usage_scope" class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
+                        <option value="opd" {{ old('usage_scope', $group->usage_scope ?? 'opd') === 'opd' ? 'selected' : '' }}>OPD only</option>
+                        <option value="ot" {{ old('usage_scope', $group->usage_scope ?? '') === 'ot' ? 'selected' : '' }}>OT only</option>
+                        <option value="both" {{ old('usage_scope', $group->usage_scope ?? '') === 'both' ? 'selected' : '' }}>Both OPD &amp; OT</option>
+                    </select>
+                    @error('usage_scope')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
             </div>
 

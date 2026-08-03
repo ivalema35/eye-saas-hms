@@ -34,6 +34,9 @@ class PatientStoreRequest extends FormRequest
             'case_fee' => ['required', 'numeric', 'min:0'],
             'referrer_id' => ['nullable', 'integer', 'exists:tbl_referrers,id'],
             'is_old_patient' => ['nullable', 'boolean'],
+            // OT Workflow Upgrade — Phase 2: links this OPD registration back to the
+            // pre-registration OT appointment it was checked in from (if any).
+            'ot_appointment_id' => ['nullable', 'integer', 'exists:ot_appointments,id'],
         ];
     }
 

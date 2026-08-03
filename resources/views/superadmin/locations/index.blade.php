@@ -95,17 +95,28 @@
             @else
                 <div class="hms-table-wrap" style="border:none">
                     <table class="hms-table">
-                        <thead><tr><th>#</th><th>Country Name</th><th>Default Timezone</th><th>States</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                        <thead><tr><th>#</th><th>Country Name</th><th>Code</th><th>Default Timezone</th><th>Currency</th><th>FX (INR/unit)</th><th>States</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                         <tbody>
                             @foreach($countries as $i => $c)
                                 <tr>
                                     <td style="color:#94A3B8;font-size:.8rem">{{ $countries->firstItem() + $i }}</td>
                                     <td style="font-weight:600;color:#1B4F72">{{ $c->name }}</td>
                                     <td>
+                                        <span style="font-size:.8rem;background:#F8FAFC;color:#334155;padding:.2rem .5rem;border-radius:6px;font-weight:700">
+                                            {{ $c->country_code ?: '—' }}
+                                        </span>
+                                    </td>
+                                    <td>
                                         <span style="font-size:.8rem;background:#EFF6FF;color:#1B4F72;padding:.2rem .5rem;border-radius:6px">
                                             <i class="bi bi-clock me-1"></i>{{ $c->default_timezone ?? 'UTC' }}
                                         </span>
                                     </td>
+                                    <td>
+                                        <span style="font-size:.8rem;background:#ECFDF5;color:#047857;padding:.2rem .5rem;border-radius:6px">
+                                            {{ $c->currency_symbol ?? '₹' }} {{ $c->currency_code ?? 'INR' }}
+                                        </span>
+                                    </td>
+                                    <td style="font-size:.85rem;color:#475569">{{ number_format((float) ($c->fx_inr_per_unit ?: 1), 4) }}</td>
                                     <td>
                                         <a href="{{ route('superadmin.locations.index', ['tab' => 'states', 'country_id' => $c->id]) }}"
                                            style="color:#1B4F72;font-size:.85rem">
@@ -125,7 +136,12 @@
                                             <button class="hms-btn hms-btn-outline hms-btn-xs edit-country-btn"
                                                 data-id="{{ $c->id }}"
                                                 data-name="{{ $c->name }}"
-                                                data-timezone="{{ $c->default_timezone ?? 'UTC' }}">
+                                                data-country-code="{{ $c->country_code ?? '' }}"
+                                                data-timezone="{{ $c->default_timezone ?? 'UTC' }}"
+                                                data-currency-code="{{ $c->currency_code ?? 'INR' }}"
+                                                data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
+                                                data-currency-name="{{ $c->currency_name ?? '' }}"
+                                                data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </button>
                                             <form method="POST" action="{{ route('superadmin.locations.countries.destroy', $c->id) }}" class="del-form">
@@ -432,7 +448,7 @@
 
     {{-- Add Country --}}
     <div class="modal fade" id="addCountryModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
                 <div class="modal-header" style="background:#1B4F72;border-radius:12px 12px 0 0;padding:.875rem 1.25rem">
                     <h5 class="modal-title" style="color:#fff;font-weight:700;font-size:.95rem"><i class="bi bi-globe2 me-2"></i>Add Country</h5>
@@ -446,7 +462,16 @@
                             <input type="text" name="name" class="hms-input" placeholder="e.g. India" required autofocus>
                             <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Name will be auto-formatted (Title Case).</p>
                         </div>
-                        <div>
+                        <div class="mb-3">
+                            <label class="hms-label">Country Code (ISO) <span style="color:#E53E3E">*</span></label>
+                            <select name="country_code" id="addCountryCode" class="hms-input" required>
+                                <option value="">— Select Code —</option>
+                                @foreach(\App\Services\Platform\CurrencyService::commonCountryCodes() as $iso => $hint)
+                                    <option value="{{ $iso }}" @selected($iso === 'IN')>{{ $iso }} — {{ $hint }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="hms-label">Default Timezone <span style="color:#E53E3E">*</span></label>
                             <select name="default_timezone" id="addCountryTimezone" class="hms-input" required>
                                 @foreach(\App\Services\Platform\TimezoneService::groupedTimezones() as $region => $zones)
@@ -457,6 +482,27 @@
                                     </optgroup>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="hms-label">Currency <span style="color:#E53E3E">*</span></label>
+                            <select name="currency_code" id="addCountryCurrency" class="hms-input" required>
+                                @foreach(\App\Services\Platform\CurrencyService::commonCurrencies() as $cur)
+                                    <option value="{{ $cur['code'] }}"
+                                            data-symbol="{{ $cur['symbol'] }}"
+                                            data-name="{{ $cur['name'] }}"
+                                            data-fx="{{ \App\Services\Platform\CurrencyService::fxForCurrencyCode($cur['code']) }}"
+                                            @selected($cur['code'] === 'INR')>
+                                        {{ $cur['code'] }} ({{ $cur['symbol'] }}) — {{ $cur['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" name="currency_symbol" id="addCountryCurrencySymbol" value="₹">
+                            <input type="hidden" name="currency_name" id="addCountryCurrencyName" value="Indian Rupee">
+                        </div>
+                        <div>
+                            <label class="hms-label">FX Rate (INR per 1 unit) <span style="color:#E53E3E">*</span></label>
+                            <input type="number" step="0.0001" min="0.0001" name="fx_inr_per_unit" id="addCountryFx" class="hms-input" value="1" required>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert SaaS plan prices on register. Example: AUD ≈ 55 (1 A$ ≈ ₹55).</p>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
@@ -470,7 +516,7 @@
 
     {{-- Edit Country --}}
     <div class="modal fade" id="editCountryModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
                 <div class="modal-header" style="background:#1B4F72;border-radius:12px 12px 0 0;padding:.875rem 1.25rem">
                     <h5 class="modal-title" style="color:#fff;font-weight:700;font-size:.95rem"><i class="bi bi-pencil-fill me-2"></i>Edit Country</h5>
@@ -483,7 +529,16 @@
                             <label class="hms-label">Country Name <span style="color:#E53E3E">*</span></label>
                             <input type="text" name="name" id="editCountryName" class="hms-input" required>
                         </div>
-                        <div>
+                        <div class="mb-3">
+                            <label class="hms-label">Country Code (ISO) <span style="color:#E53E3E">*</span></label>
+                            <select name="country_code" id="editCountryCode" class="hms-input" required>
+                                <option value="">— Select Code —</option>
+                                @foreach(\App\Services\Platform\CurrencyService::commonCountryCodes() as $iso => $hint)
+                                    <option value="{{ $iso }}">{{ $iso }} — {{ $hint }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label class="hms-label">Default Timezone <span style="color:#E53E3E">*</span></label>
                             <select name="default_timezone" id="editCountryTimezone" class="hms-input select2-timezone" required>
                                 @foreach(\App\Services\Platform\TimezoneService::groupedTimezones() as $region => $zones)
@@ -498,6 +553,30 @@
                                 <i class="bi bi-exclamation-triangle-fill me-1"></i>
                                 Updating will cascade to hospitals that have not overridden their timezone.
                             </p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="hms-label">Currency <span style="color:#E53E3E">*</span></label>
+                            <select name="currency_code" id="editCountryCurrency" class="hms-input" required>
+                                @foreach(\App\Services\Platform\CurrencyService::commonCurrencies() as $cur)
+                                    <option value="{{ $cur['code'] }}"
+                                            data-symbol="{{ $cur['symbol'] }}"
+                                            data-name="{{ $cur['name'] }}"
+                                            data-fx="{{ \App\Services\Platform\CurrencyService::fxForCurrencyCode($cur['code']) }}">
+                                        {{ $cur['code'] }} ({{ $cur['symbol'] }}) — {{ $cur['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="hidden" name="currency_symbol" id="editCountryCurrencySymbol" value="₹">
+                            <input type="hidden" name="currency_name" id="editCountryCurrencyName" value="">
+                            <p style="font-size:.78rem;color:#F59E0B;margin:.5rem 0 0">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                Currency cascades to hospitals that have not overridden it.
+                            </p>
+                        </div>
+                        <div>
+                            <label class="hms-label">FX Rate (INR per 1 unit) <span style="color:#E53E3E">*</span></label>
+                            <input type="number" step="0.0001" min="0.0001" name="fx_inr_per_unit" id="editCountryFx" class="hms-input" value="1" required>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Register plan prices convert using this rate.</p>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
@@ -926,14 +1005,42 @@
                 });
             });
 
+            /* ── Currency select → fill hidden symbol/name + FX ── */
+            function bindCurrencySelect(selId, symbolId, nameId, fxId) {
+                const sel = document.getElementById(selId);
+                if (!sel) return;
+                const sync = () => {
+                    const opt = sel.options[sel.selectedIndex];
+                    const symbolEl = document.getElementById(symbolId);
+                    const nameEl = document.getElementById(nameId);
+                    const fxEl = document.getElementById(fxId);
+                    if (symbolEl) symbolEl.value = opt?.dataset?.symbol || '';
+                    if (nameEl) nameEl.value = opt?.dataset?.name || '';
+                    if (fxEl && opt?.dataset?.fx) fxEl.value = opt.dataset.fx;
+                };
+                sel.addEventListener('change', sync);
+                sync();
+            }
+            bindCurrencySelect('addCountryCurrency', 'addCountryCurrencySymbol', 'addCountryCurrencyName', 'addCountryFx');
+            bindCurrencySelect('editCountryCurrency', 'editCountryCurrencySymbol', 'editCountryCurrencyName', 'editCountryFx');
+
             /* ── Edit Country ── */
             document.querySelectorAll('.edit-country-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
                     document.getElementById('editCountryForm').action =
                         '{{ route("superadmin.locations.countries.update", ":id") }}'.replace(':id', this.dataset.id);
                     document.getElementById('editCountryName').value = this.dataset.name;
+                    const codeSel = document.getElementById('editCountryCode');
+                    if (codeSel) codeSel.value = this.dataset.countryCode || '';
                     const tzSel = document.getElementById('editCountryTimezone');
                     if (tzSel) tzSel.value = this.dataset.timezone || 'UTC';
+                    const curSel = document.getElementById('editCountryCurrency');
+                    if (curSel) {
+                        curSel.value = this.dataset.currencyCode || 'INR';
+                        curSel.dispatchEvent(new Event('change'));
+                    }
+                    const fxEl = document.getElementById('editCountryFx');
+                    if (fxEl) fxEl.value = this.dataset.fx || '1';
                     new bootstrap.Modal(document.getElementById('editCountryModal')).show();
                 });
             });

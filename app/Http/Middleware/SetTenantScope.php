@@ -46,6 +46,10 @@ class SetTenantScope
                 Config::set('app.hospital_timezone', $timezone);
                 date_default_timezone_set($timezone);
             }
+
+            // Hospital currency — case fee / OT / prints isi se format honge
+            Config::set('app.hospital_currency_code', $tenant->currency_code ?: config('app.platform_currency_code', 'INR'));
+            Config::set('app.hospital_currency_symbol', $tenant->currency_symbol ?: config('app.platform_currency_symbol', '₹'));
         }
 
         return $next($request);

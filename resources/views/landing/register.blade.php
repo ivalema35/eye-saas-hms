@@ -1,4 +1,4 @@
-﻿@extends('landing.layouts.app')
+@extends('landing.layouts.app')
 
 @section('title', 'Register Your Hospital — Eye HMS SaaS')
 @section('meta_description', 'Start your free 14-day trial of Eye HMS — complete hospital management software for eye clinics. No credit card required.')
@@ -279,8 +279,14 @@
                                     <select name="country" id="regCountry" class="hms-select">
                                         <option value="">Search or Add Country</option>
                                         @foreach($countries as $c)
-                                            <option value="{{ $c->name }}" data-id="{{ $c->id }}" {{ old('country') === $c->name ? 'selected' : '' }}>
-                                                {{ $c->name }}
+                                            <option value="{{ $c->name }}"
+                                                    data-id="{{ $c->id }}"
+                                                    data-country-code="{{ $c->country_code ?? '' }}"
+                                                    data-currency-code="{{ $c->currency_code ?? 'INR' }}"
+                                                    data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
+                                                    data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}"
+                                                    {{ old('country') === $c->name ? 'selected' : '' }}>
+                                                {{ $c->name }}@if($c->country_code) ({{ $c->country_code }})@endif
                                             </option>
                                         @endforeach
                                     </select>
@@ -398,19 +404,22 @@
                         <div class="reg-section">
                             <div class="reg-section-label"><i class="fa-solid fa-credit-card"></i> Plan After Trial</div>
 
-                            <div class="plan-cards">
+                            <div class="plan-cards" id="regPlanCards"
+                                 data-monthly="{{ $planPricing['monthly']['price'] }}"
+                                 data-quarterly="{{ $planPricing['quarterly']['price'] }}"
+                                 data-yearly="{{ $planPricing['yearly']['price'] }}">
                                 <label class="plan-card-label">
                                     <input type="radio" name="plan" value="monthly" {{ old('plan', request('plan', 'monthly')) === 'monthly' ? 'checked' : '' }}>
                                     <div class="plan-card-inner">
                                         <span class="pc-name">Monthly</span>
-                                        <span class="pc-price">&#8377;999/mo</span>
+                                        <span class="pc-price" data-plan="monthly">{{ platform_currency_symbol() }}{{ number_format($planPricing['monthly']['price']) }}/mo</span>
                                     </div>
                                 </label>
                                 <label class="plan-card-label">
                                     <input type="radio" name="plan" value="quarterly" {{ old('plan', request('plan')) === 'quarterly' ? 'checked' : '' }}>
                                     <div class="plan-card-inner">
                                         <span class="pc-name">Quarterly</span>
-                                        <span class="pc-price">&#8377;2,697/qtr</span>
+                                        <span class="pc-price" data-plan="quarterly">{{ platform_currency_symbol() }}{{ number_format($planPricing['quarterly']['price']) }}/qtr</span>
                                         <span class="pc-save">Save 10% &#9733; Popular</span>
                                     </div>
                                 </label>
@@ -418,11 +427,14 @@
                                     <input type="radio" name="plan" value="yearly" {{ old('plan', request('plan')) === 'yearly' ? 'checked' : '' }}>
                                     <div class="plan-card-inner">
                                         <span class="pc-name">Yearly</span>
-                                        <span class="pc-price">&#8377;9,590/yr</span>
+                                        <span class="pc-price" data-plan="yearly">{{ platform_currency_symbol() }}{{ number_format($planPricing['yearly']['price']) }}/yr</span>
                                         <span class="pc-save">Save 20%</span>
                                     </div>
                                 </label>
                             </div>
+                            <p id="regPlanCurrencyHint" style="margin-top:.5rem;font-size:.75rem;color:var(--hms-text-muted)">
+                                Prices shown in <strong id="regPlanCurrencyLabel">{{ platform_currency_code() }}</strong> based on selected country.
+                            </p>
                             @error('plan')
                                 <span class="hms-form-error" style="margin-top:.5rem"><i
                                         class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
@@ -578,7 +590,50 @@
                 @foreach($countries as $c)
                     '{{ addslashes($c->name) }}': {{ $c->id }},
                 @endforeach
-                                                };
+            };
+
+            var countryMetaMap = {
+                @foreach($countries as $c)
+                    '{{ addslashes($c->name) }}': {
+                        id: {{ $c->id }},
+                        countryCode: @json($c->country_code),
+                        currencyCode: @json($c->currency_code ?: 'INR'),
+                        currencySymbol: @json($c->currency_symbol ?: '₹'),
+                        fx: {{ (float) ($c->fx_inr_per_unit ?: 1) }}
+                    },
+                @endforeach
+            };
+
+            var basePlans = {
+                monthly: {{ (int) $planPricing['monthly']['price'] }},
+                quarterly: {{ (int) $planPricing['quarterly']['price'] }},
+                yearly: {{ (int) $planPricing['yearly']['price'] }}
+            };
+            var planSuffix = { monthly: '/mo', quarterly: '/qtr', yearly: '/yr' };
+
+            function convertFromInr(inrAmount, fx) {
+                var rate = parseFloat(fx);
+                if (!rate || rate <= 0) rate = 1;
+                return Math.max(1, Math.round(inrAmount / rate));
+            }
+
+            function formatPlanAmount(n) {
+                return Number(n).toLocaleString('en-IN');
+            }
+
+            function updatePlanPricing(meta) {
+                var symbol = (meta && meta.currencySymbol) ? meta.currencySymbol : @json(platform_currency_symbol());
+                var code = (meta && meta.currencyCode) ? meta.currencyCode : @json(platform_currency_code());
+                var fx = (meta && meta.fx) ? meta.fx : 1;
+                Object.keys(basePlans).forEach(function (key) {
+                    var el = document.querySelector('.pc-price[data-plan="' + key + '"]');
+                    if (!el) return;
+                    var local = convertFromInr(basePlans[key], fx);
+                    el.textContent = symbol + formatPlanAmount(local) + (planSuffix[key] || '');
+                });
+                var label = document.getElementById('regPlanCurrencyLabel');
+                if (label) label.textContent = code + (meta && meta.countryCode ? ' · ' + meta.countryCode : '');
+            }
 
         // Track active parent IDs so child create callbacks know where to attach
         var activeCountryId = null;
@@ -598,7 +653,15 @@
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
                     if (data && data.id) {
-                        callback({ value: data.name, text: data.name, locId: data.id });
+                        callback({
+                            value: data.name,
+                            text: data.name,
+                            locId: data.id,
+                            countryCode: data.country_code || '',
+                            currencyCode: data.currency_code || 'INR',
+                            currencySymbol: data.currency_symbol || '₹',
+                            fx: parseFloat(data.fx_inr_per_unit || 1)
+                        });
                     } else {
                         callback(false);
                     }
@@ -636,7 +699,16 @@
             createOnBlur: false,
             create: function (input, callback) {
                 postCreate('{{ route("location.create-country") }}', { name: input }, function (opt) {
-                    if (opt) countryIdMap[opt.value] = opt.locId;
+                    if (opt) {
+                        countryIdMap[opt.value] = opt.locId;
+                        countryMetaMap[opt.value] = {
+                            id: opt.locId,
+                            countryCode: opt.countryCode || '',
+                            currencyCode: opt.currencyCode || 'INR',
+                            currencySymbol: opt.currencySymbol || '₹',
+                            fx: opt.fx || 1
+                        };
+                    }
                     callback(opt || false);
                 });
             },
@@ -686,6 +758,7 @@
             activeStateId = null;
             activeDistrictId = null;
             var id = name ? countryIdMap[name] : null;
+            updatePlanPricing(name ? (countryMetaMap[name] || null) : null);
             if (!id) return;
             activeCountryId = id;
             tsState.enable(); // enable immediately — user can type/create even if no states exist yet
@@ -693,6 +766,11 @@
                 populateTs(tsState, data);
             });
         });
+
+        // Initial pricing if country already selected (old input / default)
+        if (tsCountry.getValue()) {
+            updatePlanPricing(countryMetaMap[tsCountry.getValue()] || null);
+        }
 
         tsState.on('change', function (name) {
             resetTs(tsDistrict);

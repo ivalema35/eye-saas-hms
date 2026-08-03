@@ -629,8 +629,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
 
         <div class="exam-layout-wrapper">
             <div class="doctor-stepper-sidebar d-print-none">
-                <h6 class="fw-bold text-muted mb-2 ps-2">EXAM STEPS</h6>
-
+                
                 <div class="step-group-label first">Primary Exam</div>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
@@ -649,6 +648,13 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
 
                 <hr>
                 <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
+                @haspermission('ot.surgery.recommend')
+                    <button type="button" class="btn fw-bold w-100 mt-2 text-white"
+                            style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
+                            data-bs-toggle="modal" data-bs-target="#recommendSurgeryModal">
+                        <i class="bi bi-hospital me-1"></i> Recommend Surgery
+                    </button>
+                @endhaspermission
             </div>
 
             <div class="main-canvas">
@@ -669,14 +675,16 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                     <div id="canvas_st"></div>
                                 </div>
                                 <div class="canvas-box">
-                                    <div class="canvas-section-title">K/C/O</div>
                                     <div id="canvas_kco"></div>
+                                </div>
+                                <div class="canvas-box">
+                                    <div class="canvas-section-title">Fundus</div>
+                                    <div id="canvas_fundus"></div>
                                 </div>
                             </div>
 
                             <div class="col-6 col-md-6 d-flex flex-column gap-2">
                                 <div class="canvas-box">
-                                    <div class="canvas-section-title">Complaint</div>
                                     <div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
                                 </div>
                                 <div class="canvas-box">
@@ -690,10 +698,6 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                 <div class="canvas-box">
                                     <div class="canvas-section-title">O/E</div>
                                     <div id="canvas_oe"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">Fundus</div>
-                                    <div id="canvas_fundus"></div>
                                 </div>
                                 <div class="canvas-box">
                                     <div class="canvas-section-title">Diagnosis</div>
@@ -790,11 +794,10 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
 
         <div class="stepper-wrap d-flex d-print-none justify-content-between align-items-center mb-4 p-3 bg-white rounded shadow-sm border gap-3 flex-wrap">
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                <div class="h5 mb-0 text-primary fw-bold">Exam Steps:</div>
                 @if(!$secondaryExam)
-                    <span class="badge bg-info text-dark ms-3 rounded-pill px-3 py-2" style="font-size: 0.8rem; font-weight: 500;">
+                    <!-- <span class="badge bg-info text-dark ms-3 rounded-pill px-3 py-2" style="font-size: 0.8rem; font-weight: 500;">
                         <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-filled from Primary Exam
-                    </span>
+                    </span> -->
                 @endif
             </div>
             <div class="d-flex align-items-center gap-1 flex-wrap">
@@ -814,6 +817,13 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
             <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
+            @haspermission('ot.surgery.recommend')
+                <button type="button" class="btn btn-sm fw-bold px-3 text-white"
+                        style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
+                        data-bs-toggle="modal" data-bs-target="#recommendSurgeryModal">
+                    <i class="bi bi-hospital me-1"></i> Recommend Surgery
+                </button>
+            @endhaspermission
         </div>
 
         <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
@@ -833,14 +843,16 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                             <div id="canvas_st"></div>
                         </div>
                         <div class="canvas-box">
-                            <div class="canvas-section-title">K/C/O</div>
                             <div id="canvas_kco"></div>
+                        </div>
+                        <div class="canvas-box">
+                            <div class="canvas-section-title">Fundus</div>
+                            <div id="canvas_fundus"></div>
                         </div>
                     </div>
 
                     <div class="col-6 col-md-6 d-flex flex-column gap-2">
                         <div class="canvas-box">
-                            <div class="canvas-section-title">Complaint</div>
                             <div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
                         </div>
                         <div class="canvas-box">
@@ -854,10 +866,6 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                         <div class="canvas-box">
                             <div class="canvas-section-title">O/E</div>
                             <div id="canvas_oe"></div>
-                        </div>
-                        <div class="canvas-box">
-                            <div class="canvas-section-title">Fundus</div>
-                            <div id="canvas_fundus"></div>
                         </div>
                         <div class="canvas-box">
                             <div class="canvas-section-title">Diagnosis</div>
@@ -1060,8 +1068,8 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                     <td>
                                         <select name="exam_data[kco_rows][{{ $ki }}][since]" class="form-select form-select-sm">
                                             <option value="">-</option>
-                                            @foreach(range(1, 10) as $n)
-                                                <option value="{{ $n }}" {{ ($krow['since'] ?? '') == $n ? 'selected' : '' }}>{{ $n }}</option>
+                                            @foreach(range(1, 30) as $n)
+                                                <option value="{{ $n }}" {{ (string) ($krow['since'] ?? '') === (string) $n ? 'selected' : '' }}>{{ $n }}</option>
                                             @endforeach
                                         </select>
                                     </td>
@@ -1134,7 +1142,7 @@ $vnCols = [
 ];
                     @endphp
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                     <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
                             <i class="bi bi-eye-fill text-white"></i>
@@ -1205,7 +1213,7 @@ $pgMasterOpts = [
 ];
                     @endphp
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                     @php
     $pgRows = [
         'DISTANCE' => [
@@ -1344,7 +1352,7 @@ $pgMasterOpts = [
                 </div>
                 <div class="modal-body p-3">
 
-                    @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                    @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                     @php
     $stRows = [
         'DISTANCE' => [
@@ -1411,7 +1419,6 @@ $pgMasterOpts = [
                                                 </div>
                                                 <button type="button" class="btn btn-success pg-pick-btn" data-sign="pos" style="width:32px;height:32px;padding:0;font-size:20px;line-height:1;border-radius:6px;font-weight:300;">+</button>
                                             </div>
-                                            <div style="font-size:10px;color:#64748b;margin-top:3px;">ADD: <strong>{{ $stAddVal ?: '—' }}</strong></div>
                                             <input type="hidden" name="exam_data[st][{{ $eye }}][ns]" value="{{ $stNsVal }}">
                                         </td>
                                         @endif
@@ -1433,7 +1440,6 @@ $pgMasterOpts = [
                                                 <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['cyl']['val'] }}">
                                                 <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['cyl']['key'] }}]" value="{{ $rf['cyl']['val'] }}">
                                             </div>
-                                            <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
                                         </td>
                                         @endif
                                         {{-- AXIS: dropdown for DISTANCE, read-only mirror for NEAR --}}
@@ -1451,7 +1457,6 @@ $pgMasterOpts = [
                                                 <input type="text" class="form-control form-control-sm text-center fw-semibold" style="font-size:13px;border-color:#cbd5e1;background:#f8fafc;color:#475569;" placeholder="—" readonly value="{{ $rf['ax']['val'] }}">
                                                 <input type="hidden" name="exam_data[st][{{ $eye }}][{{ $rf['ax']['key'] }}]" value="{{ $rf['ax']['val'] }}">
                                             </div>
-                                            <div style="font-size:10px;color:#94a3b8;margin-top:3px;">= Distance</div>
                                         </td>
                                         @endif
                                         {{-- VN C ST: only for DISTANCE row --}}
@@ -1519,7 +1524,7 @@ $pgMasterOpts = [
                                 <thead style="background:#f0f4f8;">
                                     <tr>
                                         <th style="width:140px;border-bottom:2px solid #1B4F72;"></th>
-                                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                                        @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                                         <th class="text-center" style="font-weight:700;font-size:12px;letter-spacing:.06em;color:#1B4F72;border-bottom:2px solid #1B4F72;">
                                             <i class="bi bi-eye-fill me-1"></i>{{ $eyeLabel }}
                                         </th>
@@ -1553,7 +1558,7 @@ $pgMasterOpts = [
                     </div>
 
                     {{-- IOP indicator badges --}}
-                    <div class="d-flex gap-3 mt-3 px-1">
+                    <!-- <div class="d-flex gap-3 mt-3 px-1">
                         <div class="d-flex align-items-center gap-2">
                             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#22c55e;"></span>
                             <span style="font-size:11px;color:#64748b;">Normal: 10–21 mmHg</span>
@@ -1566,7 +1571,7 @@ $pgMasterOpts = [
                             <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;"></span>
                             <span style="font-size:11px;color:#64748b;">High: ≥25 mmHg</span>
                         </div>
-                    </div>
+                    </div> -->
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
                     <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
@@ -1618,8 +1623,8 @@ foreach ($oeFieldMeta as $meta) {
                                 <thead>
                                     <tr>
                                         <th style="width:140px;background:#f0f4f8;border-bottom:2px solid #1B4F72;"></th>
-                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Right Eye (RE)</th>
-                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Left Eye (LE)</th>
+                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Right Eye</th>
+                                        <th class="oe-eye-col text-center"><i class="bi bi-eye-fill me-1"></i>Left Eye</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1735,7 +1740,7 @@ foreach ($oeFieldMeta as $meta) {
                 <div class="modal-body p-3">
 
                     <div class="row g-3">
-                        @foreach(['re' => 'Right Eye (RE)', 'le' => 'Left Eye (LE)'] as $eye => $eyeLabel)
+                        @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                         <div class="col-md-6">
                             <div class="rounded-3 overflow-hidden h-100" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                                 <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
@@ -2554,8 +2559,8 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             const i  = kcoRowIndex++;
             const tr = document.createElement('tr');
             tr.className = 'kco-row';
-            const sinceOpts = ['-',...Array.from({length:10},(_,n)=>n+1)]
-                .map((n,idx) => `<option value="${idx===0?'':n}">${n}</option>`).join('');
+            const sinceOpts = ['-',...Array.from({length:30},(_,n)=>n+1)]
+                .map((n,idx) => `<option value="${idx===0?'':n}"${n===1?' selected':''}>${n}</option>`).join('');
             const unitOpts = ['Days','Weeks','Months','Years','Longtime']
                 .map(u => `<option value="${u}"${u==='Years'?' selected':''}>${u}</option>`).join('');
             tr.innerHTML = `
@@ -2589,9 +2594,16 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         });
         document.getElementById('kcoBody')?.addEventListener('input', function (e) {
             const input = e.target.closest('.row-kco-search');
-            if (!input) { return; }
-            activeKcoInput = input;
-            renderKcoDropdown();
+            if (input) {
+                activeKcoInput = input;
+                renderKcoDropdown();
+            }
+            checkProgress();
+            updateLivePreview();
+        });
+        document.getElementById('kcoBody')?.addEventListener('change', function () {
+            checkProgress();
+            updateLivePreview();
         });
 
         window.addEventListener('scroll', positionKcoDropdown, true);
@@ -2974,40 +2986,57 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             const exp  = val(`exam_data[oe][pseudophakia_${eye}][operation_expense]`);
             const hosp = val(`exam_data[oe][pseudophakia_${eye}][hospital_name]`);
             if (base === '-') { return '-'; }
-            const extras = [type, exp !== '-' ? '₹' + exp : '', hosp].filter(v => v && v !== '-');
+            const extras = [type, exp !== '-' ? currencySymbol + exp : '', hosp].filter(v => v && v !== '-');
             return extras.length ? `${base} (${extras.join(', ')})` : base;
         };
 
         // Build C/O row data
+        const fieldBySuffix = (row, suffix) => {
+            const el = Array.from(row.querySelectorAll('input, select, textarea'))
+                .find((node) => typeof node.name === 'string' && node.name.endsWith(suffix));
+            return el ? String(el.value ?? '').trim() : '';
+        };
         const coRows = Array.from(document.querySelectorAll('#coBody .co-row'));
         const coData = coRows.map(row => ({
-            complaint : row.querySelector('[name*="[complaint]"]')?.value?.trim() || '',
-            since     : row.querySelector('[name*="[since]"]')?.value || '',
-            unit      : row.querySelector('[name*="[unit]"]')?.value || '',
-            eye       : row.querySelector('[name*="[eye]"]')?.value || '',
-            comment   : row.querySelector('[name*="[comment]"]')?.value?.trim() || '',
+            complaint : fieldBySuffix(row, '[complaint]'),
+            since     : fieldBySuffix(row, '[since]'),
+            unit      : fieldBySuffix(row, '[unit]'),
+            eye       : fieldBySuffix(row, '[eye]'),
+            comment   : fieldBySuffix(row, '[comment]'),
         })).filter(d => d.complaint);
 
         // Build K/C/O row data
         const kcoRows = Array.from(document.querySelectorAll('#kcoBody .kco-row'));
-        const kcoData = kcoRows.map(row => ({
-            condition : row.querySelector('[name*="[condition]"]')?.value?.trim() || '',
-            since     : row.querySelector('[name*="[since]"]')?.value || '',
-            unit      : row.querySelector('[name*="[unit]"]')?.value || '',
-            comment   : row.querySelector('[name*="[comment]"]')?.value?.trim() || '',
-        })).filter(d => d.condition);
+        const formatKcoSince = (since, unit) => {
+            const s = String(since ?? '').trim();
+            const u = String(unit ?? '').trim();
+            if (u === 'Longtime') return 'Longtime';
+            return [s, u].filter(Boolean).join(' ');
+        };
+        const kcoData = kcoRows.map(row => {
+            const cells = row.querySelectorAll('td');
+            const sinceFromCell = cells[1]?.querySelector('select, input')?.value ?? '';
+            const unitFromCell = cells[2]?.querySelector('select, input')?.value ?? '';
+            return {
+                condition : fieldBySuffix(row, '[condition]') || (cells[0]?.querySelector('input')?.value?.trim() || ''),
+                since     : fieldBySuffix(row, '[since]') || String(sinceFromCell).trim(),
+                unit      : fieldBySuffix(row, '[unit]') || String(unitFromCell).trim(),
+                comment   : fieldBySuffix(row, '[comment]') || (cells[3]?.querySelector('input')?.value?.trim() || ''),
+            };
+        }).filter(d => d.condition);
 
         // Build H/O pill list
         const hnoVal  = document.getElementById('hnoHidden')?.value?.trim() || '';
         const hnoList = hnoVal ? hnoVal.split(',').map(s => s.trim()).filter(Boolean) : [];
 
-        // V-notation block helper
+        // V-notation block helper — empty values stay blank (no "-")
+        const blankVn = (v) => (v && v !== '-') ? String(v) : '';
         const makeVn = (label, re, le) =>
             `<div class="d-inline-flex align-items-center me-3 mb-1">` +
             `<span class="fw-bold me-1" style="font-size:11px;">${label}</span>` +
-            `<span class="fw-light mx-1" style="font-size:1.4rem;line-height:0.5;">&lt;</span>` +
-            `<div class="d-flex flex-column" style="font-size:11px;line-height:1.3;">` +
-            `<span>${re}</span><span>${le}</span></div></div>`;
+            `<span class="fw-bold mx-1" style="font-size:1.55rem;line-height:0.5;color:#1B4F72;">&lt;</span>` +
+            `<div class="d-flex flex-column" style="font-size:11px;line-height:1.35;min-width:18px;">` +
+            `<span>${blankVn(re)}</span><span>${blankVn(le)}</span></div></div>`;
 
         const vnRe  = val('exam_data[vision][vn_re]');
         const vnLe  = val('exam_data[vision][vn_le]');
@@ -3017,13 +3046,17 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         const nrLe  = val('exam_data[vision][nrvn_le]');
         const iopRe = val('exam_data[nct][iop_re]');
         const iopLe = val('exam_data[nct][iop_le]');
+        const glVnRe = val('exam_data[pg][re][vn]');
+        const glVnLe = val('exam_data[pg][le][vn]');
+        const glNrRe = val('exam_data[pg][re][near_vn]');
+        const glNrLe = val('exam_data[pg][le][near_vn]');
 
         const cvTd   = (t) => `<td class="text-center" style="font-size:10px;padding:2px 5px;">${t || '—'}</td>`;
         const pill   = (t) => `<span style="background:#eef4f9;color:#1B4F72;padding:1px 8px;border-radius:8px;margin-right:3px;font-size:10px;">${t}</span>`;
-        const cvTable = (title, cols, rows) =>
+        const cvTable = (title, cols, rows, titleAlign = 'center') =>
             `<table class="table table-sm table-bordered mb-2" style="font-size:10px;">` +
             `<thead>` +
-            `<tr><th colspan="${cols.length}" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">${title}</th></tr>` +
+            `<tr><th colspan="${cols.length}" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px 6px;letter-spacing:.06em;border-color:#1B4F72;text-align:${titleAlign};">${title}</th></tr>` +
             `<tr style="background:#eef4f9;">${cols.map(c => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 5px;font-weight:600;">${c}</th>`).join('')}</tr>` +
             `</thead><tbody>${rows}</tbody></table>`;
 
@@ -3032,14 +3065,14 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             coData.length
                 ? coData.map(d => `<tr>${cvTd(d.complaint)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.eye)}${cvTd(d.comment)}</tr>`).join('')
                 : `<tr><td colspan="4" class="text-center" style="font-size:10px;padding:3px;color:#94a3b8;">—</td></tr>`
-        );
+        , 'left');
         document.getElementById('canvas_co').innerHTML = coHtml;
 
         // K/C/O table
         const kcoHtml = kcoData.length
-            ? cvTable('K/C/O', ['Condition', 'Since', 'Comment'],
-                kcoData.map(d => `<tr>${cvTd(d.condition)}${cvTd(d.since ? d.since+' '+d.unit : '')}${cvTd(d.comment)}</tr>`).join('')
-              )
+            ? cvTable('K/C/O', ['Condition', 'Since/Duration', 'Comment'],
+                kcoData.map(d => `<tr>${cvTd(d.condition)}${cvTd(formatKcoSince(d.since, d.unit))}${cvTd(d.comment)}</tr>`).join('')
+              , 'left')
             : '';
         document.getElementById('canvas_kco').innerHTML = kcoHtml;
 
@@ -3049,18 +3082,33 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             : '';
         document.getElementById('canvas_hno').innerHTML = hnoHtml;
 
-        // Vision data
+        // Vision + NCT — 2×3 layout matching clinical slip
         const visionLineHtml =
-            `<div class="d-flex flex-wrap align-items-center">` +
-            makeVn('Vn', vnRe, vnLe) +
-            makeVn('PH', phRe, phLe) +
-            makeVn('NrVn', nrRe, nrLe) +
-            `<div class="d-inline-flex align-items-center me-2 mb-1" style="font-size:11px;"><strong>IOP:</strong>&nbsp;${iopRe}/${iopLe}</div>` +
+            `<div style="display:flex;flex-direction:column;gap:6px;">` +
+            `<div class="d-flex flex-wrap align-items-start">` +
+                makeVn('Vn', vnRe, vnLe) +
+                makeVn('Vn C GL', glVnRe, glVnLe) +
+                makeVn('Pn/Vn', phRe, phLe) +
+            `</div>` +
+            `<div class="d-flex flex-wrap align-items-start">` +
+                makeVn('Nr/Vn', nrRe, nrLe) +
+                makeVn('Nr/Vn C GL', glNrRe, glNrLe) +
+                makeVn('NCT', iopRe, iopLe) +
+            `</div>` +
             `</div>`;
         document.getElementById('canvas_vision_line').innerHTML = visionLineHtml;
 
         // PG (Distance & Near) — SPH / CYL X Axis, no VN
-        const pgFmt = (sph, cyl, ax) => `${sph} / ${cyl} X ${ax}`;
+        // Skip "X" (and leave blank) when axis/fields are not filled.
+        const pgFmt = (sph, cyl, ax) => {
+            const s = (sph && sph !== '-') ? String(sph).trim() : '';
+            const c = (cyl && cyl !== '-') ? String(cyl).trim() : '';
+            const a = (ax && ax !== '-') ? String(ax).trim() : '';
+            if (!s && !c && !a) return '';
+            let out = (s || '-') + ' / ' + (c || '-');
+            if (a) out += ' X ' + a;
+            return out;
+        };
         const pgReDist = pgFmt(val('exam_data[pg][re][ds]'), val('exam_data[pg][re][dc]'), val('exam_data[pg][re][ax]'));
         const pgLeDist = pgFmt(val('exam_data[pg][le][ds]'), val('exam_data[pg][le][dc]'), val('exam_data[pg][le][ax]'));
         const pgReNear = pgFmt(val('exam_data[pg][re][ns]'), val('exam_data[pg][re][nc]'), val('exam_data[pg][re][na]'));
@@ -3069,21 +3117,28 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             `<div class="d-flex flex-wrap align-items-start">${makeVn('PG', pgReDist, pgLeDist)}${makeVn('NrPG', pgReNear, pgLeNear)}</div>`;
         document.getElementById('canvas_pg').innerHTML = visionHtml;
 
-        // ST table (VN C ST above D/N per eye, ADD below)
-        const stReAdd = val('exam_data[st][re][add]');
-        const stLeAdd = val('exam_data[st][le][add]');
+        // ST table (VN C ST above D/N per eye; selected options below)
         const stVnRe  = (() => { const v = val('exam_data[st][re][vn]'); return v === '-' ? '' : v; })();
         const stVnLe  = (() => { const v = val('exam_data[st][le][vn]'); return v === '-' ? '' : v; })();
         const stCell  = (v, dim) => `<td class="text-center" style="padding:2px;${dim ? 'color:#94a3b8;' : ''}">${v}</td>`;
         const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
         const stRowTag = (t) => `<th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">${t}</th>`;
+        const stOptLabels = [
+            { key: 'bifocal', label: 'Bifocal' },
+            { key: 'nd_separate', label: 'Near & Distance Separate' },
+            { key: 'progressive', label: 'Progressive' },
+            { key: 'computer_uses', label: 'Computer Uses' },
+        ].filter((opt) => {
+            const el = document.querySelector(`input[name="exam_data[st][${opt.key}]"]`);
+            return !!(el && el.checked);
+        }).map((opt) => opt.label);
 
         let stHtml =
             `<table class="table table-sm table-bordered mb-1" style="font-size:11px;">` +
             `<thead>` +
             `<tr>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE (RE)</th>` +
-              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE (LE)</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">RIGHT EYE</th>` +
+              `<th colspan="4" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">LEFT EYE</th>` +
             `</tr>` +
             `<tr style="background:#eef4f9;">${pgSubTh(stVnRe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh(stVnLe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}</tr>` +
             `</thead><tbody>` +
@@ -3096,8 +3151,8 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
               `${stRowTag('N')}${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}` +
             `</tr>` +
             `</tbody></table>`;
-        if (stReAdd !== '-' || stLeAdd !== '-') {
-            stHtml += `<div style="font-size:10px;color:#475569;margin-bottom:3px;"><span style="color:#1B4F72;font-weight:700;">ADD</span>&emsp;RE: <strong>${stReAdd}</strong>&emsp;LE: <strong>${stLeAdd}</strong></div>`;
+        if (stOptLabels.length) {
+            stHtml += `<div style="margin-bottom:2px;">${stOptLabels.map(pill).join('')}</div>`;
         }
         document.getElementById('canvas_st').innerHTML = stHtml;
 
@@ -3136,10 +3191,7 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         const diagnoses = selectedLabels('input[name="exam_data[diagnoses][]"]');
         const dxPill = (t) => `<span style="background:#fef2f2;color:#991b1b;padding:1px 8px;border-radius:8px;margin-right:3px;margin-bottom:3px;font-size:10px;border:1px solid #fecaca;display:inline-block;">${t}</span>`;
         const dxSection = diagnoses.length
-            ? `<table class="table table-sm table-bordered mb-1" style="font-size:10px;">` +
-              `<thead><tr><th colspan="1" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">DIAGNOSIS</th></tr></thead>` +
-              `<tbody><tr><td style="padding:3px 5px;">${diagnoses.map(dxPill).join('')}</td></tr></tbody>` +
-              `</table>`
+            ? `<div style="padding:3px 2px;">${diagnoses.map(dxPill).join('')}</div>`
             : '';
 
         const rxRows = Array.from(document.querySelectorAll('#rxBody .rx-row'));
@@ -3150,29 +3202,26 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             const dosage = dosageId && dosagesJson[dosageId] ? dosagesJson[dosageId] : '-';
             const durRaw = row.querySelector('[name*="[duration]"]')?.value.trim() || '';
             const duration = durRaw ? durRaw + ' Days' : '-';
-            const instruction = row.querySelector('[name*="[instructions]"]')?.value || '-';
-            const eye = row.querySelector('[name*="[eye]"]')?.value || '-';
-            return `<tr><td style="font-size:10px;padding:2px 4px;">${name}</td><td style="font-size:10px;padding:2px 4px;">${dosage}</td><td style="font-size:10px;padding:2px 4px;">${duration}</td><td style="font-size:10px;padding:2px 4px;">${eye}</td><td style="font-size:10px;padding:2px 4px;">${instruction}</td></tr>`;
+            const qty = row.querySelector('[name*="[quantity]"]')?.value || '-';
+            const routeId = row.querySelector('[name*="[route_id]"]')?.value || '';
+            const route = routeId && routesJson[routeId] ? routesJson[routeId] : '-';
+            return `<tr><td style="font-size:10px;padding:2px 4px;">${name}</td><td style="font-size:10px;padding:2px 4px;">${dosage}</td><td style="font-size:10px;padding:2px 4px;">${duration}</td><td style="font-size:10px;padding:2px 4px;">${qty}</td><td style="font-size:10px;padding:2px 4px;">${route}</td></tr>`;
         }).filter(Boolean).join('');
 
         const rxTable = rxBodyHtml
             ? `<table class="table table-sm table-bordered mb-0" style="font-size:10px;">` +
               `<thead>` +
-              `<tr><th colspan="5" class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">PRESCRIPTION (Rx)</th></tr>` +
-              `<tr style="background:#eef4f9;"><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Medicine</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Dose</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Days</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Eye</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Instr.</th></tr>` +
+              `<tr style="background:#eef4f9;"><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Medicine Name</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Dosage</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Days</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">QTY</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Route of Administration</th></tr>` +
               `</thead><tbody>${rxBodyHtml}</tbody></table>`
             : '';
 
         document.getElementById('canvas_diagnosis').innerHTML = dxSection;
         document.getElementById('canvas_medicine').innerHTML = rxTable;
 
-        // Advice canvas
+        // Advice canvas — outer "Advice" title only, no inner band
         const adviceText = (document.getElementById('advice_textarea')?.value || '').trim();
         const adviceHtml = adviceText
-            ? `<table class="table table-sm table-bordered mb-0" style="font-size:10px;">` +
-              `<thead><tr><th class="text-center" style="background:#1B4F72;color:#fff;font-size:10px;padding:2px;letter-spacing:.06em;border-color:#1B4F72;">CLINICAL ADVICE &amp; INSTRUCTIONS</th></tr></thead>` +
-              `<tbody><tr><td style="font-size:10px;padding:3px 5px;white-space:pre-line;">${adviceText}</td></tr></tbody>` +
-              `</table>`
+            ? `<div style="font-size:10px;padding:3px 2px;white-space:pre-line;">${adviceText}</div>`
             : '';
         document.getElementById('canvas_advice').innerHTML = adviceHtml;
     };
@@ -3285,13 +3334,40 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
             wrap.innerHTML =
                 '<div class="p-3 rounded-3 mb-3" style="background:linear-gradient(135deg,#f0fdf4 0%,#ecfdf5 100%);border:1px solid #bbf7d0;">' +
-                '<div class="fw-semibold mb-2" style="font-size:13px;color:#166534;"><i class="bi bi-check-circle me-1"></i>Suggested Advices <small class="fw-normal text-muted">(click to append)</small></div>' +
+                '<div class="fw-semibold mb-2" style="font-size:13px;color:#166534;"><i class="bi bi-check-circle me-1"></i>Suggested Advices <small class="fw-normal text-muted">(click to append · × to remove)</small></div>' +
                 '<div class="d-flex flex-wrap gap-2">' +
-                advices.map(a =>
-                    '<button type="button" class="btn btn-sm btn-outline-success" style="font-size:12px;" onclick="appendSuggestedAdvice(' + a.id + ')">' +
-                    esc(a.advice) + '</button>'
-                ).join('') +
+                advices.map(a => {
+                    const active = isAdviceInTextarea(a.advice);
+                    return '<span class="suggested-advice-chip d-inline-flex align-items-center" style="border-radius:20px;border:1px solid ' + (active ? '#166534' : '#86efac') + ';background:' + (active ? '#166534' : 'white') + ';overflow:hidden;">' +
+                        '<button type="button" class="btn btn-sm border-0" style="font-size:12px;padding:4px 8px 4px 12px;color:' + (active ? '#fff' : '#166534') + ';background:transparent;box-shadow:none;" onclick="appendSuggestedAdvice(' + a.id + ')">' +
+                        esc(a.advice) + '</button>' +
+                        '<button type="button" class="btn btn-sm border-0 suggested-advice-remove" title="Remove from advice text" style="font-size:12px;padding:4px 8px 4px 2px;line-height:1;color:' + (active ? 'rgba(255,255,255,.9)' : '#dc2626') + ';background:transparent;box-shadow:none;" onclick="removeSuggestedAdvice(' + a.id + ')">' +
+                        '<i class="bi bi-x-lg" style="font-size:10px;"></i></button>' +
+                        '</span>';
+                }).join('') +
                 '</div></div>';
+        }
+
+        function getAdviceParts() {
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return [];
+            return ta.value.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        function isAdviceInTextarea(text) {
+            if (!text) return false;
+            return getAdviceParts().includes(String(text).trim());
+        }
+
+        function syncAdviceTextarea(parts) {
+            const ta = document.getElementById('advice_textarea');
+            if (!ta) return;
+            ta.value = parts.join(', ');
+            ta.dispatchEvent(new Event('input'));
+            const countEl = document.getElementById('adviceCharCount');
+            if (countEl) countEl.textContent = ta.value.length + ' / 2000';
+            if (typeof updateLivePreview === 'function') updateLivePreview();
+            if (typeof checkProgress === 'function') checkProgress();
         }
 
         window.loadSuggestedGroup = function (id) {
@@ -3319,13 +3395,21 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         };
 
         window.appendSuggestedAdvice = function (id) {
-            const text = adviceMap[id] || '';
+            const text = (adviceMap[id] || '').trim();
             if (!text) return;
-            const ta = document.getElementById('advice_textarea');
-            if (!ta) return;
-            const cur = ta.value.trim();
-            ta.value = cur ? cur + ', ' + text : text;
-            if (typeof updateLivePreview === 'function') updateLivePreview();
+            const parts = getAdviceParts();
+            if (!parts.includes(text)) {
+                parts.push(text);
+                syncAdviceTextarea(parts);
+            }
+            update();
+        };
+
+        window.removeSuggestedAdvice = function (id) {
+            const text = (adviceMap[id] || '').trim();
+            if (!text) return;
+            syncAdviceTextarea(getAdviceParts().filter(p => p !== text));
+            update();
         };
 
         function update() {
@@ -3354,6 +3438,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                         });
                         ta.dispatchEvent(new Event('input'));
                         if (typeof updateLivePreview === 'function') { updateLivePreview(); }
+                        update();
                     }
                 }
             }
@@ -3814,12 +3899,12 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 chip.textContent = fmt;
                 chip.dataset.val = fmt;
                 if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid #1B4F72;background:#fff;color:#1B4F72;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 } else {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#1B4F72;color:#fff;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 }
-                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#154360'; } });
-                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = '#1B4F72'; } });
+                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
+                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
                 grid.appendChild(chip);
             });
 
@@ -3832,12 +3917,12 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 chip.textContent = fmt;
                 chip.dataset.val = fmt;
                 if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid #64748b;background:#fff;color:#64748b;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 } else {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:none;background:#475569;color:#fff;cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 }
-                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#334155'; } });
-                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = '#475569'; } });
+                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
+                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
                 grid.appendChild(chip);
             })();
 
@@ -4284,7 +4369,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             const hosp = pseudoInput(eye, 'hospital')?.value || '';
             const parts = [];
             if (type) { parts.push(type); }
-            if (exp)  { parts.push('₹' + exp); }
+            if (exp)  { parts.push(currencySymbol + exp); }
             if (hosp) { parts.push(hosp); }
             if (parts.length) {
                 el.textContent = parts.join(' · ');
@@ -4312,7 +4397,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
         window.openPseudoModal = function (eye) {
             currentPseudoEye = eye;
-            document.getElementById('pseudoModalEyeLabel').textContent = eye === 're' ? 'Right Eye (RE)' : 'Left Eye (LE)';
+            document.getElementById('pseudoModalEyeLabel').textContent = eye === 're' ? 'Right Eye' : 'Left Eye';
             setOpTypeUI(pseudoInput(eye, 'op-type')?.value || '');
             document.getElementById('pseudoOpExpense').value = pseudoInput(eye, 'op-expense')?.value || '';
             document.getElementById('pseudoHospital').value = pseudoInput(eye, 'hospital')?.value || '';
@@ -4671,7 +4756,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                             <div class="col-6 col-md-3">
                                 <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
                                     <div class="text-muted" style="font-size:11px;">Case Fee</div>
-                                    <div class="fw-semibold">₹ {{ number_format($patient->case_fee ?? 0, 2) }}</div>
+                                    <div class="fw-semibold">{{ money($patient->case_fee ?? 0, 2) }}</div>
                                 </div>
                             </div>
                             <div class="col-6 col-md-3">
@@ -4760,5 +4845,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
     input.addEventListener('blur', cancelEdit);
 })();
 </script>
+
+@include('hospital.exam._recommend_surgery_modal', ['recommendReturnTo' => 'secondary'])
 
 @endsection

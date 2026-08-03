@@ -139,17 +139,29 @@ class SettingsApiController extends Controller
             }
         }
 
-        // Sync location + timezone back to tenants table
+        // Sync location + timezone + currency back to tenants table
         $tenantId     = (int) config('app.tenant_id');
         $tenantRecord = Tenant::find($tenantId);
         if ($tenantRecord) {
-            $tenantRecord->update([
+            $currencyUpdate = [];
+            $countryName = $validated['hospital_country'] ?? $tenantRecord->country;
+            if ($countryName && ! $tenantRecord->is_currency_override) {
+                $master = MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
+                if ($master) {
+                    $currencyUpdate = [
+                        'currency_code' => $master->currency_code ?: 'INR',
+                        'currency_symbol' => $master->currency_symbol ?: '₹',
+                    ];
+                }
+            }
+
+            $tenantRecord->update(array_merge([
                 'country'  => $validated['hospital_country']  ?? $tenantRecord->country,
                 'state'    => $validated['hospital_state']    ?? $tenantRecord->state,
                 'district' => $validated['hospital_district'] ?? $tenantRecord->district,
                 'city'     => $validated['hospital_city']     ?? $tenantRecord->city,
                 'timezone' => $validated['hospital_timezone'] ?? $tenantRecord->timezone,
-            ]);
+            ], $currencyUpdate));
         }
 
         return response()->json(['success' => true, 'message' => 'Settings saved successfully.']);
@@ -214,7 +226,7 @@ class SettingsApiController extends Controller
 
     public function locationCountries(): JsonResponse
     {
-        $countries = MasterCountry::active()->orderBy('name')->get(['id', 'name', 'default_timezone']);
+        $countries = MasterCountry::active()->orderBy('name')->get(['id', 'name', 'default_timezone', 'currency_code', 'currency_symbol', 'currency_name']);
 
         return response()->json([
             'success' => true,
@@ -222,6 +234,9 @@ class SettingsApiController extends Controller
                 'id'               => $c->id,
                 'name'             => $c->name,
                 'default_timezone' => $c->default_timezone,
+                'currency_code'    => $c->currency_code,
+                'currency_symbol'  => $c->currency_symbol,
+                'currency_name'    => $c->currency_name,
             ]),
         ]);
     }

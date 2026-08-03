@@ -574,8 +574,11 @@
                                     <option value="{{ $c->name }}"
                                             data-id="{{ $c->id }}"
                                             data-timezone="{{ $c->default_timezone ?? 'UTC' }}"
+                                            data-currency-code="{{ $c->currency_code ?? 'INR' }}"
+                                            data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
+                                            data-country-code="{{ $c->country_code ?? '' }}"
                                             {{ $savedCountry === $c->name ? 'selected' : '' }}>
-                                        {{ $c->name }}
+                                        {{ $c->name }}@if(!empty($c->country_code)) ({{ $c->country_code }})@endif
                                     </option>
                                 @endforeach
                             </select>
@@ -606,6 +609,17 @@
                             @error('hospital_timezone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+
+                        {{-- Currency (auto from country) --}}
+                        <div class="col-md-6">
+                            <label class="form-label">Currency</label>
+                            <input type="text" id="settingCurrencyDisplay" class="form-control clinical-input" readonly
+                                   value="{{ currency_symbol() }} {{ currency_code() }}">
+                            <div class="form-text" style="font-size:.75rem;color:var(--settings-muted)">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Auto from country master. Used for case fees, OT billing &amp; prints.
+                            </div>
                         </div>
 
                         {{-- State --}}
@@ -1216,6 +1230,14 @@ function selectLogoStyle(value) {
             // Auto-fill timezone from country default
             if (tzSel && opt.dataset.timezone) {
                 tzSel.value = opt.dataset.timezone;
+            }
+
+            // Auto-fill currency preview from country master
+            var currencyDisplay = document.getElementById('settingCurrencyDisplay');
+            if (currencyDisplay) {
+                var sym = opt.dataset.currencySymbol || '';
+                var code = opt.dataset.currencyCode || '';
+                currencyDisplay.value = (sym && code) ? (sym + ' ' + code) : '';
             }
 
             resetSelect(stateSel,    '— Select State —');

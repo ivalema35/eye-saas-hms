@@ -64,6 +64,8 @@ class ExaminationService
                     'dosage_id' => ! empty($line['dosage_id']) ? (int) $line['dosage_id'] : null,
                     'frequency' => $line['frequency'] ?? null,
                     'duration' => $line['duration'] ?? null,
+                    'quantity' => ! empty($line['quantity']) ? (int) $line['quantity'] : null,
+                    'route_id' => ! empty($line['route_id']) ? (int) $line['route_id'] : null,
                     'eye' => $line['eye'] ?? 'Both',
                     'instructions' => $line['instructions'] ?? null,
                     'sort_order' => $i,
@@ -124,8 +126,8 @@ class ExaminationService
                     'name' => $line['name'],
                     'dosage_id' => ! empty($line['dosage_id']) ? (int) $line['dosage_id'] : null,
                     'duration' => $line['duration'] ?? null,
-                    'eye' => $line['eye'] ?? 'Both',
-                    'instructions' => $line['instructions'] ?? null,
+                    'quantity' => ! empty($line['quantity']) ? (int) $line['quantity'] : null,
+                    'route_id' => ! empty($line['route_id']) ? (int) $line['route_id'] : null,
                 ];
             }
 

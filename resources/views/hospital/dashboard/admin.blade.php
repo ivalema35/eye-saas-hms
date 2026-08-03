@@ -54,21 +54,21 @@
         <div class="hms-stat-icon hsi-green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Today Revenue</div>
-            <div class="hms-stat-value">₹{{ number_format($revenueToday, 2) }}</div>
+            <div class="hms-stat-value">{{ money($revenueToday, 2) }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-blue"><i class="fa-solid fa-calendar"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">This Month</div>
-            <div class="hms-stat-value">₹{{ number_format($revenueMonth, 2) }}</div>
+            <div class="hms-stat-value">{{ money($revenueMonth, 2) }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-teal"><i class="fa-solid fa-chart-line"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">This Year</div>
-            <div class="hms-stat-value">₹{{ number_format($revenueYear, 2) }}</div>
+            <div class="hms-stat-value">{{ money($revenueYear, 2) }}</div>
         </div>
     </div>
     <div class="hms-stat-card">
@@ -111,9 +111,9 @@
                     <tr>
                         <th>Receptionist</th>
                         <th class="text-center">Walk-ins</th>
-                        <th class="text-end">Gross (₹)</th>
-                        <th class="text-end">FOC (₹)</th>
-                        <th class="text-end">Net (₹)</th>
+                        <th class="text-end">Gross ({{ currency_symbol() }})</th>
+                        <th class="text-end">FOC ({{ currency_symbol() }})</th>
+                        <th class="text-end">Net ({{ currency_symbol() }})</th>
                     </tr>
                 </thead>
                 <tbody>

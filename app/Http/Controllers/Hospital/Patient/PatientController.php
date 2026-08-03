@@ -7,6 +7,7 @@ use App\Http\Requests\Hospital\Patient\PatientPhoneStoreRequest;
 use App\Http\Requests\Hospital\Patient\PatientStoreRequest;
 use App\Http\Requests\Hospital\Patient\PatientUpdateRequest;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\Referrer;
 use App\Models\Platform\HospitalShareRequest;
@@ -165,8 +166,8 @@ class PatientController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })->get();
@@ -203,9 +204,22 @@ class PatientController extends Controller
         $tenant = app('tenant');
         $data = $request->validated();
 
+        // OT Workflow Upgrade — Phase 2: not a Patient column, handled separately below.
+        $otAppointmentId = $data['ot_appointment_id'] ?? null;
+        unset($data['ot_appointment_id']);
+
         $data['reception_id'] = Auth::guard('hospital_user')->id();
 
         $patient = $this->patientService->registerWalkIn($data, $tenant->id);
+
+        if ($otAppointmentId) {
+            OtAppointment::query()
+                ->where('id', $otAppointmentId)
+                ->update([
+                    'status' => OtAppointment::STATUS_COMPLETED,
+                    'converted_patient_id' => $patient->id,
+                ]);
+        }
 
         return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'dashboard'])
             ->with('success', 'Patient registered successfully.');
@@ -221,8 +235,8 @@ class PatientController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })->get();
@@ -313,8 +327,8 @@ class PatientController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_doctor'])
-                                ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })->get();
@@ -395,8 +409,8 @@ class PatientController extends Controller
             ->where(function ($q) {
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', fn($r) => $r->where(function ($i) {
-                        $i->whereIn('slug', ['doctor', 'ot_doctor'])
-                            ->orWhereIn('name', ['doctor', 'ot_doctor']);
+                        $i->whereIn('slug', ['doctor'])
+                            ->orWhereIn('name', ['doctor']);
                     }));
             })->get();
 
@@ -487,7 +501,13 @@ class PatientController extends Controller
 
     public function print(string $slug, Patient $patient): View
     {
-        $patient->load('doctor', 'reception');
+        $patient->load([
+            'doctor:id,name,doctor_prefix',
+            'reception:id,name',
+            'location:id,city,district,state',
+            'masterCity:id,name,district_id',
+            'masterCity.district:id,name',
+        ]);
         $tenant = app('tenant');
 
         return view('hospital.patients.print', compact('patient', 'slug', 'tenant'));
@@ -495,11 +515,17 @@ class PatientController extends Controller
 
     public function downloadBill(string $slug, Patient $patient): Response
     {
-        $patient->load('doctor', 'reception');
+        $patient->load([
+            'doctor:id,name,doctor_prefix',
+            'reception:id,name',
+            'location:id,city,district,state',
+            'masterCity:id,name,district_id',
+            'masterCity.district:id,name',
+        ]);
         $tenant = app('tenant');
 
         $pdf = Pdf::loadView('pdfs.opd-bill', compact('patient', 'tenant'))
-            ->setPaper('a5', 'portrait');
+            ->setPaper('a4', 'portrait');
 
         return $pdf->download("OPD-Bill-{$patient->patient_code}.pdf");
     }

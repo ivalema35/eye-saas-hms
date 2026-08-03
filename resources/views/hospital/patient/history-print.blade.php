@@ -569,13 +569,26 @@
                                             $pseudo = $oe['pseudophakia_' . $eye] ?? [];
                                             $extras = array_filter([
                                                 $pseudo['operation_type'] ?? '',
-                                                !empty($pseudo['operation_expense']) ? '₹' . $pseudo['operation_expense'] : '',
+                                                !empty($pseudo['operation_expense']) ? currency_symbol() . $pseudo['operation_expense'] : '',
                                                 $pseudo['hospital_name'] ?? '',
                                             ], fn($v) => $v !== '' && $v !== null);
 
                                             return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
                                         };
-                                        $pgFmt = fn($s, $c, $a) => ($s ?: '-') . ' / ' . ($c ?: '-') . ' X ' . ($a ?: '-');
+                                        $pgFmt = function ($s, $c, $a) {
+                                            $s = trim((string) $s);
+                                            $c = trim((string) $c);
+                                            $a = trim((string) $a);
+                                            if ($s === '' && $c === '' && $a === '') {
+                                                return '';
+                                            }
+                                            $out = ($s !== '' ? $s : '-') . ' / ' . ($c !== '' ? $c : '-');
+                                            if ($a !== '') {
+                                                $out .= ' X ' . $a;
+                                            }
+
+                                            return $out;
+                                        };
                                         $coRows = array_filter($data['co_rows'] ?? [], fn($r) => !empty($r['complaint']));
                                         $kcoRows = array_filter($data['kco_rows'] ?? [], fn($r) => !empty($r['condition']));
                                         $vision = $data['vision'] ?? [];
@@ -594,11 +607,15 @@
                                         $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds'])
                                             || !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
                                         $hasSt = !empty($st['re']['ds']) || !empty($st['le']['ds'])
-                                            || !empty($st['re']['ns']) || !empty($st['le']['ns']);
+                                            || !empty($st['re']['ns']) || !empty($st['le']['ns'])
+                                            || !empty($st['bifocal']) || !empty($st['nd_separate'])
+                                            || !empty($st['progressive']) || !empty($st['computer_uses']);
                                         $hasVision = !empty($vision['vn_re']) || !empty($vision['vn_le'])
                                             || !empty($vision['pnvn_re']) || !empty($vision['pnvn_le'])
                                             || !empty($vision['nrvn_re']) || !empty($vision['nrvn_le'])
-                                            || !empty($nct['iop_re']) || !empty($nct['iop_le']);
+                                            || !empty($nct['iop_re']) || !empty($nct['iop_le'])
+                                            || !empty($pg['re']['vn']) || !empty($pg['le']['vn'])
+                                            || !empty($pg['re']['near_vn']) || !empty($pg['le']['near_vn']);
                                         $oeFields = [
                                             'sac' => 'SAC', 'lid' => 'LID', 'conj' => 'CONJ', 'cornea' => 'CORNEA',
                                             'ac' => 'AC', 'iris' => 'IRIS', 'pupil' => 'PUPIL', 'lens' => 'LENS',
@@ -677,8 +694,8 @@
                                                     <table class="exam-table">
                                                         <thead>
                                                             <tr>
-                                                                <th colspan="4" style="text-align:center;">RIGHT EYE (RE)</th>
-                                                                <th colspan="4" style="text-align:center;">LEFT EYE (LE)</th>
+                                                                <th colspan="4" style="text-align:center;">RIGHT EYE</th>
+                                                                <th colspan="4" style="text-align:center;">LEFT EYE</th>
                                                             </tr>
                                                             <tr>
                                                                 <th>{{ $st['re']['vn'] ?? '' }}</th>
@@ -710,9 +727,17 @@
                                                             </tr>
                                                         </tbody>
                                                     </table>
-                                                    @if(!empty($st['re']['add']) || !empty($st['le']['add']))
-                                                        <div class="exam-plain" style="white-space:normal;border-top:none;margin-top:-1px;">
-                                                            <strong>ADD</strong>&emsp;RE: {{ $st['re']['add'] ?? '-' }}&emsp;LE: {{ $st['le']['add'] ?? '-' }}
+                                                    @php
+                                                        $stOptLabels = collect([
+                                                            'bifocal' => 'Bifocal',
+                                                            'nd_separate' => 'Near & Distance Separate',
+                                                            'progressive' => 'Progressive',
+                                                            'computer_uses' => 'Computer Uses',
+                                                        ])->filter(fn ($label, $key) => !empty($st[$key]))->values()->all();
+                                                    @endphp
+                                                    @if(!empty($stOptLabels))
+                                                        <div class="exam-plain" style="white-space:normal;border-top:none;margin-top:-1px;color:#1B4F72;font-weight:600;">
+                                                            {{ implode(' · ', $stOptLabels) }}
                                                         </div>
                                                     @endif
                                                 </div>
@@ -720,23 +745,64 @@
 
                                             @if(count($kcoRows))
                                                 <div class="exam-section">
-                                                    <div class="exam-section-title">K/C/O</div>
                                                     <table class="exam-table">
                                                         <thead>
                                                             <tr>
+                                                                <th colspan="3" style="background:#1B4F72;color:#fff;text-align:left;padding-left:6px;">K/C/O</th>
+                                                            </tr>
+                                                            <tr>
                                                                 <th>Condition</th>
-                                                                <th>Since</th>
+                                                                <th>Since/Duration</th>
                                                                 <th>Comment</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             @foreach($kcoRows as $kr)
+                                                                @php
+                                                                    $kSince = trim((string) ($kr['since'] ?? ''));
+                                                                    $kUnit = trim((string) ($kr['unit'] ?? ''));
+                                                                    $kDuration = $kUnit === 'Longtime'
+                                                                        ? 'Longtime'
+                                                                        : trim($kSince.($kSince !== '' && $kUnit !== '' ? ' ' : '').$kUnit);
+                                                                @endphp
                                                                 <tr>
                                                                     <td>{{ $kr['condition'] }}</td>
-                                                                    <td>{{ !empty($kr['since']) ? $kr['since'] . ' ' . ($kr['unit'] ?? '') : '-' }}</td>
+                                                                    <td>{{ $kDuration !== '' ? $kDuration : '-' }}</td>
                                                                     <td>{{ $kr['comment'] ?? '-' }}</td>
                                                                 </tr>
                                                             @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @endif
+
+                                            @if($hasFundus)
+                                                <div class="exam-section">
+                                                    <div class="exam-section-title">Fundus</div>
+                                                    <table class="exam-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Fundus</th>
+                                                                <th>RIGHT</th>
+                                                                <th>LEFT</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>DISC</td>
+                                                                <td>{{ $cv($fundus['disc_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['disc_le'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>FR</td>
+                                                                <td>{{ $cv($fundus['fr_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['fr_le'] ?? '') }}</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>COMMENT</td>
+                                                                <td>{{ $cv($fundus['comment_re'] ?? '') }}</td>
+                                                                <td>{{ $cv($fundus['comment_le'] ?? '') }}</td>
+                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>
@@ -746,7 +812,6 @@
                                         <div class="exam-stack">
                                             @if(count($coRows))
                                                 <div class="exam-section">
-                                                    <div class="exam-section-title">Complaint</div>
                                                     <table class="exam-table">
                                                         <thead>
                                                             <tr>
@@ -785,10 +850,54 @@
                                                 <div class="exam-section">
                                                     <div class="exam-section-title">Vision</div>
                                                     <div class="exam-plain" style="white-space:normal;">
-                                                        <span class="exam-vn-line"><strong>Vn</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['vn_re'] ?? '') }}/{{ $cv($vision['vn_le'] ?? '') }}</span>
-                                                        <span class="exam-vn-line"><strong>PH</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['pnvn_re'] ?? '') }}/{{ $cv($vision['pnvn_le'] ?? '') }}</span>
-                                                        <span class="exam-vn-line"><strong>NrVn</strong>&nbsp;&lt;&nbsp;{{ $cv($vision['nrvn_re'] ?? '') }}/{{ $cv($vision['nrvn_le'] ?? '') }}</span>
-                                                        <span class="exam-vn-line"><strong>IOP:</strong>&nbsp;{{ $cv($nct['iop_re'] ?? '') }}/{{ $cv($nct['iop_le'] ?? '') }}</span>
+                                                        <div style="display:flex;flex-direction:column;gap:6px;">
+                                                            <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px;">
+                                                                <span class="exam-vn-line" style="align-items:flex-start;">
+                                                                    <strong>Vn</strong>&nbsp;&lt;&nbsp;
+                                                                    <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                        <span>{{ $vision['vn_re'] ?? '' }}</span>
+                                                                        <span>{{ $vision['vn_le'] ?? '' }}</span>
+                                                                    </span>
+                                                                </span>
+                                                                <span class="exam-vn-line" style="align-items:flex-start;">
+                                                                    <strong>Vn C GL</strong>&nbsp;&lt;&nbsp;
+                                                                    <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                        <span>{{ $pg['re']['vn'] ?? '' }}</span>
+                                                                        <span>{{ $pg['le']['vn'] ?? '' }}</span>
+                                                                    </span>
+                                                                </span>
+                                                                <span class="exam-vn-line" style="align-items:flex-start;">
+                                                                    <strong>Pn/Vn</strong>&nbsp;&lt;&nbsp;
+                                                                    <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                        <span>{{ $vision['pnvn_re'] ?? '' }}</span>
+                                                                        <span>{{ $vision['pnvn_le'] ?? '' }}</span>
+                                                                    </span>
+                                                                </span>
+                                                            </div>
+                                                            <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px 16px;">
+                                                                <span class="exam-vn-line" style="align-items:flex-start;">
+                                                                    <strong>Nr/Vn</strong>&nbsp;&lt;&nbsp;
+                                                                    <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                        <span>{{ $vision['nrvn_re'] ?? '' }}</span>
+                                                                        <span>{{ $vision['nrvn_le'] ?? '' }}</span>
+                                                                    </span>
+                                                                </span>
+                                                                <span class="exam-vn-line" style="align-items:flex-start;">
+                                                                    <strong>Nr/Vn C GL</strong>&nbsp;&lt;&nbsp;
+                                                                    <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                        <span>{{ $pg['re']['near_vn'] ?? '' }}</span>
+                                                                        <span>{{ $pg['le']['near_vn'] ?? '' }}</span>
+                                                                    </span>
+                                                                </span>
+                                                                <span class="exam-vn-line" style="align-items:flex-start;">
+                                                                    <strong>NCT</strong>&nbsp;&lt;&nbsp;
+                                                                    <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
+                                                                        <span>{{ $nct['iop_re'] ?? '' }}</span>
+                                                                        <span>{{ $nct['iop_le'] ?? '' }}</span>
+                                                                    </span>
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             @endif
@@ -817,38 +926,6 @@
                                                                     @endif
                                                                 </tr>
                                                             @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            @endif
-
-                                            @if($hasFundus)
-                                                <div class="exam-section">
-                                                    <div class="exam-section-title">Fundus</div>
-                                                    <table class="exam-table">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Fundus</th>
-                                                                <th>RIGHT</th>
-                                                                <th>LEFT</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            <tr>
-                                                                <td>DISC</td>
-                                                                <td>{{ $cv($fundus['disc_re'] ?? '') }}</td>
-                                                                <td>{{ $cv($fundus['disc_le'] ?? '') }}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>FR</td>
-                                                                <td>{{ $cv($fundus['fr_re'] ?? '') }}</td>
-                                                                <td>{{ $cv($fundus['fr_le'] ?? '') }}</td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>COMMENT</td>
-                                                                <td>{{ $cv($fundus['comment_re'] ?? '') }}</td>
-                                                                <td>{{ $cv($fundus['comment_le'] ?? '') }}</td>
-                                                            </tr>
                                                         </tbody>
                                                     </table>
                                                 </div>

@@ -23,6 +23,7 @@ use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterCountry;
 use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
+use App\Services\Platform\PlatformPricingService;
 use App\Services\Platform\TenantService;
 use App\Support\EmailRules;
 use App\Support\PhoneRules;
@@ -35,7 +36,8 @@ use Illuminate\View\View;
 class RegisterController extends Controller
 {
     public function __construct(
-        protected TenantService $tenantService
+        protected TenantService $tenantService,
+        protected PlatformPricingService $pricingService,
     ) {
     }
 
@@ -44,8 +46,20 @@ class RegisterController extends Controller
      */
     public function show(): View
     {
-        $countries = MasterCountry::active()->orderBy('name')->get(['id', 'name']);
-        return view('landing.register', compact('countries'));
+        $countries = MasterCountry::active()
+            ->orderBy('name')
+            ->get([
+                'id',
+                'name',
+                'country_code',
+                'currency_code',
+                'currency_symbol',
+                'fx_inr_per_unit',
+            ]);
+
+        $planPricing = $this->pricingService->basePlans();
+
+        return view('landing.register', compact('countries', 'planPricing'));
     }
 
     /**
@@ -151,8 +165,26 @@ class RegisterController extends Controller
     {
         $request->validate(['name' => ['required', 'string', 'min:2', 'max:100']]);
         $name = MasterCountry::normalize($request->name);
-        $country = MasterCountry::firstOrCreate(['name' => $name], ['is_active' => true]);
-        return response()->json(['id' => $country->id, 'name' => $country->name]);
+        $country = MasterCountry::firstOrCreate(
+            ['name' => $name],
+            [
+                'is_active' => true,
+                'default_timezone' => 'UTC',
+                'currency_code' => 'INR',
+                'currency_symbol' => '₹',
+                'currency_name' => 'Indian Rupee',
+                'fx_inr_per_unit' => 1,
+            ]
+        );
+
+        return response()->json([
+            'id' => $country->id,
+            'name' => $country->name,
+            'country_code' => $country->country_code,
+            'currency_code' => $country->currency_code ?: 'INR',
+            'currency_symbol' => $country->currency_symbol ?: '₹',
+            'fx_inr_per_unit' => (float) ($country->fx_inr_per_unit ?: 1),
+        ]);
     }
 
     public function createState(Request $request): JsonResponse

@@ -543,6 +543,141 @@
 
     {{-- Flatpickr --}}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        /**
+         * Shared date-range filter (flatpickr range) — SuperAdmin shell.
+         * Same API as hospital layout: [data-hms-date-range]
+         */
+        window.initHmsDateRange = function (root) {
+            if (typeof flatpickr === 'undefined') {
+                return;
+            }
+            var scope = root || document;
+            scope.querySelectorAll('[data-hms-date-range]').forEach(function (el) {
+                if (el._hmsDateRangeInit) {
+                    return;
+                }
+                el._hmsDateRangeInit = true;
+
+                var mode = el.getAttribute('data-range-mode') || 'split';
+                var startName = el.getAttribute('data-start-name') || 'start_date';
+                var endName = el.getAttribute('data-end-name') || 'end_date';
+                var startVal = (el.getAttribute('data-start-value') || '').trim();
+                var endVal = (el.getAttribute('data-end-value') || '').trim();
+                var autoSubmit = el.getAttribute('data-auto-submit') !== '0';
+                var form = el.closest('form');
+                var isSubmitting = false;
+
+                if (mode === 'combined' && el.value && el.value.indexOf(' to ') !== -1) {
+                    var parts = el.value.split(' to ');
+                    startVal = (parts[0] || '').trim();
+                    endVal = (parts[1] || '').trim();
+                }
+
+                function ensureHidden(name, value) {
+                    if (!form || !name) {
+                        return null;
+                    }
+                    form.querySelectorAll('input[name="' + name + '"]').forEach(function (node) {
+                        if (node !== el && node.type !== 'hidden') {
+                            node.remove();
+                        }
+                    });
+                    var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
+                    if (existing) {
+                        if (value !== undefined && value !== null && value !== '') {
+                            existing.value = value;
+                        }
+                        return existing;
+                    }
+                    var inp = document.createElement('input');
+                    inp.type = 'hidden';
+                    inp.name = name;
+                    inp.value = value || '';
+                    form.appendChild(inp);
+                    return inp;
+                }
+
+                var startInput = null;
+                var endInput = null;
+                if (mode === 'split') {
+                    el.removeAttribute('name');
+                    startInput = ensureHidden(startName, startVal);
+                    endInput = ensureHidden(endName, endVal || startVal);
+                }
+
+                var defaultDates = null;
+                if (startVal && endVal) {
+                    defaultDates = [startVal, endVal];
+                } else if (startVal) {
+                    defaultDates = [startVal, startVal];
+                }
+
+                function applyDates(selectedDates, instance) {
+                    if (!selectedDates || !selectedDates.length) {
+                        if (mode === 'combined') {
+                            el.value = '';
+                        } else {
+                            if (startInput) startInput.value = '';
+                            if (endInput) endInput.value = '';
+                        }
+                        return;
+                    }
+                    var a = instance.formatDate(selectedDates[0], 'Y-m-d');
+                    var b = selectedDates.length > 1
+                        ? instance.formatDate(selectedDates[1], 'Y-m-d')
+                        : a;
+                    if (mode === 'combined') {
+                        el.value = a === b ? a : (a + ' to ' + b);
+                    } else {
+                        if (startInput) startInput.value = a;
+                        if (endInput) endInput.value = b;
+                    }
+                }
+
+                function submitIfReady(selectedDates) {
+                    if (!autoSubmit || !form || isSubmitting) {
+                        return;
+                    }
+                    if (selectedDates.length >= 1) {
+                        isSubmitting = true;
+                        setTimeout(function () {
+                            if (typeof form.requestSubmit === 'function') {
+                                form.requestSubmit();
+                            } else {
+                                form.submit();
+                            }
+                        }, 30);
+                    }
+                }
+
+                flatpickr(el, {
+                    mode: 'range',
+                    dateFormat: 'Y-m-d',
+                    defaultDate: defaultDates,
+                    allowInput: false,
+                    onChange: function (selectedDates, _dateStr, instance) {
+                        applyDates(selectedDates, instance);
+                        if (selectedDates.length === 2) {
+                            submitIfReady(selectedDates);
+                        }
+                    },
+                    onClose: function (selectedDates, _dateStr, instance) {
+                        if (selectedDates.length === 1) {
+                            applyDates(selectedDates, instance);
+                            submitIfReady(selectedDates);
+                        }
+                    }
+                });
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof window.initHmsDateRange === 'function') {
+                window.initHmsDateRange();
+            }
+        });
+    </script>
 
     {{-- Sidebar toggle & collapsible groups --}}
     <script>

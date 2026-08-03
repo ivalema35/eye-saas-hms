@@ -14,12 +14,14 @@
 
 namespace App\Models\Hospital;
 
+use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Platform\MasterCity;
 use App\Models\Platform\Tenant;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Patient extends Model
@@ -89,9 +91,24 @@ class Patient extends Model
         return $this->belongsTo(CaseType::class, 'case_id');
     }
 
+    public function slot(): BelongsTo
+    {
+        return $this->belongsTo(Slot::class, 'slot_id');
+    }
+
     public function referrer(): BelongsTo
     {
         return $this->belongsTo(Referrer::class, 'referrer_id');
+    }
+
+    /**
+     * The OT Appointment (pre-registration) this patient was converted from, if any.
+     * Only walk-in registrations (`type = 'walkin'`) can originate this way — see
+     * PatientController::store(), which sets `ot_appointments.converted_patient_id`.
+     */
+    public function otAppointmentSource(): HasOne
+    {
+        return $this->hasOne(OtAppointment::class, 'converted_patient_id');
     }
 
     public function primaryExamination()

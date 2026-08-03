@@ -277,7 +277,7 @@
 
     <div class="card-body p-0">
         <div class="table-responsive instruction-table-wrap">
-            <table class="table premium-table table-hover align-middle mb-0 instruction-table">
+            <table class="table premium-table table-hover align-middle mb-0 instruction-table js-datatable" style="width:100%">
                 <thead>
                     <tr>
                         <th style="width:50px">#</th>

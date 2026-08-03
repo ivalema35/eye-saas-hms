@@ -3,44 +3,204 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Operation Certificate</title>
+    <title>Certificate</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 24px; color: #111827; }
-        .head { border-bottom: 2px solid #0f4c81; padding-bottom: 8px; margin-bottom: 16px; }
-        .head h1 { margin: 0; color: #0f4c81; }
-        .line { margin-bottom: 8px; }
-        .label { color: #6b7280; }
-        .print-btn { position: fixed; right: 12px; top: 12px; }
-        @media print { .print-btn { display:none; } body { margin: 0; } }
+        @page {
+            size: A4 portrait;
+            margin: 18mm 20mm;
+        }
+        body {
+            font-family: "Times New Roman", Times, Georgia, serif;
+            margin: 0;
+            background: #f4f6fb;
+            color: #111;
+            font-size: 15px;
+            line-height: 1.55;
+        }
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 12px auto;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+            padding: 22mm 24mm;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .date-row {
+            text-align: right;
+            font-size: 15px;
+            letter-spacing: 0.02em;
+            margin-bottom: 28px;
+        }
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            margin: 0 0 36px;
+            text-transform: uppercase;
+        }
+        .body-text {
+            text-align: justify;
+            font-size: 16px;
+            line-height: 1.85;
+            margin: 0;
+        }
+        .body-text .hl {
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .sign-block {
+            margin-top: 64px;
+            width: 48%;
+            margin-left: auto;
+            text-align: center;
+        }
+        .sign-img {
+            max-height: 52px;
+            max-width: 160px;
+            margin-bottom: 4px;
+            object-fit: contain;
+        }
+        .sign-line {
+            min-height: 40px;
+            margin-bottom: 4px;
+        }
+        .doctor-name {
+            font-weight: 700;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .doctor-meta {
+            font-size: 13px;
+            margin: 2px 0 0;
+            line-height: 1.45;
+        }
+        .print-btn {
+            position: fixed;
+            right: 12px;
+            top: 12px;
+            border: 0;
+            background: #0f4c81;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+        }
+        @media print {
+            body { background: #fff; }
+            .page {
+                width: 100%;
+                min-height: auto;
+                margin: 0;
+                box-shadow: none;
+                padding: 0;
+            }
+            .print-btn { display: none; }
+        }
     </style>
 </head>
 <body>
+@php
+    $patient = $booking->patient;
+    $doctor = $booking->otDoctor;
+    $patientName = strtoupper(trim((string) ($patient?->full_name ?? '-')));
+
+    $eyeRaw = strtoupper(trim((string) ($booking->eye ?? '')));
+    $eyeLabel = match (true) {
+        in_array($eyeRaw, ['RE', 'OD', 'RIGHT', 'R'], true) => 'RIGHT',
+        in_array($eyeRaw, ['LE', 'OS', 'LEFT', 'L'], true) => 'LEFT',
+        in_array($eyeRaw, ['BOTH', 'BE', 'BILATERAL'], true) => 'BOTH',
+        default => ($eyeRaw !== '' ? $eyeRaw : '—'),
+    };
+
+    $surgeryName = trim((string) ($surgery->surgery_name ?? $booking->ot_type ?? 'cataract'));
+    $surgeryLabel = mb_strtolower($surgeryName);
+
+    $gender = strtolower(trim((string) ($patient?->gender ?? '')));
+    $pronoun = match (true) {
+        in_array($gender, ['f', 'female', 'woman', 'girl'], true) => 'She',
+        in_array($gender, ['m', 'male', 'man', 'boy'], true) => 'He',
+        default => 'She/He',
+    };
+
+    $certDate = optional($booking->discharged_at)->format('d/m/Y')
+        ?? now()->format('d/m/Y');
+
+    $surgeryAt = $booking->operated_at
+        ?? ($surgery?->surgery_at ?? null)
+        ?? ($booking->surgery_date ? $booking->surgery_date->copy()->setTime(9, 0) : null);
+
+    // Print times: always morning 9:00 AM → evening 5:00 PM (dates from actual records).
+    $admitDate = $booking->attended_at
+        ?? $surgeryAt
+        ?? ($booking->surgery_date ? $booking->surgery_date->copy() : null);
+    $admittedAt = $admitDate ? $admitDate->copy()->setTime(9, 0) : null;
+
+    $dischargeDate = $booking->discharged_at
+        ?? ($booking->surgery_date ? $booking->surgery_date->copy() : now());
+    $dischargedAt = $dischargeDate->copy()->setTime(17, 0);
+
+    $restDays = max(1, (int) ($restDays ?? 7));
+    $restFrom = $surgeryAt?->copy()?->startOfDay()
+        ?? ($booking->surgery_date?->copy()?->startOfDay() ?? now()->startOfDay());
+    $fitFrom = $restFrom->copy()->addDays($restDays);
+
+    $fmtDate = fn ($dt) => $dt ? $dt->format('d/m/Y') : '—';
+    $fmtTime = fn ($dt) => $dt ? $dt->format('h:i A') : '—';
+
+    $doctorName = trim((string) ($doctor?->name ?? 'Medical Officer'));
+    if ($doctorName !== '' && ! str_starts_with(strtoupper($doctorName), 'DR')) {
+        $doctorDisplay = 'Dr '.$doctorName;
+    } else {
+        $doctorDisplay = $doctorName !== '' ? $doctorName : 'Medical Officer';
+    }
+    $regNo = trim((string) ($doctor?->registration_no ?? ''));
+    $signatureUrl = ! empty($doctor?->signature_path)
+        ? asset('storage/'.$doctor->signature_path)
+        : null;
+@endphp
+
 <button class="print-btn" onclick="window.print()">Print</button>
-@php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
-@if($letterPad === 'available')
-<div class="head">
-    <h1>Operation Certificate</h1>
-</div>
-@else
-<div class="head" style="display:flex;align-items:center;gap:12px;">
-    <div style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-        @if(hospital_logo_url())
-            <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo" style="width:100%;height:100%;object-fit:contain;padding:8px;">
-        @else
-            <span style="font-size:28px;color:#0f4c81">👁</span>
+
+<div class="page">
+    <div class="date-row">DATE: {{ $certDate }}</div>
+
+    <h1 class="title">Certificate</h1>
+
+    <p class="body-text">
+        This is to certify that <span class="hl">{{ $patientName }}</span>
+        was operated for <span class="hl">{{ $eyeLabel }}</span> Eye
+        {{ $surgeryLabel }} with intra ocular lens implantation on
+        {{ $fmtDate($surgeryAt) }}.
+        {{ $pronoun }} was admitted on {{ $fmtDate($admittedAt) }} at {{ $fmtTime($admittedAt) }}
+        &amp; Discharge on {{ $fmtDate($dischargedAt) }} at {{ $fmtTime($dischargedAt) }}.
+        {{ $pronoun }} is advised rest for {{ $restDays }} days from {{ $fmtDate($restFrom) }}.
+        {{ $pronoun }} may be fit for duty from {{ $fmtDate($fitFrom) }}.
+    </p>
+
+    <div class="sign-block">
+        <div class="sign-line">
+            @if($signatureUrl)
+                <img src="{{ $signatureUrl }}" alt="Signature" class="sign-img">
+            @endif
+        </div>
+        <p class="doctor-name">{{ strtoupper($doctorDisplay) }}</p>
+        <p class="doctor-meta">Medical Officer</p>
+        <p class="doctor-meta">{{ hospital_name() }}</p>
+        @if(hospital_full_address())
+            <p class="doctor-meta">{{ hospital_full_address() }}</p>
+        @endif
+        @if($regNo !== '')
+            <p class="doctor-meta">Reg.No.{{ $regNo }}</p>
         @endif
     </div>
-    <div>
-        <h1>Operation Certificate</h1>
-        <div>{{ hospital_name() }} | Tenant: {{ $slug }}</div>
-    </div>
 </div>
-@endif
-<div class="line"><span class="label">Patient:</span> {{ $booking->patient?->full_name ?? '-' }}</div>
-<div class="line"><span class="label">Patient Code:</span> {{ $booking->patient?->patient_code ?? '-' }}</div>
-<div class="line"><span class="label">Doctor:</span> {{ $booking->otDoctor?->name ?? '-' }}</div>
-<div class="line"><span class="label">Surgery Performed:</span> {{ $surgery->surgery_name ?? $booking->ot_type ?? '-' }}</div>
-<div class="line"><span class="label">Date of Surgery:</span> {{ optional($booking->operated_at)->format('d M Y h:i A') ?? optional($booking->surgery_date)->format('d M Y') }}</div>
-<div class="line"><span class="label">Complication Status:</span> {{ strtoupper((string) (optional($surgery)->complication_status ?? 'none')) }}</div>
 </body>
 </html>
