@@ -15,10 +15,18 @@ use Illuminate\Support\Facades\DB;
 
 class MedicineGroupApiController extends Controller
 {
-    public function index(): JsonResponse
+    /**
+     * @param  Request  $request  Optional `scope` query param (e.g. `ot`) — filters by
+     *                            `usage_scope` (OT Workflow Upgrade, docs/OT_WORKFLOW_UPGRADE_PRD.md §4)
+     *                            so OT-only groups don't leak into OPD prescription pickers and
+     *                            vice versa. Omitted = unfiltered, unchanged from before this scope
+     *                            column existed — existing callers are unaffected.
+     */
+    public function index(Request $request): JsonResponse
     {
         $groups = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route', 'diagnosis'])
             ->withCount('items')
+            ->when($request->filled('scope'), fn ($q) => $q->whereIn('usage_scope', [(string) $request->query('scope'), 'both']))
             ->latest()
             ->paginate(25);
 

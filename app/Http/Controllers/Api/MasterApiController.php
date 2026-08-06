@@ -39,6 +39,7 @@ use App\Models\Hospital\OT\OtSurgeryType;
 use App\Models\Hospital\OT\OtType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class MasterApiController extends Controller
 {
@@ -503,6 +504,144 @@ class MasterApiController extends Controller
         OtChargeHead::findOrFail($id)->delete();
 
         return $this->ok(null, 'Charge head deleted.');
+    }
+
+    // ── OT Lens Options ───────────────────────────────────────────────────────
+    // NOTE: this data was already reachable read/write via the generic
+    // masters/detail/{type} mechanism (detailMap() has 'lens-options' =>
+    // OtLensOption::class) — but gated by permission:master.eye_exam, the wrong
+    // permission (web gates this under role:admin, alongside every other OT
+    // master). Found during a full app-parity audit (2026-08-04). These dedicated,
+    // correctly-permissioned methods are the fix — mirrors the otSlot*/
+    // otChargeHead* pattern exactly. The generic detail/{type} route is left as-is
+    // (untouched, no behavior change) since removing it could break something else
+    // already relying on it.
+
+    public function otLensOptionIndex(string $slug): JsonResponse
+    {
+        $data = OtLensOption::query()
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($r) => ['id' => $r->id, 'name' => $r->name, 'is_active' => (bool) $r->is_active]);
+
+        return $this->ok($data);
+    }
+
+    public function otLensOptionStore(Request $request, string $slug): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+
+        $request->validate([
+            'name' => [
+                'required', 'string', 'max:150',
+                Rule::unique('ot_lens_options', 'name')
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+            ],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $record = OtLensOption::create([
+            'tenant_id' => $tenantId,
+            'name' => trim($request->string('name')),
+            'is_active' => $request->boolean('is_active', false),
+        ]);
+
+        return $this->ok(['id' => $record->id, 'name' => $record->name, 'is_active' => (bool) $record->is_active], 'Lens option added.', 201);
+    }
+
+    public function otLensOptionUpdate(Request $request, string $slug, int $id): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $record = OtLensOption::query()->whereNull('deleted_at')->findOrFail($id);
+
+        $request->validate([
+            'name' => [
+                'required', 'string', 'max:150',
+                Rule::unique('ot_lens_options', 'name')
+                    ->ignore($record->id)
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+            ],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $record->update([
+            'name' => trim($request->string('name')),
+            'is_active' => $request->boolean('is_active', (bool) $record->is_active),
+        ]);
+
+        return $this->ok(['id' => $record->id, 'name' => $record->name, 'is_active' => (bool) $record->is_active]);
+    }
+
+    public function otLensOptionDestroy(string $slug, int $id): JsonResponse
+    {
+        OtLensOption::query()->whereNull('deleted_at')->findOrFail($id)->update([
+            'deleted_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $this->ok(null, 'Lens option deleted.');
+    }
+
+    // ── OT Type (broad category, e.g. Cataract/Squint) CRUD ─────────────────────
+    // Same permission-mismatch fix as OT Lens Options above — otTypesList() below
+    // (pre-existing) is a read-only dropdown helper and stays as-is; these are new.
+
+    public function otTypeIndex(string $slug): JsonResponse
+    {
+        $data = OtType::query()
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($r) => ['id' => $r->id, 'name' => $r->name]);
+
+        return $this->ok($data);
+    }
+
+    public function otTypeStore(Request $request, string $slug): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+
+        $request->validate([
+            'name' => [
+                'required', 'string', 'max:150',
+                Rule::unique('ot_types', 'name')
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+            ],
+        ]);
+
+        $record = OtType::create(['tenant_id' => $tenantId, 'name' => trim($request->string('name'))]);
+
+        return $this->ok(['id' => $record->id, 'name' => $record->name], 'OT type added.', 201);
+    }
+
+    public function otTypeUpdate(Request $request, string $slug, int $id): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $record = OtType::query()->whereNull('deleted_at')->findOrFail($id);
+
+        $request->validate([
+            'name' => [
+                'required', 'string', 'max:150',
+                Rule::unique('ot_types', 'name')
+                    ->ignore($record->id)
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+            ],
+        ]);
+
+        $record->update(['name' => trim($request->string('name'))]);
+
+        return $this->ok(['id' => $record->id, 'name' => $record->name]);
+    }
+
+    public function otTypeDestroy(string $slug, int $id): JsonResponse
+    {
+        OtType::query()->whereNull('deleted_at')->findOrFail($id)->update([
+            'deleted_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return $this->ok(null, 'OT type deleted.');
     }
 
     // ── OT Surgery Types ──────────────────────────────────────────────────────

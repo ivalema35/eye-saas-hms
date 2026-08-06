@@ -49,7 +49,7 @@ class OtReportController extends Controller
     }
 
     /** @var array<string, array{group: string, label: string}> */
-    private const REPORTS = [
+    protected const REPORTS = [
         // Operational Registers
         'appointments' => ['group' => 'Operational Registers', 'label' => 'Appointment Register'],
         'registration' => ['group' => 'Operational Registers', 'label' => 'Registration Register'],
@@ -233,7 +233,7 @@ class OtReportController extends Controller
     /**
      * @return array{0: string, 1: string}
      */
-    private function resolveDateRange(Request $request): array
+    protected function resolveDateRange(Request $request): array
     {
         $from = $request->filled('from') ? $request->string('from')->toString() : now()->startOfMonth()->toDateString();
         $to = $request->filled('to') ? $request->string('to')->toString() : now()->toDateString();
@@ -244,7 +244,7 @@ class OtReportController extends Controller
     /**
      * @return array{0: list<string>, 1: list<array<int, mixed>>}
      */
-    private function buildReport(string $type, string $from, string $to): array
+    protected function buildReport(string $type, string $from, string $to): array
     {
         $tenantId = (int) app('tenant')->id;
         $toEnd = Carbon::parse($to)->endOfDay();
