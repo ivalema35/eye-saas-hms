@@ -89,6 +89,72 @@ class ReportsApiController extends Controller
         ]);
     }
 
+    /**
+     * Channel cards (Round 3.5 gap-fill) — mirrors Hospital\Report\ReportController::index()'s
+     * $channelCounts, which itself was added with the OT Workflow Upgrade. Counts respect
+     * every filter except the channel itself, so switching cards doesn't reset other filters.
+     */
+    public function channelCounts(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_collection' => (float) $this->buildQuery($request, true)
+                    ->where('type', 'walkin')
+                    ->whereDoesntHave('otAppointmentSource')
+                    ->sum('case_fee'),
+                'ot_appointment' => $this->buildQuery($request, true)->whereHas('otAppointmentSource')->count(),
+                'walkin' => $this->buildQuery($request, true)->where('type', 'walkin')->whereDoesntHave('otAppointmentSource')->count(),
+                'phone' => $this->buildQuery($request, true)->where('type', 'phone')->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * Dedicated per-channel patient list (Round 3.5 gap-fill) — mirrors
+     * Hospital\Report\ReportController::showChannel() exactly.
+     */
+    public function showChannel(Request $request, string $channel): JsonResponse
+    {
+        $labels = [
+            'ot_appointment' => 'OT Appointment Patients',
+            'walkin' => 'Walk-in Patients',
+            'phone' => 'Phone Appointment Patients',
+        ];
+
+        if (! array_key_exists($channel, $labels)) {
+            return response()->json(['success' => false, 'message' => 'Unknown channel.'], 404);
+        }
+
+        $request->merge(['type' => $channel]);
+
+        $patients = $this->buildQuery($request)
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('created_at')
+            ->paginate((int) $request->integer('per_page', 20));
+
+        $doctors = collect();
+        $assistants = collect();
+
+        if ($channel === 'ot_appointment') {
+            $assistants = HospitalUser::active()->whereHas('role', fn (Builder $q) => $q->where('slug', 'ot_assistant'))->orderBy('name')->get(['id', 'name']);
+        } else {
+            $doctors = HospitalUser::active()->whereHas('role', fn (Builder $q) => $q->where('slug', 'doctor'))->orderBy('name')->get(['id', 'name']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'channel' => $channel,
+                'label' => $labels[$channel],
+                'patients' => collect($patients->items())->map(fn ($p) => $this->formatPatient($p))->values(),
+                'meta' => ['current_page' => $patients->currentPage(), 'last_page' => $patients->lastPage(), 'total' => $patients->total(), 'per_page' => $patients->perPage()],
+                'doctors' => $doctors,
+                'assistants' => $assistants,
+            ],
+        ]);
+    }
+
     // ── Excel export ──────────────────────────────────────────────────────────
 
     public function exportExcel(Request $request)
@@ -122,9 +188,9 @@ class ReportsApiController extends Controller
 
     // ── Shared query builder (mirrors ReportController@buildQuery exactly) ────
 
-    private function buildQuery(Request $request): Builder
+    private function buildQuery(Request $request, bool $excludeChannelFilter = false): Builder
     {
-        $query = Patient::query()->with(['doctor', 'reception', 'location', 'caseType']);
+        $query = Patient::query()->with(['doctor', 'reception', 'location', 'caseType', 'otAppointmentSource']);
 
         $query->when($request->filled('reception_id'), fn (Builder $b) =>
             $b->where('reception_id', (int) $request->input('reception_id'))
@@ -144,14 +210,18 @@ class ReportsApiController extends Controller
             fn (Builder $b) => $b->where('case_id', (int) $request->input('case_id'))
         );
 
-        $query->when($request->filled('type'), function (Builder $b) use ($request) {
-            $type = (string) $request->input('type');
-            if ($type === 'walkin' || $type === '0') {
-                $b->whereIn('type', ['walkin', '0']);
-            } elseif ($type === 'phone' || $type === '1') {
-                $b->whereIn('type', ['phone', '1']);
-            }
-        });
+        if (! $excludeChannelFilter) {
+            $query->when($request->filled('type'), function (Builder $b) use ($request) {
+                $type = (string) $request->input('type');
+                if ($type === 'ot_appointment') {
+                    $b->whereHas('otAppointmentSource');
+                } elseif ($type === 'walkin' || $type === '0') {
+                    $b->whereIn('type', ['walkin', '0'])->whereDoesntHave('otAppointmentSource');
+                } elseif ($type === 'phone' || $type === '1') {
+                    $b->whereIn('type', ['phone', '1']);
+                }
+            });
+        }
 
         $this->applyDateRange($query, (string) $request->input('date_range', ''));
 

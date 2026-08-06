@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
+use App\Models\Hospital\MasterMedicineInstruction;
 use App\Models\Hospital\MedicineCategory;
 use App\Models\Hospital\MedicineRoute;
 use App\Models\Hospital\MedicineType;
@@ -153,5 +154,40 @@ class MedicineMasterApiController extends Controller
         MedicineRoute::findOrFail($id)->delete();
 
         return response()->json(['success' => true, 'message' => 'Route deleted.']);
+    }
+
+    // ── Medicine Instructions ────────────────────────────────────────────────
+    // Round 3 gap-fill (found during full app-parity audit, 2026-08-04) — mirrors
+    // Hospital\Medicine\MedicineInstructionController, which had zero API coverage.
+
+    public function instructions(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => MasterMedicineInstruction::latest()->get(['id', 'value']),
+        ]);
+    }
+
+    public function storeInstruction(Request $request): JsonResponse
+    {
+        $request->validate(['value' => ['required', 'string', 'max:255']]);
+        $i = MasterMedicineInstruction::create(['value' => $request->value]);
+
+        return response()->json(['success' => true, 'message' => 'Instruction added successfully.', 'id' => $i->id], 201);
+    }
+
+    public function updateInstruction(string $slug, Request $request, int $id): JsonResponse
+    {
+        $request->validate(['value' => ['required', 'string', 'max:255']]);
+        MasterMedicineInstruction::findOrFail($id)->update(['value' => $request->value]);
+
+        return response()->json(['success' => true, 'message' => 'Instruction updated successfully.']);
+    }
+
+    public function destroyInstruction(string $slug, int $id): JsonResponse
+    {
+        MasterMedicineInstruction::findOrFail($id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Instruction deleted successfully.']);
     }
 }

@@ -94,6 +94,7 @@ class PermissionsSeeder extends Seeder
         ['module' => 'master', 'action' => 'master.ot_slots',    'label' => 'OT Slot Master CRUD'],
         ['module' => 'master', 'action' => 'master.ot_types',    'label' => 'OT Type Master CRUD'],
         ['module' => 'master', 'action' => 'master.ot_charges',  'label' => 'OT Charge Heads CRUD'],
+        ['module' => 'master', 'action' => 'master.ot_inventory', 'label' => 'OT Lens Inventory / Power / Package Masters CRUD'],
 
         // ── Settings ────────────────────────────────────────────────
         ['module' => 'setting', 'action' => 'settings.hospital',      'label' => 'Hospital Profile Settings'],
