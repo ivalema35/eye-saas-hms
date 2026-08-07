@@ -855,7 +855,6 @@
                     </div>
                     <div>
                         <h4 class="header-title">{{ $showAll ? 'All Patients' : "Today's Patients" }}</h4>
-                        <p class="header-subtitle">Manage and track patient records</p>
                     </div>
                 </div>
 

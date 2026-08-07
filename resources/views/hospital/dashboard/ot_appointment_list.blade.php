@@ -69,12 +69,6 @@
                         <tbody>
                             @forelse($appointments as $appointment)
                                 @php
-                                    $badgeClass = match ($appointment->status) {
-                                        'confirmed' => 'ota-status-confirmed',
-                                        'cancelled' => 'ota-status-cancelled',
-                                        'completed' => 'ota-status-completed',
-                                        default => 'ota-status-booked',
-                                    };
                                     $fullName = trim(implode(' ', array_filter([
                                         $appointment->patient_name,
                                         $appointment->middle_name,
@@ -93,7 +87,9 @@
                                     <td>{{ optional($appointment->appointment_date)->format('d M Y') ?? '-' }}</td>
                                     <td>{{ $appointment->doctor?->name ? 'Dr. '.$appointment->doctor->name : '-' }}</td>
                                     <td>{{ $appointment->location?->name ?: '-' }}</td>
-                                    <td><span class="badge ota-status-badge {{ $badgeClass }} text-capitalize">{{ $appointment->status }}</span></td>
+                                    <td>
+                                        <span class="badge ota-status-badge {{ $appointment->stage_badge_class }}">{{ $appointment->stage_label }}</span>
+                                    </td>
                                     <td class="text-center">
                                         @if($canWalkIn)
                                             <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
@@ -338,16 +334,25 @@
 
     .ota-status-badge {
         border-radius: 999px;
-        padding: .4rem .7rem;
-        font-weight: 800;
+        padding: .45rem .70rem;
+        font-weight: 900;
         letter-spacing: .02em;
+        box-shadow: 0 10px 22px rgba(27, 79, 114, 0.10);
         color: #fff;
     }
 
-    .ota-status-booked { background: #E0A800; }
-    .ota-status-confirmed { background: #1E8E5A; }
-    .ota-status-cancelled { background: #C0392B; }
-    .ota-status-completed { background: #1E8E5A; }
+    /* Same stage colours as OT Appointments register */
+    .ot-stage-booked { background: #E0A800; }
+    .ot-stage-confirmed { background: #1E8E5A; }
+    .ot-stage-cancelled { background: #C0392B; }
+    .ot-stage-checkedin { background: #5D6D7E; }
+    .ot-stage-recommended { background: #8E44AD; }
+    .ot-stage-counselled { background: #2E86C1; }
+    .ot-stage-billing { background: #D68910; }
+    .ot-stage-ward { background: #117864; }
+    .ot-stage-ready { background: #148F77; }
+    .ot-stage-operated { background: #1A5276; }
+    .ot-stage-discharged { background: #1E8E5A; }
 
     .ota-walkin-btn {
         display: inline-flex;

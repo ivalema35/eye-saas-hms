@@ -18,7 +18,12 @@ class OtAppointmentListController extends Controller
         [$startDate, $endDate] = $this->resolvedDates($request);
 
         $appointments = OtAppointment::query()
-            ->with(['doctor:id,name', 'location:id,name', 'createdBy:id,name'])
+            ->with([
+                'doctor:id,name',
+                'location:id,name',
+                'createdBy:id,name',
+                'convertedPatient.latestOtBooking',
+            ])
             ->whereDate('appointment_date', '>=', $startDate)
             ->whereDate('appointment_date', '<=', $endDate)
             ->orderByDesc('appointment_date')

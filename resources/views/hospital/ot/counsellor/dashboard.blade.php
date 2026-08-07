@@ -12,7 +12,6 @@
                     </span>
                     <div class="flex-grow-1">
                         <h5 class="ot-title">Awaiting Counselling</h5>
-                        <div class="ot-subtitle">Bookings that still need diagnosis, lens/package selection and consent.</div>
                     </div>
                 </div>
                 <span class="badge ot-total-pill">{{ $bookings->total() }} total</span>
@@ -38,7 +37,7 @@
                                     <th><i class="bi bi-eye me-1"></i>Eye</th>
                                     <th><i class="bi bi-activity me-1"></i>Surgery Type</th>
                                     <th><i class="bi bi-flag me-1"></i>Status</th>
-                                    <th class="ot-actions-col"><i class="bi bi-three-dots me-1"></i>Action</th>
+                                    <th class="ot-actions-col">Action</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -93,7 +92,6 @@
                     </span>
                     <div class="flex-grow-1">
                         <h5 class="ot-title">Payment Status</h5>
-                        <div class="ot-subtitle">Bookings billing has taken payment on — status updates automatically as they move forward.</div>
                     </div>
                 </div>
                 <span class="badge ot-total-pill">{{ $paymentVerificationQueue->total() }} total</span>
