@@ -412,7 +412,7 @@
                             <th><i class="bi bi-eye me-1"></i> Eye</th>
                             <th><i class="bi bi-activity me-1"></i> Type</th>
                             <th><i class="bi bi-flag me-1"></i> Status</th>
-                            <th class="ot-actions-col"><i class="bi bi-three-dots me-1"></i> Actions</th>
+                            <th class="ot-actions-col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>

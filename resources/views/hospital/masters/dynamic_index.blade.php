@@ -43,7 +43,6 @@
                         Back
                     </a>
                 @endif
-                <p class="text-muted small mb-0">Keep your hospital's master data organized and up-to-date.</p>
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 @if($canWrite && $showDiagnosis)

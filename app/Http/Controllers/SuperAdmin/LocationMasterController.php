@@ -26,19 +26,29 @@ class LocationMasterController extends Controller
     {
         $tab = request('tab', 'countries');
 
-        // $countries = MasterCountry::orderBy('name')->get();
-        $countries = MasterCountry::withCount('states')
-            ->orderBy('name')
-            ->paginate(10)
-            ->appends(request()->query());
-        $states = collect();
-        $districts = collect();
-        $cities = collect();
-
         $filterCountryId = request()->integer('country_id') ?: null;
         $filterStateId = request()->integer('state_id') ?: null;
         $filterDistrictId = request()->integer('district_id') ?: null;
         $search = request('search', '');
+
+        // Countries list (paginated + searchable — same UX as other location tabs)
+        $countriesQuery = MasterCountry::withCount('states');
+        if ($tab === 'countries' && $search !== '') {
+            $countriesQuery->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('country_code', 'like', "%{$search}%")
+                    ->orWhere('currency_code', 'like', "%{$search}%")
+                    ->orWhere('default_timezone', 'like', "%{$search}%");
+            });
+        }
+        $countries = $countriesQuery
+            ->orderBy('name')
+            ->paginate(10)
+            ->appends(request()->query());
+
+        $states = collect();
+        $districts = collect();
+        $cities = collect();
 
         if ($tab === 'states') {
             $q = MasterState::with('country');

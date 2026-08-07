@@ -1169,14 +1169,14 @@ $pgMasterOpts = [
 
     {{-- MODAL: PG Value Picker --}}
     <div class="modal fade" id="modalPGPicker" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered" style="width:70%;max-width:70%;">
             <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
                 <div class="modal-header py-2 px-4" style="background:#1B4F72;">
                     <h6 class="modal-title text-white fw-bold mb-0 fs-6" id="pgPickerTitle">Select Value</h6>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4" style="background:#f8fafc;">
-                    <div id="pgPickerGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:10px;max-height:340px;overflow-y:auto;" class="mb-4"></div>
+                    <div id="pgPickerGrid" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;justify-items:stretch;align-items:stretch;max-height:340px;overflow-y:auto;" class="mb-4"></div>
                     <div class="d-flex align-items-center gap-3 px-4 py-3 rounded-3" style="background:white;border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.05);">
                         <div class="d-flex flex-column align-items-center gap-1" style="min-width:90px;">
                             <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-weight:600;">Selected</span>
@@ -3674,9 +3674,9 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 chip.textContent = fmt;
                 chip.dataset.val = fmt;
                 if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 } else {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 }
                 chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
                 chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
@@ -3692,9 +3692,9 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 chip.textContent = fmt;
                 chip.dataset.val = fmt;
                 if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 } else {
-                    chip.style.cssText = 'width:100%;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
+                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
                 }
                 chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
                 chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });

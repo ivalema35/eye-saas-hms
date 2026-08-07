@@ -81,6 +81,20 @@
          TAB: COUNTRIES
     ══════════════════════════════════════ --}}
     @if($tab === 'countries')
+    <div class="filter-bar">
+        <form method="GET" action="{{ route('superadmin.locations.index') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+            <input type="hidden" name="tab" value="countries">
+            <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:220px">
+                <label class="hms-label">Search</label>
+                <input type="text" name="search" class="hms-input" placeholder="Search country, code, currency, timezone..." value="{{ $search }}">
+            </div>
+            <div style="display:flex;gap:.5rem">
+                <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i> Filter</button>
+                <a href="{{ route('superadmin.locations.index', ['tab' => 'countries']) }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
+            </div>
+        </form>
+    </div>
+
         <div class="hms-card" style="padding:0">
             <div class="hms-card-header">
                 <h3 class="hms-card-title"><i class="bi bi-globe2" style="color:#1B4F72"></i> Country List</h3>
@@ -89,8 +103,8 @@
             @if($countries->isEmpty())
                 <div class="loc-empty">
                     <i class="bi bi-globe2"></i>
-                    <p>No countries yet</p>
-                    <p class="loc-hint">Click "Add Country" to get started.</p>
+                    <p>{{ $search !== '' ? 'No countries match your search' : 'No countries yet' }}</p>
+                    <p class="loc-hint">{{ $search !== '' ? 'Try a different keyword or clear the filter.' : 'Click "Add Country" to get started.' }}</p>
                 </div>
             @else
                 <div class="hms-table-wrap" style="border:none">
