@@ -156,7 +156,7 @@ class PatientController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $slug = request()->route('slug');
         $tenantId = app('tenant')->id;
@@ -195,7 +195,49 @@ class PatientController extends Controller
         $nextMrd = $this->patientService->peekNextMrd($tenantId);
         $currentHospitalName = app('tenant')->name;
 
-        return view('hospital.patients.create', compact('slug', 'doctors', 'locations', 'cases', 'slots', 'referrers', 'nextMrd', 'currentHospitalName'));
+        // Dashboard "Walk-In" on OT Appt → open form with OT appointment prefilled.
+        $prefillOtAppointment = null;
+        $otAppointmentId = (int) $request->query('ot_appointment_id', 0);
+        if ($otAppointmentId > 0) {
+            $appointment = OtAppointment::query()
+                ->with(['doctor:id,name'])
+                ->where('id', $otAppointmentId)
+                ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+                ->whereNull('converted_patient_id')
+                ->first();
+
+            if ($appointment) {
+                $prefillOtAppointment = [
+                    'id' => $appointment->id,
+                    'appointment_number' => $appointment->appointment_number,
+                    'patient_name' => $appointment->patient_name,
+                    'middle_name' => $appointment->middle_name,
+                    'surname' => $appointment->surname,
+                    'mobile_no' => $appointment->mobile_no,
+                    'whatsapp_no' => $appointment->whatsapp_no,
+                    'age' => $appointment->age,
+                    'gender' => $appointment->gender,
+                    'occupation' => $appointment->occupation,
+                    'referrer_id' => $appointment->referrer_id,
+                    'location_id' => $appointment->location_id,
+                    'doctor_id' => $appointment->doctor_id,
+                    'doctor_name' => $appointment->doctor?->name,
+                    'appointment_date' => optional($appointment->appointment_date)->format('d M Y'),
+                ];
+            }
+        }
+
+        return view('hospital.patients.create', compact(
+            'slug',
+            'doctors',
+            'locations',
+            'cases',
+            'slots',
+            'referrers',
+            'nextMrd',
+            'currentHospitalName',
+            'prefillOtAppointment'
+        ));
     }
 
     public function store(PatientStoreRequest $request): RedirectResponse

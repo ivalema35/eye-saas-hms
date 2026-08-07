@@ -36,8 +36,9 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name'             => ['required', 'string', 'max:255'],
-            'dosage_id'        => ['required', 'exists:dosages,id'], 
-            'duration'         => ['required', 'string', 'max:100'], 
+            'usage_scope'      => ['required', 'in:opd,ot'],
+            'dosage_id'        => ['required', 'exists:dosages,id'],
+            'duration'         => ['required', 'string', 'max:100'],
             'qty'              => ['required', 'string', 'max:50'],
             'composition'      => ['nullable', 'string'],
             'company'          => ['nullable', 'string', 'max:255'],
@@ -65,8 +66,9 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name'             => ['required', 'string', 'max:255'],
-            'dosage_id'        => ['required', 'exists:dosages,id'],// Changed to required
-            'duration'         => ['required', 'string', 'max:100'], 
+            'usage_scope'      => ['required', 'in:opd,ot'],
+            'dosage_id'        => ['required', 'exists:dosages,id'],
+            'duration'         => ['required', 'string', 'max:100'],
             'qty'              => ['required', 'string', 'max:50'],
             'composition'      => ['nullable', 'string'],
             'company'          => ['nullable', 'string', 'max:255'],

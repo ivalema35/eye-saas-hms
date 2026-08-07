@@ -392,6 +392,8 @@
             color: #aaa;
         }
 
+        {!! axis_chip_css() !!}
+
         .section-sep {
             font-size: 9px;
             font-weight: 700;
@@ -674,21 +676,21 @@
                         <tbody>
                             <tr>
                                 <td class="row-lbl">Dst</td>
-                                <td>{{ $st['re']['ds'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['re']['dc'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['re']['ax'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['le']['ds'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['le']['dc'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['le']['ax'] ?? '<span class="dash">—</span>' }}</td>
+                                <td>{!! !empty($st['re']['ds']) ? e($st['re']['ds']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! !empty($st['re']['dc']) ? e($st['re']['dc']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! axis_chip($st['re']['ax'] ?? '', '<span class="dash">—</span>') !!}</td>
+                                <td>{!! !empty($st['le']['ds']) ? e($st['le']['ds']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! !empty($st['le']['dc']) ? e($st['le']['dc']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! axis_chip($st['le']['ax'] ?? '', '<span class="dash">—</span>') !!}</td>
                             </tr>
                             <tr>
                                 <td class="row-lbl">Nr</td>
-                                <td>{{ $st['re']['ns'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['re']['nc'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['re']['na'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['le']['ns'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['le']['nc'] ?? '<span class="dash">—</span>' }}</td>
-                                <td>{{ $st['le']['na'] ?? '<span class="dash">—</span>' }}</td>
+                                <td>{!! !empty($st['re']['ns']) ? e($st['re']['ns']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! !empty($st['re']['nc']) ? e($st['re']['nc']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! axis_chip($st['re']['na'] ?? '', '<span class="dash">—</span>') !!}</td>
+                                <td>{!! !empty($st['le']['ns']) ? e($st['le']['ns']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! !empty($st['le']['nc']) ? e($st['le']['nc']) : '<span class="dash">—</span>' !!}</td>
+                                <td>{!! axis_chip($st['le']['na'] ?? '', '<span class="dash">—</span>') !!}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -715,7 +717,7 @@
                                     <th>Dosage</th>
                                     <th>Days</th>
                                     <th>QTY</th>
-                                    <th>Route of Administration</th>
+                                    <th>Mode</th>
                                 </tr>
                             </thead>
                             <tbody>

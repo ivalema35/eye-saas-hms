@@ -293,7 +293,7 @@
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
-            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+            <i class="bi bi-arrow-right-circle me-1"></i> Mode
         </a>
     </li>
     <li class="nav-item">
@@ -342,7 +342,7 @@
                         <th style="width:110px">Dosage</th>
                         <th style="width:90px">Days</th>
                         <th style="width:70px">Qty</th>
-                        <th style="width:160px">Route of Administration</th>
+                        <th style="width:160px">Mode</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -230,6 +230,12 @@
     @keyframes coFadeIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
     /* Narrower dropdown for PG axis/vn fields */
     .pg-co-dropdown { width: 180px !important; }
+
+    /* Axis plain display (no pill) */
+    .axis-disp.form-control {
+        border-radius: 4px !important;
+        font-weight: 600 !important;
+    }
     .co-section-lbl {
         font-size: 10px; font-weight: 700; text-transform: uppercase;
         letter-spacing: .07em; color: #94a3b8; padding: 8px 12px 4px;
@@ -1353,11 +1359,11 @@ $pgMasterOpts = [
                     <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:#fafbfc;">
                         <div class="d-flex flex-wrap gap-4">
                             @foreach([
-                                    'bifocal' => 'Bifocal',
-                                    'nd_separate' => 'Near & Distance Separate',
-                                    'progressive' => 'Progressive',
-                                    'computer_uses' => 'Computer Uses',
-                                ] as $cbKey => $cbLabel)
+    'bifocal' => 'Bifocal',
+    'nd_separate' => 'Near & Distance Separate',
+    'progressive' => 'Progressive',
+    'computer_uses' => 'Computer Uses',
+] as $cbKey => $cbLabel)
                                 @php $cbVal = old('exam_data.st.' . $cbKey, $st[$cbKey] ?? false); @endphp
                                 <div class="form-check">
                                     <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>
@@ -1572,7 +1578,7 @@ foreach ($oeFieldMeta as $meta) {
                         <label class="form-label fw-semibold mb-2">Operation Type</label>
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-outline-secondary flex-fill pseudo-type-btn" data-val="Block">Block</button>
-                            <button type="button" class="btn btn-outline-secondary flex-fill pseudo-type-btn" data-val="Phaco">Phaco</button>
+                            <button type="button" class="btn btn-outline-secondary flex-fill pseudo-type-btn" data-val="Phaco">Topical</button>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -1793,7 +1799,7 @@ foreach ($masters['advices'] as $_a) {
                                     <th style="width:130px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Dosage</th>
                                     <th style="width:100px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Days</th>
                                     <th style="width:80px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">QTY</th>
-                                    <th style="width:160px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Route of Administration</th>
+                                    <th style="width:160px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Mode</th>
                                     <th style="width:40px;padding:10px 8px;"></th>
                                 </tr>
                             </thead>
@@ -2395,13 +2401,19 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
 
         // BOX 1 lower: PG (Distance & Near) — SPH / CYL X Axis, no VN
         // Skip "X" (and leave blank) when axis/fields are not filled.
+        const axisChip = (ax) => {
+            const a = (ax && ax !== '-') ? String(ax).trim() : '';
+            if (!a) return '';
+            const n = a.replace(/\s*°\s*$/u, '');
+            return n + '°';
+        };
         const pgFmt = (sph, cyl, ax) => {
             const s = (sph && sph !== '-') ? String(sph).trim() : '';
             const c = (cyl && cyl !== '-') ? String(cyl).trim() : '';
             const a = (ax && ax !== '-') ? String(ax).trim() : '';
             if (!s && !c && !a) return '';
             let out = (s || '-') + ' / ' + (c || '-');
-            if (a) out += ' X ' + a;
+            if (a) out += ' X ' + axisChip(a);
             return out;
         };
         const pgReDist = pgFmt(val('exam_data[pg][re][ds]'), val('exam_data[pg][re][dc]'), val('exam_data[pg][re][ax]'));
@@ -2416,6 +2428,10 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         const stVnRe  = (() => { const v = val('exam_data[st][re][vn]'); return v === '-' ? '' : v; })();
         const stVnLe  = (() => { const v = val('exam_data[st][le][vn]'); return v === '-' ? '' : v; })();
         const stCell  = (v, dim) => `<td class="text-center" style="padding:2px;${dim ? 'color:#94a3b8;' : ''}">${v}</td>`;
+        const stAxisCell = (v) => {
+            const chip = axisChip(v);
+            return `<td class="text-center" style="padding:2px;">${chip || '—'}</td>`;
+        };
         const pgSubTh = (t) => `<th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px;">${t}</th>`;
         const stRowTag = (t) => `<th class="text-center" style="background:#f0f4f8;color:#1B4F72;font-size:10px;font-weight:700;padding:2px;">${t}</th>`;
         const stOptLabels = [
@@ -2438,12 +2454,12 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             `<tr style="background:#eef4f9;">${pgSubTh(stVnRe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}${pgSubTh(stVnLe)}${pgSubTh('SPH')}${pgSubTh('CYL')}${pgSubTh('AXIS')}</tr>` +
             `</thead><tbody>` +
             `<tr>` +
-              `${stRowTag('D')}${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stCell(val('exam_data[st][re][ax]'))}` +
-              `${stRowTag('D')}${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stCell(val('exam_data[st][le][ax]'))}` +
+              `${stRowTag('D')}${stCell(val('exam_data[st][re][ds]'))}${stCell(val('exam_data[st][re][dc]'))}${stAxisCell(val('exam_data[st][re][ax]'))}` +
+              `${stRowTag('D')}${stCell(val('exam_data[st][le][ds]'))}${stCell(val('exam_data[st][le][dc]'))}${stAxisCell(val('exam_data[st][le][ax]'))}` +
             `</tr>` +
             `<tr>` +
-              `${stRowTag('N')}${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stCell(val('exam_data[st][re][na]'))}` +
-              `${stRowTag('N')}${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stCell(val('exam_data[st][le][na]'))}` +
+              `${stRowTag('N')}${stCell(val('exam_data[st][re][ns]'))}${stCell(val('exam_data[st][re][nc]'))}${stAxisCell(val('exam_data[st][re][na]'))}` +
+              `${stRowTag('N')}${stCell(val('exam_data[st][le][ns]'))}${stCell(val('exam_data[st][le][nc]'))}${stAxisCell(val('exam_data[st][le][na]'))}` +
             `</tr>` +
             `</tbody></table>`;
         if (stOptLabels.length) {
@@ -2510,7 +2526,7 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         const medicineHtml = rxBodyHtml
             ? `<table class="table table-sm table-bordered mb-0" style="font-size:10px;">` +
               `<thead>` +
-              `<tr style="background:#eef4f9;"><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Medicine Name</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Dosage</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Days</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">QTY</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Route of Administration</th></tr>` +
+              `<tr style="background:#eef4f9;"><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Medicine Name</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Dosage</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Days</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">QTY</th><th class="text-center" style="color:#1B4F72;font-size:10px;padding:2px 4px;font-weight:600;">Mode</th></tr>` +
               `</thead><tbody>${rxBodyHtml}</tbody></table>`
             : '';
         document.getElementById('canvas_medicine').innerHTML = medicineHtml;
@@ -2723,26 +2739,8 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
         document.addEventListener('change', function (e) {
             if (!e.target.matches('input[name="exam_data[diagnoses][]"]')) return;
+            // Only show suggested advice pills — do not auto-fill textarea
             update();
-            if (e.target.checked) {
-                const dxId = +e.target.value;
-                const linked = dxAdvices.filter(a => a.diagnosis_ids && a.diagnosis_ids.includes(dxId));
-                if (linked.length) {
-                    const ta = document.getElementById('advice_textarea');
-                    if (ta) {
-                        linked.forEach(a => {
-                            const text = adviceMap[a.id] || '';
-                            if (!text) return;
-                            if (!ta.value.includes(text)) {
-                                ta.value = ta.value.trim() ? ta.value.trim() + ', ' + text : text;
-                            }
-                        });
-                        ta.dispatchEvent(new Event('input'));
-                        if (typeof updateLivePreview === 'function') updateLivePreview();
-                        update();
-                    }
-                }
-            }
         });
 
         update();
@@ -3872,6 +3870,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         function applyAxisVal(val) {
             if (!axisPickTarget) return;
             axisPickTarget.inp.value = val;
+            axisPickTarget.inp.classList.toggle('has-axis-val', String(val || '').trim() !== '');
             if (axisPickTarget.hid) axisPickTarget.hid.value = val;
 
             if (axisPickTarget.hid?.name) {
@@ -3901,6 +3900,11 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 e.preventDefault();
                 openAxisPicker(inp);
             }
+        });
+
+        // Initial filled-state highlight on axis inputs
+        document.querySelectorAll('.axis-disp[data-axis-picker]').forEach(function (inp) {
+            inp.classList.toggle('has-axis-val', String(inp.value || '').trim() !== '');
         });
     })();
 

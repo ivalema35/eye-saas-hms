@@ -68,15 +68,7 @@
                                     <td>{{ optional($appointment->appointment_date)->format('d M Y') }}</td>
                                     <td>{{ $appointment->doctor?->name ? 'Dr. '.$appointment->doctor->name : '-' }}</td>
                                     <td>
-                                        @php
-                                            $badgeClass = match($appointment->status) {
-                                                'confirmed' => 'ot-status-confirmed',
-                                                'cancelled' => 'ot-status-cancelled',
-                                                'completed' => 'ot-status-completed',
-                                                default => 'ot-status-booked',
-                                            };
-                                        @endphp
-                                        <span class="badge ot-status-badge {{ $badgeClass }} text-capitalize">{{ $appointment->status }}</span>
+                                        <span class="badge ot-status-badge {{ $appointment->stage_badge_class }}">{{ $appointment->stage_label }}</span>
                                     </td>
                                     <td class="ot-actions-cell">
                                         @if(in_array($appointment->status, ['booked', 'confirmed']))
@@ -407,10 +399,17 @@
         color: #fff;
     }
 
-    .ot-status-booked { background: #E0A800; }
-    .ot-status-confirmed { background: #1E8E5A; }
-    .ot-status-cancelled { background: #C0392B; }
-    .ot-status-completed { background: #1E8E5A; }
+    .ot-stage-booked { background: #E0A800; }
+    .ot-stage-confirmed { background: #1E8E5A; }
+    .ot-stage-cancelled { background: #C0392B; }
+    .ot-stage-checkedin { background: #5D6D7E; }
+    .ot-stage-recommended { background: #8E44AD; }
+    .ot-stage-counselled { background: #2E86C1; }
+    .ot-stage-billing { background: #D68910; }
+    .ot-stage-ward { background: #117864; }
+    .ot-stage-ready { background: #148F77; }
+    .ot-stage-operated { background: #1A5276; }
+    .ot-stage-discharged { background: #1E8E5A; }
 
     .ot-icon-btn {
         border-radius: 10px;

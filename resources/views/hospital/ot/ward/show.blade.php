@@ -46,6 +46,9 @@
     @if(session('success'))
         <div class="alert alert-success ot-alert">{{ session('success') }}</div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger ot-alert">{{ session('error') }}</div>
+    @endif
     @if($errors->any())
         <div class="alert alert-danger ot-alert">
             <ul class="mb-0 ps-3">
@@ -167,17 +170,48 @@
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label">Medicine Name <span class="text-danger">*</span></label>
-                        <input type="text" name="medicine_name" class="form-control" list="eyeDropMedicines" required>
-                        <datalist id="eyeDropMedicines">
-                            <option value="Tropicamide E/D">
-                            <option value="Phenylephrine E/D">
-                        </datalist>
+                        <select name="medicine_name" class="form-select" required>
+                            <option value="">Select medicine...</option>
+                            @forelse(($otMedicines ?? collect()) as $med)
+                                <option value="{{ $med->name }}" @selected(old('medicine_name') === $med->name)>
+                                    {{ $med->name }}
+                                </option>
+                            @empty
+                                <option value="" disabled>No OT medicines in master</option>
+                            @endforelse
+                        </select>
+                        @if(($otMedicines ?? collect())->isEmpty())
+                            <div class="form-text text-warning">Add medicines with usage scope OT under Medicine Master.</div>
+                        @endif
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Eye <span class="text-danger">*</span></label>
-                        <select name="eye" class="form-select" required>
-                            <option value="RE">Right (RE)</option>
-                            <option value="LE">Left (LE)</option>
+                        @php
+                            // Autofill / lock from Recommend Surgery (booking.eye); counsellor may have updated it.
+                            $bookingEye = old('eye', (string) ($booking->eye ?? ''));
+                            if (in_array($bookingEye, ['RE', 'LE'], true)) {
+                                $eyeDropOptions = [$bookingEye];
+                            } elseif ($bookingEye === 'Both') {
+                                $eyeDropOptions = ['RE', 'LE'];
+                            } else {
+                                $eyeDropOptions = ['RE', 'LE'];
+                            }
+                            $selectedDropEye = old('eye', $eyeDropOptions[0]);
+                            if (! in_array($selectedDropEye, $eyeDropOptions, true)) {
+                                $selectedDropEye = $eyeDropOptions[0];
+                            }
+                            $eyeDropLabels = [
+                                'RE' => 'Right (RE)',
+                                'LE' => 'Left (LE)',
+                            ];
+                        @endphp
+                        <select name="eye" class="form-select" required
+                            @if(count($eyeDropOptions) === 1) title="From Recommend Surgery" @endif>
+                            @foreach($eyeDropOptions as $eyeOpt)
+                                <option value="{{ $eyeOpt }}" @selected($selectedDropEye === $eyeOpt)>
+                                    {{ $eyeDropLabels[$eyeOpt] ?? $eyeOpt }}
+                                </option>
+                            @endforeach
                         </select>
                     </div>
                     <div class="col-md-2">
@@ -224,10 +258,11 @@
                         \App\Models\Hospital\OT\OtPreOp::STATUS_COMPLICATED => 'Complicated',
                     ];
                     $readyStatus = \App\Models\Hospital\OT\OtPreOp::STATUS_READY_FOR_SURGERY;
-                    $selectedDoctorId = (int) old('ot_doctor_id', $booking->ot_doctor_id);
+                    $isReadyUi = $currentStatus === $readyStatus;
                     $selectedAssistantId = (int) old('ot_assistant_id', $booking->ot_assistant_id);
-                    $otDoctors = $otDoctors ?? collect();
                     $otAssistants = $otAssistants ?? collect();
+                    $opdDoctorId = (int) ($opdDoctorId ?? $booking->patient?->doctor_id ?? 0);
+                    $opdDoctorName = $opdDoctorName ?? $booking->patient?->doctor?->name;
                 @endphp
                 @foreach($statusOptions as $value => $label)
                     <div class="form-check form-check-inline">
@@ -239,26 +274,28 @@
                 @endforeach
 
                 <div class="row g-3 mt-3">
-                    <div class="col-md-6">
-                        <label class="form-label" for="ward_ot_doctor_id">
-                            Doctor
-                            <span class="text-danger ward-doctor-req" @if($currentStatus === $readyStatus) style="display:none" @endif>*</span>
-                        </label>
-                        <select name="ot_doctor_id" id="ward_ot_doctor_id" class="form-select">
-                            <option value="">Select doctor</option>
-                            @foreach($otDoctors as $doctor)
-                                <option value="{{ $doctor->id }}" {{ $selectedDoctorId === (int) $doctor->id ? 'selected' : '' }}>
-                                    Dr. {{ $doctor->name }}
-                                </option>
-                            @endforeach
-                        </select>
+                    {{-- Preparing / Hold / Complicated: OPD doctor is auto-assigned (not manual). --}}
+                    <div class="col-md-6" id="wardOpdDoctorWrap" @if($isReadyUi) style="display:none" @endif>
+                        <label class="form-label">Doctor <span class="text-muted small">(OPD — auto)</span></label>
+                        @if($opdDoctorId > 0 && $opdDoctorName)
+                            <input type="text" class="form-control ot-readonly" readonly
+                                value="Dr. {{ $opdDoctorName }}">
+                            <div class="form-text">Auto-assigned from OPD. Appears on this doctor's OT dashboard card.</div>
+                        @else
+                            <input type="text" class="form-control is-invalid" readonly
+                                value="No OPD doctor on patient">
+                            <div class="invalid-feedback d-block">
+                                Assign an OPD doctor on the patient profile before Preparing / Hold / Complicated.
+                            </div>
+                        @endif
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="wardAssistantWrap" @if(! $isReadyUi) style="display:none" @endif>
                         <label class="form-label" for="ward_ot_assistant_id">
                             OT Assistant
-                            <span class="text-danger ward-assistant-req" @if($currentStatus !== $readyStatus) style="display:none" @endif>*</span>
+                            <span class="text-danger ward-assistant-req">*</span>
                         </label>
-                        <select name="ot_assistant_id" id="ward_ot_assistant_id" class="form-select">
+                        <select name="ot_assistant_id" id="ward_ot_assistant_id" class="form-select"
+                            @if($isReadyUi) required @endif>
                             <option value="">Select OT assistant</option>
                             @foreach($otAssistants as $assistant)
                                 <option value="{{ $assistant->id }}" {{ $selectedAssistantId === (int) $assistant->id ? 'selected' : '' }}>
@@ -269,9 +306,6 @@
                     </div>
                 </div>
 
-                @error('ot_doctor_id')
-                    <div class="text-danger small mt-2">{{ $message }}</div>
-                @enderror
                 @error('ot_assistant_id')
                     <div class="text-danger small mt-2">{{ $message }}</div>
                 @enderror
@@ -591,24 +625,27 @@
     (function () {
         const readyValue = @json(\App\Models\Hospital\OT\OtPreOp::STATUS_READY_FOR_SURGERY);
         const radios = document.querySelectorAll('.ward-status-radio');
-        const doctorReq = document.querySelector('.ward-doctor-req');
-        const assistantReq = document.querySelector('.ward-assistant-req');
-        const doctorSelect = document.getElementById('ward_ot_doctor_id');
+        const opdWrap = document.getElementById('wardOpdDoctorWrap');
+        const assistantWrap = document.getElementById('wardAssistantWrap');
         const assistantSelect = document.getElementById('ward_ot_assistant_id');
 
-        function syncRequired() {
+        function syncUi() {
             const checked = document.querySelector('.ward-status-radio:checked');
             const isReady = checked && checked.value === readyValue;
-            if (doctorReq) doctorReq.style.display = isReady ? 'none' : '';
-            if (assistantReq) assistantReq.style.display = isReady ? '' : 'none';
-            if (doctorSelect) doctorSelect.required = !isReady;
-            if (assistantSelect) assistantSelect.required = !!isReady;
+            if (opdWrap) opdWrap.style.display = isReady ? 'none' : '';
+            if (assistantWrap) assistantWrap.style.display = isReady ? '' : 'none';
+            if (assistantSelect) {
+                assistantSelect.required = !!isReady;
+                if (!isReady) {
+                    assistantSelect.value = '';
+                }
+            }
         }
 
         radios.forEach(function (el) {
-            el.addEventListener('change', syncRequired);
+            el.addEventListener('change', syncUi);
         });
-        syncRequired();
+        syncUi();
     })();
 </script>
 @endpush

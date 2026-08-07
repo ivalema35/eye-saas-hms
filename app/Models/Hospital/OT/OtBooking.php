@@ -44,6 +44,11 @@ class OtBooking extends Model
 
     public const STATUS_DISCHARGED = 'discharged';
 
+    /** Patient refused OT after ward consult — goes to Accounts for refund. */
+    public const STATUS_SURGERY_REFUSED = 'surgery_refused';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
     protected $table = 'ot_bookings';
 
     protected $fillable = [
@@ -112,6 +117,43 @@ class OtBooking extends Model
         return $this->hasMany(OtPayment::class, 'ot_booking_id');
     }
 
+    public function refunds()
+    {
+        return $this->hasMany(OtRefund::class, 'ot_booking_id');
+    }
+
+    public function preOp()
+    {
+        return $this->hasOne(OtPreOp::class, 'ot_booking_id');
+    }
+
+    /**
+     * Ward sent patient to OPD/OT doctor for consult (not Ready for OT yet).
+     */
+    public function isDoctorConsultationPending(): bool
+    {
+        if (! in_array($this->ot_status, [
+            self::STATUS_PAYMENT_VERIFIED,
+            self::STATUS_IN_WARD,
+            self::STATUS_DILATED,
+        ], true)) {
+            return false;
+        }
+
+        if (empty($this->ot_doctor_id)) {
+            return false;
+        }
+
+        $preOpStatus = $this->preOp?->pre_op_status;
+
+        return in_array($preOpStatus, [
+            OtPreOp::STATUS_PREPARING,
+            OtPreOp::STATUS_HOLD,
+            OtPreOp::STATUS_COMPLICATED,
+            OtPreOp::STATUS_NOT_FIT,
+        ], true);
+    }
+
     /**
      * Computed payment status — Paid / Partially Paid / Pending (PDF §5, Billing Module).
      * Deliberately NOT a stored column: derived from `payments` sum vs. `package_amount`
@@ -142,5 +184,30 @@ class OtBooking extends Model
         $paid = (float) $this->payments->sum('package_amount');
 
         return max(0, round($required - $paid, 2));
+    }
+
+    /** Total collected on this booking (payments). */
+    public function getTotalPaidAttribute(): float
+    {
+        return round((float) $this->payments->sum('package_amount'), 2);
+    }
+
+    /** Total refunded on this booking. */
+    public function getTotalRefundedAttribute(): float
+    {
+        return round((float) $this->refunds->sum('amount'), 2);
+    }
+
+    /** Amount still returnable to patient (paid − refunded). Full-refund mode uses this whole amount. */
+    public function getRefundableBalanceAttribute(): float
+    {
+        return max(0, round($this->total_paid - $this->total_refunded, 2));
+    }
+
+    public function isFullyRefunded(): bool
+    {
+        $paid = $this->total_paid;
+
+        return $paid > 0 && $this->total_refunded + 0.001 >= $paid;
     }
 }

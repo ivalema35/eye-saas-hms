@@ -17,9 +17,8 @@ class OtPackageMasterController extends Controller
 
         $records = OtPackageMaster::query()
             ->where('tenant_id', $tenantId)
-            ->orderBy('lens_cost')
-            ->orderBy('room_category')
             ->orderBy('package_name')
+            ->orderBy('room_category')
             ->get();
 
         return view('hospital.masters.ot.packages', compact('slug', 'records'));
@@ -33,7 +32,7 @@ class OtPackageMasterController extends Controller
         OtPackageMaster::query()->create([
             'tenant_id' => $tenantId,
             'package_name' => $validated['package_name'],
-            'lens_cost' => $validated['lens_cost'],
+            'lens_cost' => 0,
             'room_category' => $validated['room_category'],
             'ot_charges' => $validated['ot_charges'] ?? 0,
             'surgeon_charges' => $validated['surgeon_charges'] ?? 0,
@@ -57,7 +56,6 @@ class OtPackageMasterController extends Controller
 
         $record->update([
             'package_name' => $validated['package_name'],
-            'lens_cost' => $validated['lens_cost'],
             'room_category' => $validated['room_category'],
             'ot_charges' => $validated['ot_charges'] ?? 0,
             'surgeon_charges' => $validated['surgeon_charges'] ?? 0,
@@ -87,12 +85,11 @@ class OtPackageMasterController extends Controller
     private function validated(Request $request, int $tenantId, ?int $ignoreId = null): array
     {
         return $request->validate([
-            'package_name' => ['required', 'string', 'max:150'],
-            'lens_cost' => [
+            'package_name' => [
                 'required',
-                'numeric',
-                'min:0',
-                Rule::unique('ot_package_masters', 'lens_cost')
+                'string',
+                'max:150',
+                Rule::unique('ot_package_masters', 'package_name')
                     ->where(fn ($q) => $q
                         ->where('tenant_id', $tenantId)
                         ->where('room_category', (string) $request->input('room_category'))

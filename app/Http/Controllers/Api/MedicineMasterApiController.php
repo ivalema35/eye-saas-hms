@@ -123,7 +123,7 @@ class MedicineMasterApiController extends Controller
         return response()->json(['success' => true, 'message' => 'Category deleted.']);
     }
 
-    // ── Routes of Administration ──────────────────────────────────────────────
+    // ── Mode (medicine routes) ──────────────────────────────────────────────
 
     public function medicineRoutes(): JsonResponse
     {

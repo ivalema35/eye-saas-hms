@@ -171,31 +171,42 @@ class HospitalSettingController extends Controller
                 HospitalSetting::set($key, $value);
             }
 
-                // Sync location + timezone + currency back to tenants table
+                // Sync location + timezone + currency from Super Admin country master
             $tenantRecord = Tenant::find($tenantId);
             if ($tenantRecord) {
                 $newTimezone = $validated['hospital_timezone'] ?? null;
-                $isOverride  = $newTimezone && $newTimezone !== $tenantRecord->timezone;
+                $countryName = $validated['hospital_country'] ?? $tenantRecord->country;
+                $master = $countryName
+                    ? MasterCountry::whereRaw('LOWER(name) = ?', [strtolower(trim($countryName))])->first()
+                    : null;
 
                 $currencyUpdate = [];
-                $countryName = $validated['hospital_country'] ?? $tenantRecord->country;
-                if ($countryName && ! $tenantRecord->is_currency_override) {
-                    $master = MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($countryName)])->first();
-                    if ($master) {
-                        $currencyUpdate = [
-                            'currency_code' => $master->currency_code ?: 'INR',
-                            'currency_symbol' => $master->currency_symbol ?: '₹',
-                        ];
-                    }
+                if ($master) {
+                    // Always follow country master currency when country is set on settings
+                    $currencyUpdate = [
+                        'currency_code' => $master->currency_code ?: 'INR',
+                        'currency_symbol' => $master->currency_symbol ?: '₹',
+                        'is_currency_override' => false,
+                    ];
                 }
+
+                // Timezone: prefer submitted value; if empty, pull country default
+                $resolvedTimezone = $newTimezone
+                    ?: ($master?->default_timezone)
+                    ?: $tenantRecord->timezone
+                    ?: 'UTC';
+
+                $manualTzOverride = $newTimezone
+                    && $master
+                    && $newTimezone !== $master->default_timezone;
 
                 $tenantRecord->update(array_merge([
                     'country'              => $validated['hospital_country']  ?? $tenantRecord->country,
                     'state'                => $validated['hospital_state']    ?? $tenantRecord->state,
                     'district'             => $validated['hospital_district'] ?? $tenantRecord->district,
                     'city'                 => $validated['hospital_city']     ?? $tenantRecord->city,
-                    'timezone'             => $newTimezone                    ?? $tenantRecord->timezone,
-                    'is_timezone_override' => $isOverride ? true : $tenantRecord->is_timezone_override,
+                    'timezone'             => $resolvedTimezone,
+                    'is_timezone_override' => $manualTzOverride,
                 ], $currencyUpdate));
             }
         });

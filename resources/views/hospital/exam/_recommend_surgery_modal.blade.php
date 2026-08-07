@@ -1,22 +1,9 @@
 {{-- Shared Recommend Surgery modal — used on primary + secondary exam. Follows OT/exam theme. --}}
 @php
-    $otSlots = $otSlots ?? collect();
     $otSurgeryTypes = $otSurgeryTypes ?? collect();
     $existingOtRecommendation = $existingOtRecommendation ?? null;
-    $otDefaultSlotId = $otDefaultSlotId ?? null;
-    $otDefaultSurgeryDate = $otDefaultSurgeryDate ?? null;
     $otDefaultDiagnosisHint = $otDefaultDiagnosisHint ?? null;
-    $returnTo = $recommendReturnTo ?? 'secondary';
 
-    $defaultSurgeryDate = old(
-        'surgery_date',
-        optional($existingOtRecommendation?->surgery_date)->format('Y-m-d')
-        ?: ($otDefaultSurgeryDate ?: now()->toDateString())
-    );
-    $defaultSlotId = (int) old(
-        'slot_id',
-        $existingOtRecommendation?->slot_id ?: $otDefaultSlotId
-    );
     $defaultDiagnosisHint = old(
         'diagnosis_hint',
         $existingOtRecommendation?->counselling?->diagnosis
@@ -32,7 +19,6 @@
             <form method="POST"
                 action="{{ route('hospital.ot.recommend-surgery', ['slug' => $slug, 'patientId' => $patient->id]) }}">
                 @csrf
-                <input type="hidden" name="return_to" value="{{ $returnTo }}">
                 <div class="modal-header">
                     <h5 class="modal-title" id="recommendSurgeryModalLabel">
                         <span class="ot-modal-icon" aria-hidden="true"><i class="bi bi-hospital"></i></span>
@@ -60,28 +46,6 @@
                             <option value="LE" {{ $eyeVal === 'LE' ? 'selected' : '' }}>Left (LE)</option>
                             <option value="Both" {{ $eyeVal === 'Both' ? 'selected' : '' }}>Both</option>
                         </select>
-                    </div>
-
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Proposed OT Date <span class="text-danger">*</span></label>
-                            <input type="date" name="surgery_date" class="form-control hms-input" required
-                                min="{{ now()->toDateString() }}" value="{{ $defaultSurgeryDate }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">OT Slot <span class="text-danger">*</span></label>
-                            <select name="slot_id" class="form-select hms-input" required>
-                                <option value="">Select slot</option>
-                                @foreach($otSlots as $slot)
-                                    <option value="{{ $slot->id }}" {{ $defaultSlotId === (int) $slot->id ? 'selected' : '' }}>
-                                        {{ $slot->slot_name }}
-                                        @if($slot->start_time || $slot->end_time)
-                                            ({{ \Illuminate\Support\Str::of($slot->start_time)->substr(0, 5) }}–{{ \Illuminate\Support\Str::of($slot->end_time)->substr(0, 5) }})
-                                        @endif
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
                     </div>
 
                     <div class="mb-3">

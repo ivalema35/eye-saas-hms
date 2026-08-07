@@ -537,6 +537,13 @@ class DashboardController extends Controller
                     'patients.created_at',
                     'tbl_slots.slot_name as slot_name',
                 ]);
+
+            // Also list today’s OT appointments (pre-registration) in the same table
+            $receptionistTodayPatients = $this->mergeTodayOtAppointments(
+                $receptionistTodayPatients,
+                $today,
+                request('search_contact')
+            );
         }
 
         // AJAX-filter for the receptionist "Today Added Patients" widget (mobile
@@ -582,6 +589,55 @@ class DashboardController extends Controller
                 ->sortBy(fn($doc) => $doc->id === $user->id ? 0 : 1)
                 ->values();
 
+            // OT doctor cards — same roster as OPD; counts from that doctor's OT bookings
+            // (assigned ot_doctor_id, or recommender booked_by when doctor not yet assigned).
+            $completeStatuses = [
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+                OtBooking::STATUS_SURGERY_REFUSED,
+            ];
+            $doctorIds = $doctorCards->pluck('id')->all();
+
+            $otStatsByDoctorId = collect();
+            if ($doctorIds !== []) {
+                $otRows = OtBooking::query()
+                    ->selectRaw('COALESCE(ot_doctor_id, booked_by) as doctor_key')
+                    ->selectRaw('COUNT(*) as ot_total')
+                    ->selectRaw(
+                        'SUM(CASE WHEN ot_status IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_complete',
+                        $completeStatuses
+                    )
+                    ->selectRaw(
+                        'SUM(CASE WHEN ot_status NOT IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_pending',
+                        $completeStatuses
+                    )
+                    ->where(function ($q) use ($doctorIds) {
+                        $q->whereIn('ot_doctor_id', $doctorIds)
+                            ->orWhereIn('booked_by', $doctorIds);
+                    })
+                    ->groupBy(DB::raw('COALESCE(ot_doctor_id, booked_by)'))
+                    ->get()
+                    ->keyBy('doctor_key');
+
+                $otStatsByDoctorId = $otRows;
+            }
+
+            $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId) {
+                $stats = $otStatsByDoctorId->get($doc->id);
+                $clone = clone $doc;
+                $clone->ot_total = (int) ($stats->ot_total ?? 0);
+                $clone->ot_pending = (int) ($stats->ot_pending ?? 0);
+                $clone->ot_complete = (int) ($stats->ot_complete ?? 0);
+
+                return $clone;
+            });
+
+            $otSummary = [
+                'total' => (int) $otDoctorCards->sum('ot_total'),
+                'pending' => (int) $otDoctorCards->sum('ot_pending'),
+                'complete' => (int) $otDoctorCards->sum('ot_complete'),
+            ];
+
             return view('hospital.dashboard.doctoredashboard', compact(
                 'slug',
                 'tenant',
@@ -593,7 +649,9 @@ class DashboardController extends Controller
                 'doctorPrimaryDone',
                 'doctorSecondaryDone',
                 'doctorCards',
-                'viewingDoctor'
+                'viewingDoctor',
+                'otDoctorCards',
+                'otSummary',
             ));
         }
 
@@ -1108,6 +1166,99 @@ class DashboardController extends Controller
             'contactNo',
             'date'
         ));
+    }
+
+    /**
+     * Append today’s OT appointments into the receptionist "Today Added Patients"
+     * list so pre-registration OT patients appear beside OPD walk-in/phone rows.
+     *
+     * @param  Collection<int, Patient>  $opdPatients
+     * @return Collection<int, Patient|object>
+     */
+    private function mergeTodayOtAppointments(Collection $opdPatients, string $today, ?string $searchContact = null): Collection
+    {
+        $searchContact = trim((string) ($searchContact ?? ''));
+
+        $alreadyLinkedPatientIds = $opdPatients
+            ->pluck('id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $otAppointments = OtAppointment::query()
+            ->with(['doctor:id,name,doctor_prefix', 'location:id,name'])
+            ->whereDate('appointment_date', $today)
+            ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+            ->when($searchContact !== '', function ($query) use ($searchContact) {
+                $query->where(function ($q) use ($searchContact) {
+                    $q->where('mobile_no', 'like', "%{$searchContact}%")
+                        ->orWhere('whatsapp_no', 'like', "%{$searchContact}%");
+                });
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
+
+        $otRows = $otAppointments
+            ->reject(function (OtAppointment $appt) use ($alreadyLinkedPatientIds) {
+                // Already listed as an OPD patient added today — skip duplicate row
+                $convertedId = (int) ($appt->converted_patient_id ?? 0);
+
+                return $convertedId > 0 && in_array($convertedId, $alreadyLinkedPatientIds, true);
+            })
+            ->map(function (OtAppointment $appt) {
+                $nameParts = array_values(array_filter([
+                    trim((string) ($appt->patient_name ?? '')),
+                    trim((string) ($appt->middle_name ?? '')),
+                    trim((string) ($appt->surname ?? '')),
+                ], fn ($p) => $p !== ''));
+                $fullName = $nameParts !== [] ? implode(' ', $nameParts) : '—';
+                $first = $nameParts[0] ?? 'O';
+                $last = count($nameParts) > 1 ? $nameParts[count($nameParts) - 1] : 'T';
+
+                return (object) [
+                    'source' => 'ot_appointment',
+                    'ot_appointment_id' => $appt->id,
+                    'id' => 'ot-'.$appt->id,
+                    'patient_code' => $appt->appointment_number,
+                    'first_name' => $first,
+                    'middle_name' => $appt->middle_name,
+                    'last_name' => $last,
+                    'full_name' => $fullName,
+                    'age' => $appt->age,
+                    'gender' => $appt->gender,
+                    'contact_no' => $appt->mobile_no ?: $appt->whatsapp_no,
+                    'cityName' => $appt->location?->name ?: '—',
+                    'type' => 'ot',
+                    'ot_status' => $appt->status,
+                    'appointment_time' => $appt->appointment_time,
+                    'doctor' => $appt->doctor,
+                    'doctor_patient_no' => null,
+                    'checked_in_at' => null,
+                    'primary_done_at' => null,
+                    'secondary_done_at' => null,
+                    'created_at' => $appt->created_at,
+                    'primaryExamination' => null,
+                ];
+            });
+
+        $opdRows = $opdPatients->map(function (Patient $patient) {
+            $patient->source = 'patient';
+
+            return $patient;
+        });
+
+        return $opdRows
+            ->concat($otRows)
+            ->sortByDesc(function ($row) {
+                $ts = $row->created_at ?? null;
+                if ($ts instanceof \Carbon\CarbonInterface) {
+                    return $ts->timestamp;
+                }
+
+                return 0;
+            })
+            ->values();
     }
 
     public function getHospitalDetails(string $slug, int $id): JsonResponse

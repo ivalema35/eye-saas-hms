@@ -106,7 +106,7 @@ class SecondaryExamController extends Controller
             ? collect(old('medicines'))
             : ($secondaryMedicines->isNotEmpty() ? $secondaryMedicines : $primaryMedicines);
 
-        [$otSlots, $otSurgeryTypes, $existingOtRecommendation, $otDefaultSlotId, $otDefaultSurgeryDate, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenantId, (int) $patient->id);
+        [$otSurgeryTypes, $existingOtRecommendation, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenantId, (int) $patient->id);
 
         return view('hospital.exam.secondary', compact(
             'patient',
@@ -120,11 +120,8 @@ class SecondaryExamController extends Controller
             'masters',
             'focReceptionists',
             'initialMedicines',
-            'otSlots',
             'otSurgeryTypes',
             'existingOtRecommendation',
-            'otDefaultSlotId',
-            'otDefaultSurgeryDate',
             'otDefaultDiagnosisHint',
             'otAssistants',
             'otDoctors'

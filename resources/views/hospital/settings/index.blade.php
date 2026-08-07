@@ -611,11 +611,16 @@
                             @enderror
                         </div>
 
-                        {{-- Currency (auto from country) --}}
+                        {{-- Currency (auto from country master) --}}
                         <div class="col-md-6">
                             <label class="form-label">Currency</label>
+                            @php
+                                $currencyPreview = $selectedCountry
+                                    ? trim(($selectedCountry->currency_symbol ?? '').' '.($selectedCountry->currency_code ?? ''))
+                                    : (currency_symbol().' '.currency_code());
+                            @endphp
                             <input type="text" id="settingCurrencyDisplay" class="form-control clinical-input" readonly
-                                   value="{{ currency_symbol() }} {{ currency_code() }}">
+                                   value="{{ $currencyPreview }}">
                             <div class="form-text" style="font-size:.75rem;color:var(--settings-muted)">
                                 <i class="bi bi-info-circle me-1"></i>
                                 Auto from country master. Used for case fees, OT billing &amp; prints.
@@ -1193,95 +1198,243 @@ function selectLogoStyle(value) {
     updateDarkPreview();
 }
 
-// ── Location cascade dropdowns ────────────────────────────────────────────
+// ── Location cascade dropdowns (Select2-safe) ─────────────────────────────
+// Relative paths (not route()): absolute APP_URL can be another host than the
+// hospital page, so fetch fails while timezone/currency still work (data-*).
 (function () {
+    function bootLocationCascade() {
     const countrySel  = document.getElementById('settingCountry');
     const stateSel    = document.getElementById('settingState');
     const districtSel = document.getElementById('settingDistrict');
     const citySel     = document.getElementById('settingCity');
     const tzSel       = document.getElementById('settingTimezone');
+    if (!countrySel) return;
 
-    function resetSelect(sel, placeholder) {
-        sel.innerHTML = '<option value="">' + placeholder + '</option>';
+    // Always hit the same host the user is on
+    const statesUrl    = (window.location.origin || '') + '/location/states';
+    const districtsUrl = (window.location.origin || '') + '/location/districts';
+    const citiesUrl    = (window.location.origin || '') + '/location/cities';
+
+    var suppressCascade = false;
+
+    function isSelect2(el) {
+        return !!(window.jQuery && el && jQuery(el).hasClass('select2-hidden-accessible'));
     }
 
-    function loadOptions(sel, items, savedValue) {
+    function optionDataId(el) {
+        if (!el) return '';
+        // Prefer selected option / Select2 value match
+        var opt = el.options[el.selectedIndex];
+        if (opt && (opt.getAttribute('data-id') || (opt.dataset && opt.dataset.id))) {
+            return opt.getAttribute('data-id') || opt.dataset.id || '';
+        }
+        // Fallback: find option by current value (Select2 edge cases)
+        var val = el.value;
+        if (!val) return '';
+        for (var i = 0; i < el.options.length; i++) {
+            if (el.options[i].value === val) {
+                return el.options[i].getAttribute('data-id') || el.options[i].dataset.id || '';
+            }
+        }
+        return '';
+    }
+
+    function refreshSelect2(sel) {
+        if (!isSelect2(sel)) return;
+        // Rebuild dropdown results after HTML option changes
+        try {
+            jQuery(sel).trigger('change.select2');
+        } catch (e) { /* ignore */ }
+    }
+
+    function resetSelect(sel, placeholder) {
+        if (!sel) return;
+        suppressCascade = true;
+        var empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = placeholder;
+        empty.selected = true;
+        sel.innerHTML = '';
+        sel.appendChild(empty);
+        if (window.jQuery && isSelect2(sel)) {
+            jQuery(sel).val('').trigger('change.select2');
+        }
+        suppressCascade = false;
+    }
+
+    function loadOptions(sel, items, savedValue, placeholderText) {
+        if (!sel) return;
+        items = Array.isArray(items) ? items : [];
+        suppressCascade = true;
+
+        var placeholder = placeholderText
+            || (sel.options[0] && sel.options[0].textContent)
+            || '— Select —';
+
+        sel.innerHTML = '';
+        var empty = document.createElement('option');
+        empty.value = '';
+        empty.textContent = placeholder;
+        sel.appendChild(empty);
+
+        var matchFound = false;
         items.forEach(function (item) {
+            if (!item || item.name == null) return;
             var opt = document.createElement('option');
-            opt.value        = item.name;
-            opt.dataset.id   = item.id;
-            opt.textContent  = item.name;
-            if (item.name === savedValue) opt.selected = true;
+            opt.value = item.name;
+            opt.setAttribute('data-id', item.id);
+            opt.textContent = item.name;
+            if (savedValue && String(item.name) === String(savedValue)) {
+                opt.selected = true;
+                matchFound = true;
+            }
             sel.appendChild(opt);
         });
+
+        if (!matchFound) {
+            sel.value = '';
+        }
+
+        if (window.jQuery && isSelect2(sel)) {
+            jQuery(sel).val(matchFound ? savedValue : '').trigger('change.select2');
+        }
+        suppressCascade = false;
     }
 
     function fetchJson(url, callback) {
-        fetch(url)
-            .then(function (r) { return r.json(); })
-            .then(callback)
-            .catch(function () {});
+        fetch(url, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (r) {
+                if (!r.ok) {
+                    throw new Error('HTTP ' + r.status);
+                }
+                return r.json();
+            })
+            .then(function (data) {
+                if (Array.isArray(data)) {
+                    callback(data);
+                } else if (data && Array.isArray(data.data)) {
+                    callback(data.data);
+                } else {
+                    callback([]);
+                }
+            })
+            .catch(function (err) {
+                console.error('Location cascade failed:', url, err);
+                callback([]);
+            });
     }
 
-    if (countrySel) {
-        countrySel.addEventListener('change', function () {
-            var opt = this.options[this.selectedIndex];
+    function applyCountryMasterFields(selectEl) {
+        if (!selectEl || selectEl.selectedIndex < 0) return;
+        var opt = selectEl.options[selectEl.selectedIndex];
+        if (!opt || !opt.value) return;
 
-            // Auto-fill timezone from country default
-            if (tzSel && opt.dataset.timezone) {
-                tzSel.value = opt.dataset.timezone;
+        if (tzSel && opt.dataset.timezone) {
+            tzSel.value = opt.dataset.timezone;
+            if (window.jQuery) {
+                jQuery(tzSel).val(opt.dataset.timezone).trigger('change');
             }
+        }
 
-            // Auto-fill currency preview from country master
-            var currencyDisplay = document.getElementById('settingCurrencyDisplay');
-            if (currencyDisplay) {
-                var sym = opt.dataset.currencySymbol || '';
-                var code = opt.dataset.currencyCode || '';
-                currencyDisplay.value = (sym && code) ? (sym + ' ' + code) : '';
-            }
+        var currencyDisplay = document.getElementById('settingCurrencyDisplay');
+        if (currencyDisplay) {
+            var sym = opt.dataset.currencySymbol || '';
+            var code = opt.dataset.currencyCode || '';
+            currencyDisplay.value = (sym || code) ? (sym + ' ' + code).trim() : '';
+        }
+    }
+
+    var countryChangeBusy = false;
+    function onCountryChange() {
+        if (suppressCascade || countryChangeBusy) return;
+        countryChangeBusy = true;
+        try {
+            applyCountryMasterFields(countrySel);
 
             resetSelect(stateSel,    '— Select State —');
             resetSelect(districtSel, '— Select District —');
             resetSelect(citySel,     '— Select City —');
 
-            var countryId = opt.dataset.id;
-            if (!countryId) return;
+            var countryId = optionDataId(countrySel);
+            if (!countryId) {
+                console.warn('Location cascade: country has no data-id');
+                return;
+            }
 
-            fetchJson('{{ route("location.states") }}?country_id=' + countryId, function (data) {
-                loadOptions(stateSel, data, '');
+            fetchJson(statesUrl + '?country_id=' + encodeURIComponent(countryId), function (data) {
+                loadOptions(stateSel, data, '', '— Select State —');
+                refreshSelect2(stateSel);
             });
+        } finally {
+            setTimeout(function () { countryChangeBusy = false; }, 50);
+        }
+    }
+
+    function onStateChange() {
+        if (suppressCascade) return;
+        resetSelect(districtSel, '— Select District —');
+        resetSelect(citySel,     '— Select City —');
+
+        var stateId = optionDataId(stateSel);
+        if (!stateId) return;
+
+        fetchJson(districtsUrl + '?state_id=' + encodeURIComponent(stateId), function (districts) {
+            loadOptions(districtSel, districts, '', '— Select District —');
+            if (!districts.length) {
+                fetchJson(citiesUrl + '?state_id=' + encodeURIComponent(stateId), function (cities) {
+                    loadOptions(citySel, cities, '', '— Select City —');
+                });
+            }
         });
     }
 
-    if (stateSel) {
-        stateSel.addEventListener('change', function () {
-            var opt = this.options[this.selectedIndex];
+    function onDistrictChange() {
+        if (suppressCascade) return;
+        resetSelect(citySel, '— Select City —');
 
-            resetSelect(districtSel, '— Select District —');
-            resetSelect(citySel,     '— Select City —');
+        var districtId = optionDataId(districtSel);
+        if (!districtId) return;
 
-            var stateId = opt.dataset.id;
-            if (!stateId) return;
-
-            fetchJson('{{ route("location.districts") }}?state_id=' + stateId, function (data) {
-                loadOptions(districtSel, data, '');
-            });
+        fetchJson(citiesUrl + '?district_id=' + encodeURIComponent(districtId), function (data) {
+            loadOptions(citySel, data, '', '— Select City —');
         });
     }
 
-    if (districtSel) {
-        districtSel.addEventListener('change', function () {
-            var opt = this.options[this.selectedIndex];
+    function bindSelectChange(el, handler) {
+        if (!el) return;
+        if (window.jQuery) {
+            jQuery(el).off('change.locCascade').on('change.locCascade', handler);
+        } else {
+            el.removeEventListener('change', handler);
+            el.addEventListener('change', handler);
+        }
+    }
 
-            resetSelect(citySel, '— Select City —');
+    bindSelectChange(countrySel, onCountryChange);
+    bindSelectChange(stateSel, onStateChange);
+    bindSelectChange(districtSel, onDistrictChange);
 
-            var districtId = opt.dataset.id;
-            if (!districtId) return;
+    // Currency/timezone for already-selected country (do not wipe state lists)
+    setTimeout(function () {
+        applyCountryMasterFields(countrySel);
+    }, 200);
+    }
 
-            fetchJson('{{ route("location.cities") }}?district_id=' + districtId, function (data) {
-                loadOptions(citySel, data, '');
-            });
+    if (window.jQuery) {
+        // After global Select2 init (this stack runs before initHmsSelect2 script)
+        jQuery(function () {
+            setTimeout(bootLocationCascade, 0);
         });
+    } else if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bootLocationCascade);
+    } else {
+        bootLocationCascade();
     }
 })();
 

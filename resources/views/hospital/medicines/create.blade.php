@@ -51,6 +51,18 @@
                             @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">Select Type <span class="text-danger">*</span></label>
+                            <select name="usage_scope"
+                                class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
+                                <option value="opd" @selected(old('usage_scope', 'opd') === 'opd')>OPD</option>
+                                <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>
+                            </select>
+                            @error('usage_scope')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         {{-- Medicine Name --}}
                         <div class="mb-3">
                             <label class="form-label fw-medium">Medicine Name <span class="text-danger">*</span></label>

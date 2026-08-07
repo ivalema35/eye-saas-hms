@@ -11,6 +11,7 @@ use App\Services\Auth\RolePermissionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -34,12 +35,7 @@ class HospitalUserController extends Controller
             ->paginate((int) config('app.pagination_limit', 25))
             ->withQueryString();
 
-        $roles = Role::query()
-            ->whereNull('deleted_at')
-            ->where('slug', '!=', 'hospital_admin')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
-
+        $roles = $this->rolesForUserForms();
         $roleFilterKey = $roleFilter['key'] ?? null;
         $roleFilterLabel = $roleFilter['label'] ?? null;
 
@@ -71,16 +67,46 @@ class HospitalUserController extends Controller
         };
     }
 
+    /**
+     * Roles for Add/Edit user forms, with doctor-field flag for the UI toggle.
+     *
+     * @return Collection<int, Role>
+     */
+    private function rolesForUserForms(): Collection
+    {
+        return Role::query()
+            ->whereNull('deleted_at')
+            ->where('slug', '!=', 'hospital_admin')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug'])
+            ->map(function (Role $role) {
+                $role->setAttribute('shows_doctor_fields', $this->roleShowsDoctorFields($role));
+
+                return $role;
+            });
+    }
+
+    private function roleShowsDoctorFields(Role $role): bool
+    {
+        $slug = strtolower((string) $role->slug);
+        $name = strtolower((string) $role->name);
+
+        if (in_array($slug, ['doctor', 'ot_doctor'], true) || str_contains($slug, 'doctor') || str_contains($name, 'doctor')) {
+            return true;
+        }
+
+        $keys = $role->getGrantedPermissionKeys();
+
+        return in_array('opd.exam.primary', $keys, true)
+            || in_array('opd.exam.secondary', $keys, true);
+    }
+
     public function create(): View
     {
         $this->authorizeUserManagement();
 
         $slug = request()->route('slug');
-        $roles = Role::query()
-            ->whereNull('deleted_at')
-            ->where('slug', '!=', 'hospital_admin')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
+        $roles = $this->rolesForUserForms();
 
         return view('hospital.users.create', compact('slug', 'roles'));
     }
@@ -93,9 +119,7 @@ class HospitalUserController extends Controller
         $data = $request->validated();
 
         $role = Role::query()->findOrFail((int) $data['role_id']);
-        $rolePermissionKeys = $role->getGrantedPermissionKeys();
-        $canPerformClinicalExams = in_array('opd.exam.primary', $rolePermissionKeys, true)
-            || in_array('opd.exam.secondary', $rolePermissionKeys, true);
+        $canPerformClinicalExams = $this->roleShowsDoctorFields($role);
 
         $tenantId = app('tenant')->id;
 
@@ -161,11 +185,7 @@ class HospitalUserController extends Controller
             ->where('tenant_id', app('tenant')->id)
             ->findOrFail((int) $id);
 
-        $roles = Role::query()
-            ->whereNull('deleted_at')
-            ->where('slug', '!=', 'hospital_admin')
-            ->orderBy('name')
-            ->get(['id', 'name', 'slug']);
+        $roles = $this->rolesForUserForms();
 
         return view('hospital.users.edit', compact('slug', 'user', 'roles'));
     }
@@ -181,9 +201,7 @@ class HospitalUserController extends Controller
         $data = $request->validated();
 
         $role = Role::query()->findOrFail((int) $data['role_id']);
-        $rolePermissionKeys = $role->getGrantedPermissionKeys();
-        $canPerformClinicalExams = in_array('opd.exam.primary', $rolePermissionKeys, true)
-            || in_array('opd.exam.secondary', $rolePermissionKeys, true);
+        $canPerformClinicalExams = $this->roleShowsDoctorFields($role);
 
         $tenantId = app('tenant')->id;
 

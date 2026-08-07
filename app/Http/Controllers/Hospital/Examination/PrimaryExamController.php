@@ -71,7 +71,7 @@ class PrimaryExamController extends Controller
         $masters = $this->loadMasters($tenant->id);
         $masters['doctors'] = $doctors;
 
-        [$otSlots, $otSurgeryTypes, $existingOtRecommendation, $otDefaultSlotId, $otDefaultSurgeryDate, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenant->id, (int) $patient->id);
+        [$otSurgeryTypes, $existingOtRecommendation, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenant->id, (int) $patient->id);
 
         return view('hospital.exam.primary', compact(
             'patient',
@@ -81,11 +81,8 @@ class PrimaryExamController extends Controller
             'currentDoctorId',
             'masters',
             'focReceptionists',
-            'otSlots',
             'otSurgeryTypes',
             'existingOtRecommendation',
-            'otDefaultSlotId',
-            'otDefaultSurgeryDate',
             'otDefaultDiagnosisHint',
             'otAssistants',
             'otDoctors'

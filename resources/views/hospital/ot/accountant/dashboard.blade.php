@@ -471,6 +471,26 @@
 
 @section('content')
 <div class="ot-accountant-page">
+@if(session('success'))
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
+@php $refundsPendingCount = (int) ($moneySummary['refunds_pending'] ?? 0); @endphp
+@if($refundsPendingCount > 0 && ($activeFilter ?? 'today') !== 'refunds')
+    <div class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+        <div>
+            <strong><i class="bi bi-exclamation-triangle-fill me-1"></i> Refund queue:</strong>
+            {{ $refundsPendingCount }} patient(s) refused OT and need full refund.
+            (Doctor “Send to Account” cases appear under <strong>Refunds</strong>, not Pending payment.)
+        </div>
+        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}"
+           class="btn btn-sm btn-danger text-nowrap">
+            Open Refunds <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+    </div>
+@endif
 <div class="card border-0 shadow-sm ota-card">
     <div class="card-header bg-white border-bottom ota-card-header d-flex justify-content-between align-items-center flex-wrap">
         <div class="ota-title-wrap">
@@ -479,7 +499,11 @@
             </span>
             <div>
                 <h5 class="mb-0 fw-bold ota-title" style="color: var(--color-primary);">
-                    Payment Queue
+                    @if(($activeFilter ?? '') === 'refunds')
+                        Refund Queue
+                    @else
+                        Payment Queue
+                    @endif
                 </h5>
                 
             </div>
@@ -487,10 +511,26 @@
         <div class="ota-head-actions">
             <div class="ota-filter-wrap" role="group" aria-label="OT accountant filter">
                 <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'today']) }}"
-                   class="ota-filter-btn {{ ($activeFilter ?? 'today') === 'today' ? 'active' : '' }}">Today</a>
+                   class="ota-filter-btn {{ ($activeFilter ?? 'today') === 'today' ? 'active' : '' }}">Pending</a>
+                <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}"
+                   class="ota-filter-btn {{ ($activeFilter ?? '') === 'refunds' ? 'active' : '' }}">
+                    Refunds
+                    @if($refundsPendingCount > 0)
+                        <span class="badge text-bg-danger ms-1">{{ $refundsPendingCount }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'completed']) }}"
                    class="ota-filter-btn {{ ($activeFilter ?? 'today') === 'completed' ? 'active' : '' }}">Completed</a>
             </div>
+            <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}" class="ota-total-pill text-decoration-none"
+               title="Collected vs Refunded">
+                Collected {{ money_code((float) ($moneySummary['collected'] ?? 0), 0) }}
+                · Returned {{ money_code((float) ($moneySummary['refunded'] ?? 0), 0) }}
+                @if(!empty($moneySummary['refunds_pending']))
+                    · Pending refunds {{ $moneySummary['refunds_pending'] }}
+                @endif
+                <i class="bi bi-arrow-right-short"></i>
+            </a>
             <span class="ota-total-pill">{{ $bookings->total() }} total</span>
         </div>
     </div>
@@ -511,11 +551,7 @@
                 <tbody>
                     @forelse($bookings as $booking)
                         @php
-                            // OT Workflow Upgrade — Phase 5: computed payment status
-                            // (paid/partially_paid/pending) replaces the raw ot_status
-                            // check here, which went stale once Phase 1 changed the
-                            // status flow (bookings never sit at 'booked' by the time
-                            // they reach this screen anymore).
+                            $isRefundsTab = ($activeFilter ?? '') === 'refunds';
                             $paymentStatus = $booking->payment_status;
                             $statusBadgeClass = match($paymentStatus) {
                                 'paid' => 'text-bg-success',
@@ -529,33 +565,67 @@
                                 'unpriced' => 'Package Not Set',
                                 default => 'Payment Pending',
                             };
+                            if ($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED) {
+                                if ($booking->isFullyRefunded()) {
+                                    $statusLabel = 'Fully Refunded';
+                                    $statusBadgeClass = 'text-bg-success';
+                                } elseif ($booking->refundable_balance > 0) {
+                                    $statusLabel = 'Refund Pending';
+                                    $statusBadgeClass = 'text-bg-danger';
+                                } else {
+                                    $statusLabel = 'Surgery Refused';
+                                    $statusBadgeClass = 'text-bg-secondary';
+                                }
+                            }
                         @endphp
                         <tr>
                             <td><span class="ota-patient-cell"><i class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span></td>
                             <td><span class="ota-phone-cell"><i class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span></td>
                             <td><span class="ota-date-cell"><i class="bi bi-calendar2-event"></i>{{ optional($booking->surgery_date)->format('d M Y') }}</span></td>
-                            <td><span class="ota-amount-pill"><i class="bi bi-cash-coin"></i>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</span></td>
+                            <td>
+                                <span class="ota-amount-pill"><i class="bi bi-cash-coin"></i>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</span>
+                                @if($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
+                                    <div class="small text-muted mt-1">
+                                        Paid {{ money_code($booking->total_paid, 2) }}
+                                        · Refunded {{ money_code($booking->total_refunded, 2) }}
+                                    </div>
+                                @endif
+                            </td>
                             <td>
                                 <span class="badge ota-status-badge {{ $statusBadgeClass }}">
                                     {{ $statusLabel }}
                                 </span>
-                                @if($paymentStatus === 'partially_paid')
+                                @if($paymentStatus === 'partially_paid' && ! $isRefundsTab)
                                     <div class="small text-muted mt-1">Balance: {{ money_code($booking->remaining_balance, 2) }}</div>
+                                @endif
+                                @if($isRefundsTab && $booking->refundable_balance > 0)
+                                    <div class="small text-muted mt-1">To return: {{ money_code($booking->refundable_balance, 2) }}</div>
                                 @endif
                             </td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-outline-secondary ota-view-btn me-2" data-bs-toggle="modal" data-bs-target="#otaDetailModal{{ $booking->id }}">
                                     <i class="bi bi-eye-fill me-1"></i> View
                                 </button>
-                                @if(! in_array($paymentStatus, ['paid', 'unpriced'], true))
+                                @if($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
+                                    @if($booking->refundable_balance > 0)
+                                        <a href="{{ route('hospital.ot.refunds.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                           class="btn btn-sm btn-danger ota-add-payment-btn">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Full Refund
+                                        </a>
+                                    @else
+                                        <span class="text-muted small ota-paid-note me-2"><i class="bi bi-check2-circle"></i> Refund Done</span>
+                                    @endif
+                                @elseif($paymentStatus === 'paid')
+                                    <span class="text-muted small ota-paid-note me-2"><i class="bi bi-check2-circle"></i> Payment Completed</span>
+                                @elseif($paymentStatus === 'unpriced')
+                                    <span class="text-muted small ota-paid-note me-2"><i class="bi bi-exclamation-circle"></i> Package Not Set</span>
+                                @else
                                     <a href="{{ route('hospital.ot.payments.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                        class="btn btn-sm btn-primary ota-add-payment-btn">
                                         <i class="bi bi-plus-circle me-1"></i> {{ $paymentStatus === 'partially_paid' ? 'Add Balance Payment' : 'Add Payment' }}
                                     </a>
-                                @else
-                                    <span class="text-muted small ota-paid-note me-2"><i class="bi bi-check2-circle"></i> Payment Completed</span>
                                 @endif
-                                @if($booking->payments->isNotEmpty())
+                                @if($booking->payments->isNotEmpty() && ! $isRefundsTab)
                                     <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
                                        class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
                                         <i class="bi bi-printer me-1"></i> Receipt
@@ -565,7 +635,13 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4 ota-empty-cell">No bookings in payment queue.</td>
+                            <td colspan="6" class="text-center text-muted py-4 ota-empty-cell">
+                                @if(($activeFilter ?? '') === 'refunds')
+                                    No surgery-refused patients awaiting refund.
+                                @else
+                                    No bookings in payment queue.
+                                @endif
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

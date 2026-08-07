@@ -855,7 +855,7 @@
                         <li><a class="dropdown-item" href="{{ url($slug . '/medicine-types') }}">Medicine Type</a></li>
                         <li><a class="dropdown-item" href="{{ url($slug . '/medicine-categories') }}">Medicine Category</a>
                         </li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Root Of Administration</a>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Mode</a>
                         </li>
                         <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Add Medicine</a></li>
                         <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Add Group</a></li>
@@ -1186,7 +1186,7 @@
 
                         @haspermission('ot.payment.record')
                         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => request()->route('slug')]) }}"
-                            class="hms-nav-item {{ request()->routeIs('hospital.ot.accountant.dashboard') || request()->routeIs('hospital.ot.payments.*') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.accountant.*') || request()->routeIs('hospital.ot.payments.*') || request()->routeIs('hospital.ot.refunds.*') ? 'active' : '' }}">
                             <i class="bi bi-cash-coin"></i>
                             <span>OT Accountant / Billing</span>
                         </a>
@@ -1287,7 +1287,7 @@
                         <a href="{{ route('hospital.medicine-routes.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.medicine-routes.*') ? 'active' : '' }}">
                             <i class="bi bi-arrow-right-circle"></i>
-                            <span>Route of Admin.</span>
+                            <span>Mode</span>
                         </a>
                         <a href="{{ route('hospital.medicine-dosages.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.medicine-dosages.*') ? 'active' : '' }}">
