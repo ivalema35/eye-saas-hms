@@ -165,7 +165,6 @@ class PermissionsSeeder extends Seeder
                     'role_id' => $roleId,
                     'permission_id' => $permissionId,
                     'is_granted' => 1,
-                    'access_level' => 'full',
                     'created_at' => $timestamp,
                     'updated_at' => $timestamp,
                 ];
