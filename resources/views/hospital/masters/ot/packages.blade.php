@@ -9,7 +9,7 @@
                 <a href="{{ route('hospital.masters.index', ['slug' => $slug]) }}" class="btn btn-light ot-master-back-btn">
                     Back
                 </a>
-                <p class="text-muted small mb-0">Lens cost + room category → auto-fill counselling package charges.</p>
+                <p class="text-muted small mb-0">Package name + room + charges — counsellor picks package; lens cost is entered separately on counselling.</p>
             </div>
             <button type="button" class="btn btn-primary ot-master-add-btn" data-bs-toggle="modal"
                 data-bs-target="#packageFormModal" onclick="resetForm()">
@@ -38,7 +38,6 @@
                             <tr>
                                 <th class="ps-4">#</th>
                                 <th>Package</th>
-                                <th>Lens Cost</th>
                                 <th>Room</th>
                                 <th>OT</th>
                                 <th>Surgeon</th>
@@ -53,7 +52,6 @@
                                 <tr>
                                     <td class="ps-4">{{ $index + 1 }}</td>
                                     <td>{{ $record->package_name }}</td>
-                                    <td>{{ money((float) $record->lens_cost, 2) }}</td>
                                     <td class="text-capitalize">{{ $record->room_category }}</td>
                                     <td>{{ money((float) $record->ot_charges, 2) }}</td>
                                     <td>{{ money((float) $record->surgeon_charges, 2) }}</td>
@@ -87,7 +85,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center py-4 text-muted">No packages found. Add one to enable counselling autofill.</td>
+                                    <td colspan="9" class="text-center py-4 text-muted">No packages found. Add one to enable counselling autofill.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -121,12 +119,7 @@
                                     <input type="text" name="package_name" id="package_name"
                                         class="form-control ot-master-input" required>
                                 </div>
-                                <div class="col-md-3">
-                                    <label class="form-label text-muted small fw-bold text-uppercase">Lens Cost</label>
-                                    <input type="number" step="0.01" min="0" name="lens_cost" id="lens_cost"
-                                        class="form-control ot-master-input" required>
-                                </div>
-                                <div class="col-md-3">
+                                <div class="col-md-6">
                                     <label class="form-label text-muted small fw-bold text-uppercase">Room Category</label>
                                     <select name="room_category" id="room_category" class="form-select ot-master-input" required>
                                         <option value="general">General</option>
@@ -183,7 +176,6 @@
             form.action = updateUrl.replace('__ID__', record.id);
             document.getElementById('formMethod').value = 'PUT';
             document.getElementById('package_name').value = record.package_name ?? '';
-            document.getElementById('lens_cost').value = record.lens_cost ?? '';
             document.getElementById('room_category').value = record.room_category ?? 'general';
             document.getElementById('ot_charges').value = record.ot_charges ?? 0;
             document.getElementById('surgeon_charges').value = record.surgeon_charges ?? 0;
@@ -248,7 +240,7 @@
             overflow: hidden;
         }
         .ot-master-table-wrap { padding: .9rem; background: var(--ot-soft); }
-        .ot-master-table { border-collapse: separate; border-spacing: 0 8px; min-width: 980px; }
+        .ot-master-table { border-collapse: separate; border-spacing: 0 8px; min-width: 900px; }
         .ot-master-table thead th {
             background: var(--ot-primary) !important;
             color: #fff !important;

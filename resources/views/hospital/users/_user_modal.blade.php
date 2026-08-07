@@ -188,7 +188,9 @@
                                 class="hms-select @error('role_id') is-invalid @enderror" required>
                                 <option value="">Select Role</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id }}" data-slug="{{ $role->slug }}"
+                                    <option value="{{ $role->id }}"
+                                        data-slug="{{ $role->slug }}"
+                                        data-doctor-fields="{{ !empty($role->shows_doctor_fields) ? '1' : '0' }}"
                                         @selected(old('role_id') == $role->id)>
                                         {{ $role->name }}
                                     </option>
@@ -363,15 +365,44 @@
         const userPasswordEyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
         const userPasswordEyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 
+        function roleShowsDoctorFields(roleSelect) {
+            if (!roleSelect || roleSelect.selectedIndex < 0) {
+                return false;
+            }
+            const selected = roleSelect.options[roleSelect.selectedIndex];
+            if (!selected || !selected.value) {
+                return false;
+            }
+            if (selected.dataset.doctorFields === '1') {
+                return true;
+            }
+            const slug = (selected.dataset.slug || '').toLowerCase();
+            const label = (selected.textContent || '').toLowerCase().trim();
+            return slug === 'doctor'
+                || slug === 'ot_doctor'
+                || slug.indexOf('doctor') !== -1
+                || label.indexOf('doctor') !== -1;
+        }
+
         function toggleUserDoctorFields() {
             const roleSelect = document.getElementById('user-role-id');
-            const selected = roleSelect.options[roleSelect.selectedIndex];
-            const slug = selected ? selected.dataset.slug : '';
-            const showDoctor = slug === 'doctor';
+            const showDoctor = roleShowsDoctorFields(roleSelect);
 
             document.querySelectorAll('.user-doctor-only').forEach(function (el) {
                 el.style.display = showDoctor ? '' : 'none';
             });
+        }
+
+        function bindRoleDoctorToggle(selectId, toggleFn) {
+            const el = document.getElementById(selectId);
+            if (!el) {
+                return;
+            }
+            el.addEventListener('change', toggleFn);
+            // Select2 triggers jQuery change — native listener may miss it
+            if (window.jQuery) {
+                window.jQuery(el).on('change.select2 change', toggleFn);
+            }
         }
 
         function setUserPasswordRequired(required) {
@@ -529,7 +560,15 @@
             bindUserPasswordToggle('user-password', 'toggleUserPassword', 'userPasswordEye');
             bindUserPasswordToggle('user-password-confirmation', 'toggleUserPasswordConfirmation', 'userPasswordConfirmationEye');
 
-            document.getElementById('user-role-id').addEventListener('change', toggleUserDoctorFields);
+            bindRoleDoctorToggle('user-role-id', toggleUserDoctorFields);
+            toggleUserDoctorFields();
+
+            // Re-run after Select2 global init; also when modal opens with doctor selected
+            setTimeout(toggleUserDoctorFields, 300);
+            const userModalElForShow = document.getElementById('userFormModal');
+            if (userModalElForShow) {
+                userModalElForShow.addEventListener('shown.bs.modal', toggleUserDoctorFields);
+            }
 
             document.querySelectorAll('.edit-user-modal-btn').forEach(function (btn) {
                 btn.addEventListener('click', function (e) {

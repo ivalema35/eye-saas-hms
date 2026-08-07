@@ -16,6 +16,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use App\Services\Platform\CurrencyService;
 use Symfony\Component\HttpFoundation\Response;
 
 class SetTenantScope
@@ -40,16 +41,8 @@ class SetTenantScope
                     : (int) config('app.pagination_limit', 25)
             );
 
-            // Hospital ka timezone set karo — saari date/time display isi se hogi
-            $timezone = $tenant->timezone ?? 'UTC';
-            if (in_array($timezone, timezone_identifiers_list(), true)) {
-                Config::set('app.hospital_timezone', $timezone);
-                date_default_timezone_set($timezone);
-            }
-
-            // Hospital currency — case fee / OT / prints isi se format honge
-            Config::set('app.hospital_currency_code', $tenant->currency_code ?: config('app.platform_currency_code', 'INR'));
-            Config::set('app.hospital_currency_symbol', $tenant->currency_symbol ?: config('app.platform_currency_symbol', '₹'));
+            // Currency + timezone from Super Admin country master (linked to tenant.country)
+            CurrencyService::applyTenantCurrencyToConfig($tenant);
         }
 
         return $next($request);

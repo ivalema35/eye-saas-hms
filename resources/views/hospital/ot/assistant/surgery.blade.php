@@ -37,6 +37,10 @@
                             </div>
                         @endif
 
+                        <form method="POST"
+                            action="{{ route('hospital.ot.surgery.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
+                            @csrf
+
                         <div class="ot-section mb-4">
                             <div class="ot-section-header">
                                 <h6 class="fw-bold mb-0"><i class="bi bi-person-vcard me-1"></i> A. Patient &amp; Booking Details</h6>
@@ -54,9 +58,9 @@
                                             value="{{ $booking->patient?->contact_no ?? '-' }}" readonly>
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label text-muted">OT Date</label>
-                                        <input type="text" class="form-control ot-readonly"
-                                            value="{{ optional($booking->surgery_date)->format('d M Y') }}" readonly>
+                                        <label class="form-label">OT Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="surgery_date" class="form-control" required
+                                            value="{{ old('surgery_date', optional($booking->surgery_date)->format('Y-m-d') ?: now()->format('Y-m-d')) }}">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label text-muted">Package</label>
@@ -74,41 +78,9 @@
                             </div>
                         </div>
 
-                        <form method="POST"
-                            action="{{ route('hospital.ot.surgery.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
-                            @csrf
-
                             <div class="ot-section mb-4">
                                 <div class="ot-section-header">
-                                    <h6 class="fw-bold mb-0"><i class="bi bi-shield-check me-1"></i> B. Pre-Surgery Verification <span class="text-danger">*</span></h6>
-                                </div>
-                                <div class="ot-section-body">
-                                    <p class="text-muted small mb-3">Confirm all four before recording the surgery (PDF Step 8 — OT verification checklist).</p>
-                                    <div class="row g-2">
-                                        @php
-                                            $checklist = [
-                                                'identity_verified' => 'Patient Identity Verified',
-                                                'consent_verified' => 'Consent Verified',
-                                                'payment_verified' => 'Payment Verified',
-                                                'correct_eye_verified' => 'Correct Eye Verified',
-                                            ];
-                                        @endphp
-                                        @foreach($checklist as $field => $label)
-                                            <div class="col-md-3">
-                                                <label class="ot-check-pill w-100" for="{{ $field }}">
-                                                    <input class="form-check-input" type="checkbox" name="{{ $field }}" id="{{ $field }}" value="1"
-                                                        {{ old($field, $verification?->{$field} ?? false) ? 'checked' : '' }} required>
-                                                    <span>{{ $label }}</span>
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ot-section mb-4">
-                                <div class="ot-section-header">
-                                    <h6 class="fw-bold mb-0"><i class="bi bi-scissors me-1"></i> C. Surgery Details</h6>
+                                    <h6 class="fw-bold mb-0"><i class="bi bi-scissors me-1"></i> B. Surgery Details</h6>
                                 </div>
                                 <div class="ot-section-body">
                                     <div class="row g-3 mb-1">
@@ -128,11 +100,23 @@
                                         <div class="col-md-6">
                                             <label class="form-label d-block mb-2">Eye Operated <span
                                                     class="text-danger">*</span></label>
+                                            @php
+                                                // Lock to eye chosen on Recommend Surgery modal (booking.eye).
+                                                $lockedEye = in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true)
+                                                    ? (string) $booking->eye
+                                                    : 'RE';
+                                                $eyeOptions = [$lockedEye];
+                                                $selectedEye = old('eye_operated', $lockedEye);
+                                                if (! in_array($selectedEye, $eyeOptions, true)) {
+                                                    $selectedEye = $lockedEye;
+                                                }
+                                            @endphp
                                             <div class="ot-radio-group">
-                                                @foreach(['RE', 'LE', 'Both'] as $eye)
+                                                @foreach($eyeOptions as $eye)
                                                     <div class="form-check form-check-inline ot-radio-pill">
                                                         <input class="form-check-input" type="radio" name="eye_operated"
-                                                            id="eye_operated_{{ strtolower($eye) }}" value="{{ $eye }}" {{ old('eye_operated', $booking->eye) === $eye ? 'checked' : '' }}>
+                                                            id="eye_operated_{{ strtolower($eye) }}" value="{{ $eye }}"
+                                                            {{ $selectedEye === $eye ? 'checked' : '' }} required>
                                                         <label class="form-check-label"
                                                             for="eye_operated_{{ strtolower($eye) }}">{{ $eye }}</label>
                                                     </div>
@@ -174,6 +158,68 @@
                                             <textarea name="complication_notes" id="complication_notes" rows="2"
                                                 class="form-control"
                                                 placeholder="Only required if complication status is minor/major">{{ old('complication_notes') }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            @php
+                                $c = $counselling ?? null;
+                                $lensTypes = $lensTypes ?? \App\Http\Controllers\Hospital\OT\OtAssistantController::LENS_TYPES;
+                                $selectedLensCost = old('lens_cost', $c->lens_cost ?? '');
+                                $selectedLensCost = $selectedLensCost !== '' && $selectedLensCost !== null
+                                    ? number_format((float) $selectedLensCost, 2, '.', '')
+                                    : '';
+                            @endphp
+                            <div class="ot-section mb-4">
+                                <div class="ot-section-header">
+                                    <h6 class="fw-bold mb-0"><i class="bi bi-eyeglasses me-1"></i> C. Lens Selection</h6>
+                                </div>
+                                <div class="ot-section-body">
+                                    <p class="text-muted small mb-3 mb-md-2">
+                                        Auto-filled from Counsellor form — confirm or adjust if needed before saving surgery.
+                                    </p>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Category</label>
+                                            <select name="lens_category" class="form-select">
+                                                <option value="">Select...</option>
+                                                <option value="standard" @selected(old('lens_category', $c->lens_category ?? '') === 'standard')>Standard</option>
+                                                <option value="premium" @selected(old('lens_category', $c->lens_category ?? '') === 'premium')>Premium</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Company</label>
+                                            <input type="text" name="lens_company" class="form-control"
+                                                value="{{ old('lens_company', $c->lens_company ?? '') }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Model</label>
+                                            <input type="text" name="lens_model" class="form-control"
+                                                value="{{ old('lens_model', $c->lens_model ?? '') }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Type</label>
+                                            <select name="lens_type" class="form-select">
+                                                <option value="">Select...</option>
+                                                @foreach($lensTypes as $type)
+                                                    <option value="{{ $type }}" @selected(old('lens_type', $c->lens_type ?? '') === $type)>{{ $type }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Estimated Power</label>
+                                            <input type="number" step="0.01" name="estimated_power" class="form-control"
+                                                value="{{ old('estimated_power', $c->estimated_power ?? '') }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Cost</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="lens_cost" class="form-control"
+                                                    value="{{ $selectedLensCost }}"
+                                                    placeholder="Enter lens cost">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -77,7 +77,7 @@
         </a>
         <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'routes']) }}"
            class="mm-tab-btn {{ $tab === 'routes' ? 'active' : '' }}">
-            <i class="bi bi-signpost-split"></i> Root Of Administration
+            <i class="bi bi-signpost-split"></i> Mode
         </a>
         <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'medicines']) }}"
            class="mm-tab-btn {{ $tab === 'medicines' ? 'active' : '' }}">
@@ -300,7 +300,7 @@
 
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="bi bi-signpost-split" style="color:#1B4F72"></i> Root Of Administration List</h3>
+            <h3 class="hms-card-title"><i class="bi bi-signpost-split" style="color:#1B4F72"></i> Mode List</h3>
             <span class="hms-badge hms-badge-info">{{ $routes->total() }} total</span>
         </div>
         @if($routes->isEmpty())

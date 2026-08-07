@@ -29,6 +29,8 @@
             background: #fff;
         }
 
+        {!! axis_chip_css() !!}
+
         .sheet {
             width: 210mm;
             min-height: 297mm;
@@ -718,7 +720,7 @@
                                         <th>Dosage</th>
                                         <th>Days</th>
                                         <th>QTY</th>
-                                        <th>Route of Administration</th>
+                                        <th>Mode</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -743,20 +745,6 @@
                 @php
                     $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds']) ||
                         !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
-                    $pgFmt = function ($s, $c, $a) {
-                        $s = trim((string) $s);
-                        $c = trim((string) $c);
-                        $a = trim((string) $a);
-                        if ($s === '' && $c === '' && $a === '') {
-                            return '';
-                        }
-                        $out = ($s !== '' ? $s : '-') . ' / ' . ($c !== '' ? $c : '-');
-                        if ($a !== '') {
-                            $out .= ' X ' . $a;
-                        }
-
-                        return $out;
-                    };
                 @endphp
                 @if($hasPg)
                     <article class="card">
@@ -766,16 +754,16 @@
                                 <span class="bracket-line__label">PG</span>
                                 <span class="bracket-line__mark">&lt;</span>
                                 <div class="bracket-line__values">
-                                    <span>{{ $pgFmt($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') }}</span>
-                                    <span>{{ $pgFmt($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') }}</span>
+                                    <span>{!! pg_rx_line($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') !!}</span>
+                                    <span>{!! pg_rx_line($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') !!}</span>
                                 </div>
                             </div>
                             <div class="bracket-line">
                                 <span class="bracket-line__label">NrPG</span>
                                 <span class="bracket-line__mark">&lt;</span>
                                 <div class="bracket-line__values">
-                                    <span>{{ $pgFmt($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') }}</span>
-                                    <span>{{ $pgFmt($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') }}</span>
+                                    <span>{!! pg_rx_line($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') !!}</span>
+                                    <span>{!! pg_rx_line($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') !!}</span>
                                 </div>
                             </div>
                         </div>
@@ -821,21 +809,21 @@
                                         <td class="row-tag">D</td>
                                         <td>{{ secRxVal($st['re']['ds'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['dc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['ax'] ?? '') }}</td>
+                                        <td>{!! axis_chip($st['re']['ax'] ?? '', '—') !!}</td>
                                         <td class="row-tag">D</td>
                                         <td>{{ secRxVal($st['le']['ds'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['dc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['ax'] ?? '') }}</td>
+                                        <td>{!! axis_chip($st['le']['ax'] ?? '', '—') !!}</td>
                                     </tr>
                                     <tr>
                                         <td class="row-tag">N</td>
                                         <td>{{ secRxVal($st['re']['ns'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['re']['nc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['re']['na'] ?? '') }}</td>
+                                        <td>{!! axis_chip($st['re']['na'] ?? '', '—') !!}</td>
                                         <td class="row-tag">N</td>
                                         <td>{{ secRxVal($st['le']['ns'] ?? '') }}</td>
                                         <td>{{ secRxVal($st['le']['nc'] ?? '') }}</td>
-                                        <td>{{ secRxVal($st['le']['na'] ?? '') }}</td>
+                                        <td>{!! axis_chip($st['le']['na'] ?? '', '—') !!}</td>
                                     </tr>
                                 </tbody>
                             </table>

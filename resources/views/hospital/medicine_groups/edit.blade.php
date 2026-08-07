@@ -70,7 +70,7 @@
                             <th style="min-width:140px">Dosage</th>
                             <th style="min-width:100px">Days</th>
                             <th style="width:80px" class="text-center">Qty</th>
-                            <th style="min-width:160px">Route of Administration</th>
+                            <th style="min-width:160px">Mode</th>
                             <th style="width:60px" class="text-end"></th>
                         </tr>
                     </thead>

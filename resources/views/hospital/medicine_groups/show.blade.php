@@ -303,7 +303,7 @@
                                 <th>Dosage</th>
                                 <th>Days</th>
                                 <th class="text-center" style="width:80px">Qty</th>
-                                <th>Route of Administration</th>
+                                <th>Mode</th>
                             </tr>
                         </thead>
                         <tbody>

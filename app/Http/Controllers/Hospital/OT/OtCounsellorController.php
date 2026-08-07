@@ -18,7 +18,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtConsent;
 use App\Models\Hospital\OT\OtCounselling;
-use App\Models\Hospital\OT\OtLensOption;
 use App\Models\Hospital\OT\OtPackageMaster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -84,23 +83,15 @@ class OtCounsellorController extends Controller
             ->where('ot_booking_id', $booking->id)
             ->first();
 
-        $lensOptions = OtLensOption::query()
-            ->where('tenant_id', $tenantId)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
-        // Package master rows: each lens_cost is paired with a room + charges for autofill
+        // Active OT packages for counsellor package dropdown (by name + room)
         $packageCostOptions = OtPackageMaster::query()
             ->where('tenant_id', $tenantId)
             ->where('is_active', true)
-            ->whereNotNull('lens_cost')
-            ->orderBy('lens_cost')
+            ->orderBy('package_name')
             ->orderBy('room_category')
             ->get([
                 'id',
                 'package_name',
-                'lens_cost',
                 'room_category',
                 'ot_charges',
                 'surgeon_charges',
@@ -108,36 +99,44 @@ class OtCounsellorController extends Controller
                 'consumables_charges',
             ]);
 
+        $otSurgeryTypes = DB::table('ot_surgery_types')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->orderBy('surgery_name')
+            ->get(['id', 'surgery_name']);
+
         return view('hospital.ot.counsellor.form', [
             'slug' => $slug,
             'booking' => $booking,
             'counselling' => $counselling,
             'consent' => $consent,
-            'lensOptions' => $lensOptions,
             'packageCostOptions' => $packageCostOptions,
+            'otSurgeryTypes' => $otSurgeryTypes,
         ]);
     }
 
     /**
-     * Autofill lookup: lens_cost + room_category → package / charges.
+     * Autofill lookup: package id → room + charges (lens cost is entered separately).
      */
     public function lookupPackage(Request $request, string $slug): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
 
         $validated = $request->validate([
-            'lens_cost' => ['required', 'numeric', 'min:0'],
-            'room_category' => ['required', Rule::in([OtPackageMaster::ROOM_GENERAL, OtPackageMaster::ROOM_PRIVATE])],
+            'package_id' => [
+                'required',
+                'integer',
+                Rule::exists('ot_package_masters', 'id')
+                    ->where(fn ($q) => $q->where('tenant_id', $tenantId)->where('is_active', true)->whereNull('deleted_at')),
+            ],
         ]);
 
         $package = OtPackageMaster::query()
             ->where('tenant_id', $tenantId)
             ->where('is_active', true)
-            ->where('room_category', $validated['room_category'])
-            ->where('lens_cost', (float) $validated['lens_cost'])
+            ->whereKey((int) $validated['package_id'])
             ->first([
                 'package_name',
-                'lens_cost',
                 'room_category',
                 'ot_charges',
                 'surgeon_charges',
@@ -153,6 +152,7 @@ class OtCounsellorController extends Controller
             'found' => true,
             'package' => [
                 'package_name' => $package->package_name,
+                'room_category' => $package->room_category,
                 'ot_charges' => (float) $package->ot_charges,
                 'surgeon_charges' => (float) $package->surgeon_charges,
                 'nursing_charges' => (float) $package->nursing_charges,
@@ -166,16 +166,23 @@ class OtCounsellorController extends Controller
         $tenantId = (int) app('tenant')->id;
         $booking = OtBooking::query()->findOrFail($bookingId);
 
+        $surgeryTypeNames = DB::table('ot_surgery_types')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->pluck('surgery_name')
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($booking->ot_type && ! in_array($booking->ot_type, $surgeryTypeNames, true)) {
+            $surgeryTypeNames[] = $booking->ot_type;
+        }
+
         $validated = $request->validate([
             'diagnosis' => ['nullable', 'string', 'max:255'],
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
-            'surgery_type_confirmed' => ['nullable', 'boolean'],
+            'ot_type' => ['required', 'string', 'max:150', Rule::in($surgeryTypeNames)],
             'mediclaim' => ['required', 'boolean'],
-            'lens_option' => [
-                'nullable',
-                Rule::exists('ot_lens_options', 'name')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenantId)->where('is_active', true)->whereNull('deleted_at')),
-            ],
             'lens_category' => ['nullable', Rule::in(['standard', 'premium'])],
             'lens_company' => ['nullable', 'string', 'max:150'],
             'lens_model' => ['nullable', 'string', 'max:150'],
@@ -197,12 +204,19 @@ class OtCounsellorController extends Controller
                 ),
             ],
             'report_ok' => ['nullable', 'boolean'],
-            'blood_reports_verified' => ['nullable', 'boolean'],
-            'blood_reports_normal' => ['nullable', 'boolean'],
+            'blood_reports_verified' => ['required', 'boolean'],
+            'blood_reports_normal' => ['required', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $totalEstimate = round((float) ($validated['lens_cost'] ?? 0), 2);
+        $totalEstimate = round(
+            (float) ($validated['ot_charges'] ?? 0)
+            + (float) ($validated['surgeon_charges'] ?? 0)
+            + (float) ($validated['nursing_charges'] ?? 0)
+            + (float) ($validated['consumables_charges'] ?? 0)
+            + (float) ($validated['lens_cost'] ?? 0),
+            2
+        );
 
         $counsellorId = (int) auth('hospital_user')->id();
 
@@ -211,9 +225,8 @@ class OtCounsellorController extends Controller
                 ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
                 [
                     'diagnosis' => $validated['diagnosis'] ?? null,
-                    'surgery_type_confirmed' => (bool) ($validated['surgery_type_confirmed'] ?? false),
+                    'surgery_type_confirmed' => true,
                     'mediclaim' => (bool) $validated['mediclaim'],
-                    'lens_option' => $validated['lens_option'] ?? null,
                     'lens_category' => $validated['lens_category'] ?? null,
                     'lens_company' => $validated['lens_company'] ?? null,
                     'lens_model' => $validated['lens_model'] ?? null,
@@ -230,8 +243,8 @@ class OtCounsellorController extends Controller
                     'total_estimate' => $totalEstimate,
                     'payment_mode' => $validated['payment_mode'] ?? null,
                     'report_ok' => (bool) ($validated['report_ok'] ?? false),
-                    'blood_reports_verified' => (bool) ($validated['blood_reports_verified'] ?? false),
-                    'blood_reports_normal' => (bool) ($validated['blood_reports_normal'] ?? false),
+                    'blood_reports_verified' => (bool) $validated['blood_reports_verified'],
+                    'blood_reports_normal' => (bool) $validated['blood_reports_normal'],
                     'notes' => $validated['notes'] ?? null,
                     'created_by' => $counsellorId,
                     'counselled_by' => $counsellorId,
@@ -243,8 +256,8 @@ class OtCounsellorController extends Controller
             // (OtAccountantController, ot/accountant/*.blade.php) already read these directly.
             $booking->update([
                 'eye' => $validated['eye'],
+                'ot_type' => $validated['ot_type'],
                 'has_mediclaim' => (bool) $validated['mediclaim'],
-                'lens_option' => $validated['lens_option'] ?? null,
                 'package_amount' => $totalEstimate,
                 'payment_mode' => $validated['payment_mode'] ?? null,
                 'reports_ok' => (bool) ($validated['report_ok'] ?? false),

@@ -11,7 +11,7 @@
 
 @section('content')
 <div class="user-create-page">
-    <form method="POST" action="{{ route('hospital.users.store', ['slug' => $slug]) }}">
+    <form method="POST" action="{{ route('hospital.users.store', ['slug' => $slug]) }}" enctype="multipart/form-data">
         @csrf
 
         <div class="user-create-shell">
@@ -43,7 +43,10 @@
                             <select name="role_id" id="role_id" class="hms-select @error('role_id') is-invalid @enderror" required>
                                 <option value="">Select Role</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id }}" data-slug="{{ $role->slug }}" @selected(old('role_id') == $role->id)>
+                                    <option value="{{ $role->id }}"
+                                        data-slug="{{ $role->slug }}"
+                                        data-doctor-fields="{{ !empty($role->shows_doctor_fields) ? '1' : '0' }}"
+                                        @selected(old('role_id') == $role->id)>
                                         {{ $role->name }}
                                     </option>
                                 @endforeach
@@ -102,34 +105,46 @@
                             @error('status')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
-                        <!-- <div class="hms-form-group doctor-only user-create-field" style="display:none">
-                            <label>Doctor Type</label>
-                            <select name="doctor_type" class="hms-select @error('doctor_type') is-invalid @enderror">
-                                <option value="">Select Type</option>
-                                <option value="primary" @selected(old('doctor_type') === 'primary')>Primary</option>
-                                <option value="secondary" @selected(old('doctor_type') === 'secondary')>Secondary</option>
-                            </select>
-                            @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
-                        </div> -->
-
                         <div class="hms-form-group doctor-only user-create-field" style="display:none">
                             <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters, e.g. JP)</span></label>
                             <input type="text" name="doctor_prefix" value="{{ strtoupper(old('doctor_prefix', '')) }}"
                                    maxlength="5" placeholder="e.g. JP"
                                    style="text-transform:uppercase"
                                    class="hms-input @error('doctor_prefix') is-invalid @enderror">
-                            <div style="font-size:.73rem;color:#94A3B8;margin-top:.25rem">Used in daily patient serial: <strong>JP-1, JP-2…</strong> (resets each day)</div>
+                            <div style="font-size:.73rem;color:#94A3B8;margin-top:.25rem">Daily serial format: <strong>JP-001, JP-002…</strong></div>
                             @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
-<!-- 
-                        <div class="hms-form-group doctor-only user-create-field user-create-checkbox-wrap" style="display:none">
-                            <label>Doctor Access</label>
-                            <label class="hms-checkbox-label user-create-checkbox">
-                                <input class="hms-checkbox" type="checkbox" value="1" id="foc_permission"
-                                       name="foc_permission" @checked(old('foc_permission'))>
-                                <span>Allow FOC Permission</span>
-                            </label>
-                        </div> -->
+
+                        <div class="hms-form-group doctor-only user-create-field" style="display:none">
+                            <label>Registration No.</label>
+                            <input type="text" name="registration_no" value="{{ old('registration_no') }}"
+                                   class="hms-input @error('registration_no') is-invalid @enderror"
+                                   placeholder="e.g. MCI-12345">
+                            @error('registration_no')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group doctor-only user-create-field" style="display:none">
+                            <label>Experience <span style="font-size:.75rem;color:#64748B;font-weight:400">(years)</span></label>
+                            <input type="number" name="experience_years" value="{{ old('experience_years') }}"
+                                   min="0" max="60"
+                                   class="hms-input @error('experience_years') is-invalid @enderror"
+                                   placeholder="e.g. 5">
+                            @error('experience_years')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group doctor-only user-create-field" style="display:none">
+                            <label>Signature <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
+                            <input type="file" name="signature" accept="image/jpg,image/jpeg,image/png"
+                                   class="hms-input @error('signature') is-invalid @enderror">
+                            @error('signature')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
+
+                        <div class="hms-form-group doctor-only user-create-field" style="display:none">
+                            <label>Profile Photo <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
+                            <input type="file" name="profile_photo" accept="image/jpg,image/jpeg,image/png"
+                                   class="hms-input @error('profile_photo') is-invalid @enderror">
+                            @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
             </div>
@@ -147,11 +162,28 @@
 
 @push('scripts')
 <script>
+    function roleShowsDoctorFields(roleSelect) {
+        if (!roleSelect || roleSelect.selectedIndex < 0) {
+            return false;
+        }
+        const selected = roleSelect.options[roleSelect.selectedIndex];
+        if (!selected || !selected.value) {
+            return false;
+        }
+        if (selected.dataset.doctorFields === '1') {
+            return true;
+        }
+        const slug = (selected.dataset.slug || '').toLowerCase();
+        const label = (selected.textContent || '').toLowerCase().trim();
+        return slug === 'doctor'
+            || slug === 'ot_doctor'
+            || slug.indexOf('doctor') !== -1
+            || label.indexOf('doctor') !== -1;
+    }
+
     function toggleDoctorFields() {
         const roleSelect = document.getElementById('role_id');
-        const selected = roleSelect.options[roleSelect.selectedIndex];
-        const slug = selected ? selected.dataset.slug : '';
-        const showDoctor = slug === 'doctor';
+        const showDoctor = roleShowsDoctorFields(roleSelect);
 
         document.querySelectorAll('.doctor-only').forEach(function (element) {
             element.style.display = showDoctor ? '' : 'none';
@@ -167,7 +199,12 @@
         const eyeSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle></svg>';
         const eyeSlashSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18" stroke-width="1.8" stroke-linecap="round"></path><path d="M10.2 5.1A11.3 11.3 0 0 1 12 5c7 0 10.5 7 10.5 7a19 19 0 0 1-4.1 4.7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9.9 9.9A3.2 3.2 0 0 0 12 15.2c.5 0 1-.1 1.4-.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M7.1 7.4C4 9.6 1.5 12 1.5 12s3.5 7 10.5 7c1.7 0 3.2-.3 4.6-.8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 
-        roleSelect.addEventListener('change', toggleDoctorFields);
+        if (roleSelect) {
+            roleSelect.addEventListener('change', toggleDoctorFields);
+            if (window.jQuery) {
+                window.jQuery(roleSelect).on('change.select2 change', toggleDoctorFields);
+            }
+        }
         toggleDoctorFields();
 
         if (togglePassword && passwordInput) {

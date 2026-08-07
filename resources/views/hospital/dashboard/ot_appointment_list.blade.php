@@ -63,6 +63,7 @@
                                 <th><i class="bi bi-person-vcard me-1"></i>Doctor</th>
                                 <th><i class="bi bi-geo-alt me-1"></i>City</th>
                                 <th><i class="bi bi-flag me-1"></i>Status</th>
+                                <th class="text-center"><i class="bi bi-lightning me-1"></i>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,6 +80,10 @@
                                         $appointment->middle_name,
                                         $appointment->surname,
                                     ])));
+                                    $canWalkIn = in_array($appointment->status, [
+                                        \App\Models\Hospital\OT\OtAppointment::STATUS_BOOKED,
+                                        \App\Models\Hospital\OT\OtAppointment::STATUS_CONFIRMED,
+                                    ], true) && empty($appointment->converted_patient_id);
                                 @endphp
                                 <tr>
                                     <td class="fw-semibold">{{ $appointment->appointment_number }}</td>
@@ -89,10 +94,20 @@
                                     <td>{{ $appointment->doctor?->name ? 'Dr. '.$appointment->doctor->name : '-' }}</td>
                                     <td>{{ $appointment->location?->name ?: '-' }}</td>
                                     <td><span class="badge ota-status-badge {{ $badgeClass }} text-capitalize">{{ $appointment->status }}</span></td>
+                                    <td class="text-center">
+                                        @if($canWalkIn)
+                                            <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
+                                                class="ota-walkin-btn" title="Register as walk-in (prefill from OT appointment)">
+                                                <i class="bi bi-person-walking"></i> Walk-In
+                                            </a>
+                                        @else
+                                            <span class="text-muted small">—</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center ota-empty">
+                                    <td colspan="9" class="text-center ota-empty">
                                         <i class="bi bi-inbox me-1"></i> No OT appointments found for selected dates.
                                     </td>
                                 </tr>
@@ -333,6 +348,28 @@
     .ota-status-confirmed { background: #1E8E5A; }
     .ota-status-cancelled { background: #C0392B; }
     .ota-status-completed { background: #1E8E5A; }
+
+    .ota-walkin-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 12px;
+        background: #5b21b6;
+        color: #fff !important;
+        border-radius: 20px;
+        font-size: .72rem;
+        font-weight: 800;
+        text-decoration: none !important;
+        box-shadow: 0 0 0 2px rgba(91, 33, 182, .28);
+        white-space: nowrap;
+        transition: transform 160ms ease, background 160ms ease;
+    }
+
+    .ota-walkin-btn:hover {
+        background: #4c1d95;
+        color: #fff !important;
+        transform: translateY(-1px);
+    }
 
     .ota-empty {
         padding: 2.25rem 1rem !important;

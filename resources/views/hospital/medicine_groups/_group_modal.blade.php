@@ -279,13 +279,12 @@
 
             <form id="groupForm" action="{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}" method="POST">
                 @csrf
-                <input type="hidden" name="usage_scope" id="usage_scope" value="ot">
                 <input type="hidden" name="_method" id="groupFormMethod" value="POST">
                 <input type="hidden" name="group_id" id="group-id" value="{{ old('group_id') }}">
 
                 <div class="modal-body">
                     <div class="row mb-3 g-3">
-                        <div class="col-md-6">
+                        <div class="col-md-5">
                             <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="group-name"
                                    value="{{ old('name') }}"
@@ -293,13 +292,23 @@
                                    required placeholder="e.g. Cataract Post-Op Standard">
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-medium">Group Codee</label>
+                        <div class="col-md-4">
+                            <label class="form-label fw-medium">Group Code</label>
                             <input type="text" name="group_code" id="group-code"
                                    value="{{ old('group_code') }}"
                                    class="form-control clinical-input @error('group_code') is-invalid @enderror"
                                    placeholder="e.g. CAT-001">
                             @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-medium">Select Type <span class="text-danger">*</span></label>
+                            <select name="usage_scope" id="usage_scope"
+                                    class="form-select clinical-input @error('usage_scope') is-invalid @enderror"
+                                    required>
+                                <option value="opd" @selected(old('usage_scope', 'opd') === 'opd')>OPD</option>
+                                <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>
+                            </select>
+                            @error('usage_scope')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
 
@@ -331,7 +340,7 @@
                                     <th style="min-width:140px">Dosage</th>
                                     <th style="min-width:100px">Days</th>
                                     <th style="width:80px" class="text-center">Qty</th>
-                                    <th style="min-width:160px">Route of Administration</th>
+                                    <th style="min-width:160px">Mode</th>
                                     <th style="width:60px" class="text-end"></th>
                                 </tr>
                             </thead>
@@ -500,6 +509,7 @@ function resetGroupForm() {
     document.getElementById('group-id').value = '';
     document.getElementById('group-name').value = '';
     document.getElementById('group-code').value = '';
+    document.getElementById('usage_scope').value = 'opd';
     $('#group-diagnosis').val('').trigger('change.select2');
     $('#groupRepeaterBody .medicine-select, #groupRepeaterBody [data-field="dosage_id"], #groupRepeaterBody [data-field="route_id"]').select2('destroy');
     document.getElementById('groupRepeaterBody').innerHTML = '';
@@ -516,6 +526,7 @@ function openGroupEditModal(record) {
     document.getElementById('group-id').value   = record.id ?? '';
     document.getElementById('group-name').value  = record.name ?? '';
     document.getElementById('group-code').value  = record.group_code ?? '';
+    document.getElementById('usage_scope').value = (record.usage_scope === 'ot') ? 'ot' : 'opd';
     $('#group-diagnosis').val(record.diagnosis_id ?? '').trigger('change.select2');
     document.getElementById('groupRepeaterBody').innerHTML = '';
 
@@ -589,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('group-id').value = @json(old('group_id', ''));
         document.getElementById('group-name').value = @json(old('name', ''));
         document.getElementById('group-code').value = @json(old('group_code', ''));
+        document.getElementById('usage_scope').value = @json(old('usage_scope', 'opd'));
         $('#group-diagnosis').val(@json(old('diagnosis_id', ''))).trigger('change.select2');
         document.getElementById('groupRepeaterBody').innerHTML = '';
 

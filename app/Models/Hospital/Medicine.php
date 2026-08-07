@@ -28,6 +28,7 @@ class Medicine extends Model
         'tenant_id',
         'medicine_type_id',
         'name',
+        'usage_scope',
         'dosage_id',
         'duration',
         'qty',

@@ -162,6 +162,16 @@ class Patient extends Model
         return $this->hasMany(OtBooking::class, 'patient_id');
     }
 
+    /**
+     * Most recent OT booking for this patient — used to show the patient's current
+     * OT workflow stage (in accountant/billing, in ward, operated, etc.) instead of
+     * a flat "completed" status. Uses "latest of many" so it stays eager-load safe.
+     */
+    public function latestOtBooking(): HasOne
+    {
+        return $this->hasOne(OtBooking::class, 'patient_id')->ofMany('id', 'max');
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class, 'tenant_id');

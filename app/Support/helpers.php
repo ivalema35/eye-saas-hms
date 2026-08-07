@@ -147,3 +147,56 @@ if (! function_exists('hospital_brand')) {
         ];
     }
 }
+
+if (! function_exists('axis_chip')) {
+    /**
+     * Axis value for PG/ST display/print (plain text with °, no chip).
+     */
+    function axis_chip(mixed $value, string $empty = ''): string
+    {
+        $raw = trim((string) ($value ?? ''));
+        if ($raw === '' || $raw === '-' || $raw === '—') {
+            return $empty;
+        }
+
+        $num = preg_replace('/\s*°\s*$/u', '', $raw) ?? $raw;
+        $num = trim((string) $num);
+        if ($num === '') {
+            return $empty;
+        }
+
+        return e($num).'°';
+    }
+}
+
+if (! function_exists('pg_rx_line')) {
+    /**
+     * PG / NrPG line: "SPH / CYL X <axis-chip>".
+     * Returns HTML (use {!! !!}); empty string if all blank.
+     */
+    function pg_rx_line(mixed $sph, mixed $cyl, mixed $axis): string
+    {
+        $s = trim((string) ($sph ?? ''));
+        $c = trim((string) ($cyl ?? ''));
+        $a = trim((string) ($axis ?? ''));
+
+        if ($s === '' && $c === '' && $a === '') {
+            return '';
+        }
+
+        $out = e($s !== '' ? $s : '-').' / '.e($c !== '' ? $c : '-');
+        if ($a !== '') {
+            $out .= ' X '.axis_chip($a);
+        }
+
+        return $out;
+    }
+}
+
+if (! function_exists('axis_chip_css')) {
+    /** Shared CSS for axis display — no-op (plain text only). */
+    function axis_chip_css(): string
+    {
+        return '';
+    }
+}

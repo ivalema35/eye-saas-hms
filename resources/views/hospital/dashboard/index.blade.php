@@ -1360,7 +1360,7 @@
             <i class="bi bi-wallet2"></i>
         </div>
         <p class="rec-5label">Today Collection</p>
-        <div class="rec-5value">₹{{ number_format($receptionistTodayCollection, 0) }}</div>
+        <div class="rec-5value">{{ money($receptionistTodayCollection, 0) }}</div>
     </div>
 
     {{-- Total Patients --}}
@@ -1940,7 +1940,7 @@
 
                                         <div class="foc-request-card">
                                             <span class="foc-request-label">Case Fee</span>
-                                            <div class="foc-request-value foc-request-fee">₹{{ number_format((float) $patient->case_fee, 2) }}</div>
+                                            <div class="foc-request-value foc-request-fee">{{ money((float) $patient->case_fee, 2) }}</div>
                                         </div>
 
                                         <div class="foc-request-card">
@@ -2057,6 +2057,7 @@
 .tap-type-pill { font-size:10px; font-weight:600; padding:1px 7px; border-radius:10px; letter-spacing:.2px; display:inline-block; margin-top:2px; }
 .tap-type-phone { background:#FEF3C7; color:#92400E; }
 .tap-type-walkin { background:#DBEAFE; color:#1e40af; }
+.tap-type-ot { background:#EDE9FE; color:#5B21B6; }
 .tap-meta { font-size:12px; color:#64748b; }
 .tap-meta strong { color:#334155; font-weight:600; }
 .tap-slot { font-size:12px; color:#475569; }
@@ -2243,7 +2244,7 @@
                                 <td>{{ $foc->doctor?->name ?? '—' }}</td>
                                 <td>{{ $foc->patient?->full_name ?? '—' }}</td>
                                 <td>{{ $foc->patient?->patient_code ?? '—' }}</td>
-                                <td>₹{{ number_format((float) $foc->foc_fee, 2) }}</td>
+                                <td>{{ money((float) $foc->foc_fee, 2) }}</td>
                                 <td>
                                     <button type="button" class="hms-btn hms-btn-sm hms-btn-outline foc-view-btn" data-bs-toggle="modal" data-bs-target="#focViewModal{{ $foc->id }}">
                                         <i class="fa-solid fa-eye"></i> View
@@ -2288,7 +2289,7 @@
                     <p class="mb-1"><strong>Patient:</strong> {{ $foc->patient?->full_name ?? '—' }}</p>
                     <p class="mb-1"><strong>MRD:</strong> {{ $foc->patient?->patient_code ?? '—' }}</p>
                     <p class="mb-1"><strong>Doctor:</strong> {{ $foc->doctor?->name ?? '—' }}</p>
-                    <p class="mb-1"><strong>Fee to Waive:</strong> ₹{{ number_format((float) $foc->foc_fee, 2) }}</p>
+                    <p class="mb-1"><strong>Fee to Waive:</strong> {{ money((float) $foc->foc_fee, 2) }}</p>
                     <p class="mb-0"><strong>Reason:</strong><br>{{ $foc->reason ?: 'No reason provided.' }}</p>
                 </div>
 

@@ -4,6 +4,8 @@ namespace App\Services\Platform;
 
 use App\Models\Platform\MasterCountry;
 use App\Models\Platform\Tenant;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
 
 class CurrencyService
 {
@@ -41,7 +43,6 @@ class CurrencyService
 
     /**
      * Approximate INR value of 1 unit of currency (for SaaS plan display conversion).
-     * Override per country via tbl_master_countries.fx_inr_per_unit when needed.
      *
      * @return array<string, float>
      */
@@ -73,9 +74,7 @@ class CurrencyService
     }
 
     /**
-     * Common ISO 3166-1 alpha-2 country codes for CSC master.
-     *
-     * @return array<string, string> code => country name hint
+     * @return array<string, string>
      */
     public static function commonCountryCodes(): array
     {
@@ -113,19 +112,31 @@ class CurrencyService
         return (float) ($map[strtoupper($currencyCode)] ?? 1.0);
     }
 
+    public static function findCountryByName(?string $countryName): ?MasterCountry
+    {
+        $name = trim((string) $countryName);
+        if ($name === '') {
+            return null;
+        }
+
+        return MasterCountry::query()
+            ->whereRaw('LOWER(name) = ?', [strtolower($name)])
+            ->first();
+    }
+
     /**
-     * @return array{code: string, symbol: string, name: string|null}
+     * @return array{code: string, symbol: string, name: string|null, timezone: string|null}
      */
     public function getCurrencyForCountry(string $countryName): array
     {
-        $normalized = MasterCountry::normalize($countryName);
-        $country = MasterCountry::whereRaw('LOWER(name) = ?', [strtolower($normalized)])->first();
+        $country = self::findCountryByName($countryName);
 
         if ($country) {
             return [
                 'code' => $country->currency_code ?: 'INR',
                 'symbol' => $country->currency_symbol ?: '₹',
                 'name' => $country->currency_name,
+                'timezone' => $country->default_timezone ?: null,
             ];
         }
 
@@ -133,7 +144,80 @@ class CurrencyService
             'code' => config('app.platform_currency_code', 'INR'),
             'symbol' => config('app.platform_currency_symbol', '₹'),
             'name' => null,
+            'timezone' => null,
         ];
+    }
+
+    /**
+     * Apply hospital currency (and timezone) for the active request.
+     * Prefer Super Admin country master linked to tenant.country.
+     */
+    public static function applyTenantCurrencyToConfig(?Tenant $tenant): void
+    {
+        if (! $tenant) {
+            return;
+        }
+
+        $platformCode = (string) config('app.platform_currency_code', 'INR');
+        $platformSymbol = (string) config('app.platform_currency_symbol', '₹');
+        $code = $platformCode;
+        $symbol = $platformSymbol;
+
+        // Prefer hospital settings country (Settings page) over legacy tenant.country mismatch
+        $settingsCountry = DB::table('hospital_settings')
+            ->where('tenant_id', $tenant->id)
+            ->where('key', 'hospital_country')
+            ->value('value');
+        $countryName = trim((string) ($settingsCountry ?: $tenant->country));
+        $master = $countryName !== '' ? self::findCountryByName($countryName) : null;
+
+        if ($tenant->is_currency_override) {
+            $code = $tenant->currency_code ?: $platformCode;
+            $symbol = $tenant->currency_symbol ?: $platformSymbol;
+        } elseif ($master) {
+            $code = $master->currency_code ?: ($tenant->currency_code ?: $platformCode);
+            $symbol = $master->currency_symbol ?: ($tenant->currency_symbol ?: $platformSymbol);
+
+            // Master row incomplete → infer from ISO country code when possible
+            if ((! $master->currency_code || ! $master->currency_symbol) && $master->country_code) {
+                $iso = strtoupper((string) $master->country_code);
+                $isoCurrency = [
+                    'IN' => 'INR', 'DE' => 'EUR', 'FR' => 'EUR', 'US' => 'USD',
+                    'GB' => 'GBP', 'AE' => 'AED', 'AU' => 'AUD', 'CA' => 'CAD',
+                    'SA' => 'SAR', 'SG' => 'SGD', 'NP' => 'NPR', 'BD' => 'BDT',
+                ];
+                if (isset($isoCurrency[$iso])) {
+                    $preset = self::commonCurrencies()[$isoCurrency[$iso]] ?? null;
+                    if ($preset) {
+                        $code = $master->currency_code ?: $preset['code'];
+                        $symbol = $master->currency_symbol ?: $preset['symbol'];
+                    }
+                }
+            }
+        } else {
+            $code = $tenant->currency_code ?: $platformCode;
+            $symbol = $tenant->currency_symbol ?: $platformSymbol;
+        }
+
+        Config::set('app.hospital_currency_code', $code);
+        Config::set('app.hospital_currency_symbol', $symbol);
+
+        $timezone = $tenant->timezone ?: 'UTC';
+        // Prefer settings timezone if set
+        $settingsTimezone = DB::table('hospital_settings')
+            ->where('tenant_id', $tenant->id)
+            ->where('key', 'hospital_timezone')
+            ->value('value');
+        if ($settingsTimezone && in_array($settingsTimezone, timezone_identifiers_list(), true)) {
+            $timezone = $settingsTimezone;
+        }
+        if (! $tenant->is_timezone_override && $master?->default_timezone && ! $settingsTimezone) {
+            $timezone = $master->default_timezone;
+        }
+        if (in_array($timezone, timezone_identifiers_list(), true)) {
+            Config::set('app.hospital_timezone', $timezone);
+            date_default_timezone_set($timezone);
+        }
     }
 
     public function syncFromCountry(Tenant $tenant): void
@@ -148,10 +232,16 @@ class CurrencyService
 
         $currency = $this->getCurrencyForCountry($tenant->country);
 
-        $tenant->update([
+        $payload = [
             'currency_code' => $currency['code'],
             'currency_symbol' => $currency['symbol'],
-        ]);
+        ];
+
+        if (! $tenant->is_timezone_override && ! empty($currency['timezone'])) {
+            $payload['timezone'] = $currency['timezone'];
+        }
+
+        $tenant->update($payload);
     }
 
     public static function currentCode(): string

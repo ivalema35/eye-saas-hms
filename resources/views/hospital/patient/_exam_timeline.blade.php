@@ -5,6 +5,7 @@
       $diagnosisMasters — Collection with id + diagnosis columns
       $dosageMasters    — Collection keyed by id
 --}}
+<style>{!! axis_chip_css() !!}</style>
 @if($history->isEmpty())
     <p class="history-empty text-muted text-center py-5 mb-0">
         <i class="bi bi-journal-x fs-2 d-block mb-2 opacity-50"></i>
@@ -102,21 +103,7 @@
 
                                             return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
                                         };
-                                        $pgFmt = function ($s, $c, $a) {
-                                            $s = trim((string) $s);
-                                            $c = trim((string) $c);
-                                            $a = trim((string) $a);
-                                            if ($s === '' && $c === '' && $a === '') {
-                                                return '';
-                                            }
-                                            $out = ($s !== '' ? $s : '-') . ' / ' . ($c !== '' ? $c : '-');
-                                            if ($a !== '') {
-                                                $out .= ' X ' . $a;
-                                            }
-
-                                            return $out;
-                                        };
-                                        $dxNames = $diagnosisMasters->whereIn('id', (array) $dxIds)->pluck('diagnosis')->implode(', ');
+$dxNames = $diagnosisMasters->whereIn('id', (array) $dxIds)->pluck('diagnosis')->implode(', ');
                                         $hnoList = array_filter(array_map('trim', explode(',', $data['history'] ?? '')));
                                         $hasPg = !empty($pg['re']['ds']) || !empty($pg['le']['ds'])
                                             || !empty($pg['re']['ns']) || !empty($pg['le']['ns']);
@@ -202,15 +189,15 @@
                                                         <span class="cv-vn-line" style="align-items:flex-start;">
                                                             <strong>PG</strong>&nbsp;&lt;&nbsp;
                                                             <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
-                                                                <span>{{ $pgFmt($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') }}</span>
-                                                                <span>{{ $pgFmt($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') }}</span>
+                                                                <span>{!! pg_rx_line($pg['re']['ds'] ?? '', $pg['re']['dc'] ?? '', $pg['re']['ax'] ?? '') !!}</span>
+                                                                <span>{!! pg_rx_line($pg['le']['ds'] ?? '', $pg['le']['dc'] ?? '', $pg['le']['ax'] ?? '') !!}</span>
                                                             </span>
                                                         </span>
                                                         <span class="cv-vn-line" style="align-items:flex-start;">
                                                             <strong>NrPG</strong>&nbsp;&lt;&nbsp;
                                                             <span style="display:inline-flex;flex-direction:column;line-height:1.35;">
-                                                                <span>{{ $pgFmt($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') }}</span>
-                                                                <span>{{ $pgFmt($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') }}</span>
+                                                                <span>{!! pg_rx_line($pg['re']['ns'] ?? '', $pg['re']['nc'] ?? '', $pg['re']['na'] ?? '') !!}</span>
+                                                                <span>{!! pg_rx_line($pg['le']['ns'] ?? '', $pg['le']['nc'] ?? '', $pg['le']['na'] ?? '') !!}</span>
                                                             </span>
                                                         </span>
                                                     </div>
@@ -238,21 +225,21 @@
                                                                 <th>D</th>
                                                                 <td>{{ $cv($st['re']['ds'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['re']['dc'] ?? '') }}</td>
-                                                                <td>{{ $cv($st['re']['ax'] ?? '') }}</td>
+                                                                <td>{!! axis_chip($st['re']['ax'] ?? '', $cv('')) !!}</td>
                                                                 <th>D</th>
                                                                 <td>{{ $cv($st['le']['ds'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['le']['dc'] ?? '') }}</td>
-                                                                <td>{{ $cv($st['le']['ax'] ?? '') }}</td>
+                                                                <td>{!! axis_chip($st['le']['ax'] ?? '', $cv('')) !!}</td>
                                                             </tr>
                                                             <tr>
                                                                 <th>N</th>
                                                                 <td>{{ $cv($st['re']['ns'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['re']['nc'] ?? '') }}</td>
-                                                                <td>{{ $cv($st['re']['na'] ?? '') }}</td>
+                                                                <td>{!! axis_chip($st['re']['na'] ?? '', $cv('')) !!}</td>
                                                                 <th>N</th>
                                                                 <td>{{ $cv($st['le']['ns'] ?? '') }}</td>
                                                                 <td>{{ $cv($st['le']['nc'] ?? '') }}</td>
-                                                                <td>{{ $cv($st['le']['na'] ?? '') }}</td>
+                                                                <td>{!! axis_chip($st['le']['na'] ?? '', $cv('')) !!}</td>
                                                             </tr>
                                                         </tbody>
                                                     </table>

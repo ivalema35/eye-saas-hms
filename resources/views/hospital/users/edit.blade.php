@@ -10,7 +10,7 @@
 @endsection
 
 @section('content')
-<form method="POST" action="{{ route('hospital.users.update', ['slug' => $slug, 'id' => $user->id]) }}">
+<form method="POST" action="{{ route('hospital.users.update', ['slug' => $slug, 'id' => $user->id]) }}" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -34,20 +34,15 @@
                     <select name="role_id" id="role_id" class="hms-select @error('role_id') is-invalid @enderror" required>
                         <option value="">Select Role</option>
                         @foreach($roles as $role)
-                            <option value="{{ $role->id }}" data-slug="{{ $role->slug }}"
+                            <option value="{{ $role->id }}"
+                                data-slug="{{ $role->slug }}"
+                                data-doctor-fields="{{ !empty($role->shows_doctor_fields) ? '1' : '0' }}"
                                 @selected(old('role_id', $user->role_id) == $role->id)>
                                 {{ $role->name }}
                             </option>
                         @endforeach
                     </select>
                     @error('role_id')<div class="hms-field-error">{{ $message }}</div>@enderror
-                </div>
-
-                <div class="hms-form-group">
-                    <label>Email <span class="hms-required">*</span></label>
-                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
-                           class="hms-input @error('email') is-invalid @enderror" required>
-                    @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="hms-form-group">
@@ -58,35 +53,12 @@
                     @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
 
-                <div class="hms-form-group doctor-only" style="display:none">
-                    <label>Doctor Type</label>
-                    <select name="doctor_type" class="hms-select @error('doctor_type') is-invalid @enderror">
-                        <option value="">Select Type</option>
-                        <option value="primary"   @selected(old('doctor_type', $user->doctor_type) === 'primary')>Primary</option>
-                        <option value="secondary" @selected(old('doctor_type', $user->doctor_type) === 'secondary')>Secondary</option>
-                    </select>
-                    @error('doctor_type')<div class="hms-field-error">{{ $message }}</div>@enderror
+                <div class="hms-form-group">
+                    <label>Email <span class="hms-required">*</span></label>
+                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
+                           class="hms-input @error('email') is-invalid @enderror" required>
+                    @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
-
-                <div class="hms-form-group doctor-only" style="display:none">
-                    <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters, e.g. JP)</span></label>
-                    <input type="text" name="doctor_prefix"
-                           value="{{ strtoupper(old('doctor_prefix', $user->doctor_prefix ?? '')) }}"
-                           maxlength="5" placeholder="e.g. JP"
-                           style="text-transform:uppercase"
-                           class="hms-input @error('doctor_prefix') is-invalid @enderror">
-                    <div style="font-size:.73rem;color:#94A3B8;margin-top:.25rem">Used in daily patient serial: <strong>JP-1, JP-2…</strong> (resets each day)</div>
-                    @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
-                </div>
-<!-- 
-                <div class="hms-form-group doctor-only" style="display:none">
-                    <label>&nbsp;</label>
-                    <label class="hms-checkbox-label" style="padding:.5rem 0">
-                        <input class="hms-checkbox" type="checkbox" value="1" id="foc_permission"
-                               name="foc_permission" @checked(old('foc_permission', $user->foc_permission))>
-                        <span>Allow FOC Permission</span>
-                    </label>
-                </div> -->
 
                 <div class="hms-form-group">
                     <label>New Password <span style="color:var(--hms-text-muted);font-size:.8rem">(leave blank to keep current)</span></label>
@@ -107,6 +79,64 @@
                     </select>
                     @error('status')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
+
+                <div class="hms-form-group doctor-only" style="display:none">
+                    <label>Doctor Prefix <span style="font-size:.75rem;color:#64748B;font-weight:400">(2–5 letters, e.g. JP)</span></label>
+                    <input type="text" name="doctor_prefix"
+                           value="{{ strtoupper(old('doctor_prefix', $user->doctor_prefix ?? '')) }}"
+                           maxlength="5" placeholder="e.g. JP"
+                           style="text-transform:uppercase"
+                           class="hms-input @error('doctor_prefix') is-invalid @enderror">
+                    <div style="font-size:.73rem;color:#94A3B8;margin-top:.25rem">Daily serial format: <strong>JP-001, JP-002…</strong></div>
+                    @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="hms-form-group doctor-only" style="display:none">
+                    <label>Registration No.</label>
+                    <input type="text" name="registration_no"
+                           value="{{ old('registration_no', $user->registration_no) }}"
+                           class="hms-input @error('registration_no') is-invalid @enderror"
+                           placeholder="e.g. MCI-12345">
+                    @error('registration_no')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="hms-form-group doctor-only" style="display:none">
+                    <label>Experience <span style="font-size:.75rem;color:#64748B;font-weight:400">(years)</span></label>
+                    <input type="number" name="experience_years"
+                           value="{{ old('experience_years', $user->experience_years) }}"
+                           min="0" max="60"
+                           class="hms-input @error('experience_years') is-invalid @enderror"
+                           placeholder="e.g. 5">
+                    @error('experience_years')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="hms-form-group doctor-only" style="display:none">
+                    <label>Signature <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
+                    <input type="file" name="signature" accept="image/jpg,image/jpeg,image/png"
+                           class="hms-input @error('signature') is-invalid @enderror">
+                    @if($user->signature_path)
+                        <div style="margin-top:.4rem">
+                            <span style="font-size:.72rem;color:#64748B;">Current: </span>
+                            <img src="{{ asset('storage/'.$user->signature_path) }}" alt="Signature"
+                                 style="max-height:44px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
+                        </div>
+                    @endif
+                    @error('signature')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
+
+                <div class="hms-form-group doctor-only" style="display:none">
+                    <label>Profile Photo <span style="font-size:.75rem;color:#64748B;font-weight:400">(JPG/PNG · max 20KB)</span></label>
+                    <input type="file" name="profile_photo" accept="image/jpg,image/jpeg,image/png"
+                           class="hms-input @error('profile_photo') is-invalid @enderror">
+                    @if($user->profile_photo_path)
+                        <div style="margin-top:.4rem">
+                            <span style="font-size:.72rem;color:#64748B;">Current: </span>
+                            <img src="{{ asset('storage/'.$user->profile_photo_path) }}" alt="Photo"
+                                 style="max-height:55px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
+                        </div>
+                    @endif
+                    @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
             </div>
         </div>
     </div>
@@ -122,13 +152,28 @@
 
 @push('scripts')
 <script>
-    const doctorSlugs = ['doctor'];
+    function roleShowsDoctorFields(roleSelect) {
+        if (!roleSelect || roleSelect.selectedIndex < 0) {
+            return false;
+        }
+        const selected = roleSelect.options[roleSelect.selectedIndex];
+        if (!selected || !selected.value) {
+            return false;
+        }
+        if (selected.dataset.doctorFields === '1') {
+            return true;
+        }
+        const slug = (selected.dataset.slug || '').toLowerCase();
+        const label = (selected.textContent || '').toLowerCase().trim();
+        return slug === 'doctor'
+            || slug === 'ot_doctor'
+            || slug.indexOf('doctor') !== -1
+            || label.indexOf('doctor') !== -1;
+    }
 
     function toggleDoctorFields() {
         const roleSelect = document.getElementById('role_id');
-        const selected   = roleSelect.options[roleSelect.selectedIndex];
-        const slug       = selected ? selected.dataset.slug : '';
-        const showDoctor = doctorSlugs.includes(slug);
+        const showDoctor = roleShowsDoctorFields(roleSelect);
 
         document.querySelectorAll('.doctor-only').forEach(function (el) {
             el.style.display = showDoctor ? '' : 'none';
@@ -137,7 +182,12 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         const roleSelect = document.getElementById('role_id');
-        roleSelect.addEventListener('change', toggleDoctorFields);
+        if (roleSelect) {
+            roleSelect.addEventListener('change', toggleDoctorFields);
+            if (window.jQuery) {
+                window.jQuery(roleSelect).on('change.select2 change', toggleDoctorFields);
+            }
+        }
         toggleDoctorFields();
     });
 </script>

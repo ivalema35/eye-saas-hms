@@ -662,6 +662,8 @@
                     <div class="doctor-cards-container">
                         @forelse($otDoctorCards as $doc)
                             @php
+                                $loggedInId = auth('hospital_user')->id();
+                                $isSelf = (int) $doc->id === (int) $loggedInId;
                                 $otCardUrl = route('hospital.dashboard.doctor-ot', [
                                     'slug' => $slug,
                                     'doctor_id' => $doc->id,
@@ -672,14 +674,20 @@
                                     {{ substr($doc->name, 0, 1) }}
                                 </div>
                                 <div class="doc-info">
-                                    <div class="doc-name">{{ $doc->name }}</div>
-                                    <div class="doc-assigned">Total OT — {{ $doc->ot_total ?? 0 }}</div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="doc-name">{{ $doc->name }}</div>
+                                        @if($isSelf)
+                                            <span
+                                                style="font-size:10px;font-weight:700;background:#7b2cbf;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
+                                        @endif
+                                    </div>
+                                    <div class="doc-assigned">{{ $doc->ot_total ?? 0 }} OT cases</div>
                                     <div class="doc-badges">
                                         <span class="doc-badge {{ ($doc->ot_pending ?? 0) > 0 ? 'active' : '' }}">
-                                            P — {{ $doc->ot_pending ?? 0 }}
+                                            Pending {{ $doc->ot_pending ?? 0 }}
                                         </span>
                                         <span class="doc-badge {{ ($doc->ot_complete ?? 0) > 0 ? 'active' : '' }}">
-                                            C — {{ $doc->ot_complete ?? 0 }}
+                                            Complete {{ $doc->ot_complete ?? 0 }}
                                         </span>
                                     </div>
                                 </div>

@@ -27,7 +27,7 @@ class MedicineRouteController extends Controller
 
         return redirect()
             ->route('hospital.medicine-routes.index', ['slug' => $slug])
-            ->with('success', 'Route of administration added successfully.');
+            ->with('success', 'Mode added successfully.');
     }
 
     public function update(Request $request, string $slug, int $id): RedirectResponse
@@ -42,7 +42,7 @@ class MedicineRouteController extends Controller
 
         return redirect()
             ->route('hospital.medicine-routes.index', ['slug' => $slug])
-            ->with('success', 'Route of administration updated.');
+            ->with('success', 'Mode updated.');
     }
 
     public function destroy(string $slug, int $id): RedirectResponse
@@ -51,6 +51,6 @@ class MedicineRouteController extends Controller
 
         return redirect()
             ->route('hospital.medicine-routes.index', ['slug' => $slug])
-            ->with('success', 'Route of administration deleted.');
+            ->with('success', 'Mode deleted.');
     }
 }

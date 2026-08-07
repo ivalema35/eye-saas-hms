@@ -5,8 +5,9 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 /**
- * OT Package Master — lens_cost + room_category → package/charges autofill
- * on Counsellor form.
+ * OT Package Master — package_name + room_category + charges for Counsellor autofill.
+ * Lens cost is entered on counselling (not on this master).
+ * lens_cost column kept as legacy default 0 for existing DBs / soft deletes.
  */
 return new class extends Migration
 {
@@ -16,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('tenant_id')->constrained('tenants')->cascadeOnDelete();
             $table->string('package_name', 150);
-            $table->decimal('lens_cost', 10, 2);
+            $table->decimal('lens_cost', 10, 2)->default(0);
             $table->string('room_category', 20); // general | private
             $table->decimal('ot_charges', 10, 2)->default(0);
             $table->decimal('surgeon_charges', 10, 2)->default(0);
@@ -27,8 +28,8 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(
-                ['tenant_id', 'lens_cost', 'room_category'],
-                'ot_package_masters_lookup_idx'
+                ['tenant_id', 'package_name', 'room_category'],
+                'ot_package_masters_pkg_room_idx'
             );
         });
     }

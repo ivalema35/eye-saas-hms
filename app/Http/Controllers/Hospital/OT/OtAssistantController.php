@@ -121,6 +121,7 @@ class OtAssistantController extends Controller
             'surgeryTypes' => $surgeryTypes,
             'medicines' => $medicines,
             'medicineGroups' => $medicineGroups,
+            'lensTypes' => self::LENS_TYPES,
         ]);
     }
 
@@ -150,18 +151,21 @@ class OtAssistantController extends Controller
             ? (int) $booking->ot_doctor_id
             : $assistantId;
 
-        $validated = $request->validate([
-            // Pre-surgery verification checklist — PDF Step 8 (OT Assistant verifies
-            // before the surgeon operates). Folded into this same form/submit so a
-            // surgery cannot be recorded without confirming all four.
-            'identity_verified' => ['accepted'],
-            'consent_verified' => ['accepted'],
-            'payment_verified' => ['accepted'],
-            'correct_eye_verified' => ['accepted'],
+        // Eye locked to Recommend Surgery selection (booking.eye).
+        $lockedEye = in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true)
+            ? (string) $booking->eye
+            : null;
 
+        $validated = $request->validate([
+            'surgery_date' => ['required', 'date'],
             'surgery_name' => ['required', 'string', 'max:255'],
             'ot_room' => ['nullable', 'string', 'max:100'],
-            'eye_operated' => ['required', Rule::in(['RE', 'LE', 'Both'])],
+            'eye_operated' => array_values(array_filter([
+                'required',
+                $lockedEye
+                    ? Rule::in([$lockedEye])
+                    : Rule::in(['RE', 'LE', 'Both']),
+            ])),
             'start_time' => ['nullable', 'date'],
             'end_time' => ['nullable', 'date', 'after:start_time'],
             'complication_status' => ['required', Rule::in(['none', 'minor', 'major'])],
@@ -179,24 +183,20 @@ class OtAssistantController extends Controller
                     ->whereNull('deleted_at')),
             ],
             'ot_medicines.*.dose' => ['nullable', 'string', 'max:255'],
+            // Lens info — autofilled from counselling; assistant may confirm/edit.
+            'lens_category' => ['nullable', Rule::in(['standard', 'premium'])],
+            'lens_company' => ['nullable', 'string', 'max:150'],
+            'lens_model' => ['nullable', 'string', 'max:150'],
+            'lens_type' => ['nullable', Rule::in(self::LENS_TYPES)],
+            'estimated_power' => ['nullable', 'numeric', 'between:-99.99,999.99'],
+            'lens_cost' => ['nullable', 'numeric', 'min:0'],
         ], [
-            'identity_verified.accepted' => 'Identity must be verified before surgery can be recorded.',
-            'consent_verified.accepted' => 'Consent must be verified before surgery can be recorded.',
-            'payment_verified.accepted' => 'Payment must be verified before surgery can be recorded.',
-            'correct_eye_verified.accepted' => 'Correct eye must be verified before surgery can be recorded.',
+            'eye_operated.in' => 'Eye operated must match the eye selected at Recommend Surgery'
+                .($lockedEye ? " ({$lockedEye})." : '.'),
         ]);
 
         // Assistant already assigned at Recommend Surgery (or current user for admin fill).
         $surgeryAssistantId = (int) ($booking->ot_assistant_id ?: $assistantId);
-
-        // Clinical safety: operated eye should match the booked eye (unless booking is Both).
-        $bookedEye = (string) $booking->eye;
-        $eyeOperated = (string) $validated['eye_operated'];
-        if ($bookedEye !== 'Both' && $eyeOperated !== 'Both' && $bookedEye !== $eyeOperated) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', "Operated eye ({$eyeOperated}) does not match booked eye ({$bookedEye}).");
-        }
 
         $otMedicines = collect($validated['ot_medicines'] ?? [])
             ->filter(fn (array $item): bool => ! empty($item['medicine']) || ! empty($item['dose']))
@@ -216,6 +216,45 @@ class OtAssistantController extends Controller
         }
 
         DB::transaction(function () use ($validated, $otMedicines, $operatedBy, $assistantId, $surgeryAssistantId, $tenantId, $booking): void {
+            // Keep counselling lens plan in sync (autofill source for billing/prints).
+            $existingCounselling = DB::table('ot_counselling')
+                ->where('tenant_id', $tenantId)
+                ->where('ot_booking_id', $booking->id)
+                ->first();
+
+            $lensPayload = [
+                'lens_category' => $validated['lens_category'] ?? null,
+                'lens_company' => $validated['lens_company'] ?? null,
+                'lens_model' => $validated['lens_model'] ?? null,
+                'lens_type' => $validated['lens_type'] ?? null,
+                'estimated_power' => $validated['estimated_power'] ?? null,
+                'lens_cost' => $validated['lens_cost'] ?? null,
+                'updated_at' => now(),
+            ];
+
+            if ($existingCounselling) {
+                $ot = (float) ($existingCounselling->ot_charges ?? 0);
+                $sur = (float) ($existingCounselling->surgeon_charges ?? 0);
+                $nurs = (float) ($existingCounselling->nursing_charges ?? 0);
+                $cons = (float) ($existingCounselling->consumables_charges ?? 0);
+                $lens = (float) ($validated['lens_cost'] ?? $existingCounselling->lens_cost ?? 0);
+                $total = round($ot + $sur + $nurs + $cons + $lens, 2);
+                if ($total > 0) {
+                    $lensPayload['total_estimate'] = $total;
+                    $lensPayload['package_amount'] = $total;
+                }
+                DB::table('ot_counselling')
+                    ->where('id', $existingCounselling->id)
+                    ->update($lensPayload);
+            } else {
+                DB::table('ot_counselling')->insert(array_merge($lensPayload, [
+                    'tenant_id' => $tenantId,
+                    'ot_booking_id' => $booking->id,
+                    'created_at' => now(),
+                ]));
+            }
+
+            // Auto-record verification checklist (UI checklist removed).
             OtVerification::query()->updateOrCreate(
                 ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
                 [
@@ -272,6 +311,7 @@ class OtAssistantController extends Controller
 
             $booking->update([
                 'ot_status' => OtBooking::STATUS_OPERATED,
+                'surgery_date' => $validated['surgery_date'],
                 'operated_at' => now(),
             ]);
         });

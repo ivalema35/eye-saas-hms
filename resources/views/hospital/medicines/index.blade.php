@@ -48,7 +48,7 @@
     <li class="nav-item">
         <a class="nav-link"
            href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
-            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+            <i class="bi bi-arrow-right-circle me-1"></i> Mode
         </a>
     </li>
     <li class="nav-item">
@@ -97,6 +97,7 @@
                     <tr>
                         <th style="width:50px">#</th>
                         <th>Medicine Name</th>
+                        <th>Type</th>
                         <th>Dosage</th>
                         <th>Pricing</th>
                         <th class="text-end" style="width:120px">Actions</th>
@@ -108,6 +109,12 @@
                         <td class="text-muted med-index-cell">{{ $i + 1 }}</td>
                         <td class="fw-semibold">
                             <span class="med-name-cell">{{ $med->name }}</span>
+                        </td>
+                        <td>
+                            @php $scope = $med->usage_scope ?? 'opd'; @endphp
+                            <span class="badge {{ $scope === 'ot' ? 'text-bg-warning' : 'text-bg-primary' }} text-uppercase">
+                                {{ strtoupper($scope) }}
+                            </span>
                         </td>
                         <td class="text-muted">{{ $med->dosage?->dosage ?? '—' }}</td>
                         <td><span class="med-price-pill">{{ $med->price !== null ? money($med->price, 2) : '—' }}</span></td>
@@ -132,7 +139,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" class="text-center py-5 text-muted med-empty-cell">
+                        <td colspan="6" class="text-center py-5 text-muted med-empty-cell">
                             No medicines found.
                         </td>
                     </tr>
@@ -164,9 +171,9 @@
 
                 <div class="modal-body py-3">
 
-                    {{-- Row 1: Medicine Type + Medicine Name --}}
+                    {{-- Row 1: Medicine Type + Select Type (OPD/OT) + Name --}}
                     <div class="row g-3 mb-3">
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             <label class="form-label fw-medium">Medicine Type <span class="text-danger">*</span></label>
                             <select name="medicine_type_id" id="input-medicine-type-id"
                                     class="form-select clinical-input @error('medicine_type_id') is-invalid @enderror" required>
@@ -177,12 +184,21 @@
                             </select>
                             @error('medicine_type_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
+                            <label class="form-label fw-medium">Select Type <span class="text-danger">*</span></label>
+                            <select name="usage_scope" id="input-usage-scope"
+                                    class="form-select clinical-input @error('usage_scope') is-invalid @enderror"
+                                    required>
+                                <option value="opd" @selected(old('usage_scope', 'opd') === 'opd')>OPD</option>
+                                <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>
+                            </select>
+                            @error('usage_scope')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="col-md-5">
                             <label class="form-label fw-medium">Medicine Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="input-name" value="{{ old('name') }}"
                                    class="form-control clinical-input @error('name') is-invalid @enderror"
                                    required placeholder="e.g. Moxifloxacin Tab">
-                            <div class="form-text" style="font-size:.72rem">Add Tab / Caps / Oint at end</div>
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
@@ -276,6 +292,7 @@ function resetMedicineForm() {
     document.getElementById('medicineFormMethod').value = 'POST';
     document.getElementById('medicineForm').action = medicineStoreUrl;
     document.getElementById('input-medicine-id').value = '';
+    document.getElementById('input-usage-scope').value = 'opd';
     document.getElementById('input-price').value = '0.00';
 }
 window.resetMedicineForm = resetMedicineForm;
@@ -291,6 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('medicineForm').action = medicineUpdateBase.replace('__ID__', record.id);
             document.getElementById('input-medicine-id').value = record.id ?? '';
             document.getElementById('input-medicine-type-id').value = record.medicine_type_id ?? '';
+            document.getElementById('input-usage-scope').value = (record.usage_scope === 'ot') ? 'ot' : 'opd';
             document.getElementById('input-name').value        = record.name ?? '';
             document.getElementById('input-dosage-id').value   = record.dosage_id ?? '';
             document.getElementById('input-duration').value    = record.duration ?? '';
@@ -318,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 : medicineStoreUrl;
         document.getElementById('input-medicine-id').value = oldMedicineId;
         document.getElementById('input-medicine-type-id').value = @json(old('medicine_type_id', ''));
+        document.getElementById('input-usage-scope').value = @json(old('usage_scope', 'opd'));
         document.getElementById('input-name').value = @json(old('name', ''));
         document.getElementById('input-company').value = @json(old('company', ''));
         document.getElementById('input-price').value = @json(old('price', '0.00'));

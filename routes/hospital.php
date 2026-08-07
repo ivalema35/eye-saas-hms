@@ -127,6 +127,14 @@ Route::prefix('{slug}')
                 Route::get('/dashboard/doctor-ot', [DoctorOtListController::class, 'index'])
                     ->name('dashboard.doctor-ot')
                     ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                Route::post('/dashboard/doctor-ot/{bookingId}/assign-assistant', [DoctorOtListController::class, 'assignAssistant'])
+                    ->name('dashboard.doctor-ot.assign-assistant')
+                    ->whereNumber('bookingId')
+                    ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                Route::post('/dashboard/doctor-ot/{bookingId}/refuse', [DoctorOtListController::class, 'refuseSurgery'])
+                    ->name('dashboard.doctor-ot.refuse')
+                    ->whereNumber('bookingId')
+                    ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
                 Route::get('/dashboard/assistant-ot', [AssistantOtListController::class, 'index'])
                     ->name('dashboard.assistant-ot')
                     ->middleware('permission:ot.patient.list|ot.surgery.record|ot.lens.record|ot.surgery.ready');
@@ -489,6 +497,10 @@ Route::prefix('{slug}')
                         Route::get('/slot-appointments', [OtAppointmentController::class, 'slotAppointments'])
                             ->name('slot-appointments')
                             ->middleware('permission:ot.appointment.view|ot.appointment.create');
+
+                        Route::get('/doctor-slot-load', [OtAppointmentController::class, 'doctorSlotLoad'])
+                            ->name('doctor-slot-load')
+                            ->middleware('permission:ot.appointment.view|ot.appointment.create|ot.appointment.edit');
                     });
 
                     Route::get('/ward', [OtAccountantController::class, 'wardIndex'])
@@ -545,6 +557,9 @@ Route::prefix('{slug}')
                         Route::get('/dashboard', [OtAccountantController::class, 'dashboard'])
                             ->name('accountant.dashboard');
 
+                        Route::get('/money', [OtAccountantController::class, 'moneyReport'])
+                            ->name('accountant.money');
+
                         Route::get('/payments/{bookingId}/create', [OtAccountantController::class, 'createPayment'])
                             ->name('payments.create')
                             ->whereNumber('bookingId');
@@ -556,6 +571,14 @@ Route::prefix('{slug}')
                         Route::get('/payments/{paymentId}/receipt', [OtAccountantController::class, 'receiptPrint'])
                             ->name('payments.receipt')
                             ->whereNumber('paymentId');
+
+                        Route::get('/refunds/{bookingId}/create', [OtAccountantController::class, 'createRefund'])
+                            ->name('refunds.create')
+                            ->whereNumber('bookingId');
+
+                        Route::post('/refunds/{bookingId}', [OtAccountantController::class, 'storeRefund'])
+                            ->name('refunds.store')
+                            ->whereNumber('bookingId');
                     });
 
                     // ========================================================

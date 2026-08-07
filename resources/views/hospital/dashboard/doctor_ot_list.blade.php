@@ -10,6 +10,22 @@
 
 @section('content')
 <div class="dot-list-page">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0 ps-3">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="card dot-premium-card border-0 mb-4">
         <div class="card-body">
             <div class="d-flex align-items-center gap-2 mb-3">
@@ -73,13 +89,32 @@
                                 <th><i class="bi bi-calendar-event me-1"></i>OT Date</th>
                                 <th><i class="bi bi-bandaid me-1"></i>Surgery</th>
                                 <th><i class="bi bi-eye me-1"></i>Eye</th>
-                                <th><i class="bi bi-person-vcard me-1"></i>Doctor</th>
-                                <th><i class="bi bi-person-plus me-1"></i>Assistant</th>
+                                <th><i class="bi bi-clipboard-pulse me-1"></i>Ward</th>
                                 <th><i class="bi bi-flag me-1"></i>Status</th>
+                                <th class="text-end"><i class="bi bi-lightning me-1"></i>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
+                            @php
+                                $otAssistants = $otAssistants ?? collect();
+                                $authUser = auth('hospital_user')->user();
+                                $canActAsDoctor = $authUser && (
+                                    (method_exists($authUser, 'isSuperUser') && $authUser->isSuperUser())
+                                    || in_array($authUser->role?->slug, ['hospital_admin', 'admin', 'doctor', 'ot_doctor'], true)
+                                );
+                            @endphp
                             @forelse($bookings as $booking)
+                                @php
+                                    $consultPending = $booking->isDoctorConsultationPending();
+                                    $canActThis = $canActAsDoctor && (
+                                        (method_exists($authUser, 'isSuperUser') && $authUser->isSuperUser())
+                                        || in_array($authUser->role?->slug, ['hospital_admin', 'admin'], true)
+                                        || (int) $booking->ot_doctor_id === (int) $authUser->id
+                                    );
+                                    $wardLabel = $booking->preOp
+                                        ? (\App\Models\Hospital\OT\OtPreOp::STATUS_LABELS[$booking->preOp->pre_op_status] ?? $booking->preOp->pre_op_status)
+                                        : '—';
+                                @endphp
                                 <tr>
                                     <td>{{ $booking->patient?->full_name ?? '-' }}</td>
                                     <td>{{ $booking->patient?->contact_no ?: '-' }}</td>
@@ -87,9 +122,49 @@
                                     <td>{{ optional($booking->surgery_date)->format('d M Y') ?? '-' }}</td>
                                     <td>{{ $booking->ot_type ?: '-' }}</td>
                                     <td>{{ $booking->eye ?: '-' }}</td>
-                                    <td>{{ $booking->otDoctor?->name ? 'Dr. '.$booking->otDoctor->name : '-' }}</td>
-                                    <td>{{ $booking->otAssistant?->name ?: '-' }}</td>
-                                    <td><span class="badge dot-status-badge text-uppercase">{{ $booking->ot_status }}</span></td>
+                                    <td>
+                                        <span class="badge bg-secondary-subtle text-secondary-emphasis">{{ $wardLabel }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge dot-status-badge text-uppercase">{{ $booking->ot_status }}</span>
+                                        @if($booking->otAssistant?->name)
+                                            <div class="small text-muted mt-1">Asst: {{ $booking->otAssistant->name }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        @if($consultPending && $canActThis)
+                                            <div class="d-flex flex-column align-items-end gap-2">
+                                                <form method="POST"
+                                                    action="{{ route('hospital.dashboard.doctor-ot.assign-assistant', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                    class="d-flex flex-wrap justify-content-end gap-2 align-items-center">
+                                                    @csrf
+                                                    <select name="ot_assistant_id" class="form-select form-select-sm" style="min-width:160px" required>
+                                                        <option value="">OT Assistant…</option>
+                                                        @foreach($otAssistants as $asst)
+                                                            <option value="{{ $asst->id }}">{{ $asst->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="submit" class="btn btn-sm btn-primary">
+                                                        <i class="bi bi-person-check me-1"></i> Assign OT Assistant
+                                                    </button>
+                                                </form>
+                                                <form method="POST"
+                                                    action="{{ route('hospital.dashboard.doctor-ot.refuse', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                    onsubmit="return confirm('Patient refuses OT? Will mark surgery_refused and send to Accounts for full refund.');">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                        <i class="bi bi-cash-coin me-1"></i> Send to Account (Refuse OT)
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
+                                            <span class="text-muted small">Awaiting refund (Accounts)</span>
+                                        @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_READY)
+                                            <span class="text-success small"><i class="bi bi-check2-circle"></i> Ready for OT</span>
+                                        @else
+                                            <span class="text-muted small">—</span>
+                                        @endif
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>

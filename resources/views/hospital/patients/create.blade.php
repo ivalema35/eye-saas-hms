@@ -35,7 +35,8 @@
             <form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}"
                 class="patient-create-form">
                 @csrf
-                <input type="hidden" name="ot_appointment_id" id="otAppointmentId" value="{{ old('ot_appointment_id') }}">
+                <input type="hidden" name="ot_appointment_id" id="otAppointmentId"
+                    value="{{ old('ot_appointment_id', $prefillOtAppointment['id'] ?? '') }}">
 
                 {{-- OT Appointment Search — Reception check-in (OT Workflow Upgrade Phase 2) --}}
                 <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
@@ -442,6 +443,13 @@
                     }, 300);
                 });
             }
+
+            // Prefill from dashboard "Walk-In" button (?ot_appointment_id=…)
+            @if(!empty($prefillOtAppointment))
+            foundAppointmentsList = [@json($prefillOtAppointment)];
+            // Wait for Select2 init so doctor / city / referrer bind correctly
+            setTimeout(function () { fillSelectedAppointment(0); }, 150);
+            @endif
 
             document.addEventListener('click', function (e) {
                 if (appointmentSuggestions && appointmentInput && e.target !== appointmentInput && !appointmentSuggestions.contains(e.target)) {

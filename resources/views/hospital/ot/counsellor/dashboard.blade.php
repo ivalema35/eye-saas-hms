@@ -123,7 +123,7 @@
                                             @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_PAID)
                                                 <span class="badge bg-warning-subtle text-warning-emphasis">Paid</span>
                                             @else
-                                                <span class="badge bg-success-subtle text-success-emphasis">Complete</span>
+                                                <span class="badge bg-success-subtle text-success-emphasis">Paid</span>
                                             @endif
                                         </td>
                                     </tr>

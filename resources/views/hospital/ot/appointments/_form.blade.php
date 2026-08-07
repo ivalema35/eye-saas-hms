@@ -67,7 +67,7 @@
     <div class="col-md-3">
         <label class="form-label">Appointment Date <span class="text-danger">*</span></label>
         <input type="text" name="appointment_date" id="appointment_date" class="form-control"
-            value="{{ old('appointment_date', optional($appointment?->appointment_date)->format('Y-m-d')) }}" required>
+            value="{{ old('appointment_date', optional($appointment?->appointment_date)->format('Y-m-d') ?? ($doctorLoadDate ?? now()->toDateString())) }}" required>
     </div>
     <div class="col-md-3">
         <label class="form-label">Appointment Time</label>
@@ -126,7 +126,7 @@
     </div>
     <div class="col-md-6">
         <label class="form-label">Doctor Name <span class="text-danger">*</span></label>
-        <select name="doctor_id" class="form-select" required>
+        <select name="doctor_id" id="doctor_id" class="form-select" required>
             <option value="">Select doctor...</option>
             @foreach($doctors as $doctor)
                 <option value="{{ $doctor->id }}" {{ (string) old('doctor_id', $appointment->doctor_id ?? '') === (string) $doctor->id ? 'selected' : '' }}>

@@ -97,7 +97,7 @@
                                                 value="{{ $packageLabel }}" readonly>
                                         </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">Total Amount</label>
                                             <div class="input-group">
                                                 <span class="input-group-text">{{ currency_code() }}</span>
@@ -105,15 +105,7 @@
                                                     value="{{ number_format((float) $requiredTotal, 2) }}" readonly>
                                             </div>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label">Amount Paid</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">{{ currency_code() }}</span>
-                                                <input type="text" class="form-control ot-readonly"
-                                                    value="{{ number_format((float) $totalPaidSoFar, 2) }}" readonly>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-6">
                                             <label class="form-label">Payment Status</label>
                                             <input type="text" class="form-control ot-readonly"
                                                 value="{{ $paymentStatusLabel }}" readonly>
@@ -135,11 +127,10 @@
                                             <div class="input-group">
                                                 <span class="input-group-text">{{ currency_code() }}</span>
                                                 <input type="number" step="0.01" min="0.01" name="package_amount"
-                                                    value="{{ old('package_amount', $defaultPackageAmount) }}"
-                                                    class="form-control" required
+                                                    value="{{ $defaultPackageAmount }}"
+                                                    class="form-control ot-readonly" readonly
                                                     @if($defaultPackageAmount <= 0) disabled @endif>
                                             </div>
-                                            <div class="form-text">Auto-filled with remaining balance — edit only for partial payment.</div>
                                         </div>
 
                                         <div class="col-md-6">
@@ -216,11 +207,7 @@
                             <div class="ot-modal-field-value">{{ money_code((float) $requiredTotal, 2) }}</div>
                         </div>
                         <div class="ot-modal-field">
-                            <div class="ot-modal-field-label"><i class="bi bi-wallet2 me-1"></i> Amount Paid</div>
-                            <div class="ot-modal-field-value">{{ money_code((float) $totalPaidSoFar, 2) }}</div>
-                        </div>
-                        <div class="ot-modal-field">
-                            <div class="ot-modal-field-label"><i class="bi bi-hourglass-split me-1"></i> Remaining Balance</div>
+                            <div class="ot-modal-field-label"><i class="bi bi-hourglass-split me-1"></i> Amount Being Paid</div>
                             <div class="ot-modal-field-value">{{ money_code((float) $defaultPackageAmount, 2) }}</div>
                         </div>
                         <div class="ot-modal-field">

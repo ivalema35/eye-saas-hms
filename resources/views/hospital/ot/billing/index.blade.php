@@ -146,32 +146,14 @@
 
                                 @if($hasInvoice)
                                     <div class="otb-action-group">
-                                        <a href="{{ route('hospital.ot.invoice.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
-                                            <i class="bi bi-printer"></i> Invoice
+                                        <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
+                                            <i class="bi bi-receipt-cutoff"></i> Bill Summary
                                         </a>
                                         <a href="{{ route('hospital.ot.discharge.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn otb-print-btn-discharge">
                                             <i class="bi bi-file-medical"></i> Discharge
                                         </a>
-                                        <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
-                                            <i class="bi bi-receipt-cutoff"></i> Bill Summary
-                                        </a>
                                         <a href="{{ route('hospital.ot.certificate.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
                                             <i class="bi bi-patch-check"></i> Certificate
-                                        </a>
-                                        <a href="{{ route('hospital.ot.prescription.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
-                                            <i class="bi bi-capsule"></i> Prescription
-                                        </a>
-                                        <a href="{{ route('hospital.ot.lens-slip.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
-                                            <i class="bi bi-eyeglasses"></i> Lens Slip
-                                        </a>
-                                        <a href="{{ route('hospital.ot.medicine-slip.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
-                                            <i class="bi bi-prescription2"></i> Medicine Slip
-                                        </a>
-                                        <a href="{{ route('hospital.ot.followup-slip.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn">
-                                            <i class="bi bi-calendar2-check"></i> Follow-up Slip
-                                        </a>
-                                        <a href="{{ route('hospital.ot.print-all', ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="btn btn-sm otb-print-btn otb-print-btn-discharge" target="_blank">
-                                            <i class="bi bi-printer-fill"></i> Print All
                                         </a>
                                     </div>
                                 @endif

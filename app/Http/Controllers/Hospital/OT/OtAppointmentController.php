@@ -22,9 +22,11 @@ use App\Models\Hospital\OT\OtSlot;
 use App\Models\Hospital\Referrer;
 use App\Models\Platform\MasterCity;
 use App\Support\PhoneRules;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -38,7 +40,7 @@ class OtAppointmentController extends Controller
         }
 
         $query = OtAppointment::query()
-            ->with(['doctor:id,name', 'location:id,name']);
+            ->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking']);
 
         if ($status !== 'all') {
             $query->where('status', $status);
@@ -76,21 +78,15 @@ class OtAppointmentController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
 
-        $doctors = HospitalUser::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'active')
-            ->whereHas('role', function ($query): void {
-                $query->whereIn('slug', ['doctor']);
-            })
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
+        $doctors = $this->activeDoctors($tenantId);
         $locations = $this->citiesForCurrentHospital();
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $slots = OtSlot::query()->orderBy('start_time')->get();
 
         $nextId = ((int) OtAppointment::withoutTenantScope()->max('id')) + 1;
         $nextAppointmentNumber = 'APT-'.str_pad((string) $nextId, 6, '0', STR_PAD_LEFT);
+
+        $loadDate = now()->toDateString();
 
         return view('hospital.ot.appointments.create', [
             'slug' => $slug,
@@ -99,6 +95,8 @@ class OtAppointmentController extends Controller
             'referrers' => $referrers,
             'slots' => $slots,
             'nextAppointmentNumber' => $nextAppointmentNumber,
+            'doctorLoadDate' => $loadDate,
+            'doctorLoadCards' => $this->buildDoctorSlotLoad($doctors, $slots, $loadDate),
         ]);
     }
 
@@ -144,18 +142,12 @@ class OtAppointmentController extends Controller
 
         $tenantId = (int) app('tenant')->id;
 
-        $doctors = HospitalUser::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'active')
-            ->whereHas('role', function ($query): void {
-                $query->whereIn('slug', ['doctor']);
-            })
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
+        $doctors = $this->activeDoctors($tenantId);
         $locations = $this->citiesForCurrentHospital();
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $slots = OtSlot::query()->orderBy('start_time')->get();
+
+        $loadDate = optional($appointment->appointment_date)->format('Y-m-d') ?: now()->toDateString();
 
         return view('hospital.ot.appointments.edit', [
             'slug' => $slug,
@@ -164,6 +156,8 @@ class OtAppointmentController extends Controller
             'locations' => $locations,
             'referrers' => $referrers,
             'slots' => $slots,
+            'doctorLoadDate' => $loadDate,
+            'doctorLoadCards' => $this->buildDoctorSlotLoad($doctors, $slots, $loadDate, (int) $appointment->id),
         ]);
     }
 
@@ -284,6 +278,10 @@ class OtAppointmentController extends Controller
             ->whereTime('appointment_time', $time)
             ->where('status', '!=', OtAppointment::STATUS_CANCELLED);
 
+        if ($request->filled('doctor_id')) {
+            $query->where('doctor_id', (int) $request->query('doctor_id'));
+        }
+
         if ($excludeId = $request->query('exclude_id')) {
             $query->where('id', '!=', (int) $excludeId);
         }
@@ -296,6 +294,25 @@ class OtAppointmentController extends Controller
                 'name' => trim(collect([$appointment->patient_name, $appointment->surname])->filter()->implode(' ')),
                 'status' => $appointment->status,
             ])->values(),
+        ]);
+    }
+
+    /**
+     * AJAX: per-doctor load cards for a date — each doctor lists every time slot + count.
+     * Example UI line: "1 to 2 : 10"
+     */
+    public function doctorSlotLoad(Request $request, string $slug): JsonResponse
+    {
+        $date = $request->query('date') ?: now()->toDateString();
+        $excludeId = $request->filled('exclude_id') ? (int) $request->query('exclude_id') : null;
+
+        $tenantId = (int) app('tenant')->id;
+        $doctors = $this->activeDoctors($tenantId);
+        $slots = OtSlot::query()->orderBy('start_time')->get();
+
+        return response()->json([
+            'date' => $date,
+            'doctors' => $this->buildDoctorSlotLoad($doctors, $slots, $date, $excludeId),
         ]);
     }
 
@@ -318,5 +335,154 @@ class OtAppointmentController extends Controller
             })
             ->orderBy('name')
             ->get(['id', 'name', 'district_id', 'state_id']);
+    }
+
+    private function activeDoctors(int $tenantId): Collection
+    {
+        return HospitalUser::query()
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->whereHas('role', function ($query): void {
+                $query->whereIn('slug', ['doctor']);
+            })
+            ->orderBy('name')
+            ->get(['id', 'name']);
+    }
+
+    /**
+     * @param  Collection<int, HospitalUser>  $doctors
+     * @param  Collection<int, OtSlot>  $slots
+     * @return list<array{id:int,name:string,total:int,slots:list<array{time:string,label:string,count:int,display:string}>}>
+     */
+    private function buildDoctorSlotLoad(Collection $doctors, Collection $slots, string $date, ?int $excludeId = null): array
+    {
+        $query = OtAppointment::query()
+            ->whereDate('appointment_date', $date)
+            ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+            ->whereNotNull('doctor_id');
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $counts = [];
+        foreach ($query->get(['doctor_id', 'appointment_time']) as $row) {
+            $doctorId = (int) $row->doctor_id;
+            $timeKey = '';
+            if ($row->appointment_time) {
+                try {
+                    $timeKey = Carbon::parse($row->appointment_time)->format('H:i');
+                } catch (\Throwable) {
+                    $timeKey = substr((string) $row->appointment_time, 0, 5);
+                }
+            }
+            $key = $doctorId.'|'.$timeKey;
+            $counts[$key] = ($counts[$key] ?? 0) + 1;
+        }
+
+        $slotMeta = $slots->map(function (OtSlot $slot) {
+            $time = '';
+            if ($slot->start_time) {
+                try {
+                    $time = Carbon::parse($slot->start_time)->format('H:i');
+                } catch (\Throwable) {
+                    $time = '';
+                }
+            }
+
+            return [
+                'time' => $time,
+                'label' => $this->slotRangeLabel($slot),
+            ];
+        })->values();
+
+        return $doctors->map(function (HospitalUser $doctor) use ($slotMeta, $counts) {
+            $lines = [];
+            $total = 0;
+            $matchedTimes = [];
+
+            foreach ($slotMeta as $slot) {
+                $count = (int) ($counts[$doctor->id.'|'.$slot['time']] ?? 0);
+                $total += $count;
+                if ($slot['time'] !== '') {
+                    $matchedTimes[$slot['time']] = true;
+                }
+                $lines[] = [
+                    'time' => $slot['time'],
+                    'label' => $slot['label'],
+                    'count' => $count,
+                    'display' => $slot['label'].' : '.$count,
+                ];
+            }
+
+            // Times that do not match any master slot start_time
+            $other = 0;
+            $prefix = $doctor->id.'|';
+            foreach ($counts as $key => $count) {
+                if (! str_starts_with((string) $key, $prefix)) {
+                    continue;
+                }
+                $time = substr((string) $key, strlen($prefix));
+                if ($time === '' || isset($matchedTimes[$time])) {
+                    continue;
+                }
+                $other += (int) $count;
+            }
+
+            if ($other > 0) {
+                $total += $other;
+                $lines[] = [
+                    'time' => '',
+                    'label' => 'Other',
+                    'count' => $other,
+                    'display' => 'Other : '.$other,
+                ];
+            }
+
+            // No OT slots master → show single total line for the day
+            if ($lines === []) {
+                $dayTotal = 0;
+                foreach ($counts as $key => $count) {
+                    if (str_starts_with((string) $key, $prefix)) {
+                        $dayTotal += (int) $count;
+                    }
+                }
+                $total = $dayTotal;
+                $lines[] = [
+                    'time' => '',
+                    'label' => 'All',
+                    'count' => $dayTotal,
+                    'display' => 'All : '.$dayTotal,
+                ];
+            }
+
+            return [
+                'id' => (int) $doctor->id,
+                'name' => $doctor->name,
+                'total' => $total,
+                'slots' => $lines,
+            ];
+        })->values()->all();
+    }
+
+    private function slotRangeLabel(OtSlot $slot): string
+    {
+        if (! $slot->start_time || ! $slot->end_time) {
+            return (string) ($slot->slot_name ?: 'Slot');
+        }
+
+        try {
+            $start = Carbon::parse($slot->start_time);
+            $end = Carbon::parse($slot->end_time);
+        } catch (\Throwable) {
+            return (string) ($slot->slot_name ?: 'Slot');
+        }
+
+        // "1 to 2" when both times sit on the hour; otherwise "1:30 to 2:15"
+        if ($start->minute === 0 && $end->minute === 0) {
+            return $start->format('g').' to '.$end->format('g');
+        }
+
+        return $start->format('g:i').' to '.$end->format('g:i');
     }
 }

@@ -1,5 +1,5 @@
 @extends('hospital.layouts.app')
-@section('title', 'Route of Administration')
+@section('title', 'Mode')
 @section('page-header', 'Medicine Master')
 
 @section('page-actions')
@@ -7,7 +7,7 @@
             data-bs-toggle="modal"
             data-bs-target="#routeModal"
             onclick="resetRouteForm()">
-        <i class="bi bi-plus-lg me-1"></i> Add Route of Admin.
+        <i class="bi bi-plus-lg me-1"></i> Add Mode
     </button>
 @endsection
 
@@ -55,7 +55,7 @@
     </li>
     <li class="nav-item">
         <a class="nav-link active" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
-            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+            <i class="bi bi-arrow-right-circle me-1"></i> Mode
         </a>
     </li>
     <li class="nav-item">
@@ -82,7 +82,7 @@
                 <i class="bi bi-arrow-right-circle fs-5"></i>
             </span>
             <div>
-                <h5 class="mb-0 fw-bold" style="color:#1B4F72">Route of Administration</h5>
+                <h5 class="mb-0 fw-bold" style="color:#1B4F72">Mode</h5>
                 <div style="color:rgba(27,79,114,.68);font-size:.84rem;font-weight:500;margin-top:.1rem">Manage routes e.g. Oral, Left Eye, Right Eye, IV, IM</div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                 <thead>
                     <tr>
                         <th style="width:50px">#</th>
-                        <th>Route of Administration</th>
+                        <th>Mode</th>
                         <th class="text-end" style="width:120px">Actions</th>
                     </tr>
                 </thead>
@@ -144,7 +144,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="routeModalTitle">Add Route of Administration</h5>
+                <h5 class="modal-title fw-bold" id="routeModalTitle">Add Mode</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -189,7 +189,7 @@ const routeStoreUrl   = "{{ route('hospital.medicine-routes.store',  ['slug' => 
 const routeUpdateBase = "{{ route('hospital.medicine-routes.update', ['slug' => $slug, 'id' => '__ID__']) }}";
 
 function resetRouteForm() {
-    document.getElementById('routeModalTitle').innerText = 'Add Route of Administration';
+    document.getElementById('routeModalTitle').innerText = 'Add Mode';
     document.getElementById('routeForm').reset();
     document.getElementById('routeFormMethod').value = 'POST';
     document.getElementById('routeForm').action = routeStoreUrl;
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.edit-route-btn').forEach(function (btn) {
         btn.addEventListener('click', function () {
             var record = JSON.parse(this.dataset.record);
-            document.getElementById('routeModalTitle').innerText = 'Edit Route of Administration';
+            document.getElementById('routeModalTitle').innerText = 'Edit Mode';
             document.getElementById('routeFormMethod').value = 'PUT';
             document.getElementById('routeForm').action = routeUpdateBase.replace('__ID__', record.id);
             document.getElementById('input-route-name').value = record.name ?? '';
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var oldMethod = @json(old('_method', 'POST'));
         document.getElementById('routeFormMethod').value = oldMethod;
         document.getElementById('routeModalTitle').innerText =
-            oldMethod === 'PUT' ? 'Edit Route of Administration' : 'Add Route of Administration';
+            oldMethod === 'PUT' ? 'Edit Mode' : 'Add Mode';
         document.getElementById('input-route-name').value = @json(old('name', ''));
         new bootstrap.Modal(document.getElementById('routeModal')).show();
     })();

@@ -55,7 +55,7 @@
     </li>
     <li class="nav-item">
         <a class="nav-link" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
-            <i class="bi bi-arrow-right-circle me-1"></i> Route of Admin.
+            <i class="bi bi-arrow-right-circle me-1"></i> Mode
         </a>
     </li>
     <li class="nav-item">

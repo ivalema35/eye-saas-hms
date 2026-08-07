@@ -144,6 +144,7 @@ class RegisterController extends Controller
     {
         $states = MasterState::where('country_id', $request->country_id)
             ->active()->orderBy('name')->get(['id', 'name']);
+
         return response()->json($states);
     }
 
@@ -151,14 +152,23 @@ class RegisterController extends Controller
     {
         $districts = MasterDistrict::where('state_id', $request->state_id)
             ->active()->orderBy('name')->get(['id', 'name']);
+
         return response()->json($districts);
     }
 
     public function getCities(Request $request): JsonResponse
     {
-        $cities = MasterCity::where('district_id', $request->district_id)
-            ->active()->orderBy('name')->get(['id', 'name']);
-        return response()->json($cities);
+        $query = MasterCity::query()->active()->orderBy('name');
+
+        if ($request->filled('district_id')) {
+            $query->where('district_id', $request->district_id);
+        } elseif ($request->filled('state_id')) {
+            $query->where('state_id', $request->state_id);
+        } else {
+            return response()->json([]);
+        }
+
+        return response()->json($query->get(['id', 'name']));
     }
 
     public function createCountry(Request $request): JsonResponse

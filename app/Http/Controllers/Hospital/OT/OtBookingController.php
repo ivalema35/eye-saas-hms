@@ -58,20 +58,13 @@ class OtBookingController extends Controller
 
         $validated = $request->validate([
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
-            // Doctor + OT Assistant are assigned later on Ward Patient Status.
-            'surgery_date' => ['required', 'date', 'after_or_equal:today'],
-            'slot_id' => [
-                'required',
-                'integer',
-                Rule::exists('tbl_ot_slots', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
-            ],
+            // Doctor + OT Assistant, and OT date/slot, are set later in the OT flow.
             'ot_surgery_type_id' => [
                 'required',
                 'integer',
                 Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
             'diagnosis_hint' => ['nullable', 'string', 'max:255'],
-            'return_to' => ['nullable', Rule::in(['primary', 'secondary'])],
         ]);
 
         $surgeryType = DB::table('ot_surgery_types')
@@ -97,10 +90,10 @@ class OtBookingController extends Controller
                 ->with('error', 'This patient already has an active OT booking ('.$existing->ot_status.'). Complete or discharge it before recommending again.');
         }
 
-        // Doctor / OT Assistant assigned later at Ward (Patient Status).
+        // Date/slot and staff are assigned later (counsellor / ward) — not at recommend.
         $payload = [
-            'surgery_date' => $validated['surgery_date'],
-            'slot_id' => (int) $validated['slot_id'],
+            'surgery_date' => null,
+            'slot_id' => null,
             'eye' => $validated['eye'],
             'ot_type' => $surgeryType->surgery_name,
             'ot_status' => OtBooking::STATUS_SURGERY_RECOMMENDED,
@@ -137,13 +130,8 @@ class OtBookingController extends Controller
             );
         }
 
-        $returnTo = $validated['return_to'] ?? 'secondary';
-        $route = $returnTo === 'primary'
-            ? 'hospital.exam.primary.show'
-            : 'hospital.exam.secondary.show';
-
         return redirect()
-            ->route($route, ['slug' => $slug, 'id' => $patient->id])
+            ->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', $message);
     }
 }
