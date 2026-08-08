@@ -20,9 +20,13 @@ class OtAccountantController extends Controller
     {
         $bookings = OtBooking::query()
             ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments'])
-            // Ward Management only sees a booking once payment is verified — now an
-            // automatic transition, not a manual Counsellor click (docs/tulsi.md §3).
-            ->whereIn('ot_status', [OtBooking::STATUS_PAYMENT_VERIFIED, OtBooking::STATUS_IN_WARD, OtBooking::STATUS_READY])
+            // Ward queue only while still on ward: paid / in ward / dilated.
+            // Once READY (OT Assistant assigned), patient leaves this list for assistant process.
+            ->whereIn('ot_status', [
+                OtBooking::STATUS_PAYMENT_VERIFIED,
+                OtBooking::STATUS_IN_WARD,
+                OtBooking::STATUS_DILATED,
+            ])
             ->orderBy('surgery_date')
             ->orderByDesc('id')
             ->paginate((int) config('app.pagination_limit', 25));

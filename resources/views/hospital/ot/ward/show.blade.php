@@ -180,9 +180,6 @@
                                 <option value="" disabled>No OT medicines in master</option>
                             @endforelse
                         </select>
-                        @if(($otMedicines ?? collect())->isEmpty())
-                            <div class="form-text text-warning">Add medicines with usage scope OT under Medicine Master.</div>
-                        @endif
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Eye <span class="text-danger">*</span></label>
@@ -276,11 +273,9 @@
                 <div class="row g-3 mt-3">
                     {{-- Preparing / Hold / Complicated: OPD doctor is auto-assigned (not manual). --}}
                     <div class="col-md-6" id="wardOpdDoctorWrap" @if($isReadyUi) style="display:none" @endif>
-                        <label class="form-label">Doctor <span class="text-muted small">(OPD — auto)</span></label>
                         @if($opdDoctorId > 0 && $opdDoctorName)
                             <input type="text" class="form-control ot-readonly" readonly
                                 value="Dr. {{ $opdDoctorName }}">
-                            <div class="form-text">Auto-assigned from OPD. Appears on this doctor's OT dashboard card.</div>
                         @else
                             <input type="text" class="form-control is-invalid" readonly
                                 value="No OPD doctor on patient">
@@ -324,9 +319,6 @@
         <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
             <div>
                 <div class="ot-title" style="font-size: 1rem;">Ready to send to OT Assistant?</div>
-                <div class="ot-subtitle">
-                    Set status to Ready for OT, assign OT Assistant, then send.
-                </div>
             </div>
             @php
                 $canSendReady = in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAYMENT_VERIFIED, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true)

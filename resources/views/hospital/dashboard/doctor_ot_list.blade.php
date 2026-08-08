@@ -106,11 +106,8 @@
                             @forelse($bookings as $booking)
                                 @php
                                     $consultPending = $booking->isDoctorConsultationPending();
-                                    $canActThis = $canActAsDoctor && (
-                                        (method_exists($authUser, 'isSuperUser') && $authUser->isSuperUser())
-                                        || in_array($authUser->role?->slug, ['hospital_admin', 'admin'], true)
-                                        || (int) $booking->ot_doctor_id === (int) $authUser->id
-                                    );
+                                    // Like exams: any doctor can act (not only ot_doctor_id owner)
+                                    $canActThis = $canActAsDoctor;
                                     $wardLabel = $booking->preOp
                                         ? (\App\Models\Hospital\OT\OtPreOp::STATUS_LABELS[$booking->preOp->pre_op_status] ?? $booking->preOp->pre_op_status)
                                         : '—';

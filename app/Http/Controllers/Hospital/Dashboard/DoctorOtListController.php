@@ -176,6 +176,11 @@ class DoctorOtListController extends Controller
             ->with('success', 'Patient refused OT. Sent to Accounts for refund (status: surgery_refused).');
     }
 
+    /**
+     * Like OPD examinations: any doctor (or ot_doctor) with access can act on
+     * consultation queue, not only the assigned ot_doctor_id patient owner.
+     * Admin / super always allowed.
+     */
     private function assertCanManage(OtBooking $booking): void
     {
         $user = auth('hospital_user')->user();
@@ -188,15 +193,11 @@ class DoctorOtListController extends Controller
         }
 
         $slug = $user->role?->slug;
-        if (in_array($slug, ['hospital_admin', 'admin'], true)) {
+        if (in_array($slug, ['hospital_admin', 'admin', 'doctor', 'ot_doctor'], true)) {
             return;
         }
 
-        if ((int) $booking->ot_doctor_id === (int) $user->id) {
-            return;
-        }
-
-        abort(403, 'You can only act on patients assigned to you.');
+        abort(403, 'You do not have permission to manage this OT consultation.');
     }
 
     /**

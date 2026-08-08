@@ -50,7 +50,11 @@ class OtWardApiController extends Controller
         $bookings = OtBooking::query()
             ->where('tenant_id', $tenantId)
             ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments'])
-            ->whereIn('ot_status', [OtBooking::STATUS_PAYMENT_VERIFIED, OtBooking::STATUS_IN_WARD, OtBooking::STATUS_READY])
+            ->whereIn('ot_status', [
+                OtBooking::STATUS_PAYMENT_VERIFIED,
+                OtBooking::STATUS_IN_WARD,
+                OtBooking::STATUS_DILATED,
+            ])
             ->orderBy('surgery_date')
             ->orderByDesc('id')
             ->paginate((int) $request->integer('per_page', 25));
