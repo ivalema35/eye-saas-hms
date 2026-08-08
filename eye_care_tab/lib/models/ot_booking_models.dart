@@ -14,6 +14,10 @@ abstract class OtStatus {
   static const ready               = 'ready';
   static const operated            = 'operated';
   static const discharged          = 'discharged';
+  // Patient refused OT after ward consult — sent to Accounts for a full
+  // refund. New status, web pull 2026-08-07. See
+  // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4/§5.
+  static const surgeryRefused      = 'surgery_refused';
 
   static const _labels = {
     booked: 'Booked',
@@ -26,6 +30,7 @@ abstract class OtStatus {
     ready: 'Ready',
     operated: 'Operated',
     discharged: 'Discharged',
+    surgeryRefused: 'Surgery Refused',
   };
 
   static String label(String status) => _labels[status] ?? status;
@@ -68,6 +73,25 @@ class OtBookingSummary {
   // are always present — see OT_WEB_PARITY_FIX_PRD.md §3.2.
   final String? otType;
   final double? packageAmount;
+  // Present on the Accountant list endpoint's `refunds` filter rows (Ot
+  // pull 2026-08-07) — nullable since other OT list endpoints reusing this
+  // same model don't send them. See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4.
+  final double? refundableBalance;
+  final double? totalRefunded;
+  // Ward status label source for the Doctor OT List screen ("Ward" column
+  // on web) — present when `preOp` is eager-loaded (Doctor OT List
+  // endpoint only). See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §5.
+  final String? preOpStatus;
+  // Mediclaim fallback for the Surgery Record form's Section A ("Package &
+  // Mediclaim") when no counselling row exists yet — web:
+  // `$counselling?->mediclaim ?? $booking->has_mediclaim`. See
+  // OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md TASK 2.1.
+  final bool? hasMediclaim;
+  // Discharge & Invoices queue's Generated/Pending badge — web computes this
+  // via `$invoiceBookingIds` membership per row (OtInvoiceController.php:122);
+  // present on the Discharge billing list endpoint only. See
+  // OT_DISCHARGE_INVOICES_WEB_PARITY_FIX_PLAN.md TASK 2.1.
+  final bool? hasInvoice;
 
   const OtBookingSummary({
     required this.id,
@@ -81,6 +105,11 @@ class OtBookingSummary {
     this.paymentStatus,
     this.otType,
     this.packageAmount,
+    this.refundableBalance,
+    this.totalRefunded,
+    this.preOpStatus,
+    this.hasMediclaim,
+    this.hasInvoice,
   });
 
   factory OtBookingSummary.fromJson(Map<String, dynamic> j) => OtBookingSummary(
@@ -94,9 +123,14 @@ class OtBookingSummary {
         appointmentNumber: j['appointment_number'] as String?,
         paymentStatus: j['payment_status'] as String?,
         otType: j['ot_type'] as String?,
+        preOpStatus: (j['pre_op'] as Map<String, dynamic>?)?['pre_op_status'] as String?,
         // Laravel's `decimal:2` cast serializes to JSON as a STRING (e.g.
         // "1234.00"), not a number — `as num?` throws on it.
         packageAmount: switch (j['package_amount']) { num n => n.toDouble(), String s => double.tryParse(s), _ => null },
+        refundableBalance: switch (j['refundable_balance']) { num n => n.toDouble(), String s => double.tryParse(s), _ => null },
+        totalRefunded: switch (j['total_refunded']) { num n => n.toDouble(), String s => double.tryParse(s), _ => null },
+        hasMediclaim: j['has_mediclaim'] as bool?,
+        hasInvoice: j['has_invoice'] as bool?,
       );
 }
 

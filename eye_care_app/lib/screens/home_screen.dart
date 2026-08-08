@@ -245,9 +245,8 @@ class _HomeScreenState extends State<HomeScreen>
         Navigator.push(context, appRoute(const OtCounsellorDashboardScreen()));
       case NavLabel.wardManagement:
         Navigator.push(context, appRoute(const OtWardQueueScreen()));
-      case NavLabel.doctorDashboard:
       case NavLabel.assistantDashboard:
-        Navigator.push(context, appRoute(const OtAssistantDashboardScreen()));
+        Navigator.push(context, appRoute(OtAssistantDashboardScreen(user: widget.user)));
       case NavLabel.accountantBilling:
         Navigator.push(context, appRoute(const OtAccountantDashboardScreen()));
       case NavLabel.dischargeInvoices:

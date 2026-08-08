@@ -47,6 +47,11 @@ class MedMeta {
 class MedItem {
   final int id;
   final String name;
+  // opd | ot — new field, web pull 2026-08-07. Distinct from
+  // MedicineGroup.usageScope (which has a 3rd 'both' value) — this one is
+  // per-Medicine and only ever opd/ot. See
+  // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §10.
+  final String usageScope;
   final int? medicineTypeId;
   final String? medicineTypeName;
   final int? dosageId;
@@ -60,6 +65,7 @@ class MedItem {
   const MedItem({
     required this.id,
     required this.name,
+    this.usageScope = 'opd',
     this.medicineTypeId,
     this.medicineTypeName,
     this.dosageId,
@@ -74,6 +80,7 @@ class MedItem {
   factory MedItem.fromJson(Map<String, dynamic> j) => MedItem(
         id: j['id'] as int,
         name: j['name'] as String? ?? '-',
+        usageScope: j['usage_scope'] as String? ?? 'opd',
         medicineTypeId: j['medicine_type_id'] as int?,
         medicineTypeName: (j['medicine_type'] as Map<String, dynamic>?)?['name'] as String?,
         dosageId: j['dosage_id'] as int?,
@@ -125,6 +132,7 @@ class MedGroupItem {
   final String? dosageText;
   final int? routeId;
   final String? routeName;
+  final String? frequency;
   final String? duration;
   final int quantity;
 
@@ -135,6 +143,7 @@ class MedGroupItem {
     this.dosageText,
     this.routeId,
     this.routeName,
+    this.frequency,
     this.duration,
     required this.quantity,
   });
@@ -146,9 +155,16 @@ class MedGroupItem {
         dosageText: (j['dosage'] as Map<String, dynamic>?)?['dosage'] as String?,
         routeId: j['route_id'] as int?,
         routeName: (j['route'] as Map<String, dynamic>?)?['name'] as String?,
+        frequency: j['frequency'] as String?,
         duration: j['duration'] as String?,
         quantity: (j['quantity'] as num?)?.toInt() ?? 1,
       );
+
+  /// OT ward-medicine quick-fill dose text — mirrors web's
+  /// `trim($item->frequency . ' ' . $item->duration)` exactly (was previously
+  /// just `dosageText`, which drops both fields). See
+  /// OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md TASK 2.1.
+  String get quickFillDose => [frequency, duration].where((s) => s != null && s.isNotEmpty).join(' ').trim();
 }
 
 class MedGroup {

@@ -164,6 +164,7 @@ class MedicineGroupApiController extends Controller
                 'dosage'      => $item->dosage ? ['dosage' => $item->dosage->dosage] : null,
                 'route_id'    => $item->route_id,
                 'route'       => $item->route ? ['name' => $item->route->name] : null,
+                'frequency'   => $item->frequency,
                 'duration'    => $item->duration,
                 'quantity'    => $item->quantity,
             ])->values(),

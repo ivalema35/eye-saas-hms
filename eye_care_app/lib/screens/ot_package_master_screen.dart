@@ -72,15 +72,15 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
       builder: (_) => _PackageSheet(
         item: item,
         accentColor: widget.accentColor,
-        onSave: (packageName, lensCost, roomCategory, otCharges, surgeonCharges, nursingCharges, consumablesCharges) async {
+        onSave: (packageName, roomCategory, otCharges, surgeonCharges, nursingCharges, consumablesCharges) async {
           if (item == null) {
             await OtInventoryService.instance.createPackage(
-              packageName: packageName, lensCost: lensCost, roomCategory: roomCategory,
+              packageName: packageName, roomCategory: roomCategory,
               otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges,
             );
           } else {
             await OtInventoryService.instance.updatePackage(item.id,
-              packageName: packageName, lensCost: lensCost, roomCategory: roomCategory,
+              packageName: packageName, roomCategory: roomCategory,
               otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges,
             );
           }
@@ -194,7 +194,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
 class _PackageSheet extends StatefulWidget {
   final OtPackageMasterItem? item;
   final Color accentColor;
-  final Future<void> Function(String packageName, double? lensCost, String roomCategory, double otCharges, double surgeonCharges, double nursingCharges, double consumablesCharges) onSave;
+  final Future<void> Function(String packageName, String roomCategory, double otCharges, double surgeonCharges, double nursingCharges, double consumablesCharges) onSave;
 
   const _PackageSheet({required this.item, required this.accentColor, required this.onSave});
 
@@ -203,7 +203,7 @@ class _PackageSheet extends StatefulWidget {
 }
 
 class _PackageSheetState extends State<_PackageSheet> {
-  late final TextEditingController _nameCtrl, _lensCostCtrl, _otCtrl, _surgeonCtrl, _nursingCtrl, _consumablesCtrl;
+  late final TextEditingController _nameCtrl, _otCtrl, _surgeonCtrl, _nursingCtrl, _consumablesCtrl;
   String _roomCategory = 'general';
   bool _saving = false;
   String? _nameError;
@@ -213,7 +213,6 @@ class _PackageSheetState extends State<_PackageSheet> {
     super.initState();
     final it = widget.item;
     _nameCtrl = TextEditingController(text: it?.packageName ?? '');
-    _lensCostCtrl = TextEditingController(text: it?.lensCost != null ? it!.lensCost!.toStringAsFixed(2) : '');
     _otCtrl = TextEditingController(text: it != null ? it.otCharges.toStringAsFixed(2) : '0');
     _surgeonCtrl = TextEditingController(text: it != null ? it.surgeonCharges.toStringAsFixed(2) : '0');
     _nursingCtrl = TextEditingController(text: it != null ? it.nursingCharges.toStringAsFixed(2) : '0');
@@ -223,7 +222,7 @@ class _PackageSheetState extends State<_PackageSheet> {
 
   @override
   void dispose() {
-    for (final c in [_nameCtrl, _lensCostCtrl, _otCtrl, _surgeonCtrl, _nursingCtrl, _consumablesCtrl]) {
+    for (final c in [_nameCtrl, _otCtrl, _surgeonCtrl, _nursingCtrl, _consumablesCtrl]) {
       c.dispose();
     }
     super.dispose();
@@ -238,7 +237,6 @@ class _PackageSheetState extends State<_PackageSheet> {
     try {
       await widget.onSave(
         name,
-        double.tryParse(_lensCostCtrl.text.trim()),
         _roomCategory,
         double.tryParse(_otCtrl.text.trim()) ?? 0,
         double.tryParse(_surgeonCtrl.text.trim()) ?? 0,
@@ -305,8 +303,6 @@ class _PackageSheetState extends State<_PackageSheet> {
                         selectedColor: widget.accentColor.withValues(alpha: 0.18), labelStyle: TextStyle(color: _roomCategory == 'private' ? widget.accentColor : AppColors.textPrimary, fontWeight: FontWeight.w600)),
                     ),
                   ]),
-                  const SizedBox(height: 12),
-                  TextFormField(controller: _lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Lens Cost', suffix: '₹')),
                   const SizedBox(height: 12),
                   Row(children: [
                     Expanded(child: TextFormField(controller: _otCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('OT Charges', suffix: '₹'))),

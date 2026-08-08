@@ -11,6 +11,7 @@ use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DoctorDashboardApiController extends Controller
 {
@@ -77,6 +78,49 @@ class DoctorDashboardApiController extends Controller
                     'secondary_count'=> $secondary,
                 ];
             })->values();
+
+        // ── OT doctor cards (same roster as OPD; counts from that doctor's OT
+        // bookings — assigned ot_doctor_id, or recommender booked_by when a
+        // doctor isn't assigned yet). Mirrors
+        // Hospital\Dashboard\DashboardController's $otDoctorCards/$otSummary.
+        // See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §6 / FIX_PLAN TASK 5.2.
+        $completeOtStatuses = [OtBooking::STATUS_OPERATED, OtBooking::STATUS_DISCHARGED, OtBooking::STATUS_SURGERY_REFUSED];
+        $doctorIdsForOt = $doctorCards->pluck('id')->all();
+
+        $otStatsByDoctorId = collect();
+        if ($doctorIdsForOt !== []) {
+            $otStatsByDoctorId = OtBooking::query()
+                ->selectRaw('COALESCE(ot_doctor_id, booked_by) as doctor_key')
+                ->selectRaw('COUNT(*) as ot_total')
+                ->selectRaw('SUM(CASE WHEN ot_status IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_complete', $completeOtStatuses)
+                ->selectRaw('SUM(CASE WHEN ot_status NOT IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_pending', $completeOtStatuses)
+                ->where(function ($q) use ($doctorIdsForOt) {
+                    $q->whereIn('ot_doctor_id', $doctorIdsForOt)
+                        ->orWhereIn('booked_by', $doctorIdsForOt);
+                })
+                ->groupBy(DB::raw('COALESCE(ot_doctor_id, booked_by)'))
+                ->get()
+                ->keyBy('doctor_key');
+        }
+
+        $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId) {
+            $stats = $otStatsByDoctorId->get($doc['id']);
+
+            return [
+                'id' => $doc['id'],
+                'name' => $doc['name'],
+                'is_self' => $doc['is_self'],
+                'ot_total' => (int) ($stats->ot_total ?? 0),
+                'ot_pending' => (int) ($stats->ot_pending ?? 0),
+                'ot_complete' => (int) ($stats->ot_complete ?? 0),
+            ];
+        })->values();
+
+        $otSummary = [
+            'total' => (int) $otDoctorCards->sum('ot_total'),
+            'pending' => (int) $otDoctorCards->sum('ot_pending'),
+            'complete' => (int) $otDoctorCards->sum('ot_complete'),
+        ];
 
         // ── DR Index helper ────────────────────────────────────────────────────
         $buildIndex = function (Patient $p): string {
@@ -165,6 +209,8 @@ class DoctorDashboardApiController extends Controller
                     'secondary_done' => $secondaryDone,
                 ],
                 'doctor_cards'   => $doctorCards,
+                'ot_doctor_cards'=> $otDoctorCards,
+                'ot_summary'     => $otSummary,
                 'viewing_doctor' => $viewingDoctor
                     ? ['id' => $viewingDoctor->id, 'name' => $viewingDoctor->name, 'is_self' => false]
                     : null,

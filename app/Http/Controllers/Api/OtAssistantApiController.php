@@ -77,6 +77,11 @@ class OtAssistantApiController extends Controller
             ->orderByDesc('id')
             ->paginate((int) $request->integer('per_page', 25));
 
+        // payment_status is a computed accessor, not a real column — see the
+        // matching comment in OtAccountantApiController::bookings(). Safe
+        // here since `payments` is already eager-loaded above.
+        $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status']));
+
         return response()->json(['success' => true, 'data' => $bookings]);
     }
 
@@ -127,18 +132,18 @@ class OtAssistantApiController extends Controller
                 'surgery_types' => $surgeryTypes,
                 'medicines' => $medicines,
                 'medicine_groups' => $medicineGroups,
+                'lens_types' => self::LENS_TYPES,
             ],
         ]);
     }
 
     /**
-     * NOTE (deviation from the plan doc): there is no separate backend "verify"
-     * action — the pre-surgery checklist (identity/consent/payment/correct-eye)
-     * is validated and written inside this same storeSurgery() call, atomically
-     * with the surgery record, exactly like the web form. A standalone
-     * `POST .../verify` endpoint (plan doc FR-OT-29) would have no real backend
-     * action behind it, so it was not built — the checklist fields are part of
-     * this request body instead, matching actual web behavior.
+     * Mirrors Hospital\OT\OtAssistantController::storeSurgery() exactly — including
+     * the pre-surgery verification checklist, which web validates and writes
+     * atomically inside this same call rather than via a separate endpoint. Web
+     * no longer collects the checklist from the UI (it hardcodes all 4 flags
+     * true); this mirror does the same — see WEB_PULL parity decision,
+     * OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md TASK 1.1/1.2.
      */
     public function storeSurgery(string $slug, Request $request, int $bookingId): JsonResponse
     {
@@ -157,15 +162,21 @@ class OtAssistantApiController extends Controller
 
         $operatedBy = $booking->ot_doctor_id ? (int) $booking->ot_doctor_id : $assistantId;
 
-        $validated = $request->validate([
-            'identity_verified' => ['accepted'],
-            'consent_verified' => ['accepted'],
-            'payment_verified' => ['accepted'],
-            'correct_eye_verified' => ['accepted'],
+        // Eye locked to Recommend Surgery selection (booking.eye) — matches web exactly.
+        $lockedEye = in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true)
+            ? (string) $booking->eye
+            : null;
 
+        $validated = $request->validate([
+            'surgery_date' => ['required', 'date'],
             'surgery_name' => ['required', 'string', 'max:255'],
             'ot_room' => ['nullable', 'string', 'max:100'],
-            'eye_operated' => ['required', Rule::in(['RE', 'LE', 'Both'])],
+            'eye_operated' => array_values(array_filter([
+                'required',
+                $lockedEye
+                    ? Rule::in([$lockedEye])
+                    : Rule::in(['RE', 'LE', 'Both']),
+            ])),
             'start_time' => ['nullable', 'date'],
             'end_time' => ['nullable', 'date', 'after:start_time'],
             'complication_status' => ['required', Rule::in(['none', 'minor', 'major'])],
@@ -181,23 +192,19 @@ class OtAssistantApiController extends Controller
                 Rule::exists('medicines', 'name')->where(fn ($query) => $query->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
             'ot_medicines.*.dose' => ['nullable', 'string', 'max:255'],
+            // Lens info — autofilled from counselling; assistant may confirm/edit.
+            'lens_category' => ['nullable', Rule::in(['standard', 'premium'])],
+            'lens_company' => ['nullable', 'string', 'max:150'],
+            'lens_model' => ['nullable', 'string', 'max:150'],
+            'lens_type' => ['nullable', Rule::in(self::LENS_TYPES)],
+            'estimated_power' => ['nullable', 'numeric', 'between:-99.99,999.99'],
+            'lens_cost' => ['nullable', 'numeric', 'min:0'],
         ], [
-            'identity_verified.accepted' => 'Identity must be verified before surgery can be recorded.',
-            'consent_verified.accepted' => 'Consent must be verified before surgery can be recorded.',
-            'payment_verified.accepted' => 'Payment must be verified before surgery can be recorded.',
-            'correct_eye_verified.accepted' => 'Correct eye must be verified before surgery can be recorded.',
+            'eye_operated.in' => 'Eye operated must match the eye selected at Recommend Surgery'
+                .($lockedEye ? " ({$lockedEye})." : '.'),
         ]);
 
         $surgeryAssistantId = (int) ($booking->ot_assistant_id ?: $assistantId);
-
-        $bookedEye = (string) $booking->eye;
-        $eyeOperated = (string) $validated['eye_operated'];
-        if ($bookedEye !== 'Both' && $eyeOperated !== 'Both' && $bookedEye !== $eyeOperated) {
-            return response()->json([
-                'success' => false,
-                'message' => "Operated eye ({$eyeOperated}) does not match booked eye ({$bookedEye}).",
-            ], 422);
-        }
 
         $otMedicines = collect($validated['ot_medicines'] ?? [])
             ->filter(fn (array $item): bool => ! empty($item['medicine']) || ! empty($item['dose']))
@@ -215,6 +222,45 @@ class OtAssistantApiController extends Controller
         }
 
         $surgery = DB::transaction(function () use ($validated, $otMedicines, $operatedBy, $assistantId, $surgeryAssistantId, $tenantId, $booking) {
+            // Keep counselling lens plan in sync (autofill source for billing/prints).
+            $existingCounselling = DB::table('ot_counselling')
+                ->where('tenant_id', $tenantId)
+                ->where('ot_booking_id', $booking->id)
+                ->first();
+
+            $lensPayload = [
+                'lens_category' => $validated['lens_category'] ?? null,
+                'lens_company' => $validated['lens_company'] ?? null,
+                'lens_model' => $validated['lens_model'] ?? null,
+                'lens_type' => $validated['lens_type'] ?? null,
+                'estimated_power' => $validated['estimated_power'] ?? null,
+                'lens_cost' => $validated['lens_cost'] ?? null,
+                'updated_at' => now(),
+            ];
+
+            if ($existingCounselling) {
+                $ot = (float) ($existingCounselling->ot_charges ?? 0);
+                $sur = (float) ($existingCounselling->surgeon_charges ?? 0);
+                $nurs = (float) ($existingCounselling->nursing_charges ?? 0);
+                $cons = (float) ($existingCounselling->consumables_charges ?? 0);
+                $lens = (float) ($validated['lens_cost'] ?? $existingCounselling->lens_cost ?? 0);
+                $total = round($ot + $sur + $nurs + $cons + $lens, 2);
+                if ($total > 0) {
+                    $lensPayload['total_estimate'] = $total;
+                    $lensPayload['package_amount'] = $total;
+                }
+                DB::table('ot_counselling')
+                    ->where('id', $existingCounselling->id)
+                    ->update($lensPayload);
+            } else {
+                DB::table('ot_counselling')->insert(array_merge($lensPayload, [
+                    'tenant_id' => $tenantId,
+                    'ot_booking_id' => $booking->id,
+                    'created_at' => now(),
+                ]));
+            }
+
+            // Auto-record verification checklist (matches web — UI checklist removed there too).
             OtVerification::query()->updateOrCreate(
                 ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
                 [
@@ -267,7 +313,11 @@ class OtAssistantApiController extends Controller
                 ]);
             }
 
-            $booking->update(['ot_status' => OtBooking::STATUS_OPERATED, 'operated_at' => now()]);
+            $booking->update([
+                'ot_status' => OtBooking::STATUS_OPERATED,
+                'surgery_date' => $validated['surgery_date'],
+                'operated_at' => now(),
+            ]);
 
             return $surgery;
         });

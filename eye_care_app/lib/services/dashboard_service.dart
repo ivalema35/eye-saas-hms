@@ -41,4 +41,25 @@ class DashboardService {
 
     throw Exception('Dashboard fetch failed (${response.statusCode})');
   }
+
+  Future<TodayPatientsData> fetchTodayPatients({String searchContact = ''}) async {
+    final token = await AuthService.instance.getStoredToken();
+    if (token == null) throw Exception('Not authenticated');
+
+    final uri = Uri.parse('${AppConfig.hospitalApiUrl}/dashboard/today-patients').replace(
+      queryParameters: searchContact.isNotEmpty ? {'search_contact': searchContact} : null,
+    );
+    final response = await http
+        .get(uri, headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        })
+        .timeout(AppConfig.requestTimeout);
+
+    if (response.statusCode == 200) {
+      return TodayPatientsData.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+    }
+
+    throw Exception('Today patients fetch failed (${response.statusCode})');
+  }
 }

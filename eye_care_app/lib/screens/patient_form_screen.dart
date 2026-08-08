@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
+import '../models/ot_appointment_models.dart';
 import '../models/patient_models.dart';
 import '../services/masters_service.dart';
 import '../services/patient_service.dart';
@@ -17,6 +18,11 @@ class PatientFormScreen extends StatefulWidget {
   final Patient? patient;
   final UserInfo user;
   final HospitalInfo hospital;
+  // Light client-side prefill when opening "Walk-In" from an OT appointment
+  // row (receptionist "Today Added Patients" widget) — name/contact/age/
+  // gender only, no backend link to the OT appointment (that's the separate,
+  // optional TASK 5.3). See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §9.
+  final OtAppointmentItem? prefillOt;
 
   const PatientFormScreen({
     super.key,
@@ -24,6 +30,7 @@ class PatientFormScreen extends StatefulWidget {
     this.patient,
     required this.user,
     required this.hospital,
+    this.prefillOt,
   });
 
   @override
@@ -89,6 +96,8 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     _loadMasters();
     if (widget.mode == PatientFormMode.edit && widget.patient != null) {
       _prefillFromPatient(widget.patient!);
+    } else if (widget.mode == PatientFormMode.addWalkIn && widget.prefillOt != null) {
+      _prefillFromOt(widget.prefillOt!);
     }
   }
 
@@ -122,6 +131,17 @@ class _PatientFormScreenState extends State<PatientFormScreen>
     _selectedReferrerId = p.referrer?.id;
     _isOldPatient = p.isOldPatient;
     _examDoneWarning = p.primaryDoneAt != null;
+  }
+
+  void _prefillFromOt(OtAppointmentItem o) {
+    _firstCtrl.text = o.patientName;
+    _middleCtrl.text = o.middleName ?? '';
+    _lastCtrl.text = o.surname;
+    _contactCtrl.text = o.mobileNo;
+    _whatsappCtrl.text = o.whatsappNo ?? '';
+    _ageCtrl.text = o.age > 0 ? o.age.toString() : '';
+    _selectedGender = o.gender.toLowerCase() == 'female' ? 'female' : 'male';
+    _occupationCtrl.text = o.occupation ?? '';
   }
 
   Future<void> _loadMasters() async {
@@ -400,6 +420,10 @@ class _PatientFormScreenState extends State<PatientFormScreen>
             double.tryParse(_caseFeeCtrl.text.trim()) ?? 0;
       } else {
         data['slot_id'] = _selectedSlotId;
+      }
+
+      if (widget.mode == PatientFormMode.addWalkIn && widget.prefillOt != null) {
+        data['ot_appointment_id'] = widget.prefillOt!.id;
       }
 
       if (isEdit) {

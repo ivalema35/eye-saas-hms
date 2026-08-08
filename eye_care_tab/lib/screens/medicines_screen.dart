@@ -294,6 +294,7 @@ class _MedicinesCatalogTabState extends State<_MedicinesCatalogTab> with Automat
     }
     int? typeId = item?.medicineTypeId;
     int? dosageId = item?.dosageId;
+    String usageScope = item?.usageScope ?? 'opd';
     final name = TextEditingController(text: item?.name ?? '');
     final duration = TextEditingController(text: item?.duration ?? '');
     final qty = TextEditingController(text: item?.qty ?? '');
@@ -308,7 +309,7 @@ class _MedicinesCatalogTabState extends State<_MedicinesCatalogTab> with Automat
         if (!(formKey.currentState?.validate() ?? false)) return;
         ss(() => saving = true);
         try {
-          final data = {'medicine_type_id': typeId, 'name': name.text.trim(), 'dosage_id': dosageId, 'duration': duration.text.trim(), 'qty': qty.text.trim(), 'company': company.text.trim().isEmpty ? null : company.text.trim(), 'composition': composition.text.trim().isEmpty ? null : composition.text.trim(), 'price': double.tryParse(price.text) ?? 0.0};
+          final data = {'medicine_type_id': typeId, 'name': name.text.trim(), 'usage_scope': usageScope, 'dosage_id': dosageId, 'duration': duration.text.trim(), 'qty': qty.text.trim(), 'company': company.text.trim().isEmpty ? null : company.text.trim(), 'composition': composition.text.trim().isEmpty ? null : composition.text.trim(), 'price': double.tryParse(price.text) ?? 0.0};
           if (item == null) {
             await MedicineService.instance.createMedicine(data);
           } else {
@@ -333,6 +334,15 @@ class _MedicinesCatalogTabState extends State<_MedicinesCatalogTab> with Automat
                 DropdownButtonFormField<int>(initialValue: typeId, isExpanded: true, decoration: const InputDecoration(labelText: 'Medicine Type *', border: OutlineInputBorder()), items: types.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(), onChanged: (v) => ss(() => typeId = v), validator: (v) => v == null ? 'Required' : null),
                 const SizedBox(height: 12),
                 TextFormField(controller: name, decoration: const InputDecoration(labelText: 'Medicine Name *', border: OutlineInputBorder()), validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    ChoiceChip(label: const Text('OPD'), selected: usageScope == 'opd', onSelected: (_) => ss(() => usageScope = 'opd')),
+                    const SizedBox(width: 10),
+                    ChoiceChip(label: const Text('OT'), selected: usageScope == 'ot', onSelected: (_) => ss(() => usageScope = 'ot')),
+                  ]),
+                ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<int>(initialValue: dosageId, isExpanded: true, decoration: const InputDecoration(labelText: 'Dosage *', border: OutlineInputBorder()), items: dosages.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(), onChanged: (v) => ss(() => dosageId = v), validator: (v) => v == null ? 'Required' : null),
                 const SizedBox(height: 12),
@@ -437,6 +447,7 @@ class _MedCard extends StatelessWidget {
         ]),
         const SizedBox(height: 6),
         Wrap(spacing: 10, runSpacing: 4, children: [
+          _infoChip(item.usageScope == 'ot' ? Icons.local_hospital_outlined : Icons.storefront_outlined, item.usageScope.toUpperCase()),
           if (item.medicineTypeName != null) _infoChip(Icons.label_outline_rounded, item.medicineTypeName!),
           if (item.dosageText != null) _infoChip(Icons.medication_outlined, item.dosageText!),
           if (item.duration != null) _infoChip(Icons.timer_outlined, item.duration!),

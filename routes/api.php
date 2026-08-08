@@ -234,6 +234,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // Dashboard
                     Route::get('/admin/dashboard', [DashboardController::class, 'adminDashboard'])
                         ->name('admin.dashboard');
+                    Route::get('/dashboard/today-patients', [DashboardController::class, 'todayPatients'])
+                        ->name('dashboard.today-patients');
                     Route::get('/dashboard/doctor', [DoctorDashboardApiController::class, 'dashboard'])
                         ->name('dashboard.doctor')
                         ->middleware('permission:opd.exam.primary|opd.exam.secondary');
@@ -261,6 +263,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->middleware('permission:ot.appointment.view|ot.patient.list');
                     Route::get('/dashboard/doctor-ot', [DashboardDrillDownApiController::class, 'doctorOtIndex'])
                         ->name('dashboard.doctor-ot')
+                        ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                    Route::post('/dashboard/doctor-ot/{bookingId}/assign-assistant', [DashboardDrillDownApiController::class, 'doctorOtAssignAssistant'])
+                        ->name('dashboard.doctor-ot.assign-assistant')
+                        ->whereNumber('bookingId')
+                        ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                    Route::post('/dashboard/doctor-ot/{bookingId}/refuse', [DashboardDrillDownApiController::class, 'doctorOtRefuseSurgery'])
+                        ->name('dashboard.doctor-ot.refuse')
+                        ->whereNumber('bookingId')
                         ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
                     Route::get('/dashboard/assistant-ot', [DashboardDrillDownApiController::class, 'assistantOtIndex'])
                         ->name('dashboard.assistant-ot')
@@ -588,6 +598,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         Route::post('payments', [OtAccountantApiController::class, 'storePayment'])
                             ->name('ot.payments.store')
                             ->middleware('permission:ot.payment.record');
+                        Route::get('refund-form-data', [OtAccountantApiController::class, 'refundFormData'])
+                            ->name('ot.refund.form-data')
+                            ->middleware('permission:ot.payment.record');
+                        Route::post('refunds', [OtAccountantApiController::class, 'storeRefund'])
+                            ->name('ot.refunds.store')
+                            ->middleware('permission:ot.payment.record');
                     });
 
                     Route::get('ot/payments/{paymentId}/receipt', [OtAccountantApiController::class, 'receipt'])
@@ -606,6 +622,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->middleware('permission:ot.billing.manage')->group(function () {
                         Route::post('invoice/generate', [OtDischargeApiController::class, 'generateInvoice'])
                             ->name('ot.invoice.generate');
+                        Route::get('invoice', [OtDischargeApiController::class, 'invoiceDetail'])
+                            ->name('ot.invoice.detail');
 
                         Route::prefix('print')->name('ot.print.')->group(function () {
                             Route::get('invoice', [OtDischargeApiController::class, 'invoicePrint'])->name('invoice');

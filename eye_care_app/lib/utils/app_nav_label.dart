@@ -13,7 +13,6 @@ abstract final class NavLabel {
   static const String otCounsellor       = 'OT Counsellor';
   static const String accountantBilling  = 'Accountant / Billing';
   static const String wardManagement     = 'Ward Management';
-  static const String doctorDashboard    = 'Doctor Dashboard';
   static const String assistantDashboard = 'Assistant Dashboard';
   static const String dischargeInvoices  = 'Discharge & Invoices';
 

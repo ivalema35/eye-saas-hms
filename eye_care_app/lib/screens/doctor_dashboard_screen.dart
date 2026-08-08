@@ -6,6 +6,7 @@ import '../models/auth_models.dart';
 import '../models/doctor_dashboard_models.dart';
 import '../models/patient_models.dart';
 import '../services/doctor_dashboard_service.dart';
+import 'doctor_ot_list_screen.dart';
 import 'patient_history_screen.dart';
 import 'primary_exam_screen.dart';
 import 'reports_screen.dart';
@@ -141,6 +142,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 100),
       children: [
         _buildStatCards(data.stats),
+        const SizedBox(height: 10),
+        _buildOtDoctorStrip(data.otDoctorCards, data.otSummary),
         const SizedBox(height: 14),
         if (data.doctorCards.isNotEmpty) ...[
           _buildDoctorStrip(data.doctorCards),
@@ -186,6 +189,106 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> {
               textAlign: TextAlign.center,
               style: const TextStyle(
                   fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textSecondary, height: 1.3)),
+        ]),
+      ),
+    );
+  }
+
+  /// OT doctor stat-card strip — same roster/layout convention as
+  /// `_buildDoctorStrip` (OPD), counts from that doctor's OT bookings.
+  /// Supersedes the old "My OT Patients" banner now that real per-doctor
+  /// counts are available (web pull 2026-08-07 — see
+  /// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §6 / FIX_PLAN TASK 5.2).
+  Widget _buildOtDoctorStrip(List<OtDoctorCardInfo> cards, OtSummary summary) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F0FC),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: const Color(0xFFE9D5FF)),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Icon(Icons.local_hospital_rounded, color: AppColors.purple, size: 16),
+          const SizedBox(width: 6),
+          Text('OT',
+              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: AppColors.purple)),
+          const Spacer(),
+          InkWell(
+            onTap: () => Navigator.push(context, appRoute(const DoctorOtListScreen())),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.purple.withValues(alpha: 0.3)),
+              ),
+              child: Text('OT ${summary.total} · Pending ${summary.pending} · Complete ${summary.complete}',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.purple)),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 10),
+        if (cards.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Text('No doctors found for OT counts.', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(children: cards.map(_buildOtDoctorCard).toList()),
+          ),
+      ]),
+    );
+  }
+
+  Widget _buildOtDoctorCard(OtDoctorCardInfo doc) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, appRoute(DoctorOtListScreen(doctorId: doc.isSelf ? null : doc.id))),
+      child: Container(
+        margin: const EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.all(12),
+        width: 148,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE9D5FF)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(
+              width: 30, height: 30,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(color: const Color(0xFFEFE6F8), borderRadius: BorderRadius.circular(AppRadius.sm)),
+              child: Text(
+                doc.name.isNotEmpty ? doc.name[0].toUpperCase() : '?',
+                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: AppColors.purple),
+              ),
+            ),
+            if (doc.isSelf) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(color: AppColors.purple, borderRadius: BorderRadius.circular(5)),
+                child: const Text('You', style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Colors.white)),
+              ),
+            ],
+          ]),
+          const SizedBox(height: 8),
+          Text(doc.name,
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.purple),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis),
+          const SizedBox(height: 2),
+          Text('${doc.otTotal} OT cases', style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+          const SizedBox(height: 7),
+          Row(children: [
+            _miniPill('P:${doc.otPending}', doc.otPending > 0 ? AppColors.orange : const Color(0xFFCBD5E1)),
+            const SizedBox(width: 4),
+            _miniPill('C:${doc.otComplete}', doc.otComplete > 0 ? AppColors.waitGreen : const Color(0xFFCBD5E1)),
+          ]),
         ]),
       ),
     );

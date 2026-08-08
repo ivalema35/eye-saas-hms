@@ -43,14 +43,19 @@ class _OtCounsellorDashboardScreenState extends State<OtCounsellorDashboardScree
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final results = await Future.wait([
-        OtCounsellorService.instance.fetchBookings(),
-        OtAccountantService.instance.fetchBookings(filter: 'completed'),
-      ]);
+      // Not Future.wait([...]) — the two services' fetchBookings() now
+      // return differently-shaped records (OtAccountantService's gained a
+      // moneySummary field for the Refunds feature), so a homogeneous list
+      // can't statically type them. Starting both futures before awaiting
+      // either keeps this just as concurrent.
+      final awaitingFuture = OtCounsellorService.instance.fetchBookings();
+      final paymentStatusFuture = OtAccountantService.instance.fetchBookings(filter: 'completed');
+      final awaiting = await awaitingFuture;
+      final paymentStatus = await paymentStatusFuture;
       if (mounted) {
         setState(() {
-          _awaiting = results[0].items;
-          _paymentStatus = results[1].items;
+          _awaiting = awaiting.items;
+          _paymentStatus = paymentStatus.items;
           _loading = false;
         });
       }

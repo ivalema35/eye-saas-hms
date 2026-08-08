@@ -626,6 +626,7 @@ class _MedCard extends StatelessWidget {
             spacing: 10,
             runSpacing: 4,
             children: [
+              _InfoChip(item.usageScope == 'ot' ? Icons.local_hospital_outlined : Icons.storefront_outlined, item.usageScope.toUpperCase()),
               if (item.medicineTypeName != null)
                 _InfoChip(Icons.label_outline_rounded, item.medicineTypeName!),
               if (item.dosageText != null)
@@ -1040,6 +1041,7 @@ class _MedFormSheetState extends State<_MedFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late int? _typeId;
   late int? _dosageId;
+  late String _usageScope;
   late final TextEditingController _name, _duration, _qty, _company, _composition, _price;
   bool _saving = false;
 
@@ -1049,6 +1051,7 @@ class _MedFormSheetState extends State<_MedFormSheet> {
     final m = widget.item;
     _typeId   = m?.medicineTypeId;
     _dosageId = m?.dosageId;
+    _usageScope = m?.usageScope ?? 'opd';
     _name        = TextEditingController(text: m?.name ?? '');
     _duration    = TextEditingController(text: m?.duration ?? '');
     _qty         = TextEditingController(text: m?.qty ?? '');
@@ -1071,6 +1074,7 @@ class _MedFormSheetState extends State<_MedFormSheet> {
       await widget.onSave({
         'medicine_type_id': _typeId,
         'name':             _name.text.trim(),
+        'usage_scope':      _usageScope,
         'dosage_id':        _dosageId,
         'duration':         _duration.text.trim(),
         'qty':              _qty.text.trim(),
@@ -1129,6 +1133,25 @@ class _MedFormSheetState extends State<_MedFormSheet> {
               const SizedBox(height: 12),
               _label('Medicine Name *'),
               _Field(ctrl: _name, hint: 'Add Tab / Caps / Oint at end', validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
+              const SizedBox(height: 12),
+              _label('Select Type *'),
+              Row(children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('OPD'),
+                    selected: _usageScope == 'opd',
+                    onSelected: (_) => setState(() => _usageScope = 'opd'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('OT'),
+                    selected: _usageScope == 'ot',
+                    onSelected: (_) => setState(() => _usageScope = 'ot'),
+                  ),
+                ),
+              ]),
               const SizedBox(height: 12),
               _label('Dosage *'),
               _Dropdown<int>(

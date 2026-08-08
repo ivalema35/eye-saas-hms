@@ -6,10 +6,16 @@ import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/dashboard_models.dart';
+import '../models/ot_appointment_models.dart';
+import '../models/patient_models.dart';
 import '../services/dashboard_service.dart';
 import '../services/permission_service.dart';
+import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_section_header.dart';
+import 'opd_bill_screen.dart';
+import 'patient_checkin_screen.dart';
+import 'patient_form_screen.dart';
 
 /// Tablet admin/receptionist dashboard — Pattern B (grid/card, two-column
 /// on wide layouts). Business logic (fetch/cache/refresh/count-up) ported
@@ -205,6 +211,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildPrimaryQueue(d),
+                if (d.isReceptionist) ...[
+                  const SizedBox(height: 16),
+                  _TodayPatientsWidget(user: widget.user, hospital: widget.hospital, onNavigate: widget.onNavigate),
+                ],
                 if (!d.isDoctor && d.doctorCards.isNotEmpty) ...[
                   const SizedBox(height: 16),
                   _buildDoctorCardsStrip(d.doctorCards),
@@ -881,6 +891,388 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${now.day} ${months[now.month - 1]} ${now.year}';
   }
+}
+
+// ── Receptionist "Today Added Patients" widget ─────────────────────────────
+// Mirrors web's receptionist-dashboard "Today Added Patients" table,
+// including today's still-open OT appointments (pre-registration leads)
+// merged in. Reuses Patient/OtAppointmentItem models directly so its rows
+// can hand off straight to the existing check-in/print/OT-edit screens.
+// Tablet adaptations: check-in and walk-in-from-OT open as dialogs (matching
+// this app's existing PatientCheckinScreen dialog convention) instead of
+// mobile's full-screen push; "Open OT Appointment" routes to the OT
+// Appointments rail via [onNavigate] (list, not a single-item deep link —
+// the tablet's per-item edit pane is private to ot_appointment_list_screen.dart).
+// See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §9 / FIX_PLAN TASK 5.1.
+
+class _TodayPatientsWidget extends StatefulWidget {
+  final UserInfo user;
+  final HospitalInfo hospital;
+  final void Function(String railId) onNavigate;
+
+  const _TodayPatientsWidget({required this.user, required this.hospital, required this.onNavigate});
+
+  @override
+  State<_TodayPatientsWidget> createState() => _TodayPatientsWidgetState();
+}
+
+class _TodayPatientsWidgetState extends State<_TodayPatientsWidget> {
+  TodayPatientsData? _data;
+  bool _loading = true;
+  String? _error;
+  final _searchCtrl = TextEditingController();
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({String searchContact = ''}) async {
+    if (_data == null) setState(() => _loading = true);
+    try {
+      final data = await DashboardService.instance.fetchTodayPatients(searchContact: searchContact);
+      if (!mounted) return;
+      setState(() { _data = data; _loading = false; _error = null; });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() { _loading = false; _error = e.toString(); });
+    }
+  }
+
+  void _onSearchChanged(String v) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 400), () => _load(searchContact: v.trim()));
+  }
+
+  Future<void> _openCheckIn(Patient p) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dCtx) => PatientCheckinScreen(
+        user: widget.user,
+        hospital: widget.hospital,
+        patient: p,
+        onCancel: () => Navigator.pop(dCtx),
+        onDone: (updated) {
+          Navigator.pop(dCtx);
+          _load(searchContact: _searchCtrl.text.trim());
+          Navigator.of(context, rootNavigator: true).push(appRoute(OpdBillScreen(user: widget.user, hospital: widget.hospital, patient: updated)));
+        },
+      ),
+    );
+  }
+
+  void _openPrint(Patient p) {
+    Navigator.of(context, rootNavigator: true).push(
+      appRoute(OpdBillScreen(user: widget.user, hospital: widget.hospital, patient: p)),
+    );
+  }
+
+  Future<void> _openWalkInFromOt(OtAppointmentItem item) async {
+    await showDialog<void>(
+      context: context,
+      builder: (dCtx) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 760, maxHeight: 680),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: PatientFormScreen(
+              mode: PatientFormMode.addWalkIn,
+              user: widget.user,
+              hospital: widget.hospital,
+              prefillOt: item,
+              onSaved: (saved) {
+                Navigator.pop(dCtx);
+                _load(searchContact: _searchCtrl.text.trim());
+              },
+              onCancel: () => Navigator.pop(dCtx),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = _data?.rows ?? const <TodayPatientRow>[];
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
+            child: Row(
+              children: [
+                Text(
+                  'Today Added Patients',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.primary),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.green.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(AppRadius.xl),
+                  ),
+                  child: Text(
+                    '${rows.length}',
+                    style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.green),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+            child: TextField(
+              controller: _searchCtrl,
+              onChanged: _onSearchChanged,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'Search by contact number...',
+                prefixIcon: const Icon(Icons.search_rounded, size: 18),
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+              ),
+            ),
+          ),
+          const Divider(height: 1, color: Color(0xFFE2E8F0)),
+          if (_loading)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (_error != null)
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Text(_error!, style: const TextStyle(color: AppColors.red, fontSize: 12)),
+            )
+          else if (rows.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(24),
+              child: Center(
+                child: Text('No patients added today', style: TextStyle(fontSize: 13, color: AppColors.textSecondary)),
+              ),
+            )
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: rows.length,
+              separatorBuilder: (_, _) => const Divider(height: 1, color: Color(0xFFE2E8F0), indent: 16),
+              itemBuilder: (_, i) => rows[i].isOt ? _otRow(rows[i].otAppointment!) : _patientRow(rows[i].patient!),
+            ),
+        ],
+      ),
+    );
+  }
+
+  // ── OT appointment row ──────────────────────────────────────────────────
+
+  Widget _otRow(OtAppointmentItem item) {
+    final statusColor = switch (item.status) {
+      'confirmed' => AppColors.primary,
+      'completed' => AppColors.teal,
+      _ => AppColors.orange,
+    };
+    return InkWell(
+      onTap: () => widget.onNavigate('ot_appointments'),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 19,
+              backgroundColor: AppColors.purple.withValues(alpha: 0.14),
+              child: Text(
+                _initials(item.fullName, fallback: 'OT'),
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.purple),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.fullName.isNotEmpty ? item.fullName : '—',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: AppColors.purple.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
+                      ),
+                      child: Text(
+                        'OT Appt',
+                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.purple),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(item.appointmentNumber, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                  ]),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+              ),
+              child: Text(_cap(item.status), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: statusColor)),
+            ),
+            const SizedBox(width: 4),
+            IconButton(
+              icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+              color: AppColors.purple,
+              tooltip: 'Walk-In',
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _openWalkInFromOt(item),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Patient row ──────────────────────────────────────────────────────────
+
+  Widget _patientRow(Patient p) {
+    final wait = _waitMinutes(p);
+    final waitColor = _waitColor4(wait, _data!.thresholds);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 19,
+            backgroundColor: AppColors.secondary.withValues(alpha: 0.14),
+            child: Text(
+              _initials(p.fullName, fallback: '#'),
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.secondary),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  p.fullName.isNotEmpty ? p.fullName : '—',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  [p.patientCode, p.type == 'phone' ? 'Phone' : 'Walk-in', if (p.doctor != null) p.doctor!.name].join(' · '),
+                  style: const TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          if (p.secondaryDoneAt != null)
+            _miniBadge('Done', AppColors.teal)
+          else if (p.primaryDoneAt != null)
+            _miniBadge('Primary Done', AppColors.primary)
+          else
+            _miniBadge('Waiting', AppColors.orange),
+          const SizedBox(width: 6),
+          if (p.secondaryDoneAt != null)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 6),
+              child: Icon(Icons.check_circle_outline_rounded, size: 18, color: AppColors.teal),
+            )
+          else if (p.type == 'phone' && p.checkedInAt == null)
+            IconButton(
+              icon: const Icon(Icons.login_rounded, size: 18),
+              color: AppColors.primary,
+              tooltip: 'Check In',
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _openCheckIn(p),
+            )
+          else
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: waitColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppRadius.xl),
+                ),
+                child: Text(_fmtWaitLocal(wait), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: waitColor)),
+              ),
+              IconButton(
+                icon: const Icon(Icons.print_outlined, size: 18),
+                color: AppColors.primaryA50,
+                tooltip: 'Print',
+                visualDensity: VisualDensity.compact,
+                onPressed: () => _openPrint(p),
+              ),
+            ]),
+        ],
+      ),
+    );
+  }
+
+  Widget _miniBadge(String label, Color color) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.xl)),
+        child: Text(label, style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: color)),
+      );
+
+  int _waitMinutes(Patient p) {
+    final ref = p.checkedInAt ?? p.createdAt;
+    if (ref == null) return 0;
+    return DateTime.now().difference(ref).inMinutes.clamp(0, 99999);
+  }
+
+  // 4-tier wait color (green/orange/red/fire) — matches web's wait-fire tier
+  // beyond the red threshold, which the shared 3-tier `_waitColor` above
+  // (Primary Queue widget) doesn't have.
+  Color _waitColor4(int minutes, TodayPatientsThresholds t) {
+    if (minutes < t.rGreen) return AppColors.waitGreen;
+    if (minutes < t.rOrange) return AppColors.waitOrange;
+    if (minutes < t.rRed) return AppColors.waitRed;
+    return AppColors.redDark;
+  }
+
+  String _fmtWaitLocal(int minutes) {
+    if (minutes < 1) return 'Just in';
+    if (minutes < 60) return '${minutes}m';
+    final h = minutes ~/ 60;
+    final m = minutes % 60;
+    return m > 0 ? '${h}h ${m}m' : '${h}h';
+  }
+
+  String _initials(String name, {required String fallback}) {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return fallback;
+    final parts = trimmed.split(RegExp(r'\s+'));
+    return parts.map((w) => w[0]).take(2).join().toUpperCase();
+  }
+
+  String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
 }
 
 class _QA {

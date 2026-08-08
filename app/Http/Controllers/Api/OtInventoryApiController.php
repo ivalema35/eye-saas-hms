@@ -242,9 +242,8 @@ class OtInventoryApiController extends Controller
 
         $records = OtPackageMaster::query()
             ->where('tenant_id', $tenantId)
-            ->orderBy('lens_cost')
-            ->orderBy('room_category')
             ->orderBy('package_name')
+            ->orderBy('room_category')
             ->get();
 
         return response()->json(['success' => true, 'data' => $records]);
@@ -258,7 +257,7 @@ class OtInventoryApiController extends Controller
         $record = OtPackageMaster::query()->create([
             'tenant_id' => $tenantId,
             'package_name' => $validated['package_name'],
-            'lens_cost' => $validated['lens_cost'],
+            'lens_cost' => 0,
             'room_category' => $validated['room_category'],
             'ot_charges' => $validated['ot_charges'] ?? 0,
             'surgeon_charges' => $validated['surgeon_charges'] ?? 0,
@@ -283,7 +282,6 @@ class OtInventoryApiController extends Controller
 
         $record->update([
             'package_name' => $validated['package_name'],
-            'lens_cost' => $validated['lens_cost'],
             'room_category' => $validated['room_category'],
             'ot_charges' => $validated['ot_charges'] ?? 0,
             'surgeon_charges' => $validated['surgeon_charges'] ?? 0,
@@ -312,10 +310,14 @@ class OtInventoryApiController extends Controller
     private function validatedPackage(Request $request, int $tenantId, ?int $ignoreId = null): array
     {
         return $request->validate([
-            'package_name' => ['required', 'string', 'max:150'],
-            'lens_cost' => [
-                'required', 'numeric', 'min:0',
-                Rule::unique('ot_package_masters', 'lens_cost')
+            // Uniqueness key is package_name+room_category, not lens_cost —
+            // matches web exactly (web pull 2026-08-07: lens_cost dropped as
+            // a real package field, always 0 now; lens cost is typed
+            // manually on the Counsellor form instead). See
+            // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §3.
+            'package_name' => [
+                'required', 'string', 'max:150',
+                Rule::unique('ot_package_masters', 'package_name')
                     ->where(fn ($q) => $q->where('tenant_id', $tenantId)->where('room_category', (string) $request->input('room_category'))->whereNull('deleted_at'))
                     ->ignore($ignoreId),
             ],

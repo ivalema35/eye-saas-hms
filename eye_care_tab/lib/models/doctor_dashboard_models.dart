@@ -43,6 +43,47 @@ class DoctorCardInfo {
       );
 }
 
+class OtDoctorCardInfo {
+  final int id;
+  final String name;
+  final bool isSelf;
+  final int otTotal;
+  final int otPending;
+  final int otComplete;
+
+  const OtDoctorCardInfo({
+    required this.id,
+    required this.name,
+    required this.isSelf,
+    required this.otTotal,
+    required this.otPending,
+    required this.otComplete,
+  });
+
+  factory OtDoctorCardInfo.fromJson(Map<String, dynamic> j) => OtDoctorCardInfo(
+        id:         (j['id'] as num).toInt(),
+        name:       j['name'] as String? ?? '',
+        isSelf:     j['is_self'] == true,
+        otTotal:    (j['ot_total'] as num?)?.toInt() ?? 0,
+        otPending:  (j['ot_pending'] as num?)?.toInt() ?? 0,
+        otComplete: (j['ot_complete'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class OtSummary {
+  final int total;
+  final int pending;
+  final int complete;
+
+  const OtSummary({required this.total, required this.pending, required this.complete});
+
+  factory OtSummary.fromJson(Map<String, dynamic>? j) => OtSummary(
+        total:    (j?['total'] as num?)?.toInt() ?? 0,
+        pending:  (j?['pending'] as num?)?.toInt() ?? 0,
+        complete: (j?['complete'] as num?)?.toInt() ?? 0,
+      );
+}
+
 class PrimaryPatient {
   final int id;
   final String patientCode;
@@ -120,6 +161,8 @@ class SecondaryPatient extends PrimaryPatient {
 class DoctorDashboardData {
   final DoctorDashStats stats;
   final List<DoctorCardInfo> doctorCards;
+  final List<OtDoctorCardInfo> otDoctorCards;
+  final OtSummary otSummary;
   final DoctorCardInfo? viewingDoctor;
   final List<PrimaryPatient> primaryQueue;
   final List<SecondaryPatient> secondaryQueue;
@@ -127,6 +170,8 @@ class DoctorDashboardData {
   const DoctorDashboardData({
     required this.stats,
     required this.doctorCards,
+    this.otDoctorCards = const [],
+    this.otSummary = const OtSummary(total: 0, pending: 0, complete: 0),
     this.viewingDoctor,
     required this.primaryQueue,
     required this.secondaryQueue,
@@ -137,6 +182,10 @@ class DoctorDashboardData {
         doctorCards: (j['doctor_cards'] as List<dynamic>? ?? [])
             .map((e) => DoctorCardInfo.fromJson(e as Map<String, dynamic>))
             .toList(),
+        otDoctorCards: (j['ot_doctor_cards'] as List<dynamic>? ?? [])
+            .map((e) => OtDoctorCardInfo.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        otSummary: OtSummary.fromJson(j['ot_summary'] as Map<String, dynamic>?),
         viewingDoctor: j['viewing_doctor'] != null
             ? DoctorCardInfo.fromJson(j['viewing_doctor'] as Map<String, dynamic>)
             : null,

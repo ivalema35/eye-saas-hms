@@ -95,9 +95,12 @@ class OtInventoryService with AuthenticatedService {
     return (body['data'] as List? ?? []).map((e) => OtPackageMasterItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
+  // `lens_cost` is deliberately NOT sent — web pull 2026-08-07 dropped it as
+  // a real package field entirely (always 0 server-side now; lens cost is
+  // typed manually on the Counsellor form instead). See
+  // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §3.
   Map<String, dynamic> _packageBody({
     required String packageName,
-    double? lensCost,
     required String roomCategory,
     required double otCharges,
     required double surgeonCharges,
@@ -105,7 +108,6 @@ class OtInventoryService with AuthenticatedService {
     required double consumablesCharges,
   }) => {
         'package_name': packageName,
-        'lens_cost': lensCost,
         'room_category': roomCategory,
         'ot_charges': otCharges,
         'surgeon_charges': surgeonCharges,
@@ -115,7 +117,6 @@ class OtInventoryService with AuthenticatedService {
 
   Future<OtPackageMasterItem> createPackage({
     required String packageName,
-    double? lensCost,
     required String roomCategory,
     required double otCharges,
     required double surgeonCharges,
@@ -126,7 +127,7 @@ class OtInventoryService with AuthenticatedService {
         .post(Uri.parse('$_base/masters/ot/packages'),
             headers: await headers,
             body: jsonEncode(_packageBody(
-                packageName: packageName, lensCost: lensCost, roomCategory: roomCategory,
+                packageName: packageName, roomCategory: roomCategory,
                 otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges)))
         .timeout(AppConfig.requestTimeout);
     final body = _parse(res);
@@ -135,7 +136,6 @@ class OtInventoryService with AuthenticatedService {
 
   Future<OtPackageMasterItem> updatePackage(int id, {
     required String packageName,
-    double? lensCost,
     required String roomCategory,
     required double otCharges,
     required double surgeonCharges,
@@ -146,7 +146,7 @@ class OtInventoryService with AuthenticatedService {
         .put(Uri.parse('$_base/masters/ot/packages/$id'),
             headers: await headers,
             body: jsonEncode(_packageBody(
-                packageName: packageName, lensCost: lensCost, roomCategory: roomCategory,
+                packageName: packageName, roomCategory: roomCategory,
                 otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges)))
         .timeout(AppConfig.requestTimeout);
     final body = _parse(res);

@@ -3,7 +3,6 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_radius.dart';
 import '../../models/patient_models.dart';
 import '../../services/ot_booking_service.dart';
-import '../../services/ot_slot_service.dart';
 import '../../services/ot_surgery_type_service.dart';
 import '../app_animations.dart';
 
@@ -39,16 +38,13 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
 
   late final TextEditingController _diagnosisCtrl;
   String _eye = 'RE';
-  DateTime? _surgeryDate;
-  List<OtSlotItem> _slots = [];
   List<OtSurgeryTypeItem> _surgeryTypes = [];
-  OtSlotItem? _selectedSlot;
   OtSurgeryTypeItem? _selectedSurgeryType;
 
   bool _loadingMasters = true;
   String? _mastersError;
   bool _saving = false;
-  String? _dateError, _slotError, _typeError;
+  String? _typeError;
 
   @override
   void initState() {
@@ -65,14 +61,10 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
 
   Future<void> _loadMasters() async {
     try {
-      final results = await Future.wait([
-        OtSlotService.instance.fetchAll(),
-        OtSurgeryTypeService.instance.fetchAll(),
-      ]);
+      final surgeryTypes = await OtSurgeryTypeService.instance.fetchAll();
       if (!mounted) return;
       setState(() {
-        _slots = results[0] as List<OtSlotItem>;
-        _surgeryTypes = results[1] as List<OtSurgeryTypeItem>;
+        _surgeryTypes = surgeryTypes;
         _loadingMasters = false;
       });
     } catch (e) {
@@ -84,36 +76,17 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
     }
   }
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _surgeryDate ?? now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
-      builder: (ctx, child) => Theme(
-        data: ThemeData.light().copyWith(colorScheme: ColorScheme.light(primary: AppColors.primary)),
-        child: child!,
-      ),
-    );
-    if (picked != null) setState(() { _surgeryDate = picked; _dateError = null; });
-  }
-
   Future<void> _save() async {
     setState(() {
-      _dateError = _surgeryDate == null ? 'Surgery date is required' : null;
-      _slotError = _selectedSlot == null ? 'Please select a slot' : null;
       _typeError = _selectedSurgeryType == null ? 'Please select a surgery type' : null;
     });
-    if (_dateError != null || _slotError != null || _typeError != null) return;
+    if (_typeError != null) return;
 
     setState(() => _saving = true);
     try {
       await OtBookingService.instance.recommendSurgery(
         patientId: widget.patient.id,
         eye: _eye,
-        surgeryDate: _surgeryDate!,
-        slotId: _selectedSlot!.id,
         otSurgeryTypeId: _selectedSurgeryType!.id,
         diagnosisHint: _diagnosisCtrl.text,
       );
@@ -199,28 +172,6 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
                       selectedColor: AppColors.teal.withValues(alpha: 0.18),
                       labelStyle: TextStyle(color: _eye == e ? AppColors.tealDark : AppColors.textPrimary, fontWeight: FontWeight.w600),
                     )).toList(),
-                  ),
-                  const SizedBox(height: 14),
-                  InkWell(
-                    onTap: _pickDate,
-                    borderRadius: BorderRadius.circular(AppRadius.md),
-                    child: InputDecorator(
-                      decoration: _deco('Surgery Date *', error: _dateError),
-                      child: Text(
-                        _surgeryDate == null
-                            ? 'Select date'
-                            : '${_surgeryDate!.year}-${_surgeryDate!.month.toString().padLeft(2, '0')}-${_surgeryDate!.day.toString().padLeft(2, '0')}',
-                        style: TextStyle(fontSize: 14, color: _surgeryDate == null ? const Color(0xFF94A3B8) : AppColors.darkNavy),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  DropdownButtonFormField<OtSlotItem>(
-                    initialValue: _selectedSlot,
-                    isExpanded: true,
-                    decoration: _deco('Slot *', error: _slotError),
-                    items: _slots.map((s) => DropdownMenuItem(value: s, child: Text(s.slotName, overflow: TextOverflow.ellipsis))).toList(),
-                    onChanged: (v) => setState(() { _selectedSlot = v; _slotError = null; }),
                   ),
                   const SizedBox(height: 14),
                   DropdownButtonFormField<OtSurgeryTypeItem>(

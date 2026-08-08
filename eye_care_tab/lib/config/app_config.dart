@@ -9,8 +9,8 @@ class AppConfig {
   // Dev:  uses adb reverse (localhost:8080 on device = PC Apache port 80)
   // Prod: your live domain — update _prodUrl before release build
   // static const String _devUrl  = 'http://localhost:8080/api/v1';
-  static const String _devUrl  = 'https://eyenosis.com/api/v1';
-  static const String _prodUrl = 'https://eyenosis.com/api/v1';
+  static const String _devUrl  = 'http://eyenosis.com/api/v1';
+  static const String _prodUrl = 'http://eyenosis.com/api/v1';
 
   static const String apiBaseUrl = isProduction ? _prodUrl : _devUrl;
 

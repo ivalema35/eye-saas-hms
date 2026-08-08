@@ -88,13 +88,25 @@ class OtVerificationHeader {
   final String patientName;
   final String? surgeryType;
   final String? eye;
+  // Web pre-fills the Doctor/OT Assistant selects on the Patient Status
+  // form from the booking's currently-assigned staff on every reload — this
+  // is the app equivalent (see OT_WEB_PARITY_FIX_PRD.md §4).
+  final OtNamedRef? otDoctor;
+  final OtNamedRef? otAssistant;
+  // Eye Drop Register medicine picker source (Medicine Master, OT scope
+  // only) — replaces free-text entry (web pull 2026-08-07). See
+  // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+  final List<OtNamedRef> otMedicines;
 
-  const OtVerificationHeader({required this.uhid, required this.patientName, this.surgeryType, this.eye});
+  const OtVerificationHeader({required this.uhid, required this.patientName, this.surgeryType, this.eye, this.otDoctor, this.otAssistant, this.otMedicines = const []});
 
   factory OtVerificationHeader.fromJson(Map<String, dynamic> j) => OtVerificationHeader(
         uhid: j['uhid'] as String? ?? '',
         patientName: j['patient_name'] as String? ?? '',
         surgeryType: j['surgery_type'] as String?,
         eye: j['eye'] as String?,
+        otDoctor: j['ot_doctor'] != null ? OtNamedRef.fromJson(j['ot_doctor'] as Map<String, dynamic>) : null,
+        otAssistant: j['ot_assistant'] != null ? OtNamedRef.fromJson(j['ot_assistant'] as Map<String, dynamic>) : null,
+        otMedicines: (j['ot_medicines'] as List? ?? []).map((e) => OtNamedRef.fromJson(e as Map<String, dynamic>)).toList(),
       );
 }

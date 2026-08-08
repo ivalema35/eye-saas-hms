@@ -25,16 +25,18 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
   late final TabController _tabCtrl;
   List<OtBookingSummary> _items = [];
   OtPaginationMeta? _meta;
+  OtMoneySummary? _moneySummary;
   bool _loading = true;
   String? _error;
   int _page = 1;
 
-  String get _filter => _tabCtrl.index == 0 ? 'today' : 'completed';
+  static const _filters = ['today', 'completed', 'refunds'];
+  String get _filter => _filters[_tabCtrl.index];
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(length: _filters.length, vsync: this);
     _tabCtrl.addListener(() {
       if (!_tabCtrl.indexIsChanging) return;
       setState(() => _page = 1);
@@ -53,15 +55,27 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
     setState(() { _loading = true; _error = null; });
     try {
       final result = await OtAccountantService.instance.fetchBookings(filter: _filter, page: _page);
-      if (mounted) setState(() { _items = result.items; _meta = result.meta; _loading = false; });
+      if (mounted) setState(() { _items = result.items; _meta = result.meta; _moneySummary = result.moneySummary; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
     }
   }
 
   void _open(OtBookingSummary item) {
+    if (item.otStatus == OtStatus.surgeryRefused) {
+      if ((item.refundableBalance ?? 0) > 0) _openRefund(item);
+      return;
+    }
     final name = item.patient?.fullName ?? 'Patient';
     Navigator.of(context).push(appRoute(OtPaymentScreen(bookingId: item.id, patientName: name))).then((_) => _load());
+  }
+
+  void _openRefund(OtBookingSummary item) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _RefundDialog(bookingId: item.id),
+    ).then((_) => _load());
   }
 
   Future<void> _viewDetails(OtBookingSummary item) async {
@@ -108,9 +122,30 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
               const Expanded(child: Text('Accountant / Billing', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800, letterSpacing: -0.2))),
             ]),
           ),
-          TabBar(controller: _tabCtrl, indicatorColor: Colors.white, labelColor: Colors.white, unselectedLabelColor: Colors.white70, tabs: const [Tab(text: 'Today'), Tab(text: 'Completed')]),
+          TabBar(controller: _tabCtrl, indicatorColor: Colors.white, labelColor: Colors.white, unselectedLabelColor: Colors.white70, tabs: const [Tab(text: 'Today'), Tab(text: 'Completed'), Tab(text: 'Refunds')]),
         ]),
       ),
+    );
+  }
+
+  Widget _buildMoneySummary() {
+    final s = _moneySummary;
+    if (s == null) return const SizedBox.shrink();
+    Widget stat(String label, String value, Color color) => Expanded(
+          child: Column(children: [
+            Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: color)),
+            Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+          ]),
+        );
+    return Container(
+      margin: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08))),
+      child: Row(children: [
+        stat('Collected', '₹${s.collected.toStringAsFixed(0)}', AppColors.green),
+        stat('Refunded', '₹${s.refunded.toStringAsFixed(0)}', AppColors.red),
+        stat('Net', '₹${s.net.toStringAsFixed(0)}', AppColors.primary),
+      ]),
     );
   }
 
@@ -125,42 +160,211 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
-        itemCount: _items.length,
+        itemCount: _items.length + 1,
         itemBuilder: (_, i) {
-          final item = _items[i];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: InkWell(
-              onTap: () => _open(item),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(item.patient?.fullName ?? 'Patient', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
-                      const SizedBox(height: 2),
-                      Text('${item.patient?.patientCode ?? ''}${item.surgeryDate != null ? ' · ${item.surgeryDate}' : ''}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-                      if (item.paymentStatus != null) ...[
-                        const SizedBox(height: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(color: paymentStatusColor(item.paymentStatus!).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
-                          child: Text(paymentStatusLabel(item.paymentStatus!), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: paymentStatusColor(item.paymentStatus!))),
-                        ),
-                      ],
-                    ]),
-                  ),
-                  IconButton(icon: const Icon(Icons.visibility_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'View', onPressed: () => _viewDetails(item)),
-                  IconButton(icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'Receipt', onPressed: () => _viewLatestReceipt(item)),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.textDisabled),
-                ]),
-              ),
-            ),
-          );
+          if (i == 0) return Padding(padding: const EdgeInsets.only(bottom: 8), child: _buildMoneySummary());
+          final item = _items[i - 1];
+          return _buildRow(item);
         },
       ),
+    );
+  }
+
+  Widget _buildRow(OtBookingSummary item) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _open(item),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(item.patient?.fullName ?? 'Patient', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                const SizedBox(height: 2),
+                Text('${item.patient?.patientCode ?? ''}${item.surgeryDate != null ? ' · ${item.surgeryDate}' : ''}', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                if (item.paymentStatus != null) ...[
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: paymentStatusColor(item.paymentStatus!).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
+                    child: Text(paymentStatusLabel(item.paymentStatus!), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: paymentStatusColor(item.paymentStatus!))),
+                  ),
+                ],
+                if (item.otStatus == OtStatus.surgeryRefused) ...[
+                  const SizedBox(height: 6),
+                  if ((item.refundableBalance ?? 0) > 0)
+                    Text('Refundable: ₹${item.refundableBalance!.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.orange))
+                  else
+                    Text('Refunded: ₹${(item.totalRefunded ?? 0).toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.green)),
+                ],
+              ]),
+            ),
+            if (item.otStatus == OtStatus.surgeryRefused)
+              (item.refundableBalance ?? 0) > 0
+                  ? OutlinedButton(
+                      onPressed: () => _openRefund(item),
+                      style: OutlinedButton.styleFrom(foregroundColor: AppColors.red, side: const BorderSide(color: AppColors.red)),
+                      child: const Text('Refund', style: TextStyle(fontSize: 12)),
+                    )
+                  : const Icon(Icons.check_circle_outline_rounded, color: AppColors.green)
+            else ...[
+              IconButton(icon: const Icon(Icons.visibility_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'View', onPressed: () => _viewDetails(item)),
+              IconButton(icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'Receipt', onPressed: () => _viewLatestReceipt(item)),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.textDisabled),
+            ],
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Full refund dialog ───────────────────────────────────────────────────────
+// Amount is never editable — always the full refundable balance, matching
+// web exactly (no partial-refund UI exists). See
+// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4.
+
+class _RefundDialog extends StatefulWidget {
+  final int bookingId;
+  const _RefundDialog({required this.bookingId});
+
+  @override
+  State<_RefundDialog> createState() => _RefundDialogState();
+}
+
+class _RefundDialogState extends State<_RefundDialog> {
+  bool _loading = true;
+  String? _loadError;
+  OtRefundFormData? _formData;
+  bool _saving = false;
+
+  final _receiptCtrl = TextEditingController();
+  final _reasonCtrl = TextEditingController();
+  String _paymentMode = 'cash';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _receiptCtrl.dispose();
+    _reasonCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() { _loading = true; _loadError = null; });
+    try {
+      final data = await OtAccountantService.instance.fetchRefundFormData(widget.bookingId);
+      if (mounted) {
+        setState(() {
+          _formData = data;
+          _loading = false;
+          _receiptCtrl.text = data.autoReceiptNumber;
+          _reasonCtrl.text = 'Patient refused OT — full refund';
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() { _loadError = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await OtAccountantService.instance.storeRefund(
+        widget.bookingId,
+        paymentMode: _paymentMode,
+        receiptNumber: _receiptCtrl.text.trim(),
+        reason: _reasonCtrl.text.trim(),
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        showAppSnackBar(context, 'Full refund recorded', isSuccess: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      }
+    }
+  }
+
+  Widget _readRow(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text(label, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+          Text(value, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+        ]),
+      );
+
+  InputDecoration _deco(String label) => InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: const Color(0xFFF0F6FB),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.md), borderSide: BorderSide.none),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+      title: const Text('Full Refund — Surgery Refused'),
+      content: SizedBox(
+        width: 360,
+        child: _loading
+            ? const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()))
+            : _loadError != null
+                ? Text(_loadError!, style: const TextStyle(color: AppColors.red))
+                : Builder(builder: (_) {
+                    final f = _formData!;
+                    return SingleChildScrollView(
+                      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(AppRadius.md)),
+                          child: Column(children: [
+                            _readRow('Patient', f.booking.patient?.fullName ?? '—'),
+                            _readRow('UHID', f.booking.patient?.patientCode ?? '—'),
+                            _readRow('Total Paid', '₹${f.totalPaid.toStringAsFixed(0)}'),
+                            _readRow('Already Refunded', '₹${f.totalRefunded.toStringAsFixed(0)}'),
+                          ]),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(color: AppColors.red.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.md)),
+                          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                            const Text('Refund Amount (full)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                            Text('₹${f.refundAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.red)),
+                          ]),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(spacing: 8, children: ['cash', 'online'].map((m) => ChoiceChip(label: Text(m[0].toUpperCase() + m.substring(1)), selected: _paymentMode == m, onSelected: (_) => setState(() => _paymentMode = m))).toList()),
+                        const SizedBox(height: 12),
+                        TextFormField(controller: _receiptCtrl, decoration: _deco('Receipt Number')),
+                        const SizedBox(height: 12),
+                        TextFormField(controller: _reasonCtrl, maxLines: 2, decoration: _deco('Reason')),
+                      ]),
+                    );
+                  }),
+      ),
+      actions: [
+        TextButton(onPressed: _saving ? null : () => Navigator.pop(context), child: const Text('Cancel')),
+        if (_formData != null)
+          ElevatedButton(
+            onPressed: _saving ? null : _save,
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red, foregroundColor: Colors.white),
+            child: _saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Record Full Refund'),
+          ),
+      ],
     );
   }
 }
