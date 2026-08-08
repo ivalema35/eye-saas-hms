@@ -371,6 +371,82 @@ class DashboardController extends Controller
                 ->count();
         }
 
+        // ── OT Accountant summary cards (accountant role only) ──────────────
+        // Replaces the generic OT Appointment card with the same three counts
+        // shown on the OT Accountant/Billing dashboard (today / refunds / completed).
+        $isAccountantUser = $user?->role?->slug === 'accountant';
+        $accountantPendingCount = null;
+        $accountantRefundsCount = null;
+        $accountantCompletedCount = null;
+
+        if ($isAccountantUser && $this->perm->can('ot.payment.record')) {
+            $accountantPendingCount = OtBooking::query()
+                ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
+                ->count();
+
+            $accountantRefundsCount = OtBooking::query()
+                ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                ->with(['payments', 'refunds'])
+                ->get()
+                ->filter(fn (OtBooking $b) => ! $b->isFullyRefunded() && $b->refundable_balance > 0)
+                ->count();
+
+            $accountantCompletedCount = OtBooking::query()
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                    OtBooking::STATUS_READY,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                    OtBooking::STATUS_SURGERY_REFUSED,
+                ])
+                ->count();
+        }
+
+        // ── Ward Management summary card (ward_management role only) ────────
+        // Same statuses as OtAccountantController::wardIndex() / OT Ward queue.
+        // READY (OT Assistant assigned) is NOT counted — patient has left ward.
+        $isWardManagementUser = $user?->role?->slug === 'ward_management';
+        $wardPendingCount = null;
+
+        if ($isWardManagementUser && $this->perm->can('ot.ward.entry')) {
+            $wardPendingCount = OtBooking::query()
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                ])
+                ->count();
+        }
+
+        // ── OT Assistant summary card (ot_assistant role only) ──────────────
+        // Mirrors OtAssistantController::dashboard()'s ready-for-surgery queue.
+        $isOtAssistantUser = $user?->role?->slug === 'ot_assistant';
+        $otAssistantPendingCount = null;
+
+        if ($isOtAssistantUser && $this->perm->can('ot.surgery.ready')) {
+            $otAssistantReadyQuery = OtBooking::query()->where('ot_status', OtBooking::STATUS_READY);
+
+            $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
+            if (! $seeAll) {
+                $otAssistantReadyQuery->where('ot_assistant_id', (int) $user->id);
+            }
+
+            $otAssistantPendingCount = $otAssistantReadyQuery->count();
+        }
+
+        // ── Discharge Counter summary card (discharge_counter role only) ────
+        // Mirrors OtInvoiceController::index()'s Billing Desk queue.
+        $isDischargeCounterUser = $user?->role?->slug === 'discharge_counter';
+        $dischargePendingCount = null;
+
+        if ($isDischargeCounterUser && $this->perm->can('ot.billing.manage')) {
+            $dischargePendingCount = OtBooking::query()
+                ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
+                ->count();
+        }
+
         // ── Incoming Share Requests (hospital admin only) ─────────────────────
         $pendingShareRequestsCount = null;
         $isHospitalAdmin = (bool) ($user?->role?->is_super || $user?->role?->slug === 'hospital_admin');
@@ -661,6 +737,16 @@ class DashboardController extends Controller
             'isReceptionistUser',
             'isDoctorUser',
             'isHospitalAdmin',
+            'isAccountantUser',
+            'accountantPendingCount',
+            'accountantRefundsCount',
+            'accountantCompletedCount',
+            'isWardManagementUser',
+            'wardPendingCount',
+            'isOtAssistantUser',
+            'otAssistantPendingCount',
+            'isDischargeCounterUser',
+            'dischargePendingCount',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',

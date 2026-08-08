@@ -62,6 +62,28 @@
 @media (max-width: 900px) { .rec-5row { grid-template-columns: repeat(3,1fr); } }
 @media (max-width: 576px) { .rec-5row { grid-template-columns: 1fr 1fr; } }
 
+/* ── OT Accountant summary cards (Pending / Refunds / Completed) ──────────── */
+.acct-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.acct-card-footer {
+    padding: 0 1.5rem 1.3rem;
+    margin-top: auto;
+}
+.acct-link {
+    font-size: .82rem;
+    font-weight: 800;
+    color: #1B4F72;
+    text-decoration: none;
+}
+.acct-link:hover { text-decoration: underline; }
+
 /*
   Hospital Admin Dashboard Theme
   Primary soft: #EBF5FB · Secondary: #1B4F72
@@ -1309,7 +1331,7 @@
         $doctorStripCards = $doctorCards->reject(fn ($doctor) => (int) $doctor->id === (int) auth('hospital_user')->id())->values();
     }
 
-    $hasAnyData   = $isHospitalAdmin || $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert;
+    $hasAnyData   = $isHospitalAdmin || $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert || $dischargePendingCount !== null;
     $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
 @endphp
 
@@ -1729,8 +1751,105 @@
         </div>
     @endif
 
+    {{-- Accountant: Pending Patients / Refunds / Completed (replaces OT Appointment card) --}}
+    @if($isAccountantUser && $accountantPendingCount !== null)
+        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'today']) }}"
+           class="bento-card span-4 text-decoration-none">
+            <div class="bento-stat">
+                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Pending Patients</p>
+                    <div class="metric-value">{{ $accountantPendingCount }}</div>
+                    <p class="metric-meta">Awaiting OT package payment</p>
+                </div>
+            </div>
+            <div class="acct-card-footer">
+                <span class="acct-link">Open queue &rarr;</span>
+            </div>
+        </a>
+
+        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}"
+           class="bento-card span-4 text-decoration-none">
+            <div class="bento-stat">
+                <div class="acct-icon" style="background:#FADBD8;color:#C0392B">
+                    <i data-lucide="rotate-ccw" style="width:22px;height:22px;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Refunds</p>
+                    <div class="metric-value">{{ $accountantRefundsCount }}</div>
+                    <p class="metric-meta">Surgery refused</p>
+                </div>
+            </div>
+            <div class="acct-card-footer">
+                <span class="acct-link">Open refunds &rarr;</span>
+            </div>
+        </a>
+
+        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'completed']) }}"
+           class="bento-card span-4 text-decoration-none">
+            <div class="bento-stat">
+                <div class="acct-icon" style="background:#D5F5E3;color:#229954">
+                    <i data-lucide="check-circle" style="width:22px;height:22px;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Completed</p>
+                    <div class="metric-value">{{ $accountantCompletedCount }}</div>
+                    <p class="metric-meta">Payment verified &amp; onward</p>
+                </div>
+            </div>
+            <div class="acct-card-footer">
+                <span class="acct-link">View all &rarr;</span>
+            </div>
+        </a>
+    {{-- Ward Management: Pending Patient (replaces OT Appointment card) --}}
+    @elseif($isWardManagementUser && $wardPendingCount !== null)
+        <a href="{{ route('hospital.ot.ward.index', ['slug' => $slug]) }}"
+           class="bento-card span-4 text-decoration-none">
+            <div class="bento-stat">
+                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Pending Patient</p>
+                    <div class="metric-value">{{ $wardPendingCount }}</div>
+                    <p class="metric-meta">Awaiting ward entry</p>
+                </div>
+            </div>
+        </a>
+    {{-- OT Assistant: Pending Patient (replaces OT Appointment card) --}}
+    @elseif($isOtAssistantUser && $otAssistantPendingCount !== null)
+        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug]) }}"
+           class="bento-card span-4 text-decoration-none">
+            <div class="bento-stat">
+                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Pending Patient</p>
+                    <div class="metric-value">{{ $otAssistantPendingCount }}</div>
+                    <p class="metric-meta">Ready for OT — record surgery</p>
+                </div>
+            </div>
+        </a>
+    {{-- Discharge Counter: Pending Patient (Billing Desk queue) --}}
+    @elseif($isDischargeCounterUser && $dischargePendingCount !== null)
+        <a href="{{ route('hospital.ot.billing.index', ['slug' => $slug]) }}"
+           class="bento-card span-4 text-decoration-none">
+            <div class="bento-stat">
+                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Pending Patient</p>
+                    <div class="metric-value">{{ $dischargePendingCount }}</div>
+                    <p class="metric-meta">Discharge &amp; invoices pending</p>
+                </div>
+            </div>
+        </a>
     {{-- OT Appointment (ot.patient.list / ot.appointment.view) --}}
-    @if($hasOt)
+    @elseif($hasOt)
         <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
            class="bento-card span-3 text-decoration-none">
             <div class="bento-stat">

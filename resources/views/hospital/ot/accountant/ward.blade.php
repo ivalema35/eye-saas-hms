@@ -304,16 +304,6 @@
                                    class="btn btn-sm btn-outline-secondary ward-send-btn me-2" style="background:transparent !important;color:var(--ward-secondary) !important;border-color:var(--ward-secondary-18) !important;box-shadow:none;">
                                     <i class="bi bi-heart-pulse me-1"></i> Vitals &amp; Eye Drops
                                 </a>
-                                @if(in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAYMENT_VERIFIED, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true))
-                                    <form method="POST" action="{{ route('hospital.ot.ward.ready', ['slug' => $slug, 'booking' => $booking->id]) }}" class="d-inline">
-                                        @csrf
-                                        <button type="submit" class="btn btn-sm btn-primary ward-send-btn">
-                                            <i class="bi bi-send-check me-1"></i> Send to OT Assistant
-                                        </button>
-                                    </form>
-                                @else
-                                    <span class="text-muted small ward-no-action"><i class="bi bi-dash-circle"></i> No action</span>
-                                @endif
                             </td>
                         </tr>
                     @empty
