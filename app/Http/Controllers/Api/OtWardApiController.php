@@ -17,6 +17,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtDilationEntry;
 use App\Models\Hospital\OT\OtPreOp;
@@ -130,7 +131,7 @@ class OtWardApiController extends Controller
 
     public function storeVitals(string $slug, Request $request, int $bookingId): JsonResponse
     {
-        $booking = $this->findBooking($bookingId);
+        $booking = $this->findBooking($bookingId, ['patient:id,doctor_id']);
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
@@ -166,58 +167,61 @@ class OtWardApiController extends Controller
         if ($request->boolean('assign_staff')) {
             $isReady = $validated['pre_op_status'] === OtPreOp::STATUS_READY_FOR_SURGERY;
 
-            $staff = $request->validate([
-                'ot_doctor_id' => [
-                    $isReady ? 'nullable' : 'required',
-                    'integer',
-                    Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
-                        $q->where('tenant_id', $tenantId)
-                            ->where('status', 'active')
-                            ->where(function ($inner) {
-                                $inner->whereNotNull('doctor_type')
-                                    ->orWhereExists(function ($sub) {
-                                        $sub->selectRaw('1')
-                                            ->from('roles')
-                                            ->whereColumn('roles.id', 'hospital_users.role_id')
-                                            ->where(function ($roleQ) {
-                                                $roleQ->where('roles.slug', 'doctor')
-                                                    ->orWhere('roles.name', 'doctor');
-                                            });
-                                    });
-                            });
-                    }),
-                ],
-                'ot_assistant_id' => [
-                    $isReady ? 'required' : 'nullable',
-                    'integer',
-                    Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
-                        $q->where('tenant_id', $tenantId)
-                            ->where('status', 'active')
-                            ->whereExists(function ($sub) {
-                                $sub->selectRaw('1')
-                                    ->from('roles')
-                                    ->whereColumn('roles.id', 'hospital_users.role_id')
-                                    ->where('roles.slug', 'ot_assistant');
-                            });
-                    }),
-                ],
-            ], [
-                'ot_doctor_id.required' => 'Select a doctor when the patient is not ready for OT (consultation).',
-                'ot_assistant_id.required' => 'Select an OT Assistant when the patient is Ready for OT.',
-            ]);
+            if ($isReady) {
+                // Ready for OT → only OT Assistant is required (manual) —
+                // matches web exactly.
+                $staff = $request->validate([
+                    'ot_assistant_id' => [
+                        'required', 'integer',
+                        Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
+                            $q->where('tenant_id', $tenantId)
+                                ->where('status', 'active')
+                                ->whereExists(function ($sub) {
+                                    $sub->selectRaw('1')
+                                        ->from('roles')
+                                        ->whereColumn('roles.id', 'hospital_users.role_id')
+                                        ->where('roles.slug', 'ot_assistant');
+                                });
+                        }),
+                    ],
+                ], [
+                    'ot_assistant_id.required' => 'Select an OT Assistant when the patient is Ready for OT.',
+                ]);
 
-            $booking->update([
-                'ot_doctor_id' => ! empty($staff['ot_doctor_id'])
-                    ? (int) $staff['ot_doctor_id']
-                    : $booking->ot_doctor_id,
-                'ot_assistant_id' => ! empty($staff['ot_assistant_id'])
-                    ? (int) $staff['ot_assistant_id']
-                    : ($isReady ? null : $booking->ot_assistant_id),
-            ]);
+                $booking->update(['ot_assistant_id' => (int) $staff['ot_assistant_id']]);
+                $message = 'Status saved. Patient assigned to OT Assistant.';
+            } else {
+                // Preparing / Hold / Complicated → auto-assign the OPD doctor
+                // (same doctor does OT consultation) instead of a manual
+                // pick — matches web exactly (web pull 2026-08-07). See
+                // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+                $opdDoctorId = (int) ($booking->patient?->doctor_id ?? 0);
+                if ($opdDoctorId <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'This patient has no OPD doctor. Assign a doctor on the patient record before setting Preparing / Hold / Complicated.',
+                    ], 422);
+                }
 
-            $message = $isReady
-                ? 'Status saved. Patient assigned to OT Assistant.'
-                : 'Status saved. Patient assigned to doctor for consultation.';
+                $doctorExists = HospitalUser::query()
+                    ->where('tenant_id', $tenantId)
+                    ->whereKey($opdDoctorId)
+                    ->where('status', 'active')
+                    ->exists();
+
+                if (! $doctorExists) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "OPD doctor is inactive or not found. Update the patient's OPD doctor first.",
+                    ], 422);
+                }
+
+                $booking->update([
+                    'ot_doctor_id' => $opdDoctorId,
+                    'ot_assistant_id' => null,
+                ]);
+                $message = 'Status saved. Patient assigned to OPD doctor for consultation (appears on doctor OT card).';
+            }
         }
 
         if ($booking->ot_status === OtBooking::STATUS_PAYMENT_VERIFIED) {
@@ -267,12 +271,34 @@ class OtWardApiController extends Controller
 
         $tenantId = (int) app('tenant')->id;
 
+        // Locked to the booking's own eye (RE/LE/Both → allowed set) and
+        // sourced from Medicine Master (usage_scope=ot), not free text —
+        // matches web exactly (web pull 2026-08-07). See
+        // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+        $allowedEyes = match ((string) $booking->eye) {
+            'RE' => ['RE'],
+            'LE' => ['LE'],
+            'Both' => ['RE', 'LE'],
+            default => ['RE', 'LE'],
+        };
+
         $validated = $request->validate([
-            'medicine_name' => ['required', 'string', 'max:150'],
-            'eye' => ['required', Rule::in(['RE', 'LE'])],
+            'medicine_name' => [
+                'required', 'string', 'max:150',
+                Rule::exists('medicines', 'name')->where(function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId)
+                        ->where('usage_scope', 'ot')
+                        ->whereNull('deleted_at');
+                }),
+            ],
+            'eye' => ['required', Rule::in($allowedEyes)],
             'dose_number' => ['required', 'integer', 'min:1', 'max:20'],
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'medicine_name.exists' => 'Select a valid OT medicine from the master list.',
+            'eye.in' => 'Eye must match Recommend Surgery selection'
+                . (in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' (' . $booking->eye . ').' : '.'),
         ]);
 
         $entry = OtDilationEntry::query()->create([
@@ -300,10 +326,12 @@ class OtWardApiController extends Controller
      */
     public function verificationHeader(string $slug, int $bookingId): JsonResponse
     {
-        $booking = $this->findBooking($bookingId, ['patient:id,patient_code,first_name,middle_name,last_name']);
+        $booking = $this->findBooking($bookingId, ['patient:id,patient_code,first_name,middle_name,last_name', 'otDoctor:id,name', 'otAssistant:id,name']);
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
+
+        $tenantId = (int) app('tenant')->id;
 
         return response()->json([
             'success' => true,
@@ -316,6 +344,20 @@ class OtWardApiController extends Controller
                 ])->filter()->implode(' ')),
                 'surgery_type' => $booking->ot_type,
                 'eye' => $booking->eye,
+                // Web pre-fills the Doctor/OT Assistant selects on the Patient
+                // Status form from `$booking->ot_doctor_id`/`ot_assistant_id`
+                // on every reload — the app equivalent is showing/pre-filling
+                // whoever is currently assigned. See OT_WEB_PARITY_FIX_PRD.md §4.
+                'ot_doctor' => $booking->otDoctor,
+                'ot_assistant' => $booking->otAssistant,
+                // Eye Drop Register medicine picker source (Medicine Master,
+                // OT scope only) — matches web exactly (web pull 2026-08-07).
+                // See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+                'ot_medicines' => Medicine::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where('usage_scope', 'ot')
+                    ->orderBy('name')
+                    ->get(['id', 'name']),
             ],
         ]);
     }

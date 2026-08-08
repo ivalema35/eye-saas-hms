@@ -5,10 +5,8 @@ import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
 import '../models/ot_accountant_models.dart';
-import '../models/ot_appointment_models.dart';
 import '../models/ot_booking_models.dart';
 import '../models/ot_ward_models.dart';
-import '../services/ot_appointment_service.dart';
 import '../services/ot_ward_service.dart';
 import '../services/permission_service.dart';
 import '../services/user_service.dart';
@@ -17,6 +15,21 @@ import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/app_section_header.dart';
+
+/// Closes a dialog that contains text fields safely. `unfocus()` only
+/// *schedules* the focus change — it doesn't complete synchronously — so
+/// popping the route immediately after it still tears the field down mid
+/// focus-change and throws `InheritedElement`'s `_dependents.isEmpty`
+/// assertion. Deferring the pop to `addPostFrameCallback` lets that
+/// scheduled change fully resolve on its own frame first. See
+/// OT_WEB_PARITY_FIX_PRD.md §4.3 (pass 2 — pass 1's synchronous unfocus
+/// call was not sufficient).
+void _closeDialogSafely(BuildContext dialogContext) {
+  FocusManager.instance.primaryFocus?.unfocus();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (dialogContext.mounted) Navigator.pop(dialogContext);
+  });
+}
 
 /// Tablet Ward Entry Queue (Round 3 Phase 3) — Pattern A (list + detail
 /// split), matching `OtCounsellorDashboardScreen`/`OtAppointmentListScreen`
@@ -236,7 +249,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
   OtVerificationHeader? _header;
   OtVitalsItem? _vitals;
   List<OtEyeDropEntry> _eyeDrops = [];
-  List<OtNamedRef> _doctors = [];
   List<HospitalUserModel> _assistants = [];
   bool _loading = true;
   String? _loadError;
@@ -261,16 +273,14 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
         OtWardService.instance.fetchVerificationHeader(widget.bookingId),
         OtWardService.instance.fetchVitals(widget.bookingId),
         OtWardService.instance.fetchEyeDrops(widget.bookingId),
-        OtAppointmentService.instance.fetchFormData(),
         UserService.instance.fetchUsers(),
       ]);
       if (mounted) {
-        final users = (results[4] as UserListResponse).users;
+        final users = (results[3] as UserListResponse).users;
         setState(() {
           _header = results[0] as OtVerificationHeader;
           _vitals = results[1] as OtVitalsItem?;
           _eyeDrops = results[2] as List<OtEyeDropEntry>;
-          _doctors = (results[3] as OtAppointmentFormData).doctors;
           final byRole = users.where((u) => u.role?.slug == 'ot_assistant').toList();
           _assistants = byRole.isNotEmpty ? byRole : users.where((u) => u.role?.slug != 'doctor').toList();
           _loading = false;
@@ -306,7 +316,7 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
             'pre_op_status': v?.preOpStatus ?? 'preparing',
           });
           if (mounted) setState(() => _currentOtStatus = newStatus);
-          if (mounted) Navigator.pop(dCtx);
+          if (mounted) _closeDialogSafely(dCtx);
           await _load();
         } catch (e) {
           ss(() => saving = false);
@@ -339,7 +349,7 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
           ]),
         ),
         actions: [
-          TextButton(onPressed: saving ? null : () => Navigator.pop(dCtx), child: const Text('Cancel')),
+          TextButton(onPressed: saving ? null : () => _closeDialogSafely(dCtx), child: const Text('Cancel')),
           ElevatedButton(onPressed: saving ? null : save, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save')),
         ],
       );
@@ -351,8 +361,15 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
 
   Future<void> _openStatusDialog() async {
     String status = _vitals?.preOpStatus ?? 'preparing';
-    int? doctorId;
-    int? assistantId;
+    // Matches web exactly: the OT Assistant select is pre-filled from
+    // whoever is currently assigned, not left blank on every open — only
+    // pre-select if that person is actually present in the dropdown's own
+    // list (e.g. now deactivated / role changed), so this can't throw
+    // DropdownButtonFormField's "exactly one matching item" assertion.
+    // Doctor is no longer a client-side field at all — auto-assigned
+    // server-side from the patient's OPD doctor (web pull 2026-08-07). See
+    // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+    int? assistantId = _assistants.any((a) => a.id == _header?.otAssistant?.id) ? _header?.otAssistant?.id : null;
     bool saving = false;
     String? error;
 
@@ -361,7 +378,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
       Future<void> save() async {
         ss(() {
           error = null;
-          if (!isReady && doctorId == null) error = 'Doctor is required unless status is Ready for OT';
           if (isReady && assistantId == null) error = 'OT Assistant is required when status is Ready for OT';
         });
         if (error != null) return;
@@ -370,11 +386,10 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
           final newStatus = await OtWardService.instance.storeVitals(widget.bookingId, {
             'pre_op_status': status,
             'assign_staff': true,
-            if (doctorId != null) 'ot_doctor_id': doctorId,
             if (assistantId != null) 'ot_assistant_id': assistantId,
           });
           if (mounted) setState(() => _currentOtStatus = newStatus);
-          if (mounted) Navigator.pop(dCtx);
+          if (mounted) _closeDialogSafely(dCtx);
           await _load();
         } catch (e) {
           ss(() => saving = false);
@@ -389,14 +404,14 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Align(alignment: Alignment.centerLeft, child: Wrap(spacing: 8, runSpacing: 8, children: kOtPreOpStatuses.map((s) => ChoiceChip(label: Text(otPreOpStatusLabel(s)), selected: status == s, onSelected: (_) => ss(() { status = s; error = null; }))).toList())),
             const SizedBox(height: 14),
-            DropdownButtonFormField<int>(
-              initialValue: doctorId,
-              isExpanded: true,
-              decoration: InputDecoration(labelText: isReady ? 'Doctor' : 'Doctor *', border: const OutlineInputBorder()),
-              items: _doctors.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(),
-              onChanged: (v) => ss(() => doctorId = v),
-            ),
-            const SizedBox(height: 12),
+            if (!isReady)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text('Doctor (OPD, auto-assigned): ${_header?.otDoctor?.name ?? '—'}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                ),
+              ),
             DropdownButtonFormField<int>(
               initialValue: assistantId,
               isExpanded: true,
@@ -408,7 +423,7 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
           ]),
         ),
         actions: [
-          TextButton(onPressed: saving ? null : () => Navigator.pop(dCtx), child: const Text('Cancel')),
+          TextButton(onPressed: saving ? null : () => _closeDialogSafely(dCtx), child: const Text('Cancel')),
           ElevatedButton(onPressed: saving ? null : save, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save Status')),
         ],
       );
@@ -416,11 +431,17 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
   }
 
   Future<void> _openEyeDropDialog() async {
-    final medicineCtrl = TextEditingController();
+    // Medicine picker source (Medicine Master, OT scope) and the booking's
+    // own eye-derived allowed set — both replace free-text/unrestricted
+    // entry (web pull 2026-08-07). See
+    // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+    final otMedicines = _header?.otMedicines ?? const <OtNamedRef>[];
+    final allowedEyes = switch (_header?.eye) { 'RE' => const ['RE'], 'LE' => const ['LE'], _ => const ['RE', 'LE'] };
+    String? medicineName;
     final nextDose = (_eyeDrops.isEmpty ? 0 : _eyeDrops.map((e) => e.doseNumber).reduce((a, b) => a > b ? a : b)) + 1;
     final doseCtrl = TextEditingController(text: '$nextDose');
     final remarksCtrl = TextEditingController();
-    String eye = 'RE';
+    String eye = allowedEyes.first;
     bool saving = false;
     String? medicineErr, doseErr;
 
@@ -428,14 +449,14 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
       Future<void> save() async {
         final dose = int.tryParse(doseCtrl.text.trim());
         ss(() {
-          medicineErr = medicineCtrl.text.trim().isEmpty ? 'Required' : null;
+          medicineErr = medicineName == null ? 'Required' : null;
           doseErr = (dose == null || dose < 1 || dose > 20) ? 'Must be 1-20' : null;
         });
         if (medicineErr != null || doseErr != null) return;
         ss(() => saving = true);
         try {
-          await OtWardService.instance.addEyeDrop(widget.bookingId, medicineName: medicineCtrl.text.trim(), eye: eye, doseNumber: dose!, remarks: remarksCtrl.text.trim().isEmpty ? null : remarksCtrl.text.trim());
-          if (mounted) Navigator.pop(dCtx);
+          await OtWardService.instance.addEyeDrop(widget.bookingId, medicineName: medicineName!, eye: eye, doseNumber: dose!, remarks: remarksCtrl.text.trim().isEmpty ? null : remarksCtrl.text.trim());
+          if (mounted) _closeDialogSafely(dCtx);
           await _load();
         } catch (e) {
           ss(() => saving = false);
@@ -448,10 +469,16 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
         content: SizedBox(
           width: 380,
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            TextFormField(controller: medicineCtrl, decoration: InputDecoration(labelText: 'Medicine Name', errorText: medicineErr, border: const OutlineInputBorder())),
+            DropdownButtonFormField<String>(
+              initialValue: medicineName,
+              isExpanded: true,
+              decoration: InputDecoration(labelText: 'Medicine Name', errorText: medicineErr, border: const OutlineInputBorder()),
+              items: otMedicines.map((m) => DropdownMenuItem(value: m.name, child: Text(m.name, overflow: TextOverflow.ellipsis))).toList(),
+              onChanged: (v) => ss(() { medicineName = v; medicineErr = null; }),
+            ),
             const SizedBox(height: 12),
             Row(children: [
-              Wrap(spacing: 8, children: ['RE', 'LE'].map((e) => ChoiceChip(label: Text(e), selected: eye == e, onSelected: (_) => ss(() => eye = e))).toList()),
+              Wrap(spacing: 8, children: allowedEyes.map((e) => ChoiceChip(label: Text(e), selected: eye == e, onSelected: (_) => ss(() => eye = e))).toList()),
               const SizedBox(width: 16),
               Expanded(child: TextFormField(controller: doseCtrl, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: InputDecoration(labelText: 'Dose #', errorText: doseErr, border: const OutlineInputBorder()))),
             ]),
@@ -460,12 +487,11 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
           ]),
         ),
         actions: [
-          TextButton(onPressed: saving ? null : () => Navigator.pop(dCtx), child: const Text('Cancel')),
+          TextButton(onPressed: saving ? null : () => _closeDialogSafely(dCtx), child: const Text('Cancel')),
           ElevatedButton(onPressed: saving ? null : save, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save')),
         ],
       );
     }));
-    medicineCtrl.dispose();
     doseCtrl.dispose();
     remarksCtrl.dispose();
   }
@@ -574,6 +600,9 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
           trailing: _canWriteVitals ? TextButton.icon(onPressed: _openStatusDialog, icon: const Icon(Icons.edit_outlined, size: 14), label: const Text('Save Status', style: TextStyle(fontSize: 12))) : null,
         ),
         Text('Pre-op status: ${otPreOpStatusLabel(_vitals?.preOpStatus ?? 'preparing')}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 6),
+        Text('Doctor: ${_header?.otDoctor?.name ?? '—'}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+        Text('OT Assistant: ${_header?.otAssistant?.name ?? '—'}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
       ]),
     );
   }

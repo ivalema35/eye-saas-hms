@@ -35,6 +35,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\OT\OtBooking;
+use App\Models\Hospital\OT\OtDischargeSummary;
 use App\Models\Hospital\OT\OtSurgery;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -44,23 +45,33 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OtDischargeApiController extends Controller
 {
-    public function bookings(): JsonResponse
+    public function bookings(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
 
         $bookings = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no'])
-            ->whereIn('ot_status', ['operated', 'discharged'])
+            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no'])
+            // Web tolerates legacy uppercase status values too (OtInvoiceController::index).
+            ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
             ->orderByDesc('surgery_date')
             ->orderByDesc('id')
-            ->paginate(25);
+            ->paginate((int) $request->integer('per_page', (int) config('app.pagination_limit', 25)));
 
         $invoiceBookingIds = DB::table('ot_invoices')
             ->where('tenant_id', $tenantId)
             ->pluck('ot_booking_id')
             ->map(static fn ($id) => (int) $id)
             ->all();
+
+        // Append full_name (accessor, not auto-serialized) and the per-row
+        // Generated/Pending invoice flag — mirrors web's $invoiceBookingIds
+        // membership check (OtInvoiceController.php:122) so the app can render
+        // the same badge without a second round trip per row.
+        $bookings->getCollection()->each(function (OtBooking $b) use ($invoiceBookingIds) {
+            $b->patient?->append('full_name');
+            $b->has_invoice = in_array($b->id, $invoiceBookingIds, true);
+        });
 
         return response()->json([
             'success' => true,
@@ -191,6 +202,35 @@ class OtDischargeApiController extends Controller
         ], 201);
     }
 
+    /**
+     * Invoice detail for a booking — not in the original PRD skeleton, added
+     * so the app can tell whether an invoice already exists (and show its
+     * summary/line items) instead of only ever seeing the one-shot
+     * generateInvoice() response. See
+     * OT_DISCHARGE_INVOICES_WEB_PARITY_FIX_PLAN.md TASK 2.2.
+     * Returns `data: null` (200) when no invoice exists yet — this is a
+     * normal "not generated" state, not an error.
+     */
+    public function invoiceDetail(string $slug, int $bookingId): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+
+        $booking = OtBooking::query()->where('tenant_id', $tenantId)->find($bookingId);
+        if (! $booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        $invoice = OtDischargeSummary::query()
+            ->where('tenant_id', $tenantId)
+            ->where('ot_booking_id', $booking->id)
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'data' => $invoice,
+        ]);
+    }
+
     public function invoicePrint(string $slug, int $bookingId): Response
     {
         $tenantId = (int) app('tenant')->id;
@@ -207,7 +247,7 @@ class OtDischargeApiController extends Controller
 
         $lineItems = is_string($invoice->line_items) ? (json_decode($invoice->line_items, true) ?: []) : (array) $invoice->line_items;
 
-        return Pdf::loadView('hospital.ot.billing.invoice_print', compact('booking', 'invoice', 'lineItems'))
+        return Pdf::loadView('hospital.ot.billing.invoice_print', compact('booking', 'invoice', 'lineItems', 'slug'))
             ->download("Invoice_{$bookingId}.pdf");
     }
 
@@ -259,7 +299,10 @@ class OtDischargeApiController extends Controller
         }
 
         $surgery = $this->latestSurgery($bookingId);
-        $restDays = max(1, min(90, (int) $request->integer('rest_days', 7)));
+        // Web resets an out-of-range low value back to the default (7), not up
+        // to 1 — OtDischargeController::certificatePrint.
+        $restDaysInput = (int) $request->integer('rest_days', 7);
+        $restDays = $restDaysInput < 1 ? 7 : min(90, $restDaysInput);
 
         return Pdf::loadView('hospital.ot.billing.certificate_print', compact('booking', 'surgery', 'restDays'))
             ->download("Certificate_{$bookingId}.pdf");
@@ -300,6 +343,7 @@ class OtDischargeApiController extends Controller
             'booking' => $booking,
             'surgery' => $surgery,
             'wardMedicines' => $surgery?->medicinesForPrint() ?? [],
+            'slug' => $slug,
         ])->download("Prescription_{$bookingId}.pdf");
     }
 
@@ -315,7 +359,7 @@ class OtDischargeApiController extends Controller
 
         $lensDetail = DB::table('ot_lens_details')->where('tenant_id', $tenantId)->where('ot_booking_id', $booking->id)->latest('id')->first();
 
-        return Pdf::loadView('hospital.ot.billing.lens_slip_print', compact('booking', 'lensDetail'))
+        return Pdf::loadView('hospital.ot.billing.lens_slip_print', compact('booking', 'lensDetail', 'slug'))
             ->download("LensSlip_{$bookingId}.pdf");
     }
 
@@ -332,7 +376,7 @@ class OtDischargeApiController extends Controller
         $invoice = DB::table('ot_invoices')->where('tenant_id', $tenantId)->where('ot_booking_id', $booking->id)->first();
         abort_if(! $invoice, 404, 'Generate the invoice/discharge first to set a follow-up date.');
 
-        return Pdf::loadView('hospital.ot.billing.followup_slip_print', compact('booking', 'invoice'))
+        return Pdf::loadView('hospital.ot.billing.followup_slip_print', compact('booking', 'invoice', 'slug'))
             ->download("FollowupSlip_{$bookingId}.pdf");
     }
 

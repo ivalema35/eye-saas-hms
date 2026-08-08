@@ -8,8 +8,9 @@ import 'base_service.dart';
 /// Round 3 Phase 4 — `OtAssistantApiController`. `fetchBookings()` returns
 /// only the ready-for-surgery queue — the web's lens workflow UI is hidden
 /// by design (lens data is captured during counselling), there is no
-/// separate ready-for-lens queue. Both surgery-record and lens-record
-/// screens are reached from the same queue.
+/// separate ready-for-lens queue. Web's lens-record route also has no UI
+/// entry point of its own, so this app doesn't build one either (removed
+/// 2026-08-07 — see OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md).
 class OtAssistantService with AuthenticatedService {
   OtAssistantService._();
   static final OtAssistantService instance = OtAssistantService._();
@@ -33,13 +34,12 @@ class OtAssistantService with AuthenticatedService {
     return OtSurgeryFormData.fromJson(body['data'] as Map<String, dynamic>);
   }
 
-  /// The combined verify + record call — one submit, no separate "verify"
-  /// step (see build PRD §8 gotcha).
+  /// Web parity (2026-08-07): the pre-surgery verification checklist is no
+  /// longer collected client-side — the backend auto-verifies all 4 items
+  /// atomically with the surgery record, matching web exactly. See
+  /// OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md TASK 1.1/2.1.
   Future<void> storeSurgery(int bookingId, {
-    required bool identityVerified,
-    required bool consentVerified,
-    required bool paymentVerified,
-    required bool correctEyeVerified,
+    required String surgeryDate,
     required String surgeryName,
     String? otRoom,
     required String eyeOperated,
@@ -50,16 +50,19 @@ class OtAssistantService with AuthenticatedService {
     String? bloodLoss,
     int? medicineGroupId,
     List<OtSurgeryMedicineLine> otMedicines = const [],
+    String? lensCategory,
+    String? lensCompany,
+    String? lensModel,
+    String? lensType,
+    double? estimatedPower,
+    double? lensCost,
   }) async {
     final res = await http
         .post(
           Uri.parse('$_base/ot/bookings/$bookingId/surgery'),
           headers: await headers,
           body: jsonEncode({
-            'identity_verified': identityVerified,
-            'consent_verified': consentVerified,
-            'payment_verified': paymentVerified,
-            'correct_eye_verified': correctEyeVerified,
+            'surgery_date': surgeryDate,
             'surgery_name': surgeryName,
             'ot_room': otRoom,
             'eye_operated': eyeOperated,
@@ -70,47 +73,12 @@ class OtAssistantService with AuthenticatedService {
             'blood_loss': bloodLoss,
             'medicine_group_id': medicineGroupId,
             'ot_medicines': otMedicines.map((m) => m.toJson()).toList(),
-          }),
-        )
-        .timeout(AppConfig.requestTimeout);
-    _parse(res);
-  }
-
-  Future<OtLensDetailResponse> fetchLens(int bookingId) async {
-    final res = await http.get(Uri.parse('$_base/ot/bookings/$bookingId/lens'), headers: await headers).timeout(AppConfig.requestTimeout);
-    final body = _parse(res);
-    return OtLensDetailResponse.fromJson(body['data'] as Map<String, dynamic>);
-  }
-
-  Future<void> storeLens(int bookingId, {
-    int? lensInventoryId,
-    required String lensName,
-    String? manufacturer,
-    required String lensType,
-    required double lensPower,
-    int? axis,
-    required double lensMrp,
-    String? batchNumber,
-    String? serialNumber,
-    String? expiryDate,
-    required bool implanted,
-  }) async {
-    final res = await http
-        .post(
-          Uri.parse('$_base/ot/bookings/$bookingId/lens'),
-          headers: await headers,
-          body: jsonEncode({
-            'lens_inventory_id': lensInventoryId,
-            'lens_name': lensName,
-            'manufacturer': manufacturer,
+            'lens_category': lensCategory,
+            'lens_company': lensCompany,
+            'lens_model': lensModel,
             'lens_type': lensType,
-            'lens_power': lensPower,
-            'axis': axis,
-            'lens_mrp': lensMrp,
-            'batch_number': batchNumber,
-            'serial_number': serialNumber,
-            'expiry_date': expiryDate,
-            'implanted': implanted,
+            'estimated_power': estimatedPower,
+            'lens_cost': lensCost,
           }),
         )
         .timeout(AppConfig.requestTimeout);

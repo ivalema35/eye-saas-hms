@@ -54,7 +54,6 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
 
   Future<void> _openDialog({OtPackageMasterItem? item}) async {
     final nameCtrl = TextEditingController(text: item?.packageName ?? '');
-    final lensCostCtrl = TextEditingController(text: item?.lensCost != null ? item!.lensCost!.toStringAsFixed(2) : '');
     final otCtrl = TextEditingController(text: item != null ? item.otCharges.toStringAsFixed(2) : '0');
     final surgeonCtrl = TextEditingController(text: item != null ? item.surgeonCharges.toStringAsFixed(2) : '0');
     final nursingCtrl = TextEditingController(text: item != null ? item.nursingCharges.toStringAsFixed(2) : '0');
@@ -69,15 +68,14 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
         if (name.isEmpty) { ss(() => nameErr = 'Required'); return; }
         ss(() { saving = true; nameErr = null; });
         try {
-          final lensCost = double.tryParse(lensCostCtrl.text.trim());
           final otCharges = double.tryParse(otCtrl.text.trim()) ?? 0;
           final surgeonCharges = double.tryParse(surgeonCtrl.text.trim()) ?? 0;
           final nursingCharges = double.tryParse(nursingCtrl.text.trim()) ?? 0;
           final consumablesCharges = double.tryParse(consumablesCtrl.text.trim()) ?? 0;
           if (item == null) {
-            await OtInventoryService.instance.createPackage(packageName: name, lensCost: lensCost, roomCategory: roomCategory, otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges);
+            await OtInventoryService.instance.createPackage(packageName: name, roomCategory: roomCategory, otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges);
           } else {
-            await OtInventoryService.instance.updatePackage(item.id, packageName: name, lensCost: lensCost, roomCategory: roomCategory, otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges);
+            await OtInventoryService.instance.updatePackage(item.id, packageName: name, roomCategory: roomCategory, otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges);
           }
           if (mounted) Navigator.pop(dCtx);
           await _load();
@@ -103,8 +101,6 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
                 Expanded(child: ChoiceChip(label: const Text('Private'), selected: roomCategory == 'private', onSelected: (_) => ss(() => roomCategory = 'private'))),
               ]),
               const SizedBox(height: 12),
-              TextFormField(controller: lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: const InputDecoration(labelText: 'Lens Cost', prefixText: '₹', border: OutlineInputBorder())),
-              const SizedBox(height: 12),
               Row(children: [
                 Expanded(child: TextFormField(controller: otCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: const InputDecoration(labelText: 'OT Charges', prefixText: '₹', border: OutlineInputBorder()))),
                 const SizedBox(width: 10),
@@ -125,7 +121,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
         ],
       );
     }));
-    for (final c in [nameCtrl, lensCostCtrl, otCtrl, surgeonCtrl, nursingCtrl, consumablesCtrl]) {
+    for (final c in [nameCtrl, otCtrl, surgeonCtrl, nursingCtrl, consumablesCtrl]) {
       c.dispose();
     }
   }

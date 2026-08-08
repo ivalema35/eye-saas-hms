@@ -1,5 +1,20 @@
+import 'ot_assistant_models.dart';
 import 'ot_booking_models.dart';
 import 'ot_inventory_models.dart';
+
+/// `ot_counselling` is read via a raw `DB::table()` query (not an Eloquent
+/// model) on the Surgery Record endpoint (`surgeryFormData()`), so Laravel's
+/// `boolean` cast never applies there — MySQL/PDO hands back a raw `1`/`0`
+/// (or `"1"`/`"0"`), not `true`/`false`. Other endpoints that DO go through
+/// the Eloquent `OtCounselling` model send real booleans. `as bool?` throws
+/// on the int/string form ("type 'int' is not a subtype of type 'bool?'") —
+/// this coerces either shape safely.
+bool _jsonBool(dynamic v, {bool fallback = false}) => switch (v) {
+      bool b => b,
+      num n => n != 0,
+      String s => s == '1' || s.toLowerCase() == 'true',
+      _ => fallback,
+    };
 
 /// A package suggestion returned by `package-lookup` — a lighter shape than
 /// the full `OtPackageMasterItem` (no id/lens_cost/room_category, since the
@@ -33,9 +48,11 @@ class OtPackageLookupSuggestion {
 class OtCounsellingItem {
   final String? diagnosis;
   final String eye; // RE | LE | Both
-  final bool surgeryTypeConfirmed;
+  // Replaces the old surgery_type_confirmed checkbox — must match an active
+  // ot_surgery_types.surgery_name (web pull 2026-08-07). See
+  // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §7.
+  final String? otType;
   final bool mediclaim;
-  final String? lensOption; // must match an active ot_lens_options.name
   final String? lensCategory; // standard | premium
   final String? lensCompany;
   final String? lensModel;
@@ -43,6 +60,10 @@ class OtCounsellingItem {
   final double? estimatedPower;
   final double? lensCost;
   final String? packageName;
+  // Surgery Record form's Section A "Package" display source — web:
+  // `$counselling?->package_amount ?? $booking->package_amount`. See
+  // OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md TASK 2.1.
+  final double? packageAmount;
   final String roomCategory; // general | private
   final double otCharges;
   final double surgeonCharges;
@@ -57,9 +78,8 @@ class OtCounsellingItem {
   const OtCounsellingItem({
     this.diagnosis,
     required this.eye,
-    this.surgeryTypeConfirmed = false,
+    this.otType,
     required this.mediclaim,
-    this.lensOption,
     this.lensCategory,
     this.lensCompany,
     this.lensModel,
@@ -67,6 +87,7 @@ class OtCounsellingItem {
     this.estimatedPower,
     this.lensCost,
     this.packageName,
+    this.packageAmount,
     required this.roomCategory,
     required this.otCharges,
     required this.surgeonCharges,
@@ -82,9 +103,8 @@ class OtCounsellingItem {
   factory OtCounsellingItem.fromJson(Map<String, dynamic> j) => OtCounsellingItem(
         diagnosis: j['diagnosis'] as String?,
         eye: j['eye'] as String? ?? 'Both',
-        surgeryTypeConfirmed: j['surgery_type_confirmed'] as bool? ?? false,
-        mediclaim: j['mediclaim'] as bool? ?? false,
-        lensOption: j['lens_option'] as String?,
+        otType: j['ot_type'] as String?,
+        mediclaim: _jsonBool(j['mediclaim']),
         lensCategory: j['lens_category'] as String?,
         lensCompany: j['lens_company'] as String?,
         lensModel: j['lens_model'] as String?,
@@ -92,14 +112,15 @@ class OtCounsellingItem {
         estimatedPower: numOrStringToDouble(j['estimated_power']),
         lensCost: numOrStringToDouble(j['lens_cost']),
         packageName: j['package_name'] as String?,
+        packageAmount: numOrStringToDouble(j['package_amount']),
         roomCategory: j['room_category'] as String? ?? 'general',
         otCharges: numOrStringToDouble(j['ot_charges']) ?? 0,
         surgeonCharges: numOrStringToDouble(j['surgeon_charges']) ?? 0,
         nursingCharges: numOrStringToDouble(j['nursing_charges']) ?? 0,
         consumablesCharges: numOrStringToDouble(j['consumables_charges']) ?? 0,
         paymentMode: j['payment_mode'] as String? ?? 'cash',
-        bloodReportsVerified: j['blood_reports_verified'] as bool? ?? false,
-        bloodReportsNormal: j['blood_reports_normal'] as bool? ?? false,
+        bloodReportsVerified: _jsonBool(j['blood_reports_verified']),
+        bloodReportsNormal: _jsonBool(j['blood_reports_normal']),
         notes: j['notes'] as String?,
         totalEstimate: numOrStringToDouble(j['total_estimate']),
       );
@@ -107,9 +128,8 @@ class OtCounsellingItem {
   Map<String, dynamic> toJson() => {
         'diagnosis': diagnosis,
         'eye': eye,
-        'surgery_type_confirmed': surgeryTypeConfirmed,
+        'ot_type': otType,
         'mediclaim': mediclaim,
-        'lens_option': lensOption,
         'lens_category': lensCategory,
         'lens_company': lensCompany,
         'lens_model': lensModel,
@@ -159,22 +179,24 @@ class OtCounsellingDetail {
   final OtBookingSummary booking;
   final OtCounsellingItem? counselling;
   final OtConsentItem? consent;
-  final List<OtLensOptionItem> lensOptions;
   final List<OtPackageMasterItem> packageCostOptions;
+  // Replaces lens_options — the ot_type dropdown's source list (web pull
+  // 2026-08-07). See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §7.
+  final List<OtSurgeryTypeOption> otSurgeryTypes;
 
   const OtCounsellingDetail({
     required this.booking,
     this.counselling,
     this.consent,
-    required this.lensOptions,
     required this.packageCostOptions,
+    required this.otSurgeryTypes,
   });
 
   factory OtCounsellingDetail.fromJson(Map<String, dynamic> j) => OtCounsellingDetail(
         booking: OtBookingSummary.fromJson(j['booking'] as Map<String, dynamic>),
         counselling: j['counselling'] != null ? OtCounsellingItem.fromJson(j['counselling'] as Map<String, dynamic>) : null,
         consent: j['consent'] != null ? OtConsentItem.fromJson(j['consent'] as Map<String, dynamic>) : null,
-        lensOptions: (j['lens_options'] as List? ?? []).map((e) => OtLensOptionItem.fromJson(e as Map<String, dynamic>)).toList(),
         packageCostOptions: (j['package_cost_options'] as List? ?? []).map((e) => OtPackageMasterItem.fromJson(e as Map<String, dynamic>)).toList(),
+        otSurgeryTypes: (j['ot_surgery_types'] as List? ?? []).map((e) => OtSurgeryTypeOption.fromJson(e as Map<String, dynamic>)).toList(),
       );
 }

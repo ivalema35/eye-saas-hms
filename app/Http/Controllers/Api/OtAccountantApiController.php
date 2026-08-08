@@ -31,6 +31,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtPayment;
+use App\Models\Hospital\OT\OtRefund;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -73,18 +74,28 @@ class OtAccountantApiController extends Controller
         if ($filter === 'all') {
             $filter = 'completed';
         }
-        if (! in_array($filter, ['today', 'completed'], true)) {
+        if (! in_array($filter, ['today', 'completed', 'refunds'], true)) {
             $filter = 'today';
         }
 
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments']);
+            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments', 'refunds']);
 
         if ($filter === 'today') {
+            // Pending payment queue — all counselled / partial-paid bookings awaiting
+            // collection. surgery_date is often null after Recommend Surgery (date set
+            // later), so do not require surgery_date = today or it never appears here.
+            // Matches web exactly (web pull 2026-08-07). See
+            // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4/§9.
             $query->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
-                ->whereDate('surgery_date', today())
+                ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
                 ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        } elseif ($filter === 'refunds') {
+            // Surgery refused — full refund pending or done.
+            $query->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                ->orderByDesc('updated_at')
                 ->orderByDesc('id');
         } else {
             $query->whereIn('ot_status', [
@@ -94,6 +105,7 @@ class OtAccountantApiController extends Controller
                 OtBooking::STATUS_READY,
                 OtBooking::STATUS_OPERATED,
                 OtBooking::STATUS_DISCHARGED,
+                OtBooking::STATUS_SURGERY_REFUSED,
             ])->orderByDesc('surgery_date')->orderByDesc('id');
         }
 
@@ -106,9 +118,27 @@ class OtAccountantApiController extends Controller
         // eager-load `payments`, so the accessor would trigger a lazy-load
         // per row there). `payments` is already eager-loaded above, so this
         // is free here.
-        $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status', 'remaining_balance']));
+        // `refunds` is already eager-loaded above (every filter, matching
+        // web), so appending the refund accessors here is free too — the
+        // `refunds` filter/UI needs `refundable_balance` to know whether a
+        // row is still refundable.
+        $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status', 'remaining_balance', 'total_paid', 'total_refunded', 'refundable_balance']));
 
-        return response()->json(['success' => true, 'data' => $bookings, 'meta' => ['filter' => $filter]]);
+        // Matches web's Accountant dashboard money summary card exactly.
+        $moneySummary = [
+            'collected' => (float) OtPayment::query()->where('tenant_id', $tenantId)->sum('package_amount'),
+            'refunded' => (float) OtRefund::query()->where('tenant_id', $tenantId)->sum('amount'),
+            'refunds_pending' => OtBooking::query()
+                ->where('tenant_id', $tenantId)
+                ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                ->with(['payments', 'refunds'])
+                ->get()
+                ->filter(fn (OtBooking $b) => ! $b->isFullyRefunded() && $b->refundable_balance > 0)
+                ->count(),
+        ];
+        $moneySummary['net'] = round($moneySummary['collected'] - $moneySummary['refunded'], 2);
+
+        return response()->json(['success' => true, 'data' => $bookings, 'meta' => ['filter' => $filter, 'money_summary' => $moneySummary]]);
     }
 
     public function paymentFormData(string $slug, int $bookingId): JsonResponse
@@ -221,12 +251,13 @@ class OtAccountantApiController extends Controller
         }
 
         $validated = $request->validate([
-            'package_amount' => ['required', 'numeric', 'min:0.01', 'max:' . $remaining],
             'receipt_number' => ['nullable', 'string', 'max:255'],
             'payment_mode' => ['required', 'string', Rule::in(['cash', 'online', 'mediclaim'])],
-        ], [
-            'package_amount.max' => 'Payment cannot exceed remaining balance of ' . number_format($remaining, 2) . '.',
         ]);
+
+        // Ignore any client-submitted amount; force server remaining balance —
+        // matches web exactly (partial payments removed, web pull 2026-08-07).
+        $validated['package_amount'] = $remaining;
 
         $counselling = DB::table('ot_counselling')
             ->where('tenant_id', $tenantId)
@@ -334,6 +365,101 @@ class OtAccountantApiController extends Controller
                 'required_total' => (float) ($payment->booking->package_amount ?? 0),
             ],
         ]);
+    }
+
+    /**
+     * Full refund form data — mirrors `OtAccountantController::createRefund()`.
+     * Only surgery_refused bookings with a refundable balance. See
+     * WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4.
+     */
+    public function refundFormData(string $slug, int $bookingId): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+
+        $booking = OtBooking::query()
+            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'payments', 'refunds'])
+            ->where('tenant_id', $tenantId)
+            ->find($bookingId);
+
+        if (! $booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        if ($booking->ot_status !== OtBooking::STATUS_SURGERY_REFUSED) {
+            return response()->json(['success' => false, 'message' => 'Refund is only available for surgery_refused bookings.'], 422);
+        }
+
+        if ($booking->refundable_balance <= 0) {
+            return response()->json(['success' => false, 'message' => 'This booking is already fully refunded (or has no payments).'], 422);
+        }
+
+        $autoReceipt = 'REF-' . now()->format('Ym') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'booking' => $booking,
+                'total_paid' => $booking->total_paid,
+                'total_refunded' => $booking->total_refunded,
+                'refund_amount' => $booking->refundable_balance,
+                'auto_receipt_number' => $autoReceipt,
+            ],
+        ]);
+    }
+
+    /**
+     * Record full refund (forced amount = refundable balance) — mirrors
+     * `OtAccountantController::storeRefund()` exactly.
+     */
+    public function storeRefund(string $slug, Request $request, int $bookingId): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+
+        $booking = OtBooking::query()
+            ->with(['payments', 'refunds'])
+            ->where('tenant_id', $tenantId)
+            ->find($bookingId);
+
+        if (! $booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        if ($booking->ot_status !== OtBooking::STATUS_SURGERY_REFUSED) {
+            return response()->json(['success' => false, 'message' => 'Refund is only available for surgery_refused bookings.'], 422);
+        }
+
+        $refundable = (float) $booking->refundable_balance;
+        if ($refundable <= 0) {
+            return response()->json(['success' => false, 'message' => 'Nothing left to refund on this booking.'], 422);
+        }
+
+        $validated = $request->validate([
+            'payment_mode' => ['required', 'string', Rule::in(['cash', 'online'])],
+            'receipt_number' => ['nullable', 'string', 'max:100'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $receipt = trim((string) ($validated['receipt_number'] ?? ''));
+        if ($receipt === '') {
+            $receipt = 'REF-' . now()->format('Ym') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+        }
+
+        $refund = OtRefund::query()->create([
+            'tenant_id' => $tenantId,
+            'ot_booking_id' => $booking->id,
+            'amount' => $refundable,
+            'payment_mode' => strtolower($validated['payment_mode']),
+            'receipt_number' => $receipt,
+            'reason' => $validated['reason'] ?? 'Patient refused OT — full refund',
+            'refunded_by' => (int) auth('sanctum')->id(),
+            'refunded_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Full refund of ' . number_format($refundable, 2) . ' recorded (receipt ' . $receipt . ').',
+            'data' => $refund,
+        ], 201);
     }
 
     private function generateUniqueInvoiceNumber(int $tenantId): string

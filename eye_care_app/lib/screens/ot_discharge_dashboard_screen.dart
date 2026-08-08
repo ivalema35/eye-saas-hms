@@ -65,42 +65,93 @@ class _OtDischargeDashboardScreenState extends State<OtDischargeDashboardScreen>
   Widget _buildBody() {
     if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
     if (_error != null) return AppErrorState(message: _error!, onRetry: _load);
-    if (_items.isEmpty) return AppEmptyState(message: 'No operated bookings yet.', icon: Icons.receipt_long_rounded, onRefresh: _load);
 
-    return RefreshIndicator(
-      color: AppColors.primary,
-      onRefresh: _load,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(14, 12, 14, 20),
-        itemCount: _items.length,
-        itemBuilder: (_, i) {
-          final item = _items[i];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: InkWell(
-              onTap: () => _open(item),
-              borderRadius: BorderRadius.circular(14),
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]),
-                child: Row(children: [
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(item.patient?.fullName ?? 'Patient', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
-                      const SizedBox(height: 2),
-                      Text(item.patient?.patientCode ?? '', style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
-                    ]),
-                  ),
-                  StatusBadge(label: OtStatus.label(item.otStatus), color: item.otStatus == OtStatus.discharged ? AppColors.green : AppColors.orange),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right_rounded, color: AppColors.textDisabled),
-                ]),
+    return Column(children: [
+      _buildListHeader(),
+      Expanded(
+        child: _items.isEmpty
+            ? AppEmptyState(message: 'No records available for billing.', icon: Icons.receipt_long_rounded, onRefresh: _load)
+            : RefreshIndicator(
+                color: AppColors.primary,
+                onRefresh: _load,
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(14, 0, 14, 20),
+                  itemCount: _items.length,
+                  itemBuilder: (_, i) => _bookingCard(_items[i]),
+                ),
               ),
+      ),
+    ]);
+  }
+
+  Widget _buildListHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+      child: Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('Billing Desk', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.darkNavy)),
+            const Text('Generate invoices and print discharge documents.', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+          ]),
+        ),
+        if (_meta != null)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(999)),
+            child: Text('${_meta!.total} total', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+          ),
+      ]),
+    );
+  }
+
+  Widget _bookingCard(OtBookingSummary item) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => _open(item),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)), boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.05), blurRadius: 8, offset: const Offset(0, 2))]),
+          child: Row(children: [
+            Expanded(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(item.patient?.fullName ?? 'Patient', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                const SizedBox(height: 2),
+                Row(children: [
+                  if (item.patient?.patientCode != null && item.patient!.patientCode.isNotEmpty) ...[
+                    Text(item.patient!.patientCode, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                    const Text(' · ', style: TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                  ],
+                  Icon(Icons.calendar_today_outlined, size: 11, color: AppColors.textSecondary),
+                  const SizedBox(width: 3),
+                  Text(_fmtDate(item.surgeryDate), style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+                ]),
+              ]),
             ),
-          );
-        },
+            Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
+              StatusBadge(label: item.otStatus.toUpperCase(), color: item.otStatus == OtStatus.discharged ? AppColors.green : AppColors.orange),
+              const SizedBox(height: 4),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(color: (item.hasInvoice ?? false) ? AppColors.green.withValues(alpha: 0.12) : AppColors.orange.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(999)),
+                child: Text((item.hasInvoice ?? false) ? 'Generated' : 'Pending', style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, color: (item.hasInvoice ?? false) ? AppColors.green : AppColors.orange)),
+              ),
+            ]),
+            const SizedBox(width: 8),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textDisabled),
+          ]),
+        ),
       ),
     );
+  }
+
+  String _fmtDate(String? iso) {
+    if (iso == null) return '—';
+    final d = DateTime.tryParse(iso);
+    if (d == null) return '—';
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${d.day.toString().padLeft(2, '0')} ${months[d.month - 1]} ${d.year}';
   }
 }

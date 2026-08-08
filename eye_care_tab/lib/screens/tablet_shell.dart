@@ -13,6 +13,7 @@ import '../widgets/secret_tap_area.dart';
 import 'clinical_queue_screen.dart';
 import 'dashboard_screen.dart';
 import 'doctor_dashboard_screen.dart';
+import 'doctor_ot_list_screen.dart';
 import 'foc_screen.dart';
 import 'login_screen.dart';
 import 'masters_screen.dart';
@@ -150,9 +151,12 @@ class _TabletShellState extends State<TabletShell> with WidgetsBindingObserver {
           const _RailEntry('ot_billing', Icons.account_balance_wallet_rounded, 'Accountant / Billing'),
         if (p.can(Perm.otWardEntry))
           const _RailEntry('ot_ward', Icons.bed_rounded, 'Ward Management'),
-        if (p.can(Perm.otSurgeryRecord))
-          const _RailEntry('ot_doctor', Icons.local_hospital_rounded, 'Doctor Dashboard (OT)'),
-        if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList))
+        // Web has one merged "OT Assistant Dashboard" nav entry gated by
+        // lens.record/lens.implant/surgery.ready/surgery.record combined —
+        // no separate "Doctor Dashboard" (the old OT Doctor role's surgery
+        // recording was absorbed into OT Assistant, see
+        // ot_assistant_dashboard_screen.dart).
+        if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList) || p.can(Perm.otSurgeryReady) || p.can(Perm.otSurgeryRecord))
           const _RailEntry('ot_assistant', Icons.handyman_rounded, 'Assistant Dashboard'),
         if (p.can(Perm.otBillingManage))
           const _RailEntry('ot_discharge', Icons.receipt_long_rounded, 'Discharge & Invoices'),
@@ -192,6 +196,8 @@ class _TabletShellState extends State<TabletShell> with WidgetsBindingObserver {
         return _isDoctor
             ? DoctorDashboardScreen(user: widget.user, hospital: widget.hospital, onNavigate: (id) => setState(() => _selected = id))
             : DashboardScreen(user: widget.user, hospital: widget.hospital, onNavigate: (id) => setState(() => _selected = id));
+      case 'doctor_ot_list':
+        return const DoctorOtListScreen();
       case 'patients':
         return PatientsScreen(user: widget.user, hospital: widget.hospital);
       case 'queue':
@@ -206,9 +212,8 @@ class _TabletShellState extends State<TabletShell> with WidgetsBindingObserver {
         return const OtCounsellorDashboardScreen();
       case 'ot_ward':
         return const OtWardQueueScreen();
-      case 'ot_doctor':
       case 'ot_assistant':
-        return const OtAssistantDashboardScreen();
+        return OtAssistantDashboardScreen(user: widget.user);
       case 'ot_billing':
         return const OtAccountantDashboardScreen();
       case 'ot_discharge':

@@ -8,7 +8,7 @@ import 'patient_history_screen.dart';
 /// Full-screen route wrapper around [PatientHistoryScreen], which has no
 /// chrome of its own since it's normally embedded in the Patients detail
 /// pane. Used anywhere history needs to be opened from outside that pane
-/// (Share History's own-patient view, Doctor Dashboard's queue rows).
+/// (Share History's own-patient view, Assistant Dashboard's queue rows).
 class PatientHistoryRoute extends StatelessWidget {
   final UserInfo user;
   final HospitalInfo hospital;

@@ -20,11 +20,14 @@ class OtBookingService with AuthenticatedService {
   /// `surgery_recommended`/`booked` updates the existing booking rather
   /// than creating a duplicate — matches web behavior, nothing extra to
   /// handle client-side for that case.
+  ///
+  /// `surgery_date`/`slot_id` are deliberately NOT sent — web pull
+  /// 2026-08-07 dropped both from this endpoint entirely (always null at
+  /// recommend time now; assigned later by the counsellor/ward flow). See
+  /// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §1.
   Future<OtRecommendSurgeryResult> recommendSurgery({
     required int patientId,
     required String eye, // RE | LE | Both
-    required DateTime surgeryDate,
-    required int slotId,
     required int otSurgeryTypeId,
     String? diagnosisHint,
   }) async {
@@ -34,9 +37,6 @@ class OtBookingService with AuthenticatedService {
           headers: await headers,
           body: jsonEncode({
             'eye': eye,
-            'surgery_date':
-                '${surgeryDate.year.toString().padLeft(4, '0')}-${surgeryDate.month.toString().padLeft(2, '0')}-${surgeryDate.day.toString().padLeft(2, '0')}',
-            'slot_id': slotId,
             'ot_surgery_type_id': otSurgeryTypeId,
             if (diagnosisHint != null && diagnosisHint.trim().isNotEmpty) 'diagnosis_hint': diagnosisHint.trim(),
           }),

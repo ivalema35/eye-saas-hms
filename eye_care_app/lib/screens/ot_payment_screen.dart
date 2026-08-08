@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../models/ot_accountant_models.dart';
 import '../services/ot_accountant_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+
+/// See the matching helper in `ot_ward_screen.dart` for why this is needed
+/// — `unfocus()` only schedules the focus change, it doesn't apply
+/// synchronously, so popping right after it (pass 1's fix) still races.
+/// Deferring to `addPostFrameCallback` lets that change resolve first.
+void _closeSheetSafely(BuildContext sheetContext) {
+  FocusManager.instance.primaryFocus?.unfocus();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (sheetContext.mounted) Navigator.pop(sheetContext);
+  });
+}
 
 /// Round 3 Phase 5 — Payment status + record-payment. `storePayment` both
 /// records the payment AND (when it completes the package amount) advances
@@ -193,7 +203,6 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
   OtPaymentFormData? _formData;
   bool _saving = false;
 
-  final _amountCtrl = TextEditingController();
   final _receiptCtrl = TextEditingController();
   String _paymentMode = 'cash';
 
@@ -205,7 +214,6 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
 
   @override
   void dispose() {
-    _amountCtrl.dispose();
     _receiptCtrl.dispose();
     super.dispose();
   }
@@ -217,7 +225,6 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
         setState(() {
           _formData = data;
           _loadingForm = false;
-          _amountCtrl.text = data.remainingBalance > 0 ? data.remainingBalance.toStringAsFixed(0) : data.defaultPackageAmount.toStringAsFixed(0);
           _receiptCtrl.text = data.autoReceiptNumber;
           _paymentMode = data.defaultPaymentMode;
         });
@@ -228,17 +235,12 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
   }
 
   Future<void> _save() async {
-    final amount = double.tryParse(_amountCtrl.text.trim());
-    if (amount == null || amount <= 0) {
-      showAppSnackBar(context, 'Enter a valid amount', isError: true);
-      return;
-    }
     setState(() => _saving = true);
     try {
-      final result = await OtAccountantService.instance.storePayment(widget.bookingId, packageAmount: amount, receiptNumber: _receiptCtrl.text.trim(), paymentMode: _paymentMode);
+      final result = await OtAccountantService.instance.storePayment(widget.bookingId, receiptNumber: _receiptCtrl.text.trim(), paymentMode: _paymentMode);
       widget.onSaved();
       if (mounted) {
-        Navigator.pop(context);
+        _closeSheetSafely(context);
         showAppSnackBar(context, result.isFullyPaid ? 'Payment complete — booking moved to Ward' : 'Payment recorded', isSuccess: true);
       }
     } catch (e) {
@@ -286,7 +288,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
             padding: const EdgeInsets.fromLTRB(20, 10, 8, 14),
             child: Row(children: [
               const Expanded(child: Text('Record Payment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.darkNavy))),
-              IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => Navigator.pop(context)),
+              IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => _closeSheetSafely(context)),
             ]),
           ),
           if (_loadingForm)
@@ -305,7 +307,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
                     decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(AppRadius.md)),
                     child: Column(children: [
                       _readRow('UHID', f.booking.patient?.patientCode ?? '—'),
-                      _readRow('OT Package', f.counselling?.packageName ?? f.counselling?.lensOption ?? '—'),
+                      _readRow('OT Package', f.counselling?.packageName ?? '—'),
                       _readRow('Total Amount', '₹${f.requiredTotal.toStringAsFixed(0)}'),
                       _readRow('Amount Paid', '₹${f.totalPaidSoFar.toStringAsFixed(0)}'),
                       _readRow('Payment Status', paymentStatusLabel(f.booking.paymentStatus ?? 'pending')),
@@ -314,10 +316,19 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
                     ]),
                   ),
                   const SizedBox(height: 12),
-                  Text('Remaining balance: ₹${f.remainingBalance.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  // Amount is no longer editable — web pull 2026-08-07 removed
+                  // partial payments; the server always charges the full
+                  // remaining balance. See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §2.
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                    decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(AppRadius.md)),
+                    child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                      const Text('Amount to be Paid', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                      Text('₹${f.remainingBalance.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                    ]),
+                  ),
                   if (disabled) Padding(padding: const EdgeInsets.only(top: 4), child: Text('Nothing remaining to pay.', style: const TextStyle(fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600))),
-                  const SizedBox(height: 12),
-                  TextFormField(enabled: !disabled, controller: _amountCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], decoration: _deco('Amount *', suffix: '₹')),
                   const SizedBox(height: 12),
                   Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Expanded(child: TextFormField(enabled: !disabled, controller: _receiptCtrl, decoration: _deco('Receipt Number'))),
@@ -337,7 +348,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
             child: Row(children: [
-              Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: _saving ? null : () => _closeSheetSafely(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
@@ -544,7 +555,7 @@ class _BillingDetailsDialogState extends State<_BillingDetailsDialog> {
                 : Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                     _row('Patient', _data!.booking.patient?.fullName ?? '—'),
                     _row('UHID', _data!.booking.patient?.patientCode ?? '—'),
-                    _row('OT Package', _data!.counselling?.packageName ?? _data!.counselling?.lensOption ?? '—'),
+                    _row('OT Package', _data!.counselling?.packageName ?? '—'),
                     _row('Total Amount', '₹${_data!.requiredTotal.toStringAsFixed(0)}'),
                     _row('Amount Paid', '₹${_data!.totalPaidSoFar.toStringAsFixed(0)}'),
                     _row('Remaining Balance', '₹${_data!.remainingBalance.toStringAsFixed(0)}'),

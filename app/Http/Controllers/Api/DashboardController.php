@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
@@ -265,6 +266,120 @@ class DashboardController extends Controller
                 'receptionist_stats'          => $receptionistStats,
                 'doctor_cards'                => $doctorCards,
                 'pending_share_requests_count'=> $pendingShareRequestsCount,
+            ],
+        ]);
+    }
+
+    /**
+     * Receptionist "Today Added Patients" widget — patients this receptionist
+     * registered today, merged with today's still-open OT appointments
+     * (pre-registration leads not yet converted to a patient). Mirrors
+     * Hospital\Dashboard\DashboardController::mergeTodayOtAppointments().
+     * See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §9 / FIX_PLAN TASK 5.1.
+     *
+     * GET /api/v1/{slug}/dashboard/today-patients
+     * Auth: sanctum + subscription.active. Receptionist role only.
+     */
+    public function todayPatients(Request $request): JsonResponse
+    {
+        $authUser = auth('sanctum')->user();
+        $roleSlug = $authUser?->role?->slug ?? '';
+        if (! in_array($roleSlug, ['receptionist', 'receptionist_opd'], true)) {
+            return response()->json(['success' => false, 'message' => 'Only available to receptionist users.'], 403);
+        }
+
+        $today = now()->toDateString();
+        $searchContact = trim((string) $request->query('search_contact', ''));
+
+        $patients = Patient::with([
+            'doctor:id,name,doctor_prefix',
+            'location:id,city,district,state',
+            'caseType:id,case_type',
+            'referrer:id,name',
+            'primaryExamination:id,patient_id,exam_data,dilation_time,updated_at',
+            'secondaryExamination:id,patient_id',
+        ])
+            ->where('reception_id', $authUser->id)
+            ->whereDate('appointment_date', $today)
+            ->when($searchContact !== '', fn ($q) => $q->where('contact_no', 'like', "%{$searchContact}%"))
+            ->latest('created_at')
+            ->get();
+
+        $alreadyLinkedIds = $patients->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $patientRows = $patients->map(function (Patient $p) {
+            $arr = $p->toArray();
+            $arr['full_name'] = $p->full_name;
+            $arr['source'] = 'patient';
+
+            // Same dilation-unlock computation as PatientApiController::index,
+            // duplicated here since this query's filters (reception_id-scoped,
+            // today-only) differ from that endpoint's.
+            $arr['unlock_time_ms'] = null;
+            $pe = $p->primaryExamination;
+            if ($pe && ! $p->secondary_done_at && ! $p->secondaryExamination) {
+                $examData = $pe->exam_data;
+                if (is_string($examData)) {
+                    $examData = json_decode($examData, true);
+                }
+                $dilate = is_array($examData) ? ($examData['dilate'] ?? null) : null;
+                $dilationTime = $pe->dilation_time;
+                if ($dilate === 'Yes' && $dilationTime && $pe->updated_at) {
+                    $unlockAt = $pe->updated_at->addMinutes((int) $dilationTime);
+                    if ($unlockAt->isFuture()) {
+                        $arr['unlock_time_ms'] = $unlockAt->timestamp * 1000;
+                    }
+                }
+            }
+
+            return $arr;
+        });
+
+        $otRows = OtAppointment::query()
+            ->with(['doctor:id,name', 'location:id,name'])
+            ->whereDate('appointment_date', $today)
+            ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+            ->when($searchContact !== '', function ($q) use ($searchContact) {
+                $q->where(function ($qq) use ($searchContact) {
+                    $qq->where('mobile_no', 'like', "%{$searchContact}%")
+                        ->orWhere('whatsapp_no', 'like', "%{$searchContact}%");
+                });
+            })
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get()
+            ->reject(function (OtAppointment $appt) use ($alreadyLinkedIds) {
+                $convertedId = (int) ($appt->converted_patient_id ?? 0);
+
+                return $convertedId > 0 && in_array($convertedId, $alreadyLinkedIds, true);
+            })
+            ->map(function (OtAppointment $appt) {
+                $arr = $appt->toArray();
+                $arr['source'] = 'ot_appointment';
+
+                return $arr;
+            });
+
+        $rows = $patientRows->concat($otRows)
+            ->sortByDesc(fn ($row) => strtotime((string) ($row['created_at'] ?? '')) ?: 0)
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $rows,
+            'meta' => [
+                'count' => $rows->count(),
+                'wait_thresholds' => [
+                    'r_green' => (int) HospitalSetting::get('wait_green_max', 30),
+                    'r_orange' => (int) HospitalSetting::get('wait_orange_max', 60),
+                    'r_red' => (int) HospitalSetting::get('wait_red_max', 120),
+                    'd_green' => (int) HospitalSetting::get('wait_d_green_max', 40),
+                    'd_orange' => (int) HospitalSetting::get('wait_d_orange_max', 90),
+                    'd_red' => (int) HospitalSetting::get('wait_d_red_max', 120),
+                    'nd_green' => (int) HospitalSetting::get('wait_nd_green_max', 20),
+                    'nd_orange' => (int) HospitalSetting::get('wait_nd_orange_max', 60),
+                    'nd_red' => (int) HospitalSetting::get('wait_nd_red_max', 120),
+                ],
             ],
         ]);
     }

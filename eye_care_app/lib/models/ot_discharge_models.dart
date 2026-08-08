@@ -20,6 +20,62 @@ class OtInvoiceGenerateResult {
       );
 }
 
+/// One `line_items[]` entry on an invoice — `Lens Charges`/`OT Charges`/etc
+/// when the counselling breakdown is present, or a charge-head percentage
+/// split otherwise. See OT_DISCHARGE_INVOICES_WEB_PARITY_FIX_PLAN.md TASK 2.2.
+class OtInvoiceLineItem {
+  final String head;
+  final double? percentage;
+  final double amount;
+
+  const OtInvoiceLineItem({required this.head, this.percentage, required this.amount});
+
+  factory OtInvoiceLineItem.fromJson(Map<String, dynamic> j) => OtInvoiceLineItem(
+        head: j['head'] as String? ?? '',
+        percentage: numOrStringToDouble(j['percentage']),
+        amount: numOrStringToDouble(j['amount']) ?? 0,
+      );
+}
+
+/// `GET .../invoice` — the persisted invoice record, if one has been
+/// generated for this booking. Drives the detail screen's invoice-summary
+/// card + gates the print grid (only shown once this is non-null).
+class OtInvoiceSummary {
+  final String invoiceNumber;
+  final List<OtInvoiceLineItem> lineItems;
+  final double totalAmount;
+  final double taxAmount;
+  final double discount;
+  final double netAmount;
+  final String? followUpDate;
+  final bool isFinalized;
+  final String? createdAt;
+
+  const OtInvoiceSummary({
+    required this.invoiceNumber,
+    required this.lineItems,
+    required this.totalAmount,
+    required this.taxAmount,
+    required this.discount,
+    required this.netAmount,
+    this.followUpDate,
+    this.isFinalized = false,
+    this.createdAt,
+  });
+
+  factory OtInvoiceSummary.fromJson(Map<String, dynamic> j) => OtInvoiceSummary(
+        invoiceNumber: j['invoice_number'] as String? ?? '',
+        lineItems: (j['line_items'] as List? ?? []).map((e) => OtInvoiceLineItem.fromJson(e as Map<String, dynamic>)).toList(),
+        totalAmount: numOrStringToDouble(j['total_amount']) ?? 0,
+        taxAmount: numOrStringToDouble(j['tax_amount']) ?? 0,
+        discount: numOrStringToDouble(j['discount']) ?? 0,
+        netAmount: numOrStringToDouble(j['net_amount']) ?? 0,
+        followUpDate: j['follow_up_date'] as String?,
+        isFinalized: j['is_finalized'] as bool? ?? false,
+        createdAt: j['created_at'] as String?,
+      );
+}
+
 /// One entry from the `discharge-bundle` manifest — a URL list, **not** a
 /// merged PDF (see build PRD §10 gotcha, no server-side PDF merge exists).
 class OtDischargeDocument {
@@ -39,13 +95,13 @@ class OtDischargeDocument {
 /// separately, it's a manifest not a print type).
 enum OtDischargeDocType {
   invoice('invoice', 'Invoice'),
-  summaryBill('summary-bill', 'Summary Bill'),
+  summaryBill('summary-bill', 'Bill Summary'),
   discharge('discharge', 'Discharge Summary'),
-  certificate('certificate', 'Certificate'),
-  medicineSlip('medicine-slip', 'Medicine Slip'),
+  certificate('certificate', 'Surgery Certificate'),
+  medicineSlip('medicine-slip', 'Take-Home Medicine Slip'),
   prescription('prescription', 'Prescription'),
-  lensSlip('lens-slip', 'Lens Slip'),
-  followupSlip('followup-slip', 'Follow-up Slip');
+  lensSlip('lens-slip', 'Lens Implant Details'),
+  followupSlip('followup-slip', 'Follow-up Appointment Slip');
 
   final String path;
   final String label;

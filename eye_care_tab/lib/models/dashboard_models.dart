@@ -1,3 +1,6 @@
+import 'patient_models.dart';
+import 'ot_appointment_models.dart';
+
 class DashboardData {
   final int? subscriptionDaysLeft;
   final bool isDoctor;
@@ -258,6 +261,74 @@ class WaitThresholds {
       rGreen: json['r_green'] as int? ?? 30,
       rOrange: json['r_orange'] as int? ?? 60,
       rRed: json['r_red'] as int? ?? 120,
+    );
+  }
+}
+
+/// Dilation-specific wait thresholds ("D" = dilated, "ND" = not dilated) —
+/// only used by the receptionist "Today Added Patients" widget, matching
+/// web's `wait_d_*`/`wait_nd_*` settings (distinct from the plain "R"
+/// registration-wait thresholds above).
+class TodayPatientsThresholds {
+  final int rGreen, rOrange, rRed;
+  final int dGreen, dOrange, dRed;
+  final int ndGreen, ndOrange, ndRed;
+
+  const TodayPatientsThresholds({
+    this.rGreen = 30, this.rOrange = 60, this.rRed = 120,
+    this.dGreen = 40, this.dOrange = 90, this.dRed = 120,
+    this.ndGreen = 20, this.ndOrange = 60, this.ndRed = 120,
+  });
+
+  factory TodayPatientsThresholds.fromJson(Map<String, dynamic> json) => TodayPatientsThresholds(
+        rGreen: json['r_green'] as int? ?? 30,
+        rOrange: json['r_orange'] as int? ?? 60,
+        rRed: json['r_red'] as int? ?? 120,
+        dGreen: json['d_green'] as int? ?? 40,
+        dOrange: json['d_orange'] as int? ?? 90,
+        dRed: json['d_red'] as int? ?? 120,
+        ndGreen: json['nd_green'] as int? ?? 20,
+        ndOrange: json['nd_orange'] as int? ?? 60,
+        ndRed: json['nd_red'] as int? ?? 120,
+      );
+}
+
+/// One row of the receptionist "Today Added Patients" widget — either a
+/// real `Patient` this receptionist registered today, or an unconverted
+/// `OtAppointmentItem` (OT pre-registration lead) merged in alongside it.
+/// Reuses both existing models directly (see WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md
+/// §9) so the row can be handed straight to the existing check-in/print/OT-edit
+/// screens without a parallel data shape.
+class TodayPatientRow {
+  final Patient? patient;
+  final OtAppointmentItem? otAppointment;
+
+  const TodayPatientRow({this.patient, this.otAppointment});
+
+  bool get isOt => otAppointment != null;
+
+  factory TodayPatientRow.fromJson(Map<String, dynamic> json) {
+    if (json['source'] == 'ot_appointment') {
+      return TodayPatientRow(otAppointment: OtAppointmentItem.fromJson(json));
+    }
+    return TodayPatientRow(patient: Patient.fromJson(json));
+  }
+}
+
+class TodayPatientsData {
+  final List<TodayPatientRow> rows;
+  final TodayPatientsThresholds thresholds;
+
+  const TodayPatientsData({required this.rows, required this.thresholds});
+
+  factory TodayPatientsData.fromJson(Map<String, dynamic> json) {
+    final data = (json['data'] as List<dynamic>? ?? [])
+        .map((e) => TodayPatientRow.fromJson(e as Map<String, dynamic>))
+        .toList();
+    final meta = json['meta'] as Map<String, dynamic>? ?? {};
+    return TodayPatientsData(
+      rows: data,
+      thresholds: TodayPatientsThresholds.fromJson(meta['wait_thresholds'] as Map<String, dynamic>? ?? {}),
     );
   }
 }

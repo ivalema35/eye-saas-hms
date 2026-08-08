@@ -26,8 +26,13 @@ class OtDischargeSummary extends Model
     protected $fillable = [
         'tenant_id',
         'ot_booking_id',
+        'invoice_number',
         'line_items',
         'total_amount',
+        'tax_amount',
+        'discount',
+        'net_amount',
+        'follow_up_date',
         'is_finalized',
         'generated_by',
     ];
@@ -35,6 +40,10 @@ class OtDischargeSummary extends Model
     protected $casts = [
         'line_items' => 'array',
         'total_amount' => 'decimal:2',
+        'tax_amount' => 'decimal:2',
+        'discount' => 'decimal:2',
+        'net_amount' => 'decimal:2',
+        'follow_up_date' => 'date',
         'is_finalized' => 'boolean',
     ];
 

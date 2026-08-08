@@ -41,6 +41,16 @@ class OtDischargeService with AuthenticatedService {
     return OtInvoiceGenerateResult.fromJson(body['data'] as Map<String, dynamic>);
   }
 
+  /// `GET .../invoice` — null when no invoice has been generated yet for
+  /// this booking (a normal state, not an error). See
+  /// OT_DISCHARGE_INVOICES_WEB_PARITY_FIX_PLAN.md TASK 2.2.
+  Future<OtInvoiceSummary?> fetchInvoiceDetail(int bookingId) async {
+    final res = await http.get(Uri.parse('$_base/ot/bookings/$bookingId/invoice'), headers: await headers).timeout(AppConfig.requestTimeout);
+    final body = _parse(res);
+    final data = body['data'] as Map<String, dynamic>?;
+    return data == null ? null : OtInvoiceSummary.fromJson(data);
+  }
+
   Future<List<OtDischargeDocument>> fetchBundleManifest(int bookingId) async {
     final res = await http.get(Uri.parse('$_base/ot/bookings/$bookingId/print/discharge-bundle'), headers: await headers).timeout(AppConfig.requestTimeout);
     final body = _parse(res);

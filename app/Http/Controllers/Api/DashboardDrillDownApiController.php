@@ -29,11 +29,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
+use App\Models\Hospital\OT\OtPreOp;
 use App\Models\Hospital\Patient;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -223,18 +226,44 @@ class DashboardDrillDownApiController extends Controller
 
     // ── Doctor's OT bookings drill-down ──────────────────────────────────────
 
+    /**
+     * Matches web's `DoctorOtListController::index()` exactly (web pull
+     * 2026-08-07, "Phase 2"): also surfaces null-surgery_date bookings
+     * (unscheduled since surgery_date/slot_id are now assigned later — see
+     * WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §1) when today falls in the
+     * selected range, and self-recommended-but-unassigned bookings
+     * (`ot_doctor_id` null, `booked_by` = the doctor). New `preOp` eager
+     * load + `ot_assistants` list support the two new actions below.
+     */
     public function doctorOtIndex(Request $request): JsonResponse
     {
         [$startDate, $endDate] = $this->resolvedDates($request);
         $doctorId = $request->filled('doctor_id') ? (int) $request->input('doctor_id') : null;
 
         $query = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no,age', 'otDoctor:id,name', 'otAssistant:id,name'])
-            ->whereDate('surgery_date', '>=', $startDate)
-            ->whereDate('surgery_date', '<=', $endDate);
+            ->with(['patient:id,first_name,middle_name,last_name,contact_no,age', 'otDoctor:id,name', 'otAssistant:id,name', 'preOp'])
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween(DB::raw('DATE(surgery_date)'), [$startDate, $endDate])
+                    ->orWhere(function ($nullDate) use ($startDate, $endDate) {
+                        $today = now()->toDateString();
+                        if ($startDate <= $today && $endDate >= $today) {
+                            $nullDate->whereNull('surgery_date')
+                                ->whereNotIn('ot_status', [
+                                    OtBooking::STATUS_OPERATED,
+                                    OtBooking::STATUS_DISCHARGED,
+                                    OtBooking::STATUS_SURGERY_REFUSED,
+                                ]);
+                        }
+                    });
+            });
 
         if ($doctorId) {
-            $query->where('ot_doctor_id', $doctorId);
+            $query->where(function ($q) use ($doctorId) {
+                $q->where('ot_doctor_id', $doctorId)
+                    ->orWhere(function ($inner) use ($doctorId) {
+                        $inner->whereNull('ot_doctor_id')->where('booked_by', $doctorId);
+                    });
+            });
         }
 
         $bookings = $query->orderByDesc('surgery_date')->orderByDesc('id')->paginate((int) $request->integer('per_page', 25));
@@ -247,8 +276,122 @@ class DashboardDrillDownApiController extends Controller
                 'end_date' => $endDate,
                 'doctor_id' => $doctorId,
                 'doctors' => HospitalUser::query()->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))->orderBy('name')->get(['id', 'name']),
+                'ot_assistants' => HospitalUser::query()->where('status', 'active')->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))->orderBy('name')->get(['id', 'name']),
             ],
         ]);
+    }
+
+    /**
+     * "Doctor agrees OT after consult" — mirrors
+     * `DoctorOtListController::assignAssistant()` exactly.
+     */
+    public function doctorOtAssignAssistant(string $slug, Request $request, int $bookingId): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $booking = OtBooking::query()->with('preOp')->find($bookingId);
+        if (! $booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        if ((int) $booking->tenant_id !== $tenantId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized booking access.'], 403);
+        }
+
+        if (! $this->canManageDoctorOtBooking($booking)) {
+            return response()->json(['success' => false, 'message' => 'You can only act on patients assigned to you.'], 403);
+        }
+
+        if (! $booking->isDoctorConsultationPending()) {
+            return response()->json(['success' => false, 'message' => 'This patient is not awaiting doctor consultation actions.'], 422);
+        }
+
+        $validated = $request->validate([
+            'ot_assistant_id' => [
+                'required', 'integer',
+                Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
+                    $q->where('tenant_id', $tenantId)
+                        ->where('status', 'active')
+                        ->whereExists(function ($sub) {
+                            $sub->selectRaw('1')
+                                ->from('roles')
+                                ->whereColumn('roles.id', 'hospital_users.role_id')
+                                ->where('roles.slug', 'ot_assistant');
+                        });
+                }),
+            ],
+        ], [
+            'ot_assistant_id.required' => 'Select an OT Assistant to proceed with surgery.',
+        ]);
+
+        DB::transaction(function () use ($booking, $validated, $tenantId): void {
+            OtPreOp::query()->updateOrCreate(
+                ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
+                [
+                    'pre_op_status' => OtPreOp::STATUS_READY_FOR_SURGERY,
+                    'entered_by' => (int) auth('sanctum')->id(),
+                ]
+            );
+
+            $booking->update([
+                'ot_assistant_id' => (int) $validated['ot_assistant_id'],
+                'ot_status' => OtBooking::STATUS_READY,
+                'attended_at' => $booking->attended_at ?? now(),
+            ]);
+        });
+
+        return response()->json(['success' => true, 'message' => 'OT Assistant assigned. Patient is Ready for OT.', 'data' => ['ot_status' => $booking->fresh()->ot_status]]);
+    }
+
+    /**
+     * "Patient refuses surgery" — mirrors
+     * `DoctorOtListController::refuseSurgery()` exactly.
+     */
+    public function doctorOtRefuseSurgery(string $slug, int $bookingId): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $booking = OtBooking::query()->with('preOp')->find($bookingId);
+        if (! $booking) {
+            return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+
+        if ((int) $booking->tenant_id !== $tenantId) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized booking access.'], 403);
+        }
+
+        if (! $this->canManageDoctorOtBooking($booking)) {
+            return response()->json(['success' => false, 'message' => 'You can only act on patients assigned to you.'], 403);
+        }
+
+        if (! $booking->isDoctorConsultationPending()) {
+            return response()->json(['success' => false, 'message' => 'This patient is not awaiting doctor consultation actions.'], 422);
+        }
+
+        $booking->update([
+            'ot_status' => OtBooking::STATUS_SURGERY_REFUSED,
+            'ot_assistant_id' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Patient refused OT. Sent to Accounts for refund (status: surgery_refused).', 'data' => ['ot_status' => $booking->ot_status]]);
+    }
+
+    /** Mirrors `DoctorOtListController::assertCanManage()`. */
+    private function canManageDoctorOtBooking(OtBooking $booking): bool
+    {
+        $user = auth('sanctum')->user();
+        if (! $user) {
+            return false;
+        }
+
+        if (method_exists($user, 'isSuperUser') && $user->isSuperUser()) {
+            return true;
+        }
+
+        $slug = $user->role?->slug;
+        if (in_array($slug, ['hospital_admin', 'admin'], true)) {
+            return true;
+        }
+
+        return (int) $booking->ot_doctor_id === (int) $user->id;
     }
 
     // ── OT Assistant's queue drill-down ──────────────────────────────────────

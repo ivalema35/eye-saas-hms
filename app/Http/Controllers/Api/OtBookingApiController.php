@@ -42,11 +42,10 @@ class OtBookingApiController extends Controller
 
         $validated = $request->validate([
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
-            'surgery_date' => ['required', 'date', 'after_or_equal:today'],
-            'slot_id' => [
-                'required', 'integer',
-                Rule::exists('tbl_ot_slots', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
-            ],
+            // Doctor + OT Assistant, and OT date/slot, are set later in the OT flow —
+            // matches web exactly (OtBookingController::recommendSurgery(), web pull
+            // 2026-08-07: surgery_date/slot_id dropped from validation, always null
+            // at recommend time now).
             'ot_surgery_type_id' => [
                 'required', 'integer',
                 Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
@@ -80,9 +79,10 @@ class OtBookingApiController extends Controller
             ], 422);
         }
 
+        // Date/slot and staff are assigned later (counsellor / ward) — not at recommend.
         $payload = [
-            'surgery_date' => $validated['surgery_date'],
-            'slot_id' => (int) $validated['slot_id'],
+            'surgery_date' => null,
+            'slot_id' => null,
             'eye' => $validated['eye'],
             'ot_type' => $surgeryType->surgery_name,
             'ot_status' => OtBooking::STATUS_SURGERY_RECOMMENDED,

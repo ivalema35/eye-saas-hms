@@ -12,17 +12,23 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            background: #f4f6fb;
+            background: #fff;
             color: #111827;
             font-size: 12px;
         }
+        /* Base styles must already fit inside @page's own margin — DomPDF
+           (used for the app's PDF export) ignores @media print entirely, so
+           a "card preview" width/padding here would overflow the printable
+           canvas and get clipped. Real browsers reset to this exact layout
+           via @media print anyway, so there's no visual loss when printing
+           from web. See OT_DISCHARGE_INVOICES_WEB_PARITY_FIX_PLAN.md
+           Addendum (PDF clipping bug). */
         .page {
-            width: 148mm;
-            min-height: 210mm;
-            margin: 12px auto;
+            width: 100%;
+            min-height: auto;
+            margin: 0;
             background: #fff;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-            padding: 8mm;
+            padding: 0;
             box-sizing: border-box;
         }
         .header { border-bottom: 2px solid #0f4c81; margin-bottom: 10px; padding-bottom: 6px; }
@@ -51,8 +57,6 @@
         .implant-no { background: #fee2e2; color: #991b1b; }
         .print-btn { position: fixed; right: 12px; top: 12px; border: 0; background: #0f4c81; color: #fff; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
         @media print {
-            body { background: #fff; }
-            .page { width: 100%; min-height: auto; margin: 0; box-shadow: none; padding: 0; }
             .print-btn { display: none; }
         }
     </style>

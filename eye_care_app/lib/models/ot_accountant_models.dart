@@ -146,6 +146,67 @@ class OtPaymentResult {
       );
 }
 
+/// Per-tenant money-summary card shown on the Accountant dashboard (web:
+/// collected/refunded/net + a count of refunds still pending). Sits under
+/// the `bookings()` response's `meta.money_summary`, not `data`. See
+/// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4.
+class OtMoneySummary {
+  final double collected;
+  final double refunded;
+  final int refundsPending;
+  final double net;
+
+  const OtMoneySummary({required this.collected, required this.refunded, required this.refundsPending, required this.net});
+
+  factory OtMoneySummary.fromJson(Map<String, dynamic> j) => OtMoneySummary(
+        collected: numOrStringToDouble(j['collected']) ?? 0,
+        refunded: numOrStringToDouble(j['refunded']) ?? 0,
+        refundsPending: j['refunds_pending'] as int? ?? 0,
+        net: numOrStringToDouble(j['net']) ?? 0,
+      );
+}
+
+/// `GET .../refund-form-data` — only reachable for `surgery_refused`
+/// bookings with a refundable balance; `refund_amount` is always the FULL
+/// balance (no partial-refund UI exists, matches web exactly). See
+/// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4.
+class OtRefundFormData {
+  final OtBookingSummary booking;
+  final double totalPaid;
+  final double totalRefunded;
+  final double refundAmount;
+  final String autoReceiptNumber;
+
+  const OtRefundFormData({
+    required this.booking,
+    required this.totalPaid,
+    required this.totalRefunded,
+    required this.refundAmount,
+    required this.autoReceiptNumber,
+  });
+
+  factory OtRefundFormData.fromJson(Map<String, dynamic> j) => OtRefundFormData(
+        booking: OtBookingSummary.fromJson(j['booking'] as Map<String, dynamic>),
+        totalPaid: numOrStringToDouble(j['total_paid']) ?? 0,
+        totalRefunded: numOrStringToDouble(j['total_refunded']) ?? 0,
+        refundAmount: numOrStringToDouble(j['refund_amount']) ?? 0,
+        autoReceiptNumber: j['auto_receipt_number'] as String? ?? '',
+      );
+}
+
+/// Result of `POST .../refunds` — a raw `OtRefund` row.
+class OtRefundResult {
+  final double amount;
+  final String? receiptNumber;
+
+  const OtRefundResult({required this.amount, this.receiptNumber});
+
+  factory OtRefundResult.fromJson(Map<String, dynamic> j) => OtRefundResult(
+        amount: numOrStringToDouble(j['amount']) ?? 0,
+        receiptNumber: j['receipt_number'] as String?,
+      );
+}
+
 class OtPaymentReceipt {
   final OtPaymentEntry payment;
   final double totalPaid;

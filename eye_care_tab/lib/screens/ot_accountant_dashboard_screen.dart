@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../constants/app_breakpoints.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -10,6 +9,17 @@ import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
+
+/// See the matching helper in `ot_ward_queue_screen.dart` for why this is
+/// needed — `unfocus()` only schedules the focus change, it doesn't apply
+/// synchronously, so popping right after it (pass 1's fix) still races.
+/// Deferring to `addPostFrameCallback` lets that change resolve first.
+void _closeDialogSafely(BuildContext dialogContext) {
+  FocusManager.instance.primaryFocus?.unfocus();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (dialogContext.mounted) Navigator.pop(dialogContext);
+  });
+}
 
 /// Tablet Accountant / Billing (Round 3 Phase 5) — Pattern A (list + detail
 /// split), matching `OtCounsellorDashboardScreen`/`OtAppointmentListScreen`.
@@ -30,6 +40,7 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
   late final TabController _tabCtrl;
   List<OtBookingSummary> _items = [];
   OtPaginationMeta? _meta;
+  OtMoneySummary? _moneySummary;
   bool _loading = true;
   String? _error;
   int _page = 1;
@@ -37,12 +48,13 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
   _PaneMode _paneMode = _PaneMode.list;
   OtBookingSummary? _selected;
 
-  String get _filter => _tabCtrl.index == 0 ? 'today' : 'completed';
+  static const _filters = ['today', 'completed', 'refunds'];
+  String get _filter => _filters[_tabCtrl.index];
 
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(length: _filters.length, vsync: this);
     _tabCtrl.addListener(() {
       if (!_tabCtrl.indexIsChanging) return;
       setState(() => _page = 1);
@@ -61,13 +73,27 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
     setState(() { _loading = true; _error = null; });
     try {
       final result = await OtAccountantService.instance.fetchBookings(filter: _filter, page: _page);
-      if (mounted) setState(() { _items = result.items; _meta = result.meta; _loading = false; });
+      if (mounted) setState(() { _items = result.items; _meta = result.meta; _moneySummary = result.moneySummary; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
     }
   }
 
-  void _open(OtBookingSummary item) => setState(() { _paneMode = _PaneMode.detail; _selected = item; });
+  void _open(OtBookingSummary item) {
+    if (item.otStatus == OtStatus.surgeryRefused) {
+      if ((item.refundableBalance ?? 0) > 0) _openRefund(item);
+      return;
+    }
+    setState(() { _paneMode = _PaneMode.detail; _selected = item; });
+  }
+
+  void _openRefund(OtBookingSummary item) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => _RefundDialog(bookingId: item.id),
+    ).then((_) => _load());
+  }
 
   void _closePane() => setState(() { _paneMode = _PaneMode.list; _selected = null; });
 
@@ -133,11 +159,31 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,
-          tabs: const [Tab(text: 'Today'), Tab(text: 'Completed')],
+          tabs: const [Tab(text: 'Today'), Tab(text: 'Completed'), Tab(text: 'Refunds')],
         ),
+        if (_moneySummary != null) Padding(padding: const EdgeInsets.fromLTRB(12, 8, 12, 0), child: _buildMoneySummary()),
         const SizedBox(height: 8),
         Expanded(child: _buildBody()),
         if (_meta != null) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: AppPaginationBar(currentPage: _meta!.currentPage, totalPages: _meta!.lastPage, onPageChange: (p) { setState(() => _page = p); _load(); })),
+      ]),
+    );
+  }
+
+  Widget _buildMoneySummary() {
+    final s = _moneySummary!;
+    Widget stat(String label, String value, Color color) => Expanded(
+          child: Column(children: [
+            Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: color)),
+            Text(label, style: const TextStyle(fontSize: 9.5, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
+          ]),
+        );
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(AppRadius.md)),
+      child: Row(children: [
+        stat('Collected', '₹${s.collected.toStringAsFixed(0)}', AppColors.green),
+        stat('Refunded', '₹${s.refunded.toStringAsFixed(0)}', AppColors.red),
+        stat('Net', '₹${s.net.toStringAsFixed(0)}', AppColors.primary),
       ]),
     );
   }
@@ -176,10 +222,27 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
                         child: Text(paymentStatusLabel(item.paymentStatus!), style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: paymentStatusColor(item.paymentStatus!))),
                       ),
                     ],
+                    if (item.otStatus == OtStatus.surgeryRefused) ...[
+                      const SizedBox(height: 6),
+                      if ((item.refundableBalance ?? 0) > 0)
+                        Text('Refundable: ₹${item.refundableBalance!.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.orange))
+                      else
+                        Text('Refunded: ₹${(item.totalRefunded ?? 0).toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.green)),
+                    ],
                   ]),
                 ),
-                IconButton(icon: const Icon(Icons.visibility_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'View', onPressed: () => _viewDetails(item)),
-                IconButton(icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'Receipt', onPressed: () => _viewLatestReceipt(item)),
+                if (item.otStatus == OtStatus.surgeryRefused)
+                  (item.refundableBalance ?? 0) > 0
+                      ? OutlinedButton(
+                          onPressed: () => _openRefund(item),
+                          style: OutlinedButton.styleFrom(foregroundColor: AppColors.red, side: const BorderSide(color: AppColors.red)),
+                          child: const Text('Refund', style: TextStyle(fontSize: 12)),
+                        )
+                      : const Icon(Icons.check_circle_outline_rounded, color: AppColors.green)
+                else ...[
+                  IconButton(icon: const Icon(Icons.visibility_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'View', onPressed: () => _viewDetails(item)),
+                  IconButton(icon: const Icon(Icons.receipt_long_outlined, size: 20, color: AppColors.textSecondary), tooltip: 'Receipt', onPressed: () => _viewLatestReceipt(item)),
+                ],
               ]),
             ),
           ),
@@ -211,6 +274,146 @@ class _OtAccountantDashboardScreenState extends State<OtAccountantDashboardScree
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))]),
       child: child,
+    );
+  }
+}
+
+// ── Full refund dialog ───────────────────────────────────────────────────────
+// Amount is never editable — always the full refundable balance, matching
+// web exactly (no partial-refund UI exists). See
+// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4.
+
+class _RefundDialog extends StatefulWidget {
+  final int bookingId;
+  const _RefundDialog({required this.bookingId});
+
+  @override
+  State<_RefundDialog> createState() => _RefundDialogState();
+}
+
+class _RefundDialogState extends State<_RefundDialog> {
+  bool _loading = true;
+  String? _loadError;
+  OtRefundFormData? _formData;
+  bool _saving = false;
+
+  final _receiptCtrl = TextEditingController();
+  final _reasonCtrl = TextEditingController();
+  String _paymentMode = 'cash';
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  @override
+  void dispose() {
+    _receiptCtrl.dispose();
+    _reasonCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() { _loading = true; _loadError = null; });
+    try {
+      final data = await OtAccountantService.instance.fetchRefundFormData(widget.bookingId);
+      if (mounted) {
+        setState(() {
+          _formData = data;
+          _loading = false;
+          _receiptCtrl.text = data.autoReceiptNumber;
+          _reasonCtrl.text = 'Patient refused OT — full refund';
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() { _loadError = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
+    }
+  }
+
+  Future<void> _save() async {
+    setState(() => _saving = true);
+    try {
+      await OtAccountantService.instance.storeRefund(
+        widget.bookingId,
+        paymentMode: _paymentMode,
+        receiptNumber: _receiptCtrl.text.trim(),
+        reason: _reasonCtrl.text.trim(),
+      );
+      if (mounted) {
+        _closeDialogSafely(context);
+        showAppSnackBar(context, 'Full refund recorded', isSuccess: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _saving = false);
+        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      }
+    }
+  }
+
+  Widget _readRow(String label, String value) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Text(label, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+          Text(value, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700)),
+        ]),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
+      title: const Text('Full Refund — Surgery Refused'),
+      content: SizedBox(
+        width: 400,
+        child: _loading
+            ? const SizedBox(height: 120, child: Center(child: CircularProgressIndicator()))
+            : _loadError != null
+                ? Text(_loadError!, style: const TextStyle(color: AppColors.red))
+                : Builder(builder: (_) {
+                    final f = _formData!;
+                    return SingleChildScrollView(
+                      child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(AppRadius.md)),
+                          child: Column(children: [
+                            _readRow('Patient', f.booking.patient?.fullName ?? '—'),
+                            _readRow('UHID', f.booking.patient?.patientCode ?? '—'),
+                            _readRow('Total Paid', '₹${f.totalPaid.toStringAsFixed(0)}'),
+                            _readRow('Already Refunded', '₹${f.totalRefunded.toStringAsFixed(0)}'),
+                          ]),
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          decoration: BoxDecoration(color: AppColors.red.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.md)),
+                          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                            const Text('Refund Amount (full)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                            Text('₹${f.refundAmount.toStringAsFixed(0)}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.red)),
+                          ]),
+                        ),
+                        const SizedBox(height: 12),
+                        Wrap(spacing: 8, children: ['cash', 'online'].map((m) => ChoiceChip(label: Text(m[0].toUpperCase() + m.substring(1)), selected: _paymentMode == m, onSelected: (_) => setState(() => _paymentMode = m))).toList()),
+                        const SizedBox(height: 12),
+                        TextFormField(controller: _receiptCtrl, decoration: const InputDecoration(labelText: 'Receipt Number', border: OutlineInputBorder())),
+                        const SizedBox(height: 12),
+                        TextFormField(controller: _reasonCtrl, maxLines: 2, decoration: const InputDecoration(labelText: 'Reason', border: OutlineInputBorder())),
+                      ]),
+                    );
+                  }),
+      ),
+      actions: [
+        TextButton(onPressed: _saving ? null : () => _closeDialogSafely(context), child: const Text('Cancel')),
+        if (_formData != null)
+          ElevatedButton(
+            onPressed: _saving ? null : _save,
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.red, foregroundColor: Colors.white),
+            child: _saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Record Full Refund'),
+          ),
+      ],
     );
   }
 }
@@ -487,7 +690,6 @@ class _PaymentDetailPaneState extends State<_PaymentDetailPane> {
     bool loadingForm = true;
     String? formError;
     OtPaymentFormData? formData;
-    final amountCtrl = TextEditingController();
     final receiptCtrl = TextEditingController();
     String paymentMode = 'cash';
     bool saving = false;
@@ -497,7 +699,6 @@ class _PaymentDetailPaneState extends State<_PaymentDetailPane> {
         final data = await OtAccountantService.instance.fetchPaymentFormData(widget.bookingId);
         formData = data;
         loadingForm = false;
-        amountCtrl.text = data.remainingBalance > 0 ? data.remainingBalance.toStringAsFixed(0) : data.defaultPackageAmount.toStringAsFixed(0);
         receiptCtrl.text = data.autoReceiptNumber;
         paymentMode = data.defaultPaymentMode;
         ss(() {});
@@ -514,15 +715,10 @@ class _PaymentDetailPaneState extends State<_PaymentDetailPane> {
       }
       final disabled = formData != null && formData!.remainingBalance <= 0 && formData!.defaultPackageAmount > 0;
       Future<void> save() async {
-        final amount = double.tryParse(amountCtrl.text.trim());
-        if (amount == null || amount <= 0) {
-          showAppSnackBar(context, 'Enter a valid amount', isError: true);
-          return;
-        }
         ss(() => saving = true);
         try {
-          final result = await OtAccountantService.instance.storePayment(widget.bookingId, packageAmount: amount, receiptNumber: receiptCtrl.text.trim(), paymentMode: paymentMode);
-          if (mounted) Navigator.pop(dCtx);
+          final result = await OtAccountantService.instance.storePayment(widget.bookingId, receiptNumber: receiptCtrl.text.trim(), paymentMode: paymentMode);
+          if (mounted) _closeDialogSafely(dCtx);
           await _load();
           widget.onChanged();
           if (mounted) showAppSnackBar(context, result.isFullyPaid ? 'Payment complete — booking moved to Ward' : 'Payment recorded', isSuccess: true);
@@ -546,7 +742,7 @@ class _PaymentDetailPaneState extends State<_PaymentDetailPane> {
                         decoration: BoxDecoration(color: const Color(0xFFF0F6FB), borderRadius: BorderRadius.circular(AppRadius.md)),
                         child: Column(children: [
                           _readRow('UHID', formData!.booking.patient?.patientCode ?? '—'),
-                          _readRow('OT Package', formData!.counselling?.packageName ?? formData!.counselling?.lensOption ?? '—'),
+                          _readRow('OT Package', formData!.counselling?.packageName ?? '—'),
                           _readRow('Total Amount', '₹${formData!.requiredTotal.toStringAsFixed(0)}'),
                           _readRow('Amount Paid', '₹${formData!.totalPaidSoFar.toStringAsFixed(0)}'),
                           _readRow('Payment Status', paymentStatusLabel(formData!.booking.paymentStatus ?? 'pending')),
@@ -555,10 +751,19 @@ class _PaymentDetailPaneState extends State<_PaymentDetailPane> {
                         ]),
                       ),
                       const SizedBox(height: 12),
-                      Align(alignment: Alignment.centerLeft, child: Text('Remaining balance: ₹${formData!.remainingBalance.toStringAsFixed(0)}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
-                      if (disabled) Align(alignment: Alignment.centerLeft, child: Text('Nothing remaining to pay.', style: const TextStyle(fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600))),
-                      const SizedBox(height: 12),
-                      TextFormField(enabled: !disabled, controller: amountCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))], decoration: const InputDecoration(labelText: 'Amount *', prefixText: '₹', border: OutlineInputBorder())),
+                      // Amount is no longer editable — web pull 2026-08-07 removed
+                      // partial payments; the server always charges the full
+                      // remaining balance. See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §2.
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.06), borderRadius: BorderRadius.circular(AppRadius.md)),
+                        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                          const Text('Amount to be Paid', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                          Text('₹${formData!.remainingBalance.toStringAsFixed(0)}', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: AppColors.primary)),
+                        ]),
+                      ),
+                      if (disabled) Align(alignment: Alignment.centerLeft, child: Padding(padding: const EdgeInsets.only(top: 4), child: Text('Nothing remaining to pay.', style: const TextStyle(fontSize: 12, color: AppColors.red, fontWeight: FontWeight.w600)))),
                       const SizedBox(height: 12),
                       Row(children: [
                         Expanded(child: TextFormField(enabled: !disabled, controller: receiptCtrl, decoration: const InputDecoration(labelText: 'Receipt Number', border: OutlineInputBorder()))),
@@ -570,12 +775,11 @@ class _PaymentDetailPaneState extends State<_PaymentDetailPane> {
                     ]),
         ),
         actions: [
-          TextButton(onPressed: saving ? null : () => Navigator.pop(dCtx), child: const Text('Cancel')),
+          TextButton(onPressed: saving ? null : () => _closeDialogSafely(dCtx), child: const Text('Cancel')),
           ElevatedButton(onPressed: saving ? null : save, style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white), child: saving ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save Payment')),
         ],
       );
     }));
-    amountCtrl.dispose();
     receiptCtrl.dispose();
   }
 
@@ -733,7 +937,7 @@ class _BillingDetailsPaneDialogState extends State<_BillingDetailsPaneDialog> {
                     return Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
                       _readRow('Patient', d.booking.patient?.fullName ?? '—'),
                       _readRow('UHID', d.booking.patient?.patientCode ?? '—'),
-                      _readRow('OT Package', d.counselling?.packageName ?? d.counselling?.lensOption ?? '—'),
+                      _readRow('OT Package', d.counselling?.packageName ?? '—'),
                       _readRow('Total Amount', '₹${d.requiredTotal.toStringAsFixed(0)}'),
                       _readRow('Amount Paid', '₹${d.totalPaidSoFar.toStringAsFixed(0)}'),
                       _readRow('Remaining Balance', '₹${d.remainingBalance.toStringAsFixed(0)}'),

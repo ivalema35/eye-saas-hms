@@ -1,26 +1,34 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
-import '../constants/permissions.dart';
 import '../models/medicine_models.dart';
 import '../models/ot_assistant_models.dart';
-import '../services/medicine_service.dart';
 import '../services/ot_assistant_service.dart';
-import '../services/permission_service.dart';
-import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_section_header.dart';
-import 'ot_lens_form_screen.dart';
 
-/// Round 3 Phase 4 — Surgery Record. **One combined verify + record
-/// submit** — the backend has no state for a partial verify, so this is a
-/// single form/screen, not a confirm-then-record flow (explicit backend
-/// instruction, see build PRD §8 gotcha).
+/// One `_medicineRows` line — medicine is a dropdown pick (not free text, see
+/// OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md G5) so it always resolves against
+/// `Medicine::exists` server-side; dose stays free text like web.
+class _MedRow {
+  String? medicine;
+  final TextEditingController doseCtrl = TextEditingController();
+  _MedRow({this.medicine});
+  void dispose() => doseCtrl.dispose();
+}
+
+/// Web parity rebuild (2026-08-07) — see OT_SURGERY_RECORD_WEB_PARITY_FIX_PLAN.md.
+/// **One combined verify + record submit** — the backend auto-verifies the
+/// pre-surgery checklist atomically with the surgery record (no separate
+/// "verify" step and, since this rebuild, no checklist UI either — matches
+/// web, which removed the checklist from its own form and hardcodes it
+/// server-side).
 ///
-/// Lens recording is reachable from here (app-bar action), not from the
-/// Assistant Dashboard queue — matches web exactly, where lens is hidden
-/// from the dashboard by design (OT_WEB_PARITY_FIX_PRD.md §5.1).
+/// No lens-recording entry point here — web's lens-record route exists but
+/// isn't linked from any of its own UI (not the dashboard queue, not this
+/// form), so neither app links to it either (removed 2026-08-07, previously
+/// an app-bar action).
 class OtSurgeryRecordScreen extends StatefulWidget {
   final int bookingId;
   final String patientName;
@@ -35,24 +43,28 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
   bool _loading = true;
   String? _loadError;
   OtSurgeryFormData? _formData;
-  List<MedGroup> _medicineGroups = [];
   bool _saving = false;
 
   final _otRoomCtrl = TextEditingController();
   final _complicationNotesCtrl = TextEditingController();
   final _bloodLossCtrl = TextEditingController();
+  final _lensCompanyCtrl = TextEditingController();
+  final _lensModelCtrl = TextEditingController();
+  final _estimatedPowerCtrl = TextEditingController();
+  final _lensCostCtrl = TextEditingController();
 
-  bool _identityVerified = false;
-  bool _consentVerified = false;
-  bool _paymentVerified = false;
-  bool _correctEyeVerified = false;
   String? _surgeryName;
-  String _eyeOperated = 'Both';
+  DateTime _surgeryDate = DateTime.now();
+  // Eye Operated is locked to the booking's own eye (Recommend Surgery
+  // selection) — matches web's `$lockedEye`, not a user-editable picker.
+  String _lockedEye = 'RE';
   DateTime? _startDateTime;
   DateTime? _endDateTime;
   String _complicationStatus = 'none';
+  String? _lensCategory;
+  String? _lensType;
   int? _medicineGroupId;
-  final List<(TextEditingController medicine, TextEditingController dose)> _medicineRows = [];
+  final List<_MedRow> _medicineRows = [_MedRow()];
 
   @override
   void initState() {
@@ -65,9 +77,12 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
     _otRoomCtrl.dispose();
     _complicationNotesCtrl.dispose();
     _bloodLossCtrl.dispose();
-    for (final (m, d) in _medicineRows) {
-      m.dispose();
-      d.dispose();
+    _lensCompanyCtrl.dispose();
+    _lensModelCtrl.dispose();
+    _estimatedPowerCtrl.dispose();
+    _lensCostCtrl.dispose();
+    for (final r in _medicineRows) {
+      r.dispose();
     }
     super.dispose();
   }
@@ -75,28 +90,40 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
   Future<void> _load() async {
     setState(() { _loading = true; _loadError = null; });
     try {
-      final results = await Future.wait([
-        OtAssistantService.instance.fetchSurgeryFormData(widget.bookingId),
-        MedicineService.instance.fetchOtMedicineGroups(),
-      ]);
-      if (mounted) {
-        setState(() {
-          _formData = results[0] as OtSurgeryFormData;
-          _medicineGroups = (results[1] as MedGroupListResult).groups;
-          _eyeOperated = _formData!.booking.eye ?? 'Both';
-          final v = _formData!.verification;
-          if (v != null) {
-            _identityVerified = v.identityVerified;
-            _consentVerified = v.consentVerified;
-            _paymentVerified = v.paymentVerified;
-            _correctEyeVerified = v.correctEyeVerified;
-          }
-          _loading = false;
-        });
-      }
+      final formData = await OtAssistantService.instance.fetchSurgeryFormData(widget.bookingId);
+      if (!mounted) return;
+      setState(() {
+        _formData = formData;
+
+        final bookingEye = formData.booking.eye;
+        _lockedEye = (bookingEye == 'RE' || bookingEye == 'LE' || bookingEye == 'Both') ? bookingEye! : 'RE';
+
+        final apptSurgeryDate = formData.booking.surgeryDate;
+        _surgeryDate = apptSurgeryDate != null ? (DateTime.tryParse(apptSurgeryDate) ?? DateTime.now()) : DateTime.now();
+
+        final otType = formData.booking.otType;
+        if (otType != null && formData.surgeryTypes.any((t) => t.surgeryName == otType)) {
+          _surgeryName = otType;
+        }
+
+        final c = formData.counselling;
+        _lensCategory = c?.lensCategory;
+        _lensCompanyCtrl.text = c?.lensCompany ?? '';
+        _lensModelCtrl.text = c?.lensModel ?? '';
+        _lensType = c?.lensType;
+        _estimatedPowerCtrl.text = c?.estimatedPower?.toString() ?? '';
+        _lensCostCtrl.text = c?.lensCost != null ? c!.lensCost!.toStringAsFixed(2) : '';
+
+        _loading = false;
+      });
     } catch (e) {
       if (mounted) setState(() { _loadError = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
     }
+  }
+
+  Future<void> _pickSurgeryDate() async {
+    final date = await showDatePicker(context: context, initialDate: _surgeryDate, firstDate: DateTime(2020), lastDate: DateTime(2100));
+    if (date != null) setState(() => _surgeryDate = date);
   }
 
   Future<void> _pickDateTime({required bool isStart}) async {
@@ -109,37 +136,48 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
     setState(() { if (isStart) _startDateTime = combined; else _endDateTime = combined; });
   }
 
-  void _addMedicineRow() => setState(() => _medicineRows.add((TextEditingController(), TextEditingController())));
-  void _removeMedicineRow(int i) => setState(() {
-        _medicineRows[i].$1.dispose();
-        _medicineRows[i].$2.dispose();
-        _medicineRows.removeAt(i);
+  void _addMedicineRow() => setState(() => _medicineRows.add(_MedRow()));
+
+  /// Removing the last remaining row clears it instead of deleting it —
+  /// matches web's JS behaviour exactly (a row is always present).
+  void _removeMedicineRow(int i) {
+    if (_medicineRows.length == 1) {
+      setState(() {
+        _medicineRows[i].medicine = null;
+        _medicineRows[i].doseCtrl.clear();
       });
+      return;
+    }
+    setState(() {
+      _medicineRows[i].dispose();
+      _medicineRows.removeAt(i);
+    });
+  }
 
   /// Wipes and rebuilds the medicine row list from the selected group's
-  /// items — matches web's quick-fill behaviour exactly (OT_WEB_PARITY_FIX_PRD.md §5.2).
+  /// items — matches web's quick-fill behaviour, incl. composing dose from
+  /// `frequency + duration` (not dosage text).
   void _applyMedicineGroup(MedGroup group) {
     setState(() {
-      for (final (m, d) in _medicineRows) {
-        m.dispose();
-        d.dispose();
+      for (final r in _medicineRows) {
+        r.dispose();
       }
       _medicineRows.clear();
       _medicineGroupId = group.id;
       for (final item in group.items) {
-        _medicineRows.add((TextEditingController(text: item.medicineName ?? ''), TextEditingController(text: item.dosageText ?? '')));
+        if (item.medicineName == null || item.medicineName!.isEmpty) continue;
+        _medicineRows.add(_MedRow(medicine: item.medicineName)..doseCtrl.text = item.quickFillDose);
       }
+      if (_medicineRows.isEmpty) _medicineRows.add(_MedRow());
     });
   }
 
-  String _fmtDateTime(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}:00';
-  String _fmtDisplay(DateTime? d) => d == null ? 'Select' : '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year} ${TimeOfDay.fromDateTime(d).format(context)}';
+  String _fmtDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _fmtDateTime(DateTime d) => '${_fmtDate(d)} ${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}:00';
+  String _fmtDisplayDate(DateTime d) => '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  String _fmtDisplayDateTime(DateTime? d) => d == null ? 'Select' : '${_fmtDisplayDate(d)} ${TimeOfDay.fromDateTime(d).format(context)}';
 
   Future<void> _save() async {
-    if (!(_identityVerified && _consentVerified && _paymentVerified && _correctEyeVerified)) {
-      showAppSnackBar(context, 'All 4 verification items must be checked', isError: true);
-      return;
-    }
     if (_surgeryName == null || _surgeryName!.isEmpty) {
       showAppSnackBar(context, 'Surgery name is required', isError: true);
       return;
@@ -148,27 +186,37 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
       showAppSnackBar(context, 'Complication notes are required when a complication is recorded', isError: true);
       return;
     }
+    if (_startDateTime != null && _endDateTime != null && !_endDateTime!.isAfter(_startDateTime!)) {
+      showAppSnackBar(context, 'End time must be after start time', isError: true);
+      return;
+    }
     setState(() => _saving = true);
     try {
       await OtAssistantService.instance.storeSurgery(
         widget.bookingId,
-        identityVerified: _identityVerified,
-        consentVerified: _consentVerified,
-        paymentVerified: _paymentVerified,
-        correctEyeVerified: _correctEyeVerified,
+        surgeryDate: _fmtDate(_surgeryDate),
         surgeryName: _surgeryName!,
         otRoom: _otRoomCtrl.text.trim().isEmpty ? null : _otRoomCtrl.text.trim(),
-        eyeOperated: _eyeOperated,
+        eyeOperated: _lockedEye,
         startTime: _startDateTime == null ? null : _fmtDateTime(_startDateTime!),
         endTime: _endDateTime == null ? null : _fmtDateTime(_endDateTime!),
         complicationStatus: _complicationStatus,
         complicationNotes: _complicationNotesCtrl.text.trim().isEmpty ? null : _complicationNotesCtrl.text.trim(),
         bloodLoss: _bloodLossCtrl.text.trim().isEmpty ? null : _bloodLossCtrl.text.trim(),
         medicineGroupId: _medicineGroupId,
-        otMedicines: _medicineRows.where((r) => r.$1.text.trim().isNotEmpty).map((r) => OtSurgeryMedicineLine(medicine: r.$1.text.trim(), dose: r.$2.text.trim().isEmpty ? null : r.$2.text.trim())).toList(),
+        otMedicines: _medicineRows
+            .where((r) => (r.medicine ?? '').isNotEmpty)
+            .map((r) => OtSurgeryMedicineLine(medicine: r.medicine!, dose: r.doseCtrl.text.trim().isEmpty ? null : r.doseCtrl.text.trim()))
+            .toList(),
+        lensCategory: _lensCategory,
+        lensCompany: _lensCompanyCtrl.text.trim().isEmpty ? null : _lensCompanyCtrl.text.trim(),
+        lensModel: _lensModelCtrl.text.trim().isEmpty ? null : _lensModelCtrl.text.trim(),
+        lensType: _lensType,
+        estimatedPower: double.tryParse(_estimatedPowerCtrl.text.trim()),
+        lensCost: double.tryParse(_lensCostCtrl.text.trim()),
       );
       if (!mounted) return;
-      showAppSnackBar(context, 'Surgery recorded', isSuccess: true);
+      showAppSnackBar(context, 'Surgery recorded successfully.', isSuccess: true);
       Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -178,8 +226,9 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
     }
   }
 
-  InputDecoration _deco(String label) => InputDecoration(
+  InputDecoration _deco(String label, {String? hint}) => InputDecoration(
         labelText: label,
+        hintText: hint,
         filled: true,
         fillColor: const Color(0xFFF0F6FB),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.md), borderSide: BorderSide.none),
@@ -215,16 +264,10 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                const Text('Surgery Record', style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w800)),
-                Text(widget.patientName, style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11)),
+                const Text('Surgery Recording Form', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w800)),
+                Text('${widget.patientName} · Complete surgery details and ward medicines', style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 11), overflow: TextOverflow.ellipsis),
               ]),
             ),
-            if (PermissionService.instance.can(Perm.otLensRecord) || PermissionService.instance.can(Perm.otLensImplant))
-              IconButton(
-                icon: const Icon(Icons.remove_red_eye_outlined, color: Colors.white),
-                tooltip: 'Record Lens',
-                onPressed: () => Navigator.of(context).push(appRoute(OtLensFormScreen(bookingId: widget.bookingId, patientName: widget.patientName))),
-              ),
           ]),
         ),
       ),
@@ -238,65 +281,90 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
           children: [
-            const AppSectionHeader(title: 'Patient & Booking Details', icon: Icons.badge_outlined),
+            const AppSectionHeader(title: 'A. Patient & Booking Details', icon: Icons.badge_outlined),
             _readOnlyRow('Patient Name', formData.booking.patient?.fullName ?? '—'),
             _readOnlyRow('Phone', formData.booking.patient?.contactNo ?? '—'),
-            _readOnlyRow('OT Date', formData.booking.surgeryDate ?? '—'),
-            _readOnlyRow('Package', formData.counselling?.totalEstimate != null ? '₹${formData.counselling!.totalEstimate!.toStringAsFixed(0)}' : '—'),
-            _readOnlyRow('Mediclaim', (formData.counselling?.mediclaim ?? false) ? 'YES' : 'NO'),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: _pickSurgeryDate,
+              child: InputDecorator(decoration: _deco('OT Date *'), child: Text(_fmtDisplayDate(_surgeryDate))),
+            ),
+            const SizedBox(height: 8),
+            _readOnlyRow('Package', '₹${(formData.counselling?.packageAmount ?? formData.booking.packageAmount ?? 0).toStringAsFixed(2)}'),
+            _readOnlyRow('Mediclaim', (formData.counselling?.mediclaim ?? formData.booking.hasMediclaim ?? false) ? 'YES' : 'NO'),
             const SizedBox(height: 16),
 
-            const AppSectionHeader(title: 'Pre-Surgery Verification', icon: Icons.verified_outlined),
-            _checklistTile('Identity Verified', _identityVerified, (v) => setState(() => _identityVerified = v)),
-            _checklistTile('Consent Verified', _consentVerified, (v) => setState(() => _consentVerified = v)),
-            _checklistTile('Payment Verified', _paymentVerified, (v) => setState(() => _paymentVerified = v)),
-            _checklistTile('Correct Eye Verified', _correctEyeVerified, (v) => setState(() => _correctEyeVerified = v)),
-            const SizedBox(height: 16),
-
-            const AppSectionHeader(title: 'Surgery Details', icon: Icons.local_hospital_outlined),
+            const AppSectionHeader(title: 'B. Surgery Details', icon: Icons.local_hospital_outlined),
             DropdownButtonFormField<String>(
               initialValue: _surgeryName,
               isExpanded: true,
-              decoration: _deco('Surgery Name *'),
+              decoration: _deco('Surgery Name *', hint: 'Select surgery...'),
               items: formData.surgeryTypes.map((t) => DropdownMenuItem(value: t.surgeryName, child: Text(t.surgeryName, overflow: TextOverflow.ellipsis))).toList(),
               onChanged: (v) => setState(() => _surgeryName = v),
             ),
             const SizedBox(height: 10),
-            Row(children: [
-              Expanded(child: TextFormField(controller: _otRoomCtrl, decoration: _deco('OT Room'))),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Wrap(spacing: 8, children: ['RE', 'LE', 'Both'].map((e) => ChoiceChip(label: Text(e), selected: _eyeOperated == e, onSelected: (_) => setState(() => _eyeOperated = e))).toList()),
-              ),
-            ]),
+            InputDecorator(
+              decoration: _deco('Eye Operated'),
+              child: Text(_lockedEye, style: const TextStyle(fontWeight: FontWeight.w700)),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(controller: _otRoomCtrl, decoration: _deco('OT Room', hint: 'e.g. OT-1')),
             const SizedBox(height: 10),
             Row(children: [
-              Expanded(child: InkWell(onTap: () => _pickDateTime(isStart: true), child: InputDecorator(decoration: _deco('Start Time'), child: Text(_fmtDisplay(_startDateTime))))),
+              Expanded(child: InkWell(onTap: () => _pickDateTime(isStart: true), child: InputDecorator(decoration: _deco('Start Time'), child: Text(_fmtDisplayDateTime(_startDateTime))))),
               const SizedBox(width: 10),
-              Expanded(child: InkWell(onTap: () => _pickDateTime(isStart: false), child: InputDecorator(decoration: _deco('End Time'), child: Text(_fmtDisplay(_endDateTime))))),
+              Expanded(child: InkWell(onTap: () => _pickDateTime(isStart: false), child: InputDecorator(decoration: _deco('End Time'), child: Text(_fmtDisplayDateTime(_endDateTime))))),
             ]),
-            const SizedBox(height: 16),
-
-            const AppSectionHeader(title: 'Complications', icon: Icons.warning_amber_outlined),
+            const SizedBox(height: 10),
             Wrap(spacing: 8, children: ['none', 'minor', 'major'].map((c) => ChoiceChip(label: Text(c[0].toUpperCase() + c.substring(1)), selected: _complicationStatus == c, onSelected: (_) => setState(() => _complicationStatus = c))).toList()),
-            if (_complicationStatus != 'none') ...[
-              const SizedBox(height: 10),
-              TextFormField(controller: _complicationNotesCtrl, maxLines: 2, decoration: _deco('Complication Notes *')),
-            ],
             const SizedBox(height: 10),
-            TextFormField(controller: _bloodLossCtrl, decoration: _deco('Blood Loss')),
+            TextFormField(controller: _complicationNotesCtrl, maxLines: 2, decoration: _deco('Complication Notes', hint: 'Only required if complication status is minor/major')),
+            const SizedBox(height: 10),
+            TextFormField(controller: _bloodLossCtrl, decoration: _deco('Blood Loss', hint: 'e.g. Minimal, 50ml')),
             const SizedBox(height: 16),
 
-            AppSectionHeader(title: 'OT Medicines', icon: Icons.medication_outlined, trailing: TextButton.icon(onPressed: _addMedicineRow, icon: const Icon(Icons.add_rounded, size: 14), label: const Text('Add', style: TextStyle(fontSize: 12)))),
-            if (_medicineGroups.isNotEmpty)
+            const AppSectionHeader(title: 'C. Lens Selection', icon: Icons.remove_red_eye_outlined),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: Text('Auto-filled from Counsellor form — confirm or adjust if needed before saving surgery.', style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: _lensCategory,
+              isExpanded: true,
+              decoration: _deco('Lens Category', hint: 'Select...'),
+              items: const [DropdownMenuItem(value: 'standard', child: Text('Standard')), DropdownMenuItem(value: 'premium', child: Text('Premium'))],
+              onChanged: (v) => setState(() => _lensCategory = v),
+            ),
+            const SizedBox(height: 10),
+            TextFormField(controller: _lensCompanyCtrl, decoration: _deco('Lens Company')),
+            const SizedBox(height: 10),
+            TextFormField(controller: _lensModelCtrl, decoration: _deco('Lens Model')),
+            const SizedBox(height: 10),
+            DropdownButtonFormField<String>(
+              initialValue: _lensType,
+              isExpanded: true,
+              decoration: _deco('Lens Type', hint: 'Select...'),
+              items: formData.lensTypes.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              onChanged: (v) => setState(() => _lensType = v),
+            ),
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(child: TextFormField(controller: _estimatedPowerCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: _deco('Estimated Power'))),
+              const SizedBox(width: 10),
+              Expanded(child: TextFormField(controller: _lensCostCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: _deco('Lens Cost (₹)', hint: 'Enter lens cost'))),
+            ]),
+            const SizedBox(height: 16),
+
+            AppSectionHeader(title: 'D. In-Ward Medicines', icon: Icons.medication_outlined, trailing: TextButton.icon(onPressed: _addMedicineRow, icon: const Icon(Icons.add_rounded, size: 14), label: const Text('Add Medicine', style: TextStyle(fontSize: 12)))),
+            if (formData.medicineGroups.isNotEmpty)
               DropdownButtonFormField<int>(
                 initialValue: _medicineGroupId,
                 isExpanded: true,
-                decoration: _deco('Quick-fill from OT Medicine Group'),
-                items: _medicineGroups.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name, overflow: TextOverflow.ellipsis))).toList(),
+                decoration: _deco('Quick-fill from OT Medicine Group', hint: 'Select group (optional)...'),
+                items: formData.medicineGroups.map((g) => DropdownMenuItem(value: g.id, child: Text(g.name, overflow: TextOverflow.ellipsis))).toList(),
                 onChanged: (v) {
                   if (v == null) return;
-                  _applyMedicineGroup(_medicineGroups.firstWhere((g) => g.id == v));
+                  _applyMedicineGroup(formData.medicineGroups.firstWhere((g) => g.id == v));
                 },
               ),
             const SizedBox(height: 10),
@@ -304,9 +372,18 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(children: [
-                  Expanded(flex: 2, child: TextFormField(controller: _medicineRows[i].$1, decoration: _deco('Medicine'))),
+                  Expanded(
+                    flex: 2,
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _medicineRows[i].medicine,
+                      isExpanded: true,
+                      decoration: _deco('Medicine', hint: 'Select medicine...'),
+                      items: formData.medicines.map((m) => DropdownMenuItem(value: m, child: Text(m, overflow: TextOverflow.ellipsis))).toList(),
+                      onChanged: (v) => setState(() => _medicineRows[i].medicine = v),
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Expanded(child: TextFormField(controller: _medicineRows[i].$2, decoration: _deco('Dose'))),
+                  Expanded(child: TextFormField(controller: _medicineRows[i].doseCtrl, decoration: _deco('Dose / Frequency'))),
                   IconButton(icon: const Icon(Icons.remove_circle_outline, size: 20, color: AppColors.red), onPressed: () => _removeMedicineRow(i)),
                 ]),
               ),
@@ -317,11 +394,24 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-          child: ElevatedButton(
-            onPressed: _saving ? null : _save,
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))),
-            child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Verify & Record Surgery', style: TextStyle(fontWeight: FontWeight.w700)),
-          ),
+          child: Row(children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: _saving ? null : () => Navigator.pop(context),
+                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))),
+                child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              flex: 2,
+              child: ElevatedButton(
+                onPressed: _saving ? null : _save,
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))),
+                child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('Save Surgery', style: TextStyle(fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ]),
         ),
       ),
     ]);
@@ -333,14 +423,5 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
           SizedBox(width: 110, child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary))),
           Expanded(child: Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
         ]),
-      );
-
-  Widget _checklistTile(String label, bool value, ValueChanged<bool> onChanged) => CheckboxListTile(
-        value: value,
-        onChanged: (v) => onChanged(v ?? false),
-        title: Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-        controlAffinity: ListTileControlAffinity.leading,
-        contentPadding: EdgeInsets.zero,
-        activeColor: AppColors.teal,
       );
 }

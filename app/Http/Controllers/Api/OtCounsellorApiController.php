@@ -18,7 +18,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtConsent;
 use App\Models\Hospital\OT\OtCounselling;
-use App\Models\Hospital\OT\OtLensOption;
 use App\Models\Hospital\OT\OtPackageMaster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -44,23 +43,31 @@ class OtCounsellorApiController extends Controller
         return response()->json(['success' => true, 'data' => $bookings]);
     }
 
+    /**
+     * `package_id`-based (not `lens_cost`+`room_category`) — matches web
+     * exactly (`OtCounsellorController::lookupPackage()`, web pull
+     * 2026-08-07). Packages no longer carry a meaningful `lens_cost` (all
+     * default to 0 on the new package-master form), so an exact-match
+     * lookup on that column would collide across distinct packages — see
+     * WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §3.
+     */
     public function lookupPackage(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
 
         $validated = $request->validate([
-            'lens_cost' => ['required', 'numeric', 'min:0'],
-            'room_category' => ['required', Rule::in([OtPackageMaster::ROOM_GENERAL, OtPackageMaster::ROOM_PRIVATE])],
+            'package_id' => [
+                'required', 'integer',
+                Rule::exists('ot_package_masters', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->where('is_active', true)->whereNull('deleted_at')),
+            ],
         ]);
 
         $package = OtPackageMaster::query()
             ->where('tenant_id', $tenantId)
             ->where('is_active', true)
-            ->where('room_category', $validated['room_category'])
-            ->where('lens_cost', (float) $validated['lens_cost'])
+            ->whereKey((int) $validated['package_id'])
             ->first([
                 'package_name',
-                'lens_cost',
                 'room_category',
                 'ot_charges',
                 'surgeon_charges',
@@ -78,6 +85,7 @@ class OtCounsellorApiController extends Controller
                 'found' => true,
                 'package' => [
                     'package_name' => $package->package_name,
+                    'room_category' => $package->room_category,
                     'ot_charges' => (float) $package->ot_charges,
                     'surgeon_charges' => (float) $package->surgeon_charges,
                     'nursing_charges' => (float) $package->nursing_charges,
@@ -110,22 +118,17 @@ class OtCounsellorApiController extends Controller
             ->where('ot_booking_id', $booking->id)
             ->first();
 
-        $lensOptions = OtLensOption::query()
-            ->where('tenant_id', $tenantId)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
+        // Web pull 2026-08-07: no longer filtered to whereNotNull('lens_cost')
+        // or ordered/selecting that column — packages no longer carry a
+        // meaningful lens_cost (see lookupPackage()'s comment above).
         $packageCostOptions = OtPackageMaster::query()
             ->where('tenant_id', $tenantId)
             ->where('is_active', true)
-            ->whereNotNull('lens_cost')
-            ->orderBy('lens_cost')
+            ->orderBy('package_name')
             ->orderBy('room_category')
             ->get([
                 'id',
                 'package_name',
-                'lens_cost',
                 'room_category',
                 'ot_charges',
                 'surgeon_charges',
@@ -133,14 +136,20 @@ class OtCounsellorApiController extends Controller
                 'consumables_charges',
             ]);
 
+        $otSurgeryTypes = DB::table('ot_surgery_types')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->orderBy('surgery_name')
+            ->get(['id', 'surgery_name']);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'booking' => $booking,
                 'counselling' => $counselling,
                 'consent' => $consent,
-                'lens_options' => $lensOptions,
                 'package_cost_options' => $packageCostOptions,
+                'ot_surgery_types' => $otSurgeryTypes,
             ],
         ]);
     }
@@ -154,16 +163,26 @@ class OtCounsellorApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
 
+        // ot_type replaces surgery_type_confirmed as the real field — matches
+        // web exactly (web pull 2026-08-07). Fallback keeps an
+        // already-set-but-since-deactivated type valid, same as web.
+        $surgeryTypeNames = DB::table('ot_surgery_types')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->pluck('surgery_name')
+            ->filter()
+            ->values()
+            ->all();
+
+        if ($booking->ot_type && ! in_array($booking->ot_type, $surgeryTypeNames, true)) {
+            $surgeryTypeNames[] = $booking->ot_type;
+        }
+
         $validated = $request->validate([
             'diagnosis' => ['nullable', 'string', 'max:255'],
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
-            'surgery_type_confirmed' => ['nullable', 'boolean'],
+            'ot_type' => ['required', 'string', 'max:150', Rule::in($surgeryTypeNames)],
             'mediclaim' => ['required', 'boolean'],
-            'lens_option' => [
-                'nullable',
-                Rule::exists('ot_lens_options', 'name')
-                    ->where(fn ($query) => $query->where('tenant_id', $tenantId)->where('is_active', true)->whereNull('deleted_at')),
-            ],
             'lens_category' => ['nullable', Rule::in(['standard', 'premium'])],
             'lens_company' => ['nullable', 'string', 'max:150'],
             'lens_model' => ['nullable', 'string', 'max:150'],
@@ -185,12 +204,22 @@ class OtCounsellorApiController extends Controller
                 ),
             ],
             'report_ok' => ['nullable', 'boolean'],
-            'blood_reports_verified' => ['nullable', 'boolean'],
-            'blood_reports_normal' => ['nullable', 'boolean'],
+            'blood_reports_verified' => ['required', 'boolean'],
+            'blood_reports_normal' => ['required', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $totalEstimate = round((float) ($validated['lens_cost'] ?? 0), 2);
+        // Sums all 4 charge fields + lens_cost — matches web exactly (web
+        // pull 2026-08-07 changed this from lens_cost-only). See
+        // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §7.
+        $totalEstimate = round(
+            (float) ($validated['ot_charges'] ?? 0)
+            + (float) ($validated['surgeon_charges'] ?? 0)
+            + (float) ($validated['nursing_charges'] ?? 0)
+            + (float) ($validated['consumables_charges'] ?? 0)
+            + (float) ($validated['lens_cost'] ?? 0),
+            2
+        );
         $counsellorId = (int) auth('sanctum')->id();
 
         DB::transaction(function () use ($tenantId, $booking, $validated, $totalEstimate, $counsellorId): void {
@@ -198,9 +227,8 @@ class OtCounsellorApiController extends Controller
                 ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
                 [
                     'diagnosis' => $validated['diagnosis'] ?? null,
-                    'surgery_type_confirmed' => (bool) ($validated['surgery_type_confirmed'] ?? false),
+                    'surgery_type_confirmed' => true,
                     'mediclaim' => (bool) $validated['mediclaim'],
-                    'lens_option' => $validated['lens_option'] ?? null,
                     'lens_category' => $validated['lens_category'] ?? null,
                     'lens_company' => $validated['lens_company'] ?? null,
                     'lens_model' => $validated['lens_model'] ?? null,
@@ -217,8 +245,8 @@ class OtCounsellorApiController extends Controller
                     'total_estimate' => $totalEstimate,
                     'payment_mode' => $validated['payment_mode'] ?? null,
                     'report_ok' => (bool) ($validated['report_ok'] ?? false),
-                    'blood_reports_verified' => (bool) ($validated['blood_reports_verified'] ?? false),
-                    'blood_reports_normal' => (bool) ($validated['blood_reports_normal'] ?? false),
+                    'blood_reports_verified' => (bool) $validated['blood_reports_verified'],
+                    'blood_reports_normal' => (bool) $validated['blood_reports_normal'],
                     'notes' => $validated['notes'] ?? null,
                     'created_by' => $counsellorId,
                     'counselled_by' => $counsellorId,
@@ -230,8 +258,8 @@ class OtCounsellorApiController extends Controller
             // and other OT screens read these directly off ot_bookings.
             $booking->update([
                 'eye' => $validated['eye'],
+                'ot_type' => $validated['ot_type'],
                 'has_mediclaim' => (bool) $validated['mediclaim'],
-                'lens_option' => $validated['lens_option'] ?? null,
                 'package_amount' => $totalEstimate,
                 'payment_mode' => $validated['payment_mode'] ?? null,
                 'reports_ok' => (bool) ($validated['report_ok'] ?? false),

@@ -51,9 +51,12 @@ class AppDrawer extends StatelessWidget {
         const _Item(Icons.account_balance_wallet_rounded, NavLabel.accountantBilling),
       if (p.can(Perm.otWardEntry))
         const _Item(Icons.bed_rounded, NavLabel.wardManagement),
-      if (p.can(Perm.otSurgeryRecord))
-        const _Item(Icons.local_hospital_rounded, NavLabel.doctorDashboard),
-      if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList))
+      // Web has one merged "OT Assistant Dashboard" nav entry gated by
+      // lens.record/lens.implant/surgery.ready/surgery.record combined — no
+      // separate "Doctor Dashboard" (the old OT Doctor role's surgery
+      // recording was absorbed into OT Assistant, see
+      // ot_assistant_dashboard_screen.dart).
+      if (p.can(Perm.otLensRecord) || p.can(Perm.otLensImplant) || p.can(Perm.otPatientList) || p.can(Perm.otSurgeryReady) || p.can(Perm.otSurgeryRecord))
         const _Item(Icons.handyman_rounded, NavLabel.assistantDashboard),
       if (p.can(Perm.otBillingManage))
         const _Item(Icons.receipt_long_rounded, NavLabel.dischargeInvoices),

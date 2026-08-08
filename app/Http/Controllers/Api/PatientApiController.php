@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Location;
+use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\Patient;
 use App\Models\Platform\HospitalShareRequest;
 use App\Services\Hospital\PatientService;
@@ -160,12 +161,32 @@ class PatientApiController extends Controller
             'occupation'       => ['nullable', 'string', 'max:100'],
             'referrer_id'      => ['nullable', 'integer'],
             'is_old_patient'   => ['nullable', 'boolean'],
+            // Set when converting from an OT appointment lead (receptionist
+            // "Today Added Patients" widget's Walk-In action) — not a Patient
+            // column, handled separately below. Mirrors
+            // Hospital\Patient\PatientController::store()'s OT-conversion step.
+            // See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §9 / FIX_PLAN TASK 5.3.
+            'ot_appointment_id' => ['nullable', 'integer'],
         ]);
 
         $tenant = app('tenant');
+        $otAppointmentId = $validated['ot_appointment_id'] ?? null;
+        unset($validated['ot_appointment_id']);
         $validated['reception_id'] = auth('sanctum')->id();
 
         $patient = $this->patientService->registerWalkIn($validated, $tenant->id);
+
+        if ($otAppointmentId) {
+            OtAppointment::query()
+                ->where('id', $otAppointmentId)
+                ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+                ->whereNull('converted_patient_id')
+                ->update([
+                    'status' => OtAppointment::STATUS_COMPLETED,
+                    'converted_patient_id' => $patient->id,
+                ]);
+        }
+
         $patient->load(['doctor:id,name', 'location:id,city,district,state', 'caseType:id,case_type']);
 
         $arr = $patient->toArray();

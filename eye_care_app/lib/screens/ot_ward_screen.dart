@@ -3,15 +3,28 @@ import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
-import '../models/ot_appointment_models.dart';
 import '../models/ot_booking_models.dart';
 import '../models/ot_ward_models.dart';
-import '../services/ot_appointment_service.dart';
 import '../services/ot_ward_service.dart';
 import '../services/permission_service.dart';
 import '../services/user_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_error_state.dart';
+
+/// Closes a sheet that contains text fields safely. `unfocus()` only
+/// *schedules* the focus change — it doesn't complete synchronously — so
+/// popping the route immediately after it still tears the field down mid
+/// focus-change and throws `InheritedElement`'s `_dependents.isEmpty`
+/// assertion. Deferring the pop to `addPostFrameCallback` lets that
+/// scheduled change fully resolve on its own frame first. See
+/// OT_WEB_PARITY_FIX_PRD.md §4.3 (pass 2 — pass 1's synchronous unfocus
+/// call was not sufficient).
+void _closeSheetSafely(BuildContext sheetContext) {
+  FocusManager.instance.primaryFocus?.unfocus();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (sheetContext.mounted) Navigator.pop(sheetContext);
+  });
+}
 
 /// Round 3 Phase 3 — Ward Management. Read (`ot.ward.entry`) and write
 /// (`ot.preop.entry` vitals / `ot.dilation.track` eye-drops) are gated
@@ -37,7 +50,6 @@ class _OtWardScreenState extends State<OtWardScreen> with SingleTickerProviderSt
   OtVerificationHeader? _header;
   OtVitalsItem? _vitals;
   List<OtEyeDropEntry> _eyeDrops = [];
-  List<OtNamedRef> _doctors = [];
   List<HospitalUserModel> _assistants = [];
   bool _loading = true;
   String? _loadError;
@@ -74,16 +86,14 @@ class _OtWardScreenState extends State<OtWardScreen> with SingleTickerProviderSt
         OtWardService.instance.fetchVerificationHeader(widget.bookingId),
         OtWardService.instance.fetchVitals(widget.bookingId),
         OtWardService.instance.fetchEyeDrops(widget.bookingId),
-        OtAppointmentService.instance.fetchFormData(),
         UserService.instance.fetchUsers(),
       ]);
       if (mounted) {
-        final users = (results[4] as UserListResponse).users;
+        final users = (results[3] as UserListResponse).users;
         setState(() {
           _header = results[0] as OtVerificationHeader;
           _vitals = results[1] as OtVitalsItem?;
           _eyeDrops = results[2] as List<OtEyeDropEntry>;
-          _doctors = (results[3] as OtAppointmentFormData).doctors;
           // No dedicated "list OT assistants" endpoint — reuse the users
           // master list filtered to the ot_assistant role slug (see
           // OT_WEB_PARITY_FIX_PRD.md §12.5). Falls back to showing every
@@ -129,6 +139,8 @@ class _OtWardScreenState extends State<OtWardScreen> with SingleTickerProviderSt
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _EyeDropSheet(
         nextDose: (_eyeDrops.isEmpty ? 0 : _eyeDrops.map((e) => e.doseNumber).reduce((a, b) => a > b ? a : b)) + 1,
+        otMedicines: _header?.otMedicines ?? const [],
+        allowedEyes: switch (_header?.eye) { 'RE' => const ['RE'], 'LE' => const ['LE'], _ => const ['RE', 'LE'] },
         onSave: (medicineName, eye, doseNumber, remarks) async {
           await OtWardService.instance.addEyeDrop(widget.bookingId, medicineName: medicineName, eye: eye, doseNumber: doseNumber, remarks: remarks);
           await _load();
@@ -146,13 +158,19 @@ class _OtWardScreenState extends State<OtWardScreen> with SingleTickerProviderSt
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (_) => _StatusSheet(
         currentStatus: _vitals?.preOpStatus ?? 'preparing',
-        doctors: _doctors,
         assistants: _assistants,
-        onSave: (status, doctorId, assistantId) async {
+        // Doctor is auto-assigned server-side from the patient's OPD doctor
+        // (web pull 2026-08-07) — no manual picker anymore, just display it.
+        opdDoctorName: _header?.otDoctor?.name,
+        // Matches web exactly: pre-fill from whoever is currently assigned,
+        // guarded so a since-deactivated/role-changed person (not present in
+        // the dropdown's own list) can't trip the Dropdown's "exactly one
+        // matching item" assertion.
+        initialAssistantId: _assistants.any((a) => a.id == _header?.otAssistant?.id) ? _header?.otAssistant?.id : null,
+        onSave: (status, assistantId) async {
           final newStatus = await OtWardService.instance.storeVitals(widget.bookingId, {
             'pre_op_status': status,
             'assign_staff': true,
-            if (doctorId != null) 'ot_doctor_id': doctorId,
             if (assistantId != null) 'ot_assistant_id': assistantId,
           });
           if (mounted) setState(() => _currentOtStatus = newStatus);
@@ -388,10 +406,15 @@ class _OtWardScreenState extends State<OtWardScreen> with SingleTickerProviderSt
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.md), border: Border.all(color: AppColors.primary.withValues(alpha: 0.08))),
-            child: Row(children: [
-              Icon(Icons.assignment_turned_in_outlined, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Expanded(child: Text('Pre-op status: ${otPreOpStatusLabel(_vitals?.preOpStatus ?? 'preparing')}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [
+                Icon(Icons.assignment_turned_in_outlined, size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Pre-op status: ${otPreOpStatusLabel(_vitals?.preOpStatus ?? 'preparing')}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
+              ]),
+              const SizedBox(height: 6),
+              Text('Doctor: ${_header?.otDoctor?.name ?? '—'}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+              Text('OT Assistant: ${_header?.otAssistant?.name ?? '—'}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
             ]),
           ),
           const SizedBox(height: 16),
@@ -457,7 +480,7 @@ class _VitalsSheetState extends State<_VitalsSheet> {
         'spo2': double.tryParse(_spo2Ctrl.text.trim()),
         'hba1c': double.tryParse(_hba1cCtrl.text.trim()),
       });
-      if (mounted) Navigator.pop(context);
+      if (mounted) _closeSheetSafely(context);
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
@@ -486,7 +509,7 @@ class _VitalsSheetState extends State<_VitalsSheet> {
             padding: const EdgeInsets.fromLTRB(20, 10, 8, 14),
             child: Row(children: [
               const Expanded(child: Text('Record Vitals', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.darkNavy))),
-              IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => Navigator.pop(context)),
+              IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => _closeSheetSafely(context)),
             ]),
           ),
           Padding(
@@ -514,7 +537,7 @@ class _VitalsSheetState extends State<_VitalsSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
             child: Row(children: [
-              Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: _saving ? null : () => _closeSheetSafely(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
@@ -536,31 +559,36 @@ class _VitalsSheetState extends State<_VitalsSheet> {
 
 class _EyeDropSheet extends StatefulWidget {
   final int nextDose;
+  // Medicine picker source (Medicine Master, OT scope) and the booking's
+  // own eye-derived allowed set — both replace free-text/unrestricted entry
+  // (web pull 2026-08-07). See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+  final List<OtNamedRef> otMedicines;
+  final List<String> allowedEyes;
   final Future<void> Function(String medicineName, String eye, int doseNumber, String? remarks) onSave;
 
-  const _EyeDropSheet({required this.nextDose, required this.onSave});
+  const _EyeDropSheet({required this.nextDose, required this.otMedicines, required this.allowedEyes, required this.onSave});
 
   @override
   State<_EyeDropSheet> createState() => _EyeDropSheetState();
 }
 
 class _EyeDropSheetState extends State<_EyeDropSheet> {
-  late final TextEditingController _medicineCtrl, _doseCtrl, _remarksCtrl;
-  String _eye = 'RE';
+  late final TextEditingController _doseCtrl, _remarksCtrl;
+  String? _medicineName;
+  late String _eye;
   bool _saving = false;
   String? _medicineError, _doseError;
 
   @override
   void initState() {
     super.initState();
-    _medicineCtrl = TextEditingController();
     _doseCtrl = TextEditingController(text: '${widget.nextDose}');
     _remarksCtrl = TextEditingController();
+    _eye = widget.allowedEyes.first;
   }
 
   @override
   void dispose() {
-    _medicineCtrl.dispose();
     _doseCtrl.dispose();
     _remarksCtrl.dispose();
     super.dispose();
@@ -569,15 +597,15 @@ class _EyeDropSheetState extends State<_EyeDropSheet> {
   Future<void> _save() async {
     final dose = int.tryParse(_doseCtrl.text.trim());
     setState(() {
-      _medicineError = _medicineCtrl.text.trim().isEmpty ? 'Required' : null;
+      _medicineError = _medicineName == null ? 'Required' : null;
       _doseError = (dose == null || dose < 1 || dose > 20) ? 'Must be 1-20' : null;
     });
     if (_medicineError != null || _doseError != null) return;
 
     setState(() => _saving = true);
     try {
-      await widget.onSave(_medicineCtrl.text.trim(), _eye, dose!, _remarksCtrl.text.trim().isEmpty ? null : _remarksCtrl.text.trim());
-      if (mounted) Navigator.pop(context);
+      await widget.onSave(_medicineName!, _eye, dose!, _remarksCtrl.text.trim().isEmpty ? null : _remarksCtrl.text.trim());
+      if (mounted) _closeSheetSafely(context);
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
@@ -605,16 +633,22 @@ class _EyeDropSheetState extends State<_EyeDropSheet> {
           padding: const EdgeInsets.fromLTRB(20, 10, 8, 14),
           child: Row(children: [
             const Expanded(child: Text('Log Eye-Drop Dose', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.darkNavy))),
-            IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => Navigator.pop(context)),
+            IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => _closeSheetSafely(context)),
           ]),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Column(children: [
-            TextFormField(controller: _medicineCtrl, textCapitalization: TextCapitalization.words, decoration: _deco('Medicine Name *', error: _medicineError)),
+            DropdownButtonFormField<String>(
+              initialValue: _medicineName,
+              isExpanded: true,
+              decoration: _deco('Medicine Name *', error: _medicineError),
+              items: widget.otMedicines.map((m) => DropdownMenuItem(value: m.name, child: Text(m.name, overflow: TextOverflow.ellipsis))).toList(),
+              onChanged: (v) => setState(() { _medicineName = v; _medicineError = null; }),
+            ),
             const SizedBox(height: 12),
             Row(children: [
-              Wrap(spacing: 8, children: ['RE', 'LE'].map((e) => ChoiceChip(label: Text(e), selected: _eye == e, onSelected: (_) => setState(() => _eye = e))).toList()),
+              Wrap(spacing: 8, children: widget.allowedEyes.map((e) => ChoiceChip(label: Text(e), selected: _eye == e, onSelected: (_) => setState(() => _eye = e))).toList()),
               const SizedBox(width: 16),
               Expanded(child: TextFormField(controller: _doseCtrl, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: _deco('Dose #', error: _doseError))),
             ]),
@@ -625,7 +659,7 @@ class _EyeDropSheetState extends State<_EyeDropSheet> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
           child: Row(children: [
-            Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
+            Expanded(child: OutlinedButton(onPressed: _saving ? null : () => _closeSheetSafely(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
@@ -646,11 +680,21 @@ class _EyeDropSheetState extends State<_EyeDropSheet> {
 
 class _StatusSheet extends StatefulWidget {
   final String currentStatus;
-  final List<OtNamedRef> doctors;
   final List<HospitalUserModel> assistants;
-  final Future<void> Function(String status, int? doctorId, int? assistantId) onSave;
+  // Doctor is auto-assigned server-side from the patient's OPD doctor when
+  // not Ready for OT (web pull 2026-08-07) — display-only, no picker. See
+  // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+  final String? opdDoctorName;
+  final int? initialAssistantId;
+  final Future<void> Function(String status, int? assistantId) onSave;
 
-  const _StatusSheet({required this.currentStatus, required this.doctors, required this.assistants, required this.onSave});
+  const _StatusSheet({
+    required this.currentStatus,
+    required this.assistants,
+    this.opdDoctorName,
+    this.initialAssistantId,
+    required this.onSave,
+  });
 
   @override
   State<_StatusSheet> createState() => _StatusSheetState();
@@ -658,7 +702,6 @@ class _StatusSheet extends StatefulWidget {
 
 class _StatusSheetState extends State<_StatusSheet> {
   late String _status;
-  int? _doctorId;
   int? _assistantId;
   bool _saving = false;
   String? _error;
@@ -669,22 +712,23 @@ class _StatusSheetState extends State<_StatusSheet> {
   void initState() {
     super.initState();
     _status = widget.currentStatus;
+    _assistantId = widget.initialAssistantId;
   }
 
   Future<void> _save() async {
-    // Live conditional-required toggling matches web exactly: Doctor is
-    // required unless status=Ready for OT, Assistant only when it is.
+    // Assistant is required only when Ready for OT — Doctor is no longer a
+    // client-side field at all (auto-assigned server-side, web pull
+    // 2026-08-07).
     setState(() {
       _error = null;
-      if (!_isReady && _doctorId == null) _error = 'Doctor is required unless status is Ready for OT';
       if (_isReady && _assistantId == null) _error = 'OT Assistant is required when status is Ready for OT';
     });
     if (_error != null) return;
 
     setState(() => _saving = true);
     try {
-      await widget.onSave(_status, _doctorId, _assistantId);
-      if (mounted) Navigator.pop(context);
+      await widget.onSave(_status, _assistantId);
+      if (mounted) _closeSheetSafely(context);
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
@@ -712,7 +756,7 @@ class _StatusSheetState extends State<_StatusSheet> {
             padding: const EdgeInsets.fromLTRB(20, 10, 8, 14),
             child: Row(children: [
               const Expanded(child: Text('Patient Status', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.darkNavy))),
-              IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => Navigator.pop(context)),
+              IconButton(icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)), onPressed: () => _closeSheetSafely(context)),
             ]),
           ),
           Padding(
@@ -722,14 +766,14 @@ class _StatusSheetState extends State<_StatusSheet> {
               const SizedBox(height: 8),
               Wrap(spacing: 8, runSpacing: 8, children: kOtPreOpStatuses.map((s) => ChoiceChip(label: Text(otPreOpStatusLabel(s)), selected: _status == s, onSelected: (_) => setState(() { _status = s; _error = null; }))).toList()),
               const SizedBox(height: 14),
-              DropdownButtonFormField<int>(
-                initialValue: _doctorId,
-                isExpanded: true,
-                decoration: _deco(_isReady ? 'Doctor' : 'Doctor *'),
-                items: widget.doctors.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name, overflow: TextOverflow.ellipsis))).toList(),
-                onChanged: (v) => setState(() => _doctorId = v),
-              ),
-              const SizedBox(height: 12),
+              if (!_isReady)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text('Doctor (OPD, auto-assigned): ${widget.opdDoctorName ?? '—'}', style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                  ),
+                ),
               DropdownButtonFormField<int>(
                 initialValue: _assistantId,
                 isExpanded: true,
@@ -743,7 +787,7 @@ class _StatusSheetState extends State<_StatusSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
             child: Row(children: [
-              Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
+              Expanded(child: OutlinedButton(onPressed: _saving ? null : () => _closeSheetSafely(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
               const SizedBox(width: 12),
               Expanded(
                 flex: 2,
