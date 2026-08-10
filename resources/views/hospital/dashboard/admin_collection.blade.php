@@ -10,8 +10,11 @@
 
 @section('content')
 <div class="acoll-page">
+    @php
+        $bd = $breakdown ?? ['opd' => 0, 'ot_collected' => 0, 'ot_refunded' => 0, 'ot_net' => 0, 'total' => $grandTotal ?? 0];
+    @endphp
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card acoll-premium-card border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-2">
@@ -19,17 +22,38 @@
                         <span class="acoll-label">Grand Total</span>
                     </div>
                     <div class="acoll-value">{{ money($grandTotal, 0) }}</div>
+                    <div class="acoll-hint">OPD + OT net</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card acoll-premium-card border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="acoll-icon"><i class="bi bi-clipboard2-pulse"></i></span>
+                        <span class="acoll-label">OPD</span>
+                    </div>
+                    <div class="acoll-value">{{ money((float) $bd['opd'], 0) }}</div>
+                    <div class="acoll-hint">Case fees (not cut by OT refund)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card acoll-premium-card border-0 h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="acoll-icon"><i class="bi bi-hospital"></i></span>
+                        <span class="acoll-label">OT Net</span>
+                    </div>
+                    <div class="acoll-value">{{ money((float) $bd['ot_net'], 0) }}</div>
                     <div class="acoll-hint">
-                        @if($startDate === $endDate)
-                            {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }}
-                        @else
-                            {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} – {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
-                        @endif
+                        {{ money((float) $bd['ot_collected'], 0) }} paid
+                        − {{ money((float) $bd['ot_refunded'], 0) }} refund
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-8">
+        <div class="col-md-3">
             <div class="card acoll-premium-card border-0 h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-3">
@@ -38,8 +62,8 @@
                     </div>
                     <form method="GET" action="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}">
                         <div class="d-flex flex-wrap gap-2 align-items-end">
-                            <div style="min-width:220px;flex:1">
-                                <label class="form-label acoll-form-label" for="date_range">Date range</label>
+                            <div style="min-width:160px;flex:1">
+                                <label class="form-label acoll-form-label" for="date_range">Dates</label>
                                 <input type="text" id="date_range" class="form-control clinical-input"
                                     data-hms-date-range
                                     data-start-name="start_date"
@@ -63,9 +87,9 @@
         <div class="acoll-card-header">
             <div class="acoll-title-wrap">
                 <span class="acoll-title-icon" aria-hidden="true"><i class="bi bi-people-fill" style="font-size: 1.1rem;"></i></span>
-                <h5 class="acoll-title mb-0">Reception-wise Collection</h5>
+                <h5 class="acoll-title mb-0">Reception-wise OPD Collection</h5>
             </div>
-            <span class="badge acoll-count-badge">Click a row for case-wise detail</span>
+            <span class="badge acoll-count-badge">OPD case fees only · OT is in grand total above</span>
         </div>
         <div class="card-body p-0">
             <div class="acoll-table-wrap">

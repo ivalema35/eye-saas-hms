@@ -1455,6 +1455,7 @@
             <div>
                 <p class="metric-label">Total Collection</p>
                 <div class="metric-value">{{ money($revenueToday ?? 0, 0) }}</div>
+                <p class="metric-meta">OPD + OT net</p>
             </div>
         </div>
     </a>
@@ -2114,6 +2115,9 @@
                             <div class="rev-value">{{ money($revenueYear, 0) }}</div>
                         </div>
                     </div>
+                    <p class="text-muted small mb-0 px-3 pb-3" style="font-size:.72rem;">
+                        OPD + OT net (OT refund cuts OT only, not OPD)
+                    </p>
                 </div>
             @endif
 
