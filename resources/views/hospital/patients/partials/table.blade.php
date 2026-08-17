@@ -1,15 +1,14 @@
-{{-- Patients table + pagination. Rendered on initial page load AND returned
-     directly (no layout) for the live-search AJAX request. Keep this file's
-     markup byte-for-byte identical to what index.blade.php used to render
-     inline, since the AJAX swap replaces #patients-table-container's HTML
-     with this exact partial. --}}
+{{-- Patients table. Search/sort/pagination are handled client-side by
+     DataTables (initialized in hospital.patients.index — kept off the
+     rows-are-latest-first default ordering, so it isn't the shared
+     .js-datatable auto-init). --}}
 <div class="table-wrapper">
-    <table class="modern-table">
+    <table class="modern-table patients-table" style="width:100%">
         <thead>
             <tr>
                 <th style="width:44px">#</th>
-                <th style="width:110px">MRD</th>
-                <th>Patient</th>
+                <th style="width:80px">MRD</th>
+                <th style="min-width:260px">Patient</th>
                 <th style="width:130px">Doctor</th>
                 <th style="width:110px">Fee / Type</th>
                 <th style="width:150px">Status</th>
@@ -36,7 +35,7 @@
                 @endphp
                 <tr class="pt-row">
                     {{-- # --}}
-                    <td class="serial">{{ $patients->firstItem() + $i }}</td>
+                    <td class="serial">{{ $i + 1 }}</td>
 
                     {{-- MRD --}}
                     <td><span class="mrd-badge">{{ $p->patient_code }}</span></td>
@@ -44,7 +43,6 @@
                     {{-- Patient: name + meta --}}
                     <td>
                         <div class="pt-info">
-                            <div class="pt-avatar">{{ strtoupper(substr($p->first_name, 0, 1)) }}</div>
                             <div>
                                 <div class="pt-name">{{ $p->full_name }}</div>
                                 <div class="pt-meta">
@@ -165,17 +163,10 @@
                     <td colspan="7" class="empty-state">
                         <div class="empty-icon"><i class="bi bi-inbox"></i></div>
                         <h5>No patients found</h5>
-                        <p>{{ request('search') ? 'No results match your search.' : ($showAll ? 'No patients registered yet.' : 'No patients registered today.') }}
-                        </p>
+                        <p>{{ $showAll ? 'No patients registered yet.' : 'No patients registered today.' }}</p>
                     </td>
                 </tr>
             @endforelse
         </tbody>
     </table>
 </div>
-
-@if($patients->hasPages())
-    <div class="pagination-modern">
-        {{ $patients->links('pagination::bootstrap-5') }}
-    </div>
-@endif

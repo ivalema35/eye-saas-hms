@@ -1,15 +1,30 @@
 @extends('hospital.layouts.app')
 @section('title', 'OT Reports')
-@section('page-header', 'OT Reports')
-
-@section('page-actions')
-    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-clipboard2-pulse me-1"></i> OPD Patient Reports
-    </a>
-@endsection
+{{-- Layout page-header intentionally unused — the title + breadcrumb are
+rendered above the report groups instead. --}}
 
 @section('content')
 <div class="ot-reports-page">
+
+    <div class="ot-reports-header-block">
+        <div class="ot-reports-header-copy">
+            <div class="ot-reports-header-title">
+                <span class="ot-reports-header-icon"><i class="bi bi-bar-chart-line-fill"></i></span>
+                OT Reports
+            </div>
+            <nav class="ot-reports-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="ot-reports-breadcrumb-sep">/</span>
+                <span>Reports</span>
+                <span class="ot-reports-breadcrumb-sep">/</span>
+                <span class="ot-reports-breadcrumb-current">OT Reports</span>
+            </nav>
+        </div>
+        <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+            <i class="bi bi-clipboard2-pulse me-1"></i> OPD Patient Reports
+        </a>
+    </div>
+
     @foreach($reportsByGroup as $group => $reports)
         <div class="card ot-premium-card border-0 mb-4">
             <div class="ot-card-header">
@@ -58,6 +73,69 @@
     @keyframes ot-page-in {
         from { opacity: 0; transform: translateY(8px); }
         to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .ot-reports-header-block {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.15rem;
+    }
+
+    .ot-reports-header-title {
+        font-weight: 800;
+        font-size: 1.4rem;
+        color: var(--ot-secondary);
+        letter-spacing: -.02em;
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .ot-reports-header-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, var(--ot-secondary) 0%, #2471a3 100%);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(27, 79, 114, .28);
+    }
+
+    .ot-reports-header-icon i {
+        font-size: 1.05rem;
+    }
+
+    .ot-reports-breadcrumb {
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .85rem;
+        color: #8891a0;
+    }
+
+    .ot-reports-breadcrumb a {
+        color: #8891a0;
+        text-decoration: none;
+    }
+
+    .ot-reports-breadcrumb a:hover {
+        color: var(--ot-secondary);
+    }
+
+    .ot-reports-breadcrumb-sep {
+        color: #c3c9d3;
+    }
+
+    .ot-reports-breadcrumb-current {
+        color: #4a5568;
+        font-weight: 600;
     }
 
     .ot-reports-page .hms-btn {
@@ -156,6 +234,11 @@
         background: var(--ot-s2-08);
         color: var(--ot-secondary);
         font-size: 1.4rem;
+        transition: transform 220ms cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .ot-report-tile:hover .ot-report-tile-icon {
+        transform: translateY(-2px) scale(1.08) rotate(-4deg);
     }
 
     /* Cycle a soft pastel palette across tiles, tied to the theme hue family */

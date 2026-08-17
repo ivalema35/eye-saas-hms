@@ -1,425 +1,407 @@
-﻿@extends('landing.layouts.app')
+@extends('landing.layouts.app')
 
-@section('title', 'Eye HMS SaaS — Smart Hospital Management for Eye Clinics in India')
-@section('meta_description', 'Cloud-based Eye Hospital Management System for ophthalmology clinics in India. Manage patients, OPD appointments, surgery scheduling, billing & reports — all in one platform. Start free 14-day trial.')
-@section('meta_keywords', 'eye hospital management software India, ophthalmology HMS, eye clinic software, hospital management system, OPD scheduling, patient management ophthalmology, cloud HMS India, eye care software')
-@section('og_title', 'Eye HMS SaaS — Smart Hospital Management for Eye Clinics')
-@section('og_description', 'Complete cloud-based Hospital Management System for eye clinics & ophthalmology hospitals in India. Patient management, OPD, surgery, billing — all in one.')
+@section('title', 'EYENOSIS — Eye Hospital CRM Platform')
+@section('meta_description', 'Cloud multi-tenant Eye Hospital CRM: patients, OPD, primary/secondary exam, OT counselling & surgery, accountant, ward, discharge billing and reports. Start free 14-day trial.')
+@section('meta_keywords', 'eye hospital CRM, ophthalmology HMS, OT management, multi-tenant hospital SaaS, eye clinic software India')
+@section('og_title', 'EYENOSIS — Eye Hospital CRM Platform')
+@section('og_description', 'Complete multi-tenant CRM / HMS for eye hospitals — OPD, OT, billing, roles and reports.')
 
 @section('content')
 
-{{-- ============================================================
-     Hero Section
-============================================================ --}}
-@include('landing.components.hero')
- 
-{{-- ============================================================
-     Trust Strip
-============================================================ --}}
-<div class="pub-trust-strip" aria-label="Key statistics">
-    <div class="pub-trust-inner pub-animate-fade">
-        <div class="trust-stat">
-            <div class="trust-stat-num">500<span style="color:var(--hms-teal)">+</span></div>
-            <div class="trust-stat-label">Hospitals Registered</div>
-        </div>
-        <div class="trust-stat">
-            <div class="trust-stat-num">14</div>
-            <div class="trust-stat-label">Day Free Trial</div>
-        </div>
-        <div class="trust-stat">
-            <div class="trust-stat-num">99.9<span style="color:var(--hms-success)">%</span></div>
-            <div class="trust-stat-label">Uptime Guaranteed</div>
-        </div>
-        <div class="trust-stat">
-            <div class="trust-stat-num">&#x20B9;0</div>
-            <div class="trust-stat-label">Setup / Installation</div>
-        </div>
-        <div class="trust-stat">
-            <div class="trust-stat-num">24/7</div>
-            <div class="trust-stat-label">Cloud Access</div>
-        </div>
-    </div>
-</div>
+    @include('landing.components.hero')
 
-{{-- ============================================================
-     Features Section
-============================================================ --}}
-<section class="pub-section pub-section-grey" id="features" aria-labelledby="features-heading">
-    <div class="pub-section-inner">
-        <div class="pub-section-header">
-            <span class="section-eyebrow"><i class="fa-solid fa-star"></i> Features</span>
-            <h2 id="features-heading">Everything Your Eye Clinic Needs</h2>
-            <p>All modules built specifically for ophthalmology practice management — no extra configuration required.</p>
+    {{-- Module strip --}}
+    <section class="ecrm-strip ecrm-reveal" aria-label="Platform highlights">
+        <div class="ecrm-container ecrm-strip-inner">
+            <div><i class="fa-solid fa-hospital-user"></i><span>Multi-tenant hospitals</span></div>
+            <div><i class="fa-solid fa-stethoscope"></i><span>Clinical exams</span></div>
+            <div><i class="fa-solid fa-scalpel"></i><span>Full OT pipeline</span></div>
+            <div><i class="fa-solid fa-file-invoice-dollar"></i><span>Billing &amp; refunds</span></div>
+            <div><i class="fa-solid fa-user-shield"></i><span>Role permissions</span></div>
+            <div><i class="fa-solid fa-chart-pie"></i><span>Ops reports</span></div>
         </div>
-        <div class="features-grid pub-animate-group">
-            <article class="feature-card pub-animate">
-                <div class="feature-icon-box fi-blue"><i class="fa-solid fa-user-injured"></i></div>
-                <h3>Patient Management</h3>
-                <p>Complete patient records with eye-specific history, medical records, visit tracking, and family linkage for multi-patient households.</p>
-            </article>
-            <article class="feature-card pub-animate">
-                <div class="feature-icon-box fi-teal"><i class="fa-solid fa-calendar-check"></i></div>
-                <h3>OPD Appointment Scheduling</h3>
-                <p>Smart appointment booking with doctor availability, configurable slot durations, SMS/email reminders, and walk-in management.</p>
-            </article>
-            <article class="feature-card pub-animate">
-                <div class="feature-icon-box fi-orange"><i class="fa-solid fa-eye"></i></div>
-                <h3>Eye Examination Module</h3>
-                <p>Comprehensive eye exam forms — visual acuity, refraction, slit lamp, fundus, IOP, corneal mapping & diagnosis with custom fields.</p>
-            </article>
-            <article class="feature-card pub-animate">
-                <div class="feature-icon-box fi-green"><i class="fa-solid fa-scalpel"></i></div>
-                <h3>OT &amp; Surgery Module</h3>
-                <p>Operation Theatre scheduling, surgical notes, implant tracking, post-op care plans, and OT utilization &amp; efficiency reports.</p>
-            </article>
-            <article class="feature-card pub-animate">
-                <div class="feature-icon-box fi-purple"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-                <h3>GST Billing &amp; Invoicing</h3>
-                <p>GST-compliant invoicing, multi-mode payment tracking, insurance claims, automated receipt generation &amp; revenue reports.</p>
-            </article>
-            <article class="feature-card pub-animate">
-                <div class="feature-icon-box fi-red"><i class="fa-solid fa-chart-line"></i></div>
-                <h3>Analytics &amp; Reports</h3>
-                <p>Real-time dashboards, patient statistics, doctor performance, revenue trends, and exportable reports for informed decisions.</p>
-            </article>
-        </div>
-    </div>
-</section>
+    </section>
 
-{{-- ============================================================
-     How It Works
-============================================================ --}}
-<section class="pub-section" aria-labelledby="steps-heading">
-    <div class="pub-section-inner">
-        <div class="pub-section-header">
-            <span class="section-eyebrow"><i class="fa-solid fa-list-ol"></i> How It Works</span>
-            <h2 id="steps-heading">Get Started in 3 Simple Steps</h2>
-            <p>From registration to running your clinic — setup takes less than 5 minutes.</p>
-        </div>
-        <div class="steps-grid pub-animate-group">
-            <div class="step-item pub-animate">
-                <div class="step-num">1</div>
-                <h3>Register Your Hospital</h3>
-                <p>Fill a simple form with your hospital name, contact info and choose a plan. Your dedicated subdomain is ready instantly.</p>
+    {{-- CRM Modules --}}
+    <section class="ecrm-section" id="modules" aria-labelledby="modules-heading">
+        <div class="ecrm-container">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">CRM modules</span>
+                <h2 id="modules-heading">Built from real hospital desks</h2>
+                <p>Each module maps to how your clinic actually works — not a generic hospital template.</p>
             </div>
-            <div class="step-item pub-animate">
-                <div class="step-num">2</div>
-                <h3>Configure Your Clinic</h3>
-                <p>Add doctors, configure OPD timings, billing items and departments. Pre-built templates make setup fast.</p>
-            </div>
-            <div class="step-item pub-animate">
-                <div class="step-num">3</div>
-                <h3>Start Managing Patients</h3>
-                <p>Register patients, book appointments, conduct exams and generate bills. Everything in one place, from day one.</p>
+            <div class="ecrm-cards">
+                <article class="ecrm-card ecrm-card--blue ecrm-reveal">
+                    <div class="ecrm-card-ico" aria-hidden="true"><i class="fa-solid fa-id-card"></i></div>
+                    <h3>Patient CRM</h3>
+                    <p>Registration, walk-in / phone, search, history timeline, referrals and case fees.</p>
+                    <ul>
+                        <li>Patient master &amp; visits</li>
+                        <li>Reception ownership</li>
+                        <li>Print / history surfaces</li>
+                    </ul>
+                </article>
+                <article class="ecrm-card ecrm-card--teal ecrm-reveal">
+                    <div class="ecrm-card-ico" aria-hidden="true"><i class="fa-solid fa-eye"></i></div>
+                    <h3>Clinical exams</h3>
+                    <p>Primary &amp; secondary examination workflows with diagnosis and prescriptions.</p>
+                    <ul>
+                        <li>Doctor queues</li>
+                        <li>Exam printouts</li>
+                        <li>Recommend surgery → OT</li>
+                    </ul>
+                </article>
+                <article class="ecrm-card ecrm-card--indigo ecrm-reveal">
+                    <div class="ecrm-card-ico" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></div>
+                    <h3>OPD &amp; appointments</h3>
+                    <p>OPD desk flow with OT appointment intake for conversion into the surgical pipeline.</p>
+                    <ul>
+                        <li>Queue management</li>
+                        <li>OT appointments</li>
+                        <li>FOC controls</li>
+                    </ul>
+                </article>
+                <article class="ecrm-card ecrm-card--orange ecrm-reveal">
+                    <div class="ecrm-card-ico" aria-hidden="true"><i class="fa-solid fa-comments-dollar"></i></div>
+                    <h3>OT counselling</h3>
+                    <p>Package selection, lens options, estimates and counselling before payment.</p>
+                    <ul>
+                        <li>Package masters</li>
+                        <li>Cost breakdown</li>
+                        <li>Consent handoff</li>
+                    </ul>
+                </article>
+                <article class="ecrm-card ecrm-card--green ecrm-reveal">
+                    <div class="ecrm-card-ico" aria-hidden="true"><i class="fa-solid fa-wallet"></i></div>
+                    <h3>Accountant desk</h3>
+                    <p>OT package payments, payment verified queue, surgery-refuse refunds, money report.</p>
+                    <ul>
+                        <li>Collect package fee</li>
+                        <li>Full refund flow</li>
+                        <li>Net collection view</li>
+                    </ul>
+                </article>
+                <article class="ecrm-card ecrm-card--navy ecrm-reveal">
+                    <div class="ecrm-card-ico" aria-hidden="true"><i class="fa-solid fa-bed-pulse"></i></div>
+                    <h3>Ward → OT → discharge</h3>
+                    <p>Ward vitals &amp; dilation, assistant lens, doctor surgery, discharge invoices &amp; slips.</p>
+                    <ul>
+                        <li>Ward management</li>
+                        <li>OT assistant / surgeon</li>
+                        <li>Billing desk prints</li>
+                    </ul>
+                </article>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
-{{-- ============================================================
-     Testimonials
-============================================================ --}}
-<section class="pub-section pub-section-grey" aria-labelledby="testimonials-heading">
-    <div class="pub-section-inner">
-        <div class="pub-section-header">
-            <span class="section-eyebrow"><i class="fa-solid fa-quote-left"></i> Testimonials</span>
-            <h2 id="testimonials-heading">Loved by Eye Care Professionals</h2>
-            <p>What our customers say about Eye HMS SaaS</p>
-        </div>
-        <div class="testimonials-grid pub-animate-group">
-            <article class="testimonial-card pub-animate">
-                <div class="t-quote-icon">&ldquo;</div>
-                <div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                <p class="t-text">Eye HMS transformed how we manage our clinic. Patient records are instant, appointment scheduling is smooth, and billing is error-free. Highly recommended!</p>
-                <div class="t-author">
-                    <div class="t-avatar">DR</div>
-                    <div>
-                        <div class="t-name">Dr. Ravi Sharma</div>
-                        <div class="t-role">Ophthalmologist, Sharma Eye Centre, Mumbai</div>
+    {{-- Image + detail sections --}}
+    <section class="ecrm-section ecrm-section-alt ecrm-details-section" id="details" aria-label="Platform details">
+        <div class="ecrm-container">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">Platform depth</span>
+                <h2>Clinical, OT and SaaS — designed as one CRM</h2>
+                <p>Real desk workflows, status-driven OT and hospital isolation — not a bolted-on module list.</p>
+            </div>
+            <div class="ecrm-detail-stack">
+                <div class="ecrm-detail ecrm-reveal">
+                    <div class="ecrm-detail-media">
+                        <img src="{{ asset('images/landing/detail-clinical.png') }}"
+                            alt="Clinical exam CRM — primary examination workspace" width="1200" height="900" loading="lazy"
+                            decoding="async">
+                    </div>
+                    <div class="ecrm-detail-copy">
+                        <span class="ecrm-kicker">Clinical CRM</span>
+                        <h3>Exams that stay on the patient timeline</h3>
+                        <p>Doctors work queues by stage. Findings, diagnosis and prescriptions stay attached to the same
+                            registration — ready for history and OT recommendation.</p>
+                        <ul class="ecrm-ticks">
+                            <li>Primary &amp; secondary stages</li>
+                            <li>Printable clinical sheets</li>
+                            <li>Seamless hand-off to OT counselling</li>
+                        </ul>
                     </div>
                 </div>
-            </article>
-            <article class="testimonial-card pub-animate">
-                <div class="t-quote-icon">&ldquo;</div>
-                <div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                <p class="t-text">We switched from paper records to Eye HMS and it was the best decision. The OT module is especially impressive — everything tracked and organised perfectly.</p>
-                <div class="t-author">
-                    <div class="t-avatar">AP</div>
-                    <div>
-                        <div class="t-name">Dr. Anita Patel</div>
-                        <div class="t-role">Medical Director, Vision Plus Hospital, Ahmedabad</div>
+
+                <div class="ecrm-detail reverse ecrm-reveal">
+                    <div class="ecrm-detail-media">
+                        <img src="{{ asset('images/landing/detail-ot.png') }}"
+                            alt="OT surgery pipeline CRM — counselling to discharge" width="1200" height="900"
+                            loading="lazy" decoding="async">
+                    </div>
+                    <div class="ecrm-detail-copy">
+                        <span class="ecrm-kicker">OT CRM</span>
+                        <h3>Surgery journey under control</h3>
+                        <p>From counselled package to payment, ward prep, assistant lens, operated status and discharge desk
+                            — every role sees the right queue.</p>
+                        <ul class="ecrm-ticks">
+                            <li>Payment verify → ward → ready → operated</li>
+                            <li>Refunds when surgery is refused</li>
+                            <li>Invoices, slips &amp; follow-up printables</li>
+                        </ul>
                     </div>
                 </div>
-            </article>
-            <article class="testimonial-card pub-animate">
-                <div class="t-quote-icon">&ldquo;</div>
-                <div class="t-stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                <p class="t-text">As a multi-doctor clinic, managing appointments was always a headache. Eye HMS solved that completely. The analytics dashboard gives us real clarity on our performance.</p>
-                <div class="t-author">
-                    <div class="t-avatar">SK</div>
-                    <div>
-                        <div class="t-name">Dr. Suresh Kumar</div>
-                        <div class="t-role">Clinic Owner, Eye Care Clinic, Bangalore</div>
+
+                <div class="ecrm-detail ecrm-reveal">
+                    <div class="ecrm-detail-media">
+                        <img src="{{ asset('images/landing/detail-saas.png') }}"
+                            alt="Multi-tenant hospital SaaS — isolated workspaces" width="1200" height="900" loading="lazy"
+                            decoding="async">
+                    </div>
+                    <div class="ecrm-detail-copy">
+                        <span class="ecrm-kicker">SaaS foundation</span>
+                        <h3>Multi-tenant by design</h3>
+                        <p>Each hospital gets an isolated workspace with its own staff, masters and operational data —
+                            managed under platform subscriptions.</p>
+                        <ul class="ecrm-ticks">
+                            <li>Hospital admin settings</li>
+                            <li>Permission-aware menus</li>
+                            <li>Trial → paid plans</li>
+                        </ul>
                     </div>
                 </div>
-            </article>
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
-{{-- ============================================================
-     Pricing Preview
-============================================================ --}}
-<section class="pub-section" id="pricing" aria-labelledby="pricing-heading">
-    <div class="pub-section-inner">
-        <div class="pub-section-header">
-            <span class="section-eyebrow"><i class="fa-solid fa-tag"></i> Pricing</span>
-            <h2 id="pricing-heading">Simple, Transparent Pricing</h2>
-            <p>Start with a 14-day free trial — no credit card required. Upgrade anytime.</p>
-        </div>
-        <div class="pricing-grid pub-animate-group">
-            {{-- Monthly --}}
-            <div class="pricing-card pub-animate">
-                <h3>Monthly</h3>
-                <p class="pricing-desc">Pay as you go, cancel anytime</p>
-                <div class="pricing-price">
-                    <span class="p-sym">&#x20B9;</span>{{ number_format($pricing['monthly']['price']) }}<span class="p-period">/mo</span>
-                </div>
-                <div class="pricing-divider"></div>
-                <ul class="pricing-features">
-                    <li><i class="fa-solid fa-check"></i> All modules included</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited patients</li>
-                    <li><i class="fa-solid fa-check"></i> Up to 10 users</li>
-                    <li><i class="fa-solid fa-check"></i> Email support</li>
-                    <li><i class="fa-solid fa-check"></i> Daily backups</li>
-                </ul>
-                <a href="{{ route('register.show', ['plan' => 'monthly']) }}" class="hms-btn hms-btn-secondary hms-btn-block">
-                    Get Started
-                </a>
+    {{-- Workflow --}}
+    <section class="ecrm-section" id="workflow" aria-labelledby="workflow-heading">
+        <div class="ecrm-container">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">Workflow</span>
+                <h2 id="workflow-heading">From walk-in to follow-up</h2>
+                <p>A continuous CRM path across OPD and OT — the right role owns each step.</p>
             </div>
+            <ol class="ecrm-steps">
+                <li class="ecrm-reveal"><span class="ecrm-step-num">01</span><strong>Register</strong><em>Reception</em>
+                </li>
+                <li class="ecrm-reveal"><span class="ecrm-step-num">02</span><strong>Examine</strong><em>Doctor</em></li>
+                <li class="ecrm-reveal"><span class="ecrm-step-num">03</span><strong>Counsel</strong><em>Counsellor</em>
+                </li>
+                <li class="ecrm-reveal"><span class="ecrm-step-num">04</span><strong>Collect</strong><em>Accountant</em>
+                </li>
+                <li class="ecrm-reveal"><span class="ecrm-step-num">05</span><strong>Prep</strong><em>Ward</em></li>
+                <li class="ecrm-reveal"><span class="ecrm-step-num">06</span><strong>Operate</strong><em>OT team</em></li>
+                <li class="ecrm-reveal"><span class="ecrm-step-num">07</span><strong>Discharge</strong><em>Billing desk</em>
+                </li>
+            </ol>
+        </div>
+    </section>
 
-            {{-- Quarterly (popular) --}}
-            <div class="pricing-card popular pub-animate">
-                <div class="popular-ribbon">Most Popular</div>
-                <h3>Quarterly</h3>
-                <p class="pricing-desc">Save 10% — great for growing clinics</p>
-                <div class="pricing-price">
-                    <span class="p-sym">&#x20B9;</span>{{ number_format($pricing['quarterly']['price']) }}<span class="p-period">/qtr</span>
-                </div>
-                <div class="pricing-original">&#x20B9;{{ number_format($pricing['quarterly']['original']) }}</div>
-                <div class="pricing-save">Save &#x20B9;{{ number_format($pricing['quarterly']['save']) }}</div>
-                <ul class="pricing-features">
-                    <li><i class="fa-solid fa-check"></i> All modules included</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited patients</li>
-                    <li><i class="fa-solid fa-check"></i> Up to 10 users</li>
-                    <li><i class="fa-solid fa-check"></i> Priority email + chat</li>
-                    <li><i class="fa-solid fa-check"></i> Daily backups</li>
-                </ul>
-                <a href="{{ route('register.show', ['plan' => 'quarterly']) }}" class="hms-btn hms-btn-primary hms-btn-block">
-                    Get Started
-                </a>
+    {{-- Roles --}}
+    <section class="ecrm-section ecrm-section-alt" id="roles" aria-labelledby="roles-heading">
+        <div class="ecrm-container">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">Role-based CRM</span>
+                <h2 id="roles-heading">Desks your staff already understand</h2>
+                <p>Permission-aware navigation for every hospital role — fewer wrong screens, faster work.</p>
             </div>
+            <div class="ecrm-roles">
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-headset"></i></div>
+                    <h3>Reception</h3>
+                    <p>Register, FOC request, OPD queue, phone appointments.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-user-doctor"></i></div>
+                    <h3>Doctor</h3>
+                    <p>Primary / secondary exams, surgery recommend, OT doctor queue.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <h3>Counsellor</h3>
+                    <p>Package counselling, consent handoff into billing.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-calculator"></i></div>
+                    <h3>Accountant</h3>
+                    <p>OT payment, refunds, ward list, money summary.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-bed"></i></div>
+                    <h3>Ward</h3>
+                    <p>Vitals, dilation, medicine groups for OT prep.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-user-nurse"></i></div>
+                    <h3>OT assistant</h3>
+                    <p>Ready queue, lens detail, assist surgery flow.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-file-invoice"></i></div>
+                    <h3>Discharge</h3>
+                    <p>Invoices, medicine / lens slips, certificates.</p>
+                </article>
+                <article class="ecrm-reveal">
+                    <div class="ecrm-role-ico" aria-hidden="true"><i class="fa-solid fa-user-tie"></i></div>
+                    <h3>Hospital admin</h3>
+                    <p>Users, masters, settings, collection overview, reports.</p>
+                </article>
+            </div>
+        </div>
+    </section>
 
-            {{-- Yearly --}}
-            <div class="pricing-card pub-animate">
-                <h3>Yearly</h3>
-                <p class="pricing-desc">Maximum savings — 20% off</p>
-                <div class="pricing-price">
-                    <span class="p-sym">&#x20B9;</span>{{ number_format($pricing['yearly']['price']) }}<span class="p-period">/yr</span>
-                </div>
-                <div class="pricing-original">&#x20B9;{{ number_format($pricing['yearly']['original']) }}</div>
-                <div class="pricing-save">Save &#x20B9;{{ number_format($pricing['yearly']['save']) }}</div>
-                <ul class="pricing-features">
-                    <li><i class="fa-solid fa-check"></i> All modules included</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited patients</li>
-                    <li><i class="fa-solid fa-check"></i> Unlimited users</li>
-                    <li><i class="fa-solid fa-check"></i> Priority + phone support</li>
-                    <li><i class="fa-solid fa-check"></i> Real-time backups</li>
-                </ul>
-                <a href="{{ route('register.show', ['plan' => 'yearly']) }}" class="hms-btn hms-btn-secondary hms-btn-block">
-                    Get Started
-                </a>
+    {{-- Pricing --}}
+    <section class="ecrm-section" id="pricing" aria-labelledby="pricing-heading">
+        <div class="ecrm-container">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">Pricing</span>
+                <h2 id="pricing-heading">Transparent SaaS plans</h2>
+                <p>Start with a 14-day free trial — no credit card required. Upgrade anytime.</p>
             </div>
+            <div class="ecrm-pricing">
+                <article class="ecrm-price ecrm-reveal">
+                    <h3>Monthly</h3>
+                    <p class="desc">Pay as you go, cancel anytime</p>
+                    <div class="amount">
+                        <span
+                            class="sym">{{ platform_currency_symbol() }}</span>{{ number_format($pricing['monthly']['price']) }}
+                        <span class="per">/mo</span>
+                    </div>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> All modules included</li>
+                        <li><i class="fa-solid fa-check"></i> Unlimited patients</li>
+                        <li><i class="fa-solid fa-check"></i> Up to 10 users</li>
+                        <li><i class="fa-solid fa-check"></i> Email support</li>
+                        <li><i class="fa-solid fa-check"></i> Daily backups</li>
+                    </ul>
+                    <a href="{{ route('register.show', ['plan' => 'monthly']) }}"
+                        class="ecrm-btn ecrm-btn-outline ecrm-btn-block">Get Started</a>
+                </article>
+                <article class="ecrm-price featured ecrm-reveal">
+                    <div class="ribbon">Most Popular</div>
+                    <h3>Quarterly</h3>
+                    <p class="desc">Save 10% — great for growing clinics</p>
+                    <div class="amount">
+                        <span
+                            class="sym">{{ platform_currency_symbol() }}</span>{{ number_format($pricing['quarterly']['price']) }}
+                        <span class="per">/qtr</span>
+                    </div>
+                    <div class="save">
+                        <s>{{ platform_currency_symbol() }}{{ number_format($pricing['quarterly']['original']) }}</s>
+                        <span>Save {{ platform_currency_symbol() }}{{ number_format($pricing['quarterly']['save']) }}</span>
+                    </div>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> All modules included</li>
+                        <li><i class="fa-solid fa-check"></i> Unlimited patients</li>
+                        <li><i class="fa-solid fa-check"></i> Up to 10 users</li>
+                        <li><i class="fa-solid fa-check"></i> Priority email + chat</li>
+                        <li><i class="fa-solid fa-check"></i> Daily backups</li>
+                    </ul>
+                    <a href="{{ route('register.show', ['plan' => 'quarterly']) }}"
+                        class="ecrm-btn ecrm-btn-primary ecrm-btn-block">Get Started</a>
+                </article>
+                <article class="ecrm-price ecrm-reveal">
+                    <h3>Yearly</h3>
+                    <p class="desc">Maximum savings — 20% off</p>
+                    <div class="amount">
+                        <span
+                            class="sym">{{ platform_currency_symbol() }}</span>{{ number_format($pricing['yearly']['price']) }}
+                        <span class="per">/yr</span>
+                    </div>
+                    <div class="save">
+                        <s>{{ platform_currency_symbol() }}{{ number_format($pricing['yearly']['original']) }}</s>
+                        <span>Save {{ platform_currency_symbol() }}{{ number_format($pricing['yearly']['save']) }}</span>
+                    </div>
+                    <ul>
+                        <li><i class="fa-solid fa-check"></i> All modules included</li>
+                        <li><i class="fa-solid fa-check"></i> Unlimited patients</li>
+                        <li><i class="fa-solid fa-check"></i> Unlimited users</li>
+                        <li><i class="fa-solid fa-check"></i> Priority + phone support</li>
+                        <li><i class="fa-solid fa-check"></i> Real-time backups</li>
+                    </ul>
+                    <a href="{{ route('register.show', ['plan' => 'yearly']) }}"
+                        class="ecrm-btn ecrm-btn-outline ecrm-btn-block">Get Started</a>
+                </article>
+            </div>
+            <p class="ecrm-price-more">
+                Prefer a dedicated page?
+                <a href="{{ route('pricing') }}">Open full pricing →</a>
+            </p>
         </div>
-        <p style="text-align:center;margin-top:1.75rem;font-size:.875rem;color:var(--hms-text-muted)">
-            Need a full feature comparison?
-            <a href="{{ route('pricing') }}" style="color:var(--hms-primary);font-weight:600">View Pricing Page &rarr;</a>
-        </p>
-    </div>
-</section>
+    </section>
 
-{{-- ============================================================
-     FAQ
-============================================================ --}}
-<section class="pub-section pub-section-grey" id="faq" aria-labelledby="faq-heading">
-    <div class="pub-section-inner">
-        <div class="pub-section-header">
-            <span class="section-eyebrow"><i class="fa-solid fa-circle-question"></i> FAQ</span>
-            <h2 id="faq-heading">Frequently Asked Questions</h2>
-            <p>Have a question? We have answers.</p>
+    {{-- FAQ --}}
+    <section class="ecrm-section ecrm-section-alt" id="faq" aria-labelledby="faq-heading">
+        <div class="ecrm-container ecrm-faq-wrap">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">FAQ</span>
+                <h2 id="faq-heading">Frequently asked questions</h2>
+                <p>Trials, multi-tenant data, plans and access.</p>
+            </div>
+            <div class="ecrm-faq" role="list">
+                <div class="ecrm-faq-item" role="listitem">
+                    <button type="button" class="ecrm-faq-btn" aria-expanded="false">
+                        What happens after the 14-day free trial ends?
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <div class="ecrm-faq-body">
+                        After your trial ends, you have a 7-day grace period to choose a plan. During grace, you can view
+                        records but cannot add new data. Pick any plan to restore full access.
+                    </div>
+                </div>
+                <div class="ecrm-faq-item" role="listitem">
+                    <button type="button" class="ecrm-faq-btn" aria-expanded="false">
+                        Is each hospital’s data isolated?
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <div class="ecrm-faq-body">
+                        Yes. Eye HMS is multi-tenant: each hospital workspace is tenant-scoped, with role-based staff access
+                        inside that hospital.
+                    </div>
+                </div>
+                <div class="ecrm-faq-item" role="listitem">
+                    <button type="button" class="ecrm-faq-btn" aria-expanded="false">
+                        Can I change plans later?
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <div class="ecrm-faq-body">
+                        Yes. Active hospitals can change billing cycle (monthly, quarterly, yearly) from settings according
+                        to platform subscription rules.
+                    </div>
+                </div>
+                <div class="ecrm-faq-item" role="listitem">
+                    <button type="button" class="ecrm-faq-btn" aria-expanded="false">
+                        Do I need to install software?
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <div class="ecrm-faq-body">
+                        No. Eye HMS is cloud-based — use a modern browser on desktop, tablet or phone.
+                    </div>
+                </div>
+                <div class="ecrm-faq-item" role="listitem">
+                    <button type="button" class="ecrm-faq-btn" aria-expanded="false">
+                        How do subscriptions get paid?
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <div class="ecrm-faq-body">
+                        Platform subscriptions run through Razorpay (UPI, cards, net banking and wallets, subject to gateway
+                        availability).
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="faq-list" role="list">
-            <div class="faq-item" role="listitem">
-                <button class="faq-btn" type="button" aria-expanded="false">
-                    What happens after the 14-day free trial ends?
-                    <span class="faq-icon"><i class="fa-solid fa-plus"></i></span>
-                </button>
-                <div class="faq-body">
-                    After your trial ends, you have a 7-day grace period to choose a plan. During grace, you can view all records but cannot add new data. Pick any plan to restore full access immediately.
-                </div>
-            </div>
-            <div class="faq-item" role="listitem">
-                <button class="faq-btn" type="button" aria-expanded="false">
-                    Is my hospital data safe and private?
-                    <span class="faq-icon"><i class="fa-solid fa-plus"></i></span>
-                </button>
-                <div class="faq-body">
-                    Yes. All data is encrypted in transit (TLS) and at rest. Each hospital's data is completely isolated from others through multi-tenancy. We perform daily automated backups with 30-day retention.
-                </div>
-            </div>
-            <div class="faq-item" role="listitem">
-                <button class="faq-btn" type="button" aria-expanded="false">
-                    Can I switch or upgrade plans later?
-                    <span class="faq-icon"><i class="fa-solid fa-plus"></i></span>
-                </button>
-                <div class="faq-body">
-                    Absolutely. You can change your billing cycle (monthly, quarterly, or yearly) at any time from the Settings page. The new plan takes effect from your next billing date.
-                </div>
-            </div>
-            <div class="faq-item" role="listitem">
-                <button class="faq-btn" type="button" aria-expanded="false">
-                    Do I need to install any software?
-                    <span class="faq-icon"><i class="fa-solid fa-plus"></i></span>
-                </button>
-                <div class="faq-body">
-                    No installation needed. Eye HMS is 100% cloud-based. Open any modern browser on your computer, tablet, or mobile phone — and you are ready to go.
-                </div>
-            </div>
-            <div class="faq-item" role="listitem">
-                <button class="faq-btn" type="button" aria-expanded="false">
-                    What payment methods do you accept?
-                    <span class="faq-icon"><i class="fa-solid fa-plus"></i></span>
-                </button>
-                <div class="faq-body">
-                    We support all major Indian payment methods via Razorpay — UPI, credit/debit cards (Visa, Mastercard, RuPay), net banking, and popular wallets.
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-{{-- ============================================================
-     CTA Banner
-============================================================ --}}
-<section class="pub-cta-banner" aria-label="Call to action">
-    <div class="pub-cta-banner-inner">
-        <h2>Ready to Transform Your Practice?</h2>
-        <p>Join hundreds of eye care professionals across India who trust Eye HMS to deliver better patient outcomes and streamlined operations.</p>
-        <div class="cta-btns">
-            <a href="{{ route('register.show') }}" class="btn-hero-primary">
-                <i class="fa-solid fa-rocket"></i> Start Free 14-Day Trial
-            </a>
-            <a href="{{ route('pricing') }}" class="btn-hero-outline">
-                <i class="fa-solid fa-tag"></i> View Pricing
-            </a>
-        </div>
-    </div>
-</section>
+    </section>
 
 @endsection
 
 @push('scripts')
-<script>
-    (function () {
-        var statStrip = document.querySelector('.pub-trust-strip');
-        var statElements = Array.prototype.slice.call(document.querySelectorAll('.trust-stat-num'));
-        var hasCounted = false;
-
-        function parseStatNumber(node) {
-            var clone = node.cloneNode(true);
-            var spans = clone.querySelectorAll('span');
-            spans.forEach(function (s) { s.remove(); });
-            var raw = (clone.textContent || '').trim();
-            var match = raw.match(/[\d]+(?:\.[\d]+)?/);
-            if (!match) return null;
-            return {
-                value: parseFloat(match[0]),
-                decimals: match[0].indexOf('.') !== -1 ? (match[0].split('.')[1] || '').length : 0
-            };
-        }
-
-        function animateCount(node, target, decimals, duration) {
-            var startTime = null;
-            var endDecor = node.innerHTML.replace(/^[\s\S]*?(?=<span|$)/, '');
-
-            function frame(ts) {
-                if (!startTime) startTime = ts;
-                var progress = Math.min((ts - startTime) / duration, 1);
-                var eased = 1 - Math.pow(1 - progress, 3);
-                var current = target * eased;
-                var display = decimals > 0 ? current.toFixed(decimals) : Math.round(current).toString();
-                node.innerHTML = display + endDecor;
-                if (progress < 1) {
-                    requestAnimationFrame(frame);
-                } else {
-                    var finalVal = decimals > 0 ? target.toFixed(decimals) : Math.round(target).toString();
-                    node.innerHTML = finalVal + endDecor;
-                }
-            }
-
-            requestAnimationFrame(frame);
-        }
-
-        function runCountUp() {
-            if (hasCounted) return;
-            hasCounted = true;
-            statElements.forEach(function (el, idx) {
-                var parsed = parseStatNumber(el);
-                if (!parsed) return;
-                setTimeout(function () {
-                    animateCount(el, parsed.value, parsed.decimals, 1200);
-                }, idx * 80);
-            });
-        }
-
-        var observeTargets = Array.prototype.slice.call(document.querySelectorAll('.pub-animate'));
-        if (statStrip) observeTargets.push(statStrip);
-
-        if ('IntersectionObserver' in window) {
-            var observer = new IntersectionObserver(function (entries, obs) {
-                entries.forEach(function (entry) {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('is-visible');
-                        if (entry.target === statStrip) {
-                            runCountUp();
-                        }
-                        obs.unobserve(entry.target);
+    <script>
+        (function () {
+            document.querySelectorAll('.ecrm-faq-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var item = btn.closest('.ecrm-faq-item');
+                    var open = item.classList.contains('is-open');
+                    document.querySelectorAll('.ecrm-faq-item.is-open').forEach(function (el) {
+                        el.classList.remove('is-open');
+                        el.querySelector('.ecrm-faq-btn').setAttribute('aria-expanded', 'false');
+                    });
+                    if (!open) {
+                        item.classList.add('is-open');
+                        btn.setAttribute('aria-expanded', 'true');
                     }
                 });
-            }, { threshold: 0.15 });
-
-            observeTargets.forEach(function (el) {
-                observer.observe(el);
             });
-        } else {
-            observeTargets.forEach(function (el) { el.classList.add('is-visible'); });
-            runCountUp();
-        }
-
-        document.querySelectorAll('.faq-btn').forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                var item = btn.closest('.faq-item');
-                var isOpen = item.classList.contains('open');
-                document.querySelectorAll('.faq-item.open').forEach(function (el) {
-                    el.classList.remove('open');
-                    el.querySelector('.faq-btn').setAttribute('aria-expanded', 'false');
-                });
-                if (!isOpen) {
-                    item.classList.add('open');
-                    btn.setAttribute('aria-expanded', 'true');
-                }
-            });
-        });
-    }());
-</script>
+        }());
+    </script>
 @endpush

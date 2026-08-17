@@ -1,32 +1,40 @@
-<nav class="pub-nav-glass" id="pubNavGlass">
-    <span class="nav-scroll-progress" id="navScrollProgress" aria-hidden="true"></span>
-    <span class="nav-heartbeat-line" aria-hidden="true"></span>
-    {{-- Brand / Logo --}}
-    <a href="{{ route('home') }}" class="pub-nav-brand">
-        <div class="brand-icon-box">
-            <img src="{{ platform_logo_url() }}" alt="Eye HMS" class="brand-logo-img">
+<header class="ecrm-mast" id="ecrmMast">
+    <div class="ecrm-mast-progress" id="ecrmScrollProgress" aria-hidden="true"></div>
+    <div class="ecrm-mast-inner">
+        <a href="{{ route('home') }}" class="ecrm-brand">
+            <span class="ecrm-brand-mark">
+                <img src="{{ platform_logo_url() }}" alt="Eye Nosis" class="brand-logo-img">
+            </span>
+            <span class="ecrm-brand-text">
+                <small>Hospital CRM SaaS</small>
+            </span>
+        </a>
+
+        <div class="ecrm-mast-right">
+            <nav class="ecrm-nav" id="ecrmNav" aria-label="Primary">
+                <a href="{{ route('home') }}" data-nav="home"
+                    class="{{ request()->routeIs('home') ? 'is-on' : '' }}">Home</a>
+                <a href="{{ route('home') }}#modules" data-nav="modules">Modules</a>
+                <a href="{{ route('home') }}#workflow" data-nav="workflow">Workflow</a>
+                <a href="{{ route('home') }}#roles" data-nav="roles">Roles</a>
+                <a href="{{ route('pricing') }}" data-nav="pricing"
+                    class="{{ request()->routeIs('pricing') ? 'is-on' : '' }}">Pricing</a>
+                <a href="{{ route('home') }}#faq" data-nav="faq">FAQ</a>
+                <a href="{{ route('login') }}" class="ecrm-nav-mobile-only">Login</a>
+                <a href="{{ route('register.show') }}" class="ecrm-nav-mobile-only">Free trial</a>
+            </nav>
+
+            <div class="ecrm-mast-actions">
+                <div class="ecrm-cta-pill" role="group" aria-label="Account actions">
+                    <a href="{{ route('login') }}" class="ecrm-cta-pill-item">Login</a>
+                    <span class="ecrm-cta-pill-divider" aria-hidden="true"></span>
+                    <a href="{{ route('register.show') }}" class="ecrm-cta-pill-item">Free trial</a>
+                </div>
+                <button type="button" class="ecrm-burger" id="ecrmBurger" aria-label="Open menu" aria-expanded="false"
+                    aria-controls="ecrmNav">
+                    <i class="fa-solid fa-bars" id="ecrmBurgerIcon"></i>
+                </button>
+            </div>
         </div>
-        <span class="brand-text">Eye</span><span class="brand-accent">HMS</span>
-    </a>
-
-    {{-- Center Nav Links --}}
-    <div class="pub-nav-links" id="pubNavLinks">
-        <a href="{{ route('home') }}"
-           class="nav-link-item {{ request()->routeIs('home') ? 'active' : '' }}">Features</a>
-        <a href="{{ route('pricing') }}"
-           class="nav-link-item {{ request()->routeIs('pricing') ? 'active' : '' }}">Pricing</a>
-        <a href="{{ route('home') }}#faq"
-           class="nav-link-item">FAQ</a>
     </div>
-
-    {{-- Right CTA Buttons --}}
-    <div class="pub-nav-cta">
-        <a href="{{ route('login') }}" class="glass-login-link">
-            <i class="fa-solid fa-right-to-bracket"></i> Login
-        </a>
-        <a href="{{ route('register.show') }}" class="glass-trial-btn">
-            <i class="fa-solid fa-rocket"></i> Start Free Trial
-        </a>
-        
-    </div>
-</nav>
+</header>

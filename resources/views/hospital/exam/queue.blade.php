@@ -1,17 +1,8 @@
 @extends('hospital.layouts.app')
 @section('title', 'Clinical Queue Dashboard')
-@section('page-header', 'Clinical Queue Dashboard')
-
-@section('page-actions')
-    <form method="GET" class="queue-filter-bar">
-        <input type="hidden" name="doctor_id" value="{{ request('doctor_id') }}">
-        <span class="queue-filter-label">
-            <i class="fa-solid fa-calendar-days"></i>
-            Filter by Date
-        </span>
-        <input type="date" id="filterDate" name="date" value="{{ $filterDate }}" placeholder="Select date" class="queue-filter-input" onchange="this.form.submit()">
-    </form>
-@endsection
+{{-- Layout page-header intentionally unused — heading, breadcrumb and
+filter sit inside one bordered card, matching the panel design used
+across the rest of the app. --}}
 
 @php
     $wGreen  = (int) hospital_setting('wait_green_max',  30);
@@ -453,9 +444,89 @@
             min-width: 0;
         }
     }
+
+    .queue-outer-card {
+        background: #ffffff;
+        border: 1px solid rgba(15, 79, 134, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+        padding: 1.1rem 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .queue-header-block {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .queue-header-title {
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: var(--queue-primary);
+        letter-spacing: -.015em;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .queue-header-title i {
+        color: var(--queue-primary);
+        font-size: 1.2rem;
+    }
+
+    .queue-breadcrumb {
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .85rem;
+        color: #8891a0;
+    }
+
+    .queue-breadcrumb a {
+        color: #8891a0;
+        text-decoration: none;
+    }
+
+    .queue-breadcrumb a:hover {
+        color: var(--queue-primary);
+    }
+
+    .queue-breadcrumb-sep {
+        color: #c3c9d3;
+    }
+
+    .queue-breadcrumb-current {
+        color: #4a5568;
+        font-weight: 600;
+    }
 </style>
 
 <div class="queue-page-shell">
+
+<div class="queue-outer-card">
+    <div class="queue-header-block">
+        <div>
+            <div class="queue-header-title"><i class="fa-solid fa-clipboard-list"></i> Clinical Queue Dashboard</div>
+            <nav class="queue-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="queue-breadcrumb-sep">/</span>
+                <span class="queue-breadcrumb-current">Clinical Queue Dashboard</span>
+            </nav>
+        </div>
+        <form method="GET" class="queue-filter-bar">
+            <input type="hidden" name="doctor_id" value="{{ request('doctor_id') }}">
+            <span class="queue-filter-label">
+                <i class="fa-solid fa-calendar-days"></i>
+                Filter by Date
+            </span>
+            <input type="date" id="filterDate" name="date" value="{{ $filterDate }}" placeholder="Select date" class="queue-filter-input" onchange="this.form.submit()">
+        </form>
+    </div>
+</div>
 
 <!-- Doctor Summary Cards Section -->
 <div class="hms-card" style="margin-bottom: 1.5rem; border-radius: 24px; overflow: hidden; border: 1px solid rgba(27, 79, 114, 0.10); box-shadow: 0 18px 40px rgba(27, 79, 114, 0.07);">

@@ -1,123 +1,153 @@
 @extends('superadmin.layouts.app')
 
 @section('title', 'Medicine Master')
-@section('page-header', 'Medicine Master')
-
-@section('page-actions')
-    @if($tab === 'dosages')
-        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addDosageModal">
-            <i class="bi bi-plus-lg"></i> Add Dosage
-        </button>
-    @elseif($tab === 'types')
-        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
-            <i class="bi bi-plus-lg"></i> Add Medicine Type
-        </button>
-    @elseif($tab === 'categories')
-        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
-            <i class="bi bi-plus-lg"></i> Add Category
-        </button>
-    @elseif($tab === 'routes')
-        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addRouteModal">
-            <i class="bi bi-plus-lg"></i> Add Route
-        </button>
-    @elseif($tab === 'medicines')
-        <!-- <a href="{{ route('superadmin.medicine-master.medicines.sample') }}" class="hms-btn hms-btn-outline hms-btn-sm">
-            <i class="bi bi-file-earmark-arrow-down"></i> Download Sample
-        </a> -->
-        <button type="button" class="hms-btn hms-btn-outline hms-btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#importMedicineModal">
-            <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
-        </button>
-        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm ms-2" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
-            <i class="bi bi-plus-lg"></i> Add Medicine
-        </button>
-    @endif
-@endsection
+{{-- Layout page-header intentionally unused — the heading, breadcrumb, tabs
+and list all sit inside one bordered card, matching the OT panel design. --}}
 
 @push('styles')
-<style>
-    .mm-tab-nav { display:flex; gap:0; border-bottom:2px solid #E2E8F0; margin-bottom:1.5rem; flex-wrap:wrap; }
-    .mm-tab-btn {
-        padding:.6rem 1.25rem; font-size:.875rem; font-weight:600; color:#64748B;
-        background:none; border:none; border-bottom:3px solid transparent;
-        cursor:pointer; transition:color .15s, border-color .15s; white-space:nowrap;
-        margin-bottom:-2px; text-decoration:none;
-    }
-    .mm-tab-btn:hover { color:#1B4F72; }
-    .mm-tab-btn.active { color:#1B4F72; border-bottom-color:#1B4F72; }
-    .mm-tab-btn .badge-count {
-        display:inline-flex; align-items:center; justify-content:center;
-        background:#EFF6FF; color:#1B4F72; font-size:.7rem; font-weight:700;
-        border-radius:999px; padding:.1rem .45rem; margin-left:.35rem;
-    }
-    .mm-empty { padding:3rem; text-align:center; color:#94A3B8; }
-    .mm-empty i { font-size:2.5rem; display:block; margin-bottom:.75rem; }
-    .mm-empty p { margin:0; font-weight:600; }
-    .mm-hint { margin:.25rem 0 0; font-size:.85rem; }
-    .filter-bar { background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:1rem 1.25rem; margin-bottom:1.25rem; }
-</style>
+    <style>
+        .mm-page { --mm-primary:#1B4F72; }
+
+        .mm-premium-card {
+            background:#ffffff;
+            border:1px solid rgba(15, 79, 134, 0.12);
+            border-radius:16px;
+            box-shadow:0 12px 32px rgba(15, 79, 134, 0.08);
+            overflow:hidden;
+        }
+
+        .mm-header-block { padding:1.25rem 1.5rem 1rem; }
+        .mm-header-title {
+            font-weight:800; font-size:1.3rem; color:var(--mm-primary);
+            letter-spacing:-.015em; display:flex; align-items:center; gap:.55rem;
+        }
+        .mm-header-title i { color:var(--mm-primary); font-size:1.2rem; }
+
+        .mm-breadcrumb {
+            margin-top:.4rem; display:flex; align-items:center; gap:.4rem;
+            font-size:.85rem; color:#8891A0;
+        }
+        .mm-breadcrumb a { color:#8891A0; text-decoration:none; }
+        .mm-breadcrumb a:hover { color:var(--mm-primary); }
+        .mm-breadcrumb-sep { color:#C3C9D3; }
+        .mm-breadcrumb-current { color:#4A5568; font-weight:600; }
+
+        .mm-tabs-row {
+            display:flex; align-items:center; justify-content:space-between;
+            flex-wrap:wrap; gap:.75rem; padding:0 1.5rem;
+            border-bottom:2px solid #E2E8F0;
+        }
+        .mm-tab-nav { display:flex; gap:0; flex-wrap:wrap; }
+        .mm-tab-btn {
+            padding:.9rem 1.1rem; font-size:.875rem; font-weight:600; color:#64748B;
+            background:none; border:none; border-bottom:3px solid transparent;
+            cursor:pointer; transition:color .15s, border-color .15s; white-space:nowrap;
+            margin-bottom:-2px; text-decoration:none;
+        }
+        .mm-tab-btn:hover { color:var(--mm-primary); }
+        .mm-tab-btn.active { color:var(--mm-primary); border-bottom-color:var(--mm-primary); }
+        .mm-tab-actions { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; padding:.6rem 0; }
+
+        .mm-panel-body { padding:1.25rem 1.5rem 1.5rem; }
+        .mm-panel-body .hms-card:last-child { margin-bottom:0; }
+
+        .mm-empty { padding:3rem; text-align:center; color:#94A3B8; }
+        .mm-empty i { font-size:2.5rem; display:block; margin-bottom:.75rem; }
+        .mm-empty p { margin:0; font-weight:600; }
+        .mm-hint { margin:.25rem 0 0; font-size:.85rem; }
+    </style>
 @endpush
 
 @section('content')
+<div class="mm-page">
+    <div class="mm-premium-card">
 
-    {{-- ══════════════════════════════════════
-         Tab Navigation
-    ══════════════════════════════════════ --}}
-    <div class="mm-tab-nav">
-        <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'dosages']) }}"
-           class="mm-tab-btn {{ $tab === 'dosages' ? 'active' : '' }}">
-            <i class="bi bi-eyedropper"></i> Dosage
-        </a>
-        <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'types']) }}"
-           class="mm-tab-btn {{ $tab === 'types' ? 'active' : '' }}">
-            <i class="bi bi-capsule"></i> Medicine Type
-        </a>
-        <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'categories']) }}"
-           class="mm-tab-btn {{ $tab === 'categories' ? 'active' : '' }}">
-            <i class="bi bi-tags"></i> Medicine Category
-        </a>
-        <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'routes']) }}"
-           class="mm-tab-btn {{ $tab === 'routes' ? 'active' : '' }}">
-            <i class="bi bi-signpost-split"></i> Mode
-        </a>
-        <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'medicines']) }}"
-           class="mm-tab-btn {{ $tab === 'medicines' ? 'active' : '' }}">
-            <i class="bi bi-clipboard2-pulse"></i> Medicine List
-        </a>
-    </div>
+        <div class="mm-header-block">
+            <div class="mm-header-title"><i class="bi bi-capsule"></i> Medicine Master</div>
+            <nav class="mm-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('superadmin.dashboard') }}">Home</a>
+                <span class="mm-breadcrumb-sep">/</span>
+                <span>Masters</span>
+                <span class="mm-breadcrumb-sep">/</span>
+                <span class="mm-breadcrumb-current">Medicine Master</span>
+            </nav>
+        </div>
+
+        {{-- ══════════════════════════════════════
+             Tab Navigation + contextual Add button
+        ══════════════════════════════════════ --}}
+        <div class="mm-tabs-row">
+            <div class="mm-tab-nav">
+                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'dosages']) }}"
+                   class="mm-tab-btn {{ $tab === 'dosages' ? 'active' : '' }}">
+                    <i class="bi bi-eyedropper"></i> Dosage
+                </a>
+                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'types']) }}"
+                   class="mm-tab-btn {{ $tab === 'types' ? 'active' : '' }}">
+                    <i class="bi bi-capsule"></i> Medicine Type
+                </a>
+                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'categories']) }}"
+                   class="mm-tab-btn {{ $tab === 'categories' ? 'active' : '' }}">
+                    <i class="bi bi-tags"></i> Medicine Category
+                </a>
+                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'routes']) }}"
+                   class="mm-tab-btn {{ $tab === 'routes' ? 'active' : '' }}">
+                    <i class="bi bi-signpost-split"></i> Mode
+                </a>
+                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'medicines']) }}"
+                   class="mm-tab-btn {{ $tab === 'medicines' ? 'active' : '' }}">
+                    <i class="bi bi-clipboard2-pulse"></i> Medicine List
+                </a>
+            </div>
+            <div class="mm-tab-actions">
+                @if($tab === 'dosages')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addDosageModal">
+                        <i class="bi bi-plus-lg"></i> Add Dosage
+                    </button>
+                @elseif($tab === 'types')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addTypeModal">
+                        <i class="bi bi-plus-lg"></i> Add Medicine Type
+                    </button>
+                @elseif($tab === 'categories')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                        <i class="bi bi-plus-lg"></i> Add Category
+                    </button>
+                @elseif($tab === 'routes')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addRouteModal">
+                        <i class="bi bi-plus-lg"></i> Add Route
+                    </button>
+                @elseif($tab === 'medicines')
+                    <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-toggle="modal" data-bs-target="#importMedicineModal">
+                        <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
+                    </button>
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal" data-bs-target="#addMedicineModal">
+                        <i class="bi bi-plus-lg"></i> Add Medicine
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        <div class="mm-panel-body">
 
     {{-- ══════════════════════════════════════
          TAB: DOSAGES
     ══════════════════════════════════════ --}}
     @if($tab === 'dosages')
-    <div class="filter-bar">
-        <form method="GET" action="{{ route('superadmin.medicine-master.index') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-            <input type="hidden" name="tab" value="dosages">
-            <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:200px">
-                <label class="hms-label">Search</label>
-                <input type="text" name="search" class="hms-input" placeholder="Search dosage..." value="{{ $search }}">
-            </div>
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'dosages']) }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-            </div>
-        </form>
-    </div>
-
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="bi bi-eyedropper" style="color:#1B4F72"></i> Dosage List</h3>
-            <span class="hms-badge hms-badge-info">{{ $dosages->total() }} total</span>
+            <h3 class="hms-card-title"><i class="bi bi-eyedropper" style="color:#ffffff"></i> Dosage List</h3>
+            <span class="hms-badge hms-badge-info">{{ $dosages->count() }} total</span>
         </div>
         @if($dosages->isEmpty())
             <div class="mm-empty"><i class="bi bi-eyedropper"></i><p>No dosages yet</p><p class="mm-hint">Click "Add Dosage" to get started.</p></div>
         @else
             <div class="hms-table-wrap" style="border:none">
-                <table class="hms-table">
+                <table class="hms-table js-datatable">
                     <thead><tr><th>#</th><th>Dosage</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                     <tbody>
                         @foreach($dosages as $i => $d)
                         <tr>
-                            <td style="color:#94A3B8;font-size:.8rem">{{ $dosages->firstItem() + $i }}</td>
+                            <td style="color:#94A3B8;font-size:.8rem">{{ $i + 1 }}</td>
                             <td style="font-weight:600;color:#1B4F72">{{ $d->dosage }}</td>
                             <td>
                                 <button class="hms-badge toggle-btn {{ $d->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
@@ -143,9 +173,6 @@
                     </tbody>
                 </table>
             </div>
-            @if($dosages->hasPages())
-                <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $dosages->links() }}</div>
-            @endif
         @endif
     </div>
     @endif
@@ -154,35 +181,21 @@
          TAB: MEDICINE TYPES
     ══════════════════════════════════════ --}}
     @if($tab === 'types')
-    <div class="filter-bar">
-        <form method="GET" action="{{ route('superadmin.medicine-master.index') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-            <input type="hidden" name="tab" value="types">
-            <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:200px">
-                <label class="hms-label">Search</label>
-                <input type="text" name="search" class="hms-input" placeholder="Search medicine type..." value="{{ $search }}">
-            </div>
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'types']) }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-            </div>
-        </form>
-    </div>
-
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="bi bi-capsule" style="color:#1B4F72"></i> Medicine Type List</h3>
-            <span class="hms-badge hms-badge-info">{{ $types->total() }} total</span>
+            <h3 class="hms-card-title"><i class="bi bi-capsule" style="color:#ffffff"></i> Medicine Type List</h3>
+            <span class="hms-badge hms-badge-info">{{ $types->count() }} total</span>
         </div>
         @if($types->isEmpty())
             <div class="mm-empty"><i class="bi bi-capsule"></i><p>No medicine types yet</p><p class="mm-hint">Click "Add Medicine Type" to get started.</p></div>
         @else
             <div class="hms-table-wrap" style="border:none">
-                <table class="hms-table">
+                <table class="hms-table js-datatable">
                     <thead><tr><th>#</th><th>Name</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                     <tbody>
                         @foreach($types as $i => $t)
                         <tr>
-                            <td style="color:#94A3B8;font-size:.8rem">{{ $types->firstItem() + $i }}</td>
+                            <td style="color:#94A3B8;font-size:.8rem">{{ $i + 1 }}</td>
                             <td style="font-weight:600;color:#1B4F72">{{ $t->name }}</td>
                             <td>
                                 <button class="hms-badge toggle-btn {{ $t->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
@@ -208,9 +221,6 @@
                     </tbody>
                 </table>
             </div>
-            @if($types->hasPages())
-                <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $types->links() }}</div>
-            @endif
         @endif
     </div>
     @endif
@@ -219,35 +229,21 @@
          TAB: MEDICINE CATEGORIES
     ══════════════════════════════════════ --}}
     @if($tab === 'categories')
-    <div class="filter-bar">
-        <form method="GET" action="{{ route('superadmin.medicine-master.index') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-            <input type="hidden" name="tab" value="categories">
-            <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:200px">
-                <label class="hms-label">Search</label>
-                <input type="text" name="search" class="hms-input" placeholder="Search category..." value="{{ $search }}">
-            </div>
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'categories']) }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-            </div>
-        </form>
-    </div>
-
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="bi bi-tags" style="color:#1B4F72"></i> Medicine Category List</h3>
-            <span class="hms-badge hms-badge-info">{{ $categories->total() }} total</span>
+            <h3 class="hms-card-title"><i class="bi bi-tags" style="color:#ffffff"></i> Medicine Category List</h3>
+            <span class="hms-badge hms-badge-info">{{ $categories->count() }} total</span>
         </div>
         @if($categories->isEmpty())
             <div class="mm-empty"><i class="bi bi-tags"></i><p>No categories yet</p><p class="mm-hint">Click "Add Category" to get started.</p></div>
         @else
             <div class="hms-table-wrap" style="border:none">
-                <table class="hms-table">
+                <table class="hms-table js-datatable">
                     <thead><tr><th>#</th><th>Name</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                     <tbody>
                         @foreach($categories as $i => $c)
                         <tr>
-                            <td style="color:#94A3B8;font-size:.8rem">{{ $categories->firstItem() + $i }}</td>
+                            <td style="color:#94A3B8;font-size:.8rem">{{ $i + 1 }}</td>
                             <td style="font-weight:600;color:#1B4F72">{{ $c->name }}</td>
                             <td>
                                 <button class="hms-badge toggle-btn {{ $c->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
@@ -273,9 +269,6 @@
                     </tbody>
                 </table>
             </div>
-            @if($categories->hasPages())
-                <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $categories->links() }}</div>
-            @endif
         @endif
     </div>
     @endif
@@ -284,35 +277,21 @@
          TAB: ROUTES
     ══════════════════════════════════════ --}}
     @if($tab === 'routes')
-    <div class="filter-bar">
-        <form method="GET" action="{{ route('superadmin.medicine-master.index') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-            <input type="hidden" name="tab" value="routes">
-            <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:200px">
-                <label class="hms-label">Search</label>
-                <input type="text" name="search" class="hms-input" placeholder="Search route..." value="{{ $search }}">
-            </div>
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'routes']) }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-            </div>
-        </form>
-    </div>
-
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="bi bi-signpost-split" style="color:#1B4F72"></i> Mode List</h3>
-            <span class="hms-badge hms-badge-info">{{ $routes->total() }} total</span>
+            <h3 class="hms-card-title"><i class="bi bi-signpost-split" style="color:#ffffff"></i> Mode List</h3>
+            <span class="hms-badge hms-badge-info">{{ $routes->count() }} total</span>
         </div>
         @if($routes->isEmpty())
             <div class="mm-empty"><i class="bi bi-signpost-split"></i><p>No routes yet</p><p class="mm-hint">Click "Add Route" to get started.</p></div>
         @else
             <div class="hms-table-wrap" style="border:none">
-                <table class="hms-table">
+                <table class="hms-table js-datatable">
                     <thead><tr><th>#</th><th>Name</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                     <tbody>
                         @foreach($routes as $i => $r)
                         <tr>
-                            <td style="color:#94A3B8;font-size:.8rem">{{ $routes->firstItem() + $i }}</td>
+                            <td style="color:#94A3B8;font-size:.8rem">{{ $i + 1 }}</td>
                             <td style="font-weight:600;color:#1B4F72">{{ $r->name }}</td>
                             <td>
                                 <button class="hms-badge toggle-btn {{ $r->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
@@ -338,9 +317,6 @@
                     </tbody>
                 </table>
             </div>
-            @if($routes->hasPages())
-                <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $routes->links() }}</div>
-            @endif
         @endif
     </div>
     @endif
@@ -349,35 +325,21 @@
          TAB: MEDICINES
     ══════════════════════════════════════ --}}
     @if($tab === 'medicines')
-    <div class="filter-bar">
-        <form method="GET" action="{{ route('superadmin.medicine-master.index') }}" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-            <input type="hidden" name="tab" value="medicines">
-            <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:200px">
-                <label class="hms-label">Search</label>
-                <input type="text" name="search" class="hms-input" placeholder="Search medicine..." value="{{ $search }}">
-            </div>
-            <div style="display:flex;gap:.5rem">
-                <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'medicines']) }}" class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-            </div>
-        </form>
-    </div>
-
     <div class="hms-card" style="padding:0">
         <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="bi bi-clipboard2-pulse" style="color:#1B4F72"></i> Medicine List</h3>
-            <span class="hms-badge hms-badge-info">{{ $medicines->total() }} total</span>
+            <h3 class="hms-card-title"><i class="bi bi-clipboard2-pulse" style="color:#ffffff"></i> Medicine List</h3>
+            <span class="hms-badge hms-badge-info">{{ $medicines->count() }} total</span>
         </div>
         @if($medicines->isEmpty())
             <div class="mm-empty"><i class="bi bi-clipboard2-pulse"></i><p>No medicines yet</p><p class="mm-hint">Click "Add Medicine" to get started.</p></div>
         @else
             <div class="hms-table-wrap" style="border:none">
-                <table class="hms-table">
+                <table class="hms-table js-datatable">
                     <thead><tr><th>#</th><th>Name</th><th>Type</th><th>Dosage</th><th>Company</th><th>Price</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
                     <tbody>
                         @foreach($medicines as $i => $m)
                         <tr>
-                            <td style="color:#94A3B8;font-size:.8rem">{{ $medicines->firstItem() + $i }}</td>
+                            <td style="color:#94A3B8;font-size:.8rem">{{ $i + 1 }}</td>
                             <td style="font-weight:600;color:#1B4F72">{{ $m->name }}</td>
                             <td style="color:#64748B;font-size:.875rem">{{ $m->medicineType->name ?? '—' }}</td>
                             <td style="color:#64748B;font-size:.875rem">{{ $m->dosage->dosage ?? '—' }}</td>
@@ -415,12 +377,13 @@
                     </tbody>
                 </table>
             </div>
-            @if($medicines->hasPages())
-                <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $medicines->links() }}</div>
-            @endif
         @endif
     </div>
     @endif
+
+        </div>{{-- /.mm-panel-body --}}
+    </div>{{-- /.mm-premium-card --}}
+</div>{{-- /.mm-page --}}
 
     {{-- ══════════════════════════════════════════════════════
          MODALS

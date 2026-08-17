@@ -1,13 +1,24 @@
 @extends('hospital.layouts.app')
 @section('title', 'Patient Reports')
-@section('page-header', 'Patient Reports')
+{{-- Layout page-header intentionally unused — the title + breadcrumb are
+rendered above the content instead. --}}
 
 @section('content')
 
-<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-    <h5 class="fw-bold mb-0" style="color: var(--color-primary);">
-        <i class="bi bi-bar-chart-fill me-2"></i>Patient Reports
-    </h5>
+<div class="preports-header-block">
+    <div class="preports-header-copy">
+        <div class="preports-header-title">
+            <span class="preports-header-icon"><i class="bi bi-bar-chart-fill"></i></span>
+            Patient Reports
+        </div>
+        <nav class="preports-breadcrumb" aria-label="breadcrumb">
+            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+            <span class="preports-breadcrumb-sep">/</span>
+            <span>Reports</span>
+            <span class="preports-breadcrumb-sep">/</span>
+            <span class="preports-breadcrumb-current">Patient Reports</span>
+        </nav>
+    </div>
 
     <div class="d-flex gap-2">
         <a href="{{ route('hospital.reports.export.excel', array_merge(['slug' => $slug], request()->all())) }}" class="btn btn-success">
@@ -19,7 +30,7 @@
     </div>
 </div>
 
-<div class="card premium-card border-0 shadow-sm bg-success-subtle border-start border-success border-4 mb-4 sticky-top" style="top: 72px; z-index: 5;">
+<div class="card premium-card border-0 bg-success-subtle border-start border-success border-4 mb-4 sticky-top preports-collection-bar" style="top: 72px; z-index: 5;">
     <div class="card-body p-3 d-flex justify-content-between align-items-center">
         <div>
             <h6 class="text-success fw-bold mb-1 text-uppercase">Total Collection (Walk-in)</h6>
@@ -54,6 +65,75 @@
 
 @push('styles')
 <style>
+    .preports-header-block {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.15rem;
+    }
+
+    .preports-header-title {
+        font-weight: 800;
+        font-size: 1.4rem;
+        color: #1B4F72;
+        letter-spacing: -.02em;
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .preports-header-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 13px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        background: linear-gradient(135deg, #1B4F72 0%, #2471a3 100%);
+        color: #fff;
+        box-shadow: 0 10px 22px rgba(27, 79, 114, .28);
+    }
+
+    .preports-header-icon i {
+        font-size: 1.05rem;
+    }
+
+    .preports-breadcrumb {
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .85rem;
+        color: #8891a0;
+    }
+
+    .preports-breadcrumb a {
+        color: #8891a0;
+        text-decoration: none;
+    }
+
+    .preports-breadcrumb a:hover {
+        color: #1B4F72;
+    }
+
+    .preports-breadcrumb-sep {
+        color: #c3c9d3;
+    }
+
+    .preports-breadcrumb-current {
+        color: #4a5568;
+        font-weight: 600;
+    }
+
+    .preports-collection-bar {
+        border-radius: 16px !important;
+        overflow: hidden;
+        box-shadow: 0 10px 26px rgba(22, 163, 74, .12) !important;
+    }
+
     /* Channel cards — same tile style as the OT Reports page (hospital/reports/ot/index.blade.php) */
     .ot-premium-card {
         background: rgba(255, 255, 255, 0.84);
@@ -99,6 +179,11 @@
         background: rgba(27, 79, 114, 0.08);
         color: #1B4F72;
         font-size: 1.4rem;
+        transition: transform 220ms cubic-bezier(.34,1.56,.64,1);
+    }
+
+    .ot-report-tile:hover .ot-report-tile-icon {
+        transform: translateY(-2px) scale(1.08) rotate(-4deg);
     }
 
     .ot-report-grid .ot-report-tile:nth-of-type(3n+1) .ot-report-tile-icon {

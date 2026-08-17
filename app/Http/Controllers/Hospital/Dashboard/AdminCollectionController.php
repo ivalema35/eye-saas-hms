@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hospital\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Patient;
+use App\Services\Hospital\HospitalCollectionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -12,22 +13,27 @@ use Illuminate\View\View;
 
 /**
  * Hospital admin dashboard "Total Collection" drill-down.
- * Reception-wise totals + single reception old / new / other case breakdown.
+ * Grand total = OPD case_fee + OT payments − OT refunds (OT refund never cuts OPD).
+ * Reception table remains OPD case_fee only (per receptionist).
  */
 class AdminCollectionController extends Controller
 {
+    public function __construct(private readonly HospitalCollectionService $collectionService) {}
+
     public function index(Request $request, string $slug): View
     {
         [$startDate, $endDate] = $this->resolvedDates($request);
 
         $rows = $this->receptionCollectionRows($startDate, $endDate);
+        $breakdown = $this->collectionService->summaryForDateRange($startDate, $endDate);
 
         return view('hospital.dashboard.admin_collection', [
             'slug' => $slug,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'rows' => $rows,
-            'grandTotal' => $rows->sum('total'),
+            'breakdown' => $breakdown,
+            'grandTotal' => (float) $breakdown['total'],
         ]);
     }
 
@@ -118,18 +124,18 @@ class AdminCollectionController extends Controller
     }
 
     /**
-     * @return array{0: string, 1: string}
+     * @return array{0:string,1:string}
      */
     private function resolvedDates(Request $request): array
     {
         $today = now()->toDateString();
-        $start = $request->input('start_date') ?: $today;
-        $end = $request->input('end_date') ?: $start;
+        $startDate = (string) ($request->input('start_date') ?: $today);
+        $endDate = (string) ($request->input('end_date') ?: $startDate);
 
-        if ($end < $start) {
-            [$start, $end] = [$end, $start];
+        if ($endDate < $startDate) {
+            [$startDate, $endDate] = [$endDate, $startDate];
         }
 
-        return [$start, $end];
+        return [$startDate, $endDate];
     }
 }

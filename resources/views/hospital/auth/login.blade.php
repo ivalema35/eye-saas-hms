@@ -243,21 +243,15 @@
         }
 
         .banner-logo {
-            width: 95px;
-            height: 95px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .95);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 8px 20px rgba(13, 33, 55, .14);
-            overflow: hidden;
         }
 
         .banner-logo img {
-            width: 100%;
-            height: 100%;
+            height: 68px;
+            width: auto;
             object-fit: contain;
         }
 
@@ -808,17 +802,12 @@
                 <div class="auth-form-box">
 
                     <a href="{{ route('home') }}" class="back-link">
-                        <i class="fa-solid fa-arrow-left"></i> Back to Eye HMS
+                        <i class="fa-solid fa-arrow-left"></i> Back to EYENOSIS
                     </a>
 
                     <div class="form-header">
                         <h2>Sign In</h2>
                         <p>Enter your credentials to access your account.</p>
-                    </div>
-
-                    <div class="role-badge">
-                        <i class="fa-solid fa-users"></i>
-                        Admin &bull; Doctor &bull; Receptionist &bull; OT Staff
                     </div>
 
                     <form method="POST" action="{{ route('hospital.login.post', ['slug' => $slug]) }}">
@@ -841,8 +830,6 @@
                         <div class="form-group">
                             <div class="row-between">
                                 <label class="form-label" for="password" style="margin-bottom:0">Password</label>
-                                <a href="{{ route('hospital.password.request', ['slug' => $slug]) }}"
-                                    class="forgot-link">Forgot Password?</a>
                             </div>
                             <div class="input-wrap">
                                 <i class="fa-solid fa-lock input-icon"></i>

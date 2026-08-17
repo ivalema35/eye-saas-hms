@@ -6,16 +6,16 @@
     <title>Discharge Card</title>
     <style>
         @page {
-            size: A4 portrait;
-            margin: 16mm 18mm;
+            size: A5 portrait;
+            margin: 12mm 13mm;
         }
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             background: #fff;
             color: #111;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 12px;
+            line-height: 1.4;
         }
         /* Base styles must already fit inside @page's own margin — DomPDF
            (used for the app's PDF export) ignores @media print entirely, so
@@ -34,19 +34,19 @@
         }
         .title {
             text-align: center;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.06em;
             text-decoration: underline;
             text-underline-offset: 4px;
             text-transform: uppercase;
-            margin: 0 0 22px;
+            margin: 0 0 16px;
         }
         .row {
             display: flex;
             justify-content: space-between;
             gap: 16px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .field {
             margin-bottom: 8px;
@@ -60,14 +60,14 @@
             min-width: 0;
         }
         .clinical {
-            margin-top: 18px;
+            margin-top: 12px;
         }
         .clinical .field {
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .rx-title {
-            margin: 22px 0 10px;
-            font-size: 16px;
+            margin: 16px 0 8px;
+            font-size: 14px;
             font-weight: 700;
             text-decoration: underline;
             text-underline-offset: 3px;
@@ -96,8 +96,8 @@
             font-style: italic;
         }
         .sign-block {
-            margin-top: 56px;
-            width: 46%;
+            margin-top: 30px;
+            width: 55%;
             margin-left: auto;
             text-align: center;
         }

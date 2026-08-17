@@ -20,7 +20,7 @@ class OtInvoiceController extends Controller
             ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
             ->orderByDesc('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25));
+            ->get();
 
         $invoiceBookingIds = DB::table('ot_invoices')
             ->where('tenant_id', $tenantId)

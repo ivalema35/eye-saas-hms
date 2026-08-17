@@ -14,6 +14,7 @@ use App\Models\Hospital\SecondaryExamination;
 use App\Models\Platform\HospitalShareRequest;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
+use App\Services\Hospital\HospitalCollectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -36,8 +37,10 @@ use Illuminate\View\View;
  */
 class DashboardController extends Controller
 {
-    public function __construct(private readonly RolePermissionService $perm)
-    {
+    public function __construct(
+        private readonly RolePermissionService $perm,
+        private readonly HospitalCollectionService $collectionService,
+    ) {
     }
 
     public function index(Request $request): View|RedirectResponse
@@ -330,7 +333,8 @@ class DashboardController extends Controller
                 ->count();
 
             // Today-specific stats for receptionist dashboard cards
-            $receptionistTodayCollection = (float) Patient::whereDate('appointment_date', $today)->sum('case_fee');
+            // Unified: OPD case_fee + OT net (payments − refunds). OT refund never cuts OPD.
+            $receptionistTodayCollection = (float) $this->collectionService->summaryForDay($today)['total'];
             $receptionistMyPatientsToday = Patient::where('reception_id', $user?->id)
                 ->whereDate('appointment_date', $today)
                 ->count();
@@ -341,19 +345,26 @@ class DashboardController extends Controller
         }
 
         // ── Financial Data (report.revenue) ──────────────────────────────────
-        // Revenue aggregates across today / month / year.
+        // Unified hospital collection/revenue:
+        // total = OPD case_fee + OT payments − OT refunds (OPD never reduced by OT refund).
         $revenueToday = null;
         $revenueMonth = null;
         $revenueYear = null;
+        $revenueBreakdown = null;
 
         if ($this->perm->can('opd.reports.view')) {
-            $revenueToday = (float) Patient::whereDate('appointment_date', $today)
-                ->sum('case_fee');
-            $revenueMonth = (float) Patient::whereMonth('appointment_date', now()->month)
-                ->whereYear('appointment_date', now()->year)
-                ->sum('case_fee');
-            $revenueYear = (float) Patient::whereYear('appointment_date', now()->year)
-                ->sum('case_fee');
+            $todaySummary = $this->collectionService->summaryForDay($today);
+            $monthSummary = $this->collectionService->summaryForCalendarMonth(now());
+            $yearSummary = $this->collectionService->summaryForCalendarYear(now());
+
+            $revenueToday = (float) $todaySummary['total'];
+            $revenueMonth = (float) $monthSummary['total'];
+            $revenueYear = (float) $yearSummary['total'];
+            $revenueBreakdown = [
+                'today' => $todaySummary,
+                'month' => $monthSummary,
+                'year' => $yearSummary,
+            ];
         }
 
         // ── OT Appointment card (ot.patient.list / ot.appointment.view) ─────
@@ -522,7 +533,18 @@ class DashboardController extends Controller
             $todaySecondary = Patient::whereDate('appointment_date', $today)
                 ->whereNotNull('secondary_done_at')
                 ->count();
-            $revenueToday = (float) Patient::whereDate('appointment_date', $today)->sum('case_fee');
+            // Unified Total Collection / Revenue: OPD + OT net (refund cuts OT only).
+            $todaySummary = $this->collectionService->summaryForDay($today);
+            $monthSummary = $this->collectionService->summaryForCalendarMonth(now());
+            $yearSummary = $this->collectionService->summaryForCalendarYear(now());
+            $revenueToday = (float) $todaySummary['total'];
+            $revenueMonth = (float) $monthSummary['total'];
+            $revenueYear = (float) $yearSummary['total'];
+            $revenueBreakdown = [
+                'today' => $todaySummary,
+                'month' => $monthSummary,
+                'year' => $yearSummary,
+            ];
             $totalDoctors = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
             $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
             $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
@@ -777,6 +799,7 @@ class DashboardController extends Controller
             'revenueToday',
             'revenueMonth',
             'revenueYear',
+            'revenueBreakdown',
             // OT
             'otToday',
             'otOperated',

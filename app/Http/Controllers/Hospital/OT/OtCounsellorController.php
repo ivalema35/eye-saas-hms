@@ -38,7 +38,7 @@ class OtCounsellorController extends Controller
             ->orderByRaw("CASE WHEN ot_status = ? THEN 0 ELSE 1 END", [OtBooking::STATUS_SURGERY_RECOMMENDED])
             ->orderBy('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25), ['*'], 'page');
+            ->get();
 
         // Payment status queue — shows bookings once billing has taken payment.
         // Stays visible after payment is verified (docs/tulsi.md §2/§3) so Reception can
@@ -56,7 +56,7 @@ class OtCounsellorController extends Controller
             ])
             ->orderBy('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25), ['*'], 'payment_page');
+            ->get();
 
         return view('hospital.ot.counsellor.dashboard', [
             'slug' => $slug,

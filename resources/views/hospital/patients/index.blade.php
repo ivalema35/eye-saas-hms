@@ -1,17 +1,10 @@
 @extends('hospital.layouts.app')
 @section('title', 'Patients')
-@section('page-header', $showAll ? 'All Patients' : "Today's Patients")
-
-@section('page-actions')
-    <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}"
-        class="hms-btn hms-btn-primary patients-top-action">
-        <i class="bi bi-person-plus"></i> Walk-in
-    </a>
-    <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}"
-        class="hms-btn hms-btn-outline patients-top-action">
-        <i class="bi bi-telephone"></i> Phone Appt
-    </a>
-@endsection
+{{-- Layout page-header intentionally unused — the heading + breadcrumb are
+rendered inside the card itself so the whole block (heading, breadcrumb,
+stat cards, panel bar, table) sits inside one bordered card, matching
+the OT Appointments / Ward Management / Billing / Accountant / Counsellor
+design. --}}
 
 @push('styles')
     <style>
@@ -37,52 +30,218 @@
             padding: 0 0 2rem 0;
         }
 
-        /* Stats Cards */
-        .stat-card {
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 251, 254, 0.98) 100%);
-            border-radius: 20px;
-            padding: 1.5rem;
+        .patients-outer-card {
+            background: #ffffff;
+            border: 1px solid rgba(15, 79, 134, 0.12) !important;
+            border-radius: 0.90rem;
+            box-shadow: 0 18px 48px rgba(27, 79, 114, 0.10);
+            overflow: hidden;
+        }
+
+        .patients-header-block {
+            background: #ffffff;
+            padding: 1.25rem 1.5rem 1rem;
+        }
+
+        .patients-header-title {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #0D2137;
+            letter-spacing: -.015em;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            box-shadow: var(--patients-shadow);
-            transition: all 0.3s ease;
+            gap: .55rem;
+        }
+
+        .patients-header-title i {
+            color: var(--patients-primary);
+            font-size: 1.2rem;
+        }
+
+        .patients-breadcrumb {
+            margin-top: .4rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .85rem;
+            color: #8891a0;
+        }
+
+        .patients-breadcrumb a {
+            color: #8891a0;
+            text-decoration: none;
+        }
+
+        .patients-breadcrumb a:hover {
+            color: var(--patients-primary);
+        }
+
+        .patients-breadcrumb-sep {
+            color: #c3c9d3;
+        }
+
+        .patients-breadcrumb-current {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .patients-stats-wrap {
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .patients-inner-panel {
+            margin: 0 1.5rem 1.5rem;
+            border: 1px solid rgba(15, 79, 134, 0.12);
+            border-radius: 10px !important;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(27, 79, 114, 0.06);
+        }
+
+        .patients-top-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: #ffffff;
+            color: var(--patients-primary);
+            border: none;
+            border-radius: 8px;
+            padding: .5rem 1rem;
+            font-weight: 700;
+            font-size: .85rem;
+            text-decoration: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
+            transition: background 170ms ease, color 170ms ease, transform 170ms ease;
+        }
+
+        .patients-top-btn:hover {
+            background: #eaf3fa;
+            color: #154160;
+        }
+
+        .patients-top-btn-outline {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: none;
+        }
+
+        .patients-top-btn-outline:hover {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+
+        /* Stats Cards */
+        @keyframes statCardPop {
+            from { opacity: 0; transform: translateY(12px) scale(.96); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes statGlossSweep {
+            0%   { transform: translateX(-50%) rotate(18deg); opacity: 0; }
+            20%  { opacity: .45; }
+            50%  { transform: translateX(40%) rotate(18deg); opacity: .35; }
+            80%  { opacity: .2; }
+            100% { transform: translateX(130%) rotate(18deg); opacity: 0; }
+        }
+
+        .stat-card {
+            --stat-accent: #1B4F72;
+            --stat-tint: rgba(27, 79, 114, .05);
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            background: linear-gradient(135deg, var(--stat-tint) 0%, rgba(255, 255, 255, .98) 55%);
+            border-radius: 14px;
+            padding: .85rem 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            box-shadow: 0 4px 14px rgba(27, 79, 114, 0.07);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
             border: 1px solid var(--patients-border);
+            border-left: 4px solid var(--stat-accent);
+            animation: statCardPop 500ms cubic-bezier(.22,1,.36,1) both;
+            animation-delay: var(--stat-d, 0s);
         }
 
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 16px 34px rgba(27, 79, 114, 0.12);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 32px rgba(27, 79, 114, 0.15);
+            border-color: var(--patients-border-strong);
+        }
+
+        .stat-card-primary { --stat-accent: #1B4F72; --stat-tint: rgba(27, 79, 114, .06); }
+        .stat-card-warning { --stat-accent: #D97706; --stat-tint: rgba(217, 119, 6, .08); }
+        .stat-card-info    { --stat-accent: #1D4ED8; --stat-tint: rgba(29, 78, 216, .07); }
+        .stat-card-success { --stat-accent: #15803D; --stat-tint: rgba(21, 128, 61, .07); }
+
+        .stat-gloss {
+            position: absolute;
+            inset: -40% -20%;
+            background: linear-gradient(115deg,
+                transparent 35%,
+                rgba(255, 255, 255, .8) 48%,
+                rgba(27, 79, 114, .12) 52%,
+                transparent 65%);
+            pointer-events: none;
+            z-index: 0;
+            animation: statGlossSweep 3.4s ease-in-out infinite;
+            animation-delay: calc(var(--stat-d, 0s) + .3s);
+        }
+
+        .stat-icon,
+        .stat-info {
+            position: relative;
+            z-index: 1;
         }
 
         .stat-icon {
-            width: 56px;
-            height: 56px;
-            border-radius: 16px;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 28px;
+            font-size: 19px;
+            flex-shrink: 0;
+            box-shadow: 0 6px 14px rgba(27, 79, 114, 0.16);
+            transition: transform .3s ease, box-shadow .3s ease;
+        }
+
+        .stat-card:hover .stat-icon {
+            transform: scale(1.08) rotate(-4deg);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .stat-card,
+            .stat-gloss,
+            .stat-icon {
+                animation: none;
+                transition: none;
+            }
+            .stat-card:hover {
+                transform: none;
+            }
         }
 
         .bg-primary-soft {
-            background: linear-gradient(135deg, rgba(27, 79, 114, 0.10) 0%, rgba(27, 79, 114, 0.16) 100%);
-            color: var(--patients-primary);
+            background: linear-gradient(135deg, #2C6FAC 0%, #1B4F72 100%);
+            color: #ffffff;
         }
 
         .bg-warning-soft {
-            background: linear-gradient(135deg, rgba(26, 188, 156, 0.12) 0%, rgba(26, 188, 156, 0.20) 100%);
-            color: var(--patients-accent);
+            background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
+            color: #ffffff;
         }
 
         .bg-info-soft {
-            background: linear-gradient(135deg, rgba(27, 79, 114, 0.08) 0%, rgba(26, 188, 156, 0.10) 100%);
-            color: var(--patients-primary);
+            background: linear-gradient(135deg, #60A5FA 0%, #1D4ED8 100%);
+            color: #ffffff;
         }
 
         .bg-success-soft {
-            background: linear-gradient(135deg, rgba(27, 79, 114, 0.10) 0%, rgba(27, 79, 114, 0.18) 100%);
-            color: var(--patients-primary);
+            background: linear-gradient(135deg, #34D399 0%, #15803D 100%);
+            color: #ffffff;
         }
 
         .stat-info {
@@ -90,33 +249,33 @@
         }
 
         .stat-value {
-            font-size: 28px;
-            font-weight: 700;
+            font-size: 22px;
+            font-weight: 800;
             margin: 0;
-            color: var(--patients-text);
-            line-height: 1.2;
+            color: var(--stat-accent);
+            letter-spacing: -.02em;
+            line-height: 1.15;
         }
 
         .stat-label {
-            font-size: 13px;
+            font-size: 10.5px;
             color: var(--patients-muted);
-            margin: 4px 0 0 0;
-            font-weight: 500;
+            margin: 1px 0 0 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .04em;
         }
 
-        /* Modern Card */
+        /* Modern Card — nested inside .patients-inner-panel, which now owns
+                       the border/shadow, so this is just a content wrapper. */
         .modern-card {
             background: var(--patients-surface);
-            border-radius: 24px;
-            box-shadow: var(--patients-shadow);
             overflow: hidden;
-            border: 1px solid var(--patients-border);
         }
 
         .card-header-modern {
-            padding: 1.75rem 2rem;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(247, 251, 254, 0.98) 100%);
-            border-bottom: 1px solid var(--patients-border);
+            padding: 1.15rem 1.5rem;
+            background: var(--patients-primary);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -131,21 +290,21 @@
         }
 
         .header-icon {
-            width: 48px;
-            height: 48px;
-            background: linear-gradient(135deg, var(--patients-primary) 0%, #0f3853 100%);
+            width: 40px;
+            height: 40px;
+            background: #ffffff;
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 24px;
+            color: var(--hms-primary);
+            font-size: 20px;
         }
 
         .header-title {
             font-size: 20px;
             font-weight: 700;
-            color: var(--patients-text);
+            color: #ffffff;
             margin: 0;
         }
 
@@ -159,13 +318,12 @@
         .toggle-switch {
             background: var(--patients-surface-muted);
             border-radius: 12px;
-            padding: 4px;
+            padding: 0px;
             display: inline-flex;
-            gap: 4px;
         }
 
         .toggle-option {
-            padding: 8px 20px;
+            padding: 7px 8px;
             border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
@@ -186,121 +344,28 @@
             text-decoration: none;
         }
 
-        /* Search Section */
-        .search-section {
-            padding: 1.5rem 2rem;
-            background: linear-gradient(180deg, rgba(247, 251, 254, 0.92) 0%, rgba(238, 245, 250, 0.92) 100%);
-            border-bottom: 1px solid var(--patients-border);
-        }
-
-        .search-wrapper {
-            max-width: 500px;
-            position: relative;
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--patients-muted);
-            font-size: 18px;
-            pointer-events: none;
-        }
-
-        .search-input {
-            width: 100%;
-            padding: 12px 16px 12px 42px;
-            border: 1px solid var(--patients-border-strong);
-            border-radius: 12px;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            background: var(--patients-surface);
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: var(--patients-primary);
-            box-shadow: 0 0 0 3px rgba(27, 79, 114, 0.10);
-        }
-
-        .search-btn {
-            position: absolute;
-            right: 6px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: linear-gradient(135deg, var(--patients-primary) 0%, #0f3853 100%);
-            color: white;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.2s ease;
-        }
-
-        .search-btn:hover {
-            background: linear-gradient(135deg, #0f3853 0%, var(--patients-primary) 100%);
-            cursor: pointer;
-        }
-
-        .search-btn:disabled {
-            opacity: .75;
-            cursor: default;
-        }
-
-        .search-btn .spin-icon {
-            animation: patients-spin .7s linear infinite;
-        }
-
-        @keyframes patients-spin {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
-        }
-
-        .search-form {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .search-clear-btn {
-            background: var(--patients-surface);
-            border: 1px solid var(--patients-border-strong);
-            color: var(--patients-muted);
-            padding: 11px 18px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        .search-clear-btn:hover {
-            background: var(--patients-surface-muted);
-            color: var(--patients-primary);
-            border-color: var(--patients-primary);
-        }
-
-        #patientsTableContainer.is-loading .table-wrapper {
-            opacity: .5;
-            pointer-events: none;
-            transition: opacity .15s ease;
-        }
-
         /* Table Styles */
         .table-wrapper {
             overflow-x: auto;
             padding: 0;
+        }
+
+        .modern-card .dataTables_wrapper {
+            padding: 0 2rem 1.5rem;
+        }
+
+        .modern-card .dataTables_wrapper .row:first-child {
+            padding-top: 0.5rem;
+        }
+
+        .modern-card .dataTables_wrapper .row:last-child {
+            padding-top: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .modern-card .dataTables_wrapper {
+                padding: 0 1.25rem 1.25rem;
+            }
         }
 
         .modern-table {
@@ -310,7 +375,7 @@
         }
 
         .modern-table thead tr {
-            background: var(--patients-surface-muted);
+            background: var(--patients-surface);
         }
 
         .modern-table th {
@@ -320,7 +385,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--patients-muted);
-            border-bottom: 1px solid var(--patients-border);
+            border-bottom: 2px solid var(--patients-border-strong);
             text-align: left;
         }
 
@@ -333,11 +398,16 @@
         }
 
         .modern-table tbody tr {
+            background: var(--patients-surface);
             transition: all 0.2s ease;
         }
 
+        .modern-table tbody tr:nth-child(even) {
+            background: var(--patients-surface-muted);
+        }
+
         .modern-table tbody tr:hover {
-            background: rgba(27, 79, 114, 0.03);
+            background: var(--patients-primary-soft);
         }
 
         .serial {
@@ -366,21 +436,6 @@
             display: flex;
             align-items: center;
             gap: 10px;
-        }
-
-        .pt-avatar {
-            flex-shrink: 0;
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            background: var(--patients-primary);
-            color: #fff;
-            font-size: 13px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            letter-spacing: .5px;
         }
 
         .pt-name {
@@ -425,8 +480,9 @@
             display: inline-flex;
             align-items: center;
             gap: 5px;
-            padding: 5px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
+            border: 1px solid transparent;
             font-size: 11.5px;
             font-weight: 600;
             white-space: nowrap;
@@ -434,16 +490,19 @@
 
         .status-badge.completed {
             background: rgba(26, 188, 156, .13);
+            border-color: rgba(26, 188, 156, .35);
             color: #0e9e82;
         }
 
         .status-badge.in-progress {
             background: rgba(27, 79, 114, .10);
+            border-color: rgba(27, 79, 114, .30);
             color: var(--patients-primary);
         }
 
         .status-badge.waiting {
             background: rgba(255, 165, 0, .12);
+            border-color: rgba(255, 165, 0, .35);
             color: #c07a00;
         }
 
@@ -620,40 +679,24 @@
             margin: 0;
         }
 
-        /* Pagination */
-        .pagination-modern {
-            padding: 1.5rem 2rem;
-            border-top: 1px solid var(--patients-border);
-            display: flex;
-            justify-content: center;
-        }
-
-        .pagination-modern nav {
-            display: inline-block;
-        }
-
         /* Responsive */
         @media (max-width: 768px) {
             .stat-card {
-                padding: 1rem;
+                padding: .75rem .9rem;
             }
 
             .stat-icon {
-                width: 44px;
-                height: 44px;
-                font-size: 22px;
+                width: 38px;
+                height: 38px;
+                font-size: 17px;
             }
 
             .stat-value {
-                font-size: 22px;
+                font-size: 19px;
             }
 
             .card-header-modern {
                 padding: 1.25rem;
-            }
-
-            .search-section {
-                padding: 1rem 1.25rem;
             }
 
             .modern-table th,
@@ -673,7 +716,6 @@
         }
 
         .patients-index-page .toggle-option i,
-        .patients-index-page .search-btn i,
         .patients-index-page .status-badge i,
         .patients-index-page .pta i {
             vertical-align: middle;
@@ -688,220 +730,116 @@
         .patients-index-page .modern-table button:hover {
             transform: translateY(-1px);
         }
-
-        .patient-search-container {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            flex-wrap: wrap;
-        }
-
-        .search-wrapper {
-            display: flex;
-            align-items: center;
-            width: 400px;
-            max-width: 100%;
-            height: 45px;
-
-            background: #fff;
-            border: 1px solid #dfe8f3;
-            border-radius: 16px;
-
-            padding: 0 8px 0 18px;
-
-            box-shadow:
-                0 8px 25px rgba(25, 118, 210, .06),
-                0 2px 6px rgba(0, 0, 0, .03);
-
-            transition: .25s;
-        }
-
-        .search-wrapper:hover {
-            border-color: #0d6efd55;
-        }
-
-        .search-wrapper:focus-within {
-            border-color: #0d6efd;
-            box-shadow:
-                0 0 0 4px rgba(13, 110, 253, .12),
-                0 10px 30px rgba(13, 110, 253, .12);
-        }
-
-        .search-icon {
-            font-size: 22px;
-            color: #8ca0b3;
-            margin-right: 14px;
-        }
-
-        .search-input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 14px;
-            background: transparent;
-            color: #1f2937;
-        }
-
-        .search-input::placeholder {
-            color: #94a3b8;
-        }
-
-        .search-btn {
-            width: 40px;
-            height: 35px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #0f3853, #1b4f72);
-            color: #fff;
-
-            display: flex;
-            align-items: center;
-            justify-content: center;
-
-            padding: 0;
-            transition: .25s;
-        }
-
-        .search-btn i {
-            font-size: 18px;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .search-clear-btn {
-            height: 43px;
-            padding: 0 10px;
-
-            border: #dfe8f3 1px solid;
-
-            background: #fff;
-            color: #64748b;
-
-            border-radius: 16px;
-
-            font-weight: 600;
-
-            display: flex;
-            align-items: center;
-            gap: 8px;
-
-            box-shadow:
-                0 8px 25px rgba(25, 118, 210, .06),
-                0 2px 6px rgba(0, 0, 0, .03);
-
-            transition: .25s;
-        }
     </style>
 @endpush
 
 @section('content')
     <div class="patients-index-page">
-        <!-- Modern Stats Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary-soft">
-                        <i class="bi bi-person-arms-up"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value">{{ $patients->total() }}</h3>
-                        <p class="stat-label">Total Patients</p>
-                    </div>
+        <div class="card patients-outer-card border-0">
+            <div class="patients-header-block">
+                <div class="patients-header-title">
+                    <i class="bi bi-people-fill"></i> Patients
                 </div>
+                <nav class="patients-breadcrumb" aria-label="breadcrumb">
+                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                    <span class="patients-breadcrumb-sep">/</span>
+                    <span class="patients-breadcrumb-current">{{ $showAll ? 'All Patients' : "Today's Patients" }}</span>
+                </nav>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-warning-soft">
-                        <i class="bi bi-hourglass-split"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value">{{ $stats['waiting'] }}</h3>
-                        <p class="stat-label">Waiting</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-info-soft">
-                        <i class="bi bi-clipboard2-check"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value">{{ $stats['primary_done'] }}</h3>
-                        <p class="stat-label">Primary Done</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-success-soft">
-                        <i class="bi bi-check2-all"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3 class="stat-value">{{ $stats['completed'] }}</h3>
-                        <p class="stat-label">Completed</p>
-                    </div>
-                </div>
-            </div>
-        </div>
 
-        <!-- Main Card -->
-        <div class="modern-card">
-            <div class="card-header-modern">
-                <div class="header-left">
-                    <div class="header-icon">
-                        <i class="bi bi-people-fill"></i>
+            <!-- Modern Stats Cards -->
+            <div class="patients-stats-wrap">
+                <div class="row g-4">
+                    <div class="col-md-3">
+                        <div class="stat-card stat-card-primary" style="--stat-d:.04s">
+                            <span class="stat-gloss" aria-hidden="true"></span>
+                            <div class="stat-icon bg-primary-soft">
+                                <i class="bi bi-person-arms-up"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value">{{ $patients->count() }}</h3>
+                                <p class="stat-label">Total Patients</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="header-title">{{ $showAll ? 'All Patients' : "Today's Patients" }}</h4>
+                    <div class="col-md-3">
+                        <div class="stat-card stat-card-warning" style="--stat-d:.09s">
+                            <span class="stat-gloss" aria-hidden="true"></span>
+                            <div class="stat-icon bg-warning-soft">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value">{{ $stats['waiting'] }}</h3>
+                                <p class="stat-label">Waiting</p>
+                            </div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="header-actions">
-                    <div class="toggle-switch">
-                        <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
-                            class="toggle-option {{ !$showAll ? 'active' : '' }}">
-                            <i class="bi bi-calendar-day"></i> Today
-                        </a>
-                        <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'all' => 1]) }}"
-                            class="toggle-option {{ $showAll ? 'active' : '' }}">
-                            <i class="bi bi-list-ul"></i> All
-                        </a>
+                    <div class="col-md-3">
+                        <div class="stat-card stat-card-info" style="--stat-d:.14s">
+                            <span class="stat-gloss" aria-hidden="true"></span>
+                            <div class="stat-icon bg-info-soft">
+                                <i class="bi bi-clipboard2-check"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value">{{ $stats['primary_done'] }}</h3>
+                                <p class="stat-label">Primary Done</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card stat-card-success" style="--stat-d:.19s">
+                            <span class="stat-gloss" aria-hidden="true"></span>
+                            <div class="stat-icon bg-success-soft">
+                                <i class="bi bi-check2-all"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 class="stat-value">{{ $stats['completed'] }}</h3>
+                                <p class="stat-label">Completed</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Search Bar -->
-            <div class="search-section">
-                <form method="GET" action="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="search-form"
-                    id="patientSearchForm">
-                    @if($showAll)
-                        <input type="hidden" name="all" value="1" id="patientSearchAllFlag">
-                    @endif
-                    <div class="patient-search-container">
-                        <div class="search-wrapper">
-                            <i class="bi bi-search search-icon"></i>
-
-                            <input type="text" name="search" value="{{ request('search') }}" class="search-input"
-                                id="patientSearchInput" placeholder="Search patient by Name, MRD or Mobile..."
-                                autocomplete="off">
-
-                            <button type="submit" class="search-btn" id="patientSearchBtn">
-                                <i class="bi bi-search"></i>
-                            </button>
+            <!-- Main Panel -->
+            <div class="patients-inner-panel">
+                <div class="modern-card">
+                    <div class="card-header-modern">
+                        <div class="header-left">
+                            <div class="header-icon">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div>
+                                <h4 class="header-title">{{ $showAll ? 'All Patients' : "Today's Patients" }}</h4>
+                            </div>
                         </div>
 
-                        <button type="button" class="search-clear-btn" id="patientSearchClear">
-                            Clear
-                        </button>
+                        <div class="header-actions d-flex align-items-center gap-2 flex-wrap">
+                            <div class="toggle-switch">
+                                <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}"
+                                    class="toggle-option {{ !$showAll ? 'active' : '' }}">
+                                    <i class="bi bi-calendar-day"></i> Today
+                                </a>
+                                <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'all' => 1]) }}"
+                                    class="toggle-option {{ $showAll ? 'active' : '' }}">
+                                    <i class="bi bi-list-ul"></i> All
+                                </a>
+                            </div>
+                            <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}" class="patients-top-btn">
+                                <i class="bi bi-person-plus"></i> Walk-in
+                            </a>
+                            <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}"
+                                class="patients-top-btn patients-top-btn-outline">
+                                <i class="bi bi-telephone"></i> Phone Appt
+                            </a>
+                        </div>
                     </div>
-                </form>
-            </div>
 
-            <!-- Patients Table -->
-            <div id="patientsTableContainer">
-                @include('hospital.patients.partials.table', ['patients' => $patients, 'slug' => $slug, 'showAll' => $showAll])
+                    <!-- Patients Table -->
+                    <div id="patientsTableContainer">
+                        @include('hospital.patients.partials.table', ['patients' => $patients, 'slug' => $slug, 'showAll' => $showAll])
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1401,6 +1339,61 @@
 @endpush
 
 @push('scripts')
+    {{-- Patients table: client-side DataTable (search box, sorting, pagination).
+    Uses its own init (not the shared .js-datatable auto-init) so the
+    default order stays "as rendered" (latest first) instead of the shared
+    helper's alphabetical-by-column-1 default. --}}
+    <script>
+        $(function () {
+            if (typeof jQuery === 'undefined' || !jQuery.fn.DataTable) {
+                return;
+            }
+
+            var $table = $('#patientsTableContainer table.patients-table');
+            if (!$table.length || jQuery.fn.DataTable.isDataTable($table[0])) {
+                return;
+            }
+
+            // The "No patients found" placeholder row is a single
+            // colspan'd <td> — DataTables can't reconcile that against a
+            // 7-column header, so drop it before initializing.
+            $table.find('tbody tr').each(function () {
+                var $cells = jQuery(this).children('td');
+                if ($cells.length === 1 && $cells.first().attr('colspan')) {
+                    jQuery(this).remove();
+                }
+            });
+
+            $table.DataTable({
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+                order: [],
+                autoWidth: false,
+                columnDefs: [
+                    { orderable: false, searchable: false, targets: [0, 6] }
+                ],
+                // Pre-filled from the top navbar's global search box (?q=...)
+                search: { search: new URLSearchParams(window.location.search).get('q') || '' },
+                language: {
+                    search: 'Search:',
+                    lengthMenu: 'Show _MENU_',
+                    info: 'Showing _START_ to _END_ of _TOTAL_',
+                    infoEmpty: 'Showing 0 entries',
+                    emptyTable: 'No records found.',
+                    zeroRecords: 'No matching records.'
+                },
+                drawCallback: function () {
+                    var info = this.api().page.info();
+                    this.api().column(0, { search: 'applied', order: 'applied', page: 'current' })
+                        .nodes()
+                        .each(function (cell, i) {
+                            cell.innerHTML = info.start + i + 1;
+                        });
+                }
+            });
+        });
+    </script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             document.addEventListener('click', function (e) {
@@ -1484,119 +1477,12 @@
         });
     </script>
 
-    {{-- Live patient search: AJAX-filters the table as the user types, with
-    debounce + request-sequencing so a slow earlier response can never
-    clobber a later one. Only #patientsTableContainer's HTML is swapped;
-    the search input itself is never re-rendered, so focus/cursor are
-    naturally preserved without extra work. --}}
-    <script>
-        $(function () {
-            var $input = $('#patientSearchInput');
-            var $form = $('#patientSearchForm');
-            var $clearBtn = $('#patientSearchClear');
-            var $searchBtn = $('#patientSearchBtn');
-            var $container = $('#patientsTableContainer');
-            var searchUrl = @json(route('hospital.patients.index', ['slug' => $slug]));
-            var showAll = @json($showAll);
-
-            var debounceTimer = null;
-            var currentXhr = null;
-            var requestSeq = 0;
-
-            function setLoading(isLoading) {
-                $searchBtn.prop('disabled', isLoading);
-                $searchBtn.find('i').toggleClass('bi-search', !isLoading).toggleClass('bi-arrow-repeat spin-icon', isLoading);
-                $container.toggleClass('is-loading', isLoading);
-            }
-
-            function focusInput() {
-                var pos = $input.val().length;
-                $input.trigger('focus');
-                if ($input[0].setSelectionRange) {
-                    $input[0].setSelectionRange(pos, pos);
-                }
-            }
-
-            function fetchPatients(page) {
-                var value = $input.val();
-
-                // Abort any in-flight request so a slow earlier response
-                // can never overwrite the result of a newer one.
-                if (currentXhr) {
-                    currentXhr.abort();
-                }
-
-                var seq = ++requestSeq;
-                setLoading(true);
-
-                var params = { search: value };
-                if (showAll) {
-                    params.all = 1;
-                }
-                if (page && page > 1) {
-                    params.page = page;
-                }
-
-                currentXhr = $.ajax({
-                    url: searchUrl,
-                    method: 'GET',
-                    data: params,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                    success: function (html) {
-                        if (seq !== requestSeq) {
-                            return; // stale response — a newer request is already in flight
-                        }
-                        $container.html(html);
-                    },
-                    complete: function () {
-                        if (seq !== requestSeq) {
-                            return;
-                        }
-                        setLoading(false);
-                        currentXhr = null;
-                        focusInput();
-                    }
-                });
-            }
-
-            $input.on('input', function () {
-                clearTimeout(debounceTimer);
-                debounceTimer = setTimeout(function () {
-                    fetchPatients();
-                }, 400);
-            });
-
-            $form.on('submit', function (e) {
-                e.preventDefault();
-                clearTimeout(debounceTimer);
-                fetchPatients();
-            });
-
-            $clearBtn.on('click', function () {
-                clearTimeout(debounceTimer);
-                $input.val('');
-                focusInput();
-                fetchPatients();
-            });
-
-            // Keep pagination inside the table AJAX-driven too, so paging
-            // through search results never triggers a full page reload.
-            $(document).on('click', '#patientsTableContainer .pagination-modern a', function (e) {
-                e.preventDefault();
-                var href = $(this).attr('href') || '';
-                var match = href.match(/[?&]page=(\d+)/);
-                fetchPatients(match ? parseInt(match[1], 10) : 1);
-            });
-        });
-    </script>
-
     {{-- Live dilation countdown: the "Secondary Exam" slot shows an
     hourglass with a live MM:SS timer while a patient is dilating. The
     table markup only carries the unlock timestamp (data-unlock-time);
-    this ticks the visible text every second, and re-queries the DOM
-    each tick so it keeps working after the AJAX search swaps the
-    table's HTML. When the timer reaches zero the row is reloaded so the
-    slot flips into the real "Secondary Exam" link/button. --}}
+    this ticks the visible text every second. When the timer reaches zero
+    the page is reloaded so the slot flips into the real "Secondary Exam"
+    link/button. --}}
     <script>
         (function () {
             var reloadedForZero = false;
@@ -1612,10 +1498,7 @@
                         textEl.textContent = ' 00:00';
                         if (!reloadedForZero) {
                             reloadedForZero = true;
-                            var $container = $('#patientsTableContainer');
-                            if ($container.length) {
-                                $container.trigger('dilation-timer-elapsed');
-                            }
+                            window.location.reload();
                         }
                         return;
                     }
@@ -1628,13 +1511,6 @@
 
             updateDilationTimers();
             setInterval(updateDilationTimers, 1000);
-
-            // Once a dilation timer hits zero, silently refresh the table so
-            // the row unlocks into the real Secondary Exam action.
-            $('#patientsTableContainer').on('dilation-timer-elapsed', function () {
-                reloadedForZero = false;
-                $('#patientSearchForm').trigger('submit');
-            });
         })();
     </script>
 @endpush

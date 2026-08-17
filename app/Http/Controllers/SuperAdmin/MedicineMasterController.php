@@ -31,7 +31,6 @@ class MedicineMasterController extends Controller
     public function index(): View
     {
         $tab = request('tab', 'dosages');
-        $search = request('search', '');
 
         $dosages = collect();
         $types = collect();
@@ -40,29 +39,23 @@ class MedicineMasterController extends Controller
         $medicines = collect();
 
         if ($tab === 'dosages') {
-            $dosages = MasterDosage::when($search, fn ($q, $s) => $q->where('dosage', 'like', "%{$s}%"))
-                ->orderBy('dosage')->paginate(10)->appends(request()->query());
+            $dosages = MasterDosage::orderBy('dosage')->get();
         }
 
         if ($tab === 'types') {
-            $types = MasterMedicineType::when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
-                ->orderBy('name')->paginate(10)->appends(request()->query());
+            $types = MasterMedicineType::orderBy('name')->get();
         }
 
         if ($tab === 'categories') {
-            $categories = MasterMedicineCategory::when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
-                ->orderBy('name')->paginate(10)->appends(request()->query());
+            $categories = MasterMedicineCategory::orderBy('name')->get();
         }
 
         if ($tab === 'routes') {
-            $routes = MasterMedicineRoute::when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
-                ->orderBy('name')->paginate(10)->appends(request()->query());
+            $routes = MasterMedicineRoute::orderBy('name')->get();
         }
 
         if ($tab === 'medicines') {
-            $medicines = MasterMedicine::with('medicineType', 'dosage')
-                ->when($search, fn ($q, $s) => $q->where('name', 'like', "%{$s}%"))
-                ->latest()->paginate(10)->appends(request()->query());
+            $medicines = MasterMedicine::with('medicineType', 'dosage')->latest()->get();
         }
 
         $allTypes = MasterMedicineType::orderBy('name')->get();
@@ -70,7 +63,6 @@ class MedicineMasterController extends Controller
 
         return view('superadmin.medicine_master.index', compact(
             'tab',
-            'search',
             'dosages',
             'types',
             'categories',

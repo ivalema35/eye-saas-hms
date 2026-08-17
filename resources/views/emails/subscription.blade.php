@@ -15,7 +15,7 @@
                 {{-- ===== HEADER ===== --}}
                 <tr>
                     <td style="background-color:#1B4F72;padding:24px 30px;border-radius:10px 10px 0 0">
-                        <span style="font-size:20px;font-weight:bold;color:#FFFFFF">&#128065; Eye HMS SaaS</span>
+                        <span style="font-size:20px;font-weight:bold;color:#FFFFFF">&#128065; EYENOSIS</span>
                         <div style="font-size:12px;color:#A8D8EA;margin-top:3px">Multi-Tenant Hospital Management Platform</div>
                     </td>
                 </tr>
@@ -56,7 +56,7 @@
 
                             @case('trial_welcome')
                                 <p style="margin:0 0 14px;font-size:14px;color:#1A202C">
-                                    Welcome to <strong>Eye HMS SaaS</strong>! Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered and your <strong>14-day free trial</strong> has started.
+                                    Welcome to <strong>EYENOSIS</strong>! Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered and your <strong>14-day free trial</strong> has started.
                                 </p>
                                 <p style="margin:0 0 14px;font-size:14px;color:#1A202C">
                                     All features are available — add your doctors, receptionists, and start registering patients today.
@@ -186,11 +186,11 @@
                 <tr>
                     <td style="background-color:#0D2137;padding:20px 30px;border-radius:0 0 10px 10px">
                         <p style="margin:0;font-size:12px;color:#A8D8EA;text-align:center">
-                            This email was sent by Eye HMS SaaS Platform &nbsp;|&nbsp;
+                            This email was sent by EYENOSIS Platform &nbsp;|&nbsp;
                             <a href="{{ url('/') }}" style="color:#1ABC9C;text-decoration:none">hmssaas.com</a>
                         </p>
                         <p style="margin:8px 0 0;font-size:11px;color:#4A5568;text-align:center">
-                            Made with &#10084;&#65039; in India &nbsp;|&nbsp; &copy; {{ date('Y') }} Eye HMS SaaS
+                            Made with &#10084;&#65039; in India &nbsp;|&nbsp; &copy; {{ date('Y') }} EYENOSIS
                         </p>
                     </td>
                 </tr>

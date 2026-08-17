@@ -1,9 +1,22 @@
 @extends('hospital.layouts.app')
 @section('title', 'Master Data')
-@section('page-header', 'Master Data Management')
+{{-- Layout page-header intentionally unused — the title + breadcrumb are
+rendered above the sections instead. --}}
 
 @section('content')
     <div class="masters-premium-page" id="mastersDesignRoot">
+
+        <div class="masters-header-block">
+            <div class="masters-header-title">
+                <span class="masters-header-icon"><i class="bi bi-database-fill-gear"></i></span>
+                Master Data Management
+            </div>
+            <nav class="masters-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="masters-breadcrumb-sep">/</span>
+                <span class="masters-breadcrumb-current">Master Data</span>
+            </nav>
+        </div>
 
 
         {{-- ── Basic Masters ──────────────────────────────────────────────── --}}
@@ -241,6 +254,64 @@
             animation: masters-page-in 420ms ease both;
         }
 
+        .masters-header-block {
+            padding: 0 0 1.15rem;
+        }
+
+        .masters-header-title {
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: var(--master-primary);
+            letter-spacing: -.02em;
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+        }
+
+        .masters-header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 13px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, var(--master-primary) 0%, #2471a3 100%);
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(27, 79, 114, .28);
+        }
+
+        .masters-header-icon i {
+            font-size: 1.05rem;
+        }
+
+        .masters-breadcrumb {
+            margin-top: .4rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .85rem;
+            color: #8891a0;
+        }
+
+        .masters-breadcrumb a {
+            color: #8891a0;
+            text-decoration: none;
+        }
+
+        .masters-breadcrumb a:hover {
+            color: var(--master-primary);
+        }
+
+        .masters-breadcrumb-sep {
+            color: #c3c9d3;
+        }
+
+        .masters-breadcrumb-current {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
         .masters-hero {
             display: flex;
             justify-content: space-between;
@@ -381,21 +452,38 @@
         }
 
         .master-icon-box {
-            width: 46px;
-            height: 46px;
+            width: 48px;
+            height: 48px;
             border-radius: 16px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             box-shadow: 0 10px 20px rgba(27, 79, 114, .10);
-            transition: transform 180ms ease, box-shadow 180ms ease;
+            transition: transform 220ms cubic-bezier(.34,1.56,.64,1), box-shadow 180ms ease;
         }
 
         .master-nav-card:hover .master-icon-box {
-            transform: translateY(-2px) scale(1.04);
-            box-shadow: 0 14px 26px rgba(27, 79, 114, .16);
+            transform: translateY(-3px) scale(1.08) rotate(-4deg);
+            box-shadow: 0 14px 26px rgba(27, 79, 114, .18);
         }
+
+        /* Richer, more saturated icon colors than Bootstrap's washed *-subtle utilities */
+        .master-icon-box.bg-primary-subtle { background: linear-gradient(135deg, rgba(27,79,114,.16), rgba(27,79,114,.24)) !important; }
+        .master-icon-box.bg-success-subtle { background: linear-gradient(135deg, rgba(39,174,96,.16), rgba(39,174,96,.26)) !important; }
+        .master-icon-box.bg-warning-subtle { background: linear-gradient(135deg, rgba(230,168,15,.18), rgba(230,168,15,.28)) !important; }
+        .master-icon-box.bg-secondary-subtle { background: linear-gradient(135deg, rgba(100,116,139,.16), rgba(100,116,139,.26)) !important; }
+        .master-icon-box.bg-dark-subtle { background: linear-gradient(135deg, rgba(27,79,114,.14), rgba(13,33,55,.22)) !important; }
+        .master-icon-box.bg-info-subtle { background: linear-gradient(135deg, rgba(41,128,185,.16), rgba(41,128,185,.26)) !important; }
+        .master-icon-box.bg-danger-subtle { background: linear-gradient(135deg, rgba(192,57,43,.16), rgba(192,57,43,.26)) !important; }
+
+        .master-icon-box.text-primary { color: #1B4F72 !important; }
+        .master-icon-box.text-success { color: #1e8449 !important; }
+        .master-icon-box.text-warning { color: #b7791f !important; }
+        .master-icon-box.text-secondary { color: #475569 !important; }
+        .master-icon-box.text-dark { color: #0D2137 !important; }
+        .master-icon-box.text-info { color: #21618c !important; }
+        .master-icon-box.text-danger { color: #a93226 !important; }
 
         .master-nav-card span {
             line-height: 1.25;

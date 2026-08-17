@@ -1,30 +1,105 @@
 @extends('hospital.layouts.app')
 @section('title', 'Secondary Examination - ' . $patient->full_name)
-@section('page-header', 'Secondary Eye Examination')
-
-@section('page-actions')
-@if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
-    <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
-       class="btn secondary-exam-back-btn btn-sm">
-        Back to Patient
-    </a>
-@endif
-    @if($exam)
-        <a href="{{ route('hospital.exam.secondary.print', ['slug' => $slug, 'id' => $patient->id]) }}"
-           target="_blank" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-printer"></i> Print Rx
-        </a>
-    @endif
-    <!-- @haspermission('opd.foc.create')
-        <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
-            <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-        </button>
-    @endhaspermission -->
-@endsection
+{{-- Layout page-header intentionally unused — heading, breadcrumb and
+actions render inside the content card instead, matching the panel design
+used across the rest of the app. --}}
 
 @section('content')
 
+<div class="exam-header-card">
+    <div class="exam-header-row">
+        <div>
+            <div class="exam-header-title"><i class="bi bi-eye-fill"></i> Secondary Eye Examination</div>
+            <nav class="exam-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="exam-breadcrumb-sep">/</span>
+                <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}">Patients</a>
+                <span class="exam-breadcrumb-sep">/</span>
+                <span class="exam-breadcrumb-current">Secondary Exam</span>
+            </nav>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
+                <a href="{{ route('hospital.patients.index', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                   class="btn secondary-exam-back-btn btn-sm">
+                    Back to Patient
+                </a>
+            @endif
+            @if($exam)
+                <a href="{{ route('hospital.exam.secondary.print', ['slug' => $slug, 'id' => $patient->id]) }}"
+                   target="_blank" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-printer"></i> Print Rx
+                </a>
+            @endif
+            <!-- @haspermission('opd.foc.create')
+                <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
+                    <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
+                </button>
+            @endhaspermission -->
+        </div>
+    </div>
+</div>
+
 <style>
+    .exam-header-card {
+        background: #ffffff;
+        border: 1px solid rgba(15, 79, 134, 0.12);
+        border-radius: 16px;
+        box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+        padding: 1.1rem 1.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .exam-header-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .exam-header-title {
+        font-weight: 800;
+        font-size: 1.3rem;
+        color: #1B4F72;
+        letter-spacing: -.015em;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+    }
+
+    .exam-header-title i {
+        color: #1B4F72;
+        font-size: 1.2rem;
+    }
+
+    .exam-breadcrumb {
+        margin-top: .4rem;
+        display: flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .85rem;
+        color: #8891a0;
+    }
+
+    .exam-breadcrumb a {
+        color: #8891a0;
+        text-decoration: none;
+    }
+
+    .exam-breadcrumb a:hover {
+        color: #1B4F72;
+    }
+
+    .exam-breadcrumb-sep {
+        color: #c3c9d3;
+    }
+
+    .exam-breadcrumb-current {
+        color: #4a5568;
+        font-weight: 600;
+    }
+
     .secondary-exam-back-btn {
         border: 1px solid rgba(27, 79, 114, 0.22);
         background: rgba(27, 79, 114, 0.06);

@@ -1,6 +1,17 @@
 @extends('hospital.layouts.app')
+
+@php
+    $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'hno', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
+    $useModalLayout = in_array($type, $modalMasterTypes, true);
+@endphp
+
 @section('title', 'Manage ' . $title)
-@section('page-header', $title)
+@if(!$useModalLayout)
+    @section('page-header', $title)
+@endif
+{{-- For $useModalLayout types the heading/breadcrumb sit inside the content
+     card instead (case-master-outer-card), matching the Medicine Master /
+     Users / Roles / History panel design. --}}
 
 @section('content')
 
@@ -10,9 +21,7 @@
         $canWrite = $isSuper || (str_contains($routeGroup, '.detail.')
             ? $permService->can('master.eye_exam')
             : $permService->canAny(['master.case_types', 'master.locations']));
-        $modalMasterTypes = ['cases', 'locations', 'referrers', 'durations', 'chief-complaints', 'kcos', 'hno', 'diagnosis', 'advice', 'vn', 'vngl', 'vnst', 'pnvn', 'nrvn', 'sph_cyl', 'axis', 'nct', 'sac', 'lid', 'conj', 'cornea', 'ac', 'iris', 'pupil', 'lens', 'em', 'covertest', 'disc', 'fr'];
-        $useModalLayout = in_array($type, $modalMasterTypes, true);
-        $showBackButton = in_array($type, $modalMasterTypes, true);
+        $showBackButton = $useModalLayout;
         $isAdviceType = in_array($type, ['advice', 'advices'], true);
         $showDiagnosis = $isAdviceType && isset($diagnoses) && $diagnoses->isNotEmpty();
     @endphp
@@ -29,6 +38,17 @@
     @endif
 
     <div class="{{ $useModalLayout ? 'case-master-page' : '' }}">
+        @if($useModalLayout)
+        <div class="case-master-outer-card">
+            <div class="case-master-header-block">
+                <div class="case-master-header-title"><i class="bi bi-collection"></i> {{ $title }}</div>
+                <nav class="case-master-breadcrumb" aria-label="breadcrumb">
+                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                    <span class="case-master-breadcrumb-sep">/</span>
+                    <span class="case-master-breadcrumb-current">{{ $title }}</span>
+                </nav>
+            </div>
+        @endif
         <div class="case-master-toolbar">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 @if($showBackButton)
@@ -266,6 +286,9 @@
                 </div>
             </div>
         </div>
+        @if($useModalLayout)
+        </div>{{-- /.case-master-outer-card --}}
+        @endif
 
         {{-- Add / Edit modal --}}
         @if($canWrite && $useModalLayout)
@@ -728,6 +751,62 @@
                 color: var(--case-primary);
             }
 
+            .case-master-outer-card {
+                background: #ffffff;
+                border: 1px solid rgba(15, 79, 134, 0.12);
+                border-radius: 16px;
+                box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+                overflow: hidden;
+                padding: 1.25rem 1.5rem 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .case-master-header-block {
+                padding: 0 0 1rem;
+            }
+
+            .case-master-header-title {
+                font-weight: 800;
+                font-size: 1.3rem;
+                color: var(--case-primary);
+                letter-spacing: -.015em;
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+            }
+
+            .case-master-header-title i {
+                color: var(--case-primary);
+                font-size: 1.2rem;
+            }
+
+            .case-master-breadcrumb {
+                margin-top: .4rem;
+                display: flex;
+                align-items: center;
+                gap: .4rem;
+                font-size: .85rem;
+                color: #8891a0;
+            }
+
+            .case-master-breadcrumb a {
+                color: #8891a0;
+                text-decoration: none;
+            }
+
+            .case-master-breadcrumb a:hover {
+                color: var(--case-primary);
+            }
+
+            .case-master-breadcrumb-sep {
+                color: #c3c9d3;
+            }
+
+            .case-master-breadcrumb-current {
+                color: #4a5568;
+                font-weight: 600;
+            }
+
             .case-master-toolbar {
                 display: flex;
                 justify-content: space-between;
@@ -781,62 +860,55 @@
             }
 
             .case-master-card {
-                border: 1px solid var(--case-border) !important;
-                border-radius: 22px !important;
-                box-shadow: 0 18px 48px rgba(27, 79, 114, .10) !important;
+                border: 1px solid rgba(15, 79, 134, 0.08) !important;
+                border-radius: 16px !important;
+                box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05) !important;
                 overflow: hidden;
             }
 
             .case-master-table-wrap {
-                padding: .9rem;
-                background: var(--case-soft);
+                overflow-x: auto;
             }
 
             .case-master-table {
-                border-collapse: separate;
-                border-spacing: 0 8px;
+                border-collapse: collapse;
+                width: 100%;
                 min-width: 720px;
             }
 
             .case-master-table thead th {
-                background: var(--case-primary) !important;
-                color: #fff !important;
+                background: #F8FAFC !important;
+                color: #4A5568 !important;
                 border: 0 !important;
-                padding: .9rem 1rem !important;
-                font-size: .72rem;
-                letter-spacing: .08em;
+                border-bottom: 1px solid #E2E8F0 !important;
+                padding: .7rem 1rem !important;
+                font-size: .75rem;
+                letter-spacing: .05em;
+                font-weight: 700;
+                text-transform: uppercase;
+                text-align: left;
             }
 
-            .case-master-table thead th:first-child {
-                border-top-left-radius: 14px;
-                border-bottom-left-radius: 14px;
+            .case-master-table tbody tr {
+                transition: background 150ms ease;
             }
 
-            .case-master-table thead th:last-child {
-                border-top-right-radius: 14px;
-                border-bottom-right-radius: 14px;
+            .case-master-table tbody tr:hover {
+                background: #F5F8FC;
             }
 
             .case-master-table tbody td {
-                background: rgba(255, 255, 255, .94);
-                border-top: 1px solid rgba(27, 79, 114, .08);
+                background: transparent;
+                border: 0;
                 border-bottom: 1px solid rgba(27, 79, 114, .08);
                 color: var(--case-primary);
-                padding: .9rem 1rem;
+                padding: .75rem 1rem;
                 vertical-align: middle;
-                font-weight: 650;
+                font-weight: 600;
             }
 
-            .case-master-table tbody td:first-child {
-                border-left: 1px solid rgba(27, 79, 114, .08);
-                border-top-left-radius: 14px;
-                border-bottom-left-radius: 14px;
-            }
-
-            .case-master-table tbody td:last-child {
-                border-right: 1px solid rgba(27, 79, 114, .08);
-                border-top-right-radius: 14px;
-                border-bottom-right-radius: 14px;
+            .case-master-table tbody tr:last-child td {
+                border-bottom: 0;
             }
 
             .case-master-icon-btn {

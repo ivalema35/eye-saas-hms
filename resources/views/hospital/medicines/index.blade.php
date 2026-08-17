@@ -1,19 +1,23 @@
 @extends('hospital.layouts.app')
 @section('title', 'Medicines')
-@section('page-header', 'Medicine Master')
-
-@section('page-actions')
-    <button type="button"
-            class="btn btn-primary btn-sm med-add-btn"
-            data-bs-toggle="modal"
-            data-bs-target="#medicineModal"
-            onclick="resetMedicineForm()">
-        <i class="bi bi-plus-lg me-1"></i> Add Medicine
-    </button>
-@endsection
+{{-- Layout page-header intentionally unused — the heading, breadcrumb, tabs
+and list all sit inside one bordered card, matching the superadmin Medicine
+Master design. --}}
 
 @section('content')
 <div class="medicines-page">
+
+<div class="medmaster-outer-card">
+    <div class="medmaster-header-block">
+        <div class="medmaster-header-title"><i class="bi bi-capsule"></i> Medicine Master</div>
+        <nav class="medmaster-breadcrumb" aria-label="breadcrumb">
+            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+            <span class="medmaster-breadcrumb-sep">/</span>
+            <span>Medicines</span>
+            <span class="medmaster-breadcrumb-sep">/</span>
+            <span class="medmaster-breadcrumb-current">Medicine Master</span>
+        </nav>
+    </div>
 
 @if($errors->any())
     <div class="alert alert-danger d-flex gap-2 mb-4">
@@ -26,68 +30,67 @@
     </div>
 @endif
 
-<ul class="nav nav-tabs mb-4 type-nav-tabs">
-    <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
-            <i class="bi bi-capsule-pill me-1"></i> Dosages
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
-            <i class="bi bi-tags me-1"></i> Medicine Types
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
-            <i class="bi bi-grid me-1"></i> Medicine Categories
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
-            <i class="bi bi-arrow-right-circle me-1"></i> Mode
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link active"
-           href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
-            <i class="bi bi-capsule me-1"></i> Medicines
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link"
-           href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
-            <i class="bi bi-collection me-1"></i> Medicine Groups
-        </a>
-    </li>
+<div class="medmaster-tabs-row">
+    <ul class="nav nav-tabs type-nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link"
+               href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
+                <i class="bi bi-capsule-pill me-1"></i> Dosages
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"
+               href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
+                <i class="bi bi-tags me-1"></i> Medicine Types
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"
+               href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
+                <i class="bi bi-grid me-1"></i> Medicine Categories
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"
+               href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
+                <i class="bi bi-arrow-right-circle me-1"></i> Mode
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active"
+               href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
+                <i class="bi bi-capsule me-1"></i> Medicines
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link"
+               href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
+                <i class="bi bi-collection me-1"></i> Medicine Groups
+            </a>
+        </li>
 
-    {{-- <li class="nav-item">
-        <a class="nav-link {{ request()->routeIs('hospital.medicine_instructions.*') ? 'active' : '' }}"
-           href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
-            <i class="bi bi-list-ul me-1"></i> Instructions
-        </a>
-    </li> --}}
-</ul>
+        {{-- <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('hospital.medicine_instructions.*') ? 'active' : '' }}"
+               href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
+                <i class="bi bi-list-ul me-1"></i> Instructions
+            </a>
+        </li> --}}
+    </ul>
+    <div class="medmaster-tab-actions">
+        <button type="button"
+                class="btn btn-primary btn-sm med-add-btn"
+                data-bs-toggle="modal"
+                data-bs-target="#medicineModal"
+                onclick="resetMedicineForm()">
+            <i class="bi bi-plus-lg me-1"></i> Add Medicine
+        </button>
+    </div>
+</div>
 
 <div class="card premium-card border-0 shadow-sm med-card">
-    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-3 py-3 med-card-header">
-        <div class="med-title-wrap">
-            <span class="med-title-icon">
-                <i class="bi bi-capsule fs-4"></i>
-            </span>
-            <div>
-                <h5 class="mb-0 fw-bold med-title" style="color: var(--color-primary);">
-                    Medicines
-                </h5>
-                <div class="med-subtitle">Manage medicine names, brands, companies, pricing, and types.</div>
-            </div>
-        </div>
-        <div class="d-flex gap-2 align-items-center med-tools">
-            <span class="badge text-bg-light border med-total-pill">{{ $medicines->count() }} total</span>
-        </div>
+    <div class="medmaster-list-header">
+        <h3 class="medmaster-list-title"><i class="bi bi-capsule"></i> Medicine List</h3>
+        <span class="medmaster-list-badge">{{ $medicines->count() }} total</span>
     </div>
 
     <div class="card-body p-0">
@@ -124,7 +127,7 @@
                                         class="btn btn-sm btn-outline-secondary med-icon-btn med-edit-btn edit-medicine-btn"
                                         data-record="{{ json_encode($med) }}"
                                         title="Edit">
-                                    <i class="bi bi-pencil-fill" style="color: var(--color-secondary);"></i>
+                                    <i class="bi bi-pencil-fill"></i>
                                 </button>
                                 <form action="{{ route('hospital.medicines.destroy', ['slug' => $slug, 'medicine' => $med->id]) }}"
                                       method="POST"
@@ -148,8 +151,10 @@
             </table>
         </div>
     </div>
+
+</div>{{-- /.medmaster-outer-card --}}
 </div>
-</div>
+</div>{{-- /.medicines-page --}}
 
 {{-- Add / Edit Modal --}}
 <div class="modal fade medicine-modal" id="medicineModal" tabindex="-1" aria-hidden="true">
