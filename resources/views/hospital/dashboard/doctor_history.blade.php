@@ -2,10 +2,64 @@
 
 @section('content')
     <style>
-        .history-page-wrap {
-            background: #f8fafc !important;
-            padding: 2rem !important;
-            min-height: 100vh;
+        .history-outer-card {
+            background: #ffffff;
+            border: 1px solid rgba(15, 79, 134, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+            overflow: hidden;
+            padding: 1.25rem 1.5rem 1.5rem;
+        }
+
+        .history-header-block {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+            padding: 0 0 1rem;
+        }
+
+        .history-header-title {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #1B4F72;
+            letter-spacing: -.015em;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .history-header-title i {
+            color: #1B4F72;
+            font-size: 1.2rem;
+        }
+
+        .history-breadcrumb {
+            margin-top: .4rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .85rem;
+            color: #8891a0;
+        }
+
+        .history-breadcrumb a {
+            color: #8891a0;
+            text-decoration: none;
+        }
+
+        .history-breadcrumb a:hover {
+            color: #1B4F72;
+        }
+
+        .history-breadcrumb-sep {
+            color: #c3c9d3;
+        }
+
+        .history-breadcrumb-current {
+            color: #4a5568;
+            font-weight: 600;
         }
 
         /* ── Tabs ── */
@@ -58,16 +112,18 @@
         }
 
         .table thead th {
-            background: #1B4F72 !important;
-            color: #ffffff !important;
-            font-size: 13px;
+            background: #F8FAFC !important;
+            color: #4A5568 !important;
+            font-size: 12px;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 15px !important;
+            letter-spacing: 0.05em;
+            padding: 12px 15px !important;
+            border-bottom: 1px solid #E2E8F0 !important;
         }
 
         .table tbody tr:hover {
-            background-color: #f1f7fc !important;
+            background-color: #F5F8FC !important;
             cursor: pointer;
         }
 
@@ -153,7 +209,22 @@
         }
     </style>
 
-    <div class="history-page-wrap">
+    <div class="history-outer-card">
+
+        <div class="history-header-block">
+            <div>
+                <div class="history-header-title"><i class="bi bi-clock-history"></i> History</div>
+                <nav class="history-breadcrumb" aria-label="breadcrumb">
+                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                    <span class="history-breadcrumb-sep">/</span>
+                    <span class="history-breadcrumb-current">History</span>
+                </nav>
+            </div>
+            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary px-3"
+                style="border-radius: 6px;">
+                Back to Dashboard
+            </a>
+        </div>
 
         {{-- Global flash messages --}}
         @if(session('success'))
@@ -175,17 +246,6 @@
             </div>
         @endif
 
-        {{-- Page header --}}
-        <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
-            <h5 class="fw-bold mb-0" style="color: #1B4F72;">
-                <i class="bi bi-clock-history me-2"></i>History
-            </h5>
-            <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm btn-outline-secondary px-3"
-                style="border-radius: 6px;">
-                Back to Dashboard
-            </a>
-        </div>
-
         {{-- Tab Bar --}}
         <div class="history-tab-bar">
             <button class="history-tab-btn active" data-tab="patient-history">
@@ -205,38 +265,38 @@
             {{-- Filter Form --}}
             <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" id="patient-history-form"
                 class="card mb-4 p-3 js-auto-filter-form"
-                style="border-radius:14px; border:1px solid #e2e8f0; background:#ffffff;">
+                style="border-radius:14px; border:1px solid #e2e8f0; background:#1b4f72;">
                 <input type="hidden" name="_tab" value="patient">
                 <div class="row g-2 align-items-end">
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Patient
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">Patient
                             Name</label>
                         <input type="text" name="patient_name" value="{{ request('patient_name') }}"
                             class="form-control form-control-sm" placeholder="Search patient..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Doctor
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">Doctor
                             Name</label>
                         <input type="text" name="doctor_name" value="{{ request('doctor_name') }}"
                             class="form-control form-control-sm" placeholder="Search doctor..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Contact
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">Contact
                             No.</label>
                         <input type="text" name="contact_no" value="{{ request('contact_no') }}"
                             class="form-control form-control-sm" placeholder="Search contact..." maxlength="15"
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Date</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">Date</label>
                         <input type="date" name="date" value="{{ request('date') }}" class="form-control form-control-sm"
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-sm w-100 fw-bold"
-                            style="background:#1B4F72; color:#fff; border-radius:8px;">
+                            style="background: #ffffff;color: #1b4f72;border-radius:8px;">
                             Filter
                         </button>
                         @if(request('patient_name') || request('doctor_name') || request('contact_no') || request('date'))
@@ -261,37 +321,37 @@
             {{-- Filter Form --}}
             <form method="GET" action="{{ route('hospital.doctor.history', ['slug' => $slug]) }}" id="hospital-history-form"
                 class="card mb-4 p-3 js-auto-filter-form"
-                style="border-radius:14px; border:1px solid #e2e8f0; background:#ffffff;">
+                style="border-radius:14px; border:1px solid #e2e8f0; background:#1b4f72;">
                 <input type="hidden" name="_tab" value="hospital">
                 <div class="row g-2 align-items-end">
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">Hospital
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">Hospital
                             Name</label>
                         <input type="text" name="hosp_name" value="{{ request('hosp_name') }}"
                             class="form-control form-control-sm" placeholder="Search hospital..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-3">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">City</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">City</label>
                         <input type="text" name="hosp_city" value="{{ request('hosp_city') }}"
                             class="form-control form-control-sm" placeholder="Search city..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">District</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">District</label>
                         <input type="text" name="hosp_district" value="{{ request('hosp_district') }}"
                             class="form-control form-control-sm" placeholder="District..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2">
-                        <label class="form-label fw-semibold mb-1" style="color:#1B4F72; font-size:13px;">State</label>
+                        <label class="form-label fw-semibold mb-1" style="color:#ffffff; font-size:13px;">State</label>
                         <input type="text" name="hosp_state" value="{{ request('hosp_state') }}"
                             class="form-control form-control-sm" placeholder="State..."
                             style="border-radius:8px; border:1px solid #cbd5e1;">
                     </div>
                     <div class="col-12 col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-sm w-100 fw-bold"
-                            style="background:#1B4F72; color:#fff; border-radius:8px;">
+                            style="background: #ffffff;color: #1b4f72;border-radius:8px;">
                             Filter
                         </button>
                         @if(request('hosp_name') || request('hosp_city') || request('hosp_district') || request('hosp_state'))

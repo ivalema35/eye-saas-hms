@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'SuperAdmin') — Eye HMS SaaS</title>
+    <title>@yield('title', 'SuperAdmin') — EYENOSIS</title>
     <link rel="icon" type="image/png" href="{{ platform_logo_url() }}">
 
     {{-- Design System CSS --}}
@@ -28,47 +28,24 @@
     {{-- Flatpickr CSS --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
 
+    {{-- DataTables (Bootstrap 5) --}}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" />
+
     {{-- SweetAlert2 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
-    {{-- SuperAdmin shell: dark-navy sidebar + clean white navbar --}}
+    {{-- SuperAdmin shell styles in superadmin.css; light overrides only --}}
     <style>
-        :root {
-            --shell-secondary: #1B4F72;
-            /* Dark sidebar palette */
-            --sa-dark-900: #0F172A;
-            --sa-dark-800: #1E293B;
-            --sa-dark-muted: #94A3B8;
-            --sa-dark-subtle: #64748B;
-            --sa-dark-border: rgba(255, 255, 255, .08);
-        }
-
         body.sa-body {
-            background: #F8FAFC !important;
-            color: #1B4F72;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .sa-main {
-            background: #F8FAFC;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .sa-page-header h1 {
-            font-size: 1.35rem;
-            font-weight: 800;
-            color: #1A202C;
-            letter-spacing: -.02em;
+            background: #eef4fb !important;
         }
 
         .sa-main .hms-card,
-        .sa-main [class*="-card"],
-        .sa-main .hms-stat-card,
-        .sa-main .sa-premium-card {
-            box-shadow: none !important;
+        .sa-main .sa-premium-card,
+        .sa-main .hms-stat-card {
+            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05) !important;
         }
 
-        /* ── Stat card horizontal layout ─────────────────────── */
         .hms-stat-card {
             flex-direction: row !important;
             align-items: center !important;
@@ -85,224 +62,10 @@
             font-size: 1.375rem !important;
         }
 
-        /* ══════════════════════════════════════════════════════
-           TOP NAVBAR — solid white, clean shadow
-        ══════════════════════════════════════════════════════ */
-        .sa-navbar {
-            background: #fff !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            border-bottom: 1px solid #E2E8F0 !important;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, .05) !important;
-        }
-
-        /* ══════════════════════════════════════════════════════
-           DARK NAVY SIDEBAR
-        ══════════════════════════════════════════════════════ */
-        .sa-sidebar {
-            background: var(--sa-dark-900) !important;
-            border-right: 1px solid var(--sa-dark-border) !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            display: flex;
-            flex-direction: column;
-        }
-
         @media (max-width: 768px) {
-            .sa-sidebar {
-                background: var(--sa-dark-900) !important;
+            .hms-sidebar-toggle {
+                display: inline-grid !important;
             }
-        }
-
-        .hms-sidenav {
-            display: flex;
-            flex-direction: column;
-            padding: 1rem .75rem;
-            gap: .25rem;
-            flex: 1;
-        }
-
-        /* Section label text inside collapsible group toggles */
-        .hms-nav-section-label {
-            color: var(--sa-dark-subtle) !important;
-            font-weight: 700;
-            font-size: .70rem;
-            letter-spacing: .12em;
-            text-transform: uppercase;
-        }
-
-        .hms-nav-divider {
-            height: 1px;
-            background: var(--sa-dark-border) !important;
-            border: none;
-            margin: .35rem .5rem;
-            opacity: 1;
-        }
-
-        /* Collapsible group toggle rows (Management / System) */
-        .hms-nav-group-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: rgba(255, 255, 255, .04);
-            border: none;
-            border-radius: 8px;
-            margin: .2rem 0;
-            padding: .65rem .9rem;
-            cursor: pointer;
-            transition: transform 160ms ease, background 160ms ease;
-        }
-
-        .hms-nav-group-toggle:hover {
-            background: rgba(255, 255, 255, .08);
-            transform: translateX(2px);
-        }
-
-        .hms-nav-group-toggle:hover .hms-nav-section-label,
-        .hms-nav-group-toggle:hover .hms-nav-chevron {
-            color: #fff !important;
-        }
-
-        .hms-nav-group-toggle .hms-nav-section-label {
-            font-size: 1.05rem !important;
-            font-weight: 700 !important;
-            letter-spacing: .05em !important;
-            color: var(--sa-dark-muted) !important;
-        }
-
-        .hms-nav-group-toggle .hms-nav-chevron {
-            color: var(--sa-dark-subtle) !important;
-            font-size: .75rem;
-            transition: transform 200ms ease;
-        }
-
-        .hms-nav-group-toggle.collapsed .hms-nav-chevron {
-            transform: rotate(-90deg);
-        }
-
-        .hms-nav-group-items {
-            display: flex;
-            flex-direction: column;
-            gap: .15rem;
-            overflow: hidden;
-            transition: max-height 220ms ease;
-        }
-
-        .hms-nav-group-items.collapsed {
-            max-height: 0 !important;
-        }
-
-        .hms-nav-group-items .hms-nav-item {
-            font-size: .92rem;
-        }
-
-        .hms-nav-group-items .hms-nav-item i {
-            font-size: .95rem;
-        }
-
-        /* ── Nav items — dark theme ──────────────────────────── */
-        .hms-nav-item {
-            display: flex;
-            align-items: center;
-            gap: .55rem;
-            color: var(--sa-dark-muted) !important;
-            font-size: .9rem;
-            font-weight: 600;
-            border-radius: 10px;
-            padding: .70rem .95rem;
-            background: transparent;
-            border: none;
-            text-decoration: none !important;
-            position: relative;
-            transition: transform 160ms ease, background 160ms ease, color 160ms ease;
-        }
-
-        .hms-nav-item i {
-            color: var(--sa-dark-subtle) !important;
-            font-size: 1.05rem;
-            transition: color 160ms ease;
-        }
-
-        .hms-nav-item:hover {
-            background: var(--sa-dark-800) !important;
-            color: #fff !important;
-            transform: translateX(2px);
-            text-decoration: none !important;
-        }
-
-        .hms-nav-item:hover i {
-            color: #fff !important;
-        }
-
-        /* Active: slate-800 bg + white text + blue left accent bar */
-        .hms-nav-item.active {
-            background: var(--sa-dark-800) !important;
-            color: #fff !important;
-            font-weight: 700;
-        }
-
-        .hms-nav-item.active i {
-            color: #fff !important;
-        }
-
-        .hms-nav-item.active::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 60%;
-            min-height: 1.125rem;
-            border-radius: 0 3px 3px 0;
-            background: var(--shell-secondary);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-
-            .hms-nav-item,
-            .hms-nav-group-toggle {
-                transition: none !important;
-            }
-        }
-
-        /* ── Sidebar footer / logout ─────────────────────────── */
-        .sa-sidebar-footer {
-            padding: .75rem;
-            border-top: 1px solid var(--sa-dark-border);
-            margin-top: auto;
-        }
-
-        .sa-sidebar-logout {
-            display: flex;
-            align-items: center;
-            gap: .55rem;
-            width: 100%;
-            padding: .70rem .95rem;
-            border-radius: 10px;
-            border: none;
-            background: rgba(192, 57, 43, .15);
-            color: #FCA5A5;
-            font-size: .875rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: left;
-            transition: background 160ms ease, transform 160ms ease;
-        }
-
-        .sa-sidebar-logout i {
-            color: #FCA5A5;
-            font-size: 1rem;
-        }
-
-        .sa-sidebar-logout:hover {
-            background: #C0392B;
-            color: #fff;
-            transform: translateX(2px);
-        }
-
-        .sa-sidebar-logout:hover i {
-            color: #fff;
         }
     </style>
 
@@ -311,203 +74,149 @@
 
 <body class="sa-body">
 
-    {{-- ================================================
-    Top Navigation Bar
-    ================================================ --}}
-    <nav class="sa-navbar">
-        <div style="display:flex;align-items:center;gap:.5rem">
-            <button class="hms-sidebar-toggle" id="hmsSidebarToggle" type="button" aria-label="Toggle sidebar">
-                <i class="bi bi-list"></i>
-            </button>
-            <a href="{{ route('superadmin.dashboard') }}" class="sa-navbar-brand" style="text-decoration:none">
-                <img src="{{ platform_logo_url() }}" alt="Eye HMS" class="sa-navbar-logo">
-                <span>Eye HMS</span>
-                <small class="sa-badge-platform">Platform Admin</small>
-            </a>
-        </div>
+    {{-- Mobile backdrop --}}
+    <div class="hms-sidebar-backdrop" id="hmsSidebarBackdrop"></div>
 
-        <div class="sa-navbar-right">
-            {{-- User Dropdown --}}
-            <div class="sa-user-dropdown dropdown">
-                <button class="sa-user-btn dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    <span class="sa-user-avatar">
-                        <i class="bi bi-shield-fill-check"></i>
-                    </span>
-                    <span class="sa-user-name d-none d-md-inline">
-                        {{ auth('superadmin')->user()?->name ?? 'SuperAdmin' }}
-                    </span>
-                    <i class="bi bi-chevron-down sa-user-chevron"></i>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end sa-user-dropdown-menu">
-                    <li class="sa-dropdown-header">
-                        <div class="sa-dropdown-user-info">
-                            <span class="sa-dropdown-avatar"><i class="bi bi-shield-fill-check"></i></span>
-                            <div>
-                                <div class="sa-dropdown-name">{{ auth('superadmin')->user()?->name ?? 'SuperAdmin' }}
-                                </div>
-                                <div class="sa-dropdown-email">{{ auth('superadmin')->user()?->email ?? '' }}</div>
-                            </div>
-                        </div>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider my-1">
-                    </li>
-                    <li>
-                        <a class="dropdown-item sa-dropdown-item" href="{{ route('superadmin.profile') }}">
-                            <i class="bi bi-person-circle"></i> My Profile
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item sa-dropdown-item" href="{{ route('superadmin.settings') }}">
-                            <i class="bi bi-sliders"></i> Platform Settings
-                        </a>
-                    </li>
-                    <li>
-                        <hr class="dropdown-divider my-1">
-                    </li>
-                    <li>
-                        <form method="POST" action="{{ route('superadmin.logout') }}">
-                            @csrf
-                            <button type="submit" class="dropdown-item sa-dropdown-item sa-dropdown-item-danger">
-                                <i class="bi bi-box-arrow-right"></i> Logout
-                            </button>
-                        </form>
-                    </li>
-                </ul>
+    {{-- ============================================
+    Sidebar (white, brand blue active)
+    ============================================ --}}
+    <aside class="sa-sidebar" id="hmsSidebar">
+        <button type="button" class="sa-sidebar-rail-btn" id="saSidebarCollapse" aria-label="Collapse or expand sidebar"
+            title="Collapse sidebar">
+            <i class="bi bi-chevron-left" id="saSidebarCollapseIcon"></i>
+        </button>
+
+        <a href="{{ route('superadmin.dashboard') }}" class="sa-sidebar-brand">
+            <span class="sa-sidebar-brand-mark">
+                <img src="{{ platform_logo_url() }}" alt="Eye HMS">
+            </span>
+            <div class="sa-sidebar-brand-text">
+                <small>Platform Admin</small>
             </div>
-        </div>
-    </nav>
+        </a>
+
+        <nav class="hms-sidenav">
+            <a href="{{ route('superadmin.dashboard') }}"
+                class="hms-nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="hms-nav-divider"></div>
+            <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
+                data-target="sa-nav-management">
+                <span class="hms-nav-section-label" style="padding:0;margin:0">Management</span>
+                <i class="bi bi-chevron-down hms-nav-chevron"></i>
+            </div>
+            <div class="hms-nav-group-items {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
+                id="sa-nav-management">
+                <a href="{{ route('superadmin.hospitals.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.*') ? 'active' : '' }}">
+                    <i class="bi bi-hospital-fill"></i>
+                    <span>Hospitals</span>
+                </a>
+                <a href="{{ route('superadmin.plans.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
+                    <i class="bi bi-layers-fill"></i>
+                    <span>Plans</span>
+                </a>
+                <a href="{{ route('superadmin.subscriptions.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
+                    <i class="bi bi-credit-card-2-front-fill"></i>
+                    <span>Subscriptions</span>
+                </a>
+                <a href="{{ route('superadmin.payments.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.payments.*') ? 'active' : '' }}">
+                    <i class="bi bi-cash-coin"></i>
+                    <span>Payments</span>
+                </a>
+                <a href="{{ route('superadmin.audit-logs.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.audit-logs.*') ? 'active' : '' }}">
+                    <i class="bi bi-clipboard2-check-fill"></i>
+                    <span>Audit Logs</span>
+                </a>
+                <a href="{{ route('superadmin.notifications.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.notifications.*') ? 'active' : '' }}">
+                    <i class="bi bi-bell-fill"></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+
+            <div class="hms-nav-divider"></div>
+            <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.locations.*', 'superadmin.timezones.*', 'superadmin.medicine-master.*') ? '' : 'collapsed' }}"
+                data-target="sa-nav-masters">
+                <span class="hms-nav-section-label" style="padding:0;margin:0">Masters</span>
+                <i class="bi bi-chevron-down hms-nav-chevron"></i>
+            </div>
+            <div class="hms-nav-group-items {{ request()->routeIs('superadmin.locations.*', 'superadmin.timezones.*', 'superadmin.medicine-master.*') ? '' : 'collapsed' }}"
+                id="sa-nav-masters">
+                <a href="{{ route('superadmin.locations.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.locations.*') ? 'active' : '' }}">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Location Master</span>
+                </a>
+                <a href="{{ route('superadmin.timezones.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.timezones.*') ? 'active' : '' }}">
+                    <i class="bi bi-clock-fill"></i>
+                    <span>Timezone Master</span>
+                </a>
+                <a href="{{ route('superadmin.medicine-master.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.medicine-master.*') ? 'active' : '' }}">
+                    <i class="bi bi-capsule"></i>
+                    <span>Medicine Master</span>
+                </a>
+            </div>
+
+            <div class="hms-nav-divider"></div>
+            <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.profile', 'superadmin.settings') ? '' : 'collapsed' }}"
+                data-target="sa-nav-system">
+                <span class="hms-nav-section-label" style="padding:0;margin:0">System</span>
+                <i class="bi bi-chevron-down hms-nav-chevron"></i>
+            </div>
+            <div class="hms-nav-group-items {{ request()->routeIs('superadmin.profile', 'superadmin.settings') ? '' : 'collapsed' }}"
+                id="sa-nav-system">
+                <a href="{{ route('superadmin.profile') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.profile') ? 'active' : '' }}">
+                    <i class="bi bi-person-circle"></i>
+                    <span>My Profile</span>
+                </a>
+                <a href="{{ route('superadmin.settings') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.settings') ? 'active' : '' }}">
+                    <i class="bi bi-sliders"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
 
     <div class="sa-layout">
-
-        {{-- Mobile backdrop --}}
-        <div class="hms-sidebar-backdrop" id="hmsSidebarBackdrop"></div>
-
-        {{-- ============================================
-        Sidebar
-        ============================================ --}}
-        <aside class="sa-sidebar" id="hmsSidebar">
-            <nav class="hms-sidenav">
-
-                {{-- Dashboard (always visible) --}}
-                <a href="{{ route('superadmin.dashboard') }}"
-                    class="hms-nav-item {{ request()->routeIs('superadmin.dashboard') ? 'active' : '' }}">
-                    <i class="bi bi-grid-1x2-fill"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                {{-- MANAGEMENT --}}
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
-                    data-target="sa-nav-management">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">Management</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
+        {{-- Floating topbar: search + logout --}}
+        <header class="sa-topbar">
+            <div class="sa-topbar-left">
+                <button class="hms-sidebar-toggle" id="hmsSidebarToggle" type="button" aria-label="Toggle sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <label class="sa-topbar-search" for="saTopSearch">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="search" id="saTopSearch" name="sa_search" placeholder="Search (Ctrl+/)"
+                        autocomplete="off">
+                </label>
+            </div>
+            <div class="sa-topbar-right">
+                <div class="sa-topbar-user">
+                    <strong>{{ auth('superadmin')->user()?->name ?? 'SuperAdmin' }}</strong>
+                    <small>{{ auth('superadmin')->user()?->email ?? 'Platform admin' }}</small>
                 </div>
-                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
-                    id="sa-nav-management">
-                    <a href="{{ route('superadmin.hospitals.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.*') ? 'active' : '' }}">
-                        <i class="bi bi-hospital-fill"></i>
-                        <span>Hospitals</span>
-                    </a>
-                    <a href="{{ route('superadmin.plans.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
-                        <i class="bi bi-layers-fill"></i>
-                        <span>Plans</span>
-                    </a>
-                    <a href="{{ route('superadmin.subscriptions.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.subscriptions.*') ? 'active' : '' }}">
-                        <i class="bi bi-credit-card-2-front-fill"></i>
-                        <span>Subscriptions</span>
-                    </a>
-                    <a href="{{ route('superadmin.payments.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.payments.*') ? 'active' : '' }}">
-                        <i class="bi bi-cash-coin"></i>
-                        <span>Payments</span>
-                    </a>
-                    <a href="{{ route('superadmin.audit-logs.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.audit-logs.*') ? 'active' : '' }}">
-                        <i class="bi bi-clipboard2-check-fill"></i>
-                        <span>Audit Logs</span>
-                    </a>
-                    <a href="{{ route('superadmin.notifications.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.notifications.*') ? 'active' : '' }}">
-                        <i class="bi bi-bell-fill"></i>
-                        <span>Notifications</span>
-                    </a>
-                </div>
-
-                {{-- MASTERS --}}
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.locations.*', 'superadmin.timezones.*', 'superadmin.medicine-master.*') ? '' : 'collapsed' }}"
-                    data-target="sa-nav-masters">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">Masters</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.locations.*', 'superadmin.timezones.*', 'superadmin.medicine-master.*') ? '' : 'collapsed' }}"
-                    id="sa-nav-masters">
-                    <a href="{{ route('superadmin.locations.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.locations.*') ? 'active' : '' }}">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        <span>Location Master</span>
-                    </a>
-                    <a href="{{ route('superadmin.timezones.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.timezones.*') ? 'active' : '' }}">
-                        <i class="bi bi-clock-fill"></i>
-                        <span>Timezone Master</span>
-                    </a>
-                    <a href="{{ route('superadmin.medicine-master.index') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.medicine-master.*') ? 'active' : '' }}">
-                        <i class="bi bi-capsule"></i>
-                        <span>Medicine Master</span>
-                    </a>
-                </div>
-
-                {{-- SYSTEM --}}
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.profile', 'superadmin.settings') ? '' : 'collapsed' }}"
-                    data-target="sa-nav-system">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">System</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items {{ request()->routeIs('superadmin.profile', 'superadmin.settings') ? '' : 'collapsed' }}"
-                    id="sa-nav-system">
-                    <a href="{{ route('superadmin.profile') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.profile') ? 'active' : '' }}">
-                        <i class="bi bi-person-circle"></i>
-                        <span>My Profile</span>
-                    </a>
-                    <a href="{{ route('superadmin.settings') }}"
-                        class="hms-nav-item {{ request()->routeIs('superadmin.settings') ? 'active' : '' }}">
-                        <i class="bi bi-sliders"></i>
-                        <span>Settings</span>
-                    </a>
-                </div>
-
-            </nav>
-
-            {{-- Sidebar Footer — Logout --}}
-            <div class="sa-sidebar-footer">
-                <form method="POST" action="{{ route('superadmin.logout') }}">
+                <form method="POST" action="{{ route('superadmin.logout') }}" class="m-0">
                     @csrf
-                    <button type="submit" class="sa-sidebar-logout">
+                    <button type="submit" class="sa-topbar-logout" title="Logout" aria-label="Logout">
                         <i class="bi bi-box-arrow-right"></i>
-                        <span>Logout</span>
                     </button>
                 </form>
             </div>
+        </header>
 
-        </aside>
-
-        {{-- ============================================
-        Main Content Area
-        ============================================ --}}
         <main class="sa-main">
-
-            {{-- Flash messages handled via SweetAlert2 toasts (see bottom JS) --}}
-
-            {{-- Page Header --}}
             @hasSection('page-header')
                 <div class="sa-page-header">
                     <h1>@yield('page-header')</h1>
@@ -517,11 +226,8 @@
                 </div>
             @endif
 
-            {{-- Main Content --}}
             @yield('content')
-
         </main>
-
     </div>{{-- /.sa-layout --}}
 
     {{-- Bootstrap 5.3 JS --}}
@@ -537,6 +243,64 @@
 
     {{-- jQuery (Select2 dependency) --}}
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
+    {{-- DataTables --}}
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        /**
+         * Turns any table.js-datatable into a searchable/sortable/paginated
+         * DataTable. Same convention as the hospital-panel layout.
+         */
+        window.initHmsDataTables = function (root) {
+            if (typeof jQuery === 'undefined' || !jQuery.fn.DataTable) {
+                return;
+            }
+
+            var $root = root ? jQuery(root) : jQuery(document);
+
+            $root.find('table.js-datatable').each(function () {
+                var $table = jQuery(this);
+
+                if (jQuery.fn.DataTable.isDataTable(this)) {
+                    return;
+                }
+
+                var headers = $table.find('thead th').map(function () {
+                    return jQuery(this).text().replace(/\s+/g, ' ').trim().toLowerCase();
+                }).get();
+
+                var nonInteractive = [];
+                headers.forEach(function (label, index) {
+                    if (label === '#' || label === 'action' || label === 'actions') {
+                        nonInteractive.push(index);
+                    }
+                });
+
+                $table.DataTable({
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                    order: [],
+                    autoWidth: false,
+                    columnDefs: nonInteractive.length
+                        ? [{ orderable: false, searchable: false, targets: nonInteractive }]
+                        : [],
+                    language: {
+                        search: 'Search:',
+                        lengthMenu: 'Show _MENU_',
+                        info: 'Showing _START_ to _END_ of _TOTAL_',
+                        infoEmpty: 'Showing 0 entries',
+                        emptyTable: 'No records found.',
+                        zeroRecords: 'No matching records.'
+                    }
+                });
+            });
+        };
+
+        jQuery(function () {
+            window.initHmsDataTables();
+        });
+    </script>
 
     {{-- Select2 --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -685,7 +449,51 @@
             var sidebar = document.getElementById('hmsSidebar');
             var backdrop = document.getElementById('hmsSidebarBackdrop');
             var toggle = document.getElementById('hmsSidebarToggle');
+            var collapseBtn = document.getElementById('saSidebarCollapse');
+            var collapseIcon = document.getElementById('saSidebarCollapseIcon');
+            var COLLAPSE_KEY = 'sa_sidebar_collapsed';
 
+            function setCollapsed(on) {
+                if (!sidebar) return;
+                sidebar.classList.toggle('is-collapsed', on);
+                document.documentElement.classList.toggle('sa-sidebar-is-collapsed', on);
+                document.documentElement.style.setProperty(
+                    '--sa-sidebar-w',
+                    on ? '78px' : '260px'
+                );
+                if (collapseIcon) {
+                    collapseIcon.className = on ? 'bi bi-chevron-right' : 'bi bi-chevron-left';
+                }
+                if (collapseBtn) {
+                    collapseBtn.title = on ? 'Expand sidebar' : 'Collapse sidebar';
+                    collapseBtn.setAttribute('aria-label', on ? 'Expand sidebar' : 'Collapse sidebar');
+                    collapseBtn.setAttribute('aria-expanded', on ? 'false' : 'true');
+                }
+                try {
+                    localStorage.setItem(COLLAPSE_KEY, on ? '1' : '0');
+                } catch (e) { /* ignore */ }
+            }
+
+            /* Desktop collapse rail button (UI width only) */
+            if (collapseBtn) {
+                var saved = false;
+                try {
+                    saved = localStorage.getItem(COLLAPSE_KEY) === '1';
+                } catch (e) { /* ignore */ }
+                if (window.matchMedia && window.matchMedia('(min-width: 769px)').matches) {
+                    setCollapsed(saved);
+                }
+                collapseBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) {
+                        return;
+                    }
+                    setCollapsed(!sidebar.classList.contains('is-collapsed'));
+                });
+            }
+
+            /* Mobile drawer toggle (existing) */
             if (toggle) {
                 toggle.addEventListener('click', function () {
                     sidebar.classList.toggle('open');
@@ -726,6 +534,17 @@
                     }
                 });
             });
+
+            /* Search: Ctrl+/ focuses field (UI only, no data change) */
+            var search = document.getElementById('saTopSearch');
+            if (search) {
+                document.addEventListener('keydown', function (e) {
+                    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                        e.preventDefault();
+                        search.focus();
+                    }
+                });
+            }
         });
     </script>
 

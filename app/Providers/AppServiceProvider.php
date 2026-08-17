@@ -52,7 +52,10 @@ class AppServiceProvider extends ServiceProvider
             $hospitalLogoNobgPath = $hospitalSettings['hospital_logo_nobg'] ?? null;
             $logoSidebarStyle = $hospitalSettings['logo_sidebar_style'] ?? 'white';
 
-            // Sidebar uses bg-removed version when white style + nobg exists
+            // Sidebar uses bg-removed version when white style + nobg exists — that
+            // variant is only legible on the sidebar's dark background, so it must
+            // stay out of hospitalLogoUrl (used everywhere else: login, print
+            // documents, topbar) or the logo goes invisible on white backgrounds.
             $sidebarLogoPath = ($logoSidebarStyle === 'white' && $hospitalLogoNobgPath)
                 ? $hospitalLogoNobgPath
                 : $hospitalLogoPath;
@@ -64,7 +67,10 @@ class AppServiceProvider extends ServiceProvider
                 'hospitalOfficialEmail' => $hospitalOfficialEmail,
                 'hospitalContactNumber' => $hospitalContactNumber,
                 'hospitalLogo' => $hospitalLogoPath,
-                'hospitalLogoUrl' => $sidebarLogoPath
+                'hospitalLogoUrl' => $hospitalLogoPath
+                    ? asset('storage/' . $hospitalLogoPath)
+                    : platform_logo_url(),
+                'hospitalSidebarLogoUrl' => $sidebarLogoPath
                     ? asset('storage/' . $sidebarLogoPath)
                     : platform_logo_url(),
                 'hospitalLogoSidebarStyle' => $logoSidebarStyle,

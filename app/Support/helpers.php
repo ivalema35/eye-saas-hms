@@ -109,7 +109,16 @@ if (! function_exists('hospital_contact_number')) {
 if (! function_exists('platform_logo_url')) {
     function platform_logo_url(): string
     {
-        return asset('images/eye-hms-logo.png');
+        $relativePath = 'images/eye-hms-logo.png';
+        $absolutePath = public_path($relativePath);
+
+        // Cache-bust with the file's mtime so browsers (which cache favicons
+        // very aggressively, separately from normal page assets) pick up the
+        // new logo immediately after it's replaced instead of keeping the
+        // stale/broken one indefinitely.
+        $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
+
+        return asset($relativePath).($version ? '?v='.$version : '');
     }
 }
 

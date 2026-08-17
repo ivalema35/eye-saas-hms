@@ -1,16 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to Eye HMS</title>
+    <title>Welcome to EYENOSIS</title>
 </head>
-<body style="margin:0;padding:0;background:#F7FAFC;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:2rem auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+
+<body
+    style="margin:0;padding:0;background:#F7FAFC;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0"
+        style="max-width:600px;margin:2rem auto;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);">
         <tr>
-            <td style="padding:2rem 2.5rem;text-align:center;background:linear-gradient(135deg,#0070C0,#00B0A0);border-radius:12px 12px 0 0;">
-                <h1 style="color:#fff;margin:0;font-size:1.5rem;font-weight:800;">Welcome to Eye HMS</h1>
-                <p style="color:rgba(255,255,255,.85);margin:.5rem 0 0;font-size:.9rem;">Your hospital management platform is ready!</p>
+            <td
+                style="padding:2rem 2.5rem;text-align:center;background:linear-gradient(135deg,#0070C0,#00B0A0);border-radius:12px 12px 0 0;">
+                <h1 style="color:#fff;margin:0;font-size:1.5rem;font-weight:800;">Welcome to EYENOSIS</h1>
+                <p style="color:rgba(255,255,255,.85);margin:.5rem 0 0;font-size:.9rem;">Your hospital management
+                    platform is ready!</p>
             </td>
         </tr>
         <tr>
@@ -19,14 +25,18 @@
                     Hello <strong>{{ $tenant->admin_name }}</strong>,
                 </p>
                 <p style="font-size:.95rem;color:#1A202C;line-height:1.6;">
-                    Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered on Eye HMS SaaS platform.
+                    Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered on EYENOSIS
+                    platform.
                     You have a <strong>14-day free trial</strong> to explore all features.
                 </p>
 
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;margin:1.5rem 0;">
+                <table width="100%" cellpadding="0" cellspacing="0"
+                    style="background:#F7FAFC;border:1px solid #E2E8F0;border-radius:8px;margin:1.5rem 0;">
                     <tr>
                         <td style="padding:1.25rem;">
-                            <p style="margin:0 0 .5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;font-weight:700;">Your Login Details</p>
+                            <p
+                                style="margin:0 0 .5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;color:#6B7280;font-weight:700;">
+                                Your Login Details</p>
                             <table cellpadding="0" cellspacing="0" style="font-size:.9rem;color:#1A202C;">
                                 <tr>
                                     <td style="padding:.25rem 1rem .25rem 0;font-weight:600;">Hospital URL:</td>
@@ -38,7 +48,9 @@
                                 </tr>
                                 <tr>
                                     <td style="padding:.25rem 1rem .25rem 0;font-weight:600;">Trial Ends:</td>
-                                    <td style="padding:.25rem 0;">{{ optional($tenant->trial_ends_at)->format('d M Y') }}</td>
+                                    <td style="padding:.25rem 0;">
+                                        {{ optional($tenant->trial_ends_at)->format('d M Y') }}
+                                    </td>
                                 </tr>
                             </table>
                         </td>
@@ -47,24 +59,25 @@
 
                 <p style="text-align:center;margin:1.5rem 0;">
                     <a href="{{ url('/' . $tenant->slug . '/login') }}"
-                       style="display:inline-block;padding:.75rem 2rem;background:#0070C0;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:.9rem;">
+                        style="display:inline-block;padding:.75rem 2rem;background:#0070C0;color:#fff;border-radius:8px;text-decoration:none;font-weight:700;font-size:.9rem;">
                         Login to Your Hospital
                     </a>
                 </p>
 
                 <p style="font-size:.85rem;color:#6B7280;line-height:1.6;">
                     If you have any questions, reply to this email or contact our support team.<br>
-                    Thank you for choosing Eye HMS!
+                    Thank you for choosing EYENOSIS!
                 </p>
             </td>
         </tr>
         <tr>
             <td style="padding:1.25rem 2.5rem;text-align:center;border-top:1px solid #E2E8F0;">
                 <p style="margin:0;font-size:.75rem;color:#9CA3AF;">
-                    &copy; {{ date('Y') }} Eye HMS SaaS. All rights reserved.
+                    &copy; {{ date('Y') }} EYENOSIS. All rights reserved.
                 </p>
             </td>
         </tr>
     </table>
 </body>
+
 </html>

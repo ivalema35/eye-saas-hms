@@ -1,6 +1,7 @@
 @extends('hospital.layouts.app')
 @section('title', 'Hospital Settings')
-@section('page-header', 'Hospital Settings')
+{{-- Layout page-header intentionally unused — the title + breadcrumb are
+rendered above the hero card instead. --}}
 
 @section('content')
     <div class="hospital-settings-page">
@@ -14,6 +15,69 @@
                 --settings-muted: rgba(27, 79, 114, .62);
                 color: var(--settings-primary);
                 animation: settings-page-in 420ms ease both;
+            }
+
+            .settings-header-block {
+                padding: 0 0 1rem;
+            }
+
+            .settings-header-title {
+                font-weight: 800;
+                font-size: 1.4rem;
+                color: var(--settings-primary);
+                letter-spacing: -.02em;
+                display: flex;
+                align-items: center;
+                gap: .7rem;
+            }
+
+            .settings-header-icon {
+                width: 40px;
+                height: 40px;
+                border-radius: 13px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                background: linear-gradient(135deg, var(--settings-primary) 0%, #2471a3 100%);
+                color: #fff;
+                box-shadow: 0 10px 22px rgba(27, 79, 114, .28);
+                transition: transform .25s ease;
+            }
+
+            .settings-header-block:hover .settings-header-icon {
+                transform: rotate(-8deg) scale(1.06);
+            }
+
+            .settings-header-icon i {
+                font-size: 1.05rem;
+            }
+
+            .settings-breadcrumb {
+                margin-top: .4rem;
+                display: flex;
+                align-items: center;
+                gap: .4rem;
+                font-size: .85rem;
+                color: #8891a0;
+            }
+
+            .settings-breadcrumb a {
+                color: #8891a0;
+                text-decoration: none;
+            }
+
+            .settings-breadcrumb a:hover {
+                color: var(--settings-primary);
+            }
+
+            .settings-breadcrumb-sep {
+                color: #c3c9d3;
+            }
+
+            .settings-breadcrumb-current {
+                color: #4a5568;
+                font-weight: 600;
             }
 
             .settings-hero {
@@ -74,6 +138,7 @@
             }
 
             .settings-card {
+                position: relative;
                 border: 1px solid var(--settings-border) !important;
                 border-radius: 22px;
                 background: rgba(255, 255, 255, .88);
@@ -83,8 +148,40 @@
             }
 
             .settings-card-header {
+                position: relative;
                 background: linear-gradient(135deg, rgba(235, 245, 251, .92), rgba(255, 255, 255, .96)) !important;
                 border-bottom: 1px solid var(--settings-border) !important;
+                overflow: hidden;
+            }
+
+            .settings-card-header::after {
+                content: '';
+                position: absolute;
+                inset: -60% -20%;
+                background: linear-gradient(115deg,
+                        transparent 40%,
+                        rgba(255, 255, 255, .85) 50%,
+                        rgba(27, 79, 114, .10) 54%,
+                        transparent 64%);
+                pointer-events: none;
+                transform: translateX(-60%) rotate(12deg);
+                animation: settings-shimmer-once 1.4s ease-out 400ms 1 both;
+            }
+
+            @keyframes settings-shimmer-once {
+                0% {
+                    transform: translateX(-60%) rotate(12deg);
+                    opacity: 0;
+                }
+
+                15% {
+                    opacity: .6;
+                }
+
+                100% {
+                    transform: translateX(120%) rotate(12deg);
+                    opacity: 0;
+                }
             }
 
             .settings-tabs {
@@ -106,11 +203,20 @@
 
             .settings-tabs .nav-link:hover,
             .settings-tabs .nav-link.active {
-                background: var(--settings-primary) !important;
+                background: linear-gradient(135deg, var(--settings-primary) 0%, #2471a3 100%) !important;
                 border-color: var(--settings-primary) !important;
                 color: #fff !important;
                 transform: translateY(-1px);
-                box-shadow: 0 12px 26px rgba(27, 79, 114, .16);
+                box-shadow: 0 12px 26px rgba(27, 79, 114, .18);
+            }
+
+            .settings-tabs .nav-link i {
+                transition: transform .2s ease;
+            }
+
+            .settings-tabs .nav-link:hover i,
+            .settings-tabs .nav-link.active i {
+                transform: scale(1.08);
             }
 
             .settings-card-body {
@@ -138,7 +244,11 @@
                 align-items: center;
                 justify-content: center;
                 flex-shrink: 0;
-                transition: border-color .2s, box-shadow .2s;
+                transition: border-color .2s, box-shadow .2s, transform .2s ease;
+            }
+
+            .logo-style-option:hover .settings-logo-box {
+                transform: translateY(-2px);
             }
 
             /* Dark preview box — sidebar pe kaisa dikhega */
@@ -155,7 +265,11 @@
                 justify-content: center;
                 flex-shrink: 0;
                 position: relative;
-                transition: border-color .2s, box-shadow .2s;
+                transition: border-color .2s, box-shadow .2s, transform .2s ease;
+            }
+
+            .logo-style-option:hover .settings-logo-box-dark {
+                transform: translateY(-2px);
             }
 
             .logo-style-option.active .settings-logo-box,
@@ -422,7 +536,8 @@
             @media (prefers-reduced-motion: reduce) {
 
                 .hospital-settings-page,
-                .settings-card {
+                .settings-card,
+                .settings-card-header::after {
                     animation: none;
                 }
 
@@ -560,16 +675,17 @@
             }
         </style>
 
-        {{-- Hero --}}
-        <div class="settings-hero">
-            <span class="settings-hero-icon">
-                <i class="bi bi-gear-fill fs-4"></i>
-            </span>
-            <div>
-                <span class="settings-kicker"><i class="bi bi-sliders2 me-1"></i> Configuration</span>
-                <h4 class="fw-bold mb-0">Hospital Settings</h4>
-                <p>Manage hospital profile, billing defaults, print notes, and display preferences.</p>
+        {{-- Header + Breadcrumb --}}
+        <div class="settings-header-block">
+            <div class="settings-header-title">
+                <span class="settings-header-icon"><i class="bi bi-gear-fill"></i></span>
+                Hospital Settings
             </div>
+            <nav class="settings-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="settings-breadcrumb-sep">/</span>
+                <span class="settings-breadcrumb-current">Settings</span>
+            </nav>
         </div>
 
         <div class="card border-0 settings-card">

@@ -58,7 +58,7 @@ class OtAssistantController extends Controller
         $readyBookings = $readyQuery
             ->orderBy('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25), ['*'], 'ready_page');
+            ->get();
 
         // Lens workflow UI hidden — counselling already captures planned lens;
         // routes/controllers kept for optional direct access / future use.

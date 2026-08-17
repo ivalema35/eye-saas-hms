@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Platform Admin &mdash; Eye HMS SaaS</title>
+    <title>Platform Admin &mdash; EYENOSIS</title>
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -242,21 +242,15 @@
         }
 
         .banner-logo {
-            width: 95px;
-            height: 95px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .95);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 8px 20px rgba(13, 33, 55, .14);
-            overflow: hidden;
         }
 
         .banner-logo img {
-            width: 100%;
-            height: 100%;
+            height: 60px;
+            width: auto;
             object-fit: contain;
         }
 
@@ -427,6 +421,13 @@
             width: 100%;
             max-width: 430px;
             animation: fadeIn .8s ease-out;
+        }
+
+        .form-side-logo {
+            display: block;
+            height: 55px;
+            width: auto;
+            margin: 0 auto 2.1rem;
         }
 
         .back-link {
@@ -835,7 +836,6 @@
                             <span class="hero-dot" title="System Online"></span>
                         </span>
                     </div>
-                    <h1>Master Control Panel</h1>
                     <p>System administration and tenant management.</p>
                     <ul class="banner-features">
                         <li><i class="bi bi-check-circle-fill"></i> Tenant Management</li>
@@ -849,15 +849,14 @@
             <div class="auth-form-side">
                 <div class="auth-form-box">
 
-                    <a href="{{ route('home') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to Eye HMS</a>
+                    <img src="{{ platform_logo_url() }}" alt="{{ config('app.name') }}" class="form-side-logo">
+
+                    <a href="{{ route('home') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to EYNOSIS</a>
 
                     <div class="form-header">
                         <h2>Platform Admin</h2>
                         <p>Super Admin access only.</p>
                     </div>
-
-                    <div class="role-badge"><i class="bi bi-lock-fill"></i> Restricted Area &mdash; Authorized Personnel
-                        Only</div>
 
                     <form method="POST" action="{{ route('superadmin.login.post') }}">
                         @csrf
@@ -871,8 +870,10 @@
                                     value="{{ old('email') }}" placeholder="admin@eyehms.com" required autofocus
                                     autocomplete="email">
                             </div>
-                            @error('email')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i>
-                            {{ $message }}</div>@enderror
+                            @error('email')
+                                <div class="form-error"><i class="bi bi-exclamation-circle-fill"></i>
+                                    {{ $message }}
+                            </div>@enderror
                         </div>
 
                         <div class="form-group">
@@ -888,16 +889,18 @@
                                     <i class="bi bi-eye-fill" id="eyeIcon"></i>
                                 </button>
                             </div>
-                            @error('password')<div class="form-error"><i class="bi bi-exclamation-circle-fill"></i>
-                            {{ $message }}</div>@enderror
+                            @error('password')
+                                <div class="form-error"><i class="bi bi-exclamation-circle-fill"></i>
+                                    {{ $message }}
+                            </div>@enderror
                         </div>
 
-                        <button type="submit" class="btn-login hms-btn hms-btn-primary"><i
-                                class="bi bi-box-arrow-in-right"></i> Sign In to Platform</button>
+                        <button type="submit" class="btn-login"><i class="bi bi-box-arrow-in-right"></i> Sign In to
+                            Platform</button>
                     </form>
 
-                    <div class="form-footer"><a href="{{ route('home') }}"><i class="bi bi-arrow-left"></i> Back to Eye
-                            HMS</a></div>
+                    <div class="form-footer"><a href="{{ route('home') }}"><i class="bi bi-arrow-left"></i> Back to
+                            EYENOSIS</a></div>
 
                 </div>
             </div>

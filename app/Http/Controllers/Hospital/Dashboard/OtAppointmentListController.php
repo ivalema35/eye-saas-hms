@@ -28,8 +28,7 @@ class OtAppointmentListController extends Controller
             ->whereDate('appointment_date', '<=', $endDate)
             ->orderByDesc('appointment_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25))
-            ->withQueryString();
+            ->get();
 
         return view('hospital.dashboard.ot_appointment_list', [
             'slug' => $slug,

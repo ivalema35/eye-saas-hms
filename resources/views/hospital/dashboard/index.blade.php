@@ -1,6 +1,7 @@
 @extends('hospital.layouts.app')
 @section('title', 'Dashboard')
-@section('page-header', 'Dashboard')
+{{-- Layout page-header intentionally unused — replaced by the "Welcome
+     back" banner rendered inside the page content (design refresh). --}}
 
 @push('styles')
 <style>
@@ -14,9 +15,11 @@
     background: #ffffff;
     border: 1px solid rgba(27, 79, 114, 0.12);
     border-radius: 18px;
-    padding: 1.45rem 1.3rem;
+    min-height: 118px;
+    padding: 1rem 1.05rem .95rem;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: .55rem;
     transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
     text-decoration: none;
@@ -24,28 +27,51 @@
     position: relative;
     overflow: hidden;
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    animation: dash-card-pop 500ms cubic-bezier(.22,1,.36,1) both;
 }
 .rec-5card.rec-5link:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     border-color: rgba(27, 79, 114, 0.18);
     background: #ffffff;
     box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
 }
+.rec-5card .bento-gloss {
+    position: absolute;
+    inset: -40% -20%;
+    background: linear-gradient(115deg,
+        transparent 35%,
+        rgba(255, 255, 255, .7) 48%,
+        rgba(27, 79, 114, .1) 52%,
+        transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bentoGlossSweep 3.2s ease-in-out infinite;
+}
 .rec-5icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    border: 1px solid rgba(27, 79, 114, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.3rem;
+    font-size: 1.05rem;
     flex-shrink: 0;
     font-weight: 600;
     background: #EBF5FB;
     color: #1B4F72;
+    position: relative;
+    z-index: 1;
+    transition: transform .22s ease;
+}
+.rec-5card:hover .rec-5icon {
+    transform: scale(1.06);
 }
 .rec-5label {
-    font-size: .68rem;
+    order: 2;
+    position: relative;
+    z-index: 1;
+    font-size: 10.5px;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: .1em;
@@ -53,36 +79,17 @@
     margin: 0;
 }
 .rec-5value {
-    font-size: 2rem;
+    order: 1;
+    position: relative;
+    z-index: 1;
+    font-size: clamp(1.35rem, 1.8vw, 1.65rem);
     font-weight: 900;
     color: #1B4F72;
-    line-height: 1;
-    letter-spacing: -1px;
+    line-height: 1.1;
+    letter-spacing: -.035em;
 }
 @media (max-width: 900px) { .rec-5row { grid-template-columns: repeat(3,1fr); } }
 @media (max-width: 576px) { .rec-5row { grid-template-columns: 1fr 1fr; } }
-
-/* ── OT Accountant summary cards (Pending / Refunds / Completed) ──────────── */
-.acct-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-.acct-card-footer {
-    padding: 0 1.5rem 1.3rem;
-    margin-top: auto;
-}
-.acct-link {
-    font-size: .82rem;
-    font-weight: 800;
-    color: #1B4F72;
-    text-decoration: none;
-}
-.acct-link:hover { text-decoration: underline; }
 
 /*
   Hospital Admin Dashboard Theme
@@ -152,6 +159,72 @@
     pointer-events: none;
 }
 
+/* ── Welcome banner ────────────────────────────────────────────────────── */
+.dash-welcome-card {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(235,245,251,.7) 100%);
+    border: 1px solid rgba(27, 79, 114, 0.12);
+    border-radius: 20px;
+    padding: 1rem 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    box-shadow: var(--dash-shadow);
+}
+
+.dash-welcome-date {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(27, 79, 114, 0.08);
+    color: var(--dash-secondary);
+    border-radius: 999px;
+    padding: .3rem .8rem;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.dash-welcome-title {
+    margin: .6rem 0 0;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--dash-secondary);
+    letter-spacing: -.02em;
+}
+
+.dash-welcome-wave {
+    display: inline-block;
+    animation: dash-wave 2.2s ease-in-out infinite;
+    transform-origin: 70% 70%;
+}
+
+@keyframes dash-wave {
+    0%, 60%, 100% { transform: rotate(0deg); }
+    10%, 30% { transform: rotate(-12deg); }
+    20% { transform: rotate(10deg); }
+}
+
+.dash-welcome-sub {
+    margin: .35rem 0 0;
+    color: var(--dash-s2-70);
+    font-size: .92rem;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .dash-welcome-card {
+        padding: 1.25rem;
+    }
+
+    .dash-welcome-title {
+        font-size: 1.25rem;
+    }
+}
+
 /* ── Layout grid ───────────────────────────────────────────────────────── */
 .bento-dashboard {
     display: grid;
@@ -163,69 +236,106 @@
 
 /* ── Metric cards (top row) ────────────────────────────────────────────── */
 .bento-dashboard > .bento-card {
-    border-radius: 20px;
+    border-radius: 18px;
     background: #ffffff;
+    min-height: 118px;
     /* border: 1px solid var(--dash-secondary); */
     position: relative;
     overflow: hidden;
     box-shadow: var(--dash-shadow);
-    animation: dash-card-pop 480ms ease both;
+    animation: dash-card-pop 500ms cubic-bezier(.22,1,.36,1) both;
 }
 @keyframes dash-card-pop {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(12px) scale(.96); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .bento-dashboard > .bento-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     /* border: 1px solid var(--dash-secondary); */
     background: #ffffff;
     box-shadow: var(--dash-shadow-hover);
 }
 
+/* Diagonal glossy splash — continuous sweep across the card */
+.bento-dashboard > .bento-card .bento-gloss {
+    position: absolute;
+    inset: -40% -20%;
+    background: linear-gradient(115deg,
+        transparent 35%,
+        rgba(255, 255, 255, .7) 48%,
+        rgba(27, 79, 114, .1) 52%,
+        transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+    animation: bentoGlossSweep 3.2s ease-in-out infinite;
+}
+@keyframes bentoGlossSweep {
+    0%   { transform: translateX(-50%) rotate(18deg); opacity: 0; }
+    20%  { opacity: .45; }
+    50%  { transform: translateX(40%) rotate(18deg); opacity: .35; }
+    80%  { opacity: .2; }
+    100% { transform: translateX(130%) rotate(18deg); opacity: 0; }
+}
+
 .bento-dashboard > .bento-card .bento-stat {
     position: relative;
     z-index: 1;
-    flex-direction: row-reverse;
+    flex-direction: column;
     align-items: flex-start;
-    justify-content: space-between;
-    gap: 1.2rem;
-    padding: 1.35rem 1.5rem;
+    gap: .55rem;
+    padding: 1rem 1.05rem .95rem;
 }
 
 .bento-dashboard > .bento-card .bento-icon {
-    width: 54px;
-    height: 54px;
-    border-radius: 14px;
-    background: #EBF5FB !important;
-    border: 1px solid rgba(27, 79, 114, 0.12) !important;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #EBF5FB;
+    border: 1px solid rgba(27, 79, 114, 0.12);
     margin: 0 !important;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: transform .22s ease;
 }
 
-.bento-dashboard > .bento-card .metric-label {
-    color: var(--dash-s2-82);
-    font-size: 11px;
-    letter-spacing: .12em;
-    font-weight: 800;
-    text-transform: uppercase;
+.bento-dashboard > .bento-card:hover .bento-icon {
+    transform: scale(1.06);
+}
+
+.bento-dashboard > .bento-card .bento-stat > div:not(.bento-icon) {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 }
 
 .bento-dashboard > .bento-card .metric-value {
-    font-size: 36px;
-    margin-top: .35rem;
-    line-height: 1.05;
-    font-weight: 900;
+    order: 1;
+    font-size: clamp(1.35rem, 1.8vw, 1.65rem);
+    margin-top: 0;
+    line-height: 1.1;
+    font-weight: 800;
+    letter-spacing: -.035em;
     color: var(--dash-secondary);
 }
 
+.bento-dashboard > .bento-card .metric-label {
+    order: 2;
+    margin-top: 0;
+    color: var(--dash-s2-82);
+    font-size: 10.5px;
+    letter-spacing: .1em;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
 .bento-dashboard > .bento-card .metric-meta {
-    margin-top: .55rem;
-    font-size: 12px;
-    color: rgba(27, 79, 114, 0.65);
+    order: 3;
+    margin-top: .15rem;
+    font-size: 11px;
+    color: rgba(27, 79, 114, 0.6);
     font-weight: 600;
 }
 
@@ -259,6 +369,7 @@
 @media (prefers-reduced-motion: reduce) {
     .bento-card,
     .bento-dashboard > .bento-card,
+    .bento-gloss,
     .rec-5card,
     .doctor-strip-card { animation: none; transition: none; }
     .bento-card:hover,
@@ -301,27 +412,22 @@
     color: var(--dash-secondary);
 }
 
-/* force icon color to theme even if inline styles exist */
 .bento-icon i,
 .bento-icon svg {
-    color: var(--dash-secondary) !important;
-    stroke: var(--dash-secondary) !important;
     font-weight: 600;
 }
 
-/* Neutralize old per-color icon classes to stay in 2-color palette */
-.ig-blue,
-.ig-green,
-.ig-orange,
-.ig-teal,
-.ig-purple,
-.ig-red,
-.ig-indigo,
-.ig-cobalt {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(235,245,251,.6) 100%) !important;
-    border: 2px solid rgba(27,79,114,.2) !important;
-    color: var(--dash-secondary) !important;
-}
+/* Type-colored icon badges — same idea as the receptionist 5-card row:
+   each stat gets a pastel background tinted to match its own icon color
+   (set inline per-icon), instead of one flat neutral tone. */
+.ig-blue    { background: #EBF5FB !important; border: 1px solid rgba(27, 79, 114, .18) !important; }
+.ig-green   { background: #D5F5E3 !important; border: 1px solid rgba(39, 174, 96, .25) !important; }
+.ig-orange  { background: #FDEBD0 !important; border: 1px solid rgba(230, 126, 34, .25) !important; }
+.ig-teal    { background: #D1F2EB !important; border: 1px solid rgba(26, 188, 156, .25) !important; }
+.ig-purple  { background: #F5EEF8 !important; border: 1px solid rgba(142, 68, 173, .25) !important; }
+.ig-red     { background: #FADBD8 !important; border: 1px solid rgba(192, 57, 43, .25) !important; }
+.ig-indigo  { background: #EAECEE !important; border: 1px solid rgba(52, 73, 94, .2) !important; }
+.ig-cobalt  { background: #EAF2FF !important; border: 1px solid rgba(41, 128, 185, .25) !important; }
 
 /* ── Metric typography ─────────────────────────────────────────────────── */
 .metric-label {
@@ -1335,6 +1441,15 @@
     $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
 @endphp
 
+{{-- Welcome banner (design refresh) --}}
+<div class="dash-welcome-card">
+    <div class="dash-welcome-left">
+        <span class="dash-welcome-date"><i class="bi bi-calendar-check"></i> {{ now()->format('d M, Y') }}</span>
+        <h2 class="dash-welcome-title">Welcome <span class="dash-welcome-wave">👋</span></h2>
+        <p class="dash-welcome-sub">Here's what's happening with {{ $tenant?->name ?? config('app.name') }} today.</p>
+    </div>
+</div>
+
 {{-- Subscription Alert --}}
 @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
     <div class="bento-alert {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
@@ -1378,6 +1493,7 @@
 
     {{-- Today Collection --}}
     <div class="rec-5card">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#D5F5E3;color:#27AE60">
             <i class="bi bi-wallet2"></i>
         </div>
@@ -1387,6 +1503,7 @@
 
     {{-- Total Patients --}}
     <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#EBF5FB;color:#1B4F72">
             <i class="bi bi-people-fill"></i>
         </div>
@@ -1396,6 +1513,7 @@
 
     {{-- My Patients --}}
     <a href="{{ route('hospital.patients.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#EAF2FF;color:#2C6FAC">
             <i class="bi bi-person-check-fill"></i>
         </div>
@@ -1406,6 +1524,7 @@
     {{-- Reports --}}
     @haspermission('reports.view')
     <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#F5EEF8;color:#8E44AD">
             <i class="bi bi-bar-chart-line-fill"></i>
         </div>
@@ -1416,6 +1535,7 @@
 
     {{-- Phone Appointments --}}
     <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#D1F2EB;color:#1ABC9C">
             <i class="bi bi-telephone-fill"></i>
         </div>
@@ -1434,10 +1554,11 @@
 @if($isHospitalAdmin)
     {{-- Hospital admin: only these 8 cards --}}
 
-    <div class="bento-card span-3">
+    <div class="bento-card span-2">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon ig-blue">
-                <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                <i class="bi bi-people-fill" style="font-size:22px;color:#1B4F72"></i>
             </div>
             <div>
                 <p class="metric-label">Total Today Patients</p>
@@ -1447,23 +1568,24 @@
         </div>
     </div>
 
-    <a href="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}" class="bento-card span-3 text-decoration-none">
+    <a href="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}" class="bento-card span-2 text-decoration-none">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon ig-green">
-                <i data-lucide="wallet" style="width:22px;height:22px;color:#27AE60;stroke-width:1.75"></i>
+                <i class="bi bi-wallet2" style="font-size:22px;color:#27AE60"></i>
             </div>
             <div>
                 <p class="metric-label">Total Collection</p>
                 <div class="metric-value">{{ money($revenueToday ?? 0, 0) }}</div>
-                <p class="metric-meta">OPD + OT net</p>
             </div>
         </div>
     </a>
 
-    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="bento-card span-3 text-decoration-none">
+    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="bento-card span-2 text-decoration-none">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon ig-indigo">
-                <i data-lucide="file-bar-chart" style="width:22px;height:22px;color:#34495E;stroke-width:1.75"></i>
+                <i class="bi bi-file-earmark-bar-graph" style="font-size:22px;color:#34495E"></i>
             </div>
             <div>
                 <p class="metric-label">Report</p>
@@ -1473,10 +1595,11 @@
         </div>
     </a>
 
-    <a href="{{ route('hospital.users.index', ['slug' => $slug, 'role' => 'doctor']) }}" class="bento-card span-3 text-decoration-none">
+    <a href="{{ route('hospital.users.index', ['slug' => $slug, 'role' => 'doctor']) }}" class="bento-card span-2 text-decoration-none">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon ig-cobalt">
-                <i data-lucide="user-round" style="width:22px;height:22px;color:#2980B9;stroke-width:1.75"></i>
+                <i class="bi bi-person-circle" style="font-size:22px;color:#2980B9"></i>
             </div>
             <div>
                 <p class="metric-label">Doctor</p>
@@ -1485,10 +1608,11 @@
         </div>
     </a>
 
-    <a href="{{ route('hospital.users.index', ['slug' => $slug, 'role' => 'receptionist']) }}" class="bento-card span-3 text-decoration-none">
+    <a href="{{ route('hospital.users.index', ['slug' => $slug, 'role' => 'receptionist']) }}" class="bento-card span-2 text-decoration-none">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon" style="background:rgba(26,188,156,.12);">
-                <i data-lucide="headset" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
+                <i class="bi bi-headset" style="font-size:22px;color:#1ABC9C"></i>
             </div>
             <div>
                 <p class="metric-label">Reception</p>
@@ -1497,10 +1621,11 @@
         </div>
     </a>
 
-    <div class="bento-card span-3">
+    <div class="bento-card span-2">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon ig-teal">
-                <i data-lucide="eye" style="width:22px;height:22px;color:#1ABC9C;stroke-width:1.75"></i>
+                <i class="bi bi-eye-fill" style="font-size:22px;color:#1ABC9C"></i>
             </div>
             <div>
                 <p class="metric-label">Primary / Second</p>
@@ -1509,10 +1634,11 @@
         </div>
     </div>
 
-    <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}" class="bento-card span-3 text-decoration-none">
+    <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}" class="bento-card span-2 text-decoration-none">
+        <span class="bento-gloss" aria-hidden="true"></span>
         <div class="bento-stat">
             <div class="bento-icon ig-purple">
-                <i data-lucide="activity" style="width:22px;height:22px;color:#8E44AD;stroke-width:1.75"></i>
+                <i class="bi bi-activity" style="font-size:22px;color:#8E44AD"></i>
             </div>
             <div>
                 <p class="metric-label">OT Total</p>
@@ -1523,10 +1649,11 @@
 
     @if(($pendingShareRequestsCount ?? null) !== null)
         <a href="{{ route('hospital.doctor.history', ['slug' => $slug]) }}?_tab=request"
-            class="bento-card span-3 text-decoration-none" style="position:relative;">
+            class="bento-card span-2 text-decoration-none" style="position:relative;">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
                 <div class="bento-icon" style="background:rgba(13,148,136,.12);">
-                    <i data-lucide="send" style="width:22px;height:22px;color:#0d9488;stroke-width:1.75"></i>
+                    <i class="bi bi-send-fill" style="font-size:22px;color:#0d9488"></i>
                 </div>
                 <div>
                     <p class="metric-label">Incoming Requests</p>
@@ -1549,7 +1676,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-cobalt">
-                    <i data-lucide="user-round-check" style="width:22px;height:22px;color:#2980B9;stroke-width:1.75"></i>
+                    <i class="bi bi-person-check-fill" style="font-size:22px;color:#2980B9"></i>
                 </div>
                 <div>
                     <p class="metric-label">Doctor Dashboard</p>
@@ -1568,7 +1695,7 @@
             class="bento-card span-3 text-decoration-none" style="position:relative;">
             <div class="bento-stat">
                 <div class="bento-icon" style="background:rgba(13,148,136,.12);">
-                    <i data-lucide="send" style="width:22px;height:22px;color:#0d9488;stroke-width:1.75"></i>
+                    <i class="bi bi-send-fill" style="font-size:22px;color:#0d9488"></i>
                 </div>
                 <div>
                     <p class="metric-label">Incoming Requests</p>
@@ -1588,7 +1715,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-blue">
-                    <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                    <i class="bi bi-people-fill" style="font-size:22px;color:#1B4F72"></i>
                 </div>
                 <div>
                     <p class="metric-label">Total Patients</p>
@@ -1601,7 +1728,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon" style="background:rgba(39,174,96,.12);">
-                    <i data-lucide="scissors" style="width:22px;height:22px;color:#27AE60;stroke-width:1.75"></i>
+                    <i class="bi bi-scissors" style="font-size:22px;color:#27AE60"></i>
                 </div>
                 <div>
                     <p class="metric-label">Surgeries Completed</p>
@@ -1614,7 +1741,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon" style="background:rgba(27,79,114,.12);">
-                    <i data-lucide="eye" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                    <i class="bi bi-eye-fill" style="font-size:22px;color:#1B4F72"></i>
                 </div>
                 <div>
                     <p class="metric-label">Lens Consumption</p>
@@ -1627,7 +1754,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon" style="background:rgba(230,126,34,.12);">
-                    <i data-lucide="package-minus" style="width:22px;height:22px;color:#E67E22;stroke-width:1.75"></i>
+                    <i class="bi bi-box-seam" style="font-size:22px;color:#E67E22"></i>
                 </div>
                 <div>
                     <p class="metric-label">Lens Low Stock</p>
@@ -1640,7 +1767,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon" style="background:rgba(192,57,43,.12);">
-                    <i data-lucide="calendar-clock" style="width:22px;height:22px;color:#C0392B;stroke-width:1.75"></i>
+                    <i class="bi bi-calendar-x" style="font-size:22px;color:#C0392B"></i>
                 </div>
                 <div>
                     <p class="metric-label">Lens Near Expiry</p>
@@ -1656,7 +1783,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-blue">
-                    <i data-lucide="users" style="width:22px;height:22px;color:#1B4F72;stroke-width:1.75"></i>
+                    <i class="bi bi-people-fill" style="font-size:22px;color:#1B4F72"></i>
                 </div>
                 <div>
                     <p class="metric-label">Today's Patients</p>
@@ -1670,7 +1797,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-orange">
-                    <i data-lucide="stethoscope" style="width:22px;height:22px;color:#E67E22;stroke-width:1.75"></i>
+                    <i class="bi bi-clipboard2-pulse" style="font-size:22px;color:#E67E22"></i>
                 </div>
                 <div>
                     <p class="metric-label">Pending Exams</p>
@@ -1688,8 +1815,7 @@
     <div class="px-3 pt-3 pb-3">
 <div class="d-flex align-items-center gap-4">
     <div class="bento-icon ig-teal">
-        <i data-lucide="eye"
-           style="width:20px;height:20px;stroke-width:1.75"></i>
+        <i class="bi bi-eye-fill" style="font-size:20px"></i>
     </div>
 
     <p class="metric-label mb-0">OPD QUEUE</p>
@@ -1725,7 +1851,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-indigo">
-                    <i data-lucide="clipboard-list" style="width:22px;height:22px;color:#34495E;stroke-width:1.75"></i>
+                    <i class="bi bi-clipboard-check" style="font-size:22px;color:#34495E"></i>
                 </div>
                 <div>
                     <p class="metric-label">Registrations</p>
@@ -1741,7 +1867,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-green">
-                    <i data-lucide="indian-rupee" style="width:22px;height:22px;color:#27AE60;stroke-width:1.75"></i>
+                    <i class="bi bi-currency-rupee" style="font-size:22px;color:#27AE60"></i>
                 </div>
                 <div>
                     <p class="metric-label">Today Revenue</p>
@@ -1756,9 +1882,10 @@
     @if($isAccountantUser && $accountantPendingCount !== null)
         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'today']) }}"
            class="bento-card span-4 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
-                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
-                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                <div class="bento-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
                 <div>
                     <p class="metric-label">Pending Patients</p>
@@ -1766,16 +1893,14 @@
                     <p class="metric-meta">Awaiting OT package payment</p>
                 </div>
             </div>
-            <div class="acct-card-footer">
-                <span class="acct-link">Open queue &rarr;</span>
-            </div>
         </a>
 
         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}"
            class="bento-card span-4 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
-                <div class="acct-icon" style="background:#FADBD8;color:#C0392B">
-                    <i data-lucide="rotate-ccw" style="width:22px;height:22px;stroke-width:1.75"></i>
+                <div class="bento-icon" style="background:#FADBD8;color:#C0392B">
+                    <i class="bi bi-arrow-counterclockwise"></i>
                 </div>
                 <div>
                     <p class="metric-label">Refunds</p>
@@ -1783,16 +1908,14 @@
                     <p class="metric-meta">Surgery refused</p>
                 </div>
             </div>
-            <div class="acct-card-footer">
-                <span class="acct-link">Open refunds &rarr;</span>
-            </div>
         </a>
 
         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'completed']) }}"
            class="bento-card span-4 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
-                <div class="acct-icon" style="background:#D5F5E3;color:#229954">
-                    <i data-lucide="check-circle" style="width:22px;height:22px;stroke-width:1.75"></i>
+                <div class="bento-icon" style="background:#D5F5E3;color:#229954">
+                    <i class="bi bi-check-circle-fill"></i>
                 </div>
                 <div>
                     <p class="metric-label">Completed</p>
@@ -1800,17 +1923,15 @@
                     <p class="metric-meta">Payment verified &amp; onward</p>
                 </div>
             </div>
-            <div class="acct-card-footer">
-                <span class="acct-link">View all &rarr;</span>
-            </div>
         </a>
     {{-- Ward Management: Pending Patient (replaces OT Appointment card) --}}
     @elseif($isWardManagementUser && $wardPendingCount !== null)
         <a href="{{ route('hospital.ot.ward.index', ['slug' => $slug]) }}"
            class="bento-card span-4 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
-                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
-                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                <div class="bento-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
                 <div>
                     <p class="metric-label">Pending Patient</p>
@@ -1823,9 +1944,10 @@
     @elseif($isOtAssistantUser && $otAssistantPendingCount !== null)
         <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug]) }}"
            class="bento-card span-4 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
-                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
-                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                <div class="bento-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
                 <div>
                     <p class="metric-label">Pending Patient</p>
@@ -1838,9 +1960,10 @@
     @elseif($isDischargeCounterUser && $dischargePendingCount !== null)
         <a href="{{ route('hospital.ot.billing.index', ['slug' => $slug]) }}"
            class="bento-card span-4 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
-                <div class="acct-icon" style="background:#FDEBD0;color:#E67E22">
-                    <i data-lucide="hourglass" style="width:22px;height:22px;stroke-width:1.75"></i>
+                <div class="bento-icon" style="background:#FDEBD0;color:#E67E22">
+                    <i class="bi bi-hourglass-split"></i>
                 </div>
                 <div>
                     <p class="metric-label">Pending Patient</p>
@@ -1855,7 +1978,7 @@
            class="bento-card span-3 text-decoration-none">
             <div class="bento-stat">
                 <div class="bento-icon ig-purple">
-                    <i data-lucide="activity" style="width:22px;height:22px;color:#8E44AD;stroke-width:1.75"></i>
+                    <i class="bi bi-activity" style="font-size:22px;color:#8E44AD"></i>
                 </div>
                 <div>
                     <p class="metric-label">OT Appointment</p>
@@ -1871,7 +1994,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-red">
-                    <i data-lucide="file-check" style="width:22px;height:22px;color:#C0392B;stroke-width:1.75"></i>
+                    <i class="bi bi-file-earmark-check" style="font-size:22px;color:#C0392B"></i>
                 </div>
                 <div>
                     <p class="metric-label">FOC Approval</p>
@@ -1890,7 +2013,7 @@
         <div class="bento-card span-3">
             <div class="bento-stat">
                 <div class="bento-icon ig-cobalt">
-                    <i data-lucide="user-cog" style="width:22px;height:22px;color:#2980B9;stroke-width:1.75"></i>
+                    <i class="bi bi-person-gear" style="font-size:22px;color:#2980B9"></i>
                 </div>
                 <div>
                     <p class="metric-label">Staff</p>
@@ -2115,9 +2238,6 @@
                             <div class="rev-value">{{ money($revenueYear, 0) }}</div>
                         </div>
                     </div>
-                    <p class="text-muted small mb-0 px-3 pb-3" style="font-size:.72rem;">
-                        OPD + OT net (OT refund cuts OT only, not OPD)
-                    </p>
                 </div>
             @endif
 

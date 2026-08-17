@@ -58,8 +58,7 @@ class DoctorOtListController extends Controller
         $bookings = $query
             ->orderByDesc('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25))
-            ->withQueryString();
+            ->get();
 
         $doctor = $doctorId
             ? HospitalUser::query()->where('id', $doctorId)->first(['id', 'name'])

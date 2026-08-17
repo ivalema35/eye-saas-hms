@@ -1,144 +1,158 @@
 @extends('hospital.layouts.app')
 @section('title', 'OT Counselling')
-@section('page-header', 'OT Counselling')
-
-@section('page-actions')
-    <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-    </a>
-@endsection
+{{-- Layout page-header intentionally unused — heading, breadcrumb and
+actions render inside the content card instead, matching the panel design
+used across the rest of the app. --}}
 
 @section('content')
-            <div class="ot-counselling-page">
-                <div class="card ot-premium-card ot-patient-banner border-0 mb-4">
-                    <div class="card-body d-flex flex-column flex-md-row justify-content-between gap-2 align-items-md-center">
-                        <div class="ot-title-wrap">
-                            <span class="ot-title-icon" aria-hidden="true">
-                                <i class="bi bi-chat-left-heart" style="font-size: 1.2rem;"></i>
-                            </span>
-                            <div>
-                                <h4 class="mb-1 ot-title">{{ $booking->patient?->full_name ?? 'Patient' }}</h4>
-                                <div class="ot-subtitle">
-                                    UHID {{ $booking->patient?->patient_code ?? '-' }} &middot;
-                                    Eye {{ $booking->eye }} &middot;
-                                    {{ $booking->ot_type }} &middot;
-                                    Dr. {{ $booking->otDoctor?->name ?? '-' }}
+                    <div class="ot-counselling-page">
+                        <div class="ot-outer-card">
+                            <div class="ot-header-block">
+                                <div>
+                                    <div class="ot-header-title"><i class="bi bi-chat-left-heart"></i> OT Counselling</div>
+                                    <nav class="ot-breadcrumb" aria-label="breadcrumb">
+                                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                                        <span class="ot-breadcrumb-sep">/</span>
+                                        <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}">Counselling</a>
+                                        <span class="ot-breadcrumb-sep">/</span>
+                                        <span class="ot-breadcrumb-current">Booking #{{ $booking->id }}</span>
+                                    </nav>
+                                </div>
+                                <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="card ot-premium-card ot-patient-banner border-0 mb-4">
+                            <div class="card-body d-flex flex-column flex-md-row justify-content-between gap-2 align-items-md-center">
+                                <div class="ot-title-wrap">
+                                    <span class="ot-title-icon" aria-hidden="true">
+                                        <i class="bi bi-chat-left-heart" style="font-size: 1.2rem;"></i>
+                                    </span>
+                                    <div>
+                                        <h4 class="mb-1 ot-title">{{ $booking->patient?->full_name ?? 'Patient' }}</h4>
+                                        <div class="ot-subtitle">
+                                            UHID {{ $booking->patient?->patient_code ?? '-' }} &middot;
+                                            Eye {{ $booking->eye }} &middot;
+                                            {{ $booking->ot_type }} &middot;
+                                            Dr. {{ $booking->otDoctor?->name ?? '-' }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-md-end ot-booking-meta">
+                                    Booking #{{ $booking->id }}<br>
+                                    {{ optional($booking->surgery_date)->format('d M Y') }}
                                 </div>
                             </div>
                         </div>
-                        <div class="text-md-end ot-booking-meta">
-                            Booking #{{ $booking->id }}<br>
-                            {{ optional($booking->surgery_date)->format('d M Y') }}
-                        </div>
-                    </div>
-                </div>
 
-                @if(session('success'))
-                    <div class="alert alert-success ot-alert">{{ session('success') }}</div>
-                @endif
-                @if(session('error'))
-                    <div class="alert alert-danger ot-alert">{{ session('error') }}</div>
-                @endif
-                @if($errors->any())
-                    <div class="alert alert-danger ot-alert">
-                        <ul class="mb-0 ps-3">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+                        @if(session('success'))
+                            <div class="alert alert-success ot-alert">{{ session('success') }}</div>
+                        @endif
+                        @if(session('error'))
+                            <div class="alert alert-danger ot-alert">{{ session('error') }}</div>
+                        @endif
+                        @if($errors->any())
+                            <div class="alert alert-danger ot-alert">
+                                <ul class="mb-0 ps-3">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
 
-                {{-- ===================== Counselling Form ===================== --}}
-                <div class="card ot-premium-card border-0 mb-4">
-                    <div class="ot-card-header">
-                        <div class="ot-title-wrap">
-                            <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-clipboard2-pulse"
-                                    style="font-size: 1.2rem;"></i></span>
-                            <h5 class="ot-title mb-0">Diagnosis, Lens &amp; Package</h5>
-                        </div>
-                    </div>
-                    <div class="card-body p-4">
-                        <form method="POST"
-                            action="{{ route('hospital.ot.counsellor.counselling.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
-                            @csrf
-
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Diagnosis</label>
-                                    <input type="text" name="diagnosis" class="form-control"
-                                        value="{{ old('diagnosis', $counselling->diagnosis ?? '') }}"
-                                        placeholder="e.g. Senile Cataract">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Eye <span class="text-danger">*</span></label>
-                                    @php $eyeVal = old('eye', $booking->eye ?? ''); @endphp
-                                    <select name="eye" class="form-select" required>
-                                        <option value="">Select eye</option>
-                                        <option value="RE" {{ $eyeVal === 'RE' ? 'selected' : '' }}>Right (RE)</option>
-                                        <option value="LE" {{ $eyeVal === 'LE' ? 'selected' : '' }}>Left (LE)</option>
-                                        <option value="Both" {{ $eyeVal === 'Both' ? 'selected' : '' }}>Both</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Surgery Type <span class="text-danger">*</span></label>
-                                    @php $otTypeVal = old('ot_type', $booking->ot_type ?? ''); @endphp
-                                    <select name="ot_type" class="form-select" required>
-                                        <option value="">Select surgery</option>
-                                        @foreach($otSurgeryTypes as $stype)
-                                            <option value="{{ $stype->surgery_name }}" {{ $otTypeVal === $stype->surgery_name ? 'selected' : '' }}>
-                                                {{ $stype->surgery_name }}
-                                            </option>
-                                        @endforeach
-                                        @if($otTypeVal !== '' && !$otSurgeryTypes->contains('surgery_name', $otTypeVal))
-                                            <option value="{{ $otTypeVal }}" selected>{{ $otTypeVal }}</option>
-                                        @endif
-                                    </select>
+                        {{-- ===================== Counselling Form ===================== --}}
+                        <div class="card ot-premium-card border-0 mb-4">
+                            <div class="ot-card-header">
+                                <div class="ot-title-wrap">
+                                    <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-clipboard2-pulse"
+                                            style="font-size: 1.2rem;"></i></span>
+                                    <h5 class="ot-title mb-0">Diagnosis, Lens &amp; Package</h5>
                                 </div>
                             </div>
+                            <div class="card-body p-4">
+                                <form method="POST"
+                                    action="{{ route('hospital.ot.counsellor.counselling.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
+                                    @csrf
 
-                            <hr class="my-4">
-                            <h6 class="ot-section-title mb-3"><i class="bi bi-eyeglasses me-1"></i> Lens Selection</h6>
-                            <div class="row g-3">
-                                <div class="col-md-3">
-                                    <label class="form-label">Lens Category</label>
-                                    <select name="lens_category" class="form-select">
-                                        <option value="">Select...</option>
-                                        <option value="standard" {{ old('lens_category', $counselling->lens_category ?? '') === 'standard' ? 'selected' : '' }}>Standard</option>
-                                        <option value="premium" {{ old('lens_category', $counselling->lens_category ?? '') === 'premium' ? 'selected' : '' }}>Premium</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Lens Company</label>
-                                    <input type="text" name="lens_company" class="form-control"
-                                        value="{{ old('lens_company', $counselling->lens_company ?? '') }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Lens Model</label>
-                                    <input type="text" name="lens_model" class="form-control"
-                                        value="{{ old('lens_model', $counselling->lens_model ?? '') }}">
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Lens Type</label>
-                                    <select name="lens_type" class="form-select">
-                                        <option value="">Select...</option>
-                                        @foreach(['Accommodating', 'Aspheric', 'EDOF', 'Monofocal', 'Multifocal', 'Spherical', 'Toric', 'Trifocal'] as $type)
-                                            <option value="{{ $type }}" {{ old('lens_type', $counselling->lens_type ?? '') === $type ? 'selected' : '' }}>{{ $type }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-4">
+                                            <label class="form-label">Diagnosis</label>
+                                            <input type="text" name="diagnosis" class="form-control"
+                                                value="{{ old('diagnosis', $counselling->diagnosis ?? '') }}"
+                                                placeholder="e.g. Senile Cataract">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Eye <span class="text-danger">*</span></label>
+                                            @php $eyeVal = old('eye', $booking->eye ?? ''); @endphp
+                                            <select name="eye" class="form-select" required>
+                                                <option value="">Select eye</option>
+                                                <option value="RE" {{ $eyeVal === 'RE' ? 'selected' : '' }}>Right (RE)</option>
+                                                <option value="LE" {{ $eyeVal === 'LE' ? 'selected' : '' }}>Left (LE)</option>
+                                                <option value="Both" {{ $eyeVal === 'Both' ? 'selected' : '' }}>Both</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Surgery Type <span class="text-danger">*</span></label>
+                                            @php $otTypeVal = old('ot_type', $booking->ot_type ?? ''); @endphp
+                                            <select name="ot_type" class="form-select" required>
+                                                <option value="">Select surgery</option>
+                                                @foreach($otSurgeryTypes as $stype)
+                                                    <option value="{{ $stype->surgery_name }}" {{ $otTypeVal === $stype->surgery_name ? 'selected' : '' }}>
+                                                        {{ $stype->surgery_name }}
+                                                    </option>
+                                                @endforeach
+                                                @if($otTypeVal !== '' && !$otSurgeryTypes->contains('surgery_name', $otTypeVal))
+                                                    <option value="{{ $otTypeVal }}" selected>{{ $otTypeVal }}</option>
+                                                @endif
+                                            </select>
+                                        </div>
+                                    </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label">Estimated Power</label>
-                                    <input type="number" step="0.01" name="estimated_power" class="form-control"
-                                        value="{{ old('estimated_power', $counselling->estimated_power ?? '') }}">
-                                </div>
-                            </div>
+                                    <hr class="my-4">
+                                    <h6 class="ot-section-title mb-3"><i class="bi bi-eyeglasses me-1"></i> Lens Selection</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Category</label>
+                                            <select name="lens_category" class="form-select">
+                                                <option value="">Select...</option>
+                                                <option value="standard" {{ old('lens_category', $counselling->lens_category ?? '') === 'standard' ? 'selected' : '' }}>Standard</option>
+                                                <option value="premium" {{ old('lens_category', $counselling->lens_category ?? '') === 'premium' ? 'selected' : '' }}>Premium</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Company</label>
+                                            <input type="text" name="lens_company" class="form-control"
+                                                value="{{ old('lens_company', $counselling->lens_company ?? '') }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Model</label>
+                                            <input type="text" name="lens_model" class="form-control"
+                                                value="{{ old('lens_model', $counselling->lens_model ?? '') }}">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Type</label>
+                                            <select name="lens_type" class="form-select">
+                                                <option value="">Select...</option>
+                                                @foreach(['Accommodating', 'Aspheric', 'EDOF', 'Monofocal', 'Multifocal', 'Spherical', 'Toric', 'Trifocal'] as $type)
+                                                    <option value="{{ $type }}" {{ old('lens_type', $counselling->lens_type ?? '') === $type ? 'selected' : '' }}>{{ $type }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
 
-                            <hr class="my-4">
-                            <h6 class="ot-section-title mb-3"><i class="bi bi-bag-check me-1"></i> Package &amp; Cost Estimate</h6>
-                            <div class="row g-3">
-                                @php
+                                        <div class="col-md-3">
+                                            <label class="form-label">Estimated Power</label>
+                                            <input type="number" step="0.01" name="estimated_power" class="form-control"
+                                                value="{{ old('estimated_power', $counselling->estimated_power ?? '') }}">
+                                        </div>
+                                    </div>
+
+                                    <hr class="my-4">
+                                    <h6 class="ot-section-title mb-3"><i class="bi bi-bag-check me-1"></i> Package &amp; Cost Estimate</h6>
+                                    <div class="row g-3">
+                                        @php
     $selectedPackageName = old('package_name', $counselling->package_name ?? '');
     $selectedRoom = old('room_category', $counselling->room_category ?? '');
     $selectedLensCost = old('lens_cost', $counselling->lens_cost ?? '');
@@ -168,247 +182,247 @@
     if ($totalEstimateDisplay <= 0 && !empty($counselling?->total_estimate)) {
         $totalEstimateDisplay = (float) $counselling->total_estimate;
     }
-                                @endphp
-                                <div class="col-md-4">
-                                    <label class="form-label">OT Package</label>
-                                    <select id="ot_package_select" class="form-select">
-                                        <option value="">Select package...</option>
-                                        @foreach($packageCostOptions as $pkgOpt)
-                                            @php
+                                        @endphp
+                                        <div class="col-md-4">
+                                            <label class="form-label">OT Package</label>
+                                            <select id="ot_package_select" class="form-select">
+                                                <option value="">Select package...</option>
+                                                @foreach($packageCostOptions as $pkgOpt)
+                                                    @php
         $optLabel = $pkgOpt->package_name
             . ' · ' . ucfirst((string) $pkgOpt->room_category);
-                                            @endphp
-                                            <option value="{{ $pkgOpt->id }}"
-                                                data-package-name="{{ $pkgOpt->package_name }}"
-                                                data-room="{{ $pkgOpt->room_category }}"
-                                                data-ot-charges="{{ number_format((float) $pkgOpt->ot_charges, 2, '.', '') }}"
-                                                data-surgeon-charges="{{ number_format((float) $pkgOpt->surgeon_charges, 2, '.', '') }}"
-                                                data-nursing-charges="{{ number_format((float) $pkgOpt->nursing_charges, 2, '.', '') }}"
-                                                data-consumables-charges="{{ number_format((float) $pkgOpt->consumables_charges, 2, '.', '') }}"
-                                                {{ (int) $matchedPackageId === (int) $pkgOpt->id ? 'selected' : '' }}>
-                                                {{ $optLabel }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <input type="hidden" name="package_name" id="package_name"
-                                        value="{{ $selectedPackageName }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Room Category</label>
-                                    <select name="room_category" id="room_category" class="form-select">
-                                        <option value="">Select...</option>
-                                        <option value="general" {{ $selectedRoom === 'general' ? 'selected' : '' }}>General</option>
-                                        <option value="private" {{ $selectedRoom === 'private' ? 'selected' : '' }}>Private</option>
-                                    </select>
-                                </div>
+                                                    @endphp
+                                                    <option value="{{ $pkgOpt->id }}"
+                                                        data-package-name="{{ $pkgOpt->package_name }}"
+                                                        data-room="{{ $pkgOpt->room_category }}"
+                                                        data-ot-charges="{{ number_format((float) $pkgOpt->ot_charges, 2, '.', '') }}"
+                                                        data-surgeon-charges="{{ number_format((float) $pkgOpt->surgeon_charges, 2, '.', '') }}"
+                                                        data-nursing-charges="{{ number_format((float) $pkgOpt->nursing_charges, 2, '.', '') }}"
+                                                        data-consumables-charges="{{ number_format((float) $pkgOpt->consumables_charges, 2, '.', '') }}"
+                                                        {{ (int) $matchedPackageId === (int) $pkgOpt->id ? 'selected' : '' }}>
+                                                        {{ $optLabel }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <input type="hidden" name="package_name" id="package_name"
+                                                value="{{ $selectedPackageName }}">
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Room Category</label>
+                                            <select name="room_category" id="room_category" class="form-select">
+                                                <option value="">Select...</option>
+                                                <option value="general" {{ $selectedRoom === 'general' ? 'selected' : '' }}>General</option>
+                                                <option value="private" {{ $selectedRoom === 'private' ? 'selected' : '' }}>Private</option>
+                                            </select>
+                                        </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label">OT Charges</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ currency_code() }}</span>
-                                        <input type="number" step="0.01" min="0" name="ot_charges" id="ot_charges"
-                                            class="form-control ot-cost-input"
-                                            value="{{ old('ot_charges', $counselling->ot_charges ?? '') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Surgeon Charges</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ currency_code() }}</span>
-                                        <input type="number" step="0.01" min="0" name="surgeon_charges" id="surgeon_charges"
-                                            class="form-control ot-cost-input"
-                                            value="{{ old('surgeon_charges', $counselling->surgeon_charges ?? '') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Nursing Charges</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ currency_code() }}</span>
-                                        <input type="number" step="0.01" min="0" name="nursing_charges" id="nursing_charges"
-                                            class="form-control ot-cost-input"
-                                            value="{{ old('nursing_charges', $counselling->nursing_charges ?? '') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label">Consumables</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ currency_code() }}</span>
-                                        <input type="number" step="0.01" min="0" name="consumables_charges" id="consumables_charges"
-                                            class="form-control ot-cost-input"
-                                            value="{{ old('consumables_charges', $counselling->consumables_charges ?? '') }}">
-                                    </div>
-                                </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">OT Charges</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="ot_charges" id="ot_charges"
+                                                    class="form-control ot-cost-input"
+                                                    value="{{ old('ot_charges', $counselling->ot_charges ?? '') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Surgeon Charges</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="surgeon_charges" id="surgeon_charges"
+                                                    class="form-control ot-cost-input"
+                                                    value="{{ old('surgeon_charges', $counselling->surgeon_charges ?? '') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Nursing Charges</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="nursing_charges" id="nursing_charges"
+                                                    class="form-control ot-cost-input"
+                                                    value="{{ old('nursing_charges', $counselling->nursing_charges ?? '') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Consumables</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="consumables_charges" id="consumables_charges"
+                                                    class="form-control ot-cost-input"
+                                                    value="{{ old('consumables_charges', $counselling->consumables_charges ?? '') }}">
+                                            </div>
+                                        </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label">Lens Cost</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">{{ currency_code() }}</span>
-                                        <input type="number" step="0.01" min="0" name="lens_cost" id="lens_cost" class="form-control ot-cost-input"
-                                            value="{{ $selectedLensCost }}" placeholder="Enter lens cost">
-                                    </div>
-                                </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Lens Cost</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ currency_code() }}</span>
+                                                <input type="number" step="0.01" min="0" name="lens_cost" id="lens_cost" class="form-control ot-cost-input"
+                                                    value="{{ $selectedLensCost }}" placeholder="Enter lens cost">
+                                            </div>
+                                        </div>
 
-                                <div class="col-md-12">
-                                    <div class="ot-total-box d-flex justify-content-between align-items-center">
-                                        <span class="fw-bold">Total Estimate</span>
-                                        <span class="fw-bold fs-5" id="otTotalEstimate">{{ currency_code() }}
-                                            {{ number_format($totalEstimateDisplay, 2) }}</span>
-                                    </div>
-                                </div>
+                                        <div class="col-md-12">
+                                            <div class="ot-total-box d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold">Total Estimate</span>
+                                                <span class="fw-bold fs-5" id="otTotalEstimate">{{ currency_code() }}
+                                                    {{ number_format($totalEstimateDisplay, 2) }}</span>
+                                            </div>
+                                        </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label d-block">Mediclaim <span class="text-danger">*</span></label>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="mediclaim" id="mediclaim_yes" value="1"
-                                            {{ old('mediclaim', $counselling->mediclaim ?? false) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="mediclaim_yes">Yes</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="mediclaim" id="mediclaim_no" value="0"
-                                            {{ old('mediclaim', $counselling->mediclaim ?? false) ? '' : 'checked' }}>
-                                        <label class="form-check-label" for="mediclaim_no">No</label>
-                                    </div>
-                                </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label d-block">Mediclaim <span class="text-danger">*</span></label>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="mediclaim" id="mediclaim_yes" value="1"
+                                                    {{ old('mediclaim', $counselling->mediclaim ?? false) ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="mediclaim_yes">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="mediclaim" id="mediclaim_no" value="0"
+                                                    {{ old('mediclaim', $counselling->mediclaim ?? false) ? '' : 'checked' }}>
+                                                <label class="form-check-label" for="mediclaim_no">No</label>
+                                            </div>
+                                        </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label">Payment Mode</label>
-                                    <select name="payment_mode" id="ot_payment_mode" class="form-select">
-                                        <option value="">Select...</option>
-                                        <option value="cash" data-mediclaim="0" {{ old('payment_mode', $counselling->payment_mode ?? '') === 'cash' ? 'selected' : '' }}>Cash</option>
-                                        <option value="online" data-mediclaim="0" {{ old('payment_mode', $counselling->payment_mode ?? '') === 'online' ? 'selected' : '' }}>Online</option>
-                                        <option value="mediclaim" data-mediclaim="1" {{ old('payment_mode', $counselling->payment_mode ?? '') === 'mediclaim' ? 'selected' : '' }}>Mediclaim</option>
-                                    </select>
-                                </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label">Payment Mode</label>
+                                            <select name="payment_mode" id="ot_payment_mode" class="form-select">
+                                                <option value="">Select...</option>
+                                                <option value="cash" data-mediclaim="0" {{ old('payment_mode', $counselling->payment_mode ?? '') === 'cash' ? 'selected' : '' }}>Cash</option>
+                                                <option value="online" data-mediclaim="0" {{ old('payment_mode', $counselling->payment_mode ?? '') === 'online' ? 'selected' : '' }}>Online</option>
+                                                <option value="mediclaim" data-mediclaim="1" {{ old('payment_mode', $counselling->payment_mode ?? '') === 'mediclaim' ? 'selected' : '' }}>Mediclaim</option>
+                                            </select>
+                                        </div>
 
-                                <div class="col-md-3">
-                                    <label class="form-label d-block">Blood reports verified</label>
-                                    @php $bloodVerified = old('blood_reports_verified', $counselling->blood_reports_verified ?? false); @endphp
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="blood_reports_verified"
-                                            id="blood_verified_yes" value="1" {{ $bloodVerified ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="blood_verified_yes">Yes</label>
+                                        <div class="col-md-3">
+                                            <label class="form-label d-block">Blood reports verified</label>
+                                            @php $bloodVerified = old('blood_reports_verified', $counselling->blood_reports_verified ?? false); @endphp
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="blood_reports_verified"
+                                                    id="blood_verified_yes" value="1" {{ $bloodVerified ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="blood_verified_yes">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="blood_reports_verified"
+                                                    id="blood_verified_no" value="0" {{ $bloodVerified ? '' : 'checked' }}>
+                                                <label class="form-check-label" for="blood_verified_no">No</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label d-block">Blood reports normal</label>
+                                            @php $bloodNormal = old('blood_reports_normal', $counselling->blood_reports_normal ?? false); @endphp
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="blood_reports_normal"
+                                                    id="blood_normal_yes" value="1" {{ $bloodNormal ? 'checked' : '' }}>
+                                                <label class="form-check-label" for="blood_normal_yes">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="blood_reports_normal"
+                                                    id="blood_normal_no" value="0" {{ $bloodNormal ? '' : 'checked' }}>
+                                                <label class="form-check-label" for="blood_normal_no">No</label>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="blood_reports_verified"
-                                            id="blood_verified_no" value="0" {{ $bloodVerified ? '' : 'checked' }}>
-                                        <label class="form-check-label" for="blood_verified_no">No</label>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
+                                        <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                            <i class="bi bi-check2-circle me-1"></i> Save Counselling
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="form-label d-block">Blood reports normal</label>
-                                    @php $bloodNormal = old('blood_reports_normal', $counselling->blood_reports_normal ?? false); @endphp
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="blood_reports_normal"
-                                            id="blood_normal_yes" value="1" {{ $bloodNormal ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="blood_normal_yes">Yes</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="radio" name="blood_reports_normal"
-                                            id="blood_normal_no" value="0" {{ $bloodNormal ? '' : 'checked' }}>
-                                        <label class="form-check-label" for="blood_normal_no">No</label>
-                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        {{-- ===================== Consent Form ===================== --}}
+                        <div class="card ot-premium-card border-0 mb-4">
+                            <div class="ot-card-header">
+                                <div class="ot-title-wrap">
+                                    <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-pen"
+                                            style="font-size: 1.2rem;"></i></span>
+                                    <h5 class="ot-title mb-0">Informed Consent</h5>
                                 </div>
                             </div>
+                            <div class="card-body p-4">
+                                <form method="POST"
+                                    action="{{ route('hospital.ot.counsellor.consent.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                    id="consentForm">
+                                    @csrf
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="consent_given" id="consent_given"
+                                                    value="1" {{ old('consent_given', $consent->consent_given ?? false) ? 'checked' : '' }}
+                                                    required>
+                                                <label class="form-check-label fw-bold" for="consent_given">Patient has given informed
+                                                    consent for surgery</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label">Witness Name</label>
+                                            <input type="text" name="witness_name" class="form-control"
+                                                value="{{ old('witness_name', $consent->witness_name ?? '') }}">
+                                        </div>
 
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
-                                <button type="submit" class="hms-btn hms-btn-primary px-4">
-                                    <i class="bi bi-check2-circle me-1"></i> Save Counselling
-                                </button>
+                                        <div class="col-md-6">
+                                            <label class="form-label d-flex justify-content-between">
+                                                Patient Signature
+                                                <button type="button" class="btn btn-sm btn-link p-0 ot-clear-pad"
+                                                    data-target="patientSignaturePad">Clear</button>
+                                            </label>
+                                            <div class="ot-signature-wrap">
+                                                <canvas id="patientSignaturePad" class="ot-signature-pad"></canvas>
+                                            </div>
+                                            <input type="hidden" name="patient_signature" id="patient_signature_input">
+                                            @if(!empty($consent?->patient_signature_path))
+                                                <div class="small text-muted mt-1"><i class="bi bi-check2-circle text-success"></i> Signature
+                                                    already on file — draw again to replace.</div>
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label d-flex justify-content-between">
+                                                Guardian Signature (optional)
+                                                <button type="button" class="btn btn-sm btn-link p-0 ot-clear-pad"
+                                                    data-target="guardianSignaturePad">Clear</button>
+                                            </label>
+                                            <div class="ot-signature-wrap">
+                                                <canvas id="guardianSignaturePad" class="ot-signature-pad"></canvas>
+                                            </div>
+                                            <input type="hidden" name="guardian_signature" id="guardian_signature_input">
+                                            @if(!empty($consent?->guardian_signature_path))
+                                                <div class="small text-muted mt-1"><i class="bi bi-check2-circle text-success"></i> Signature
+                                                    already on file — draw again to replace.</div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
+                                        <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                            <i class="bi bi-check2-circle me-1"></i> Save Consent
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
-                    </div>
-                </div>
+                        </div>
 
-                {{-- ===================== Consent Form ===================== --}}
-                <div class="card ot-premium-card border-0 mb-4">
-                    <div class="ot-card-header">
-                        <div class="ot-title-wrap">
-                            <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-pen"
-                                    style="font-size: 1.2rem;"></i></span>
-                            <h5 class="ot-title mb-0">Informed Consent</h5>
+                        {{-- ===================== Send to Billing ===================== --}}
+                        <div class="card ot-premium-card border-0 mb-4">
+                            <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
+                                <div>
+                                    <div class="ot-title" style="font-size: 1rem; color: #1b4f72;">Ready for Billing?</div>
+                                    <div class="ot-subtitle">Requires counselling saved and consent given.</div>
+                                </div>
+                                <form method="POST"
+                                    action="{{ route('hospital.ot.counsellor.send-to-billing', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
+                                    @csrf
+                                    <button type="submit" class="hms-btn ot-billing-btn px-4" {{ $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_COUNSELLED ? 'disabled' : '' }}>
+                                        <i class="bi bi-send-check me-1"></i>
+                                        {{ $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_COUNSELLED ? 'Already Sent to Billing' : 'Send to Billing' }}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
-                    <div class="card-body p-4">
-                        <form method="POST"
-                            action="{{ route('hospital.ot.counsellor.consent.store', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                            id="consentForm">
-                            @csrf
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="consent_given" id="consent_given"
-                                            value="1" {{ old('consent_given', $consent->consent_given ?? false) ? 'checked' : '' }}
-                                            required>
-                                        <label class="form-check-label fw-bold" for="consent_given">Patient has given informed
-                                            consent for surgery</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Witness Name</label>
-                                    <input type="text" name="witness_name" class="form-control"
-                                        value="{{ old('witness_name', $consent->witness_name ?? '') }}">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label d-flex justify-content-between">
-                                        Patient Signature
-                                        <button type="button" class="btn btn-sm btn-link p-0 ot-clear-pad"
-                                            data-target="patientSignaturePad">Clear</button>
-                                    </label>
-                                    <div class="ot-signature-wrap">
-                                        <canvas id="patientSignaturePad" class="ot-signature-pad"></canvas>
-                                    </div>
-                                    <input type="hidden" name="patient_signature" id="patient_signature_input">
-                                    @if(!empty($consent?->patient_signature_path))
-                                        <div class="small text-muted mt-1"><i class="bi bi-check2-circle text-success"></i> Signature
-                                            already on file — draw again to replace.</div>
-                                    @endif
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label d-flex justify-content-between">
-                                        Guardian Signature (optional)
-                                        <button type="button" class="btn btn-sm btn-link p-0 ot-clear-pad"
-                                            data-target="guardianSignaturePad">Clear</button>
-                                    </label>
-                                    <div class="ot-signature-wrap">
-                                        <canvas id="guardianSignaturePad" class="ot-signature-pad"></canvas>
-                                    </div>
-                                    <input type="hidden" name="guardian_signature" id="guardian_signature_input">
-                                    @if(!empty($consent?->guardian_signature_path))
-                                        <div class="small text-muted mt-1"><i class="bi bi-check2-circle text-success"></i> Signature
-                                            already on file — draw again to replace.</div>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
-                                <button type="submit" class="hms-btn hms-btn-primary px-4">
-                                    <i class="bi bi-check2-circle me-1"></i> Save Consent
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                {{-- ===================== Send to Billing ===================== --}}
-                <div class="card ot-premium-card border-0 mb-4">
-                    <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
-                        <div>
-                            <div class="ot-title" style="font-size: 1rem;">Ready for Billing?</div>
-                            <div class="ot-subtitle">Requires counselling saved and consent given.</div>
-                        </div>
-                        <form method="POST"
-                            action="{{ route('hospital.ot.counsellor.send-to-billing', ['slug' => $slug, 'bookingId' => $booking->id]) }}">
-                            @csrf
-                            <button type="submit" class="hms-btn ot-billing-btn px-4" {{ $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_COUNSELLED ? 'disabled' : '' }}>
-                                <i class="bi bi-send-check me-1"></i>
-                                {{ $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_COUNSELLED ? 'Already Sent to Billing' : 'Send to Billing' }}
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
 @endsection
 
 @push('styles')
@@ -458,33 +472,75 @@
             box-shadow: 0 12px 26px rgba(27, 79, 114, 0.14);
         }
 
-        .ot-premium-card {
-            background: rgba(255, 255, 255, 0.84);
-            border: 1px solid var(--ot-s2-12) !important;
-            border-radius: 22px;
-            box-shadow: 0 18px 48px rgba(27, 79, 114, 0.10);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            animation: ot-card-rise 520ms cubic-bezier(.2, .9, .2, 1) both;
+        .ot-outer-card {
+            background: #ffffff;
+            border: 1px solid rgba(15, 79, 134, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+            padding: 1.1rem 1.5rem;
+            margin-bottom: 1.25rem;
         }
 
-        @keyframes ot-card-rise {
-            from {
-                opacity: 0;
-                transform: translateY(10px) scale(0.99);
-            }
+        .ot-header-block {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
 
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+        .ot-header-title {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--ot-secondary);
+            letter-spacing: -.015em;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .ot-header-title i {
+            color: var(--ot-secondary);
+            font-size: 1.2rem;
+        }
+
+        .ot-breadcrumb {
+            margin-top: .4rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .85rem;
+            color: #8891a0;
+        }
+
+        .ot-breadcrumb a {
+            color: #8891a0;
+            text-decoration: none;
+        }
+
+        .ot-breadcrumb a:hover {
+            color: var(--ot-secondary);
+        }
+
+        .ot-breadcrumb-sep {
+            color: #c3c9d3;
+        }
+
+        .ot-breadcrumb-current {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .ot-premium-card {
+            background: #ffffff;
+            border: 1px solid rgba(15, 79, 134, 0.08) !important;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
+            overflow: hidden;
         }
 
         .ot-card-header {
-            background:
-                linear-gradient(135deg, rgba(235, 245, 251, 0.92), rgba(255, 255, 255, 0.94)),
-                #ffffff;
+            background: #1b4f72;
             border-bottom: 1px solid var(--ot-s2-12);
             padding: 1.15rem 1.25rem;
             display: flex;
@@ -500,11 +556,11 @@
         }
 
         .ot-title-icon {
-            width: 44px;
-            height: 44px;
+            width: 40px;
+            height: 40px;
             border-radius: 14px;
-            background: var(--ot-secondary);
-            color: #ffffff;
+            background: #ffffff;
+            color: #1b4f72;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -516,7 +572,7 @@
             font-weight: 900;
             letter-spacing: -0.2px;
             margin: 0;
-            color: var(--ot-secondary);
+            color: #ffffff;
         }
 
         .ot-subtitle {

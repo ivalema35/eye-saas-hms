@@ -29,7 +29,7 @@ class OtAccountantController extends Controller
             ])
             ->orderBy('surgery_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25));
+            ->get();
 
         return view('hospital.ot.accountant.ward', [
             'slug' => $slug,
@@ -87,9 +87,7 @@ class OtAccountantController extends Controller
                 ->orderByDesc('id');
         }
 
-        $bookings = $bookingsQuery
-            ->paginate(20)
-            ->appends($request->query());
+        $bookings = $bookingsQuery->get();
 
         $tenantId = (int) app('tenant')->id;
         $moneySummary = [

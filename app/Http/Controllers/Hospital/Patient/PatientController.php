@@ -58,28 +58,13 @@ class PatientController extends Controller
             $query->whereDate('appointment_date', $today);
         }
 
-        // Search
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('patient_code', 'like', "%{$search}%")
-                    ->orWhere('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('contact_no', 'like', "%{$search}%");
-            });
-        }
-
         $stats = [
             'waiting' => (clone $query)->whereNull('primary_done_at')->whereNull('secondary_done_at')->count(),
             'primary_done' => (clone $query)->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count(),
             'completed' => (clone $query)->whereNotNull('secondary_done_at')->count(),
         ];
 
-        $patients = $query->latest()->paginate((int) config('app.pagination_limit', 25))->withQueryString();
-
-        // Live search: return just the table/pagination markup, no layout.
-        if ($request->ajax()) {
-            return view('hospital.patients.partials.table', compact('patients', 'slug', 'showAll'));
-        }
+        $patients = $query->latest()->get();
 
         return view('hospital.patients.index', compact('patients', 'slug', 'showAll', 'stats'));
     }

@@ -32,8 +32,7 @@ class HospitalUserController extends Controller
                 $query->whereHas('role', fn (Builder $q) => $q->whereIn('slug', $roleFilter['slugs']));
             })
             ->latest()
-            ->paginate((int) config('app.pagination_limit', 25))
-            ->withQueryString();
+            ->get();
 
         $roles = $this->rolesForUserForms();
         $roleFilterKey = $roleFilter['key'] ?? null;

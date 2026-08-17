@@ -6,16 +6,16 @@
     <title>Certificate</title>
     <style>
         @page {
-            size: A4 portrait;
-            margin: 18mm 20mm;
+            size: A5 portrait;
+            margin: 13mm 14mm;
         }
         body {
             font-family: "Times New Roman", Times, Georgia, serif;
             margin: 0;
             background: #fff;
             color: #111;
-            font-size: 15px;
-            line-height: 1.55;
+            font-size: 13px;
+            line-height: 1.5;
         }
         /* Base styles must already fit inside @page's own margin — DomPDF
            (used for the app's PDF export) ignores @media print entirely, so
@@ -35,24 +35,24 @@
         }
         .date-row {
             text-align: right;
-            font-size: 15px;
+            font-size: 13px;
             letter-spacing: 0.02em;
-            margin-bottom: 28px;
+            margin-bottom: 18px;
         }
         .title {
             text-align: center;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-decoration: underline;
             text-underline-offset: 4px;
-            margin: 0 0 36px;
+            margin: 0 0 22px;
             text-transform: uppercase;
         }
         .body-text {
             text-align: justify;
-            font-size: 16px;
-            line-height: 1.85;
+            font-size: 13.5px;
+            line-height: 1.7;
             margin: 0;
         }
         .body-text .hl {
@@ -60,8 +60,8 @@
             text-transform: uppercase;
         }
         .sign-block {
-            margin-top: 64px;
-            width: 48%;
+            margin-top: 36px;
+            width: 58%;
             margin-left: auto;
             text-align: center;
         }

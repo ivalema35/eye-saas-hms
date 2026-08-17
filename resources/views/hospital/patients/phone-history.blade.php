@@ -1,24 +1,86 @@
 @extends('hospital.layouts.app')
 @section('title', 'Phone Appointment History')
-@section('page-header', 'Phone Appointment History')
+{{-- Layout page-header intentionally unused — the heading, breadcrumb and
+list all sit inside one bordered card, matching the Medicine Master / Users /
+Roles / History / OT Patients panel design. --}}
 
 @push('styles')
 <style>
 .phone-history-page {
-    padding-bottom: 2rem;
+    padding-bottom: .25rem;
+}
+
+.phone-history-outer-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 79, 134, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+    overflow: hidden;
+    padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.phone-history-header-block {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    padding: 0 0 1rem;
+}
+
+.phone-history-page-title {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: #1B4F72;
+    letter-spacing: -.015em;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+}
+
+.phone-history-page-title i {
+    color: #1B4F72;
+    font-size: 1.2rem;
+}
+
+.phone-history-breadcrumb {
+    margin-top: .4rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .85rem;
+    color: #8891a0;
+}
+
+.phone-history-breadcrumb a {
+    color: #8891a0;
+    text-decoration: none;
+}
+
+.phone-history-breadcrumb a:hover {
+    color: #1B4F72;
+}
+
+.phone-history-breadcrumb-sep {
+    color: #c3c9d3;
+}
+
+.phone-history-breadcrumb-current {
+    color: #4a5568;
+    font-weight: 600;
 }
 
 .phone-history-card {
     background: #ffffff;
-    border: 1px solid rgba(27, 79, 114, 0.12);
-    border-radius: 20px;
-    box-shadow: 0 10px 28px rgba(27, 79, 114, 0.08);
+    border: 1px solid rgba(15, 79, 134, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
     overflow: hidden;
 }
 
 .phone-history-header {
-    padding: 1.25rem 1.5rem;
-    border-bottom: 1px solid rgba(27, 79, 114, 0.12);
+    padding: 1rem 1.25rem;
+    background: #1B4F72;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -28,9 +90,48 @@
 
 .phone-history-title {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: .95rem;
     font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.phone-history-card-body {
+    padding: 1.25rem 1.5rem;
+}
+
+.ph-filter-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(27, 79, 114, 0.10);
     color: #1B4F72;
+    font-size: 1rem;
+}
+
+.ph-filter-title {
+    color: #1B4F72;
+    font-weight: 800;
+}
+
+.ph-btn-outline {
+    border: 1.5px solid rgba(27, 79, 114, 0.24);
+    color: #1B4F72;
+    font-weight: 700;
+    border-radius: 10px;
+    background: #fff;
+    transition: background 170ms ease, border-color 170ms ease;
+}
+
+.ph-btn-outline:hover {
+    background: rgba(27, 79, 114, 0.06);
+    color: #1B4F72;
+    border-color: #1B4F72;
 }
 
 .phone-history-filter {
@@ -75,12 +176,17 @@
 }
 
 .phone-history-table thead th {
-    background: rgba(27, 79, 114, 0.07);
-    color: rgba(27, 79, 114, 0.82);
-    font-size: .76rem;
+    background: #F8FAFC;
+    color: #4A5568;
+    font-size: .75rem;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: .04em;
-    border-bottom: 1px solid rgba(27, 79, 114, 0.14);
+    letter-spacing: .05em;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.phone-history-table tbody tr:hover td {
+    background: #F5F8FC;
 }
 
 .phone-history-table td {
@@ -177,9 +283,24 @@
 
 @section('content')
 <div class="phone-history-page">
-    <div class="phone-history-card">
-        <div class="phone-history-header">
-            <h3 class="phone-history-title">Date-wise Phone Appointment Patients</h3>
+    <div class="phone-history-outer-card">
+        <div class="phone-history-header-block">
+            <div>
+                <div class="phone-history-page-title"><i class="bi bi-telephone-fill"></i> Phone Appointment History</div>
+                <nav class="phone-history-breadcrumb" aria-label="breadcrumb">
+                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                    <span class="phone-history-breadcrumb-sep">/</span>
+                    <span class="phone-history-breadcrumb-current">Phone Appointment History</span>
+                </nav>
+            </div>
+        </div>
+
+    <div class="phone-history-card mb-4">
+        <div class="phone-history-card-body">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="ph-filter-icon"><i class="bi bi-funnel-fill"></i></span>
+                <strong class="ph-filter-title">Date Range Filter</strong>
+            </div>
 
             <form method="GET" class="phone-history-filter">
                 <div>
@@ -197,9 +318,15 @@
                         style="min-width:220px;">
                 </div>
                 <div>
-                    <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="btn btn-outline-secondary">Reset</a>
+                    <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="btn ph-btn-outline">Reset</a>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div class="phone-history-card">
+        <div class="phone-history-header">
+            <h3 class="phone-history-title"><i class="bi bi-calendar2-week"></i> Phone Appointment Patients</h3>
         </div>
 
         <div class="phone-history-body">
@@ -293,6 +420,7 @@
             </div>
         </div>
     </div>
+    </div>{{-- /.phone-history-outer-card --}}
 </div>
 @endsection
 

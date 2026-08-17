@@ -6,16 +6,16 @@
     <title>Bill Summery</title>
     <style>
         @page {
-            size: A4 portrait;
-            margin: 16mm 18mm;
+            size: A5 portrait;
+            margin: 12mm 13mm;
         }
         body {
             font-family: Arial, Helvetica, sans-serif;
             margin: 0;
             background: #fff;
             color: #111;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 12.5px;
+            line-height: 1.45;
         }
         /* Base styles must already fit inside @page's own margin — DomPDF
            (used for the app's PDF export) ignores @media print entirely, so
@@ -34,23 +34,23 @@
         }
         .title {
             text-align: center;
-            font-size: 22px;
+            font-size: 18px;
             font-weight: 700;
             letter-spacing: 0.06em;
             text-decoration: underline;
             text-underline-offset: 4px;
             text-transform: uppercase;
-            margin: 0 0 22px;
+            margin: 0 0 16px;
         }
         .meta {
             display: flex;
             justify-content: space-between;
             gap: 16px;
-            margin-bottom: 18px;
-            font-size: 14px;
+            margin-bottom: 14px;
+            font-size: 12.5px;
         }
         .for-block {
-            margin-bottom: 22px;
+            margin-bottom: 16px;
         }
         .for-block .for-label {
             margin-bottom: 4px;
@@ -92,12 +92,12 @@
             font-weight: 700;
         }
         .sign-block {
-            margin-top: 64px;
-            width: 42%;
+            margin-top: 36px;
+            width: 52%;
             margin-left: auto;
             text-align: center;
             border: 1.5px solid #5b2c8a;
-            padding: 14px 10px;
+            padding: 10px 8px;
             color: #5b2c8a;
         }
         .sign-block .for-hosp {

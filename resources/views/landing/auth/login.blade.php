@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login &mdash; Eye HMS SaaS</title>
+    <title>Login &mdash; EYENOSIS</title>
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" referrerpolicy="no-referrer" />
@@ -243,21 +243,15 @@
         }
 
         .banner-logo {
-            width: 95px;
-            height: 95px;
-            border-radius: 24px;
-            background: rgba(255, 255, 255, .95);
             display: inline-flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 8px 20px rgba(13, 33, 55, .14);
-            overflow: hidden;
         }
 
         .banner-logo img {
-            width: 100%;
-            height: 100%;
+            height: 60px;
+            width: auto;
             object-fit: contain;
         }
 
@@ -384,6 +378,13 @@
             width: 100%;
             max-width: 430px;
             animation: fadeIn .8s ease-out;
+        }
+
+        .form-side-logo {
+            display: block;
+            height: 55px;
+            width: auto;
+            margin: 0 auto 2.1rem;
         }
 
         .back-link {
@@ -822,7 +823,6 @@
                     <div class="hero-pet">
                         <i class="fa-solid fa-hospital-user"></i>
                     </div>
-                    <h1>Unified Staff Portal</h1>
                     <p>Access your hospital workspace seamlessly.</p>
                     <ul class="banner-features">
                         <li><i class="fa-solid fa-circle-check"></i> Single Sign-On for All Roles</li>
@@ -836,16 +836,15 @@
             <div class="auth-form-side">
                 <div class="auth-form-box">
 
-                    <a href="{{ route('home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to Eye
-                        HMS</a>
+                    <img src="{{ platform_logo_url() }}" alt="{{ config('app.name') }}" class="form-side-logo">
+
+                    <a href="{{ route('home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to
+                        EYENOSIS</a>
 
                     <div class="form-header">
                         <h2>Welcome Back</h2>
                         <p>Enter your credentials to continue.</p>
                     </div>
-
-                    <div class="role-badge"><i class="fa-solid fa-users"></i> Admin &bull; Doctor &bull; Receptionist
-                        &bull; OT Staff</div>
 
                     <form method="POST" action="{{ route('login.post') }}">
                         @csrf
@@ -859,8 +858,10 @@
                                     placeholder="yourname@hospital.com or 9876543210" required autofocus
                                     autocomplete="username">
                             </div>
-                            @error('email')<div class="form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                            {{ $message }}</div>@enderror
+                            @error('email')
+                                <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                    {{ $message }}
+                            </div>@enderror
                         </div>
 
                         <div class="form-group">
@@ -870,9 +871,6 @@
                                 @if (Route::has('password.request'))
                                     <a href="{{ route('password.request') }}" class="forgot-link"
                                         style="font-size:.85rem;color:#2980B9;text-decoration:none;">Forgot Password?</a>
-                                @else
-                                    <span class="forgot-link" style="font-size:.85rem;color:#64748B;">Forgot
-                                        Password?</span>
                                 @endif
                             </div>
                             <div class="input-wrap password-field-wrap">
@@ -890,8 +888,10 @@
                                     </svg>
                                 </button>
                             </div>
-                            @error('password')<div class="form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                            {{ $message }}</div>@enderror
+                            @error('password')
+                                <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                    {{ $message }}
+                            </div>@enderror
                         </div>
 
                         <div class="remember-row">

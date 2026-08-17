@@ -1,7 +1,7 @@
 @extends('landing.layouts.app')
 
-@section('title', 'Register Your Hospital — Eye HMS SaaS')
-@section('meta_description', 'Start your free 14-day trial of Eye HMS — complete hospital management software for eye clinics. No credit card required.')
+@section('title', 'Register Your Hospital — EYENOSIS')
+@section('meta_description', 'Start your free 14-day trial of EYENOSIS — complete hospital management software for eye clinics. No credit card required.')
 
 @push('styles')
     <style>
@@ -135,325 +135,324 @@
 
     <div class="reg-page-body">
         <div class="reg-body">
+            <div class="reg-shell">
 
-            {{-- Left Panel --}}
-            <div class="reg-left-panel">
-                <h3>Start Your Free 14-Day Trial</h3>
-                <p style="font-size:.8125rem;color:rgba(255,255,255,.65);margin:0 0 1.75rem;line-height:1.6">
-                    No credit card required. Full access from day one.
-                </p>
+                {{-- Left: value prop --}}
+                <aside class="reg-left-panel">
+                    <span class="reg-aside-badge">
+                        <i class="fa-solid fa-shield-halved"></i> Free trial
+                    </span>
+                    <h3>Start your free 14-day trial</h3>
+                    <p class="reg-aside-lead">
+                        No credit card required. Full hospital CRM access from day one.
+                    </p>
 
-                <ul class="reg-benefits">
-                    <li>
-                        <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
-                        <span>Complete Hospital Management System</span>
-                    </li>
-                    <li>
-                        <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
-                        <span>Patient Records, Appointments &amp; Billing</span>
-                    </li>
-                    <li>
-                        <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
-                        <span>Eye Examination &amp; OT Surgery Modules</span>
-                    </li>
-                    <li>
-                        <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
-                        <span>Multi-user with Role-based Permissions</span>
-                    </li>
-                    <li>
-                        <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
-                        <span>Secure Cloud — Access from Anywhere</span>
-                    </li>
-                    <li>
-                        <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
-                        <span>Daily Automatic Backups</span>
-                    </li>
-                </ul>
+                    <ul class="reg-benefits">
+                        <li>
+                            <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
+                            <span>Complete Hospital Management System</span>
+                        </li>
+                        <li>
+                            <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
+                            <span>Patient Records, Appointments &amp; Billing</span>
+                        </li>
+                        <li>
+                            <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
+                            <span>Eye Examination &amp; OT Surgery Modules</span>
+                        </li>
+                        <li>
+                            <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
+                            <span>Multi-user with Role-based Permissions</span>
+                        </li>
+                        <li>
+                            <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
+                            <span>Secure Cloud — Access from Anywhere</span>
+                        </li>
+                        <li>
+                            <span class="rb-icon"><i class="fa-solid fa-check"></i></span>
+                            <span>Daily Automatic Backups</span>
+                        </li>
+                    </ul>
 
-                <div class="reg-stat-grid">
-                    <div class="reg-stat-mini">
-                        <span class="rsm-num">500+</span>
-                        <span class="rsm-lbl">Hospitals</span>
-                    </div>
-                    <div class="reg-stat-mini">
-                        <span class="rsm-num">14</span>
-                        <span class="rsm-lbl">Days Free</span>
-                    </div>
-                    <div class="reg-stat-mini">
-                        <span class="rsm-num">99.9%</span>
-                        <span class="rsm-lbl">Uptime SLA</span>
-                    </div>
-                    <div class="reg-stat-mini">
-                        <span class="rsm-num">24/7</span>
-                        <span class="rsm-lbl">Support</span>
-                    </div>
-                </div>
-
-                <div
-                    style="margin-top:1.75rem;background:rgba(26,188,156,.15);border:1px solid rgba(26,188,156,.3);border-radius:var(--hms-radius);padding:.875rem 1rem;display:flex;align-items:center;gap:.625rem;font-size:.8125rem;color:rgba(255,255,255,.85)">
-                    <i class="fa-solid fa-gift" style="color:#1ABC9C"></i>
-                    <span>14 Days Free Trial — No Payment Required</span>
-                </div>
-            </div>
-
-            {{-- Right: Form --}}
-            <div class="reg-form-card">
-                <div class="reg-form-head">
-                    <h2><i class="fa-solid fa-hospital-user" style="color:var(--hms-primary);margin-right:.5rem"></i>Create
-                        Your Account</h2>
-                    <p style="margin:0;font-size:.8125rem;color:var(--hms-text-muted)">All fields marked * are required</p>
-                </div>
-
-                <div class="reg-form-body">
-
-                    <!-- @if($errors->any())
-                                                                                                                    <div style="background:var(--hms-danger-bg);border:1px solid rgba(192,57,43,.25);border-radius:var(--hms-radius);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;color:var(--hms-danger)">
-                                                                                                                        <i class="fa-solid fa-circle-exclamation" style="margin-top:.1rem;flex-shrink:0"></i>
-                                                                                                                        <div style="font-size:.875rem">
-                                                                                                                            @foreach($errors->all() as $error)
-                                                                                                                                <div>{{ $error }}</div>
-                                                                                                                            @endforeach
-                                                                                                                        </div>
-                                                                                                                    </div>
-                                                                                                                @endif -->
-
-                    <form method="POST" action="{{ route('register.store') }}" id="registerForm">
-                        @csrf
-
-                        {{-- Hospital Info --}}
-                        <div class="reg-section">
-                            <div class="reg-section-label"><i class="fa-solid fa-hospital"></i> Hospital Details</div>
-
-                            <div class="hms-form-group">
-                                <label>Hospital Name *</label>
-                                <input type="text" name="hospital_name"
-                                    class="hms-input @error('hospital_name') is-invalid @enderror"
-                                    value="{{ old('hospital_name') }}" placeholder="e.g. Vision Eye Centre" required
-                                    id="hospitalName">
-                                @error('hospital_name')
-                                    <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                        {{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="hms-form-group">
-                                <label>Hospital URL Slug *</label>
-                                <div class="slug-input-wrap">
-                                    <span class="slug-prefix">{{ parse_url(url('/'), PHP_URL_HOST) }}/</span>
-                                    <input type="text" name="slug" id="slugInput"
-                                        class="slug-input-field @error('slug') is-invalid @enderror"
-                                        value="{{ old('slug') }}" placeholder="vision-eye-centre" required
-                                        pattern="[a-z0-9\-]+" minlength="3" maxlength="30">
-                                </div>
-                                <div class="slug-status" id="slugStatus"></div>
-                                @error('slug')
-                                    <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                        {{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="hms-form-group">
-                                <label>Hospital Code * <span
-                                        style="font-weight:400;color:var(--hms-text-muted);font-size:.8rem">(3 or 4 letters
-                                        —
-                                        prefix for all patient MRD numbers)</span></label>
-                                <div style="display:flex;align-items:center;gap:.75rem">
-                                    <input type="text" name="hospital_code" id="hospitalCodeInput"
-                                        class="hms-input @error('hospital_code') is-invalid @enderror"
-                                        value="{{ old('hospital_code') }}"
-                                        placeholder="e.g. MAI or MAIN"" required maxlength=" 4"
-                                        style="width:7rem;text-transform:uppercase;letter-spacing:.1rem;font-size:1rem">
-                                    <span style="color:var(--hms-text-muted);font-size:.85rem">MRD preview: <strong
-                                            id="mrdPreview" style="color:var(--hms-primary)">---0001</strong></span>
-                                </div>
-                                <div class="slug-status" id="codeStatus"></div>
-                                @error('hospital_code')
-                                    <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                        {{ $message }}</span>
-                                @enderror
-                            </div>
-
-                            <div class="form-row-2">
-                                <div class="hms-form-group">
-                                    <label>Country</label>
-                                    <select name="country" id="regCountry" class="hms-select">
-                                        <option value="">Search or Add Country</option>
-                                        @foreach($countries as $c)
-                                            <option value="{{ $c->name }}"
-                                                    data-id="{{ $c->id }}"
-                                                    data-country-code="{{ $c->country_code ?? '' }}"
-                                                    data-currency-code="{{ $c->currency_code ?? 'INR' }}"
-                                                    data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
-                                                    data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}"
-                                                    {{ old('country') === $c->name ? 'selected' : '' }}>
-                                                {{ $c->name }}@if($c->country_code) ({{ $c->country_code }})@endif
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="hms-form-group">
-                                    <label>State</label>
-                                    <select name="state" id="regState" class="hms-select" disabled>
-                                        <option value="">Search or Add State</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-row-2">
-                                <div class="hms-form-group">
-                                    <label>District</label>
-                                    <select name="district" id="regDistrict" class="hms-select" disabled>
-                                        <option value="">Search or Add District</option>
-                                    </select>
-                                </div>
-                                <div class="hms-form-group">
-                                    <label>City</label>
-                                    <select name="city" id="regCity" class="hms-select" disabled>
-                                        <option value="">Search or Add City</option>
-                                    </select>
-                                </div>
-                            </div>
+                    <div class="reg-stat-grid">
+                        <div class="reg-stat-mini">
+                            <span class="rsm-num">14</span>
+                            <span class="rsm-lbl">Days Free</span>
                         </div>
-
-                        {{-- Admin Account --}}
-                        <div class="reg-section">
-                            <div class="reg-section-label"><i class="fa-solid fa-user-tie"></i> Admin Account</div>
-
-                            <div class="form-row-2">
-                                <div class="hms-form-group">
-                                    <label>Admin Name *</label>
-                                    <input type="text" name="admin_name"
-                                        class="hms-input @error('admin_name') is-invalid @enderror"
-                                        value="{{ old('admin_name') }}" placeholder="Dr. John Smith" required>
-                                    @error('admin_name')
-                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ $message }}</span>
-                                    @enderror
-                                </div>
-                                <div class="hms-form-group">
-                                    <label>Admin Email *</label>
-                                    <input type="email" name="admin_email"
-                                        class="hms-input @error('admin_email') is-invalid @enderror"
-                                        value="{{ old('admin_email') }}" placeholder="admin@hospital.com" required>
-                                    @error('admin_email')
-                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ $message }}</span>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            <div class="hms-form-group">
-                                <label>Phone Number *</label>
-                                <input type="tel" name="admin_phone"
-                                    class="hms-input @error('admin_phone') is-invalid @enderror"
-                                    value="{{ old('admin_phone') }}" placeholder="+919876543210" required
-                                    data-intl-phone>
-                                @error('admin_phone')
-                                    <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                        {{ $message }}</span>
-                                @enderror
-                            </div>
+                        <div class="reg-stat-mini">
+                            <span class="rsm-num">OPD+OT</span>
+                            <span class="rsm-lbl">Full stack</span>
                         </div>
-
-                        {{-- Security --}}
-                        <div class="reg-section">
-                            <div class="reg-section-label"><i class="fa-solid fa-lock"></i> Security</div>
-
-                            <div class="form-row-2">
-                                <div class="hms-form-group">
-                                    <label>Password *</label>
-                                    <div class="password-field-wrap">
-                                        <input type="password" name="password" id="registerPassword"
-                                            class="hms-input password-field-input @error('password') is-invalid @enderror"
-                                            placeholder="Min 8 characters" required minlength="8">
-                                        <button type="button" id="toggleRegisterPassword" class="password-field-toggle"
-                                            aria-label="Toggle password visibility">
-                                            <svg id="regPassEye" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
-                                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                </path>
-                                                <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    @error('password')
-                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
-                                            {{ $message }}</span>
-                                    @enderror
-                                </div>
-                                <div class="hms-form-group">
-                                    <label>Confirm Password *</label>
-                                    <div class="password-field-wrap">
-                                        <input type="password" name="password_confirmation" id="registerPasswordConfirm"
-                                            class="hms-input password-field-input" placeholder="Repeat password" required
-                                            minlength="8">
-                                        <button type="button" id="toggleRegisterPasswordConfirm"
-                                            class="password-field-toggle" aria-label="Toggle confirm password visibility">
-                                            <svg id="regPassConfirmEye" viewBox="0 0 24 24" aria-hidden="true">
-                                                <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
-                                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                </path>
-                                                <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="reg-stat-mini">
+                            <span class="rsm-num">Roles</span>
+                            <span class="rsm-lbl">Desk ready</span>
                         </div>
+                        <div class="reg-stat-mini">
+                            <span class="rsm-num">Cloud</span>
+                            <span class="rsm-lbl">Anywhere</span>
+                        </div>
+                    </div>
 
-                        {{-- Plan Selection --}}
-                        <div class="reg-section">
-                            <div class="reg-section-label"><i class="fa-solid fa-credit-card"></i> Plan After Trial</div>
+                    <div class="reg-gift">
+                        <i class="fa-solid fa-gift"></i>
+                        <span>14 Days Free Trial — No payment required to start</span>
+                    </div>
+                </aside>
 
-                            <div class="plan-cards" id="regPlanCards"
-                                 data-monthly="{{ $planPricing['monthly']['price'] }}"
-                                 data-quarterly="{{ $planPricing['quarterly']['price'] }}"
-                                 data-yearly="{{ $planPricing['yearly']['price'] }}">
-                                <label class="plan-card-label">
-                                    <input type="radio" name="plan" value="monthly" {{ old('plan', request('plan', 'monthly')) === 'monthly' ? 'checked' : '' }}>
-                                    <div class="plan-card-inner">
-                                        <span class="pc-name">Monthly</span>
-                                        <span class="pc-price" data-plan="monthly">{{ platform_currency_symbol() }}{{ number_format($planPricing['monthly']['price']) }}/mo</span>
-                                    </div>
-                                </label>
-                                <label class="plan-card-label">
-                                    <input type="radio" name="plan" value="quarterly" {{ old('plan', request('plan')) === 'quarterly' ? 'checked' : '' }}>
-                                    <div class="plan-card-inner">
-                                        <span class="pc-name">Quarterly</span>
-                                        <span class="pc-price" data-plan="quarterly">{{ platform_currency_symbol() }}{{ number_format($planPricing['quarterly']['price']) }}/qtr</span>
-                                        <span class="pc-save">Save 10% &#9733; Popular</span>
-                                    </div>
-                                </label>
-                                <label class="plan-card-label">
-                                    <input type="radio" name="plan" value="yearly" {{ old('plan', request('plan')) === 'yearly' ? 'checked' : '' }}>
-                                    <div class="plan-card-inner">
-                                        <span class="pc-name">Yearly</span>
-                                        <span class="pc-price" data-plan="yearly">{{ platform_currency_symbol() }}{{ number_format($planPricing['yearly']['price']) }}/yr</span>
-                                        <span class="pc-save">Save 20%</span>
-                                    </div>
-                                </label>
+                {{-- Right: form --}}
+                <div class="reg-form-card">
+                    <div class="reg-form-head">
+                        <div class="reg-form-head-row">
+                            <div>
+                                <h2>
+                                    <span class="reg-head-ico"><i class="fa-solid fa-hospital-user"></i></span>
+                                    Create your account
+                                </h2>
+                                <p>All fields marked * are required</p>
                             </div>
-                            <p id="regPlanCurrencyHint" style="margin-top:.5rem;font-size:.75rem;color:var(--hms-text-muted)">
-                                Prices shown in <strong id="regPlanCurrencyLabel">{{ platform_currency_code() }}</strong> based on selected country.
+                            <p class="reg-login-hint">
+                                Already registered?
+                                <a href="{{ route('login') }}">Login</a>
                             </p>
-                            @error('plan')
-                                <span class="hms-form-error" style="margin-top:.5rem"><i
-                                        class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
-                            @enderror
                         </div>
+                    </div>
 
-                        <button type="submit" class="hms-btn hms-btn-success hms-btn-block"
-                            style="padding:.875rem;font-size:1rem;display:flex;align-items:center;justify-content:center;gap:.5rem;border-radius:var(--hms-radius);border:none;cursor:pointer;font-weight:700;margin-top:.25rem">
-                            <i class="fa-solid fa-rocket"></i> Start 14-Day Free Trial
-                        </button>
+                    <div class="reg-form-body">
 
-                        <p style="text-align:center;margin-top:1rem;font-size:.775rem;color:var(--hms-text-muted)">
-                            By registering, you agree to our <a href="#" style="color:var(--hms-primary)">Terms of
-                                Service</a> and <a href="#" style="color:var(--hms-primary)">Privacy Policy</a>.
-                        </p>
-                    </form>
+                        <form method="POST" action="{{ route('register.store') }}" id="registerForm">
+                            @csrf
+
+                            {{-- Hospital Info --}}
+                            <div class="reg-section">
+                                <div class="reg-section-label"><i class="fa-solid fa-hospital"></i> Hospital Details</div>
+
+                                <div class="hms-form-group">
+                                    <label>Hospital Name *</label>
+                                    <input type="text" name="hospital_name"
+                                        class="hms-input @error('hospital_name') is-invalid @enderror"
+                                        value="{{ old('hospital_name') }}" placeholder="e.g. Vision Eye Centre" required
+                                        id="hospitalName">
+                                    @error('hospital_name')
+                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                            {{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="hms-form-group">
+                                    <label>Hospital URL Slug *</label>
+                                    <div class="slug-input-wrap">
+                                        <span class="slug-prefix">{{ parse_url(url('/'), PHP_URL_HOST) }}/</span>
+                                        <input type="text" name="slug" id="slugInput"
+                                            class="slug-input-field @error('slug') is-invalid @enderror"
+                                            value="{{ old('slug') }}" placeholder="vision-eye-centre" required
+                                            pattern="[a-z0-9\-]+" minlength="3" maxlength="30">
+                                    </div>
+                                    <div class="slug-status" id="slugStatus"></div>
+                                    @error('slug')
+                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                            {{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="hms-form-group">
+                                    <label>Hospital Code * <span
+                                            style="font-weight:400;color:#5d7084;font-size:.8rem">(3–4 letters — MRD prefix)</span></label>
+                                    <div class="reg-code-row">
+                                        <input type="text" name="hospital_code" id="hospitalCodeInput"
+                                            class="hms-input @error('hospital_code') is-invalid @enderror"
+                                            value="{{ old('hospital_code') }}"
+                                            placeholder="e.g. MAI" required maxlength="4">
+                                        <span class="reg-mrd-preview">MRD preview: <strong
+                                                id="mrdPreview">---0001</strong></span>
+                                    </div>
+                                    <div class="slug-status" id="codeStatus"></div>
+                                    @error('hospital_code')
+                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                            {{ $message }}</span>
+                                    @enderror
+                                </div>
+
+                                <div class="form-row-2">
+                                    <div class="hms-form-group">
+                                        <label>Country</label>
+                                        <select name="country" id="regCountry" class="hms-select">
+                                            <option value="">Search or Add Country</option>
+                                            @foreach($countries as $c)
+                                                <option value="{{ $c->name }}"
+                                                        data-id="{{ $c->id }}"
+                                                        data-country-code="{{ $c->country_code ?? '' }}"
+                                                        data-currency-code="{{ $c->currency_code ?? 'INR' }}"
+                                                        data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
+                                                        data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}"
+                                                        {{ old('country') === $c->name ? 'selected' : '' }}>
+                                                    {{ $c->name }}@if($c->country_code) ({{ $c->country_code }})@endif
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="hms-form-group">
+                                        <label>State</label>
+                                        <select name="state" id="regState" class="hms-select" disabled>
+                                            <option value="">Search or Add State</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-row-2">
+                                    <div class="hms-form-group">
+                                        <label>District</label>
+                                        <select name="district" id="regDistrict" class="hms-select" disabled>
+                                            <option value="">Search or Add District</option>
+                                        </select>
+                                    </div>
+                                    <div class="hms-form-group">
+                                        <label>City</label>
+                                        <select name="city" id="regCity" class="hms-select" disabled>
+                                            <option value="">Search or Add City</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Admin Account --}}
+                            <div class="reg-section">
+                                <div class="reg-section-label"><i class="fa-solid fa-user-tie"></i> Admin Account</div>
+
+                                <div class="form-row-2">
+                                    <div class="hms-form-group">
+                                        <label>Admin Name *</label>
+                                        <input type="text" name="admin_name"
+                                            class="hms-input @error('admin_name') is-invalid @enderror"
+                                            value="{{ old('admin_name') }}" placeholder="Dr. John Smith" required>
+                                        @error('admin_name')
+                                            <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                                {{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                    <div class="hms-form-group">
+                                        <label>Admin Email *</label>
+                                        <input type="email" name="admin_email"
+                                            class="hms-input @error('admin_email') is-invalid @enderror"
+                                            value="{{ old('admin_email') }}" placeholder="admin@hospital.com" required>
+                                        @error('admin_email')
+                                            <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                                {{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <div class="hms-form-group">
+                                    <label>Phone Number *</label>
+                                    <input type="tel" name="admin_phone"
+                                        class="hms-input @error('admin_phone') is-invalid @enderror"
+                                        value="{{ old('admin_phone') }}" placeholder="+919876543210" required
+                                        data-intl-phone>
+                                    @error('admin_phone')
+                                        <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                            {{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            {{-- Security --}}
+                            <div class="reg-section">
+                                <div class="reg-section-label"><i class="fa-solid fa-lock"></i> Security</div>
+
+                                <div class="form-row-2">
+                                    <div class="hms-form-group">
+                                        <label>Password *</label>
+                                        <div class="password-field-wrap">
+                                            <input type="password" name="password" id="registerPassword"
+                                                class="hms-input password-field-input @error('password') is-invalid @enderror"
+                                                placeholder="Min 8 characters" required minlength="8">
+                                            <button type="button" id="toggleRegisterPassword" class="password-field-toggle"
+                                                aria-label="Toggle password visibility">
+                                                <svg id="regPassEye" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
+                                                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    </path>
+                                                    <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        @error('password')
+                                            <span class="hms-form-error"><i class="fa-solid fa-circle-exclamation"></i>
+                                                {{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                    <div class="hms-form-group">
+                                        <label>Confirm Password *</label>
+                                        <div class="password-field-wrap">
+                                            <input type="password" name="password_confirmation" id="registerPasswordConfirm"
+                                                class="hms-input password-field-input" placeholder="Repeat password" required
+                                                minlength="8">
+                                            <button type="button" id="toggleRegisterPasswordConfirm"
+                                                class="password-field-toggle" aria-label="Toggle confirm password visibility">
+                                                <svg id="regPassConfirmEye" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path d="M1.5 12s3.5-7 10.5-7 10.5 7 10.5 7-3.5 7-10.5 7S1.5 12 1.5 12Z"
+                                                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                    </path>
+                                                    <circle cx="12" cy="12" r="3.2" stroke-width="1.8"></circle>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Plan Selection --}}
+                            <div class="reg-section">
+                                <div class="reg-section-label"><i class="fa-solid fa-credit-card"></i> Plan After Trial</div>
+
+                                <div class="plan-cards" id="regPlanCards"
+                                     data-monthly="{{ $planPricing['monthly']['price'] }}"
+                                     data-quarterly="{{ $planPricing['quarterly']['price'] }}"
+                                     data-yearly="{{ $planPricing['yearly']['price'] }}">
+                                    <label class="plan-card-label">
+                                        <input type="radio" name="plan" value="monthly" {{ old('plan', request('plan', 'monthly')) === 'monthly' ? 'checked' : '' }}>
+                                        <div class="plan-card-inner">
+                                            <span class="pc-name">Monthly</span>
+                                            <span class="pc-price" data-plan="monthly">{{ platform_currency_symbol() }}{{ number_format($planPricing['monthly']['price']) }}/mo</span>
+                                        </div>
+                                    </label>
+                                    <label class="plan-card-label">
+                                        <input type="radio" name="plan" value="quarterly" {{ old('plan', request('plan')) === 'quarterly' ? 'checked' : '' }}>
+                                        <div class="plan-card-inner">
+                                            <span class="pc-name">Quarterly</span>
+                                            <span class="pc-price" data-plan="quarterly">{{ platform_currency_symbol() }}{{ number_format($planPricing['quarterly']['price']) }}/qtr</span>
+                                            <span class="pc-save">Save 10% &#9733; Popular</span>
+                                        </div>
+                                    </label>
+                                    <label class="plan-card-label">
+                                        <input type="radio" name="plan" value="yearly" {{ old('plan', request('plan')) === 'yearly' ? 'checked' : '' }}>
+                                        <div class="plan-card-inner">
+                                            <span class="pc-name">Yearly</span>
+                                            <span class="pc-price" data-plan="yearly">{{ platform_currency_symbol() }}{{ number_format($planPricing['yearly']['price']) }}/yr</span>
+                                            <span class="pc-save">Save 20%</span>
+                                        </div>
+                                    </label>
+                                </div>
+                                <p id="regPlanCurrencyHint" style="margin-top:.65rem;font-size:.75rem;color:#5d7084">
+                                    Prices shown in <strong id="regPlanCurrencyLabel">{{ platform_currency_code() }}</strong> based on selected country.
+                                </p>
+                                @error('plan')
+                                    <span class="hms-form-error" style="margin-top:.5rem"><i
+                                            class="fa-solid fa-circle-exclamation"></i> {{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            <button type="submit" class="reg-submit">
+                                <i class="fa-solid fa-rocket"></i> Start 14-Day Free Trial
+                            </button>
+
+                            <p class="reg-legal">
+                                By registering, you agree to our <a href="#">Terms of Service</a>
+                                and <a href="#">Privacy Policy</a>.
+                            </p>
+                        </form>
+                    </div>
                 </div>
-            </div>
 
+            </div>
         </div>
     </div>
 

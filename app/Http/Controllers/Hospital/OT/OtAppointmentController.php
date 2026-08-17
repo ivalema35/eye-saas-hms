@@ -64,8 +64,7 @@ class OtAppointmentController extends Controller
         $appointments = $query
             ->orderByDesc('appointment_date')
             ->orderByDesc('id')
-            ->paginate((int) config('app.pagination_limit', 25))
-            ->appends($request->query());
+            ->get();
 
         return view('hospital.ot.appointments.index', [
             'slug' => $slug,

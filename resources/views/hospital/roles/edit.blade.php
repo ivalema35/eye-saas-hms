@@ -1,7 +1,9 @@
 @extends('hospital.layouts.app')
 
 @section('title', 'Edit Role — ' . $role->name)
-@section('page-header', 'Edit Role: ' . $role->name)
+{{-- Layout page-header intentionally unused — heading, breadcrumb and
+list all sit inside one bordered card, matching the panel design used
+across the rest of the app. --}}
 
 @section('content')
 
@@ -18,12 +20,62 @@
     color: var(--roles-primary);
     animation: role-form-in 420ms ease both;
 }
+.role-outer-card {
+    background: #ffffff;
+    border: 1px solid rgba(15, 79, 134, 0.12);
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+    padding: 1.1rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+.role-header-block {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.role-header-title {
+    font-weight: 800;
+    font-size: 1.3rem;
+    color: var(--roles-primary);
+    letter-spacing: -.015em;
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+}
+.role-header-title i {
+    color: var(--roles-primary);
+    font-size: 1.2rem;
+}
+.role-breadcrumb {
+    margin-top: .4rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .85rem;
+    color: #8891a0;
+}
+.role-breadcrumb a {
+    color: #8891a0;
+    text-decoration: none;
+}
+.role-breadcrumb a:hover {
+    color: var(--roles-primary);
+}
+.role-breadcrumb-sep {
+    color: #c3c9d3;
+}
+.role-breadcrumb-current {
+    color: #4a5568;
+    font-weight: 600;
+}
 .role-form-card,
 .permission-card {
-    border: 1px solid var(--roles-border) !important;
-    border-radius: 22px;
+    border: 1px solid rgba(15, 79, 134, 0.08) !important;
+    border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 14px 36px rgba(38, 50, 56, .08) !important;
+    box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05) !important;
     background: var(--roles-panel);
 }
 .role-form-card .hms-card-header {
@@ -189,6 +241,25 @@
 </style>
 
 <div class="role-form-page">
+
+<div class="role-outer-card">
+    <div class="role-header-block">
+        <div>
+            <div class="role-header-title"><i class="bi bi-shield-lock"></i> Edit Role: {{ $role->name }}</div>
+            <nav class="role-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="role-breadcrumb-sep">/</span>
+                <a href="{{ route('hospital.roles.index', ['slug' => $slug]) }}">Roles &amp; Permissions</a>
+                <span class="role-breadcrumb-sep">/</span>
+                <span class="role-breadcrumb-current">Edit Role</span>
+            </nav>
+        </div>
+        <a href="{{ route('hospital.roles.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+            <i class="bi bi-arrow-left me-1"></i> Back to Roles
+        </a>
+    </div>
+</div>
+
 <form method="POST" action="{{ route('hospital.roles.update', ['slug' => $slug, 'id' => $role->id]) }}">
     @csrf
     @method('PUT')
@@ -292,7 +363,7 @@
     </div>
 
     <div class="role-submit-actions">
-        <button type="submit" class="hms-btn hms-btn-primary">
+        <button type="submit" class="hms-btn hms-btn-primary" style="color: #1b4f72;">
             <i class="fa-solid fa-check"></i> Save Role
         </button>
         <a href="{{ route('hospital.roles.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">Back to Roles</a>

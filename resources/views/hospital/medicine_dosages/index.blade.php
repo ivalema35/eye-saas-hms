@@ -1,16 +1,23 @@
 @extends('hospital.layouts.app')
 @section('title', 'Medicine Dosages')
-@section('page-header', 'Medicine Master')
-
-@section('page-actions')
-    <button class="btn btn-primary btn-sm med-add-btn" data-bs-toggle="modal" data-bs-target="#dosageModal"
-        onclick="resetDosageForm()">
-        <i class="bi bi-plus-lg me-1"></i> Add Dosage
-    </button>
-@endsection
+{{-- Layout page-header intentionally unused — the heading, breadcrumb, tabs
+and list all sit inside one bordered card, matching the superadmin Medicine
+Master design. --}}
 
 @section('content')
     <div class="medicine-dosages-page medicines-page">
+
+    <div class="medmaster-outer-card">
+        <div class="medmaster-header-block">
+            <div class="medmaster-header-title"><i class="bi bi-capsule"></i> Medicine Master</div>
+            <nav class="medmaster-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="medmaster-breadcrumb-sep">/</span>
+                <span>Medicines</span>
+                <span class="medmaster-breadcrumb-sep">/</span>
+                <span class="medmaster-breadcrumb-current">Medicine Master</span>
+            </nav>
+        </div>
 
         <style>
             .medicine-dosages-page {
@@ -30,12 +37,11 @@
             }
 
             .dosage-card {
-                border: 1px solid var(--dosage-secondary-12) !important;
-                border-radius: 22px;
-                background: rgba(255, 255, 255, .86);
-                box-shadow: 0 18px 48px rgba(27, 79, 114, .10) !important;
+                border: 1px solid rgba(15, 79, 134, 0.08) !important;
+                border-radius: 16px;
+                background: #fff;
+                box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05) !important;
                 overflow: hidden;
-                animation: med-card-rise 520ms cubic-bezier(.2, .9, .2, 1) both;
             }
 
             .dosage-card-header {
@@ -76,72 +82,49 @@
             }
 
             .dosage-table-wrap {
-                padding: .9rem;
                 overflow-x: auto;
             }
 
             .dosage-table {
-                border-collapse: separate;
-                border-spacing: 0 8px;
+                border-collapse: collapse;
+                width: 100%;
                 min-width: 640px;
             }
 
-            .dosage-table thead tr,
             .dosage-table thead th {
-                background: var(--dosage-secondary) !important;
-            }
-
-            .dosage-table thead th {
-                color: #fff !important;
-                border: 0 !important;
-                padding: .9rem 1rem;
-                font-size: .72rem;
-                letter-spacing: .08em;
-                font-weight: 900;
+                background: #F8FAFC;
+                color: #4A5568;
+                border: 0;
+                border-bottom: 1px solid #E2E8F0;
+                padding: .7rem 1rem;
+                font-size: .75rem;
+                letter-spacing: .05em;
+                font-weight: 700;
                 text-transform: uppercase;
                 white-space: nowrap;
-            }
-
-            .dosage-table thead th:first-child {
-                border-top-left-radius: 14px;
-                border-bottom-left-radius: 14px;
-            }
-
-            .dosage-table thead th:last-child {
-                border-top-right-radius: 14px;
-                border-bottom-right-radius: 14px;
+                text-align: left;
             }
 
             .dosage-table tbody tr {
-                animation: med-row-in 460ms ease both;
-                transition: transform 170ms ease, box-shadow 170ms ease;
+                transition: background 150ms ease;
             }
 
             .dosage-table tbody tr:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 16px 34px rgba(27, 79, 114, .10);
+                background: #F5F8FC;
             }
 
             .dosage-table tbody td {
-                background: rgba(255, 255, 255, .92);
-                border-top: 1px solid var(--dosage-secondary-08);
+                background: transparent;
+                border: 0;
                 border-bottom: 1px solid var(--dosage-secondary-08);
                 color: var(--dosage-secondary);
-                padding: .9rem 1rem;
+                padding: .75rem 1rem;
                 vertical-align: middle;
-                font-weight: 650;
+                font-weight: 600;
             }
 
-            .dosage-table tbody td:first-child {
-                border-left: 1px solid var(--dosage-secondary-08);
-                border-top-left-radius: 14px;
-                border-bottom-left-radius: 14px;
-            }
-
-            .dosage-table tbody td:last-child {
-                border-right: 1px solid var(--dosage-secondary-08);
-                border-top-right-radius: 14px;
-                border-bottom-right-radius: 14px;
+            .dosage-table tbody tr:last-child td {
+                border-bottom: 0;
             }
 
             .dosage-index-cell {
@@ -166,7 +149,7 @@
                 width: 34px;
                 height: 34px;
                 padding: 0 !important;
-                border-radius: 50% !important;
+                border-radius: 8px !important;
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -256,57 +239,56 @@
             </div>
         @endif
 
-        <ul class="nav nav-tabs mb-4 type-nav-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-capsule-pill me-1"></i> Dosages
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-tags me-1"></i> Medicine Types
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-grid me-1"></i> Medicine Categories
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-arrow-right-circle me-1"></i> Mode
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-capsule me-1"></i> Medicines
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-collection me-1"></i> Medicine Groups
-                </a>
-            </li>
-            {{-- <li class="nav-item">
-                <a class="nav-link" href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
-                    <i class="bi bi-list-ul me-1"></i> Instructions
-                </a>
-            </li> --}}
-        </ul>
+        <div class="medmaster-tabs-row">
+            <ul class="nav nav-tabs type-nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link active" href="{{ route('hospital.medicine-dosages.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-capsule-pill me-1"></i> Dosages
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.medicine-types.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-tags me-1"></i> Medicine Types
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.medicine-categories.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-grid me-1"></i> Medicine Categories
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.medicine-routes.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-arrow-right-circle me-1"></i> Mode
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-capsule me-1"></i> Medicines
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-collection me-1"></i> Medicine Groups
+                    </a>
+                </li>
+                {{-- <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-list-ul me-1"></i> Instructions
+                    </a>
+                </li> --}}
+            </ul>
+            <div class="medmaster-tab-actions">
+                <button class="btn btn-primary btn-sm med-add-btn" data-bs-toggle="modal" data-bs-target="#dosageModal"
+                    onclick="resetDosageForm()">
+                    <i class="bi bi-plus-lg me-1"></i> Add Dosage
+                </button>
+            </div>
+        </div>
 
         <div class="card type-card border-0 dosage-card">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3 dosage-card-header">
-                <div class="d-flex align-items-center gap-3">
-                    <span class="dosage-title-icon" style="flex-shrink:0">
-                        <i class="bi bi-capsule-pill fs-4"></i>
-                    </span>
-                    <div>
-                        <h5 class="mb-0 fw-bold dosage-title" style="color: var(--color-primary);">Dosages</h5>
-                        <div class="dosage-subtitle">Manage reusable dosage instructions for prescriptions.</div>
-                    </div>
-                </div>
-                <span class="badge text-bg-light border"
-                    style="font-size:.85rem;font-weight:900;padding:.45rem .85rem">{{ $dosages->count() }} total</span>
+            <div class="medmaster-list-header">
+                <h3 class="medmaster-list-title"><i class="bi bi-capsule-pill"></i> Dosage List</h3>
+                <span class="medmaster-list-badge">{{ $dosages->count() }} total</span>
             </div>
 
             <div class="card-body p-0">
@@ -329,7 +311,7 @@
                                             <button type="button"
                                                 class="btn btn-sm btn-outline-secondary dosage-icon-btn dosage-edit-btn edit-dosage-btn"
                                                 data-record="{{ json_encode($dosage) }}" title="Edit">
-                                                <i class="bi bi-pencil-fill" style="color: var(--color-secondary);"></i>
+                                                <i class="bi bi-pencil-fill"></i>
                                             </button>
                                             <form
                                                 action="{{ route('hospital.medicine-dosages.destroy', ['slug' => $slug, 'id' => $dosage->id]) }}"
@@ -358,6 +340,8 @@
                 </div>
             </div>
         </div>
+
+    </div>{{-- /.medmaster-outer-card --}}
     </div>
 
     <div class="modal fade premium-modal" id="dosageModal" tabindex="-1" aria-hidden="true">
