@@ -63,7 +63,7 @@
                             <div class="ot-actions d-flex justify-content-end gap-2">
                                 <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
                                     class="hms-btn hms-btn-outline">Cancel</a>
-                                <button type="submit" class="hms-btn hms-btn-primary px-4">
+                                <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1B4F72;">
                                     <i class="bi bi-check2-circle me-1"></i> Save Appointment
                                 </button>
                             </div>

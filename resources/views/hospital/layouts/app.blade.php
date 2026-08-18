@@ -24,7 +24,7 @@
 
     {{-- Font Awesome (legacy pages; can be removed after full icon migration) --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
-        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uf0aJSUYjaQfXArGPgql7EiSBEeP4MNFxZJR2A=="
+        integrity="sha512-Avb2QiuDEEvB4bZJYdft2mNjVShBftLdPG8FJ0V7irTLQ8Uo0qcPxh4Plq7G5tGm0rU+1SPhVotteLpBERwTkw=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     {{-- Select2 CSS --}}
@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                           now runs full height and the search/profile bar lives
-                                           inside the scrollable content column (design refresh). */
+                                                       now runs full height and the search/profile bar lives
+                                                       inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -721,7 +721,7 @@
             text-decoration: none;
         }
 
-        .sidebar-brand-mark {
+        /* .sidebar-brand-mark {
             background: transparent;
             display: inline-flex;
             align-items: center;
@@ -730,12 +730,12 @@
             width: 63px;
             height: 63px;
             overflow: hidden;
-        }
+        } */
 
         .sidebar-brand-mark .sidebar-logo {
-            height: 48px;
+            height: 60px;
             width: auto;
-            max-width: 63px;
+            max-width: 100px;
             object-fit: contain;
             display: block;
         }
@@ -1148,16 +1148,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                                                                                                            <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                                                                                <i class="bi bi-list-task"></i> Basic Master
-                                                                                                                            </a>
-                                                                                                                            <ul class="dropdown-menu">
-                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                                                                            </ul>
-                                                                                                                        </div> -->
+                                                                                                                                        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                                                                                            <i class="bi bi-list-task"></i> Basic Master
+                                                                                                                                        </a>
+                                                                                                                                        <ul class="dropdown-menu">
+                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                                                                                        </ul>
+                                                                                                                                    </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
@@ -1263,11 +1263,6 @@
                             <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
                                 style="filter:{{ $sidebarLogoFilter }}!important;" loading="lazy" decoding="async">
                         @endif
-                    </span>
-                    <span class="sidebar-brand-copy">
-                        <span class="sidebar-brand-name" title="{{ $hospitalName }}"
-                            style="--name-len: {{ mb_strlen((string) $hospitalName) }};">{{ $hospitalName }}</span>
-                        <span class="sidebar-brand-tag">Hospital Workspace</span>
                     </span>
                 </a>
             </div>
@@ -1661,7 +1656,7 @@
                         <div class="dropdown hms-content-profile">
                             <button type="button" class="hms-content-user-info dropdown-toggle" data-bs-toggle="dropdown"
                                 aria-expanded="false" title="Account menu" aria-label="Account menu">
-                                <strong>{{ $contentTopbarUser?->name }}</strong>
+                                <strong>{{ $hospitalName }}</strong>
                                 <small>{{ $contentTopbarUser?->role?->name ?? 'Hospital Staff' }}</small>
                             </button>
                             <div class="dropdown-menu dropdown-menu-end hms-content-profile-menu">

@@ -4,7 +4,7 @@
 @section('page-header', 'Plan Management')
 
 @section('page-actions')
-    <button type="button" class="hms-btn hms-btn-primary" onclick="document.getElementById('editPricingModal').showModal()">
+    <button type="button" class="hms-btn hms-btn-primary" onclick="document.getElementById('editPricingModal').showModal()" style="color: #1b4f72;">
         <i class="bi bi-pencil-fill"></i> Edit Pricing
     </button>
 @endsection
