@@ -31,8 +31,10 @@ class TenantService
 
         $tenant = DB::transaction(function () use ($data, &$tenantId) {
 
+            $needsApproval = empty($data['skip_approval']);
+
             $trialDays = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
-            $trialEndsAt = Carbon::now()->addDays($trialDays);
+            $trialEndsAt = $needsApproval ? null : Carbon::now()->addDays($trialDays);
 
             // 1. Tenant record create karo
             $country  = $data['country'] ?? null;
@@ -62,7 +64,7 @@ class TenantService
                 'currency_code' => $currency['code'],
                 'currency_symbol' => $currency['symbol'],
                 'is_currency_override' => false,
-                'status' => 'trial',
+                'status' => $needsApproval ? 'pending' : 'trial',
                 'trial_ends_at' => $trialEndsAt,
                 'is_setup_done' => false,
             ]);
@@ -96,16 +98,37 @@ class TenantService
 
             $tenantId = $tenant->id;
 
-            Log::info("New tenant created: #{$tenant->id} ({$tenant->slug}) — trial until {$trialEndsAt->toDateString()}");
+            Log::info("New tenant created: #{$tenant->id} ({$tenant->slug}) — status {$tenant->status}");
 
             return $tenant;
         });
 
         // Dispatch OUTSIDE transaction — tenant is committed and visible to job
-        SendWelcomeEmail::dispatch($tenant);
-        SeedTenantDefaultMasters::dispatch($tenantId);
+        if (empty($data['skip_approval'])) {
+            SeedTenantDefaultMasters::dispatch($tenantId);
+        } else {
+            SendWelcomeEmail::dispatch($tenant);
+            SeedTenantDefaultMasters::dispatch($tenantId);
+        }
 
         return $tenant;
+    }
+
+    public function approveRegistration(Tenant $tenant): void
+    {
+        $trialDays = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
+        $tenant->update([
+            'status' => 'trial',
+            'trial_ends_at' => Carbon::now()->addDays($trialDays),
+        ]);
+        SendWelcomeEmail::dispatch($tenant);
+        Log::info("Tenant registration approved: #{$tenant->id} ({$tenant->slug})");
+    }
+
+    public function rejectRegistration(Tenant $tenant): void
+    {
+        $tenant->update(['status' => 'inactive']);
+        Log::info("Tenant registration rejected: #{$tenant->id} ({$tenant->slug})");
     }
 
     public function activate(Tenant $tenant): void
@@ -124,11 +147,19 @@ class TenantService
     {
         $subscription = $tenant->subscriptions()->latest()->first();
         if ($subscription) {
-            $newEnd = Carbon::parse($subscription->ends_at)->addDays($days);
+            $baseEnd = $subscription->ends_at && Carbon::parse($subscription->ends_at)->isFuture()
+                ? Carbon::parse($subscription->ends_at)
+                : now();
+            $newEnd = $baseEnd->copy()->addDays($days);
             $subscription->update(['ends_at' => $newEnd]);
+            $tenant->update(['status' => 'grace']);
+        } else {
+            $base = $tenant->trial_ends_at && Carbon::parse($tenant->trial_ends_at)->isFuture()
+                ? Carbon::parse($tenant->trial_ends_at)
+                : now();
+            $newTrialEnd = $base->copy()->addDays($days);
+            $tenant->update(['status' => 'grace', 'trial_ends_at' => $newTrialEnd]);
         }
-
-        $tenant->update(['status' => 'grace']);
         Log::info("Tenant #{$tenant->id} grace extended by {$days} days");
     }
 }

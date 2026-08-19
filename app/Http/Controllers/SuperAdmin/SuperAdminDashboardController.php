@@ -27,6 +27,8 @@ class SuperAdminDashboardController extends Controller
         $graceCount = Tenant::where('status', 'grace')->count();
         $suspendedCount = Tenant::where('status', 'suspended')->count();
         $inactiveCount = Tenant::where('status', 'inactive')->count();
+        $pendingCount = Tenant::where('status', 'pending')->count();
+        $latestPending = Tenant::where('status', 'pending')->latest()->first();
 
         $monthlyRevenue = Payment::where('status', 'success')
             ->whereMonth('paid_at', $now->month)
@@ -85,6 +87,8 @@ class SuperAdminDashboardController extends Controller
             'graceCount',
             'suspendedCount',
             'inactiveCount',
+            'pendingCount',
+            'latestPending',
             'monthlyRevenue',
             'expiringThisWeek',
             'revenueMonths',

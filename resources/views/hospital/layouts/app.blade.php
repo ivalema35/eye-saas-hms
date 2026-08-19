@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                                       now runs full height and the search/profile bar lives
-                                                       inside the scrollable content column (design refresh). */
+                                                               now runs full height and the search/profile bar lives
+                                                               inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -1082,18 +1082,7 @@
         })();
     </script>
 
-    {{-- ================================================
-    Grace Period Warning Banner
-    ================================================ --}}
-    @if(session('show_grace_warning'))
-        <div class="hms-grace-banner">
-            <i class="bi bi-exclamation-triangle-fill"></i>
-            <strong>Warning:</strong>
-            Aapka subscription expire ho gaya hai. Please renew karein warna access band ho jayega.
-            <a href="{{ route('hospital.settings.index', ['slug' => request()->route('slug')]) }}"
-                class="hms-grace-link">Renew Now</a>
-        </div>
-    @endif
+    {{-- Grace Period Warning Banner removed --}}
 
     {{-- ================================================
     Top Navigation Bar
@@ -1148,16 +1137,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                                                                                                                        <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                                                                                            <i class="bi bi-list-task"></i> Basic Master
-                                                                                                                                        </a>
-                                                                                                                                        <ul class="dropdown-menu">
-                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                                                                                        </ul>
-                                                                                                                                    </div> -->
+                                                                                                                                                <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                                                                                                    <i class="bi bi-list-task"></i> Basic Master
+                                                                                                                                                </a>
+                                                                                                                                                <ul class="dropdown-menu">
+                                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                                                                                                </ul>
+                                                                                                                                            </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">

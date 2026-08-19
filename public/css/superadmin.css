@@ -728,7 +728,7 @@
     border-color: rgba(15, 79, 134, 0.16);
 }
 .sa-btn-ghost:hover {
-    background: rgba(15, 79, 134, 0.05);
+    /* background: rgba(15, 79, 134, 0.05); */
     border-color: rgba(15, 79, 134, 0.28);
     color: #0f4f86 !important;
     transform: translateY(-1px);
@@ -881,6 +881,17 @@
     color: var(--kpi-accent);
     white-space: nowrap;
     letter-spacing: 0.01em;
+}
+.sa-kpi-chip--new {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.58rem;
+    border-radius: 999px;
+    background: #e11d48;
+    color: #fff;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
 }
 .sa-kpi-chip--ok {
     color: #0d9488;

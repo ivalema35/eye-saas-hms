@@ -57,7 +57,10 @@ class SecondaryExamController extends Controller
             }
         }
         $user = Auth::guard('hospital_user')->user();
-        $ed = $secondaryExam?->exam_data ?? ($primaryExam?->exam_data ?? []);
+        $ed = $this->examinationService->examDataForSecondaryForm(
+            is_array($primaryExam?->exam_data) ? $primaryExam->exam_data : [],
+            is_array($secondaryExam?->exam_data) ? $secondaryExam->exam_data : []
+        );
 
         $doctors = HospitalUser::query()
             ->where('tenant_id', $tenantId)

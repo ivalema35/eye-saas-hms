@@ -4,8 +4,11 @@
       $history         — Collection of PrimaryExamination / SecondaryExamination
       $diagnosisMasters — Collection with id + diagnosis columns
       $dosageMasters    — Collection keyed by id
+      $isOwnHistory     — bool, defaults true. Set to false for partner-hospital
+                           (shared, cross-tenant) history so the Edit button is hidden.
 --}}
 <style>{!! axis_chip_css() !!}</style>
+@php $isOwnHistory = $isOwnHistory ?? true; @endphp
 @if($history->isEmpty())
     <p class="history-empty text-muted text-center py-5 mb-0">
         <i class="bi bi-journal-x fs-2 d-block mb-2 opacity-50"></i>
@@ -84,6 +87,13 @@
                                     data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}">
                                     <i class="bi bi-clipboard2-pulse me-1"></i> View Clinical Data
                                 </button>
+
+                                @if($isOwnHistory)
+                                    <a href="{{ route($isPrimary ? 'hospital.exam.primary.show' : 'hospital.exam.secondary.show', ['slug' => $slug, 'id' => $exam->patient_id]) }}"
+                                        class="btn btn-sm btn-{{ $exam->color }} mt-1 ms-1" style="color:#fff;">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </a>
+                                @endif
 
                                 <div class="collapse mt-3" id="{{ $collapseId }}">
                                     @php

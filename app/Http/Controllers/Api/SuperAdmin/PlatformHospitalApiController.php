@@ -111,6 +111,7 @@ class PlatformHospitalApiController extends Controller
         $validated['hospital_code'] = $this->generateHospitalCode($validated['hospital_name']);
         $validated['plan']          = $validated['plan'] ?? 'monthly';
         $validated['start_trial']   = '1';
+        $validated['skip_approval'] = true;
 
         $tenant = $this->tenantService->createTenant($validated);
 

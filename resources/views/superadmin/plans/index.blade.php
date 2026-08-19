@@ -114,6 +114,137 @@
 
 </div>
 
+{{-- ── Country-wise Price Overrides ── --}}
+<div class="hms-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:1.1rem 1.25rem;border-bottom:1px solid rgba(15,79,134,.08);background:linear-gradient(180deg,#fafcfe,#fff)">
+        <div style="display:flex;align-items:center;gap:.75rem">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(15,79,134,.1);color:#0f4f86;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">
+                <i class="bi bi-globe2"></i>
+            </div>
+            <div>
+                <div style="font-weight:750;color:#0f4f86;font-size:.95rem">Country-wise Price Overrides</div>
+                <div style="font-size:.72rem;color:#94a3b8">Set exact local prices per country. Falls back to FX conversion if not set.</div>
+            </div>
+        </div>
+        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" onclick="document.getElementById('addCountryPriceModal').showModal()">
+            <i class="bi bi-plus-lg"></i> Add Country Price
+        </button>
+    </div>
+
+    @if($countryPrices->isEmpty())
+        <div style="padding:2rem;text-align:center;color:#94a3b8;font-size:.875rem">
+            <i class="bi bi-globe" style="font-size:1.5rem;display:block;margin-bottom:.5rem;opacity:.4"></i>
+            No country-specific prices set — FX conversion is used for all countries.
+        </div>
+    @else
+        <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:.875rem">
+                <thead>
+                    <tr style="background:rgba(15,79,134,.03)">
+                        <th style="padding:.7rem 1.15rem;text-align:left;font-size:.7rem;font-weight:750;text-transform:uppercase;letter-spacing:.04em;color:#6b7f93;border-bottom:1px solid rgba(15,79,134,.08)">Country</th>
+                        <th style="padding:.7rem 1.15rem;text-align:right;font-size:.7rem;font-weight:750;text-transform:uppercase;letter-spacing:.04em;color:#6b7f93;border-bottom:1px solid rgba(15,79,134,.08)">Monthly</th>
+                        <th style="padding:.7rem 1.15rem;text-align:right;font-size:.7rem;font-weight:750;text-transform:uppercase;letter-spacing:.04em;color:#6b7f93;border-bottom:1px solid rgba(15,79,134,.08)">Quarterly</th>
+                        <th style="padding:.7rem 1.15rem;text-align:right;font-size:.7rem;font-weight:750;text-transform:uppercase;letter-spacing:.04em;color:#6b7f93;border-bottom:1px solid rgba(15,79,134,.08)">Yearly</th>
+                        <th style="padding:.7rem 1.15rem;text-align:right;font-size:.7rem;font-weight:750;text-transform:uppercase;letter-spacing:.04em;color:#6b7f93;border-bottom:1px solid rgba(15,79,134,.08)">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($countryPrices as $countryId => $prices)
+                        @php
+                            $priceByC = $prices->keyBy('cycle');
+                            $countryName = $priceByC->first()?->country?->name ?? '—';
+                            $currencySymbol = $priceByC->first()?->country?->currency_symbol ?? '';
+                        @endphp
+                        <tr class="cp-row" data-country-id="{{ $countryId }}" style="border-bottom:1px solid rgba(15,79,134,.05);transition:background .15s">
+                            <td style="padding:.85rem 1.15rem;font-weight:600;color:#0a1628">{{ $countryName }}</td>
+                            <td style="padding:.85rem 1.15rem;text-align:right;color:#334155">
+                                {{ $currencySymbol }}{{ number_format($priceByC->get('monthly')?->price ?? 0) }}
+                            </td>
+                            <td style="padding:.85rem 1.15rem;text-align:right;color:#334155">
+                                {{ $currencySymbol }}{{ number_format($priceByC->get('quarterly')?->price ?? 0) }}
+                            </td>
+                            <td style="padding:.85rem 1.15rem;text-align:right;color:#334155">
+                                {{ $currencySymbol }}{{ number_format($priceByC->get('yearly')?->price ?? 0) }}
+                            </td>
+                            <td style="padding:.85rem 1.15rem;text-align:right">
+                                <button type="button"
+                                    class="hms-btn-icon cp-edit-btn"
+                                    title="Edit"
+                                    data-country-id="{{ $countryId }}"
+                                    data-country-name="{{ $countryName }}"
+                                    data-monthly="{{ $priceByC->get('monthly')?->price ?? 0 }}"
+                                    data-quarterly="{{ $priceByC->get('quarterly')?->price ?? 0 }}"
+                                    data-yearly="{{ $priceByC->get('yearly')?->price ?? 0 }}"
+                                    onclick="openEditCountryPrice(this)">
+                                    <i class="bi bi-pencil-fill"></i>
+                                </button>
+                                <button type="button"
+                                    class="hms-btn-icon"
+                                    title="Delete"
+                                    style="background:rgba(192,57,43,.08);color:#c0392b;margin-left:.25rem"
+                                    onclick="deleteCountryPrice({{ $countryId }}, '{{ $countryName }}')">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
+{{-- Add/Edit Country Price Modal --}}
+<dialog id="addCountryPriceModal" style="border:none;border-radius:16px;padding:0;width:100%;max-width:520px;box-shadow:0 25px 80px rgba(0,0,0,.22)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:1.15rem 1.5rem;border-bottom:1px solid rgba(15,79,134,.08);background:linear-gradient(180deg,#fafcfe,#fff)">
+        <h5 style="margin:0;font-size:1rem;font-weight:750;color:#0f4f86;display:flex;align-items:center;gap:.5rem">
+            <i class="bi bi-globe2"></i>
+            <span id="cpModalTitle">Add Country Price Override</span>
+        </h5>
+        <button type="button" onclick="document.getElementById('addCountryPriceModal').close()" style="background:none;border:none;font-size:1.1rem;color:#94a3b8;cursor:pointer;padding:.25rem .4rem">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+    <div style="padding:1.5rem">
+        <input type="hidden" id="cpCountryIdInput">
+        <div class="hms-form-group" style="margin-bottom:1rem">
+            <label class="hms-label">Country</label>
+            <select id="cpCountrySelect" class="hms-input">
+                <option value="">— Select country —</option>
+                @foreach($countries as $c)
+                    <option value="{{ $c->id }}" data-symbol="{{ $c->currency_symbol ?? '' }}" data-code="{{ $c->currency_code ?? 'INR' }}">
+                        {{ $c->name }} ({{ $c->currency_code ?? 'INR' }})
+                    </option>
+                @endforeach
+            </select>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem">
+            <div class="hms-form-group">
+                <label class="hms-label">Monthly <span id="cpSymbol" style="color:#94a3b8"></span></label>
+                <input type="number" id="cpMonthly" class="hms-input" min="0" step="1" placeholder="0">
+            </div>
+            <div class="hms-form-group">
+                <label class="hms-label">Quarterly</label>
+                <input type="number" id="cpQuarterly" class="hms-input" min="0" step="1" placeholder="0">
+            </div>
+            <div class="hms-form-group">
+                <label class="hms-label">Yearly</label>
+                <input type="number" id="cpYearly" class="hms-input" min="0" step="1" placeholder="0">
+            </div>
+        </div>
+        <p style="font-size:.75rem;color:#94a3b8;margin-top:.75rem;margin-bottom:0">
+            <i class="bi bi-info-circle"></i>
+            Enter exact prices in the country's local currency. Leave all 0 to remove override.
+        </p>
+    </div>
+    <div style="padding:1rem 1.5rem;border-top:1px solid rgba(15,79,134,.08);display:flex;justify-content:flex-end;gap:.75rem">
+        <button type="button" class="hms-btn hms-btn-outline" onclick="document.getElementById('addCountryPriceModal').close()">Cancel</button>
+        <button type="button" class="hms-btn hms-btn-primary" onclick="saveCountryPrice()">
+            <i class="bi bi-floppy-fill"></i> Save Prices
+        </button>
+    </div>
+</dialog>
+
 {{-- ── Edit Pricing Modal (native <dialog>) ── --}}
 <dialog id="editPricingModal" style="border:none;border-radius:16px;padding:0;width:100%;max-width:640px;box-shadow:0 25px 80px rgba(0,0,0,.25)">
     <div style="display:flex;align-items:center;justify-content:space-between;padding:1.25rem 1.5rem;border-bottom:1px solid #E2E8F0">
@@ -235,6 +366,86 @@
 
 @push('scripts')
 <script>
+// ── Country Price Modal ───────────────────────────────────────────────────
+var CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+document.getElementById('cpCountrySelect').addEventListener('change', function () {
+    var opt = this.options[this.selectedIndex];
+    var sym = opt.getAttribute('data-symbol') || '';
+    document.getElementById('cpSymbol').textContent = sym ? '(' + sym + ')' : '';
+});
+
+function openEditCountryPrice(btn) {
+    var d = btn.dataset;
+    document.getElementById('cpModalTitle').textContent = 'Edit — ' + d.countryName;
+    document.getElementById('cpCountryIdInput').value = d.countryId;
+    var sel = document.getElementById('cpCountrySelect');
+    sel.value = d.countryId;
+    sel.dispatchEvent(new Event('change'));
+    sel.disabled = true;
+    document.getElementById('cpMonthly').value = d.monthly;
+    document.getElementById('cpQuarterly').value = d.quarterly;
+    document.getElementById('cpYearly').value = d.yearly;
+    document.getElementById('addCountryPriceModal').showModal();
+}
+
+document.getElementById('addCountryPriceModal').addEventListener('close', function () {
+    document.getElementById('cpModalTitle').textContent = 'Add Country Price Override';
+    document.getElementById('cpCountryIdInput').value = '';
+    document.getElementById('cpCountrySelect').disabled = false;
+    document.getElementById('cpCountrySelect').value = '';
+    document.getElementById('cpMonthly').value = '';
+    document.getElementById('cpQuarterly').value = '';
+    document.getElementById('cpYearly').value = '';
+    document.getElementById('cpSymbol').textContent = '';
+});
+
+function saveCountryPrice() {
+    var countryId = document.getElementById('cpCountryIdInput').value
+                 || document.getElementById('cpCountrySelect').value;
+    if (!countryId) { alert('Please select a country.'); return; }
+    var monthly   = parseFloat(document.getElementById('cpMonthly').value)   || 0;
+    var quarterly = parseFloat(document.getElementById('cpQuarterly').value) || 0;
+    var yearly    = parseFloat(document.getElementById('cpYearly').value)    || 0;
+    if (!monthly && !quarterly && !yearly) { alert('Enter at least one price.'); return; }
+
+    fetch('{{ route("superadmin.plans.country-price.save") }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        body: JSON.stringify({ country_id: countryId, monthly: monthly, quarterly: quarterly, yearly: yearly })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (data.success) {
+            document.getElementById('addCountryPriceModal').close();
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error saving prices.');
+        }
+    })
+    .catch(function () { alert('Network error.'); });
+}
+
+function deleteCountryPrice(countryId, countryName) {
+    if (!confirm('Remove price override for ' + countryName + '?')) return;
+    fetch('{{ route("superadmin.plans.country-price.delete") }}', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        body: JSON.stringify({ country_id: countryId })
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (data.success) { window.location.reload(); }
+    });
+}
+
+// ── Hover highlight on table rows ───────────────────────────────────────
+document.querySelectorAll('.cp-row').forEach(function (row) {
+    row.addEventListener('mouseenter', function () { this.style.background = 'rgba(15,79,134,.03)'; });
+    row.addEventListener('mouseleave', function () { this.style.background = ''; });
+});
+
+// ── Plan Feature rows ────────────────────────────────────────────────────
 function addFeatureRow() {
     var container = document.getElementById('featuresContainer');
     var row = document.createElement('div');

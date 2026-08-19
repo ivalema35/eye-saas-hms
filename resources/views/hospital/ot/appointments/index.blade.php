@@ -81,7 +81,7 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                             <td>{{ $appointment->patient_name }}</td>
                                             <td>{{ $appointment->mobile_no }}</td>
                                             <td><span
-                                                    class="badge ot-type-badge text-capitalize">{{ str_replace('_', ' ', $appointment->appointment_type) }}</span>
+                                                    class="badge ot-type-badge {{ $appointment->appointment_type === 'ot' ? '' : 'text-capitalize' }}">{{ $appointment->appointment_type === 'ot' ? 'OT' : str_replace('_', ' ', $appointment->appointment_type) }}</span>
                                             </td>
                                             <td>{{ optional($appointment->appointment_date)->format('d M Y') }}</td>
                                             <td>{{ $appointment->doctor?->name ? 'Dr. ' . $appointment->doctor->name : '-' }}

@@ -874,6 +874,11 @@ svg {
     background: var(--hms-warning-bg);
     color: var(--hms-warning);
 }
+.hms-badge-pending,
+.hms-badge-PENDING {
+    background: rgba(15, 79, 134, 0.12);
+    color: #0f4f86;
+}
 
 /* ============================================================
    Stats Grid (Dashboard)

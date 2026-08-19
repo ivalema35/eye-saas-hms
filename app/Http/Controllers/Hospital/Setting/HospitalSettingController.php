@@ -201,6 +201,7 @@ class HospitalSettingController extends Controller
                     && $newTimezone !== $master->default_timezone;
 
                 $tenantRecord->update(array_merge([
+                    'name'                 => $validated['hospital_name'],
                     'country'              => $validated['hospital_country']  ?? $tenantRecord->country,
                     'state'                => $validated['hospital_state']    ?? $tenantRecord->state,
                     'district'             => $validated['hospital_district'] ?? $tenantRecord->district,

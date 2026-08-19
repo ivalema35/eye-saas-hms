@@ -922,6 +922,7 @@
                                 @include('hospital.patient._exam_timeline', [
                                     'history'         => $partnerHistory,
                                     'diagnosisMasters' => $partnerDiagnoses,
+                                    'isOwnHistory'    => false,
                                 ])
                             </div>
                         </div>

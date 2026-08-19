@@ -137,7 +137,8 @@ across the rest of the app. --}}
                                     maxlength="5" placeholder="e.g. JP" style="text-transform:uppercase"
                                     class="hms-input @error('doctor_prefix') is-invalid @enderror">
                                 <div style="font-size:.73rem;color:#94A3B8;margin-top:.25rem">Daily serial format:
-                                    <strong>JP-001, JP-002…</strong></div>
+                                    <strong>JP-001, JP-002…</strong>
+                                </div>
                                 @error('doctor_prefix')
                                 <div class="hms-field-error">{{ $message }}</div>@enderror
                             </div>

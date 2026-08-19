@@ -15,8 +15,8 @@ class MedicineController extends Controller
     public function index(string $slug): View
     {
         $medicineTypes = MedicineType::orderBy('name')->get();
-        $dosages       = Dosage::orderBy('dosage')->get();
-        $medicines     = Medicine::with('medicineType', 'dosage')
+        $dosages = Dosage::orderBy('dosage')->get();
+        $medicines = Medicine::with('medicineType', 'dosage')
             ->latest()
             ->get();
 
@@ -26,7 +26,7 @@ class MedicineController extends Controller
     public function create(string $slug): View
     {
         $medicineTypes = MedicineType::orderBy('name')->get();
-        $dosages       = Dosage::orderBy('dosage')->get();
+        $dosages = Dosage::orderBy('dosage')->get();
 
         return view('hospital.medicines.create', compact('slug', 'medicineTypes', 'dosages'));
     }
@@ -35,14 +35,14 @@ class MedicineController extends Controller
     {
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
-            'name'             => ['required', 'string', 'max:255'],
-            'usage_scope'      => ['required', 'in:opd,ot'],
-            'dosage_id'        => ['required', 'exists:dosages,id'],
-            'duration'         => ['required', 'string', 'max:100'],
-            'qty'              => ['required', 'string', 'max:50'],
-            'composition'      => ['nullable', 'string'],
-            'company'          => ['nullable', 'string', 'max:255'],
-            'price'            => ['nullable', 'numeric', 'min:0'],
+            'name' => ['required', 'string', 'max:255'],
+            // 'usage_scope'      => ['required', 'in:opd,ot'],
+            'dosage_id' => ['required', 'exists:dosages,id'],
+            'duration' => ['required', 'string', 'max:100'],
+            'qty' => ['required', 'string', 'max:50'],
+            'composition' => ['nullable', 'string'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         Medicine::create($validated);
@@ -53,9 +53,9 @@ class MedicineController extends Controller
 
     public function edit(string $slug, int $id): View
     {
-        $medicine      = Medicine::findOrFail($id);
+        $medicine = Medicine::findOrFail($id);
         $medicineTypes = MedicineType::orderBy('name')->get();
-        $dosages       = Dosage::orderBy('dosage')->get();
+        $dosages = Dosage::orderBy('dosage')->get();
 
         return view('hospital.medicines.edit', compact('slug', 'medicine', 'medicineTypes', 'dosages'));
     }
@@ -65,14 +65,14 @@ class MedicineController extends Controller
         $medicine = Medicine::findOrFail($id);
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
-            'name'             => ['required', 'string', 'max:255'],
-            'usage_scope'      => ['required', 'in:opd,ot'],
-            'dosage_id'        => ['required', 'exists:dosages,id'],
-            'duration'         => ['required', 'string', 'max:100'],
-            'qty'              => ['required', 'string', 'max:50'],
-            'composition'      => ['nullable', 'string'],
-            'company'          => ['nullable', 'string', 'max:255'],
-            'price'            => ['nullable', 'numeric', 'min:0'],
+            'name' => ['required', 'string', 'max:255'],
+            // 'usage_scope'      => ['required', 'in:opd,ot'],
+            'dosage_id' => ['required', 'exists:dosages,id'],
+            'duration' => ['required', 'string', 'max:100'],
+            'qty' => ['required', 'string', 'max:50'],
+            'composition' => ['nullable', 'string'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
         $medicine->update($validated);

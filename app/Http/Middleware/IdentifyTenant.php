@@ -78,9 +78,6 @@ class IdentifyTenant
         // BelongsToTenant trait is config ko use karega
         Config::set('app.tenant_id', $tenant->id);
 
-        // Request me bhi set karo (convenience ke liye)
-        $request->merge(['_tenant' => $tenant]);
-
         return $next($request);
     }
 }

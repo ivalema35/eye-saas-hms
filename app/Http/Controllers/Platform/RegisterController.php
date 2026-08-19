@@ -59,7 +59,23 @@ class RegisterController extends Controller
 
         $planPricing = $this->pricingService->basePlans();
 
-        return view('landing.register', compact('countries', 'planPricing'));
+        // Country override prices keyed by country_id for JS use
+        // Wrapped in try-catch so registration page works even before migration runs
+        try {
+            $countryOverrides = \App\Models\Platform\PlanCountryPrice::where('is_active', true)
+                ->get()
+                ->groupBy('country_id')
+                ->map(function ($rows) {
+                    return $rows->keyBy('cycle')->map(fn($r) => (int) $r->price);
+                })
+                ->toArray();
+        } catch (\Exception $e) {
+            $countryOverrides = [];
+        }
+
+        return view('landing.register', compact('countries', 'planPricing', 'countryOverrides'));
+
+        return view('landing.register', compact('countries', 'planPricing', 'countryOverrides'));
     }
 
     /**
@@ -135,9 +151,20 @@ class RegisterController extends Controller
 
         $tenant = $this->tenantService->createTenant($validated);
 
-        return redirect()
-            ->route('hospital.login', ['slug' => $tenant->slug])
-            ->with('success', 'Hospital registered successfully! Please login to continue.');
+        return redirect()->route('register.pending', ['slug' => $tenant->slug]);
+    }
+
+    public function pending(string $slug): View|RedirectResponse
+    {
+        $tenant = Tenant::where('slug', $slug)->firstOrFail();
+
+        if ($tenant->status !== 'pending') {
+            return redirect()->route('hospital.login', ['slug' => $tenant->slug]);
+        }
+
+        return view('landing.register-pending', [
+            'hospitalName' => $tenant->name,
+        ]);
     }
 
     public function getStates(Request $request): JsonResponse

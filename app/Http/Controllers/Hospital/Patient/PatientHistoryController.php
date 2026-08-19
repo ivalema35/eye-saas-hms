@@ -8,6 +8,7 @@ use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use App\Models\Platform\HospitalShareRequest;
+use App\Services\Hospital\ExaminationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -212,10 +213,10 @@ class PatientHistoryController extends Controller
 
                 return $exam;
             })
+            ->filter(fn (SecondaryExamination $exam): bool => $this->examRecordHasContent($exam))
             ->keyBy('patient_id');
 
-        // One exam per visit: secondary once done, primary until then.
-        // (union, not merge — merge() re-indexes integer keys via array_merge and would keep both)
+        // Secondary done → that card only. Secondary still pending → primary only.
         return $secondaryExams->union($primaryExams)->values()->sortByDesc('examined_at');
     }
 
@@ -243,11 +244,18 @@ class PatientHistoryController extends Controller
 
                 return $exam;
             })
+            ->filter(fn (SecondaryExamination $exam): bool => $this->examRecordHasContent($exam))
             ->keyBy('patient_id');
 
-        // One exam per visit: secondary once done, primary until then.
-        // (union, not merge — merge() re-indexes integer keys via array_merge and would keep both)
+        // Secondary done → that card only. Secondary still pending → primary only.
         return $secondaryExams->union($primaryExams)->values()->sortByDesc('examined_at');
+    }
+
+    private function examRecordHasContent(SecondaryExamination $exam): bool
+    {
+        $data = is_array($exam->exam_data) ? $exam->exam_data : [];
+
+        return app(ExaminationService::class)->examDataHasContent($data);
     }
 
     private function loadMasters(int $tenantId): array

@@ -28,21 +28,20 @@ class CheckSubscriptionActive
             abort(404);
         }
 
-        $blockedStatuses = ['inactive', 'suspended'];
+        if ($tenant->status === 'suspended' || ! $tenant->hasAccess()) {
+            $tenant->markExpiredIfNeeded();
 
-        if (in_array($tenant->status, $blockedStatuses)) {
-            // Ajax request ke liye JSON response
+            $message = $tenant->status === 'pending'
+                ? 'Your hospital registration is waiting for SuperAdmin approval.'
+                : 'Your hospital plan has expired. Please contact the administrator.';
+
             if ($request->expectsJson()) {
-                return response()->json([
-                    'error' => 'Subscription inactive. Please renew to continue.',
-                ], 403);
+                return response()->json(['error' => $message], 403);
             }
 
-            // Grace period me hain — warning dikhao lekin allow karo
-            // Inactive/suspended — block karo
             return redirect()
                 ->route('hospital.login', ['slug' => $tenant->slug])
-                ->with('error', 'Your subscription has expired. Please contact support.');
+                ->with('error', $message);
         }
 
         return $next($request);

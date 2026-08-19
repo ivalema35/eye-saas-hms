@@ -7,10 +7,10 @@ used across the rest of the app. --}}
 @push('styles')
     <style>
         /*
-                              OT Reception Dashboard (Design refresh)
-                              - Design-only changes. Dynamic Blade logic untouched.
-                              - Palette follows hospital shell: Primary #ebf5fbeb, Secondary #1B4F72
-                            */
+                                  OT Reception Dashboard (Design refresh)
+                                  - Design-only changes. Dynamic Blade logic untouched.
+                                  - Palette follows hospital shell: Primary #ebf5fbeb, Secondary #1B4F72
+                                */
 
         .ot-recep-dashboard {
             --ot-primary: #ebf5fbeb;

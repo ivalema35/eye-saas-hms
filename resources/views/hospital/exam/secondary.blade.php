@@ -6,7 +6,7 @@ used across the rest of the app. --}}
 
 @section('content')
 
-<div class="exam-header-card">
+<!-- <div class="exam-header-card">
     <div class="exam-header-row">
         <div>
             <div class="exam-header-title"><i class="bi bi-eye-fill"></i> Secondary Eye Examination</div>
@@ -31,24 +31,24 @@ used across the rest of the app. --}}
                     <i class="bi bi-printer"></i> Print Rx
                 </a>
             @endif
-            <!-- @haspermission('opd.foc.create')
+            @haspermission('opd.foc.create')
                 <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
                     <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
                 </button>
-            @endhaspermission -->
+            @endhaspermission
         </div>
     </div>
-</div>
+</div> -->
 
 <style>
-    .exam-header-card {
+    /* .exam-header-card {
         background: #ffffff;
         border: 1px solid rgba(15, 79, 134, 0.12);
         border-radius: 16px;
         box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
         padding: 1.1rem 1.5rem;
         margin-bottom: 1.25rem;
-    }
+    } */
 
     .exam-header-row {
         display: flex;
@@ -723,73 +723,73 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
 
                 <hr>
-                <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
-                @haspermission('ot.surgery.recommend')
-                    <button type="button" class="btn fw-bold w-100 mt-2 text-white"
-                            style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
-                            data-bs-toggle="modal" data-bs-target="#recommendSurgeryModal">
-                        <i class="bi bi-hospital me-1"></i> Recommend Surgery
-                    </button>
-                @endhaspermission
-            </div>
+                                            <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
+                                                                            @haspermission('ot.surgery.recommend')
+                                                                                                                        <button type="button" class="btn fw-bold w-100 mt-2 text-white"
+                                                                                                                            style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);" data-bs-toggle="modal"
+                                                                                                                            data-bs-target="#recommendSurgeryModal">
+                                                                                                                            <i class="bi bi-hospital me-1"></i> Surgery Recommendation
+                                                                                                                        </button>
+                                                                                                                        @endhaspermission
+                                                                                    </div>
 
-            <div class="main-canvas">
-                <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
-                    <div class="clinical-grid-container" style="font-size:13px;">
-                        <div class="row g-2">
-                            <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">Medicine</div>
-                                    <div id="canvas_medicine"><em class="text-muted" style="font-size:11px;">Enter medicines...</em></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">PG</div>
-                                    <div id="canvas_pg"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">ST</div>
-                                    <div id="canvas_st"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div id="canvas_kco"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">Fundus</div>
-                                    <div id="canvas_fundus"></div>
-                                </div>
-                            </div>
+                                                                                    <div class="main-canvas">
+                                                                                        <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
+                                                                                            <div class="clinical-grid-container" style="font-size:13px;">
+                                                                                                <div class="row g-2">
+                                                                                                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">Medicine</div>
+                                                                                                            <div id="canvas_medicine"><em class="text-muted" style="font-size:11px;">Enter medicines...</em></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">PG</div>
+                                                                                                            <div id="canvas_pg"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">ST</div>
+                                                                                                            <div id="canvas_st"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div id="canvas_kco"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">Fundus</div>
+                                                                                                            <div id="canvas_fundus"></div>
+                                                                                                        </div>
+                                                                                                    </div>
 
-                            <div class="col-6 col-md-6 d-flex flex-column gap-2">
-                                <div class="canvas-box">
-                                    <div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">H/O</div>
-                                    <div id="canvas_hno"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">Vision</div>
-                                    <div id="canvas_vision_line"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">O/E</div>
-                                    <div id="canvas_oe"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">Diagnosis</div>
-                                    <div id="canvas_diagnosis"></div>
-                                </div>
-                                <div class="canvas-box">
-                                    <div class="canvas-section-title">Advice</div>
-                                    <div id="canvas_advice"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    @else
+                                                                                                    <div class="col-6 col-md-6 d-flex flex-column gap-2">
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div id="canvas_co"><em class="text-muted" style="font-size:11px;">Enter chief complaints to see them here...</em></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">H/O</div>
+                                                                                                            <div id="canvas_hno"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">Vision</div>
+                                                                                                            <div id="canvas_vision_line"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">O/E</div>
+                                                                                                            <div id="canvas_oe"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">Diagnosis</div>
+                                                                                                            <div id="canvas_diagnosis"></div>
+                                                                                                        </div>
+                                                                                                        <div class="canvas-box">
+                                                                                                            <div class="canvas-section-title">Advice</div>
+                                                                                                            <div id="canvas_advice"></div>
+                                                                                                        </div>
+                                                                                                    </div>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @else
         @php
     $sWGreen = (int) hospital_setting('wait_green_max', 30);
     $sWOrange = (int) hospital_setting('wait_orange_max', 60);
@@ -1099,7 +1099,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                     @endif
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="btn btn-primary step-done-btn" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -1192,7 +1192,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="btn btn-primary step-done-btn" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -1212,9 +1212,9 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
 
                     @php
 $vnCols = [
-    ['abbr' => 'VN', 'full' => 'Distance Vision', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
-    ['abbr' => 'PnVn', 'full' => 'Pinhole', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
-    ['abbr' => 'NrVn', 'full' => 'Near Vision', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
+    ['abbr' => 'VN', 'full' => '', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
+    ['abbr' => 'PnVn', 'full' => '', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
+    ['abbr' => 'NrVn', 'full' => '', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
 ];
                     @endphp
 
@@ -1261,7 +1261,7 @@ $vnCols = [
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Done
                     </button>
                 </div>
@@ -1374,7 +1374,7 @@ $pgMasterOpts = [
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Save
                     </button>
                 </div>
@@ -1575,7 +1575,7 @@ $pgMasterOpts = [
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Save
                     </button>
                 </div>
@@ -1650,7 +1650,7 @@ $pgMasterOpts = [
                     </div> -->
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                     Done
                     </button>
                 </div>
@@ -1755,7 +1755,7 @@ foreach ($oeFieldMeta as $meta) {
                     </div>
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Done
                     </button>
                 </div>
@@ -1864,7 +1864,7 @@ foreach ($oeFieldMeta as $meta) {
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Done
                     </button>
                 </div>
@@ -1921,7 +1921,7 @@ foreach ($masters['advices'] as $_a) {
                 </div>
                 <div class="modal-footer justify-content-between">
                     <span id="dxFooterHint" class="text-muted" style="font-size:12px;"></span>
-                    <button type="button" class="btn btn-danger px-4" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="btn btn-danger px-4 step-done-btn" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -1953,7 +1953,7 @@ foreach ($masters['advices'] as $_a) {
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer"><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button></div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary step-done-btn" data-bs-dismiss="modal">Done</button></div>
             </div>
         </div>
     </div>
@@ -2059,7 +2059,7 @@ foreach ($masters['advices'] as $_a) {
                     </div>
                 </div>
                 <div class="modal-footer" style="background:#f8fafc;border-top:1px solid #dde3ea;">
-                    <button type="button" class="btn px-4 fw-semibold" style="background:#1B4F72;color:white;border-radius:8px;" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="btn px-4 fw-semibold step-done-btn" style="background:#1B4F72;color:white;border-radius:8px;" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -3902,8 +3902,10 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             var addHid = document.querySelector('[name="exam_data[st][' + eye + '][add]"]');
             var nsHid  = document.querySelector('[name="exam_data[st][' + eye + '][ns]"]');
             if (!dsHid || !addHid || !nsHid) return;
+            var addRaw = String(addHid.value || '').trim();
+            if (!addRaw) return;
             var ds  = parseFloat(String(dsHid.value  || '').replace(/^\+/, '')) || 0;
-            var add = parseFloat(String(addHid.value || '').replace(/^\+/, '')) || 0;
+            var add = parseFloat(addRaw.replace(/^\+/, '')) || 0;
             var ns  = ds + add;
             var fmt = ns > 0 ? '+' + ns.toFixed(2) : (ns < 0 ? ns.toFixed(2) : '0.00');
             nsHid.value = fmt;
@@ -3931,7 +3933,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
         // Sync NEAR on ST modal open
         document.getElementById('modalST')?.addEventListener('show.bs.modal', function () {
-            ['re', 'le'].forEach(function (eye) { calcStNearSph(eye); syncStNearFromDist(eye); });
+            ['re', 'le'].forEach(function (eye) { syncStNearFromDist(eye); });
         });
 
         function pgFmt(num) {
@@ -4046,9 +4048,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 syncAxisForCyl(pgPickTarget.inp, val);
             }
 
-            // Recalc ST Near SPH when Distance SPH or ADD changes
-            const stDsMatch  = hidName.match(/^exam_data\[st\]\[(re|le)\]\[ds\]$/);
-            if (stDsMatch) calcStNearSph(stDsMatch[1]);
+            // Recalc ST Near SPH only when ADD (Near) is chosen — not when Distance SPH changes
             const stAddMatch = hidName.match(/^exam_data\[st\]\[(re|le)\]\[add\]$/);
             if (stAddMatch) { calcStNearSph(stAddMatch[1]); syncStNearFromDist(stAddMatch[1]); }
 
@@ -4684,6 +4684,36 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
     }
     // Fallback: run after draft-restore timer (300ms) completes
     setTimeout(initCanvas, 400);
+})();
+</script>
+
+<script>
+// ── Step auto-advance: clicking Done/Save in a step modal opens the next step's modal.
+// Only fires when Done/Save was clicked (not the X/backdrop). Advice keeps its own
+// existing behaviour untouched — it's the last entry so no listener is attached to it.
+(function () {
+    var STEP_ORDER = ['modalClinical', 'modalHko', 'modalVision', 'modalPG', 'modalST', 'modalNCT', 'modalOE', 'modalFundus', 'modalDilate', 'modalDiagnosis', 'modalRx', 'modalAdvice'];
+
+    document.querySelectorAll('.step-done-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var modalEl = btn.closest('.modal');
+            if (modalEl) { modalEl.dataset.autoAdvance = '1'; }
+        });
+    });
+
+    STEP_ORDER.forEach(function (modalId, idx) {
+        var nextId = STEP_ORDER[idx + 1];
+        if (!nextId) return;
+        var modalEl = document.getElementById(modalId);
+        if (!modalEl) return;
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            if (modalEl.dataset.autoAdvance === '1') {
+                modalEl.dataset.autoAdvance = '';
+                var nextEl = document.getElementById(nextId);
+                if (nextEl) { bootstrap.Modal.getOrCreateInstance(nextEl).show(); }
+            }
+        });
+    });
 })();
 </script>
 

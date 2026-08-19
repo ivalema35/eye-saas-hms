@@ -8,6 +8,8 @@ use App\Models\Platform\MasterCity;
 use App\Models\Platform\MasterCountry;
 use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
+use App\Models\Platform\PlanCountryPrice;
+use App\Models\Platform\PlatformSetting;
 use App\Models\Platform\Tenant;
 use App\Services\Platform\TimezoneService;
 use Illuminate\Http\JsonResponse;
@@ -45,6 +47,16 @@ class LocationMasterController extends Controller
             ->orderBy('name')
             ->paginate(10)
             ->appends(request()->query());
+
+        $countryPlanPrices = collect();
+        try {
+            $countryPlanPrices = PlanCountryPrice::query()
+                ->whereIn('country_id', $countries->pluck('id'))
+                ->get()
+                ->groupBy('country_id');
+        } catch (\Throwable $e) {
+            $countryPlanPrices = collect();
+        }
 
         $states = collect();
         $districts = collect();
@@ -97,6 +109,7 @@ class LocationMasterController extends Controller
             'filterStateId',
             'filterDistrictId',
             'search',
+            'countryPlanPrices',
             'statesForFilter',
             'districtsForFilter'
         ));
@@ -116,6 +129,9 @@ class LocationMasterController extends Controller
             'currency_symbol'  => 'required|string|max:10',
             'currency_name'    => 'nullable|string|max:50',
             'fx_inr_per_unit'  => 'required|numeric|min:0.0001|max:999999',
+            'plan_monthly'     => 'nullable|numeric|min:0|max:99999999',
+            'plan_quarterly'   => 'nullable|numeric|min:0|max:99999999',
+            'plan_yearly'      => 'nullable|numeric|min:0|max:99999999',
         ]);
         $name = MasterCountry::normalize($request->name);
         $countryCode = strtoupper($request->country_code);
@@ -131,7 +147,7 @@ class LocationMasterController extends Controller
         $code = strtoupper($request->currency_code);
         $preset = \App\Services\Platform\CurrencyService::commonCurrencies()[$code] ?? null;
 
-        MasterCountry::create([
+        $country = MasterCountry::create([
             'name'             => $name,
             'country_code'     => $countryCode,
             'default_timezone' => $request->default_timezone,
@@ -141,6 +157,8 @@ class LocationMasterController extends Controller
             'fx_inr_per_unit'  => (float) $request->fx_inr_per_unit,
             'is_active'        => true,
         ]);
+
+        $this->syncCountryPlanPrices($country->id, $request);
 
         return back()->with('success', "Country \"{$name}\" added.")->with('open_tab', 'countries');
     }
@@ -155,6 +173,9 @@ class LocationMasterController extends Controller
             'currency_symbol'  => 'required|string|max:10',
             'currency_name'    => 'nullable|string|max:50',
             'fx_inr_per_unit'  => 'required|numeric|min:0.0001|max:999999',
+            'plan_monthly'     => 'nullable|numeric|min:0|max:99999999',
+            'plan_quarterly'   => 'nullable|numeric|min:0|max:99999999',
+            'plan_yearly'      => 'nullable|numeric|min:0|max:99999999',
         ]);
         $name = MasterCountry::normalize($request->name);
         $countryCode = strtoupper($request->country_code);
@@ -197,7 +218,46 @@ class LocationMasterController extends Controller
                 'currency_symbol' => $request->currency_symbol ?: ($preset['symbol'] ?? '₹'),
             ]);
 
+        $this->syncCountryPlanPrices($country->id, $request);
+
         return back()->with('success', 'Country updated. Timezone & currency cascaded to non-overridden hospitals.')->with('open_tab', 'countries');
+    }
+
+    /**
+     * Save exact local-currency plan prices shown on the register page.
+     */
+    private function syncCountryPlanPrices(int $countryId, Request $request): void
+    {
+        $monthly = $request->filled('plan_monthly') ? (float) $request->plan_monthly : null;
+        if ($monthly === null || $monthly <= 0) {
+            return;
+        }
+
+        $qDisc = (int) (PlatformSetting::where('key', 'quarterly_discount')->value('value') ?? 10);
+        $yDisc = (int) (PlatformSetting::where('key', 'yearly_discount')->value('value') ?? 20);
+
+        $quarterly = $request->filled('plan_quarterly') && (float) $request->plan_quarterly > 0
+            ? (float) $request->plan_quarterly
+            : round($monthly * 3 * (1 - $qDisc / 100), 2);
+
+        $yearly = $request->filled('plan_yearly') && (float) $request->plan_yearly > 0
+            ? (float) $request->plan_yearly
+            : round($monthly * 12 * (1 - $yDisc / 100), 2);
+
+        try {
+            foreach ([
+                'monthly' => $monthly,
+                'quarterly' => $quarterly,
+                'yearly' => $yearly,
+            ] as $cycle => $price) {
+                PlanCountryPrice::updateOrCreate(
+                    ['country_id' => $countryId, 'cycle' => $cycle],
+                    ['price' => $price, 'is_active' => true]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Table may not exist until migrate runs
+        }
     }
 
     public function destroyCountry(MasterCountry $country): RedirectResponse

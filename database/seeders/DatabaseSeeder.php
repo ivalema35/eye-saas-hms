@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             KcoSeeder::class,
             MasterAdviceSeeder::class,
             MasterDiagnosisSeeder::class,
+            GlobalMasterDiagnosisSeeder::class,
             MasterHnoSeeder::class,
 
             // ── Vision masters ────────────────────────────────────────

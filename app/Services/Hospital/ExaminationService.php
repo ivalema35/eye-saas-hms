@@ -145,8 +145,8 @@ class ExaminationService
                     ]
                 );
 
-                $examData['rx'] = $rxData;
-                $exam->update(['exam_data' => $examData]);
+                $mergedSecData['rx'] = $rxData;
+                $exam->update(['exam_data' => $mergedSecData]);
             }
 
             $patient->update(['secondary_done_at' => now()]);
@@ -168,5 +168,66 @@ class ExaminationService
         int $tenantId
     ): SecondaryExamination {
         return $this->saveSecondaryExam($patient, $doctorId, $examData, $medicines, $tenantId);
+    }
+
+    /**
+     * Secondary form values: saved secondary fields win; empty keys keep primary.
+     *
+     * @param  array<string, mixed>|null  $primary
+     * @param  array<string, mixed>|null  $secondary
+     * @return array<string, mixed>
+     */
+    public function examDataForSecondaryForm(?array $primary, ?array $secondary): array
+    {
+        $base = is_array($primary) ? $primary : [];
+        $over = is_array($secondary) ? $secondary : [];
+
+        if ($over === []) {
+            return $base;
+        }
+
+        return $this->mergeExamDataPreferFilled($base, $over);
+    }
+
+    public function examDataHasContent(?array $data): bool
+    {
+        return $this->examValueFilled($data ?? []);
+    }
+
+    /**
+     * @param  array<string, mixed>  $base
+     * @param  array<string, mixed>  $override
+     * @return array<string, mixed>
+     */
+    private function mergeExamDataPreferFilled(array $base, array $override): array
+    {
+        foreach ($override as $key => $value) {
+            if (is_array($value) && isset($base[$key]) && is_array($base[$key]) && ! array_is_list($value)) {
+                $base[$key] = $this->mergeExamDataPreferFilled($base[$key], $value);
+            } elseif ($this->examValueFilled($value)) {
+                $base[$key] = $value;
+            }
+        }
+
+        return $base;
+    }
+
+    private function examValueFilled(mixed $value): bool
+    {
+        if ($value === null || $value === '' || $value === []) {
+            return false;
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $item) {
+                if ($this->examValueFilled($item)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        return true;
     }
 }

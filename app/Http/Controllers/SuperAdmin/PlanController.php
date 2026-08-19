@@ -17,8 +17,11 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Platform\MasterCountry;
+use App\Models\Platform\PlanCountryPrice;
 use App\Models\Platform\PlatformSetting;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -55,12 +58,26 @@ class PlanController extends Controller
             'Email Support',
         ];
 
+        $countries = MasterCountry::active()->orderBy('name')->get(['id', 'name', 'currency_code', 'currency_symbol']);
+
+        try {
+            $countryPrices = PlanCountryPrice::with('country')
+                ->where('is_active', true)
+                ->orderBy('country_id')
+                ->get()
+                ->groupBy('country_id');
+        } catch (\Exception $e) {
+            $countryPrices = collect();
+        }
+
         return view('superadmin.plans.index', compact(
             'monthlyPrice', 'quarterlyDiscount', 'yearlyDiscount',
             'trialDays', 'graceDays',
             'quarterlyPrice', 'yearlyPrice',
             'quarterlyOriginal', 'yearlyOriginal',
             'features',
+            'countries',
+            'countryPrices',
         ));
     }
 
@@ -114,5 +131,47 @@ class PlanController extends Controller
     public function destroy(string $plan): RedirectResponse
     {
         return redirect()->route('superadmin.plans.index');
+    }
+
+    /**
+     * Save country-wise price overrides (AJAX POST)
+     */
+    public function saveCountryPrice(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'country_id' => ['required', 'integer', 'exists:tbl_master_countries,id'],
+            'monthly'    => ['required', 'numeric', 'min:0'],
+            'quarterly'  => ['required', 'numeric', 'min:0'],
+            'yearly'     => ['required', 'numeric', 'min:0'],
+        ]);
+
+        foreach (['monthly', 'quarterly', 'yearly'] as $cycle) {
+            PlanCountryPrice::updateOrCreate(
+                ['country_id' => $validated['country_id'], 'cycle' => $cycle],
+                ['price' => $validated[$cycle], 'is_active' => true]
+            );
+        }
+
+        $country = MasterCountry::find($validated['country_id']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Prices saved for {$country->name}",
+            'country_id' => $validated['country_id'],
+        ]);
+    }
+
+    /**
+     * Delete all price overrides for a country
+     */
+    public function deleteCountryPrice(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'country_id' => ['required', 'integer', 'exists:tbl_master_countries,id'],
+        ]);
+
+        PlanCountryPrice::where('country_id', $validated['country_id'])->delete();
+
+        return response()->json(['success' => true]);
     }
 }

@@ -2182,6 +2182,7 @@ body {
 .hms-badge-grace,    .hms-badge-GRACE     { background: var(--hms-badge-grace-bg);    color: var(--hms-badge-grace-text); }
 .hms-badge-inactive, .hms-badge-INACTIVE  { background: var(--hms-badge-inactive-bg); color: var(--hms-badge-inactive-text); }
 .hms-badge-suspended,.hms-badge-SUSPENDED { background: var(--hms-badge-suspended-bg);color: var(--hms-badge-suspended-text); }
+.hms-badge-expired,  .hms-badge-EXPIRED   { background: var(--hms-badge-suspended-bg);color: var(--hms-badge-suspended-text); }
 .hms-badge-success   { background: var(--hms-success-bg); color: var(--hms-success); }
 .hms-badge-warning   { background: var(--hms-warning-bg); color: var(--hms-warning); }
 .hms-badge-danger    { background: var(--hms-danger-bg);  color: var(--hms-danger); }

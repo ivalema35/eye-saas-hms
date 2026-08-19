@@ -62,6 +62,33 @@ class LoginController extends Controller
             ->first();
 
         if ($user && Hash::check($password, $user->password)) {
+            if ($tenant->status === 'pending') {
+                $request->hitRateLimiter();
+
+                return back()
+                    ->withErrors(['email' => 'Your hospital registration is waiting for SuperAdmin approval. You can login after it is accepted.'])
+                    ->withInput(['email' => $login]);
+            }
+
+            if ($tenant->status === 'suspended') {
+                $request->hitRateLimiter();
+
+                return back()
+                    ->withErrors(['email' => 'This hospital is suspended. Please contact support.'])
+                    ->withInput(['email' => $login]);
+            }
+
+            $tenant->markExpiredIfNeeded();
+            $tenant->refresh();
+
+            if (! $tenant->hasAccess()) {
+                $request->hitRateLimiter();
+
+                return back()
+                    ->withErrors(['email' => 'Your hospital plan has expired. Please contact the administrator.'])
+                    ->withInput(['email' => $login]);
+            }
+
             Auth::guard($this->guard)->login($user, $remember);
             $request->clearRateLimiter();
             $request->session()->regenerate();

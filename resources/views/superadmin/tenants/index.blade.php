@@ -11,6 +11,18 @@
 
 @section('content')
 
+    @if(($pendingCount ?? 0) > 0 && request('status') !== 'pending')
+        <div class="hms-card" style="margin-bottom:1.25rem;padding:1rem 1.25rem;border-color:rgba(217,119,6,.28);display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+            <div>
+                <strong style="color:#0f4f86">{{ $pendingCount }} registration request{{ $pendingCount === 1 ? '' : 's' }} waiting</strong>
+                <div style="font-size:.8rem;color:#64748B">Accept a request before that hospital admin can login.</div>
+            </div>
+            <a href="{{ route('superadmin.hospitals.index', ['status' => 'pending']) }}" class="hms-btn hms-btn-primary hms-btn-sm" style="color:#1b4f72">
+                Review requests
+            </a>
+        </div>
+    @endif
+
     {{-- Filter Card --}}
     <div class="hms-card" style="margin-bottom:1.25rem;padding:1.25rem">
         <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
@@ -29,9 +41,11 @@
                 <label class="hms-label">Status</label>
                 <select name="status" class="hms-select">
                     <option value="">All Statuses</option>
+                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
                     <option value="trial" {{ request('status') === 'trial' ? 'selected' : '' }}>Trial</option>
                     <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Active</option>
                     <option value="grace" {{ request('status') === 'grace' ? 'selected' : '' }}>Grace</option>
+                    <option value="expired" {{ request('status') === 'expired' ? 'selected' : '' }}>Expired</option>
                     <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Inactive</option>
                     <option value="suspended" {{ request('status') === 'suspended' ? 'selected' : '' }}>Suspended</option>
                 </select>
@@ -89,8 +103,8 @@
                                 </td>
                                 <td>{{ $tenant->city ?? '—' }}</td>
                                 <td>
-                                    <span class="hms-badge hms-badge-{{ $tenant->status ?? 'inactive' }}">
-                                        {{ ucfirst($tenant->status ?? 'inactive') }}
+                                    <span class="hms-badge hms-badge-{{ $tenant->displayStatus() }}">
+                                        {{ ucfirst($tenant->displayStatus()) }}
                                     </span>
                                 </td>
                                 <td style="font-size:.85rem;color:#64748B">
@@ -105,6 +119,24 @@
                                             data-tooltip="View Details">
                                             <i class="bi bi-eye-fill"></i>
                                         </a>
+                                        @if($tenant->status === 'pending')
+                                            <form method="POST" action="{{ route('superadmin.hospitals.approve', $tenant) }}"
+                                                style="margin:0">
+                                                @csrf
+                                                <button type="submit" class="hms-btn-icon hms-btn-icon-success"
+                                                    data-tooltip="Accept registration">
+                                                    <i class="bi bi-check-lg"></i>
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('superadmin.hospitals.reject', $tenant) }}"
+                                                style="margin:0" onsubmit="return confirm('Reject this registration?')">
+                                                @csrf
+                                                <button type="submit" class="hms-btn-icon hms-btn-icon-danger"
+                                                    data-tooltip="Reject registration">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        @else
                                         <button type="button" class="hms-btn-icon"
                                             style="background:transparent;border:0;padding:0;cursor:pointer"
                                             data-tooltip="Edit Hospital" data-bs-toggle="modal"
@@ -130,6 +162,7 @@
                                                     <i class="bi bi-ban"></i>
                                                 </button>
                                             </form>
+                                        @endif
                                         @endif
                                     </div>
                                 </td>
