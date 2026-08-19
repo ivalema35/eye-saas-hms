@@ -4,7 +4,7 @@
  * OtAppointmentController.php
  *
  * PURPOSE: OT Workflow Upgrade — Phase 2 (Appointment Module).
- *          Pre-registration appointments — booked over phone/walk-in/online/referral
+ *          Pre-registration appointments — booked over phone/walk-in/online/OT
  *          BEFORE the patient physically arrives. Reception check-in (Patient module)
  *          searches these by appointment number/mobile to pre-fill OPD registration.
  *          See docs/OT_WORKFLOW_UPGRADE_PRD.md §2.
@@ -35,7 +35,7 @@ class OtAppointmentController extends Controller
     public function index(Request $request, string $slug): View
     {
         $status = strtolower((string) $request->query('status', 'all'));
-        if (! in_array($status, ['all', OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED, OtAppointment::STATUS_CANCELLED, OtAppointment::STATUS_COMPLETED], true)) {
+        if (!in_array($status, ['all', OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED, OtAppointment::STATUS_CANCELLED, OtAppointment::STATUS_COMPLETED], true)) {
             $status = 'all';
         }
 
@@ -83,7 +83,7 @@ class OtAppointmentController extends Controller
         $slots = OtSlot::query()->orderBy('start_time')->get();
 
         $nextId = ((int) OtAppointment::withoutTenantScope()->max('id')) + 1;
-        $nextAppointmentNumber = 'APT-'.str_pad((string) $nextId, 6, '0', STR_PAD_LEFT);
+        $nextAppointmentNumber = 'APT-' . str_pad((string) $nextId, 6, '0', STR_PAD_LEFT);
 
         $loadDate = now()->toDateString();
 
@@ -104,12 +104,18 @@ class OtAppointmentController extends Controller
         $tenantId = (int) app('tenant')->id;
 
         $validated = $request->validate([
-            'appointment_type' => ['required', Rule::in([
-                OtAppointment::TYPE_PHONE, OtAppointment::TYPE_WALK_IN, OtAppointment::TYPE_ONLINE, OtAppointment::TYPE_REFERRAL,
-            ])],
+            'appointment_type' => [
+                'required',
+                Rule::in([
+                    OtAppointment::TYPE_PHONE,
+                    OtAppointment::TYPE_WALK_IN,
+                    OtAppointment::TYPE_ONLINE,
+                    OtAppointment::TYPE_OT,
+                ])
+            ],
             'appointment_date' => ['required', 'date', 'after_or_equal:today'],
             'appointment_time' => ['nullable', 'date_format:H:i'],
-            'doctor_id' => ['required', 'integer', Rule::exists('hospital_users', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId))],
+            'doctor_id' => ['required', 'integer', Rule::exists('hospital_users', 'id')->where(fn($q) => $q->where('tenant_id', $tenantId))],
             'patient_name' => ['required', 'string', 'max:200'],
             'middle_name' => ['nullable', 'string', 'max:200'],
             'surname' => ['required', 'string', 'max:200'],
@@ -118,7 +124,7 @@ class OtAppointmentController extends Controller
             'age' => ['required', 'integer', 'min:0', 'max:150'],
             'gender' => ['required', Rule::in(['male', 'female', 'other'])],
             'occupation' => ['nullable', 'string', 'max:100'],
-            'referrer_id' => ['nullable', 'integer', Rule::exists('tbl_referrers', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId))],
+            'referrer_id' => ['nullable', 'integer', Rule::exists('tbl_referrers', 'id')->where(fn($q) => $q->where('tenant_id', $tenantId))],
             'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ], array_merge(PhoneRules::messages('mobile_no'), PhoneRules::messages('whatsapp_no')));
@@ -166,12 +172,18 @@ class OtAppointmentController extends Controller
         $appointment = OtAppointment::query()->findOrFail($id);
 
         $validated = $request->validate([
-            'appointment_type' => ['required', Rule::in([
-                OtAppointment::TYPE_PHONE, OtAppointment::TYPE_WALK_IN, OtAppointment::TYPE_ONLINE, OtAppointment::TYPE_REFERRAL,
-            ])],
+            'appointment_type' => [
+                'required',
+                Rule::in([
+                    OtAppointment::TYPE_PHONE,
+                    OtAppointment::TYPE_WALK_IN,
+                    OtAppointment::TYPE_ONLINE,
+                    OtAppointment::TYPE_OT,
+                ])
+            ],
             'appointment_date' => ['required', 'date'],
             'appointment_time' => ['nullable', 'date_format:H:i'],
-            'doctor_id' => ['required', 'integer', Rule::exists('hospital_users', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId))],
+            'doctor_id' => ['required', 'integer', Rule::exists('hospital_users', 'id')->where(fn($q) => $q->where('tenant_id', $tenantId))],
             'patient_name' => ['required', 'string', 'max:200'],
             'middle_name' => ['nullable', 'string', 'max:200'],
             'surname' => ['required', 'string', 'max:200'],
@@ -180,7 +192,7 @@ class OtAppointmentController extends Controller
             'age' => ['required', 'integer', 'min:0', 'max:150'],
             'gender' => ['required', Rule::in(['male', 'female', 'other'])],
             'occupation' => ['nullable', 'string', 'max:100'],
-            'referrer_id' => ['nullable', 'integer', Rule::exists('tbl_referrers', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId))],
+            'referrer_id' => ['nullable', 'integer', Rule::exists('tbl_referrers', 'id')->where(fn($q) => $q->where('tenant_id', $tenantId))],
             'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
             'notes' => ['nullable', 'string', 'max:2000'],
         ], array_merge(PhoneRules::messages('mobile_no'), PhoneRules::messages('whatsapp_no')));
@@ -238,7 +250,7 @@ class OtAppointmentController extends Controller
 
         return response()->json([
             'found' => $appointments->isNotEmpty(),
-            'appointments' => $appointments->map(fn (OtAppointment $appointment) => [
+            'appointments' => $appointments->map(fn(OtAppointment $appointment) => [
                 'id' => $appointment->id,
                 'appointment_number' => $appointment->appointment_number,
                 'patient_name' => $appointment->patient_name,
@@ -268,7 +280,7 @@ class OtAppointmentController extends Controller
         $date = $request->query('date');
         $time = $request->query('time');
 
-        if (! $date || ! $time) {
+        if (!$date || !$time) {
             return response()->json(['appointments' => []]);
         }
 
@@ -288,7 +300,7 @@ class OtAppointmentController extends Controller
         $appointments = $query->orderBy('id')->get(['id', 'patient_name', 'surname', 'status']);
 
         return response()->json([
-            'appointments' => $appointments->map(fn (OtAppointment $appointment) => [
+            'appointments' => $appointments->map(fn(OtAppointment $appointment) => [
                 'id' => $appointment->id,
                 'name' => trim(collect([$appointment->patient_name, $appointment->surname])->filter()->implode(' ')),
                 'status' => $appointment->status,
@@ -375,7 +387,7 @@ class OtAppointmentController extends Controller
                     $timeKey = substr((string) $row->appointment_time, 0, 5);
                 }
             }
-            $key = $doctorId.'|'.$timeKey;
+            $key = $doctorId . '|' . $timeKey;
             $counts[$key] = ($counts[$key] ?? 0) + 1;
         }
 
@@ -401,7 +413,7 @@ class OtAppointmentController extends Controller
             $matchedTimes = [];
 
             foreach ($slotMeta as $slot) {
-                $count = (int) ($counts[$doctor->id.'|'.$slot['time']] ?? 0);
+                $count = (int) ($counts[$doctor->id . '|' . $slot['time']] ?? 0);
                 $total += $count;
                 if ($slot['time'] !== '') {
                     $matchedTimes[$slot['time']] = true;
@@ -410,15 +422,15 @@ class OtAppointmentController extends Controller
                     'time' => $slot['time'],
                     'label' => $slot['label'],
                     'count' => $count,
-                    'display' => $slot['label'].' : '.$count,
+                    'display' => $slot['label'] . ' : ' . $count,
                 ];
             }
 
             // Times that do not match any master slot start_time
             $other = 0;
-            $prefix = $doctor->id.'|';
+            $prefix = $doctor->id . '|';
             foreach ($counts as $key => $count) {
-                if (! str_starts_with((string) $key, $prefix)) {
+                if (!str_starts_with((string) $key, $prefix)) {
                     continue;
                 }
                 $time = substr((string) $key, strlen($prefix));
@@ -434,7 +446,7 @@ class OtAppointmentController extends Controller
                     'time' => '',
                     'label' => 'Other',
                     'count' => $other,
-                    'display' => 'Other : '.$other,
+                    'display' => 'Other : ' . $other,
                 ];
             }
 
@@ -451,7 +463,7 @@ class OtAppointmentController extends Controller
                     'time' => '',
                     'label' => 'All',
                     'count' => $dayTotal,
-                    'display' => 'All : '.$dayTotal,
+                    'display' => 'All : ' . $dayTotal,
                 ];
             }
 
@@ -466,7 +478,7 @@ class OtAppointmentController extends Controller
 
     private function slotRangeLabel(OtSlot $slot): string
     {
-        if (! $slot->start_time || ! $slot->end_time) {
+        if (!$slot->start_time || !$slot->end_time) {
             return (string) ($slot->slot_name ?: 'Slot');
         }
 
@@ -479,9 +491,9 @@ class OtAppointmentController extends Controller
 
         // "1 to 2" when both times sit on the hour; otherwise "1:30 to 2:15"
         if ($start->minute === 0 && $end->minute === 0) {
-            return $start->format('g').' to '.$end->format('g');
+            return $start->format('g') . ' to ' . $end->format('g');
         }
 
-        return $start->format('g:i').' to '.$end->format('g:i');
+        return $start->format('g:i') . ' to ' . $end->format('g:i');
     }
 }

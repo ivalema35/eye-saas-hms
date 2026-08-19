@@ -18,7 +18,9 @@ use Illuminate\View\View;
 
 class HospitalUserController extends Controller
 {
-    public function __construct(private readonly RolePermissionService $permissionService) {}
+    public function __construct(private readonly RolePermissionService $permissionService)
+    {
+    }
 
     public function index(Request $request): View
     {
@@ -29,7 +31,7 @@ class HospitalUserController extends Controller
 
         $users = HospitalUser::with('role')
             ->when($roleFilter, function (Builder $query) use ($roleFilter) {
-                $query->whereHas('role', fn (Builder $q) => $q->whereIn('slug', $roleFilter['slugs']));
+                $query->whereHas('role', fn(Builder $q) => $q->whereIn('slug', $roleFilter['slugs']));
             })
             ->latest()
             ->get();
@@ -122,23 +124,23 @@ class HospitalUserController extends Controller
 
         $tenantId = app('tenant')->id;
 
-        $signaturePath    = $this->storeUserFile($request, 'signature',     $tenantId);
+        $signaturePath = $this->storeUserFile($request, 'signature', $tenantId);
         $profilePhotoPath = $this->storeUserFile($request, 'profile_photo', $tenantId);
 
         HospitalUser::create([
-            'tenant_id'          => $tenantId,
-            'role_id'            => $role->id,
-            'name'               => $data['name'],
-            'email'              => $data['email'],
-            'contact'            => $data['contact'] ?? null,
-            'password'           => $data['password'],
-            'status'             => $data['status'],
-            'doctor_type'        => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
-            'doctor_prefix'      => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
-            'foc_permission'     => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
-            'registration_no'    => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
-            'experience_years'   => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
-            'signature_path'     => $canPerformClinicalExams ? $signaturePath : null,
+            'tenant_id' => $tenantId,
+            'role_id' => $role->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact' => $data['contact'] ?? null,
+            'password' => $data['password'],
+            'status' => $data['status'],
+            'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
+            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'registration_no' => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
+            'experience_years' => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
+            'signature_path' => $canPerformClinicalExams ? $signaturePath : null,
             'profile_photo_path' => $canPerformClinicalExams ? $profilePhotoPath : null,
         ]);
 
@@ -152,7 +154,7 @@ class HospitalUserController extends Controller
 
     private function storeUserFile($request, string $field, int $tenantId, ?string $existingPath = null): ?string
     {
-        if (! $request->hasFile($field)) {
+        if (!$request->hasFile($field)) {
             return $existingPath;
         }
 
@@ -204,25 +206,25 @@ class HospitalUserController extends Controller
 
         $tenantId = app('tenant')->id;
 
-        $signaturePath    = $this->storeUserFile($request, 'signature',     $tenantId, $user->signature_path);
+        $signaturePath = $this->storeUserFile($request, 'signature', $tenantId, $user->signature_path);
         $profilePhotoPath = $this->storeUserFile($request, 'profile_photo', $tenantId, $user->profile_photo_path);
 
         $updateData = [
-            'role_id'            => $role->id,
-            'name'               => $data['name'],
-            'email'              => $data['email'],
-            'contact'            => $data['contact'] ?? null,
-            'status'             => $data['status'],
-            'doctor_type'        => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
-            'doctor_prefix'      => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
-            'foc_permission'     => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
-            'registration_no'    => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
-            'experience_years'   => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
-            'signature_path'     => $canPerformClinicalExams ? $signaturePath : null,
+            'role_id' => $role->id,
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'contact' => $data['contact'] ?? null,
+            'status' => $data['status'],
+            'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
+            'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
+            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
+            'registration_no' => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
+            'experience_years' => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
+            'signature_path' => $canPerformClinicalExams ? $signaturePath : null,
             'profile_photo_path' => $canPerformClinicalExams ? $profilePhotoPath : null,
         ];
 
-        if (! empty($data['password'])) {
+        if (!empty($data['password'])) {
             $updateData['password'] = Hash::make($data['password']);
         }
 

@@ -28,6 +28,7 @@ use App\Http\Controllers\SuperAdmin\ProfileController;
 use App\Http\Controllers\SuperAdmin\SettingsController;
 use App\Http\Controllers\SuperAdmin\SubscriptionController;
 use App\Http\Controllers\SuperAdmin\SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\DiagnosisMasterController;
 use App\Http\Controllers\SuperAdmin\LocationMasterController;
 use App\Http\Controllers\SuperAdmin\MedicineMasterController;
 use App\Http\Controllers\SuperAdmin\TimezoneMasterController;
@@ -47,6 +48,7 @@ Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
 // Hospital registration
 Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+Route::get('/register/pending/{slug}', [RegisterController::class, 'pending'])->name('register.pending');
 
 // Hospital code availability check (AJAX, rate limited)
 Route::get('/check-code', [RegisterController::class, 'checkCode'])
@@ -107,6 +109,10 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('hospitals.extend');
         Route::post('hospitals/{tenant}/reactivate', [TenantController::class, 'reactivate'])
             ->name('hospitals.reactivate');
+        Route::post('hospitals/{tenant}/approve', [TenantController::class, 'approve'])
+            ->name('hospitals.approve');
+        Route::post('hospitals/{tenant}/reject', [TenantController::class, 'reject'])
+            ->name('hospitals.reject');
         Route::post('hospitals/{tenant}/reseed-masters', [TenantController::class, 'reseedMasters'])
             ->name('hospitals.reseed-masters');
 
@@ -147,9 +153,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])
             ->name('profile.password');
 
-        // Plan Management (stub routes — controller built in T2.1)
+        // Plan Management
         Route::resource('plans', PlanController::class)
             ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        Route::post('/plans/country-price', [PlanController::class, 'saveCountryPrice'])->name('plans.country-price.save');
+        Route::delete('/plans/country-price', [PlanController::class, 'deleteCountryPrice'])->name('plans.country-price.delete');
 
         // Timezone Master — view only
         Route::get('/timezones', [TimezoneMasterController::class, 'index'])->name('timezones.index');
@@ -220,6 +228,13 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::patch('/medicine-master/medicines/{medicine}/toggle', [MedicineMasterController::class, 'toggleMedicine'])->name('medicine-master.medicines.toggle');
         Route::post('/medicine-master/medicines/import', [MedicineMasterController::class, 'importMedicines'])->name('medicine-master.medicines.import');
         Route::get('/medicine-master/medicines/sample', [MedicineMasterController::class, 'downloadSampleMedicine'])->name('medicine-master.medicines.sample');
+
+        // Diagnosis Master — global catalog, pushed down into every hospital's own tbl_master_diagnosis
+        Route::get('/diagnosis-master', [DiagnosisMasterController::class, 'index'])->name('diagnosis-master.index');
+        Route::post('/diagnosis-master', [DiagnosisMasterController::class, 'store'])->name('diagnosis-master.store');
+        Route::put('/diagnosis-master/{diagnosis}', [DiagnosisMasterController::class, 'update'])->name('diagnosis-master.update');
+        Route::delete('/diagnosis-master/{diagnosis}', [DiagnosisMasterController::class, 'destroy'])->name('diagnosis-master.destroy');
+        Route::patch('/diagnosis-master/{diagnosis}/toggle', [DiagnosisMasterController::class, 'toggle'])->name('diagnosis-master.toggle');
     });
 });
 

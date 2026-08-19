@@ -689,6 +689,9 @@
                         var params = new URLSearchParams(window.location.search);
                         fieldNames.concat(['_tab']).forEach(function (name) { params.delete(name); });
                         if (pageParam) params.delete(pageParam);
+                        Array.from(params.keys()).forEach(function (key) {
+                            if (key === '_tenant' || key.indexOf('_tenant[') === 0) params.delete(key);
+                        });
 
                         formParams().forEach(function (value, key) {
                             if (value !== '') params.set(key, value);

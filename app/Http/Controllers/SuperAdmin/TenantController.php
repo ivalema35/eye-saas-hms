@@ -46,8 +46,9 @@ class TenantController extends Controller
         }
 
         $tenants = $query->latest()->paginate(20)->appends(request()->query());
+        $pendingCount = Tenant::where('status', 'pending')->count();
 
-        return view('superadmin.tenants.index', compact('tenants'));
+        return view('superadmin.tenants.index', compact('tenants', 'pendingCount'));
     }
 
     /**
@@ -128,6 +129,7 @@ class TenantController extends Controller
 
         $validated['plan'] = $validated['plan'] ?? 'monthly';
         $validated['start_trial'] = '1';
+        $validated['skip_approval'] = true;
 
         $tenant = $this->tenantService->createTenant($validated);
 
@@ -259,6 +261,30 @@ class TenantController extends Controller
         $this->auditLog('hospital.reactivated', $tenant->id, 'Hospital reactivated by SuperAdmin');
 
         return back()->with('success', "'{$tenant->name}' reactivated.");
+    }
+
+    public function approve(Tenant $tenant): RedirectResponse
+    {
+        if ($tenant->status !== 'pending') {
+            return back()->with('error', 'This hospital is not waiting for approval.');
+        }
+
+        $this->tenantService->approveRegistration($tenant);
+        $this->auditLog('hospital.registration.approved', $tenant->id, "Registration approved: {$tenant->slug}");
+
+        return back()->with('success', "Hospital '{$tenant->name}' approved. Admin can now login. Trial has started.");
+    }
+
+    public function reject(Tenant $tenant): RedirectResponse
+    {
+        if ($tenant->status !== 'pending') {
+            return back()->with('error', 'This hospital is not waiting for approval.');
+        }
+
+        $this->tenantService->rejectRegistration($tenant);
+        $this->auditLog('hospital.registration.rejected', $tenant->id, "Registration rejected: {$tenant->slug}");
+
+        return back()->with('success', "Hospital '{$tenant->name}' registration rejected.");
     }
 
     /**

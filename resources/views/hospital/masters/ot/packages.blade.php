@@ -9,7 +9,6 @@
                 <a href="{{ route('hospital.masters.index', ['slug' => $slug]) }}" class="btn btn-light ot-master-back-btn">
                     Back
                 </a>
-                <p class="text-muted small mb-0">Package name + room + charges — counsellor picks package; lens cost is entered separately on counselling.</p>
             </div>
             <button type="button" class="btn btn-primary ot-master-add-btn" data-bs-toggle="modal"
                 data-bs-target="#packageFormModal" onclick="resetForm()">
@@ -85,7 +84,8 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center py-4 text-muted">No packages found. Add one to enable counselling autofill.</td>
+                                    <td colspan="9" class="text-center py-4 text-muted">No packages found. Add one to enable
+                                        counselling autofill.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -121,7 +121,8 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label text-muted small fw-bold text-uppercase">Room Category</label>
-                                    <select name="room_category" id="room_category" class="form-select ot-master-input" required>
+                                    <select name="room_category" id="room_category" class="form-select ot-master-input"
+                                        required>
                                         <option value="general">General</option>
                                         <option value="private">Private</option>
                                     </select>
@@ -132,23 +133,26 @@
                                         class="form-control ot-master-input" value="0">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label text-muted small fw-bold text-uppercase">Surgeon Charges</label>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Surgeon
+                                        Charges</label>
                                     <input type="number" step="0.01" min="0" name="surgeon_charges" id="surgeon_charges"
                                         class="form-control ot-master-input" value="0">
                                 </div>
                                 <div class="col-md-3">
-                                    <label class="form-label text-muted small fw-bold text-uppercase">Nursing Charges</label>
+                                    <label class="form-label text-muted small fw-bold text-uppercase">Nursing
+                                        Charges</label>
                                     <input type="number" step="0.01" min="0" name="nursing_charges" id="nursing_charges"
                                         class="form-control ot-master-input" value="0">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label text-muted small fw-bold text-uppercase">Consumables</label>
-                                    <input type="number" step="0.01" min="0" name="consumables_charges" id="consumables_charges"
-                                        class="form-control ot-master-input" value="0">
+                                    <input type="number" step="0.01" min="0" name="consumables_charges"
+                                        id="consumables_charges" class="form-control ot-master-input" value="0">
                                 </div>
                                 <div class="col-12">
                                     <div class="form-check ot-master-check">
-                                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" checked>
+                                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active"
+                                            value="1" checked>
                                         <label class="form-check-label" for="is_active">Active</label>
                                     </div>
                                 </div>
@@ -156,8 +160,10 @@
                         </div>
 
                         <div class="modal-footer border-0 gap-2">
-                            <button class="btn btn-outline-secondary rounded-3" type="button" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-primary fw-semibold rounded-3" type="submit" id="submitBtn">Save Package</button>
+                            <button class="btn btn-outline-secondary rounded-3" type="button"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary fw-semibold rounded-3" type="submit" id="submitBtn">Save
+                                Package</button>
                         </div>
                     </form>
                 </div>
@@ -213,6 +219,7 @@
             --ot-border: rgba(27, 79, 114, .12);
             --ot-border-strong: rgba(27, 79, 114, .22);
         }
+
         .ot-master-toolbar {
             display: flex;
             justify-content: space-between;
@@ -221,12 +228,14 @@
             margin-bottom: 1rem;
             flex-wrap: wrap;
         }
+
         .ot-master-add-btn {
             background: var(--ot-primary) !important;
             border-color: var(--ot-primary) !important;
             border-radius: 12px;
             font-weight: 900;
         }
+
         .ot-master-back-btn {
             border: 1px solid var(--ot-border-strong) !important;
             border-radius: 12px;
@@ -234,13 +243,24 @@
             font-weight: 800;
             background: #fff !important;
         }
+
         .ot-master-card {
             border: 1px solid var(--ot-border) !important;
             border-radius: 22px !important;
             overflow: hidden;
         }
-        .ot-master-table-wrap { padding: .9rem; background: var(--ot-soft); }
-        .ot-master-table { border-collapse: separate; border-spacing: 0 8px; min-width: 900px; }
+
+        .ot-master-table-wrap {
+            padding: .9rem;
+            background: var(--ot-soft);
+        }
+
+        .ot-master-table {
+            border-collapse: separate;
+            border-spacing: 0 8px;
+            min-width: 900px;
+        }
+
         .ot-master-table thead th {
             background: var(--ot-primary) !important;
             color: #fff !important;
@@ -250,23 +270,39 @@
             text-transform: uppercase;
             letter-spacing: .06em;
         }
+
         .ot-master-table tbody td {
             background: #fff;
             color: var(--ot-primary);
             padding: .85rem 1rem;
             font-weight: 650;
         }
+
         .ot-master-icon-btn {
-            width: 34px; height: 34px; border-radius: 50% !important;
-            display: inline-flex; align-items: center; justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50% !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .ot-master-modal .modal-content { border-radius: 22px; }
+
+        .ot-master-modal .modal-content {
+            border-radius: 22px;
+        }
+
         .ot-master-modal-icon {
-            width: 42px; height: 42px; border-radius: 14px;
-            background: var(--ot-primary); color: #fff;
-            display: inline-flex; align-items: center; justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            background: var(--ot-primary);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin-right: .8rem;
         }
+
         .ot-master-input {
             border: 1.5px solid var(--ot-border) !important;
             border-radius: 12px;
@@ -274,6 +310,10 @@
             color: var(--ot-primary);
             font-weight: 650;
         }
-        .ot-master-check { color: var(--ot-primary); font-weight: 650; }
+
+        .ot-master-check {
+            color: var(--ot-primary);
+            font-weight: 650;
+        }
     </style>
 @endpush

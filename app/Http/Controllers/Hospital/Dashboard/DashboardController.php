@@ -19,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -61,7 +62,7 @@ class DashboardController extends Controller
         // ── Subscription banner ──────────────────────────────────────────────
         $subscriptionDaysLeft = null;
         if ($tenant) {
-            $sub = $tenant->activeSubscription;
+            $sub = $tenant->subscriptions()->latest()->first();
             if ($sub && $sub->ends_at) {
                 $subscriptionDaysLeft = (int) now()->diffInDays($sub->ends_at, false);
             } elseif ($tenant->trial_ends_at) {
@@ -750,6 +751,9 @@ class DashboardController extends Controller
                 'viewingDoctor',
                 'otDoctorCards',
                 'otSummary',
+                'todayPatients',
+                'todayPrimary',
+                'todaySecondary',
             ));
         }
 
@@ -828,7 +832,7 @@ class DashboardController extends Controller
     {
         $slug = request()->route('slug');
 
-        $hospitals = Tenant::whereIn('status', ['trial', 'active', 'grace'])
+        $hospitals = Tenant::partnerVisible()
             ->where('slug', '!=', $slug)
             ->orderBy('name')
             ->get(['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status']);
@@ -907,7 +911,7 @@ class DashboardController extends Controller
             [
                 'path' => request()->url(),
                 'pageName' => 'patient_page',
-                'query' => request()->query(),
+                'query' => Arr::except($request->query(), ['_tenant', 'section']),
             ]
         );
 
@@ -916,19 +920,40 @@ class DashboardController extends Controller
         $hospDistrict = request('hosp_district');
         $hospState = request('hosp_state');
 
-        $hospitals = Tenant::whereIn('status', ['trial', 'active', 'grace'])
-            ->where('slug', '!=', $slug)
+        $partnerHospitals = Tenant::partnerVisible()
+            ->where('id', '!=', $currentTenant->id)
             ->when($hospName, fn($q) => $q->where('name', 'like', "%{$hospName}%"))
             ->when($hospCity, fn($q) => $q->where('city', 'like', "%{$hospCity}%"))
             ->when($hospDistrict, fn($q) => $q->where('district', 'like', "%{$hospDistrict}%"))
             ->when($hospState, fn($q) => $q->where('state', 'like', "%{$hospState}%"))
+            ->with('subscriptions')
             ->orderBy('name')
-            ->paginate(
-                20,
-                ['id', 'name', 'slug', 'city', 'district', 'state', 'logo_path', 'status'],
-                'hospital_page'
-            )
-            ->withQueryString();
+            ->get();
+
+        $partnerHospitals = $partnerHospitals
+            ->filter(fn (Tenant $h) => in_array($h->displayStatus(), ['trial', 'grace'], true))
+            ->values();
+
+        $perPageHosp = 20;
+        $hospPage = max(1, (int) $request->query('hospital_page', 1));
+        $hospLast = max(1, (int) ceil($partnerHospitals->count() / $perPageHosp));
+        if ($hospPage > $hospLast) {
+            $hospPage = 1;
+        }
+
+        $queryForLinks = Arr::except($request->query(), ['_tenant', 'section']);
+
+        $hospitals = new LengthAwarePaginator(
+            $partnerHospitals->forPage($hospPage, $perPageHosp)->values(),
+            $partnerHospitals->count(),
+            $perPageHosp,
+            $hospPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'hospital_page',
+                'query' => $queryForLinks,
+            ]
+        );
 
         // Build a map of request statuses for the hospital list
         $allRequests = HospitalShareRequest::where('from_tenant_id', $currentTenant->id)
@@ -1164,6 +1189,19 @@ class DashboardController extends Controller
 
     private function loadSharedExamHistoryForIds(array $patientIds): Collection
     {
+        $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
+            ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(function ($exam) {
+                $exam->type = 'Primary Exam';
+                $exam->color = 'primary';
+                $exam->icon = 'bi-clipboard2-pulse';
+
+                return $exam;
+            })
+            ->keyBy('patient_id');
+
         $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
             ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
             ->whereIn('patient_id', $patientIds)
@@ -1174,29 +1212,15 @@ class DashboardController extends Controller
                 $exam->icon = 'bi-clipboard2-check';
 
                 return $exam;
-            });
+            })
+            ->filter(function ($exam) {
+                $data = is_array($exam->exam_data) ? $exam->exam_data : [];
 
-        // Per visit/registration: if a secondary exam exists for that patient_id,
-        // suppress the primary exam so only the most advanced exam is shown.
-        $idsWithSecondary = $secondaryExams->pluck('patient_id')->unique()->all();
-        $primaryOnlyIds = array_diff($patientIds, $idsWithSecondary);
+                return app(\App\Services\Hospital\ExaminationService::class)->examDataHasContent($data);
+            })
+            ->keyBy('patient_id');
 
-        $primaryExams = collect();
-        if (!empty($primaryOnlyIds)) {
-            $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
-                ->with(['doctor' => fn($q) => $q->withoutGlobalScopes()])
-                ->whereIn('patient_id', $primaryOnlyIds)
-                ->get()
-                ->map(function ($exam) {
-                    $exam->type = 'Primary Exam';
-                    $exam->color = 'primary';
-                    $exam->icon = 'bi-clipboard2-pulse';
-
-                    return $exam;
-                });
-        }
-
-        return $primaryExams->concat($secondaryExams)->sortByDesc('examined_at');
+        return $secondaryExams->union($primaryExams)->values()->sortByDesc('examined_at');
     }
 
     public function partnerHistory(Request $request, string $slug, int $partnerTenantId): View|RedirectResponse

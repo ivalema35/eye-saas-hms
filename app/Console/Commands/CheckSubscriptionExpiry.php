@@ -54,7 +54,7 @@ class CheckSubscriptionExpiry extends Command
             Tenant::where('status', 'active')
                 ->whereHas('subscriptions', fn ($q) => $q->where('status', 'expired')->whereNull('grace_ends_at')
                 )
-                ->update(['status' => 'inactive']);
+                ->update(['status' => 'expired']);
         }
 
         // ============================================================
@@ -71,11 +71,25 @@ class CheckSubscriptionExpiry extends Command
         if (! $isDryRun) {
             $inactivatedCount = 0;
             $graceExpiredQuery->each(function (Tenant $tenant) use (&$inactivatedCount) {
-                $tenant->update(['status' => 'inactive']);
+                $tenant->update(['status' => 'expired']);
                 $inactivatedCount++;
-                Log::warning("Tenant #{$tenant->id} ({$tenant->slug}) set inactive: grace period expired.");
+                Log::warning("Tenant #{$tenant->id} ({$tenant->slug}) set expired: grace period ended.");
             });
             $this->info("Set {$inactivatedCount} tenants to inactive.");
+        }
+
+        // Step 3: Trial / grace / active tenants whose access date has passed → expired
+        $accessQuery = Tenant::whereIn('status', ['trial', 'active', 'grace'])
+            ->with('subscriptions');
+
+        $toExpire = $accessQuery->get()->filter(fn (Tenant $t) => $t->isPlanExpired());
+        $this->info("Found {$toExpire->count()} tenants to mark expired (plan date passed).");
+
+        if (! $isDryRun) {
+            foreach ($toExpire as $tenant) {
+                $tenant->update(['status' => 'expired']);
+                Log::warning("Tenant #{$tenant->id} ({$tenant->slug}) set expired: plan date passed.");
+            }
         }
 
         if ($isDryRun) {

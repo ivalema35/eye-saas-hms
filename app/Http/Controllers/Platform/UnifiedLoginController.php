@@ -58,11 +58,38 @@ class UnifiedLoginController extends Controller
         if ($user && Hash::check($password, $user->password)) {
             $tenant = Tenant::find($user->tenant_id);
 
-            if (! $tenant || ! in_array($tenant->status, ['active', 'trial', 'grace'])) {
+            if (! $tenant) {
                 $request->hitRateLimiter();
 
                 return back()
-                    ->withErrors(['email' => 'Your hospital subscription is inactive. Please contact support.'])
+                    ->withErrors(['email' => __('auth.failed')])
+                    ->withInput(['email' => $login]);
+            }
+
+            if ($tenant->status === 'pending') {
+                $request->hitRateLimiter();
+
+                return back()
+                    ->withErrors(['email' => 'Your hospital registration is waiting for SuperAdmin approval. You can login after it is accepted.'])
+                    ->withInput(['email' => $login]);
+            }
+
+            if ($tenant->status === 'suspended') {
+                $request->hitRateLimiter();
+
+                return back()
+                    ->withErrors(['email' => 'This hospital is suspended. Please contact support.'])
+                    ->withInput(['email' => $login]);
+            }
+
+            $tenant->markExpiredIfNeeded();
+            $tenant->refresh();
+
+            if (! $tenant->hasAccess()) {
+                $request->hitRateLimiter();
+
+                return back()
+                    ->withErrors(['email' => 'Your hospital plan has expired. Please contact the administrator.'])
                     ->withInput(['email' => $login]);
             }
 

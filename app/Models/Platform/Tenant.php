@@ -118,9 +118,95 @@ class Tenant extends Model
         return $this->hasMany(HospitalUser::class);
     }
 
-    /** Check if tenant has active/trial access */
+    /** Latest date the hospital may still use the product (trial, subscription, or grace). */
+    public function planAccessEndsAt(): ?\Illuminate\Support\Carbon
+    {
+        $dates = [];
+
+        if ($this->trial_ends_at) {
+            $dates[] = $this->trial_ends_at->copy();
+        }
+
+        $subscription = $this->relationLoaded('subscriptions')
+            ? $this->subscriptions->sortByDesc('id')->first()
+            : $this->subscriptions()->latest()->first();
+
+        if ($subscription) {
+            if ($subscription->ends_at) {
+                $dates[] = \Illuminate\Support\Carbon::parse($subscription->ends_at);
+            }
+            if ($subscription->grace_ends_at) {
+                $dates[] = \Illuminate\Support\Carbon::parse($subscription->grace_ends_at);
+            }
+        }
+
+        if ($dates === []) {
+            return null;
+        }
+
+        return collect($dates)->sortByDesc(fn ($d) => $d->getTimestamp())->first();
+    }
+
+    public function isPlanExpired(): bool
+    {
+        if ($this->status === 'pending') {
+            return false;
+        }
+
+        $end = $this->planAccessEndsAt();
+        if ($end) {
+            return now()->greaterThan($end);
+        }
+
+        return in_array($this->status, ['expired', 'inactive'], true);
+    }
+
+    /** Status shown in SuperAdmin (Expired when plan dates have passed). */
+    public function displayStatus(): string
+    {
+        if ($this->status === 'pending') {
+            return 'pending';
+        }
+
+        if ($this->status === 'suspended') {
+            return 'suspended';
+        }
+
+        if ($this->isPlanExpired()) {
+            return 'expired';
+        }
+
+        return (string) $this->status;
+    }
+
+    public function markExpiredIfNeeded(): void
+    {
+        if (in_array($this->status, ['suspended', 'pending'], true)) {
+            return;
+        }
+
+        if ($this->isPlanExpired() && $this->status !== 'expired') {
+            try {
+                $this->update(['status' => 'expired']);
+            } catch (\Throwable $e) {
+                // Enum migrate pending — login still blocked via isPlanExpired()
+            }
+        }
+    }
+
+    /** Check if tenant has product access (login allowed). */
     public function hasAccess(): bool
     {
-        return in_array($this->status, ['trial', 'active', 'grace']);
+        if (in_array($this->status, ['suspended', 'pending'], true)) {
+            return false;
+        }
+
+        return ! $this->isPlanExpired();
+    }
+
+    /** Same hospitals SuperAdmin shows as Trial or Grace (not expired / blocked). */
+    public function scopePartnerVisible($query)
+    {
+        return $query->whereIn('status', ['trial', 'grace']);
     }
 }

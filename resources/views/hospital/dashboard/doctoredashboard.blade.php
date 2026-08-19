@@ -459,6 +459,7 @@
             color: #7b2cbf;
             font-size: 15px;
         }
+
         .ot-summary-pill {
             display: inline-flex;
             align-items: center;
@@ -470,13 +471,262 @@
             padding: 6px 12px;
             border-radius: 999px;
         }
+
         .ot-summary-pill:hover {
             background: #EBF5FB;
             color: #1B4F72;
         }
+
         .ot-dash-card .doc-profile-card:hover {
             border-color: #c4a3e0 !important;
             background: #f3e9fb !important;
+        }
+
+        /* ==================== DOCTOR OVERVIEW: featured card + all-doctor list ==================== */
+        .doc-overview-panel {
+            display: flex;
+            align-items: stretch;
+            gap: 20px;
+            background: linear-gradient(135deg, #ebf5fbeb, #f3f9fdeb);
+            border: 1px solid rgba(27, 79, 114, 0.08);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 6px 18px rgba(11, 35, 50, 0.05);
+        }
+
+        .doc-overview-featured {
+            flex: 0 0 auto;
+        }
+
+        .doc-overview-divider {
+            width: 1px;
+            align-self: stretch;
+            background: linear-gradient(180deg, transparent, rgba(27, 79, 114, .16), transparent);
+        }
+
+        .doc-overview-list {
+            flex: 1 1 320px;
+            min-width: 260px;
+        }
+
+        @media(max-width:768px) {
+            .doc-overview-panel {
+                flex-direction: column;
+            }
+
+            .doc-overview-divider {
+                display: none;
+            }
+
+            .doc-main-card {
+                max-width: 100%;
+            }
+        }
+
+        .doc-main-card {
+            background: #ffffff;
+            border: 2px solid #cde5f5;
+            border-radius: 12px;
+            padding: 15px 8px;
+            width: 220px;
+            max-width: 220px;
+            box-shadow: 0 4px 14px rgba(11, 35, 50, 0.07);
+        }
+
+        .doc-main-identity {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin: 0 0 6px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eef3f8;
+        }
+
+        .doc-main-card .doc-avatar {
+            width: 28px;
+            height: 28px;
+            font-size: 12px;
+            background: #1B4F72;
+            color: #fff;
+        }
+
+        .doc-main-card .doc-name {
+            font-size: 12px;
+            margin-bottom: 1px;
+            line-height: 1.15;
+        }
+
+        .doc-you-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 7px;
+            font-weight: 800;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            background: #1B4F72;
+            color: #fff;
+            padding: 1px 6px;
+            border-radius: 999px;
+        }
+
+        .dm-stat-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+
+        .dm-stat-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .dm-stat-head {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            font-size: 0;
+            margin: 0;
+            letter-spacing: 0;
+            text-transform: none;
+        }
+
+        .dm-stat-head i {
+            font-size: 11px;
+        }
+
+        .dm-stat-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .dm-stat {
+            display: flex;
+            flex-direction: row;
+            align-items: baseline;
+            justify-content: center;
+            gap: 2px;
+            padding: 3px 2px;
+            border-radius: 6px;
+            min-width: 0;
+        }
+
+        .dm-stat-n {
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -.03em;
+        }
+
+        .dm-stat-k {
+            font-size: 7px;
+            font-weight: 700;
+            letter-spacing: .03em;
+            text-transform: uppercase;
+            margin-top: 0;
+            opacity: .85;
+        }
+
+        .dm-stat-group--hosp .dm-stat-head { color: #0d9488; }
+        .dm-stat-group--hosp .dm-stat {
+            background: rgba(13, 148, 136, 0.1);
+            color: #0d9488;
+        }
+        .dm-stat-group--opd .dm-stat-head { color: #0f4f86; }
+        .dm-stat-group--opd .dm-stat {
+            background: rgba(15, 79, 134, 0.1);
+            color: #0f4f86;
+        }
+        .dm-stat-group--ot .dm-stat-head { color: #7b2cbf; }
+        .dm-stat-group--ot .dm-stat {
+            background: rgba(123, 44, 191, 0.1);
+            color: #7b2cbf;
+        }
+
+        .dm-sep {
+            opacity: .55;
+            font-weight: 400;
+        }
+
+        .dm-bar-opd {
+            background: linear-gradient(135deg, #1B4F72, #14395a);
+        }
+
+        .dm-bar-ot {
+            background: linear-gradient(135deg, #7b2cbf, #631f9e);
+        }
+
+        .doctor-list-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .doc-list-card {
+            display: block;
+            background: #ffffff;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 9px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+        }
+
+        .doc-list-card:hover {
+            transform: translateY(-2px);
+            border-color: #1B4F72;
+            background: #f5fafd;
+            box-shadow: 0 8px 15px rgba(27, 79, 114, .08);
+        }
+
+        .doc-list-card.doc-selected {
+            border: 2px solid #1B4F72 !important;
+            background: #ddeef9 !important;
+        }
+
+        .dm-bar-sm {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 3px 4px;
+            font-size: 9px;
+            font-weight: 700;
+            color: #fff;
+            margin-top: 5px;
+        }
+
+        .dm-bar-sm .dm-sep {
+            opacity: .6;
+        }
+
+        .doctor-list-empty {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 32px 16px;
+            color: #94a3b8;
+            text-align: center;
+            width: 100%;
+        }
+
+        .doctor-list-empty i {
+            font-size: 26px;
+            color: #cde5f5;
+        }
+
+        @media(max-width:768px) {
+            .doctor-list-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
         }
     </style>
 @endpush
@@ -509,193 +759,123 @@
             </div>
         @endif
 
-        <div class="metric-grid">
-            {{-- Card 1: TODAY'S ASSIGNED --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                    <div class="metric-icon" style="background:#e0f2fe;">
-                        <i class="bi bi-people-fill" style="color:#0284c7;font-size:14px;"></i>
-                    </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Today's Assigned</div>
-                </div>
-                <div>
-                    <div class="metric-number">{{ $doctorAssignedPatients ?? 0 }}</div>
-
-                    <!--   <div class="doc-badges mt-1">
-                                    <span class="doc-badge {{ ($doctorPrimaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
-                                        Primary {{ $doctorPrimaryDone ?? 0 }}
-                                    </span>
-                                    <span class="doc-badge {{ ($doctorSecondaryDone ?? 0) > 0 ? 'active' : '' }}" style="font-size: 10px; padding: 2px 8px;">
-                                        Secondary {{ $doctorSecondaryDone ?? 0 }}
-                                    </span>
-                                </div> -->
-                </div>
-            </div>
-
-            {{-- Card 2: PENDING EXAMS (Primary Done) --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                    <div class="metric-icon" style="background:#ffedd5;">
-                        <i class="bi bi-file-earmark-medical-fill" style="color:#ea580c;font-size:14px;"></i>
-                    </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Primary Done</div>
-                </div>
-                <div>
-                    <div class="metric-number mb-0">{{ $doctorPrimaryDone ?? 0 }}</div>
-                </div>
-            </div>
-
-            {{-- Card 3: SECONDARY DONE --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                    <div class="metric-icon" style="background:#dcfce7;">
-                        <i class="bi bi-check-circle-fill" style="color:#16a34a;font-size:14px;"></i>
-                    </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Secondary Done</div>
-                </div>
-                <div>
-                    <div class="metric-number mb-0">{{ $doctorSecondaryDone ?? 0 }}</div>
-                </div>
-            </div>
-
-            {{-- Card 4: REPORT --}}
-            <div class="metric-card-item d-flex flex-column justify-content-between position-relative pb-2">
-                <div>
-                    <div class="metric-icon" style="background:#f8f0fc;">
-                        <i class="bi bi-bar-chart-fill" style="color:#7b2cbf;font-size:14px;"></i>
-                    </div>
-                    <div class="metric-title text-uppercase" style="letter-spacing: 1px;">Reports</div>
-                </div>
-                <div class="mt-2">
-                    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}"
-                        class="text-decoration-none text-dark d-flex align-items-center fw-bolder"
-                        style="font-size: 14px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-                        View <i class="bi bi-arrow-right ms-1" style="font-size: 14px;"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-
-        <div class="row g-4 mb-4">
-            <div class="col-lg-12">
-                <div class="card border-0 shadow-sm p-3 h-100" style="border-radius: 12px; background: #ebf5fbeb;">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                        <h6 class="fw-bold mb-0" style="color: #1B4F72;">OPD — All Doctors</h6>
-                    </div>
-
-                    <div class="doctor-cards-container">
-                        @forelse($doctorCards ?? [] as $doc)
-                            @if($doc->role?->slug === 'ot_assistant')
-                                @continue
-                            @endif
-                            @php
-                                $loggedInId = auth('hospital_user')->id();
-                                $isSelf = $doc->id === $loggedInId;
-                                $isSelected = $isSelf
-                                    ? ($viewingDoctor === null)
-                                    : ($viewingDoctor?->id === $doc->id);
-                                $cardUrl = $isSelf
-                                    ? route('hospital.dashboard', ['slug' => $slug])
-                                    : route('hospital.dashboard', ['slug' => $slug]) . '?view_doctor=' . $doc->id;
-                            @endphp
-                            <a href="{{ $cardUrl }}" class="doc-profile-card {{ $isSelected ? 'doc-selected' : '' }}"
-                                style="{{ $isSelected ? 'border:2px solid #1B4F72; background:#ddeef9;' : '' }}">
-                                {{-- Avatar --}}
-                                <div class="doc-avatar" style="{{ $isSelected ? 'background:#1B4F72; color:#fff;' : '' }}">
-                                    {{ substr($doc->name, 0, 1) }}
-                                </div>
-
-                                <div class="doc-info">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="doc-name">{{ $doc->name }}</div>
-                                        @if($isSelf)
-                                            <span
-                                                style="font-size:10px;font-weight:700;background:#1B4F72;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
-                                        @endif
-                                    </div>
-
-                                    <div class="doc-assigned">{{ $doc->assigned_today ?? 0 }} Assigned</div>
-
-                                    <div class="doc-badges">
-                                        <span class="doc-badge {{ ($doc->primary_count ?? 0) > 0 ? 'active' : '' }}">
-                                            Primary Exam {{ $doc->primary_count ?? 0 }}
-                                        </span>
-                                        <span class="doc-badge {{ ($doc->secondary_count ?? 0) > 0 ? 'active' : '' }}">
-                                            Secondary Exam {{ $doc->secondary_count ?? 0 }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </a>
-                        @empty
-                            <div class="text-muted small p-2">No other duty records live right now.</div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- OT section — same doctors, counts from Recommend Surgery (ot_doctor_id) --}}
+        {{-- ==================== DOCTOR OVERVIEW: featured card + all-doctor list (OPD + OT combined) ====================
+        --}}
         @php
+            $doctorCards = $doctorCards ?? collect();
             $otDoctorCards = $otDoctorCards ?? collect();
-            $otSummary = $otSummary ?? ['total' => 0, 'pending' => 0, 'complete' => 0];
+            $loggedInId = auth('hospital_user')->id();
+            $activeDoctorId = $viewingDoctor->id ?? $loggedInId;
+            $otStatsById = $otDoctorCards->keyBy('id');
+            $activeOtStats = $otStatsById->get($activeDoctorId);
+            $otherDoctorCards = $doctorCards->reject(
+                fn($d) => $d->role?->slug === 'ot_assistant' || $d->id === $activeDoctorId
+            )->values();
         @endphp
-        <div class="row g-4 mb-4">
-            <div class="col-lg-12">
-                <div class="card border-0 shadow-sm p-3 h-100 ot-dash-card" style="border-radius: 12px; background: #f8f0fc;">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="ot-dash-icon"><i class="bi bi-hospital"></i></span>
-                            <h6 class="fw-bold mb-0" style="color: #1B4F72;">OT</h6>
+
+        <div class="doc-overview-panel mb-4">
+            {{-- Featured card: whichever doctor's dashboard is currently open --}}
+            <div class="doc-overview-featured">
+                <div class="doc-main-card">
+                    <div class="doc-main-identity">
+                        <div class="doc-avatar">
+                            {{ substr($doctorName ?? 'D', 0, 1) }}
                         </div>
-                        <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}"
-                           class="ot-summary-pill text-decoration-none">
-                            OT — {{ $otSummary['total'] }}
-                            <span class="mx-1">|</span>
-                            Pending — {{ $otSummary['pending'] }}
-                            <span class="mx-1">|</span>
-                            Complete — {{ $otSummary['complete'] }}
-                            <i class="bi bi-arrow-right-short ms-1"></i>
-                        </a>
+                        <div>
+                            <div class="doc-name">{{ $doctorName ?? 'Doctor' }}</div>
+                            @if(!$viewingDoctor)
+                                <span class="doc-you-pill">You</span>
+                            @else
+                                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="text-decoration-none"
+                                    style="font-size:10px;font-weight:700;color:#0f4f86;">
+                                    &larr; Back to my dashboard
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
-                    <div class="doctor-cards-container">
-                        @forelse($otDoctorCards as $doc)
-                            @php
-                                $loggedInId = auth('hospital_user')->id();
-                                $isSelf = (int) $doc->id === (int) $loggedInId;
-                                $otCardUrl = route('hospital.dashboard.doctor-ot', [
-                                    'slug' => $slug,
-                                    'doctor_id' => $doc->id,
-                                ]);
-                            @endphp
-                            <a href="{{ $otCardUrl }}" class="doc-profile-card">
-                                <div class="doc-avatar" style="background:#efe6f8;color:#7b2cbf;">
+                    <div class="dm-stat-group dm-stat-group--hosp">
+                        <div class="dm-stat-head" title="Hospital today"><i class="bi bi-hospital"></i></div>
+                        <div class="dm-stat-row">
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $todayPatients ?? 0 }}</span><span class="dm-stat-k">TP</span></div>
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $todayPrimary ?? 0 }}</span><span class="dm-stat-k">PC</span></div>
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $todaySecondary ?? 0 }}</span><span class="dm-stat-k">SP</span></div>
+                        </div>
+                    </div>
+
+                    <div class="dm-stat-group dm-stat-group--opd">
+                        <div class="dm-stat-head" title="My patients"><i class="bi bi-clipboard2-pulse"></i></div>
+                        <div class="dm-stat-row">
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $doctorAssignedPatients ?? 0 }}</span><span class="dm-stat-k">TP</span></div>
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $doctorPrimaryDone ?? 0 }}</span><span class="dm-stat-k">PC</span></div>
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $doctorSecondaryDone ?? 0 }}</span><span class="dm-stat-k">SP</span></div>
+                        </div>
+                    </div>
+
+                    <div class="dm-stat-group dm-stat-group--ot">
+                        <div class="dm-stat-head" title="OT"><i class="bi bi-scissors"></i></div>
+                        <div class="dm-stat-row">
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $activeOtStats->ot_total ?? 0 }}</span><span class="dm-stat-k">OT</span></div>
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $activeOtStats->ot_pending ?? 0 }}</span><span class="dm-stat-k">OP</span></div>
+                            <div class="dm-stat"><span class="dm-stat-n">{{ $activeOtStats->ot_complete ?? 0 }}</span><span class="dm-stat-k">OC</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="doc-overview-divider"></div>
+
+            {{-- All Doctor List: each card = OPD + OT combined --}}
+            <div class="doc-overview-list">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="ot-dash-icon" style="width:26px;height:26px;font-size:12px;"><i
+                            class="bi bi-people-fill"></i></span>
+                    <h6 class="fw-bold mb-0" style="color: #1B4F72;">All Doctor List</h6>
+                </div>
+
+                <div class="doctor-list-grid">
+                    @forelse($otherDoctorCards as $doc)
+                        @php
+                            $isSelf = $doc->id === $loggedInId;
+                            $cardUrl = $isSelf
+                                ? route('hospital.dashboard', ['slug' => $slug])
+                                : route('hospital.dashboard', ['slug' => $slug]) . '?view_doctor=' . $doc->id;
+                            $docOt = $otStatsById->get($doc->id);
+                        @endphp
+                        <a href="{{ $cardUrl }}" class="doc-list-card">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <div class="doc-avatar" style="width:32px;height:32px;font-size:13px;">
                                     {{ substr($doc->name, 0, 1) }}
                                 </div>
-                                <div class="doc-info">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="doc-name">{{ $doc->name }}</div>
-                                        @if($isSelf)
-                                            <span
-                                                style="font-size:10px;font-weight:700;background:#7b2cbf;color:#fff;padding:2px 8px;border-radius:20px;">You</span>
-                                        @endif
-                                    </div>
-                                    <div class="doc-assigned">{{ $doc->ot_total ?? 0 }} OT cases</div>
-                                    <div class="doc-badges">
-                                        <span class="doc-badge {{ ($doc->ot_pending ?? 0) > 0 ? 'active' : '' }}">
-                                            Pending {{ $doc->ot_pending ?? 0 }}
-                                        </span>
-                                        <span class="doc-badge {{ ($doc->ot_complete ?? 0) > 0 ? 'active' : '' }}">
-                                            Complete {{ $doc->ot_complete ?? 0 }}
-                                        </span>
-                                    </div>
+                                <div class="doc-name" style="font-size:12.5px;">
+                                    {{ $doc->name }}
+                                    @if($isSelf)
+                                        <span
+                                            style="font-size:8px;font-weight:700;background:#1B4F72;color:#fff;padding:1px 6px;border-radius:20px;margin-left:4px;">You</span>
+                                    @endif
                                 </div>
-                            </a>
-                        @empty
-                            <div class="text-muted small p-2">No doctors found for OT counts.</div>
-                        @endforelse
-                    </div>
+                            </div>
+                            <div class="dm-bar-sm dm-bar-opd">
+                                <span>TP {{ $doc->assigned_today ?? 0 }}</span>
+                                <span class="dm-sep">|</span>
+                                <span>PC {{ $doc->primary_count ?? 0 }}</span>
+                                <span class="dm-sep">|</span>
+                                <span>SP {{ $doc->secondary_count ?? 0 }}</span>
+                            </div>
+                            <div class="dm-bar-sm dm-bar-ot">
+                                <span>OT {{ $docOt->ot_total ?? 0 }}</span>
+                                <span class="dm-sep">|</span>
+                                <span>OP {{ $docOt->ot_pending ?? 0 }}</span>
+                                <span class="dm-sep">|</span>
+                                <span>OC {{ $docOt->ot_complete ?? 0 }}</span>
+                            </div>
+                        </a>
+                    @empty
+                        <div class="doctor-list-empty">
+                            <i class="bi bi-people"></i>
+                            <span>No other doctors on duty right now.</span>
+                        </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -743,6 +923,7 @@
                                     <tr>
                                         <th>{{ $drIndexLabel }}</th>
                                         <th class="text-start">Patient Name</th>
+                                        <th>Gender</th>
                                         <th>Age</th>
                                         <th>City</th>
                                         <th>{{ $waitStatusLabel }}</th>
@@ -758,6 +939,7 @@
                                             <td class="text-start fw-semibold" style="color: #1B4F72;">
                                                 {{ $patient->first_name }} {{ $patient->last_name }}
                                             </td>
+                                            <td>{{ $patient->gender ? ucfirst($patient->gender) : '—' }}</td>
                                             <td>{{ $patient->age }}</td>
                                             <td>{{ $patient->cityName ?: '-' }}</td>
                                             <td>
@@ -792,7 +974,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="py-4 text-muted bg-light">No Data Found</td>
+                                            <td colspan="7" class="py-4 text-muted bg-light">No Data Found</td>
                                         </tr>
                                     @endforelse
                                 </tbody>
@@ -837,15 +1019,13 @@
                                     <tr>
                                         <th>{{ $drIndexLabel }}</th>
                                         <th class="text-start">Patient Name</th>
+                                        <th>Gender</th>
                                         <th>Age</th>
                                         <th>City</th>
                                         <th>{{ $waitStatusLabel }}</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-
-
                                 <tbody>
                                     @forelse($secondaryQueue ?? [] as $i => $patient)
                                         @php
@@ -879,6 +1059,7 @@
                                             <td class="text-start fw-semibold" style="color: #1B4F72;">
                                                 {{ $patient->first_name }} {{ $patient->last_name }}
                                             </td>
+                                            <td>{{ $patient->gender ? ucfirst($patient->gender) : '—' }}</td>
                                             <td>{{ $patient->age }}</td>
                                             <td>{{ $patient->cityName ?: '-' }}</td>
                                             <td>
@@ -932,7 +1113,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="py-4 text-muted bg-light">No Data Found</td>
+                                            <td colspan="7" class="py-4 text-muted bg-light">No Data Found</td>
                                         </tr>
                                     @endforelse
                                 </tbody>

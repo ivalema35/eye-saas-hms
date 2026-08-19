@@ -2,6 +2,7 @@
 
 namespace App\Services\Platform;
 
+use App\Models\Platform\PlanCountryPrice;
 use App\Models\Platform\PlatformSetting;
 
 class PlatformPricingService
@@ -62,6 +63,8 @@ class PlatformPricingService
     }
 
     /**
+     * Plans for a given FX rate (fx-conversion fallback).
+     *
      * @return array<string, array{price: int, original: int, label: string, save?: int}>
      */
     public function plansForFx(float $fxInrPerUnit): array
@@ -82,5 +85,46 @@ class PlatformPricingService
         }
 
         return $out;
+    }
+
+    /**
+     * Plans for a specific country — uses explicit override prices if set,
+     * falls back to fx-conversion when no override exists.
+     *
+     * @return array<string, array{price: int, original: int, label: string, save?: int}>
+     */
+    public function plansForCountry(int $countryId, float $fxInrPerUnit): array
+    {
+        $overrides = PlanCountryPrice::where('country_id', $countryId)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('cycle');
+
+        if ($overrides->count() === 3) {
+            // All 3 cycles have explicit override prices
+            $base = $this->basePlans();
+            return [
+                'monthly' => [
+                    'price'    => (int) $overrides['monthly']->price,
+                    'original' => (int) $overrides['monthly']->price,
+                    'label'    => 'Monthly',
+                ],
+                'quarterly' => [
+                    'price'    => (int) $overrides['quarterly']->price,
+                    'original' => (int) $overrides['monthly']->price * 3,
+                    'label'    => 'Quarterly',
+                    'save'     => max(0, (int) $overrides['monthly']->price * 3 - (int) $overrides['quarterly']->price),
+                ],
+                'yearly' => [
+                    'price'    => (int) $overrides['yearly']->price,
+                    'original' => (int) $overrides['monthly']->price * 12,
+                    'label'    => 'Yearly',
+                    'save'     => max(0, (int) $overrides['monthly']->price * 12 - (int) $overrides['yearly']->price),
+                ],
+            ];
+        }
+
+        // Fallback: fx-conversion
+        return $this->plansForFx($fxInrPerUnit);
     }
 }

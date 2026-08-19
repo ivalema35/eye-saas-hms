@@ -59,15 +59,16 @@
     <div class="col-md-3">
         <label class="form-label">Appointment Type <span class="text-danger">*</span></label>
         <select name="appointment_type" class="form-select" required>
-            @foreach(['phone' => 'Phone', 'walk_in' => 'Walk-in', 'online' => 'Online', 'referral' => 'Referral'] as $value => $label)
-                <option value="{{ $value }}" {{ old('appointment_type', $appointment->appointment_type ?? 'phone') === $value ? 'selected' : '' }}>{{ $label }}</option>
+            @foreach(['phone' => 'Phone', 'walk_in' => 'Walk-in', 'online' => 'Online', 'ot' => 'OT'] as $value => $label)
+                <option value="{{ $value }}" {{ old('appointment_type', $appointment->appointment_type ?? 'ot') === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
     </div>
     <div class="col-md-3">
         <label class="form-label">Appointment Date <span class="text-danger">*</span></label>
         <input type="text" name="appointment_date" id="appointment_date" class="form-control"
-            value="{{ old('appointment_date', optional($appointment?->appointment_date)->format('Y-m-d') ?? ($doctorLoadDate ?? now()->toDateString())) }}" required>
+            value="{{ old('appointment_date', optional($appointment?->appointment_date)->format('Y-m-d') ?? ($doctorLoadDate ?? now()->toDateString())) }}"
+            required>
     </div>
     <div class="col-md-3">
         <label class="form-label">Appointment Time</label>
@@ -93,8 +94,8 @@
     <div class="col-md-3">
         <label class="form-label">Contact Number <span class="text-danger">*</span></label>
         <input type="text" name="mobile_no" class="form-control @error('mobile_no') is-invalid @enderror"
-            value="{{ old('mobile_no', $appointment->mobile_no ?? '') }}"
-            data-intl-phone required placeholder="+919876543210">
+            value="{{ old('mobile_no', $appointment->mobile_no ?? '') }}" data-intl-phone required
+            placeholder="+919876543210">
         @error('mobile_no')
             <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
@@ -102,8 +103,8 @@
     <div class="col-md-3">
         <label class="form-label">WhatsApp Number</label>
         <input type="text" name="whatsapp_no" class="form-control @error('whatsapp_no') is-invalid @enderror"
-            value="{{ old('whatsapp_no', $appointment->whatsapp_no ?? '') }}"
-            data-intl-phone placeholder="Same if blank">
+            value="{{ old('whatsapp_no', $appointment->whatsapp_no ?? '') }}" data-intl-phone
+            placeholder="Same if blank">
         @error('whatsapp_no')
             <div class="invalid-feedback d-block">{{ $message }}</div>
         @enderror
@@ -174,7 +175,8 @@
             <option value="">Select...</option>
             @foreach(['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $label)
                 <option value="{{ $value }}" {{ old('gender', $appointment->gender ?? '') === $value ? 'selected' : '' }}>
-                    {{ $label }}</option>
+                    {{ $label }}
+                </option>
             @endforeach
         </select>
     </div>

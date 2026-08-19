@@ -6,7 +6,7 @@ used across the rest of the app. --}}
 
 @section('content')
 
-<div class="exam-header-card">
+<!-- <div class="exam-header-card">
     <div class="exam-header-row">
         <div>
             <div class="exam-header-title"><i class="bi bi-eye-fill"></i> Primary Eye Examination</div>
@@ -31,24 +31,24 @@ used across the rest of the app. --}}
                     <i class="bi bi-printer"></i> Print Rx
                 </a>
             @endif
-            <!-- @haspermission('opd.foc.create')
+            @haspermission('opd.foc.create')
                 <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModal">
                     <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
                 </button>
-            @endhaspermission -->
+            @endhaspermission
         </div>
     </div>
-</div>
+</div> -->
 
 <style>
-    .exam-header-card {
+    /* .exam-header-card {
         background: #ffffff;
         border: 1px solid rgba(15, 79, 134, 0.12);
         border-radius: 16px;
         box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
         padding: 1.1rem 1.5rem;
         margin-bottom: 1.25rem;
-    }
+    } */
 
     .exam-header-row {
         display: flex;
@@ -575,7 +575,7 @@ used across the rest of the app. --}}
 @endhaspermission
 
 @php
-$ed = $exam?->exam_data ?? [];
+$ed = old('exam_data', $exam?->exam_data ?? []);
 $vision = $ed['vision'] ?? [];
 $pg = $ed['pg'] ?? [];
 $st = $ed['st'] ?? [];
@@ -960,7 +960,7 @@ $prescriptions = $exam?->prescriptions ?? collect();
                     @endif
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="btn btn-primary step-done-btn" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -1054,7 +1054,7 @@ $prescriptions = $exam?->prescriptions ?? collect();
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
+                    <button type="button" class="btn btn-primary step-done-btn" data-bs-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
@@ -1074,9 +1074,9 @@ $prescriptions = $exam?->prescriptions ?? collect();
 
                     @php
 $vnCols = [
-    ['abbr' => 'VN', 'full' => 'Distance Vision', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
-    ['abbr' => 'PnVn', 'full' => 'Pinhole', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
-    ['abbr' => 'NrVn', 'full' => 'Near Vision', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
+    ['abbr' => 'VN', 'full' => '', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
+    ['abbr' => 'PnVn', 'full' => '', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
+    ['abbr' => 'NrVn', 'full' => '', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
 ];
                     @endphp
 
@@ -1123,7 +1123,7 @@ $vnCols = [
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Done
                     </button>
                 </div>
@@ -1236,7 +1236,7 @@ $pgMasterOpts = [
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                     Save
                     </button>
                 </div>
@@ -1452,7 +1452,7 @@ $pgMasterOpts = [
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Save
                     </button>
                 </div>
@@ -1527,7 +1527,7 @@ $pgMasterOpts = [
                     </div> -->
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Done
                     </button>
                 </div>
@@ -1632,7 +1632,7 @@ foreach ($oeFieldMeta as $meta) {
                     </div>
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                        Done
                     </button>
                 </div>
@@ -1741,7 +1741,7 @@ foreach ($oeFieldMeta as $meta) {
 
                 </div>
                 <div class="modal-footer" style="background:#f9fafb;">
-                    <button type="button" class="btn btn-primary px-4" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-primary px-4 step-done-btn" data-bs-dismiss="modal">
                         Done
                     </button>
                 </div>
@@ -3684,8 +3684,10 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             var addHid = document.querySelector('[name="exam_data[st][' + eye + '][add]"]');
             var nsHid  = document.querySelector('[name="exam_data[st][' + eye + '][ns]"]');
             if (!dsHid || !addHid || !nsHid) return;
+            var addRaw = String(addHid.value || '').trim();
+            if (!addRaw) return;
             var ds  = parseFloat(String(dsHid.value  || '').replace(/^\+/, '')) || 0;
-            var add = parseFloat(String(addHid.value || '').replace(/^\+/, '')) || 0;
+            var add = parseFloat(addRaw.replace(/^\+/, '')) || 0;
             var ns  = ds + add;
             var fmt = ns > 0 ? '+' + ns.toFixed(2) : (ns < 0 ? ns.toFixed(2) : '0.00');
             nsHid.value = fmt;
@@ -3713,7 +3715,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
         // Sync NEAR on ST modal open
         document.getElementById('modalST')?.addEventListener('show.bs.modal', function () {
-            ['re', 'le'].forEach(function (eye) { calcStNearSph(eye); syncStNearFromDist(eye); });
+            ['re', 'le'].forEach(function (eye) { syncStNearFromDist(eye); });
         });
 
         function pgFmt(num) {
@@ -3832,9 +3834,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 syncAxisForCyl(pgPickTarget.inp, val);
             }
 
-            // Recalc ST Near SPH when Distance SPH or ADD changes
-            const stDsMatch  = hidName.match(/^exam_data\[st\]\[(re|le)\]\[ds\]$/);
-            if (stDsMatch) calcStNearSph(stDsMatch[1]);
+            // Recalc ST Near SPH only when ADD (Near) is chosen — not when Distance SPH changes
             const stAddMatch = hidName.match(/^exam_data\[st\]\[(re|le)\]\[add\]$/);
             if (stAddMatch) { calcStNearSph(stAddMatch[1]); syncStNearFromDist(stAddMatch[1]); }
 
@@ -4716,6 +4716,36 @@ if (document.documentElement.classList.contains('exam-inline')) {
             });
         });
     });
+}
+
+// ── Step auto-advance: clicking Done/Save in a step modal opens the next step's modal.
+// Only fires when Done/Save was clicked (not the X/backdrop). Dilate keeps its own
+// existing behaviour untouched — it's the last entry so no listener is attached to it.
+if (!document.documentElement.classList.contains('exam-inline')) {
+    (function () {
+        var STEP_ORDER = ['modalClinical', 'modalHko', 'modalVision', 'modalPG', 'modalST', 'modalNCT', 'modalOE', 'modalFundus', 'modalDilate'];
+
+        document.querySelectorAll('.step-done-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var modalEl = btn.closest('.modal');
+                if (modalEl) { modalEl.dataset.autoAdvance = '1'; }
+            });
+        });
+
+        STEP_ORDER.forEach(function (modalId, idx) {
+            var nextId = STEP_ORDER[idx + 1];
+            if (!nextId) return;
+            var modalEl = document.getElementById(modalId);
+            if (!modalEl) return;
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                if (modalEl.dataset.autoAdvance === '1') {
+                    modalEl.dataset.autoAdvance = '';
+                    var nextEl = document.getElementById(nextId);
+                    if (nextEl) { bootstrap.Modal.getOrCreateInstance(nextEl).show(); }
+                }
+            });
+        });
+    })();
 }
 </script>
 

@@ -260,6 +260,7 @@
             color: #1B4F72;
         }
 
+
         .hero-pet {
             width: 210px;
             height: 210px;
@@ -752,6 +753,19 @@
         input[type="password"]::-ms-clear {
             display: none;
         }
+
+        .form-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-logo img {
+            height: 68px;
+            width: auto;
+            object-fit: contain;
+        }
     </style>
 </head>
 
@@ -798,9 +812,13 @@
             </div>
 
             {{-- Right: Form panel --}}
+
             <div class="auth-form-side">
                 <div class="auth-form-box">
-
+                    <div class="form-logo">
+                        <img src="{{ $hospitalLogo ? asset('storage/' . $hospitalLogo) : platform_logo_url() }}"
+                            alt="{{ $hospitalName }} Logo">
+                    </div>
                     <a href="{{ route('home') }}" class="back-link">
                         <i class="fa-solid fa-arrow-left"></i> Back to EYENOSIS
                     </a>
@@ -823,7 +841,8 @@
                                     autocomplete="username">
                             </div>
                             @error('email')
-                                <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>
+                                <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
+                                </div>
                             @enderror
                         </div>
 
@@ -843,7 +862,8 @@
                                 </button>
                             </div>
                             @error('password')
-                                <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}</div>
+                                <div class="form-error"><i class="fa-solid fa-circle-exclamation"></i> {{ $message }}
+                                </div>
                             @enderror
                         </div>
 

@@ -47,7 +47,6 @@
                 <div class="ecrm-footer-links">
                     <a href="{{ route('home') }}">Home</a>
                     <a href="{{ route('pricing') }}">Pricing</a>
-                    <a href="{{ route('superadmin.login') }}">Login</a>
                 </div>
             </div>
         </div>

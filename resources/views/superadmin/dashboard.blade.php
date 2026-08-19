@@ -26,6 +26,23 @@
 
     {{-- KPI cards — reference layout, your data --}}
     <div class="sa-kpi-grid">
+        @php
+            $requestsHref = ($pendingCount ?? 0) === 1 && !empty($latestPending)
+                ? route('superadmin.hospitals.show', $latestPending)
+                : route('superadmin.hospitals.index', ['status' => 'pending']);
+        @endphp
+        <a href="{{ $requestsHref }}" class="sa-kpi sa-kpi--navy sa-reveal" style="--d:.02s;text-decoration:none;color:inherit">
+            <span class="sa-kpi-gloss" aria-hidden="true"></span>
+            <div class="sa-kpi-top">
+                <div class="sa-kpi-icon"><i class="bi bi-send-fill"></i></div>
+                @if(($pendingCount ?? 0) > 0)
+                    <span class="sa-kpi-chip sa-kpi-chip--new">{{ $pendingCount }} New</span>
+                @endif
+            </div>
+            <strong class="sa-kpi-value">{{ $pendingCount ?? 0 }}</strong>
+            <span class="sa-kpi-label">Registration Requests</span>
+        </a>
+
         <article class="sa-kpi sa-kpi--navy sa-reveal" style="--d:.04s">
             <span class="sa-kpi-gloss" aria-hidden="true"></span>
             <div class="sa-kpi-top">
@@ -242,8 +259,8 @@
                                 <td>{{ $hospital->admin_name ?? '—' }}</td>
                                 <td>{{ $hospital->city ?? '—' }}</td>
                                 <td>
-                                    <span class="hms-badge hms-badge-{{ strtolower($hospital->status) }}">
-                                        {{ ucfirst($hospital->status) }}
+                                    <span class="hms-badge hms-badge-{{ strtolower($hospital->displayStatus()) }}">
+                                        {{ ucfirst($hospital->displayStatus()) }}
                                     </span>
                                 </td>
                                 <td class="sa-table-date">

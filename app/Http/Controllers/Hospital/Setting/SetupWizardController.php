@@ -141,6 +141,12 @@ class SetupWizardController extends Controller
                 Rule::unique('hospital_users', 'contact')
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
+
+            'doctor_prefix' => [
+                Rule::unique('hospital_users', 'doctor_prefix')
+                    ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
+            ],
+
             'password' => ['required', 'string', 'min:8'],
             // 'doctor_type' => ['nullable', 'in:primary,secondary'],
         ], [
@@ -161,6 +167,7 @@ class SetupWizardController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'contact' => $data['contact'] ?? null,
+            'doctor_prefix' => $data['doctor_prefix'] ?? null,
             'password' => Hash::make($data['password']),
             // 'doctor_type' => $data['doctor_type'] ?? null,
             'status' => 'active',
@@ -181,6 +188,8 @@ class SetupWizardController extends Controller
                 Rule::unique('hospital_users', 'contact')
                     ->where(fn($query) => $query->where('tenant_id', $tenant->id)),
             ],
+
+
             'password' => ['required', 'string', 'min:8'],
         ], [
             ...EmailRules::messages('email'),

@@ -111,9 +111,18 @@
             <div class="hms-nav-group-items {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
                 id="sa-nav-management">
                 <a href="{{ route('superadmin.hospitals.index') }}"
-                    class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.*') ? 'active' : '' }}">
+                    class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.*') && request('status') !== 'pending' ? 'active' : '' }}">
                     <i class="bi bi-hospital-fill"></i>
                     <span>Hospitals</span>
+                </a>
+                <a href="{{ route('superadmin.hospitals.index', ['status' => 'pending']) }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.index') && request('status') === 'pending' ? 'active' : '' }}">
+                    <i class="bi bi-inbox-fill"></i>
+                    <span>Requests</span>
+                    @php $saPendingCount = \App\Models\Platform\Tenant::where('status', 'pending')->count(); @endphp
+                    @if($saPendingCount > 0)
+                        <span style="margin-left:auto;background:#0f4f86;color:#fff;font-size:.65rem;font-weight:700;padding:.1rem .4rem;border-radius:999px">{{ $saPendingCount }}</span>
+                    @endif
                 </a>
                 <a href="{{ route('superadmin.plans.index') }}"
                     class="hms-nav-item {{ request()->routeIs('superadmin.plans.*') ? 'active' : '' }}">
@@ -164,6 +173,11 @@
                     class="hms-nav-item {{ request()->routeIs('superadmin.medicine-master.*') ? 'active' : '' }}">
                     <i class="bi bi-capsule"></i>
                     <span>Medicine Master</span>
+                </a>
+                <a href="{{ route('superadmin.diagnosis-master.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.diagnosis-master.*') ? 'active' : '' }}">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>Diagnosis Master</span>
                 </a>
             </div>
 

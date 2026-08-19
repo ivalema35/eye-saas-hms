@@ -1,15 +1,28 @@
 @extends('hospital.layouts.app')
 @section('title', 'Total Collection')
-@section('page-header', 'Total Collection')
-
-@section('page-actions')
-    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-    </a>
-@endsection
+{{-- Layout page-header intentionally unused — heading, breadcrumb and
+actions render inside the content card instead, matching the panel design
+used across the rest of the app. --}}
 
 @section('content')
     <div class="acoll-page">
+
+        <div class="acoll-outer-card">
+            <div class="acoll-header-block">
+                <div>
+                    <div class="acoll-header-title"><i class="bi bi-cash-stack"></i> Total Collection</div>
+                    <nav class="acoll-breadcrumb" aria-label="breadcrumb">
+                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                        <span class="acoll-breadcrumb-sep">/</span>
+                        <span class="acoll-breadcrumb-current">Total Collection</span>
+                    </nav>
+                </div>
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
         @php
             $bd = $breakdown ?? ['opd' => 0, 'ot_collected' => 0, 'ot_refunded' => 0, 'ot_net' => 0, 'total' => $grandTotal ?? 0];
         @endphp
@@ -131,10 +144,10 @@
 @push('styles')
     <style>
         /*
-          Total Collection (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-        */
+                          Total Collection (Design refresh)
+                          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                          Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+                        */
 
         .acoll-page {
             --ot-secondary: #1B4F72;
@@ -163,14 +176,71 @@
             }
         }
 
+        .acoll-outer-card {
+            background: #ffffff;
+            border: 1px solid rgba(15, 79, 134, 0.12);
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
+            padding: 1.1rem 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .acoll-header-block {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: .75rem;
+        }
+
+        .acoll-header-title {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: var(--ot-secondary);
+            letter-spacing: -.015em;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .acoll-header-title i {
+            color: var(--ot-secondary);
+            font-size: 1.2rem;
+        }
+
+        .acoll-breadcrumb {
+            margin-top: .4rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .85rem;
+            color: #8891a0;
+        }
+
+        .acoll-breadcrumb a {
+            color: #8891a0;
+            text-decoration: none;
+        }
+
+        .acoll-breadcrumb a:hover {
+            color: var(--ot-secondary);
+        }
+
+        .acoll-breadcrumb-sep {
+            color: #c3c9d3;
+        }
+
+        .acoll-breadcrumb-current {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
         .acoll-premium-card {
-            background: rgba(255, 255, 255, 0.84);
-            border: 1px solid var(--ot-s2-12) !important;
-            border-radius: 22px;
-            box-shadow: 0 18px 48px rgba(27, 79, 114, 0.10);
+            background: #ffffff;
+            border: 3px solid rgba(15, 79, 134, 0.08) !important;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
             overflow: hidden;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
         }
 
         .acoll-icon {
@@ -231,9 +301,7 @@
         }
 
         .acoll-card-header {
-            background:
-                linear-gradient(135deg, rgba(235, 245, 251, 0.92), rgba(255, 255, 255, 0.94)),
-                #ffffff;
+            background: #1B4F72;
             border-bottom: 1px solid var(--ot-s2-12);
             padding: 1.1rem 1.25rem;
             display: flex;
@@ -250,11 +318,11 @@
         }
 
         .acoll-title-icon {
-            width: 42px;
-            height: 42px;
+            width: 40px;
+            height: 40px;
             border-radius: 14px;
-            background: var(--ot-secondary);
-            color: #ffffff;
+            background: #ffffff;
+            color: #1B4F72;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -265,7 +333,7 @@
         .acoll-title {
             font-weight: 900;
             letter-spacing: -0.2px;
-            color: var(--ot-secondary);
+            color: #ffffff;
         }
 
         .acoll-count-badge {
@@ -280,38 +348,28 @@
         }
 
         .acoll-table-wrap {
-            padding: .9rem !important;
             overflow-x: auto;
         }
 
         .acoll-table {
             margin-bottom: 0;
-            border-collapse: separate;
-            border-spacing: 0 8px;
+            border-collapse: collapse;
+            width: 100%;
             min-width: 560px;
         }
 
         .acoll-table thead th {
-            background: var(--ot-secondary) !important;
-            color: #ffffff !important;
-            border-bottom: none !important;
-            font-size: .72rem;
-            letter-spacing: .08em;
-            font-weight: 900;
+            background: #F8FAFC !important;
+            color: #4A5568 !important;
+            border: 0;
+            border-bottom: 1px solid #E2E8F0 !important;
+            font-size: .75rem;
+            letter-spacing: .05em;
+            font-weight: 700;
             text-transform: uppercase;
-            padding-top: .9rem;
-            padding-bottom: .9rem;
+            padding: .7rem 1rem;
             white-space: nowrap;
-        }
-
-        .acoll-table thead th:first-child {
-            border-top-left-radius: 14px;
-            border-bottom-left-radius: 14px;
-        }
-
-        .acoll-table thead th:last-child {
-            border-top-right-radius: 14px;
-            border-bottom-right-radius: 14px;
+            text-align: left;
         }
 
         .acoll-table thead th.acoll-detail-col,
@@ -320,29 +378,23 @@
         }
 
         .acoll-table tbody td {
-            background: rgba(255, 255, 255, 0.88);
-            border-top: 1px solid var(--ot-s2-12);
+            background: transparent;
+            border: 0;
             border-bottom: 1px solid var(--ot-s2-12);
-            padding: .95rem .95rem;
-            font-weight: 750;
+            padding: .75rem 1rem;
+            font-weight: 600;
             color: rgba(27, 79, 114, 0.90);
             vertical-align: middle;
             white-space: nowrap;
         }
 
         .acoll-table tbody td:first-child {
-            border-left: 1px solid var(--ot-s2-12);
-            border-top-left-radius: 14px;
-            border-bottom-left-radius: 14px;
             color: rgba(27, 79, 114, 0.82);
-            font-weight: 900;
+            font-weight: 700;
         }
 
-        .acoll-table tbody td:last-child {
-            border-right: 1px solid var(--ot-s2-12);
-            border-top-right-radius: 14px;
-            border-bottom-right-radius: 14px;
-            color: var(--ot-s2-24);
+        .acoll-table tbody tr:last-child td {
+            border-bottom: 0;
         }
 
         .acoll-table tbody td.acoll-amount {
@@ -351,8 +403,7 @@
         }
 
         .acoll-row:hover td {
-            background: rgba(235, 245, 251, 0.78);
-            border-color: var(--ot-s2-18);
+            background: #F5F8FC;
         }
 
         .acoll-empty {

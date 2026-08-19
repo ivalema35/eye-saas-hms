@@ -864,56 +864,16 @@ class SeedTenantDefaultMasters implements ShouldQueue
         ], 'value'));
     }
 
+    /**
+     * Sourced LIVE from the Super Admin global Diagnosis Master
+     * (tbl_global_master_diagnosis) instead of a hardcoded snapshot, so a
+     * new tenant always gets whatever currently exists there — same
+     * approach as seedMedicineTypes()/seedDosages() below.
+     */
     private function seedDiagnosis(): void
     {
-        $this->insertIfEmpty('tbl_master_diagnosis', $this->valueRows([
-            '3rd Nerve Palsy',
-            '6th Nerve Palsy',
-            'Allergic Conjunctivitis',
-            'ARMD',
-            'Astigmatism',
-            'Bacterial Conjunctivitis',
-            'Bilateral Pseudophakia',
-            'Blepharitis',
-            'BRVO',
-            'CRVO',
-            'Chalazion',
-            'Chronic Simple Glaucoma',
-            'Color Blindness',
-            'Convergence Insufficiency',
-            'Corneal Abrasion',
-            'Corneal Ulcer',
-            'Dacryocystitis',
-            'Dry Eye Syndrome (DES)',
-            'Episcleritis',
-            'Esotropia',
-            'Exotropia',
-            'Foreign Body',
-            'Glaucoma',
-            'Hypermetropia',
-            'Hypermature Cataract',
-            'IMC with PSC',
-            'Immature Cataract',
-            'Iritis',
-            'Keratitis',
-            'Macular Edema',
-            'Macular Hole',
-            'Mature Cataract',
-            'Myopia',
-            'Myopic Fundus',
-            'NPDR',
-            'Optic Atrophy',
-            'PDR',
-            'Pinguecula',
-            'Presbyopia',
-            'Pseudophakia',
-            'Pterygium',
-            'Retinal Detachment',
-            'Scleritis',
-            'Stye',
-            'Uveitis',
-            'Vitreous Hemorrhage (VH)',
-        ], 'value'));
+        $values = DB::table('tbl_global_master_diagnosis')->where('is_active', true)->pluck('value')->all();
+        $this->insertIfEmpty('tbl_master_diagnosis', $this->valueRows($values, 'value'));
     }
 
     private function seedMedicineInstructions(): void

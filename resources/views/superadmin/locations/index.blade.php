@@ -163,533 +163,562 @@ panel design. --}}
 @endpush
 
 @section('content')
-<div class="loc-premium-card">
+    <div class="loc-premium-card">
 
-    <div class="loc-header-block">
-        <div class="loc-header-title"><i class="bi bi-geo-alt-fill"></i> Location Master</div>
-        <nav class="loc-breadcrumb" aria-label="breadcrumb">
-            <a href="{{ route('superadmin.dashboard') }}">Home</a>
-            <span class="loc-breadcrumb-sep">/</span>
-            <span>Masters</span>
-            <span class="loc-breadcrumb-sep">/</span>
-            <span class="loc-breadcrumb-current">Location Master</span>
-        </nav>
-    </div>
-
-    {{-- ══════════════════════════════════════
-    Tab Navigation + contextual actions
-    ══════════════════════════════════════ --}}
-    <div class="loc-tabs-row">
-        <div class="loc-tab-nav">
-            <a href="{{ route('superadmin.locations.index', ['tab' => 'countries']) }}"
-                class="loc-tab-btn {{ $tab === 'countries' ? 'active' : '' }}">
-                <i class="bi bi-globe2"></i> Countries
-                <span class="badge-count">{{ $countries->total() }}</span>
-            </a>
-            <a href="{{ route('superadmin.locations.index', ['tab' => 'states', 'country_id' => $filterCountryId]) }}"
-                class="loc-tab-btn {{ $tab === 'states' ? 'active' : '' }}">
-                <i class="bi bi-map"></i> States
-            </a>
-            <a href="{{ route('superadmin.locations.index', ['tab' => 'districts', 'country_id' => $filterCountryId, 'state_id' => $filterStateId]) }}"
-                class="loc-tab-btn {{ $tab === 'districts' ? 'active' : '' }}">
-                <i class="bi bi-geo"></i> Districts
-            </a>
-            <a href="{{ route('superadmin.locations.index', ['tab' => 'cities', 'country_id' => $filterCountryId, 'state_id' => $filterStateId]) }}"
-                class="loc-tab-btn {{ $tab === 'cities' ? 'active' : '' }}">
-                <i class="bi bi-building"></i> Cities / Villages
-            </a>
+        <div class="loc-header-block">
+            <div class="loc-header-title"><i class="bi bi-geo-alt-fill"></i> Location Master</div>
+            <nav class="loc-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('superadmin.dashboard') }}">Home</a>
+                <span class="loc-breadcrumb-sep">/</span>
+                <span>Masters</span>
+                <span class="loc-breadcrumb-sep">/</span>
+                <span class="loc-breadcrumb-current">Location Master</span>
+            </nav>
         </div>
-        <div class="loc-tab-actions">
-            <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-toggle="modal" data-bs-target="#importModal">
-                <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
-            </button>
+
+        {{-- ══════════════════════════════════════
+        Tab Navigation + contextual actions
+        ══════════════════════════════════════ --}}
+        <div class="loc-tabs-row">
+            <div class="loc-tab-nav">
+                <a href="{{ route('superadmin.locations.index', ['tab' => 'countries']) }}"
+                    class="loc-tab-btn {{ $tab === 'countries' ? 'active' : '' }}">
+                    <i class="bi bi-globe2"></i> Countries
+                    <span class="badge-count">{{ $countries->total() }}</span>
+                </a>
+                <a href="{{ route('superadmin.locations.index', ['tab' => 'states', 'country_id' => $filterCountryId]) }}"
+                    class="loc-tab-btn {{ $tab === 'states' ? 'active' : '' }}">
+                    <i class="bi bi-map"></i> States
+                </a>
+                <a href="{{ route('superadmin.locations.index', ['tab' => 'districts', 'country_id' => $filterCountryId, 'state_id' => $filterStateId]) }}"
+                    class="loc-tab-btn {{ $tab === 'districts' ? 'active' : '' }}">
+                    <i class="bi bi-geo"></i> Districts
+                </a>
+                <a href="{{ route('superadmin.locations.index', ['tab' => 'cities', 'country_id' => $filterCountryId, 'state_id' => $filterStateId]) }}"
+                    class="loc-tab-btn {{ $tab === 'cities' ? 'active' : '' }}">
+                    <i class="bi bi-building"></i> Cities / Villages
+                </a>
+            </div>
+            <div class="loc-tab-actions">
+                <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#importModal">
+                    <i class="bi bi-file-earmark-arrow-up"></i> Import Excel
+                </button>
+                @if($tab === 'countries')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addCountryModal" style="color: #1b4f72;">
+                        <i class="bi bi-plus-lg"></i> Add Country
+                    </button>
+                @elseif($tab === 'states')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addStateModal" style="color: #1b4f72;">
+                        <i class="bi bi-plus-lg"></i> Add State
+                    </button>
+                @elseif($tab === 'districts')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addDistrictModal" style="color: #1b4f72;">
+                        <i class="bi bi-plus-lg"></i> Add District
+                    </button>
+                @elseif($tab === 'cities')
+                    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#addCityModal" style="color: #1b4f72;">
+                        <i class="bi bi-plus-lg"></i> Add City
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        <div class="loc-panel-body">
+
+            {{-- ══════════════════════════════════════
+            TAB: COUNTRIES
+            ══════════════════════════════════════ --}}
             @if($tab === 'countries')
-                <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#addCountryModal">
-                    <i class="bi bi-plus-lg"></i> Add Country
-                </button>
-            @elseif($tab === 'states')
-                <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#addStateModal">
-                    <i class="bi bi-plus-lg"></i> Add State
-                </button>
-            @elseif($tab === 'districts')
-                <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#addDistrictModal">
-                    <i class="bi bi-plus-lg"></i> Add District
-                </button>
-            @elseif($tab === 'cities')
-                <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
-                    data-bs-target="#addCityModal">
-                    <i class="bi bi-plus-lg"></i> Add City
-                </button>
-            @endif
-        </div>
-    </div>
+                <div class="filter-bar">
+                    <form method="GET" action="{{ route('superadmin.locations.index') }}"
+                        style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+                        <input type="hidden" name="tab" value="countries">
+                        <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:220px">
+                            <label class="hms-label" style="color: #ffffff;">Search</label>
+                            <input type="text" name="search" class="hms-input"
+                                placeholder="Search country, code, currency, timezone..." value="{{ $search }}">
+                        </div>
+                        <div style="display:flex;gap:.5rem">
+                            <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1b4f72;">
+                                <i class="bi bi-search"></i> Filter
+                            </button>
+                            <a href="{{ route('superadmin.locations.index', ['tab' => 'countries']) }}"
+                                class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
+                        </div>
+                    </form>
+                </div>
 
-    <div class="loc-panel-body">
-
-    {{-- ══════════════════════════════════════
-    TAB: COUNTRIES
-    ══════════════════════════════════════ --}}
-    @if($tab === 'countries')
-        <div class="filter-bar">
-            <form method="GET" action="{{ route('superadmin.locations.index') }}"
-                style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-                <input type="hidden" name="tab" value="countries">
-                <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:220px">
-                    <label class="hms-label">Search</label>
-                    <input type="text" name="search" class="hms-input" placeholder="Search country, code, currency, timezone..."
-                        value="{{ $search }}">
-                </div>
-                <div style="display:flex;gap:.5rem">
-                    <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i>
-                        Filter</button>
-                    <a href="{{ route('superadmin.locations.index', ['tab' => 'countries']) }}"
-                        class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-                </div>
-            </form>
-        </div>
-
-        <div class="hms-card" style="padding:0">
-            <div class="hms-card-header">
-                <h3 class="hms-card-title"><i class="bi bi-globe2" style="color:#ffffff"></i> Country List</h3>
-                <span class="hms-badge hms-badge-info">{{ $countries->total() }} total</span>
-            </div>
-            @if($countries->isEmpty())
-                <div class="loc-empty">
-                    <i class="bi bi-globe2"></i>
-                    <p>{{ $search !== '' ? 'No countries match your search' : 'No countries yet' }}</p>
-                    <p class="loc-hint">
-                        {{ $search !== '' ? 'Try a different keyword or clear the filter.' : 'Click "Add Country" to get started.' }}
-                    </p>
-                </div>
-            @else
-                <div class="hms-table-wrap" style="border:none">
-                    <table class="hms-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Country Name</th>
-                                <th>Code</th>
-                                <th>Default Timezone</th>
-                                <th>Currency</th>
-                                <th>FX (INR/unit)</th>
-                                <th>States</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($countries as $i => $c)
-                                <tr>
-                                    <td style="color:#94A3B8;font-size:.8rem">{{ $countries->firstItem() + $i }}</td>
-                                    <td style="font-weight:600;color:#1B4F72">{{ $c->name }}</td>
-                                    <td>
-                                        <span
-                                            style="font-size:.8rem;background:#F8FAFC;color:#334155;padding:.2rem .5rem;border-radius:6px;font-weight:700">
-                                            {{ $c->country_code ?: '—' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span
-                                            style="font-size:.8rem;background:#EFF6FF;color:#1B4F72;padding:.2rem .5rem;border-radius:6px">
-                                            <i class="bi bi-clock me-1"></i>{{ $c->default_timezone ?? 'UTC' }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span
-                                            style="font-size:.8rem;background:#ECFDF5;color:#047857;padding:.2rem .5rem;border-radius:6px">
-                                            {{ $c->currency_symbol ?? '₹' }} {{ $c->currency_code ?? 'INR' }}
-                                        </span>
-                                    </td>
-                                    <td style="font-size:.85rem;color:#475569">
-                                        {{ number_format((float) ($c->fx_inr_per_unit ?: 1), 4) }}
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('superadmin.locations.index', ['tab' => 'states', 'country_id' => $c->id]) }}"
-                                            style="color:#1B4F72;font-size:.85rem">
-                                            {{ $c->states_count ?? $c->states()->count() }} states
-                                            <i class="bi bi-arrow-right-short"></i>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <button
-                                            class="hms-badge toggle-btn {{ $c->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
-                                            data-url="{{ route('superadmin.locations.countries.toggle', $c->id) }}"
-                                            style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
-                                            {{ $c->is_active ? 'Active' : 'Inactive' }}
-                                        </button>
-                                    </td>
-                                    <td class="text-end">
-                                        <div style="display:flex;gap:.4rem;justify-content:flex-end">
-                                            <button class="hms-btn hms-btn-outline hms-btn-xs edit-country-btn" data-id="{{ $c->id }}"
-                                                data-name="{{ $c->name }}" data-country-code="{{ $c->country_code ?? '' }}"
-                                                data-timezone="{{ $c->default_timezone ?? 'UTC' }}"
-                                                data-currency-code="{{ $c->currency_code ?? 'INR' }}"
-                                                data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
-                                                data-currency-name="{{ $c->currency_name ?? '' }}"
-                                                data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('superadmin.locations.countries.destroy', $c->id) }}"
-                                                class="del-form">
-                                                @csrf @method('DELETE')
-                                                <button class="hms-btn hms-btn-xs" style="background:#FEE2E2;color:#B91C1C;border:none">
-                                                    <i class="bi bi-trash-fill"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if($countries->hasPages())
-                    <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">
-                        {{ $countries->links() }}
+                <div class="hms-card" style="padding:0">
+                    <div class="hms-card-header">
+                        <h3 class="hms-card-title"><i class="bi bi-globe2" style="color:#ffffff"></i> Country List</h3>
+                        <span class="hms-badge hms-badge-info">{{ $countries->total() }} total</span>
                     </div>
-                @endif
+                    @if($countries->isEmpty())
+                        <div class="loc-empty">
+                            <i class="bi bi-globe2"></i>
+                            <p>{{ $search !== '' ? 'No countries match your search' : 'No countries yet' }}</p>
+                            <p class="loc-hint">
+                                {{ $search !== '' ? 'Try a different keyword or clear the filter.' : 'Click "Add Country" to get started.' }}
+                            </p>
+                        </div>
+                    @else
+                        <div class="hms-table-wrap" style="border:none">
+                            <table class="hms-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Country Name</th>
+                                        <th>Code</th>
+                                        <th>Default Timezone</th>
+                                        <th>Currency</th>
+                                        <th>FX (INR/unit)</th>
+                                        <th>States</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($countries as $i => $c)
+                                        <tr>
+                                            <td style="color:#94A3B8;font-size:.8rem">{{ $countries->firstItem() + $i }}</td>
+                                            <td style="font-weight:600;color:#1B4F72">{{ $c->name }}</td>
+                                            <td>
+                                                <span
+                                                    style="font-size:.8rem;background:#F8FAFC;color:#334155;padding:.2rem .5rem;border-radius:6px;font-weight:700">
+                                                    {{ $c->country_code ?: '—' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    style="font-size:.8rem;background:#EFF6FF;color:#1B4F72;padding:.2rem .5rem;border-radius:6px">
+                                                    <i class="bi bi-clock me-1"></i>{{ $c->default_timezone ?? 'UTC' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span
+                                                    style="font-size:.8rem;background:#ECFDF5;color:#047857;padding:.2rem .5rem;border-radius:6px">
+                                                    {{ $c->currency_symbol ?? '₹' }} {{ $c->currency_code ?? 'INR' }}
+                                                </span>
+                                            </td>
+                                            <td style="font-size:.85rem;color:#475569">
+                                                {{ number_format((float) ($c->fx_inr_per_unit ?: 1), 4) }}
+                                            </td>
+                                            <td>
+                                                <a href="{{ route('superadmin.locations.index', ['tab' => 'states', 'country_id' => $c->id]) }}"
+                                                    style="color:#1B4F72;font-size:.85rem">
+                                                    {{ $c->states_count ?? $c->states()->count() }} states
+                                                    <i class="bi bi-arrow-right-short"></i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    class="hms-badge toggle-btn {{ $c->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
+                                                    data-url="{{ route('superadmin.locations.countries.toggle', $c->id) }}"
+                                                    style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
+                                                    {{ $c->is_active ? 'Active' : 'Inactive' }}
+                                                </button>
+                                            </td>
+                                            <td class="text-end">
+                                                <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                                    <button class="hms-btn hms-btn-outline hms-btn-xs edit-country-btn"
+                                                        data-id="{{ $c->id }}" data-name="{{ $c->name }}"
+                                                        data-country-code="{{ $c->country_code ?? '' }}"
+                                                        data-timezone="{{ $c->default_timezone ?? 'UTC' }}"
+                                                        data-currency-code="{{ $c->currency_code ?? 'INR' }}"
+                                                        data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
+                                                        data-currency-name="{{ $c->currency_name ?? '' }}"
+                                                        data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}"
+                                                        @php
+                                                            $cycles = collect($countryPlanPrices[$c->id] ?? $countryPlanPrices[(string) $c->id] ?? [])->keyBy('cycle');
+                                                        @endphp
+                                                        data-plan-monthly="{{ $cycles->get('monthly')?->price }}"
+                                                        data-plan-quarterly="{{ $cycles->get('quarterly')?->price }}"
+                                                        data-plan-yearly="{{ $cycles->get('yearly')?->price }}">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('superadmin.locations.countries.destroy', $c->id) }}"
+                                                        class="del-form">
+                                                        @csrf @method('DELETE')
+                                                        <button class="hms-btn hms-btn-xs"
+                                                            style="background:#FEE2E2;color:#B91C1C;border:none">
+                                                            <i class="bi bi-trash-fill"></i>
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @if($countries->hasPages())
+                            <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">
+                                {{ $countries->links() }}
+                            </div>
+                        @endif
+                    @endif
+                </div>
             @endif
-        </div>
-    @endif
 
-    {{-- ══════════════════════════════════════
-    TAB: STATES
-    ══════════════════════════════════════ --}}
-    @if($tab === 'states')
-        <div class="filter-bar">
-            <form method="GET" action="{{ route('superadmin.locations.index') }}"
-                style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
-                <input type="hidden" name="tab" value="states">
-                <div class="hms-form-group" style="margin-bottom:0;min-width:200px">
-                    <label class="hms-label">Country <span style="color:#E53E3E">*</span></label>
-                    <select name="country_id" class="hms-select">
-                        <option value="">— All Countries —</option>
-                        @foreach($countries as $c)
-                            <option value="{{ $c->id }}" {{ $filterCountryId == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-                        @endforeach
-                    </select>
+            {{-- ══════════════════════════════════════
+            TAB: STATES
+            ══════════════════════════════════════ --}}
+            @if($tab === 'states')
+                <div class="filter-bar">
+                    <form method="GET" action="{{ route('superadmin.locations.index') }}"
+                        style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+                        <input type="hidden" name="tab" value="states">
+                        <div class="hms-form-group" style="margin-bottom:0;min-width:200px">
+                            <label class="hms-label" style="color: #ffffff;">Country <span
+                                    style="color:#E53E3E">*</span></label>
+                            <select name="country_id" class="hms-select">
+                                <option value="">— All Countries —</option>
+                                @foreach($countries as $c)
+                                    <option value="{{ $c->id }}" {{ $filterCountryId == $c->id ? 'selected' : '' }}>{{ $c->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:180px">
+                            <label class="hms-label" style="color: #ffffff;">Search</label>
+                            <input type="text" name="search" class="hms-input" placeholder="Search state..."
+                                value="{{ $search }}">
+                        </div>
+                        <div style="display:flex;gap:.5rem">
+                            <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1b4f72;"><i
+                                    class="bi bi-search"></i>
+                                Filter</button>
+                            <a href="{{ route('superadmin.locations.index', ['tab' => 'states']) }}"
+                                class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:180px">
-                    <label class="hms-label">Search</label>
-                    <input type="text" name="search" class="hms-input" placeholder="Search state..." value="{{ $search }}">
-                </div>
-                <div style="display:flex;gap:.5rem">
-                    <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i>
-                        Filter</button>
-                    <a href="{{ route('superadmin.locations.index', ['tab' => 'states']) }}"
-                        class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-                </div>
-            </form>
-        </div>
 
-        <div class="hms-card" style="padding:0">
-            <div class="hms-card-header">
-                <h3 class="hms-card-title"><i class="bi bi-map" style="color:#ffffff"></i> State List</h3>
-                @if($states instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                    <span class="hms-badge hms-badge-info">{{ $states->total() }} total</span>
-                @endif
-            </div>
-            @if($states->isEmpty())
-                <div class="loc-empty"><i class="bi bi-map"></i>
-                    <p>No states found</p>
-                    <p class="loc-hint">Click "Add State" to add one.</p>
+                <div class="hms-card" style="padding:0">
+                    <div class="hms-card-header">
+                        <h3 class="hms-card-title"><i class="bi bi-map" style="color:#ffffff"></i> State List</h3>
+                        @if($states instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            <span class="hms-badge hms-badge-info">{{ $states->total() }} total</span>
+                        @endif
+                    </div>
+                    @if($states->isEmpty())
+                        <div class="loc-empty"><i class="bi bi-map"></i>
+                            <p>No states found</p>
+                            <p class="loc-hint">Click "Add State" to add one.</p>
+                        </div>
+                    @else
+                        <div class="hms-table-wrap" style="border:none">
+                            <table class="hms-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Country</th>
+                                        <th>State</th>
+                                        <th>Districts</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($states as $i => $s)
+                                        <tr>
+                                            <td style="color:#94A3B8;font-size:.8rem">{{ $states->firstItem() + $i }}</td>
+                                            <td style="color:#64748B;font-size:.875rem">{{ $s->country->name }}</td>
+                                            <td style="font-weight:600">{{ $s->name }}</td>
+                                            <td>
+                                                <a href="{{ route('superadmin.locations.index', ['tab' => 'districts', 'country_id' => $filterCountryId, 'state_id' => $s->id]) }}"
+                                                    style="color:#1B4F72;font-size:.85rem">
+                                                    {{ $s->districts()->count() }} districts <i class="bi bi-arrow-right-short"></i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    class="hms-badge toggle-btn {{ $s->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
+                                                    data-url="{{ route('superadmin.locations.states.toggle', $s->id) }}"
+                                                    style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
+                                                    {{ $s->is_active ? 'Active' : 'Inactive' }}
+                                                </button>
+                                            </td>
+                                            <td class="text-end">
+                                                <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                                    <button class="hms-btn hms-btn-outline hms-btn-xs edit-state-btn"
+                                                        data-id="{{ $s->id }}" data-name="{{ $s->name }}"
+                                                        data-country-id="{{ $s->country_id }}">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('superadmin.locations.states.destroy', $s->id) }}"
+                                                        class="del-form">
+                                                        @csrf @method('DELETE')
+                                                        <button class="hms-btn hms-btn-xs"
+                                                            style="background:#FEE2E2;color:#B91C1C;border:none"><i
+                                                                class="bi bi-trash-fill"></i></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @if($states->hasPages())
+                            <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $states->links() }}</div>
+                        @endif
+                    @endif
                 </div>
-            @else
-                <div class="hms-table-wrap" style="border:none">
-                    <table class="hms-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Country</th>
-                                <th>State</th>
-                                <th>Districts</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($states as $i => $s)
-                                <tr>
-                                    <td style="color:#94A3B8;font-size:.8rem">{{ $states->firstItem() + $i }}</td>
-                                    <td style="color:#64748B;font-size:.875rem">{{ $s->country->name }}</td>
-                                    <td style="font-weight:600">{{ $s->name }}</td>
-                                    <td>
-                                        <a href="{{ route('superadmin.locations.index', ['tab' => 'districts', 'country_id' => $filterCountryId, 'state_id' => $s->id]) }}"
-                                            style="color:#1B4F72;font-size:.85rem">
-                                            {{ $s->districts()->count() }} districts <i class="bi bi-arrow-right-short"></i>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <button
-                                            class="hms-badge toggle-btn {{ $s->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
-                                            data-url="{{ route('superadmin.locations.states.toggle', $s->id) }}"
-                                            style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
-                                            {{ $s->is_active ? 'Active' : 'Inactive' }}
-                                        </button>
-                                    </td>
-                                    <td class="text-end">
-                                        <div style="display:flex;gap:.4rem;justify-content:flex-end">
-                                            <button class="hms-btn hms-btn-outline hms-btn-xs edit-state-btn" data-id="{{ $s->id }}"
-                                                data-name="{{ $s->name }}" data-country-id="{{ $s->country_id }}">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('superadmin.locations.states.destroy', $s->id) }}"
-                                                class="del-form">
-                                                @csrf @method('DELETE')
-                                                <button class="hms-btn hms-btn-xs"
-                                                    style="background:#FEE2E2;color:#B91C1C;border:none"><i
-                                                        class="bi bi-trash-fill"></i></button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if($states->hasPages())
-                    <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $states->links() }}</div>
-                @endif
             @endif
-        </div>
-    @endif
 
-    {{-- ══════════════════════════════════════
-    TAB: DISTRICTS
-    ══════════════════════════════════════ --}}
-    @if($tab === 'districts')
-        <div class="filter-bar">
-            <form method="GET" action="{{ route('superadmin.locations.index') }}"
-                style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end" id="districtFilterForm">
-                <input type="hidden" name="tab" value="districts">
-                <div class="hms-form-group" style="margin-bottom:0;min-width:180px">
-                    <label class="hms-label">Country</label>
-                    <select name="country_id" class="hms-select" id="dfCountry">
-                        <option value="">— All Countries —</option>
-                        @foreach($countries as $c)
-                            <option value="{{ $c->id }}" {{ $filterCountryId == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-                        @endforeach
-                    </select>
+            {{-- ══════════════════════════════════════
+            TAB: DISTRICTS
+            ══════════════════════════════════════ --}}
+            @if($tab === 'districts')
+                <div class="filter-bar">
+                    <form method="GET" action="{{ route('superadmin.locations.index') }}"
+                        style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end" id="districtFilterForm">
+                        <input type="hidden" name="tab" value="districts">
+                        <div class="hms-form-group" style="margin-bottom:0;min-width:180px">
+                            <label class="hms-label" style="color: #ffffff;">Country</label>
+                            <select name="country_id" class="hms-select" id="dfCountry">
+                                <option value="">— All Countries —</option>
+                                @foreach($countries as $c)
+                                    <option value="{{ $c->id }}" {{ $filterCountryId == $c->id ? 'selected' : '' }}>{{ $c->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:0;min-width:180px">
+                            <label class="hms-label" style="color: #ffffff;">State</label>
+                            <select name="state_id" class="hms-select" id="dfState">
+                                <option value="">— All States —</option>
+                                @foreach($statesForFilter as $s)
+                                    <option value="{{ $s->id }}" {{ $filterStateId == $s->id ? 'selected' : '' }}>{{ $s->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:160px">
+                            <label class="hms-label" style="color: #ffffff;">Search</label>
+                            <input type="text" name="search" class="hms-input" placeholder="Search district..."
+                                value="{{ $search }}">
+                        </div>
+                        <div style="display:flex;gap:.5rem">
+                            <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1b4f72;">
+                                <i class="bi bi-search"></i> Filter
+                            </button>
+                            <a href="{{ route('superadmin.locations.index', ['tab' => 'districts']) }}"
+                                class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="hms-form-group" style="margin-bottom:0;min-width:180px">
-                    <label class="hms-label">State</label>
-                    <select name="state_id" class="hms-select" id="dfState">
-                        <option value="">— All States —</option>
-                        @foreach($statesForFilter as $s)
-                            <option value="{{ $s->id }}" {{ $filterStateId == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:160px">
-                    <label class="hms-label">Search</label>
-                    <input type="text" name="search" class="hms-input" placeholder="Search district..." value="{{ $search }}">
-                </div>
-                <div style="display:flex;gap:.5rem">
-                    <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i>
-                        Filter</button>
-                    <a href="{{ route('superadmin.locations.index', ['tab' => 'districts']) }}"
-                        class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-                </div>
-            </form>
-        </div>
 
-        <div class="hms-card" style="padding:0">
-            <div class="hms-card-header">
-                <h3 class="hms-card-title"><i class="bi bi-geo" style="color:#ffffff"></i> District List</h3>
-                @if($districts instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                    <span class="hms-badge hms-badge-info">{{ $districts->total() }} total</span>
-                @endif
-            </div>
-            @if($districts->isEmpty())
-                <div class="loc-empty"><i class="bi bi-geo"></i>
-                    <p>No districts found</p>
-                    <p class="loc-hint">Click "Add District" to add one.</p>
+                <div class="hms-card" style="padding:0">
+                    <div class="hms-card-header">
+                        <h3 class="hms-card-title"><i class="bi bi-geo" style="color:#ffffff"></i> District List</h3>
+                        @if($districts instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            <span class="hms-badge hms-badge-info">{{ $districts->total() }} total</span>
+                        @endif
+                    </div>
+                    @if($districts->isEmpty())
+                        <div class="loc-empty"><i class="bi bi-geo"></i>
+                            <p>No districts found</p>
+                            <p class="loc-hint">Click "Add District" to add one.</p>
+                        </div>
+                    @else
+                        <div class="hms-table-wrap" style="border:none">
+                            <table class="hms-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Country</th>
+                                        <th>State</th>
+                                        <th>District Name</th>
+                                        <th>Cities</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($districts as $i => $d)
+                                        <tr>
+                                            <td style="color:#94A3B8;font-size:.8rem">{{ $districts->firstItem() + $i }}</td>
+                                            <td style="color:#64748B;font-size:.875rem">{{ $d->state->country->name }}</td>
+                                            <td style="color:#64748B;font-size:.875rem">{{ $d->state->name }}</td>
+                                            <td style="font-weight:600">{{ $d->name }}</td>
+                                            <td>
+                                                <a href="{{ route('superadmin.locations.index', ['tab' => 'cities', 'country_id' => $filterCountryId, 'state_id' => $filterStateId, 'district_id' => $d->id]) }}"
+                                                    style="color:#1B4F72;font-size:.85rem">
+                                                    {{ $d->cities()->count() }} cities <i class="bi bi-arrow-right-short"></i>
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    class="hms-badge toggle-btn {{ $d->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
+                                                    data-url="{{ route('superadmin.locations.districts.toggle', $d->id) }}"
+                                                    style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
+                                                    {{ $d->is_active ? 'Active' : 'Inactive' }}
+                                                </button>
+                                            </td>
+                                            <td class="text-end">
+                                                <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                                    <button class="hms-btn hms-btn-outline hms-btn-xs edit-district-btn"
+                                                        data-id="{{ $d->id }}" data-name="{{ $d->name }}"
+                                                        data-state-id="{{ $d->state_id }}">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('superadmin.locations.districts.destroy', $d->id) }}"
+                                                        class="del-form">
+                                                        @csrf @method('DELETE')
+                                                        <button class="hms-btn hms-btn-xs"
+                                                            style="background:#FEE2E2;color:#B91C1C;border:none"><i
+                                                                class="bi bi-trash-fill"></i></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @if($districts->hasPages())
+                            <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $districts->links() }}</div>
+                        @endif
+                    @endif
                 </div>
-            @else
-                <div class="hms-table-wrap" style="border:none">
-                    <table class="hms-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Country</th>
-                                <th>State</th>
-                                <th>District Name</th>
-                                <th>Cities</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($districts as $i => $d)
-                                <tr>
-                                    <td style="color:#94A3B8;font-size:.8rem">{{ $districts->firstItem() + $i }}</td>
-                                    <td style="color:#64748B;font-size:.875rem">{{ $d->state->country->name }}</td>
-                                    <td style="color:#64748B;font-size:.875rem">{{ $d->state->name }}</td>
-                                    <td style="font-weight:600">{{ $d->name }}</td>
-                                    <td>
-                                        <a href="{{ route('superadmin.locations.index', ['tab' => 'cities', 'country_id' => $filterCountryId, 'state_id' => $filterStateId, 'district_id' => $d->id]) }}"
-                                            style="color:#1B4F72;font-size:.85rem">
-                                            {{ $d->cities()->count() }} cities <i class="bi bi-arrow-right-short"></i>
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <button
-                                            class="hms-badge toggle-btn {{ $d->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
-                                            data-url="{{ route('superadmin.locations.districts.toggle', $d->id) }}"
-                                            style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
-                                            {{ $d->is_active ? 'Active' : 'Inactive' }}
-                                        </button>
-                                    </td>
-                                    <td class="text-end">
-                                        <div style="display:flex;gap:.4rem;justify-content:flex-end">
-                                            <button class="hms-btn hms-btn-outline hms-btn-xs edit-district-btn" data-id="{{ $d->id }}"
-                                                data-name="{{ $d->name }}" data-state-id="{{ $d->state_id }}">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('superadmin.locations.districts.destroy', $d->id) }}"
-                                                class="del-form">
-                                                @csrf @method('DELETE')
-                                                <button class="hms-btn hms-btn-xs"
-                                                    style="background:#FEE2E2;color:#B91C1C;border:none"><i
-                                                        class="bi bi-trash-fill"></i></button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if($districts->hasPages())
-                    <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $districts->links() }}</div>
-                @endif
             @endif
-        </div>
-    @endif
 
-    {{-- ══════════════════════════════════════
-    TAB: CITIES
-    ══════════════════════════════════════ --}}
-    @if($tab === 'cities')
-        <div class="filter-bar">
-            <form method="GET" action="{{ route('superadmin.locations.index') }}"
-                style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end" id="cityFilterForm">
-                <input type="hidden" name="tab" value="cities">
-                <div class="hms-form-group" style="margin-bottom:0;min-width:170px">
-                    <label class="hms-label">Country</label>
-                    <select name="country_id" class="hms-select" id="cfCountry">
-                        <option value="">— All Countries —</option>
-                        @foreach($countries as $c)
-                            <option value="{{ $c->id }}" {{ $filterCountryId == $c->id ? 'selected' : '' }}>{{ $c->name }}</option>
-                        @endforeach
-                    </select>
+            {{-- ══════════════════════════════════════
+            TAB: CITIES
+            ══════════════════════════════════════ --}}
+            @if($tab === 'cities')
+                <div class="filter-bar">
+                    <form method="GET" action="{{ route('superadmin.locations.index') }}"
+                        style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end" id="cityFilterForm">
+                        <input type="hidden" name="tab" value="cities">
+                        <div class="hms-form-group" style="margin-bottom:0;min-width:170px">
+                            <label class="hms-label" style="color: #ffffff;">Country</label>
+                            <select name="country_id" class="hms-select" id="cfCountry">
+                                <option value="">— All Countries —</option>
+                                @foreach($countries as $c)
+                                    <option value="{{ $c->id }}" {{ $filterCountryId == $c->id ? 'selected' : '' }}>{{ $c->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:0;min-width:170px">
+                            <label class="hms-label" style="color: #ffffff;">State</label>
+                            <select name="state_id" class="hms-select" id="cfState">
+                                <option value="">— All States —</option>
+                                @foreach($statesForFilter as $s)
+                                    <option value="{{ $s->id }}" {{ $filterStateId == $s->id ? 'selected' : '' }}>{{ $s->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:0;min-width:170px">
+                            <label class="hms-label" style="color: #ffffff;">District</label>
+                            <select name="district_id" class="hms-select" id="cfDistrict">
+                                <option value="">All Districts</option>
+                                @foreach($districtsForFilter as $d)
+                                    <option value="{{ $d->id }}" {{ $filterDistrictId == $d->id ? 'selected' : '' }}>{{ $d->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:150px">
+                            <label class="hms-label" style="color: #ffffff;">Search</label>
+                            <input type="text" name="search" class="hms-input" placeholder="Search city..."
+                                value="{{ $search }}">
+                        </div>
+                        <div style="display:flex;gap:.5rem">
+                            <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1b4f72;">
+                                <i class="bi bi-search"></i> Filter
+                            </button>
+                            <a href="{{ route('superadmin.locations.index', ['tab' => 'cities']) }}"
+                                class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
+                        </div>
+                    </form>
                 </div>
-                <div class="hms-form-group" style="margin-bottom:0;min-width:170px">
-                    <label class="hms-label">State</label>
-                    <select name="state_id" class="hms-select" id="cfState">
-                        <option value="">— All States —</option>
-                        @foreach($statesForFilter as $s)
-                            <option value="{{ $s->id }}" {{ $filterStateId == $s->id ? 'selected' : '' }}>{{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="hms-form-group" style="margin-bottom:0;min-width:170px">
-                    <label class="hms-label">District</label>
-                    <select name="district_id" class="hms-select" id="cfDistrict">
-                        <option value="">All Districts</option>
-                        @foreach($districtsForFilter as $d)
-                            <option value="{{ $d->id }}" {{ $filterDistrictId == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:150px">
-                    <label class="hms-label">Search</label>
-                    <input type="text" name="search" class="hms-input" placeholder="Search city..." value="{{ $search }}">
-                </div>
-                <div style="display:flex;gap:.5rem">
-                    <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-search"></i>
-                        Filter</button>
-                    <a href="{{ route('superadmin.locations.index', ['tab' => 'cities']) }}"
-                        class="hms-btn hms-btn-outline hms-btn-sm">Clear</a>
-                </div>
-            </form>
-        </div>
 
-        <div class="hms-card" style="padding:0">
-            <div class="hms-card-header">
-                <h3 class="hms-card-title"><i class="bi bi-building" style="color:#ffffff"></i> City / Village List</h3>
-                @if($cities instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                    <span class="hms-badge hms-badge-info">{{ $cities->total() }} total</span>
-                @endif
-            </div>
-            @if($cities->isEmpty())
-                <div class="loc-empty"><i class="bi bi-building"></i>
-                    <p>No cities found</p>
-                    <p class="loc-hint">Click "Add City" to add one.</p>
+                <div class="hms-card" style="padding:0">
+                    <div class="hms-card-header">
+                        <h3 class="hms-card-title"><i class="bi bi-building" style="color:#ffffff"></i> City / Village List</h3>
+                        @if($cities instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                            <span class="hms-badge hms-badge-info">{{ $cities->total() }} total</span>
+                        @endif
+                    </div>
+                    @if($cities->isEmpty())
+                        <div class="loc-empty"><i class="bi bi-building"></i>
+                            <p>No cities found</p>
+                            <p class="loc-hint">Click "Add City" to add one.</p>
+                        </div>
+                    @else
+                        <div class="hms-table-wrap" style="border:none">
+                            <table class="hms-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Country</th>
+                                        <th>State</th>
+                                        <th>District</th>
+                                        <th>City / Village</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($cities as $i => $ci)
+                                        <tr>
+                                            <td style="color:#94A3B8;font-size:.8rem">{{ $cities->firstItem() + $i }}</td>
+                                            <td style="color:#64748B;font-size:.875rem">{{ $ci->state->country->name }}</td>
+                                            <td style="color:#64748B;font-size:.875rem">{{ $ci->state->name }}</td>
+                                            <td style="color:#64748B;font-size:.875rem">{{ $ci->district?->name ?? '—' }}</td>
+                                            <td style="font-weight:600">{{ $ci->name }}</td>
+                                            <td>
+                                                <button
+                                                    class="hms-badge toggle-btn {{ $ci->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
+                                                    data-url="{{ route('superadmin.locations.cities.toggle', $ci->id) }}"
+                                                    style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
+                                                    {{ $ci->is_active ? 'Active' : 'Inactive' }}
+                                                </button>
+                                            </td>
+                                            <td class="text-end">
+                                                <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                                    <button class="hms-btn hms-btn-outline hms-btn-xs edit-city-btn"
+                                                        data-id="{{ $ci->id }}" data-name="{{ $ci->name }}"
+                                                        data-state-id="{{ $ci->state_id }}" data-district-id="{{ $ci->district_id }}">
+                                                        <i class="bi bi-pencil-fill"></i>
+                                                    </button>
+                                                    <form method="POST"
+                                                        action="{{ route('superadmin.locations.cities.destroy', $ci->id) }}"
+                                                        class="del-form">
+                                                        @csrf @method('DELETE')
+                                                        <button class="hms-btn hms-btn-xs"
+                                                            style="background:#FEE2E2;color:#B91C1C;border:none"><i
+                                                                class="bi bi-trash-fill"></i></button>
+                                                    </form>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @if($cities->hasPages())
+                            <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $cities->links() }}</div>
+                        @endif
+                    @endif
                 </div>
-            @else
-                <div class="hms-table-wrap" style="border:none">
-                    <table class="hms-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Country</th>
-                                <th>State</th>
-                                <th>District</th>
-                                <th>City / Village</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($cities as $i => $ci)
-                                <tr>
-                                    <td style="color:#94A3B8;font-size:.8rem">{{ $cities->firstItem() + $i }}</td>
-                                    <td style="color:#64748B;font-size:.875rem">{{ $ci->state->country->name }}</td>
-                                    <td style="color:#64748B;font-size:.875rem">{{ $ci->state->name }}</td>
-                                    <td style="color:#64748B;font-size:.875rem">{{ $ci->district?->name ?? '—' }}</td>
-                                    <td style="font-weight:600">{{ $ci->name }}</td>
-                                    <td>
-                                        <button
-                                            class="hms-badge toggle-btn {{ $ci->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
-                                            data-url="{{ route('superadmin.locations.cities.toggle', $ci->id) }}"
-                                            style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
-                                            {{ $ci->is_active ? 'Active' : 'Inactive' }}
-                                        </button>
-                                    </td>
-                                    <td class="text-end">
-                                        <div style="display:flex;gap:.4rem;justify-content:flex-end">
-                                            <button class="hms-btn hms-btn-outline hms-btn-xs edit-city-btn" data-id="{{ $ci->id }}"
-                                                data-name="{{ $ci->name }}" data-state-id="{{ $ci->state_id }}"
-                                                data-district-id="{{ $ci->district_id }}">
-                                                <i class="bi bi-pencil-fill"></i>
-                                            </button>
-                                            <form method="POST" action="{{ route('superadmin.locations.cities.destroy', $ci->id) }}"
-                                                class="del-form">
-                                                @csrf @method('DELETE')
-                                                <button class="hms-btn hms-btn-xs"
-                                                    style="background:#FEE2E2;color:#B91C1C;border:none"><i
-                                                        class="bi bi-trash-fill"></i></button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if($cities->hasPages())
-                    <div style="padding:1rem 1.25rem;border-top:1px solid #F1F5F9">{{ $cities->links() }}</div>
-                @endif
             @endif
-        </div>
-    @endif
 
-    </div>{{-- /.loc-panel-body --}}
-</div>{{-- /.loc-premium-card --}}
+        </div>{{-- /.loc-panel-body --}}
+    </div>{{-- /.loc-premium-card --}}
 
     {{-- ══════════════════════════════════════════════════════
     MODALS
@@ -749,12 +778,32 @@ panel design. --}}
                             <input type="hidden" name="currency_symbol" id="addCountryCurrencySymbol" value="₹">
                             <input type="hidden" name="currency_name" id="addCountryCurrencyName" value="Indian Rupee">
                         </div>
+                        <div class="mb-3">
+                            <label class="hms-label">Plan price (INR)</label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="number" min="0" step="1" name="plan_monthly" class="hms-input"
+                                        placeholder="Monthly">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" min="0" step="1" name="plan_quarterly" class="hms-input"
+                                        placeholder="Quarterly">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" min="0" step="1" name="plan_yearly" class="hms-input"
+                                        placeholder="Yearly">
+                                </div>
+                            </div>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">
+                                Enter prices in <strong>INR</strong>. Register cards convert to this country's currency using FX.
+                                Example: 1000 INR + Australia FX 55 → cards show A$18.
+                            </p>
+                        </div>
                         <div>
                             <label class="hms-label">FX Rate (INR per 1 unit) <span style="color:#E53E3E">*</span></label>
                             <input type="number" step="0.0001" min="0.0001" name="fx_inr_per_unit" id="addCountryFx"
                                 class="hms-input" value="1" required>
-                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert SaaS plan prices on
-                                register. Example: AUD ≈ 55 (1 A$ ≈ ₹55).</p>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert INR plan prices on register. Example: AUD ≈ 55 (₹1000 → A$18).</p>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
@@ -828,18 +877,39 @@ panel design. --}}
                                 Currency cascades to hospitals that have not overridden it.
                             </p>
                         </div>
+                        <div class="mb-3">
+                            <label class="hms-label">Plan price (INR)</label>
+                            <div class="row g-2">
+                                <div class="col-4">
+                                    <input type="number" min="0" step="1" name="plan_monthly" id="editPlanMonthly"
+                                        class="hms-input" placeholder="Monthly">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" min="0" step="1" name="plan_quarterly" id="editPlanQuarterly"
+                                        class="hms-input" placeholder="Quarterly">
+                                </div>
+                                <div class="col-4">
+                                    <input type="number" min="0" step="1" name="plan_yearly" id="editPlanYearly"
+                                        class="hms-input" placeholder="Yearly">
+                                </div>
+                            </div>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">
+                                Enter prices in <strong>INR</strong>. Register cards convert using FX Rate below.
+                                Example: 1000 INR, Australia FX 55 → A$18 on cards.
+                            </p>
+                        </div>
                         <div>
                             <label class="hms-label">FX Rate (INR per 1 unit) <span style="color:#E53E3E">*</span></label>
                             <input type="number" step="0.0001" min="0.0001" name="fx_inr_per_unit" id="editCountryFx"
                                 class="hms-input" value="1" required>
-                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Register plan prices convert using
-                                this rate.</p>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert INR plan prices on register. Example: AUD ≈ 55 (₹1000 → A$18).</p>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
                         <button type="button" class="hms-btn hms-btn-outline hms-btn-sm"
                             data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-check-lg"></i>
+                        <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1B4F72;"><i
+                                class="bi bi-check-lg"></i>
                             Save</button>
                     </div>
                 </form>
@@ -1339,6 +1409,12 @@ panel design. --}}
                     }
                     const fxEl = document.getElementById('editCountryFx');
                     if (fxEl) fxEl.value = this.dataset.fx || '1';
+                    const pm = document.getElementById('editPlanMonthly');
+                    const pq = document.getElementById('editPlanQuarterly');
+                    const py = document.getElementById('editPlanYearly');
+                    if (pm) pm.value = this.dataset.planMonthly || '';
+                    if (pq) pq.value = this.dataset.planQuarterly || '';
+                    if (py) py.value = this.dataset.planYearly || '';
                     new bootstrap.Modal(document.getElementById('editCountryModal')).show();
                 });
             });

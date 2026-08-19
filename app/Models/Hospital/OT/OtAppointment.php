@@ -4,7 +4,7 @@
  * OtAppointment.php
  *
  * PURPOSE: Pre-registration appointment record — captured before the patient
- *          physically arrives at the hospital (phone/walk-in/online/referral).
+ *          physically arrives at the hospital (phone/walk-in/online/OT).
  *          Distinct from `Patient` (OPD registration, created at Reception check-in)
  *          and `OtBooking` (confirmed surgery slot, created by Counsellor/Receptionist).
  *          See docs/OT_WORKFLOW_UPGRADE_PRD.md §2.
@@ -34,7 +34,7 @@ class OtAppointment extends Model
 
     public const TYPE_ONLINE = 'online';
 
-    public const TYPE_REFERRAL = 'referral';
+    public const TYPE_OT = 'ot';
 
     public const STATUS_BOOKED = 'booked';
 
@@ -75,7 +75,7 @@ class OtAppointment extends Model
     /** Human-friendly appointment number shown to reception/patient, e.g. APT-000123. */
     public function getAppointmentNumberAttribute(): string
     {
-        return 'APT-'.str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+        return 'APT-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
     }
 
     public function doctor()
@@ -124,7 +124,7 @@ class OtAppointment extends Model
             return ['label' => 'Cancelled', 'class' => 'ot-stage-cancelled'];
         }
 
-        if (! $this->converted_patient_id) {
+        if (!$this->converted_patient_id) {
             return $this->status === self::STATUS_CONFIRMED
                 ? ['label' => 'Confirmed', 'class' => 'ot-stage-confirmed']
                 : ['label' => 'Booked', 'class' => 'ot-stage-booked'];
@@ -132,7 +132,7 @@ class OtAppointment extends Model
 
         $booking = $this->convertedPatient?->latestOtBooking;
 
-        if (! $booking) {
+        if (!$booking) {
             return ['label' => 'Checked-In (OPD)', 'class' => 'ot-stage-checkedin'];
         }
 

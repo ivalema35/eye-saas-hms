@@ -610,6 +610,9 @@
             };
             var planSuffix = { monthly: '/mo', quarterly: '/qtr', yearly: '/yr' };
 
+            // Per-country explicit price overrides (set by SuperAdmin)
+            var countryPriceOverrides = @json($countryOverrides ?? []);
+
             function convertFromInr(inrAmount, fx) {
                 var rate = parseFloat(fx);
                 if (!rate || rate <= 0) rate = 1;
@@ -624,10 +627,16 @@
                 var symbol = (meta && meta.currencySymbol) ? meta.currencySymbol : @json(platform_currency_symbol());
                 var code = (meta && meta.currencyCode) ? meta.currencyCode : @json(platform_currency_code());
                 var fx = (meta && meta.fx) ? meta.fx : 1;
+                var cid = (meta && meta.id) ? String(meta.id) : null;
+                var overrides = (cid && countryPriceOverrides[cid]) ? countryPriceOverrides[cid] : null;
+
                 Object.keys(basePlans).forEach(function (key) {
                     var el = document.querySelector('.pc-price[data-plan="' + key + '"]');
                     if (!el) return;
-                    var local = convertFromInr(basePlans[key], fx);
+                    var inrAmount = (overrides && overrides[key] != null && overrides[key] !== '')
+                        ? overrides[key]
+                        : basePlans[key];
+                    var local = convertFromInr(inrAmount, fx);
                     el.textContent = symbol + formatPlanAmount(local) + (planSuffix[key] || '');
                 });
                 var label = document.getElementById('regPlanCurrencyLabel');

@@ -385,7 +385,7 @@ class MedicineMasterController extends Controller
                 ->whereRaw('LOWER(dosage) = ?', [strtolower($oldValue)])
                 ->first();
 
-            if (! $existing) {
+            if (!$existing) {
                 continue;
             }
 
@@ -395,7 +395,7 @@ class MedicineMasterController extends Controller
                 ->where('id', '!=', $existing->id)
                 ->exists();
 
-            if (! $conflict) {
+            if (!$conflict) {
                 $existing->update(['dosage' => $newValue]);
             }
         }
@@ -436,7 +436,7 @@ class MedicineMasterController extends Controller
                 ->whereRaw('LOWER(name) = ?', [strtolower($oldName)])
                 ->first();
 
-            if (! $existing) {
+            if (!$existing) {
                 continue;
             }
 
@@ -447,7 +447,7 @@ class MedicineMasterController extends Controller
                 ->where('id', '!=', $existing->id)
                 ->exists();
 
-            if (! $conflict) {
+            if (!$conflict) {
                 $existing->update(['name' => $newName]);
             }
         }

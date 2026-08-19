@@ -1451,18 +1451,16 @@
 </div>
 
 {{-- Subscription Alert --}}
-@if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
+@if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
     <div class="bento-alert {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
         <i class="fa-solid fa-triangle-exclamation"></i>
         <span>
             @if($subscriptionDaysLeft <= 0)
-                Your subscription has <strong>expired</strong>. Please renew immediately.
+                Your subscription has <strong>expired</strong>. Please contact administrator.
             @else
                 Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
             @endif
         </span>
-        <a href="{{ route('hospital.settings.index', ['slug' => $slug]) }}"
-           class="ms-auto text-decoration-none fw-semibold" style="color:inherit">Renew Now →</a>
     </div>
 @endif
 

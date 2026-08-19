@@ -346,7 +346,8 @@
                         <i class="fa-solid fa-plus"></i>
                     </button>
                     <div class="ecrm-faq-body">
-                        Yes. Eye HMS is multi-tenant: each hospital workspace is tenant-scoped, with role-based staff access
+                        Yes. Eyenosis is multi-tenant: each hospital workspace is tenant-scoped, with role-based staff
+                        access
                         inside that hospital.
                     </div>
                 </div>

@@ -7,10 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
-        Schema::create('tbl_master_diagnosis', function (Blueprint $table) {
+        Schema::create('tbl_global_master_diagnosis', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
-            $table->string('value');
+            $table->string('value')->unique();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -18,6 +18,6 @@ return new class extends Migration {
 
     public function down(): void
     {
-        Schema::dropIfExists('tbl_master_diagnosis');
+        Schema::dropIfExists('tbl_global_master_diagnosis');
     }
 };

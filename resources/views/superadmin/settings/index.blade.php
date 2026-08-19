@@ -128,7 +128,7 @@
         <div class="hms-card" style="margin-bottom:1.25rem">
             <div class="hms-card-header">
                 <h3 class="hms-card-title">
-                    <i class="bi bi-cash-coin" style="color:#1B4F72"></i>
+                    <i class="bi bi-cash-coin" style="color:#1b4f72"></i>
                     Subscription Pricing ({{ platform_currency_symbol() }})
                 </h3>
                 <a href="{{ route('superadmin.plans.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">
@@ -159,7 +159,7 @@
         {{-- Submit --}}
         <div style="display:flex;justify-content:flex-end;gap:.75rem">
             <a href="{{ route('superadmin.dashboard') }}" class="hms-btn hms-btn-outline">Cancel</a>
-            <button type="submit" class="hms-btn hms-btn-primary">
+            <button type="submit" class="hms-btn hms-btn-primary" style="color: #1b4f72;">
                 <i class="bi bi-floppy-fill"></i> Save Settings
             </button>
         </div>

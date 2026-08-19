@@ -41,21 +41,10 @@
                         <td class="location-tag"><i class="bi bi-map me-1"></i>{{ $hospital->district ?? '—' }}</td>
                         <td class="location-tag"><i class="bi bi-globe me-1"></i>{{ $hospital->state ?? '—' }}</td>
                         <td>
-                            @if(!$reqInfo)
-                                <span style="background:#f1f5f9;color:#64748b;font-size:11px;font-weight:600;padding:4px 10px;border-radius:20px;">
-                                    —
-                                </span>
-                            @elseif($reqInfo['status'] === 'accepted')
-                                <span class="badge-active"><i class="bi bi-check2-circle me-1"></i>Connected</span>
-                            @elseif($reqInfo['direction'] === 'sent')
-                                <span style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">
-                                    <i class="bi bi-clock me-1"></i>Requested
-                                </span>
-                            @else
-                                <span style="background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px;">
-                                    <i class="bi bi-bell me-1"></i>Incoming
-                                </span>
-                            @endif
+                            @php $planStatus = $hospital->displayStatus(); @endphp
+                            <span class="hms-badge hms-badge-{{ $planStatus }}">
+                                {{ ucfirst($planStatus) }}
+                            </span>
                         </td>
 
                              <td>
@@ -112,7 +101,7 @@
                 @empty
                     <tr>
                         <td colspan="8" class="py-5 text-muted">
-                            <i class="bi bi-building-slash me-2"></i>No active hospitals found.
+                            <i class="bi bi-building-slash me-2"></i>No trial or grace hospitals found.
                         </td>
                     </tr>
                 @endforelse
@@ -122,7 +111,7 @@
 
     @if($hospitals->hasPages())
     <div class="d-flex justify-content-center p-3 border-top" style="background-color:#fcfcfc;">
-    {{ $hospitals->appends(request()->except('hospital_page'))->appends(['_tab' => 'hospital'])->links() }}
+    {{ $hospitals->appends(request()->only(['hosp_name', 'hosp_city', 'hosp_district', 'hosp_state', '_tab']))->appends(['_tab' => 'hospital'])->links() }}
     </div>
     @endif
 </div>
