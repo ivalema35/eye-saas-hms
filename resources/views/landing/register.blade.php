@@ -419,7 +419,6 @@
                                     <span class="reg-head-ico"><i class="fa-solid fa-hospital-user"></i></span>
                                     Create your account
                                 </h2>
-                                <p>All fields marked <span class="hms-required">*</span> are required</p>
                             </div>
                             <p class="reg-login-hint">
                                 Already registered?

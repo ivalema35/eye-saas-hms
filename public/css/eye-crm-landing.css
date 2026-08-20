@@ -719,6 +719,143 @@ a.ecrm-btn-primary,
 .ecrm-section-alt {
     background: #fff;
 }
+
+/* Before / With EYENOSIS compare cards (IVClasses-style) */
+.ecrm-compare-section {
+    background: #f7fafc;
+    padding-top: 4.5rem;
+    padding-bottom: 4.5rem;
+}
+.ecrm-compare-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+.ecrm-compare-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+    background: #fff;
+    border: 1px solid rgba(27, 79, 114, 0.1);
+    border-radius: 28px;
+    padding: 1.35rem 1.5rem 1.35rem 1.35rem;
+    box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+}
+.ecrm-compare-card--reverse {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+}
+.ecrm-compare-media {
+    border-radius: 20px;
+    overflow: hidden;
+    background: #eef4f8;
+    aspect-ratio: 4 / 3;
+}
+.ecrm-compare-media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.ecrm-compare-copy {
+    padding: 0.5rem 0.75rem 0.5rem 0;
+}
+.ecrm-compare-card--reverse .ecrm-compare-copy {
+    padding: 0.5rem 0 0.5rem 0.75rem;
+}
+.ecrm-compare-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    background: var(--ecrm-teal-soft);
+    color: var(--ecrm-teal);
+    margin-bottom: 0.85rem;
+}
+.ecrm-compare-copy h3 {
+    font-family: var(--ecrm-display);
+    font-weight: 600;
+    font-size: clamp(1.45rem, 2.4vw, 1.95rem);
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: #1B4F72;
+    margin: 0 0 0.75rem;
+}
+.ecrm-compare-copy > p {
+    margin: 0 0 1.15rem;
+    color: #64748b;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    max-width: 36rem;
+}
+.ecrm-compare-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+.ecrm-compare-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: #475569;
+}
+.ecrm-compare-list li i {
+    width: 1.15rem;
+    margin-top: 0.15rem;
+    flex-shrink: 0;
+    text-align: center;
+}
+.ecrm-compare-list--bad li i {
+    color: #94a3b8;
+}
+.ecrm-compare-list--good li i {
+    color: #0d9488;
+}
+@media (max-width: 900px) {
+    .ecrm-compare-card,
+    .ecrm-compare-card--reverse {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+        padding: 1.1rem;
+        border-radius: 22px;
+    }
+    .ecrm-compare-card--reverse .ecrm-compare-copy {
+        order: 2;
+        padding: 0;
+    }
+    .ecrm-compare-card--reverse .ecrm-compare-media {
+        order: 1;
+    }
+    .ecrm-compare-copy {
+        padding: 0.25rem 0.15rem 0.5rem;
+    }
+    .ecrm-compare-media {
+        border-radius: 16px;
+    }
+}
+@media (max-width: 640px) {
+    .ecrm-compare-section {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+    .ecrm-compare-copy h3 {
+        font-size: 1.35rem;
+    }
+    .ecrm-compare-list li {
+        font-size: 0.9rem;
+    }
+}
+
 .ecrm-head {
     max-width: 640px;
     margin: 0 auto 2.5rem;
