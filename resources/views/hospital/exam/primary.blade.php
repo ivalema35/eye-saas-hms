@@ -468,10 +468,12 @@ used across the rest of the app. --}}
     /* આ સ્ટાઇલ ફક્ત આ જ પેજ માટે છે */
 .exam-layout-wrapper {
     display: grid;
-    grid-template-columns: 240px 1fr; /* સાઈડબાર અને મેઈન કન્ટેન્ટ */
+    grid-template-columns: 240px minmax(0, 1fr);
     gap: 20px;
     align-items: start;
     margin-top: 10px;
+    width: 100%;
+    max-width: 100%;
 }
 
 .doctor-stepper-sidebar {
@@ -485,6 +487,7 @@ used across the rest of the app. --}}
     flex-direction: column;
     gap: 8px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    min-width: 0;
 }
 
 .doctor-stepper-sidebar .step-btn {
@@ -499,6 +502,29 @@ used across the rest of the app. --}}
 /* આ વધારાની સ્ટાઇલ મેઈન કેનવાસને સાઈડબાર સાથે સરખું રાખશે */
 .main-canvas {
     width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+@media (max-width: 991.98px) {
+    .exam-layout-wrapper {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .doctor-stepper-sidebar {
+        position: static;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+        gap: 8px;
+    }
+
+    .doctor-stepper-sidebar .step-btn {
+        text-align: center !important;
+        padding: 8px 10px !important;
+        font-size: .82rem;
+    }
 }
 /* ── Wait Status Pill ── */
 .wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap;transition:background .4s,box-shadow .4s;vertical-align:middle; }

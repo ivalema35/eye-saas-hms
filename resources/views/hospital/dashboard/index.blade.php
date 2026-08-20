@@ -2315,10 +2315,12 @@
 @if($isReceptionistUser && $hasReception)
 <style>
 .tap-table-wrap { background:#ffffff; border-radius:16px; border:1px solid rgba(27,79,114,.12); overflow:hidden; box-shadow:0 1px 2px rgba(15,23,42,.04); }
-.tap-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid #edf2f7; }
-.tap-title { font-size:15px; font-weight:700; color:#1B4F72; display:flex; align-items:center; gap:8px; margin:0; }
+.tap-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; padding:16px 20px 14px; border-bottom:1px solid #edf2f7; }
+.tap-title { font-size:15px; font-weight:700; color:#1B4F72; display:flex; align-items:center; gap:8px; margin:0; flex:1 1 auto; min-width:0; }
 .tap-title i { font-size:14px; opacity:.8; }
-.tap-count { background:#EBF5FB; color:#1B4F72; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.3px; }
+.tap-count { background:#EBF5FB; color:#1B4F72; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; letter-spacing:.3px; flex-shrink:0; }
+.tap-header #today-patients-form { flex:1 1 220px; min-width:0; max-width:100%; }
+.tap-header #today-patients-form .input-group { width:100% !important; max-width:320px; }
 .tap-table { width:100%; border-collapse:collapse; font-size:13px; }
 .tap-table thead tr { background:#1B4F72; }
 .tap-table thead th { color:rgba(255,255,255,.88); font-weight:600; font-size:11px; letter-spacing:.6px; text-transform:uppercase; padding:11px 14px; border:none; white-space:nowrap; }
@@ -2345,14 +2347,22 @@
 .tap-print-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid #e2e8f0; color:#64748b; background:#fff; transition:all .15s; text-decoration:none; }
 .tap-print-btn:hover { background:#1B4F72; color:#fff; border-color:#1B4F72; }
 .tap-empty { text-align:center; padding:3rem 1rem; color:#94a3b8; font-size:13.5px; }
-.tap-tabs { display:flex; gap:6px; padding:12px 20px 0; border-bottom:1px solid #edf2f7; }
-.tap-tab-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:12.5px; font-weight:700; color:#64748b; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; margin-bottom:-1px; transition:color .15s, border-color .15s; }
+.tap-tabs { display:flex; gap:6px; padding:12px 20px 0; border-bottom:1px solid #edf2f7; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+.tap-tab-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:12.5px; font-weight:700; color:#64748b; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; margin-bottom:-1px; transition:color .15s, border-color .15s; white-space:nowrap; flex-shrink:0; }
 .tap-tab-btn:hover { color:#1B4F72; }
 .tap-tab-btn.tap-tab-active { color:#1B4F72; border-bottom-color:#1B4F72; }
 .tap-tab-n { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; margin-left:2px; border-radius:9px; background:#e2e8f0; color:#475569; font-size:10px; font-weight:800; }
 .tap-tab-btn.tap-tab-active .tap-tab-n { background:#1B4F72; color:#fff; }
 .tap-pane:not(.is-active),
 .tap-pane[hidden] { display:none !important; }
+@media (max-width: 640px) {
+    .tap-header { padding:14px 14px 12px; }
+    .tap-header #today-patients-form { flex:1 1 100%; order:3; }
+    .tap-header #today-patients-form .input-group { max-width:100%; }
+    .tap-count { order:2; }
+    .tap-tabs { padding:10px 14px 0; }
+    .tap-table-wrap { border-radius:14px; }
+}
 </style>
 <div class="row g-4 mb-4">
     <div class="col-12">
@@ -2363,9 +2373,9 @@
             </div> -->
             <div class="tap-header">
                 <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
-                
+
                 <form method="GET" action="{{ route('hospital.dashboard', ['slug' => $slug]) }}" id="today-patients-form" class="d-flex gap-2">
-                    <div class="input-group" style="width: 250px;">
+                    <div class="input-group">
                         <input type="text" name="search_contact" value="{{ request('search_contact') }}"
                             class="form-control form-control-sm" placeholder="Search by mobile..."
                             data-intl-phone>
