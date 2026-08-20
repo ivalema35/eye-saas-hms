@@ -56,6 +56,73 @@ if (! function_exists('platform_money')) {
     }
 }
 
+if (! function_exists('tenant_money')) {
+    function tenant_money(\App\Models\Platform\Tenant $tenant, float|int|string|null $amount, int $decimals = 0): string
+    {
+        $symbol = $tenant->currency_symbol ?: platform_currency_symbol();
+
+        return $symbol.number_format((float) ($amount ?? 0), $decimals);
+    }
+}
+
+if (! function_exists('platform_settings')) {
+    /** Cached platform_settings key-value map (request-scoped). */
+    function platform_settings(): array
+    {
+        static $settings = null;
+
+        if ($settings === null) {
+            $settings = \App\Models\Platform\PlatformSetting::query()
+                ->pluck('value', 'key')
+                ->toArray();
+        }
+
+        return $settings;
+    }
+}
+
+if (! function_exists('platform_setting')) {
+    function platform_setting(string $key, mixed $default = null): mixed
+    {
+        return platform_settings()[$key] ?? $default;
+    }
+}
+
+if (! function_exists('platform_trial_days')) {
+    function platform_trial_days(): int
+    {
+        return max(1, (int) platform_setting('trial_days', 14));
+    }
+}
+
+if (! function_exists('platform_gst_rate_india')) {
+    function platform_gst_rate_india(): float
+    {
+        return max(0.0, (float) platform_setting('gst_rate_india', 18));
+    }
+}
+
+if (! function_exists('platform_country_applies_gst')) {
+    /** GST applies to India registrations only. */
+    function platform_country_applies_gst(?string $countryCode, ?string $countryName = null): bool
+    {
+        $code = strtoupper(trim((string) $countryCode));
+        if ($code === 'IN') {
+            return true;
+        }
+
+        return strtolower(trim((string) $countryName)) === 'india';
+    }
+}
+
+if (! function_exists('platform_trial_label')) {
+    /** e.g. "14-day" for UI copy */
+    function platform_trial_label(): string
+    {
+        return platform_trial_days().'-day';
+    }
+}
+
 if (! function_exists('hospital_settings')) {
     function hospital_settings(): array
     {

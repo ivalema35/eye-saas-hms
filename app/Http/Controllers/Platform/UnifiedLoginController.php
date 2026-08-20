@@ -58,7 +58,7 @@ class UnifiedLoginController extends Controller
         if ($user && Hash::check($password, $user->password)) {
             $tenant = Tenant::find($user->tenant_id);
 
-            if (! $tenant) {
+            if (!$tenant) {
                 $request->hitRateLimiter();
 
                 return back()
@@ -70,7 +70,7 @@ class UnifiedLoginController extends Controller
                 $request->hitRateLimiter();
 
                 return back()
-                    ->withErrors(['email' => 'Your hospital registration is waiting for SuperAdmin approval. You can login after it is accepted.'])
+                    ->withErrors(['email' => 'Your hospital registration is waiting for Eyenosis approval. You can login after it is accepted.'])
                     ->withInput(['email' => $login]);
             }
 
@@ -85,7 +85,7 @@ class UnifiedLoginController extends Controller
             $tenant->markExpiredIfNeeded();
             $tenant->refresh();
 
-            if (! $tenant->hasAccess()) {
+            if (!$tenant->hasAccess()) {
                 $request->hitRateLimiter();
 
                 return back()

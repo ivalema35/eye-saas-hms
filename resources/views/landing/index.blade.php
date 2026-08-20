@@ -1,7 +1,9 @@
 @extends('landing.layouts.app')
 
 @section('title', 'EYENOSIS — Eye Hospital CRM Platform')
-@section('meta_description', 'Cloud multi-tenant Eye Hospital CRM: patients, OPD, primary/secondary exam, OT counselling & surgery, accountant, ward, discharge billing and reports. Start free 14-day trial.')
+@section('meta_description')
+Cloud multi-tenant Eye Hospital CRM: patients, OPD, primary/secondary exam, OT counselling & surgery, accountant, ward, discharge billing and reports. Start free {{ $platformTrialLabel }} trial.
+@endsection
 @section('meta_keywords', 'eye hospital CRM, ophthalmology HMS, OT management, multi-tenant hospital SaaS, eye clinic software India')
 @section('og_title', 'EYENOSIS — Eye Hospital CRM Platform')
 @section('og_description', 'Complete multi-tenant CRM / HMS for eye hospitals — OPD, OT, billing, roles and reports.')
@@ -247,7 +249,7 @@
             <div class="ecrm-head ecrm-reveal">
                 <span class="ecrm-kicker">Pricing</span>
                 <h2 id="pricing-heading">Transparent SaaS plans</h2>
-                <p>Start with a 14-day free trial — no credit card required. Upgrade anytime.</p>
+                <p>Start with a {{ $platformTrialLabel }} free trial — no credit card required. Upgrade anytime.</p>
             </div>
             <div class="ecrm-pricing">
                 <article class="ecrm-price ecrm-reveal">
@@ -332,7 +334,7 @@
             <div class="ecrm-faq" role="list">
                 <div class="ecrm-faq-item" role="listitem">
                     <button type="button" class="ecrm-faq-btn" aria-expanded="false">
-                        What happens after the 14-day free trial ends?
+                        What happens after the {{ $platformTrialLabel }} free trial ends?
                         <i class="fa-solid fa-plus"></i>
                     </button>
                     <div class="ecrm-faq-body">

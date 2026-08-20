@@ -33,7 +33,7 @@ class TenantService
 
             $needsApproval = empty($data['skip_approval']);
 
-            $trialDays = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
+            $trialDays = platform_trial_days();
             $trialEndsAt = $needsApproval ? null : Carbon::now()->addDays($trialDays);
 
             // 1. Tenant record create karo
@@ -116,7 +116,7 @@ class TenantService
 
     public function approveRegistration(Tenant $tenant): void
     {
-        $trialDays = (int) env('SUBSCRIPTION_TRIAL_DAYS', 14);
+        $trialDays = platform_trial_days();
         $tenant->update([
             'status' => 'trial',
             'trial_ends_at' => Carbon::now()->addDays($trialDays),

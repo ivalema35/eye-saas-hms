@@ -29,7 +29,7 @@ class HospitalAuth
             if ($tenant && $user->tenant_id !== $tenant->id) {
                 auth('hospital_user')->logout();
                 // Fall through to redirect below
-            } elseif ($tenant && ! $tenant->hasAccess()) {
+            } elseif ($tenant && !$tenant->hasAccess()) {
                 $tenant->markExpiredIfNeeded();
                 auth('hospital_user')->logout();
 
@@ -42,7 +42,7 @@ class HospitalAuth
                 return redirect()
                     ->route('hospital.login', ['slug' => $slug])
                     ->with('error', $tenant->status === 'pending'
-                        ? 'Your hospital registration is waiting for SuperAdmin approval.'
+                        ? 'Your hospital registration is waiting for Eyenosis approval.'
                         : 'Your hospital plan has expired. Please contact the administrator.');
             } else {
                 return $next($request);

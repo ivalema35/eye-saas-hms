@@ -23,7 +23,7 @@
                 {{-- ===== ALERT BANNER ===== --}}
                 @php
                     $bannerMap = [
-                        'trial_welcome'   => ['bg' => '#D5F5E3', 'text' => '#1A6F5B', 'icon' => '&#127881;', 'label' => 'Free Trial Started — 14 Days'],
+                        'trial_welcome'   => ['bg' => '#D5F5E3', 'text' => '#1A6F5B', 'icon' => '&#127881;', 'label' => 'Free Trial Started — '.$platformTrialDays.' Days'],
                         'reminder_7d'     => ['bg' => '#FFF3E0', 'text' => '#E65100', 'icon' => '&#9201;',   'label' => 'Subscription Expires in 7 Days'],
                         'reminder_3d'     => ['bg' => '#FFF3CD', 'text' => '#856404', 'icon' => '&#9888;',   'label' => 'Subscription Expires in 3 Days'],
                         'reminder_1d'     => ['bg' => '#FADBD8', 'text' => '#641E16', 'icon' => '&#128680;', 'label' => 'Subscription Expires Tomorrow!'],
@@ -56,7 +56,7 @@
 
                             @case('trial_welcome')
                                 <p style="margin:0 0 14px;font-size:14px;color:#1A202C">
-                                    Welcome to <strong>EYENOSIS</strong>! Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered and your <strong>14-day free trial</strong> has started.
+                                    Welcome to <strong>EYENOSIS</strong>! Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered and your <strong>{{ $platformTrialLabel }} free trial</strong> has started.
                                 </p>
                                 <p style="margin:0 0 14px;font-size:14px;color:#1A202C">
                                     All features are available — add your doctors, receptionists, and start registering patients today.

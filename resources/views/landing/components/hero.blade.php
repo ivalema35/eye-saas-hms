@@ -18,7 +18,7 @@
             </p>
             <div class="ecrm-hero-ctas">
                 <a href="{{ route('register.show') }}" class="ecrm-btn ecrm-btn-primary ecrm-btn-lg">
-                    Start 14-Day Free Trial
+                    Start {{ $platformTrialDays }}-Day Free Trial
                 </a>
                 <a href="{{ route('home') }}#modules" class="ecrm-btn ecrm-btn-soft ecrm-btn-lg">
                     Explore modules

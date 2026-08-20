@@ -42,6 +42,21 @@ class AppServiceProvider extends ServiceProvider
 
         Paginator::defaultView('vendor.pagination.hms');
 
+        View::composer('landing.*', function ($view): void {
+            $view->with([
+                'platformTrialDays' => platform_trial_days(),
+                'platformTrialLabel' => platform_trial_label(),
+                'platformGstRateIndia' => platform_gst_rate_india(),
+            ]);
+        });
+
+        View::composer('emails.*', function ($view): void {
+            $view->with([
+                'platformTrialDays' => platform_trial_days(),
+                'platformTrialLabel' => platform_trial_label(),
+            ]);
+        });
+
         View::composer('hospital.*', function ($view): void {
             $hospitalSettings = hospital_settings();
             $hospitalName = $hospitalSettings['hospital_name'] ?? (app('tenant')?->name ?? config('app.name'));

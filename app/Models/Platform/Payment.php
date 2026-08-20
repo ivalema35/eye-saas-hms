@@ -21,6 +21,11 @@ class Payment extends Model
     protected $fillable = [
         'tenant_id',
         'amount',
+        'currency_code',
+        'currency_symbol',
+        'subtotal',
+        'gst_rate',
+        'gst_amount',
         'cycle',
         'method',
         'gateway',
@@ -35,6 +40,9 @@ class Payment extends Model
 
     protected $casts = [
         'amount' => 'decimal:2',
+        'subtotal' => 'decimal:2',
+        'gst_rate' => 'decimal:2',
+        'gst_amount' => 'decimal:2',
         'paid_at' => 'datetime',
     ];
 

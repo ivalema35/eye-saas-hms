@@ -37,6 +37,13 @@
                         value="{{ old('trial_days', $settings->get('trial_days')?->value ?? 14) }}" min="1" max="90">
                     @error('trial_days') <span class="hms-error">{{ $message }}</span> @enderror
                 </div>
+                <div class="hms-form-group" style="margin-bottom:0">
+                    <label class="hms-label">GST Rate — India (%)</label>
+                    <input type="number" name="gst_rate_india" class="hms-input @error('gst_rate_india') is-invalid @enderror"
+                        value="{{ old('gst_rate_india', $settings->get('gst_rate_india')?->value ?? 18) }}" min="0" max="100" step="0.01">
+                    @error('gst_rate_india') <span class="hms-error">{{ $message }}</span> @enderror
+                    <small class="text-muted">Applied on registration plan total for India only. Other countries: 0%.</small>
+                </div>
             </div>
         </div>
 
