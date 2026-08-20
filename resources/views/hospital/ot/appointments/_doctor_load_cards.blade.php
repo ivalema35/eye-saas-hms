@@ -254,11 +254,11 @@ One card per doctor; each line: "1 to 2 : 10"
 </div>
 
 <div>
-    <button type="button" class="btn btn-sm btn-outline-primary ms-2"
+    <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
+        class="btn btn-sm ms-2 text-decoration-none"
         style="background: #1b4f72; color: #ffffff; border:none; width: 150px; padding: 7px;">
-        <a href="http://localhost/eye-saas/public/demo/dashboard/ot-appointments"
-            class="text-decoration-none text-white">OT Appointment</a>
-    </button>
+        OT Appointment
+    </a>
 </div>
 
 @once

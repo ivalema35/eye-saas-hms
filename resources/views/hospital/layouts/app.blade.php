@@ -691,7 +691,31 @@
 
         body.hms-sidebar-collapsed .premium-sidebar-brand-link {
             justify-content: center;
-            padding: .85rem .3rem;
+            padding: .65rem .4rem;
+        }
+
+        body.hms-sidebar-collapsed .sidebar-brand-mark {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 56px;
+            overflow: hidden;
+        }
+
+        body.hms-sidebar-collapsed .sidebar-brand-mark > span {
+            width: 44px !important;
+            height: 44px !important;
+            padding: 3px;
+        }
+
+        body.hms-sidebar-collapsed .sidebar-brand-mark .sidebar-logo {
+            height: auto !important;
+            width: auto !important;
+            max-width: 52px !important;
+            max-height: 40px !important;
+            object-fit: contain;
+            object-position: center;
         }
 
         body.hms-sidebar-collapsed .hms-nav-item,

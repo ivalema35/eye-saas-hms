@@ -8,9 +8,10 @@
 @section('content')
 
     {{-- Toast notification --}}
-    <div id="contactToast" style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
-                                             background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
-                                             box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
+    <div id="contactToast"
+        style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
+                                                         background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
+                                                         box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
         <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
         <span id="contactToastMsg"></span>
     </div>
@@ -96,7 +97,6 @@
                                             {{ $loc->name }}
 
                                         </option>
-
                                     @endforeach
                                 </select>
                                 <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline"
@@ -398,10 +398,10 @@
 
     <style>
         /* ============================================================
-                                       PHONE APPOINTMENT FORM - ATTRACTIVE DESIGN
-                                       Color Theme: #1B4F72 | #2980B9
-                                       No Conflicts - Uses specific selectors with parent wrapper
-                                       ============================================================ */
+                                                   PHONE APPOINTMENT FORM - ATTRACTIVE DESIGN
+                                                   Color Theme: #1B4F72 | #2980B9
+                                                   No Conflicts - Uses specific selectors with parent wrapper
+                                                   ============================================================ */
 
         /* Main card enhancement */
         .hms-card {
