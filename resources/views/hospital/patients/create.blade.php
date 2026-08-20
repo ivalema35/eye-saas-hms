@@ -16,22 +16,22 @@
         <span id="contactToastMsg"></span>
     </div>
 
-    <div class="hms-card border-0 shadow-lg" style="border-radius:16px">
-        <div class="hms-card-header"
+    <div class="patient-create-page patient-registration-card hms-card border-0 shadow-lg" style="border-radius:16px;max-width:100%;overflow:hidden">
+        <div class="hms-card-header patient-create-header"
             style="background:linear-gradient(135deg, #1B4F72 0%, #2980B9 100%);padding:1.75rem;border-radius:16px 16px 0 0">
-            <div style="display:flex;align-items:center;gap:1rem;color:#fff">
-                <div
-                    style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem">
+            <div class="patient-create-header-inner" style="display:flex;align-items:center;gap:1rem;color:#fff">
+                <div class="patient-create-header-icon"
+                    style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0">
                     <i class="bi bi-plus-circle-fill"></i>
                 </div>
-                <div>
+                <div class="patient-create-header-text" style="min-width:0">
                     <h4 style="margin:0;font-weight:700;font-size:1.25rem;color:#fff">Register New Patient</h4>
                     <p style="margin:0.25rem 0 0;font-size:0.9rem;opacity:0.9">Capture patient information and appointment
                         details</p>
                 </div>
             </div>
         </div>
-        <div class="hms-card-body" style="padding:2rem">
+        <div class="hms-card-body patient-create-body" style="padding:2rem">
             <form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}"
                 class="patient-create-form">
                 @csrf
@@ -40,14 +40,14 @@
 
                 {{-- OT Appointment Search — Reception check-in (OT Workflow Upgrade Phase 2) --}}
                 <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
-                    <div class="alert alert-info border-0 mb-3"
+                    <div class="alert alert-info border-0 mb-3 patient-create-ot-alert"
                         style="background:rgba(27,79,114,.06);color:#1B4F72;border-radius:12px;">
                         <i class="bi bi-hospital me-1"></i>
                         <strong>OT walk-in / pre-booked patient?</strong>
                         Search the OT appointment below first — form will auto-fill and today’s OPD visit will be linked to
                         that appointment.
                     </div>
-                    <div class="form-group position-relative" style="max-width:480px">
+                    <div class="form-group position-relative patient-create-ot-search" style="max-width:480px;width:100%">
                         <label class="form-label"><i class="bi bi-search me-1"></i> Search OT Appointment (Name / Mobile /
                             APT-000123)</label>
                         <input type="text" id="appointmentSearch" class="form-control hms-input"
@@ -63,7 +63,7 @@
 
                 {{-- MRD Number --}}
                 <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
-                    <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
+                    <div class="patient-registration-grid">
                         <div class="form-group">
                             <label class="form-label">MRD No.</label>
                             <input type="text" value="{{ $nextMrd }}" class="form-control hms-input" readonly
@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="hms-card-body patient-create-card-body">
-                    <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
+                    <div class="patient-registration-grid">
 
                         {{-- 1. Appointment Date --}}
                         <div class="form-group">
@@ -145,7 +145,7 @@
                         <div class="form-group">
                             <label class="form-label">City</label>
 
-                            <div style="display:flex;gap:5px">
+                            <div class="patient-create-city-row" style="display:flex;gap:5px;min-width:0">
 
                                 <select name="location_id" id="locationSelect" class="form-control select2 hms-select"
                                     required>
@@ -165,7 +165,7 @@
 
                                 </select>
 
-                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline">
+                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline patient-create-add-loc">
                                     +
                                 </button>
 
@@ -218,7 +218,7 @@
                     </div>
 
                     {{-- 18. ADD Button --}}
-                    <div
+                    <div class="patient-create-actions"
                         style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
                         <button type="submit" class="hms-btn hms-btn-primary" style="color: #ffffff;">
                             <i class="bi bi-check-circle-fill"></i> Register Patient
@@ -838,21 +838,141 @@
         /* Form grid - responsive with better spacing */
         .patient-registration-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 1.5rem;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .patient-create-page,
+        .patient-registration-card {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .patient-create-page *,
+        .patient-registration-card * {
+            box-sizing: border-box;
+        }
+
+        .patient-create-ot-search {
+            max-width: 100% !important;
+        }
+
+        .patient-create-city-row {
+            width: 100%;
+        }
+
+        .patient-create-city-row .select2-container {
+            flex: 1 1 auto !important;
+            width: auto !important;
+            min-width: 0 !important;
+        }
+
+        .patient-create-add-loc {
+            flex-shrink: 0;
+            min-width: 42px;
+        }
+
+        /* intl-tel-input overflow fix */
+        .patient-create-page .iti,
+        .patient-registration-card .iti {
+            width: 100% !important;
+            max-width: 100%;
+        }
+
+        .patient-create-page .iti__country-list,
+        .patient-registration-card .iti__country-list {
+            max-width: min(320px, 90vw);
         }
 
         @media (max-width: 992px) {
             .patient-registration-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 1.25rem;
+            }
+
+            .patient-create-body {
+                padding: 1.25rem !important;
+            }
+
+            .patient-create-header {
+                padding: 1.25rem !important;
+            }
+
+            .patient-create-card-body {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
             }
         }
 
         @media (max-width: 640px) {
             .patient-registration-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: minmax(0, 1fr);
                 gap: 1rem;
+            }
+
+            .patient-create-body {
+                padding: 1rem !important;
+            }
+
+            .patient-create-header {
+                padding: 1rem !important;
+                border-radius: 16px 16px 0 0 !important;
+            }
+
+            .patient-create-header-inner {
+                gap: .75rem !important;
+            }
+
+            .patient-create-header-icon {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 1.15rem !important;
+            }
+
+            .patient-create-header-text h4 {
+                font-size: 1.05rem !important;
+                line-height: 1.3;
+                word-break: break-word;
+            }
+
+            .patient-create-header-text p {
+                font-size: .8rem !important;
+            }
+
+            .patient-create-ot-alert {
+                font-size: .85rem;
+                padding: .75rem .85rem;
+                word-break: break-word;
+            }
+
+            .patient-create-actions {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                margin-top: 1.5rem !important;
+                padding-top: 1.25rem !important;
+            }
+
+            .patient-create-actions .hms-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .patient-create-page .hms-input,
+            .patient-create-page .hms-select,
+            .patient-registration-card .hms-input,
+            .patient-registration-card .hms-select,
+            .patient-registration-card select.form-control,
+            .patient-registration-card input.form-control {
+                font-size: 16px !important; /* prevent iOS zoom */
+            }
+        }
+
+        @media (max-width: 380px) {
+            .patient-create-header-icon {
+                display: none !important;
             }
         }
 

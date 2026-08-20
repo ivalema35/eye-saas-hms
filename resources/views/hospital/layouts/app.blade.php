@@ -477,10 +477,34 @@
         @media (max-width: 768px) {
             .hms-search-form {
                 max-width: none;
+                flex: 1 1 auto;
+                min-width: 0;
             }
 
             .hms-content-topbar {
-                flex-wrap: wrap;
+                flex-wrap: nowrap;
+                gap: .65rem;
+                overflow: hidden;
+            }
+
+            .hms-content-topbar-right {
+                gap: .5rem;
+                flex-shrink: 0;
+            }
+
+            .hms-main {
+                overflow-x: hidden;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .hms-search-input {
+                font-size: .82rem;
+                padding-left: 2.1rem;
+            }
+
+            .hms-search-input::placeholder {
+                font-size: .78rem;
             }
         }
 

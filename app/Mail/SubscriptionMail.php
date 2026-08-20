@@ -51,7 +51,7 @@ class SubscriptionMail extends Mailable
     private function getSubject(): string
     {
         return match ($this->emailType) {
-            'trial_welcome' => 'Welcome to Eye HMS — Your 14-Day Free Trial Has Started',
+            'trial_welcome' => 'Welcome to Eye HMS — Your '.platform_trial_days().'-Day Free Trial Has Started',
             'reminder_7d' => 'Reminder: Your Subscription Expires in 7 Days — Eye HMS',
             'reminder_3d' => 'ACTION REQUIRED: Subscription Expires in 3 Days — Eye HMS',
             'reminder_1d' => 'FINAL WARNING: Subscription Expires Tomorrow — Eye HMS',

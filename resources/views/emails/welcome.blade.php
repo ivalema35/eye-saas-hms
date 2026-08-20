@@ -27,7 +27,7 @@
                 <p style="font-size:.95rem;color:#1A202C;line-height:1.6;">
                     Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered on EYENOSIS
                     platform.
-                    You have a <strong>14-day free trial</strong> to explore all features.
+                    You have a <strong>{{ $platformTrialLabel }} free trial</strong> to explore all features.
                 </p>
 
                 <table width="100%" cellpadding="0" cellspacing="0"

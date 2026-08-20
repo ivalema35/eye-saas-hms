@@ -1,8 +1,12 @@
 @extends('landing.layouts.app')
 
 @section('title', 'Pricing — EYENOSIS | Eye Hospital CRM Plans')
-@section('meta_description', 'Transparent pricing for EYENOSIS SaaS multi-tenant eye hospital CRM. Monthly, quarterly and yearly plans with 14-day free trial.')
-@section('og_title', 'EYENOSIS Pricing — Start Free for 14 Days')
+@section('meta_description')
+Transparent pricing for EYENOSIS SaaS multi-tenant eye hospital CRM. Monthly, quarterly and yearly plans with {{ $platformTrialLabel }} free trial.
+@endsection
+@section('og_title')
+EYENOSIS Pricing — Start Free for {{ $platformTrialDays }} Days
+@endsection
 
 @section('content')
 
@@ -10,7 +14,7 @@
         <div class="ecrm-container ecrm-reveal">
             <span class="ecrm-kicker">Pricing</span>
             <h1>Simple plans for hospital CRM SaaS</h1>
-            <p>All modules included on every plan — OPD, exams, OT pipeline, billing and roles. 14-day free trial, no card
+            <p>All modules included on every plan — OPD, exams, OT pipeline, billing and roles. {{ $platformTrialLabel }} free trial, no card
                 required.</p>
             <a href="{{ route('register.show') }}" class="ecrm-btn ecrm-btn-primary ecrm-btn-lg">
                 <i class="fa-solid fa-rocket"></i> Start Free Trial

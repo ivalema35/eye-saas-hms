@@ -362,13 +362,20 @@
                 </td>
                 <td style="text-align: center; vertical-align: middle;">{{ ucfirst($payment->cycle ?? 'Monthly') }}</td>
                 <td class="amount-col" style="vertical-align: middle;">
-                    &#8377;{{ number_format((float) $payment->amount, 2) }}
+                    @php $invSym = $payment->currency_symbol ?? platform_currency_symbol(); @endphp
+                    {{ $invSym }}{{ number_format((float) $payment->amount, 2) }}
                 </td>
             </tr>
         </tbody>
     </table>
 
     {{-- ═══════════════ TOTALS ═══════════════ --}}
+    @php
+        $invSym = $payment->currency_symbol ?? platform_currency_symbol();
+        $invSubtotal = (float) ($payment->subtotal ?? $payment->amount);
+        $invGst = (float) ($payment->gst_amount ?? 0);
+        $invTotal = (float) $payment->amount;
+    @endphp
     <table width="100%" style="margin-top: 10px;">
         <tr>
             <td width="55%">&nbsp;</td>
@@ -376,17 +383,23 @@
                 <table width="100%">
                     <tr>
                         <td class="tot-lbl">Subtotal</td>
-                        <td class="tot-val">&#8377;{{ number_format((float) $payment->amount, 2) }}</td>
+                        <td class="tot-val">{{ $invSym }}{{ number_format($invSubtotal, 2) }}</td>
                     </tr>
                     <tr>
-                        <td class="tot-lbl">GST / Tax</td>
-                        <td class="tot-val">Included</td>
+                        <td class="tot-lbl">GST / Tax @if($invGst > 0)({{ number_format((float) ($payment->gst_rate ?? 0), 0) }}%)@endif</td>
+                        <td class="tot-val">
+                            @if($invGst > 0)
+                                {{ $invSym }}{{ number_format($invGst, 2) }}
+                            @else
+                                Included
+                            @endif
+                        </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="padding-top: 8px;">
                             <div class="grand-box">
                                 <div class="grand-lbl">Total Amount Paid</div>
-                                <div class="grand-amt">&#8377;{{ number_format((float) $payment->amount, 2) }}</div>
+                                <div class="grand-amt">{{ $invSym }}{{ number_format($invTotal, 2) }}</div>
                             </div>
                         </td>
                     </tr>

@@ -665,6 +665,23 @@
     color: #DC2626;
     border-left: 4px solid #DC2626;
 }
+.bento-alert-link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.bento-alert-link:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px rgba(220, 38, 38, .12);
+    color: inherit;
+}
+.bento-alert-arrow {
+    margin-left: auto;
+    flex-shrink: 0;
+    font-size: 1rem;
+    opacity: .85;
+}
 
 /* ── FOC badge pulse (same secondary palette with enhanced animation) ──────── */
 .foc-badge {
@@ -1452,16 +1469,34 @@
 
 {{-- Subscription Alert --}}
 @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
-    <div class="bento-alert {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>
-            @if($subscriptionDaysLeft <= 0)
-                Your subscription has <strong>expired</strong>. Please contact administrator.
-            @else
-                Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
-            @endif
-        </span>
-    </div>
+    @php
+        $isHospitalAdmin = auth('hospital_user')->user()?->role?->is_super;
+    @endphp
+    @if($isHospitalAdmin)
+        <a href="{{ route('hospital.subscription.index', ['slug' => $slug]) }}"
+           class="bento-alert bento-alert-link {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>
+                @if($subscriptionDaysLeft <= 0)
+                    Your subscription has <strong>expired</strong>. Please renew now.
+                @else
+                    Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
+                @endif
+            </span>
+            <i class="fa-solid fa-chevron-right bento-alert-arrow"></i>
+        </a>
+    @else
+        <div class="bento-alert {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>
+                @if($subscriptionDaysLeft <= 0)
+                    Your subscription has <strong>expired</strong>. Please contact administrator.
+                @else
+                    Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
+                @endif
+            </span>
+        </div>
+    @endif
 @endif
 
 {{-- ────────────────────────────────────────────────────────────────────────

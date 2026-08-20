@@ -24,15 +24,15 @@ class CheckSubscriptionActive
         $tenant = app()->bound('tenant') ? app('tenant') : null;
 
         // Tenant identify nahi hua — IdentifyTenant middleware pehle lagana chahiye tha
-        if (! $tenant) {
+        if (!$tenant) {
             abort(404);
         }
 
-        if ($tenant->status === 'suspended' || ! $tenant->hasAccess()) {
+        if ($tenant->status === 'suspended' || !$tenant->hasAccess()) {
             $tenant->markExpiredIfNeeded();
 
             $message = $tenant->status === 'pending'
-                ? 'Your hospital registration is waiting for SuperAdmin approval.'
+                ? 'Your hospital registration is waiting for Eyenosis approval.'
                 : 'Your hospital plan has expired. Please contact the administrator.';
 
             if ($request->expectsJson()) {

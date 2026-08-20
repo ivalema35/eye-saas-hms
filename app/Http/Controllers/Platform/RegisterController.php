@@ -74,8 +74,6 @@ class RegisterController extends Controller
         }
 
         return view('landing.register', compact('countries', 'planPricing', 'countryOverrides'));
-
-        return view('landing.register', compact('countries', 'planPricing', 'countryOverrides'));
     }
 
     /**

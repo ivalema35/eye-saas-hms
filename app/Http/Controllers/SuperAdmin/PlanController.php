@@ -37,7 +37,7 @@ class PlanController extends Controller
         $monthlyPrice = (int) ($settings->get('monthly_price')?->value ?? 999);
         $quarterlyDiscount = (int) ($settings->get('quarterly_discount')?->value ?? 10);
         $yearlyDiscount = (int) ($settings->get('yearly_discount')?->value ?? 20);
-        $trialDays = (int) ($settings->get('trial_days')?->value ?? 14);
+        $trialDays = platform_trial_days();
         $graceDays = (int) ($settings->get('grace_days')?->value ?? 7);
 
         $quarterlyPrice = (int) round($monthlyPrice * 3 * (1 - $quarterlyDiscount / 100));

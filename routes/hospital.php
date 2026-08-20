@@ -67,6 +67,7 @@ use App\Http\Controllers\Hospital\Setting\DoctorProfileController;
 use App\Http\Controllers\Hospital\Setting\HospitalSettingController;
 use App\Http\Controllers\Hospital\Setting\SetupWizardController;
 use App\Http\Controllers\Hospital\Setting\TimezoneController;
+use App\Http\Controllers\Hospital\Subscription\SubscriptionController;
 use App\Http\Controllers\Hospital\User\HospitalUserController;
 use Illuminate\Support\Facades\Route;
 
@@ -95,6 +96,18 @@ Route::prefix('{slug}')
         Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
         Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
         Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+
+        // ================================================================
+        // Subscription / Billing — accessible during grace (no subscription.active)
+        // ================================================================
+        Route::middleware(['auth.hospital'])->group(function () {
+            Route::get('/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+            Route::post('/subscription/checkout', [SubscriptionController::class, 'checkout'])->name('subscription.checkout');
+            Route::post('/subscription/confirm', [SubscriptionController::class, 'confirm'])->name('subscription.confirm');
+            Route::get('/subscription/invoice/{payment}', [SubscriptionController::class, 'downloadInvoice'])
+                ->name('subscription.invoice')
+                ->whereNumber('payment');
+        });
 
         // ================================================================
         // Authenticated Hospital Routes

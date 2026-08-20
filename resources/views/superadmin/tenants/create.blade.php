@@ -107,7 +107,7 @@
                     <option value="yearly" {{ old('plan')=='yearly' ? 'selected':'' }}>Yearly</option>
                 </select>
                 <span style="font-size:.75rem;color:var(--hms-text-muted)">
-                    Hospital will start on 14-day free trial regardless.
+                    Hospital will start on {{ platform_trial_label() }} free trial regardless.
                 </span>
             </div>
 

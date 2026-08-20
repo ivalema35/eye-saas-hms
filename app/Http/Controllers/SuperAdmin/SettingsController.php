@@ -35,6 +35,7 @@ class SettingsController extends Controller
             'platform_name' => ['required', 'string', 'max:100'],
             'support_email' => EmailRules::required(100),
             'trial_days' => ['required', 'integer', 'min:1', 'max:90'],
+            'gst_rate_india' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'razorpay_key' => ['nullable', 'string', 'max:255'],
             'razorpay_secret' => ['nullable', 'string', 'max:255'],
             'razorpay_webhook_secret' => ['nullable', 'string', 'max:255'],
@@ -63,7 +64,7 @@ class SettingsController extends Controller
             $group = match (true) {
                 str_starts_with($key, 'razorpay_') => 'razorpay',
                 str_starts_with($key, 'mail_') => 'email',
-                in_array($key, ['monthly_price', 'quarterly_discount', 'yearly_discount'], true) => 'pricing',
+                in_array($key, ['monthly_price', 'quarterly_discount', 'yearly_discount', 'gst_rate_india'], true) => 'pricing',
                 default => 'general',
             };
 

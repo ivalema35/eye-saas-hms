@@ -66,7 +66,7 @@ class LoginController extends Controller
                 $request->hitRateLimiter();
 
                 return back()
-                    ->withErrors(['email' => 'Your hospital registration is waiting for SuperAdmin approval. You can login after it is accepted.'])
+                    ->withErrors(['email' => 'Your hospital registration is waiting for Eyenosis approval. You can login after it is accepted.'])
                     ->withInput(['email' => $login]);
             }
 
@@ -81,7 +81,7 @@ class LoginController extends Controller
             $tenant->markExpiredIfNeeded();
             $tenant->refresh();
 
-            if (! $tenant->hasAccess()) {
+            if (!$tenant->hasAccess()) {
                 $request->hitRateLimiter();
 
                 return back()

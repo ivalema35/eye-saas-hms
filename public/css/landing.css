@@ -1915,6 +1915,11 @@ body {
     color: #12263a;
     margin-bottom: .4rem;
 }
+.reg-form-card .hms-required,
+.reg-form-head .hms-required {
+    color: #DC2626;
+    font-weight: 800;
+}
 .reg-form-card .hms-input,
 .reg-form-card .hms-select {
     width: 100%;

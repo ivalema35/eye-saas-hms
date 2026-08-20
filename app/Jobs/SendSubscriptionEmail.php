@@ -52,16 +52,32 @@ class SendSubscriptionEmail implements ShouldQueue
             return;
         }
 
-        Mail::to($email)->send(new SubscriptionMail($this->tenant, $this->emailType));
+        try {
+            Mail::to($email)->send(new SubscriptionMail($this->tenant, $this->emailType));
 
-        PlatformNotification::create([
-            'tenant_id' => $this->tenant->id,
-            'type' => $this->emailType,
-            'subject' => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
-            'recipient_email' => $email,
-            'status' => 'sent',
-            'sent_at' => now(),
-        ]);
+            PlatformNotification::create([
+                'tenant_id' => $this->tenant->id,
+                'type' => $this->emailType,
+                'subject' => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
+                'recipient_email' => $email,
+                'status' => 'sent',
+                'sent_at' => now(),
+            ]);
+        } catch (\Throwable $exception) {
+            Log::warning(
+                "SendSubscriptionEmail FAILED [{$this->emailType}] tenant #{$this->tenant->id}: "
+                .$exception->getMessage()
+            );
+
+            PlatformNotification::create([
+                'tenant_id' => $this->tenant->id,
+                'type' => $this->emailType,
+                'subject' => (new SubscriptionMail($this->tenant, $this->emailType))->envelope()->subject,
+                'recipient_email' => $email,
+                'status' => 'failed',
+                'error_message' => $exception->getMessage(),
+            ]);
+        }
     }
 
     public function failed(\Throwable $exception): void
