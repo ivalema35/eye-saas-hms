@@ -809,7 +809,8 @@ panel design. --}}
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
                         <button type="button" class="hms-btn hms-btn-outline hms-btn-sm"
                             data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-plus-lg"></i>
+                        <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1b4f72;"><i
+                                class="bi bi-plus-lg"></i>
                             Add</button>
                     </div>
                 </form>
@@ -1242,6 +1243,10 @@ panel design. --}}
                                 Blue = required &nbsp;|&nbsp; district = optional &nbsp;|&nbsp;
                                 Hierarchy auto-resolved. Duplicates skipped. All names auto Title-Cased.
                             </p>
+                            <p style="margin:.75rem 0 0;font-size:.85rem">
+                                <a href="{{ route('superadmin.locations.import.sample') }}"><i
+                                        class="bi bi-download"></i> Download a sample file</a>
+                            </p>
                         </div>
                         <label class="hms-label">Select File (.xlsx, .xls, .csv)</label>
                         <input type="file" name="file" class="hms-input" accept=".xlsx,.xls,.csv" required>
@@ -1249,7 +1254,8 @@ panel design. --}}
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
                         <button type="button" class="hms-btn hms-btn-outline hms-btn-sm"
                             data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-upload"></i> Import
+                        <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1b4f72;"><i
+                                class="bi bi-upload"></i> Import
                             Now</button>
                     </div>
                 </form>

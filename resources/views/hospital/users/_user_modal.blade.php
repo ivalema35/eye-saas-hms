@@ -134,6 +134,7 @@
     .user-form-modal .hms-btn-primary {
         background: #1B4F72 !important;
         border-color: #1B4F72 !important;
+        color: #ffffff !important;
         border-radius: 12px;
         font-weight: 900;
         box-shadow: 0 10px 24px rgba(27, 79, 114, .20);

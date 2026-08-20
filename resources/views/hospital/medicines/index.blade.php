@@ -71,6 +71,10 @@ Master design. --}}
                     </li> --}}
                 </ul>
                 <div class="medmaster-tab-actions">
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                        data-bs-target="#importMedicineModal">
+                        <i class="bi bi-file-earmark-arrow-up me-1"></i> CSV Upload
+                    </button>
                     <button type="button" class="btn btn-primary btn-sm med-add-btn" data-bs-toggle="modal"
                         data-bs-target="#medicineModal" onclick="resetMedicineForm()">
                         <i class="bi bi-plus-lg me-1"></i> Add Medicine
@@ -284,6 +288,69 @@ Master design. --}}
                         </button>
                         <button type="submit" class="btn btn-outline-secondary">
                             Save Medicine
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Import Medicines via CSV/Excel --}}
+    <div class="modal fade" id="importMedicineModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-file-earmark-arrow-up me-1" style="color:#1B4F72;"></i> CSV Upload
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ route('hospital.medicines.import', ['slug' => $slug]) }}"
+                    enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body py-3">
+                        <div
+                            style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:8px;padding:1rem;margin-bottom:1.25rem">
+                            <p style="margin:0 0 .5rem;font-weight:700;color:#1D4ED8;font-size:.875rem">
+                                <i class="bi bi-info-circle-fill me-1"></i> Required Excel Format
+                            </p>
+                            <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap">
+                                <code
+                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Name</code>
+                                <code
+                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Type</code>
+                                <code
+                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Dosage</code>
+                                <code
+                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Duration</code>
+                                <code
+                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Qty</code>
+                                <code
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Company</code>
+                                <code
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Composition</code>
+                                <code
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Price</code>
+                            </div>
+                            <p style="margin:.5rem 0 0;font-size:.78rem;color:#6B7280">
+                                Blue = required &nbsp;|&nbsp; gray = optional &nbsp;|&nbsp;
+                                Medicine Type &amp; Dosage must match existing entries (case-insensitive). Duplicate
+                                names are skipped.
+                            </p>
+                            <p style="margin:.75rem 0 0;font-size:.85rem">
+                                <a href="{{ route('hospital.medicines.import.sample', ['slug' => $slug]) }}"><i
+                                        class="bi bi-download"></i> Download a sample file</a>
+                            </p>
+                        </div>
+                        <label class="form-label fw-semibold">Select File (.xlsx, .xls, .csv)</label>
+                        <input type="file" name="file" class="form-control" accept=".xlsx,.xls,.csv" required>
+                    </div>
+                    <div class="modal-footer border-0 gap-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="submit" class="btn btn-outline-secondary">
+                            <i class="bi bi-upload me-1"></i> Import Now
                         </button>
                     </div>
                 </form>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Exports\LocationMasterSampleExport;
 use App\Http\Controllers\Controller;
 use App\Imports\LocationMasterImport;
 use App\Models\Platform\MasterCity;
@@ -468,6 +469,11 @@ class LocationMasterController extends Controller
         Excel::import($import, $request->file('file'));
 
         return back()->with('success', "Import done — {$import->imported} added, {$import->skipped} skipped.");
+    }
+
+    public function downloadSampleLocation()
+    {
+        return Excel::download(new LocationMasterSampleExport(), 'location-master-sample.xlsx');
     }
 
     // ═══════════════════════════════════════════════════

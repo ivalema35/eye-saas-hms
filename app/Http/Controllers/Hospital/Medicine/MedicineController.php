@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Hospital\Medicine;
 
+use App\Exports\HospitalMedicineSampleExport;
 use App\Http\Controllers\Controller;
+use App\Imports\HospitalMedicineImport;
 use App\Models\Hospital\Dosage;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MedicineController extends Controller
 {
@@ -87,5 +90,35 @@ class MedicineController extends Controller
 
         return redirect()->route('hospital.medicines.index', compact('slug'))
             ->with('success', 'Medicine deleted successfully.');
+    }
+
+    public function import(Request $request, string $slug): RedirectResponse
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
+        ]);
+
+        $import = new HospitalMedicineImport();
+        Excel::import($import, $request->file('file'));
+
+        $summary = "Imported {$import->imported}, skipped {$import->skipped}.";
+
+        if (empty($import->errors)) {
+            return redirect()->route('hospital.medicines.index', compact('slug'))
+                ->with('success', $summary);
+        }
+
+        $details = implode(' ', array_slice($import->errors, 0, 5));
+        if (count($import->errors) > 5) {
+            $details .= ' (+' . (count($import->errors) - 5) . ' more)';
+        }
+
+        return redirect()->route('hospital.medicines.index', compact('slug'))
+            ->with($import->imported > 0 ? 'warning' : 'error', "{$summary} {$details}");
+    }
+
+    public function downloadSample()
+    {
+        return Excel::download(new HospitalMedicineSampleExport(), 'medicine-sample.xlsx');
     }
 }

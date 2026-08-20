@@ -406,6 +406,7 @@
 
         .hms-btn.hms-btn-primary {
             background: linear-gradient(135deg, #1B4F72 0%, #2471A3 100%) !important;
+            color: #ffffff !important;
             border: none !important; padding: 0.875rem 2rem !important;
             font-weight: 700 !important; font-size: 0.9rem !important;
             border-radius: 40px !important; transition: all 0.3s ease;
