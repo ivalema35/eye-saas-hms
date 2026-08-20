@@ -41,6 +41,12 @@ used across the rest of the app. --}}
 </div> -->
 
 <style>
+    #modalRx .modal-dialog { max-width: 840px; }
+    #modalRx #rxTable { table-layout: fixed; }
+    #modalRx #rxTable th:nth-child(1),
+    #modalRx #rxTable td:nth-child(1) { width: 210px; max-width: 210px; }
+    #modalRx .medicine-search { width: 100%; }
+
     /* .exam-header-card {
         background: #ffffff;
         border: 1px solid rgba(15, 79, 134, 0.12);
@@ -1837,7 +1843,7 @@ foreach ($masters['advices'] as $_a) {
  
     {{-- MODAL: Medicine --}}
     <div class="modal fade" id="modalRx" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
@@ -1872,7 +1878,7 @@ foreach ($masters['advices'] as $_a) {
                                style="border:1px solid #dde3ea;border-radius:10px;overflow:hidden;">
                             <thead style="background:#f0f4f8;border-bottom:2px solid #1B4F72;">
                                 <tr>
-                                    <th style="font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Medicine Name</th>
+                                    <th style="width:210px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Medicine Name</th>
                                     <th style="width:130px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Dosage</th>
                                     <th style="width:100px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">Days</th>
                                     <th style="width:80px;font-size:12px;color:#1B4F72;font-weight:700;padding:10px 14px;">QTY</th>

@@ -137,7 +137,7 @@ class OtAppointmentController extends Controller
         ]);
 
         return redirect()
-            ->route('hospital.ot.appointments.index', ['slug' => $slug])
+            ->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Appointment booked successfully.');
     }
 

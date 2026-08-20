@@ -14,26 +14,89 @@
     .group-form-modal .modal-header {
         background: linear-gradient(135deg, rgba(235, 245, 251, .96), rgba(255, 255, 255, .94));
         border-bottom: 1px solid rgba(27, 79, 114, .12) !important;
-        padding: 1.25rem 1.5rem !important;
+        padding: .85rem 1.15rem !important;
+    }
+
+    .group-form-modal .modal-title {
+        font-size: 1rem;
+        letter-spacing: .01em;
     }
 
     .group-form-modal .modal-title,
     .group-form-modal .form-label,
     .group-form-modal .group-modal-section-title {
         color: #1B4F72;
-        font-weight: 900;
+        font-weight: 600;
     }
 
     .group-form-modal .modal-body {
-        padding: 1.5rem !important;
-        max-height: calc(100vh - 220px);
+        padding: 1rem 1.15rem 1.1rem !important;
+        max-height: calc(100vh - 200px);
         overflow-y: auto;
     }
 
     .group-form-modal .modal-footer {
         background: linear-gradient(135deg, rgba(235, 245, 251, .72), rgba(255, 255, 255, .94));
         border-top: 1px solid rgba(27, 79, 114, .12) !important;
-        padding: 1.2rem 1.5rem !important;
+        padding: .75rem 1.15rem !important;
+    }
+
+    .group-form-modal .group-modal-meta {
+        display: grid;
+        grid-template-columns: minmax(170px, 1.45fr) minmax(110px, .8fr) minmax(96px, .65fr) minmax(190px, 1.55fr);
+        gap: 8px 12px;
+        align-items: end;
+        margin-bottom: .95rem;
+        padding: .85rem .9rem;
+        border: 1px solid rgba(27, 79, 114, .10);
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(235, 245, 251, .55), rgba(255, 255, 255, .92));
+    }
+
+    .group-form-modal .group-modal-meta .form-label {
+        display: block;
+        margin-bottom: .28rem;
+        font-size: .68rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: rgba(27, 79, 114, .78);
+    }
+
+    .group-form-modal .group-modal-meta .clinical-input,
+    .group-form-modal .group-modal-meta .form-select {
+        height: 36px;
+        padding: .35rem .7rem;
+        font-size: .82rem;
+        border-radius: 10px;
+        font-weight: 500;
+    }
+
+    .group-form-modal .group-modal-meta .select2-container .select2-selection--single {
+        height: 36px !important;
+        border-radius: 10px !important;
+    }
+
+    .group-form-modal .group-modal-meta .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 34px;
+        font-size: .82rem;
+        padding-left: .7rem;
+    }
+
+    .group-form-modal .group-modal-meta .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 34px !important;
+    }
+
+    @media (max-width: 991.98px) {
+        .group-form-modal .group-modal-meta {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .group-form-modal .group-modal-meta {
+            grid-template-columns: 1fr;
+        }
     }
 
     .group-form-modal .btn-close {
@@ -52,7 +115,7 @@
         border-radius: 12px;
         background: rgba(235, 245, 251, .4);
         color: #1B4F72;
-        font-weight: 650;
+        font-weight: 500;
     }
 
     .group-form-modal .clinical-input:focus,
@@ -64,7 +127,7 @@
 
     .group-form-modal .group-modal-table {
         border-collapse: separate;
-        border-spacing: 0 10px;
+        border-spacing: 0 6px;
         min-width: 900px;
     }
 
@@ -72,10 +135,10 @@
         background: #1B4F72 !important;
         color: #fff !important;
         border: 0 !important;
-        padding: .9rem 1rem;
+        padding: .65rem .75rem;
         font-size: .72rem;
         letter-spacing: .08em;
-        font-weight: 900;
+        font-weight: 600;
         text-transform: uppercase;
         white-space: nowrap;
     }
@@ -103,7 +166,7 @@
         background: #fff;
         border-top: 1px solid rgba(27, 79, 114, .10);
         border-bottom: 1px solid rgba(27, 79, 114, .10);
-        padding: .75rem .8rem;
+        padding: .5rem .6rem;
         vertical-align: middle;
     }
 
@@ -126,7 +189,7 @@
         border-radius: 10px !important;
         background: rgba(235,245,251,.35) !important;
         color: #1B4F72 !important;
-        font-weight: 600;
+        font-weight: 500;
         font-size: .85rem;
         padding: .45rem .8rem;
         transition: border-color .15s, box-shadow .15s, background .15s;
@@ -156,7 +219,7 @@
     }
     .group-form-modal .select2-container--default .select2-selection--single .select2-selection__rendered {
         color: #1B4F72 !important;
-        font-weight: 600;
+        font-weight: 500;
         font-size: .85rem;
         padding-left: .8rem;
         line-height: 36px;
@@ -199,7 +262,7 @@
     .group-form-modal .select2-results__option[aria-selected=true] {
         background: rgba(27,79,114,.08) !important;
         color: #1B4F72 !important;
-        font-weight: 700;
+        font-weight: 600;
     }
 
     .group-form-modal .group-modal-table .btn-outline-danger {
@@ -226,7 +289,7 @@
         border-color: rgba(27, 79, 114, .18) !important;
         border-radius: 12px;
         color: #1B4F72 !important;
-        font-weight: 850;
+        font-weight: 600;
     }
 
     .group-form-modal .group-modal-add-row {
@@ -253,7 +316,7 @@
         background: #1B4F72 !important;
         border-color: #1B4F72 !important;
         border-radius: 12px;
-        font-weight: 900;
+        font-weight: 600;
         box-shadow: 0 10px 24px rgba(27, 79, 114, .20);
     }
 </style>
@@ -273,7 +336,7 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
         <div class="modal-content border-0">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="groupFormModalTitle">New Prescription Group</h5>
+                <h5 class="modal-title" id="groupFormModalTitle">New Prescription Group</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -283,25 +346,25 @@
                 <input type="hidden" name="group_id" id="group-id" value="{{ old('group_id') }}">
 
                 <div class="modal-body">
-                    <div class="row mb-3 g-3">
-                        <div class="col-md-5">
-                            <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
+                    <div class="group-modal-meta">
+                        <div>
+                            <label class="form-label" for="group-name">Group Name <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="group-name"
                                    value="{{ old('name') }}"
                                    class="form-control clinical-input @error('name') is-invalid @enderror"
                                    required placeholder="e.g. Cataract Post-Op Standard">
                             @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label fw-medium">Group Code</label>
+                        <div>
+                            <label class="form-label" for="group-code">Group Code</label>
                             <input type="text" name="group_code" id="group-code"
                                    value="{{ old('group_code') }}"
                                    class="form-control clinical-input @error('group_code') is-invalid @enderror"
                                    placeholder="e.g. CAT-001">
                             @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label fw-medium">Select Type <span class="text-danger">*</span></label>
+                        <div>
+                            <label class="form-label" for="usage_scope">Type <span class="text-danger">*</span></label>
                             <select name="usage_scope" id="usage_scope"
                                     class="form-select clinical-input @error('usage_scope') is-invalid @enderror"
                                     required>
@@ -310,16 +373,13 @@
                             </select>
                             @error('usage_scope')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
-                    </div>
-
-                    <div class="row mb-4 g-3">
-                        <div class="col-md-8">
-                            <label class="form-label fw-medium">
-                                <i class="bi bi-clipboard2-pulse me-1"></i> Diagnosis
+                        <div>
+                            <label class="form-label" for="group-diagnosis">
+                                <i class="bi bi-clipboard2-pulse me-1"></i>Diagnosis
                             </label>
                             <select name="diagnosis_id" id="group-diagnosis"
                                     class="form-select clinical-input @error('diagnosis_id') is-invalid @enderror">
-                                <option value="">— Select diagnosis —</option>
+                                <option value="">Search diagnosis...</option>
                                 @foreach($diagnoses as $d)
                                     <option value="{{ $d->id }}">{{ $d->value }}</option>
                                 @endforeach
@@ -328,7 +388,7 @@
                         </div>
                     </div>
 
-                    <h6 class="group-modal-section-title mb-3 pb-2 border-bottom">
+                    <h6 class="group-modal-section-title mb-2 pb-2 border-bottom">
                         <i class="bi bi-list-ul me-1"></i> Medicines in this Group
                     </h6>
 
