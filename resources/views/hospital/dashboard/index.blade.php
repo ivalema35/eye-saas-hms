@@ -2310,6 +2310,14 @@
 .tap-print-btn { display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px; border:1px solid #e2e8f0; color:#64748b; background:#fff; transition:all .15s; text-decoration:none; }
 .tap-print-btn:hover { background:#1B4F72; color:#fff; border-color:#1B4F72; }
 .tap-empty { text-align:center; padding:3rem 1rem; color:#94a3b8; font-size:13.5px; }
+.tap-tabs { display:flex; gap:6px; padding:12px 20px 0; border-bottom:1px solid #edf2f7; }
+.tap-tab-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; font-size:12.5px; font-weight:700; color:#64748b; background:none; border:none; border-bottom:2px solid transparent; cursor:pointer; margin-bottom:-1px; transition:color .15s, border-color .15s; }
+.tap-tab-btn:hover { color:#1B4F72; }
+.tap-tab-btn.tap-tab-active { color:#1B4F72; border-bottom-color:#1B4F72; }
+.tap-tab-n { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; margin-left:2px; border-radius:9px; background:#e2e8f0; color:#475569; font-size:10px; font-weight:800; }
+.tap-tab-btn.tap-tab-active .tap-tab-n { background:#1B4F72; color:#fff; }
+.tap-pane:not(.is-active),
+.tap-pane[hidden] { display:none !important; }
 </style>
 <div class="row g-4 mb-4">
     <div class="col-12">
@@ -2336,9 +2344,63 @@
                 <span class="tap-count" id="today-patients-count">{{ $receptionistTodayPatients->count() }} today</span>
             </div>
 
+            <div class="tap-tabs" id="today-patients-tabs">
+                <button type="button" class="tap-tab-btn tap-tab-active" data-tap-tab="phone">
+                    <i class="bi bi-telephone"></i> Phone <span class="tap-tab-n" data-tap-n="phone">0</span>
+                </button>
+                <button type="button" class="tap-tab-btn" data-tap-tab="walkin">
+                    <i class="bi bi-person-walking"></i> Walk-in <span class="tap-tab-n" data-tap-n="walkin">0</span>
+                </button>
+                <button type="button" class="tap-tab-btn" data-tap-tab="ot">
+                    <i class="bi bi-hospital"></i> OT <span class="tap-tab-n" data-tap-n="ot">0</span>
+                </button>
+            </div>
+
             <div id="today-patients-results">
                 @include('hospital.dashboard.partials.receptionist-today-patients-table')
             </div>
+            <script>
+                (function () {
+                    var tabsWrap = document.getElementById('today-patients-tabs');
+                    var results = document.getElementById('today-patients-results');
+                    if (!tabsWrap || !results) return;
+
+                    window.__todayPatientsTab = window.__todayPatientsTab || 'phone';
+
+                    window.applyTodayPatientsTabFilter = function () {
+                        var tab = window.__todayPatientsTab || 'phone';
+                        results.querySelectorAll('[data-tap-pane]').forEach(function (pane) {
+                            var on = pane.getAttribute('data-tap-pane') === tab;
+                            pane.classList.toggle('is-active', on);
+                            pane.hidden = !on;
+                        });
+                        tabsWrap.querySelectorAll('[data-tap-tab]').forEach(function (btn) {
+                            btn.classList.toggle('tap-tab-active', btn.getAttribute('data-tap-tab') === tab);
+                        });
+                        var marker = results.querySelector('[data-patient-count]');
+                        if (marker) {
+                            ['phone', 'walkin', 'ot'].forEach(function (key) {
+                                var n = marker.getAttribute('data-tap-count-' + key);
+                                var el = tabsWrap.querySelector('[data-tap-n="' + key + '"]');
+                                if (el && n !== null) el.textContent = n;
+                            });
+                        }
+                    };
+
+                    if (!tabsWrap.dataset.tapBound) {
+                        tabsWrap.dataset.tapBound = '1';
+                        tabsWrap.addEventListener('click', function (e) {
+                            var btn = e.target.closest('[data-tap-tab]');
+                            if (!btn) return;
+                            e.preventDefault();
+                            window.__todayPatientsTab = btn.getAttribute('data-tap-tab');
+                            window.applyTodayPatientsTabFilter();
+                        });
+                    }
+
+                    window.applyTodayPatientsTabFilter();
+                })();
+            </script>
         </div>
     </div>
 </div>
@@ -2371,6 +2433,14 @@
             var DEBOUNCE_MS = 500;
             var debounceTimer = null;
             var abortController = null;
+
+            function applyTabFilter() {
+                if (typeof window.applyTodayPatientsTabFilter === 'function') {
+                    window.applyTodayPatientsTabFilter();
+                }
+            }
+
+            applyTabFilter();
 
             function updateCountBadge() {
                 if (!countEl) return;
@@ -2409,6 +2479,7 @@
 
                     results.innerHTML = await res.text();
                     updateCountBadge();
+                    applyTabFilter();
 
                     if (pushToHistory) {
                         history.pushState({ todayPatients: true }, '', displayUrl + window.location.hash);

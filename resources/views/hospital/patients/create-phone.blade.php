@@ -9,8 +9,8 @@
 
     {{-- Toast notification --}}
     <div id="contactToast" style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
-                                         background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
-                                         box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
+                                             background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
+                                             box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
         <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
         <span id="contactToastMsg"></span>
     </div>
@@ -169,7 +169,7 @@
                     {{-- 16, 17 Action + MRD Hidden --}}
                     <div
                         style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
-                        <button type="submit" class="hms-btn hms-btn-primary">
+                        <button type="submit" class="hms-btn hms-btn-primary" style="color: #ffffff;">
                             <i class="bi bi-check-circle-fill"></i> Register Phone Appointment
                         </button>
                     </div>
@@ -362,6 +362,7 @@
         .patient-create-actions .hms-btn-primary {
             background: var(--pc-primary) !important;
             border-color: var(--pc-primary) !important;
+            color: #ffffff !important;
             box-shadow: 0 14px 26px rgba(27, 79, 114, .16);
         }
 
@@ -397,10 +398,10 @@
 
     <style>
         /* ============================================================
-                                   PHONE APPOINTMENT FORM - ATTRACTIVE DESIGN
-                                   Color Theme: #1B4F72 | #2980B9
-                                   No Conflicts - Uses specific selectors with parent wrapper
-                                   ============================================================ */
+                                       PHONE APPOINTMENT FORM - ATTRACTIVE DESIGN
+                                       Color Theme: #1B4F72 | #2980B9
+                                       No Conflicts - Uses specific selectors with parent wrapper
+                                       ============================================================ */
 
         /* Main card enhancement */
         .hms-card {

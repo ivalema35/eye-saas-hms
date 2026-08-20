@@ -165,6 +165,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // Location Master — index (all 4 tabs)
         Route::get('/locations', [LocationMasterController::class, 'index'])->name('locations.index');
         Route::post('/locations/import', [LocationMasterController::class, 'import'])->name('locations.import');
+        Route::get('/locations/import/sample', [LocationMasterController::class, 'downloadSampleLocation'])->name('locations.import.sample');
 
         // AJAX cascade dropdowns
         Route::get('/locations/ajax/states', [LocationMasterController::class, 'ajaxStates'])->name('locations.ajax.states');

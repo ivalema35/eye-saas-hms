@@ -469,13 +469,13 @@ svg {
 
 .hms-btn-primary {
     background: #ffffff;
-    color: #ffffff;
+    color: var(--hms-primary);
     border-color: var(--hms-primary);
 }
 .hms-btn-primary:hover {
     background: #ffffff;
     border-color: var(--hms-primary-dark);
-    color: #ffffff;
+    color: var(--hms-primary);
     text-decoration: none;
     box-shadow: 0 4px 14px rgba(27, 79, 114, 0.35);
 }

@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                                               now runs full height and the search/profile bar lives
-                                                               inside the scrollable content column (design refresh). */
+                                                                   now runs full height and the search/profile bar lives
+                                                                   inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -735,7 +735,7 @@
         .sidebar-brand-mark .sidebar-logo {
             height: 60px;
             width: auto;
-            max-width: 100px;
+            max-width: 165px;
             object-fit: contain;
             display: block;
         }
@@ -1082,6 +1082,62 @@
         })();
     </script>
 
+    {{-- Sidebar toggle & collapsible groups — kept early (before the jQuery/Select2/
+    DataTables/SweetAlert2 CDN <script> tags further down) since this is plain
+    vanilla JS with zero dependency on them. If any of those CDN scripts are slow
+    or blocked, they hold up every later inline script on the page; this one used
+    to sit after them, so the collapse button could silently stop responding
+    whenever that happened. --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var sidebar = document.getElementById('hmsSidebar');
+            var backdrop = document.getElementById('hmsSidebarBackdrop');
+            var toggle = document.getElementById('hmsSidebarToggle');
+            var collapseBtn = document.getElementById('hmsSidebarCollapseBtn');
+
+            // Desktop collapse / expand (mini icon-rail)
+            if (collapseBtn) {
+                collapseBtn.addEventListener('click', function () {
+                    var collapsed = document.body.classList.toggle('hms-sidebar-collapsed');
+                    try {
+                        localStorage.setItem('hms_sidebar_collapsed', collapsed ? '1' : '0');
+                    } catch (e) { }
+                });
+            }
+
+            // Mobile sidebar open / close
+            if (toggle) {
+                toggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('open');
+                    backdrop.classList.toggle('show');
+                });
+            }
+            if (backdrop) {
+                backdrop.addEventListener('click', function () {
+                    sidebar.classList.remove('open');
+                    backdrop.classList.remove('show');
+                });
+            }
+
+            // Collapsible nav groups
+            document.querySelectorAll('.hms-nav-group-toggle').forEach(function (el) {
+                var target = document.getElementById(el.getAttribute('data-target'));
+                if (!target) return;
+
+                // Auto-collapse groups that don't contain the active link
+                if (!target.querySelector('.hms-nav-item.active')) {
+                    target.classList.add('collapsed');
+                    el.classList.add('collapsed');
+                }
+
+                el.addEventListener('click', function () {
+                    target.classList.toggle('collapsed');
+                    el.classList.toggle('collapsed');
+                });
+            });
+        });
+    </script>
+
     {{-- Grace Period Warning Banner removed --}}
 
     {{-- ================================================
@@ -1137,16 +1193,16 @@
 
                 {{-- Basic Master Dropdown --}}
                 <!-- <div class="dropdown">
-                                                                                                                                                <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                                                                                                    <i class="bi bi-list-task"></i> Basic Master
-                                                                                                                                                </a>
-                                                                                                                                                <ul class="dropdown-menu">
-                                                                                                                                                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                                                                                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                                                                                                </ul>
-                                                                                                                                            </div> -->
+                                                                                                                                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+                                                                                                                                                        <i class="bi bi-list-task"></i> Basic Master
+                                                                                                                                                    </a>
+                                                                                                                                                    <ul class="dropdown-menu">
+                                                                                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
+                                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
+                                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
+                                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
+                                                                                                                                                    </ul>
+                                                                                                                                                </div> -->
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
@@ -2175,57 +2231,6 @@
 
     {{-- SweetAlert2 --}}
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    {{-- Sidebar toggle & collapsible groups --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var sidebar = document.getElementById('hmsSidebar');
-            var backdrop = document.getElementById('hmsSidebarBackdrop');
-            var toggle = document.getElementById('hmsSidebarToggle');
-            var collapseBtn = document.getElementById('hmsSidebarCollapseBtn');
-
-            // Desktop collapse / expand (mini icon-rail)
-            if (collapseBtn) {
-                collapseBtn.addEventListener('click', function () {
-                    var collapsed = document.body.classList.toggle('hms-sidebar-collapsed');
-                    try {
-                        localStorage.setItem('hms_sidebar_collapsed', collapsed ? '1' : '0');
-                    } catch (e) { }
-                });
-            }
-
-            // Mobile sidebar open / close
-            if (toggle) {
-                toggle.addEventListener('click', function () {
-                    sidebar.classList.toggle('open');
-                    backdrop.classList.toggle('show');
-                });
-            }
-            if (backdrop) {
-                backdrop.addEventListener('click', function () {
-                    sidebar.classList.remove('open');
-                    backdrop.classList.remove('show');
-                });
-            }
-
-            // Collapsible nav groups
-            document.querySelectorAll('.hms-nav-group-toggle').forEach(function (el) {
-                var target = document.getElementById(el.getAttribute('data-target'));
-                if (!target) return;
-
-                // Auto-collapse groups that don't contain the active link
-                if (!target.querySelector('.hms-nav-item.active')) {
-                    target.classList.add('collapsed');
-                    el.classList.add('collapsed');
-                }
-
-                el.addEventListener('click', function () {
-                    target.classList.toggle('collapsed');
-                    el.classList.toggle('collapsed');
-                });
-            });
-        });
-    </script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

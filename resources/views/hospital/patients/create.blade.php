@@ -10,8 +10,8 @@
     {{-- Toast notification --}}
     <div id="contactToast"
         style="display:none;position:fixed;top:1.25rem;right:1.25rem;z-index:9999;
-                                                                                    background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
-                                                                                    box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
+                                                                                        background:#1B4F72;color:#fff;padding:.75rem 1.25rem;border-radius:.5rem;
+                                                                                        box-shadow:0 4px 12px rgba(0,0,0,.2);font-size:.9rem;max-width:320px">
         <i class="fa-solid fa-circle-check" style="margin-right:.4rem"></i>
         <span id="contactToastMsg"></span>
     </div>
@@ -40,18 +40,23 @@
 
                 {{-- OT Appointment Search — Reception check-in (OT Workflow Upgrade Phase 2) --}}
                 <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
-                    <div class="alert alert-info border-0 mb-3" style="background:rgba(27,79,114,.06);color:#1B4F72;border-radius:12px;">
+                    <div class="alert alert-info border-0 mb-3"
+                        style="background:rgba(27,79,114,.06);color:#1B4F72;border-radius:12px;">
                         <i class="bi bi-hospital me-1"></i>
                         <strong>OT walk-in / pre-booked patient?</strong>
-                        Search the OT appointment below first — form will auto-fill and today’s OPD visit will be linked to that appointment.
+                        Search the OT appointment below first — form will auto-fill and today’s OPD visit will be linked to
+                        that appointment.
                     </div>
                     <div class="form-group position-relative" style="max-width:480px">
-                        <label class="form-label"><i class="bi bi-search me-1"></i> Search OT Appointment (Name / Mobile / APT-000123)</label>
-                        <input type="text" id="appointmentSearch" class="form-control hms-input" placeholder="Type name, mobile, or APT number for OT check-in...">
+                        <label class="form-label"><i class="bi bi-search me-1"></i> Search OT Appointment (Name / Mobile /
+                            APT-000123)</label>
+                        <input type="text" id="appointmentSearch" class="form-control hms-input"
+                            placeholder="Type name, mobile, or APT number for OT check-in...">
                         <div id="appointmentSuggestions" class="position-absolute w-100 bg-white shadow-lg rounded d-none"
-                             style="z-index:1050; border:1px solid #E2E8F0; top:100%; margin-top:4px"></div>
+                            style="z-index:1050; border:1px solid #E2E8F0; top:100%; margin-top:4px"></div>
                         <div id="appointmentLinkedNote" class="small text-success mt-1 d-none">
-                            <i class="bi bi-check2-circle"></i> Linked to OT appointment <strong id="appointmentLinkedNumber"></strong> — continue with OPD fee / registration below.
+                            <i class="bi bi-check2-circle"></i> Linked to OT appointment <strong
+                                id="appointmentLinkedNumber"></strong> — continue with OPD fee / registration below.
                         </div>
                     </div>
                 </div>
@@ -215,7 +220,7 @@
                     {{-- 18. ADD Button --}}
                     <div
                         style="display:flex;gap:0.875rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid #E2E8F0">
-                        <button type="submit" class="hms-btn hms-btn-primary">
+                        <button type="submit" class="hms-btn hms-btn-primary" style="color: #ffffff;">
                             <i class="bi bi-check-circle-fill"></i> Register Patient
                         </button>
                     </div>
@@ -446,9 +451,9 @@
 
             // Prefill from dashboard "Walk-In" button (?ot_appointment_id=…)
             @if(!empty($prefillOtAppointment))
-            foundAppointmentsList = [@json($prefillOtAppointment)];
-            // Wait for Select2 init so doctor / city / referrer bind correctly
-            setTimeout(function () { fillSelectedAppointment(0); }, 150);
+                foundAppointmentsList = [@json($prefillOtAppointment)];
+                // Wait for Select2 init so doctor / city / referrer bind correctly
+                setTimeout(function () { fillSelectedAppointment(0); }, 150);
             @endif
 
             document.addEventListener('click', function (e) {
@@ -750,6 +755,7 @@
         .patient-create-actions .hms-btn-primary {
             background: var(--pc-primary) !important;
             border-color: var(--pc-primary) !important;
+            color: #ffffff !important;
             box-shadow: 0 14px 26px rgba(27, 79, 114, .16);
         }
 
@@ -785,10 +791,10 @@
 
     <style>
         /* ============================================================
-                            PATIENT REGISTRATION - ATTRACTIVE DESIGN
-                            Color Theme: #1B4F72 (Deep Blue) | #2980B9 (Lighter Blue)
-                            No conflicts with existing styles - uses specific selectors
-                            ============================================================ */
+                                PATIENT REGISTRATION - ATTRACTIVE DESIGN
+                                Color Theme: #1B4F72 (Deep Blue) | #2980B9 (Lighter Blue)
+                                No conflicts with existing styles - uses specific selectors
+                                ============================================================ */
 
         /* Main container enhancement */
         .hms-card.patient-registration-card {

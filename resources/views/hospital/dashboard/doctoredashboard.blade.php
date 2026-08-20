@@ -486,22 +486,19 @@
         .doc-overview-panel {
             display: flex;
             align-items: stretch;
-            gap: 20px;
-            background: linear-gradient(135deg, #ebf5fbeb, #f3f9fdeb);
-            border: 1px solid rgba(27, 79, 114, 0.08);
+            gap: 18px;
+            background: #eef4f9;
+            border: 1px solid rgba(15, 79, 134, 0.1);
             border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 6px 18px rgba(11, 35, 50, 0.05);
+            padding: 14px;
         }
 
-        .doc-overview-featured {
-            flex: 0 0 auto;
-        }
+        .doc-overview-featured { flex: 0 0 auto; }
 
         .doc-overview-divider {
             width: 1px;
             align-self: stretch;
-            background: linear-gradient(180deg, transparent, rgba(27, 79, 114, .16), transparent);
+            background: linear-gradient(180deg, transparent, rgba(15, 79, 134, .16), transparent);
         }
 
         .doc-overview-list {
@@ -510,200 +507,179 @@
         }
 
         @media(max-width:768px) {
-            .doc-overview-panel {
-                flex-direction: column;
-            }
-
-            .doc-overview-divider {
-                display: none;
-            }
-
-            .doc-main-card {
-                max-width: 100%;
-            }
+            .doc-overview-panel { flex-direction: column; }
+            .doc-overview-divider { display: none; }
+            .doc-main-card { max-width: 100%; width: 100%; }
         }
 
         .doc-main-card {
-            background: #ffffff;
-            border: 2px solid #cde5f5;
-            border-radius: 12px;
-            padding: 15px 8px;
-            width: 220px;
-            max-width: 220px;
-            box-shadow: 0 4px 14px rgba(11, 35, 50, 0.07);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #fff;
+            border: 1px solid #1c1c1c;
+            outline: 2px solid #0f4f86;
+            outline-offset: 1px;
+            border-radius: 8px;
+            padding: 8px;
+            width: 228px;
+            max-width: 228px;
+            overflow: visible;
+            box-shadow: none;
         }
 
-        .doc-main-identity {
+        .doc-ref-bar {
             display: flex;
             align-items: center;
-            gap: 7px;
-            margin: 0 0 6px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid #eef3f8;
+            justify-content: center;
+            gap: 0;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .02em;
+            line-height: 1.2;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .doc-ref-bar span {
+            flex: 1;
+            text-align: center;
+            padding: 7px 4px;
+        }
+
+        .doc-ref-bar .doc-ref-div {
+            width: 1px;
+            align-self: stretch;
+            background: rgba(255, 255, 255, .35);
+            flex: 0 0 1px;
+            padding: 0;
+        }
+
+        .doc-ref-bar--top {
+            background: #0f4f86;
+        }
+
+        .doc-ref-bar--opd {
+            background: #0a2f52;
+        }
+
+        .doc-ref-bar--ot {
+            background: #0d9488;
+        }
+
+        .doc-ref-mid {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 8px;
+            background: #fff;
         }
 
         .doc-main-card .doc-avatar {
-            width: 28px;
-            height: 28px;
-            font-size: 12px;
-            background: #1B4F72;
+            width: 42px;
+            height: 42px;
+            font-size: 18px;
+            background: #0d9488;
             color: #fff;
+            border-radius: 50%;
         }
 
         .doc-main-card .doc-name {
-            font-size: 12px;
-            margin-bottom: 1px;
-            line-height: 1.15;
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f4f86;
+            margin-bottom: 2px;
         }
 
         .doc-you-pill {
             display: inline-flex;
-            align-items: center;
-            font-size: 7px;
+            font-size: 8px;
             font-weight: 800;
-            letter-spacing: .05em;
+            letter-spacing: .06em;
             text-transform: uppercase;
-            background: #1B4F72;
+            background: #0f4f86;
             color: #fff;
-            padding: 1px 6px;
+            padding: 1px 7px;
             border-radius: 999px;
-        }
-
-        .dm-stat-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            margin-bottom: 4px;
-        }
-
-        .dm-stat-group:last-child {
-            margin-bottom: 0;
-        }
-
-        .dm-stat-head {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 20px;
-            height: 20px;
-            flex-shrink: 0;
-            font-size: 0;
-            margin: 0;
-            letter-spacing: 0;
-            text-transform: none;
-        }
-
-        .dm-stat-head i {
-            font-size: 11px;
-        }
-
-        .dm-stat-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 3px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .dm-stat {
-            display: flex;
-            flex-direction: row;
-            align-items: baseline;
-            justify-content: center;
-            gap: 2px;
-            padding: 3px 2px;
-            border-radius: 6px;
-            min-width: 0;
-        }
-
-        .dm-stat-n {
-            font-size: 11px;
-            font-weight: 800;
-            line-height: 1;
-            letter-spacing: -.03em;
-        }
-
-        .dm-stat-k {
-            font-size: 7px;
-            font-weight: 700;
-            letter-spacing: .03em;
-            text-transform: uppercase;
-            margin-top: 0;
-            opacity: .85;
-        }
-
-        .dm-stat-group--hosp .dm-stat-head { color: #0d9488; }
-        .dm-stat-group--hosp .dm-stat {
-            background: rgba(13, 148, 136, 0.1);
-            color: #0d9488;
-        }
-        .dm-stat-group--opd .dm-stat-head { color: #0f4f86; }
-        .dm-stat-group--opd .dm-stat {
-            background: rgba(15, 79, 134, 0.1);
-            color: #0f4f86;
-        }
-        .dm-stat-group--ot .dm-stat-head { color: #7b2cbf; }
-        .dm-stat-group--ot .dm-stat {
-            background: rgba(123, 44, 191, 0.1);
-            color: #7b2cbf;
-        }
-
-        .dm-sep {
-            opacity: .55;
-            font-weight: 400;
-        }
-
-        .dm-bar-opd {
-            background: linear-gradient(135deg, #1B4F72, #14395a);
-        }
-
-        .dm-bar-ot {
-            background: linear-gradient(135deg, #7b2cbf, #631f9e);
         }
 
         .doctor-list-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
             gap: 10px;
         }
 
         .doc-list-card {
             display: block;
-            background: #ffffff;
-            border: 2px solid #e2e8f0;
+            background: #fff;
+            border: 1px solid rgba(15, 79, 134, 0.1);
             border-radius: 10px;
-            padding: 9px;
+            padding: 10px 10px 9px;
             text-decoration: none;
             color: inherit;
-            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+            box-shadow: 0 2px 8px rgba(15, 79, 134, 0.05);
+            transition: transform .18s ease, border-color .18s ease;
         }
 
         .doc-list-card:hover {
             transform: translateY(-2px);
-            border-color: #1B4F72;
-            background: #f5fafd;
-            box-shadow: 0 8px 15px rgba(27, 79, 114, .08);
+            border-color: #0f4f86;
         }
 
         .doc-list-card.doc-selected {
-            border: 2px solid #1B4F72 !important;
-            background: #ddeef9 !important;
+            border-color: #0f4f86 !important;
         }
 
-        .dm-bar-sm {
+        .doc-list-name {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 4px;
-            padding: 3px 4px;
-            font-size: 9px;
-            font-weight: 700;
-            color: #fff;
+            gap: 6px;
+            margin-bottom: 8px;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #0f4f86;
+        }
+
+        .doc-list-name i {
+            color: #0d9488;
+            font-size: 15px;
+        }
+
+        .doc-ref-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .doc-ref-btns + .doc-ref-btns {
             margin-top: 5px;
         }
 
-        .dm-bar-sm .dm-sep {
-            opacity: .6;
+        .doc-ref-btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            background: #0a2f52;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 4px;
+            border-radius: 6px;
+        }
+
+        .doc-ref-btn i {
+            font-size: 10px;
+            opacity: .9;
+        }
+
+        .doc-ref-btns--ot .doc-ref-btn {
+            background: #0d9488;
+        }
+
+        .doc-list-card.doc-selected {
+            border-color: #0f4f86 !important;
         }
 
         .doctor-list-empty {
@@ -735,7 +711,7 @@
     <div class="doctor-page-wrap">
 
         @php
-            $drIndexLabel = $drIndexLabel ?? 'DR Index No';
+            $drIndexLabel = $drIndexLabel ?? 'No';
             $waitStatusLabel = $waitStatusLabel ?? 'Wait Status';
             $wGreen = (int) hospital_setting('wait_green_max', 30);
             $wOrange = (int) hospital_setting('wait_orange_max', 60);
@@ -777,9 +753,16 @@
             {{-- Featured card: whichever doctor's dashboard is currently open --}}
             <div class="doc-overview-featured">
                 <div class="doc-main-card">
-                    <div class="doc-main-identity">
+                    <div class="doc-ref-bar doc-ref-bar--top" title="Hospital today">
+                        <span>C: {{ $todayPatients ?? 0 }}</span>
+                        <span class="doc-ref-div"></span>
+                        <span>PC: {{ $todayPrimary ?? 0 }}</span>
+                        <span class="doc-ref-div"></span>
+                        <span>SC: {{ $todaySecondary ?? 0 }}</span>
+                    </div>
+                    <div class="doc-ref-mid">
                         <div class="doc-avatar">
-                            {{ substr($doctorName ?? 'D', 0, 1) }}
+                            <i class="bi bi-person-badge"></i>
                         </div>
                         <div>
                             <div class="doc-name">{{ $doctorName ?? 'Doctor' }}</div>
@@ -788,37 +771,24 @@
                             @else
                                 <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="text-decoration-none"
                                     style="font-size:10px;font-weight:700;color:#0f4f86;">
-                                    &larr; Back to my dashboard
+                                    &larr; Back
                                 </a>
                             @endif
                         </div>
                     </div>
-
-                    <div class="dm-stat-group dm-stat-group--hosp">
-                        <div class="dm-stat-head" title="Hospital today"><i class="bi bi-hospital"></i></div>
-                        <div class="dm-stat-row">
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $todayPatients ?? 0 }}</span><span class="dm-stat-k">TP</span></div>
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $todayPrimary ?? 0 }}</span><span class="dm-stat-k">PC</span></div>
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $todaySecondary ?? 0 }}</span><span class="dm-stat-k">SP</span></div>
-                        </div>
+                    <div class="doc-ref-bar doc-ref-bar--opd" title="My OPD">
+                        <span>Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
+                        <span class="doc-ref-div"></span>
+                        <span>P: {{ $doctorPrimaryDone ?? 0 }}</span>
+                        <span class="doc-ref-div"></span>
+                        <span>S: {{ $doctorSecondaryDone ?? 0 }}</span>
                     </div>
-
-                    <div class="dm-stat-group dm-stat-group--opd">
-                        <div class="dm-stat-head" title="My patients"><i class="bi bi-clipboard2-pulse"></i></div>
-                        <div class="dm-stat-row">
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $doctorAssignedPatients ?? 0 }}</span><span class="dm-stat-k">TP</span></div>
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $doctorPrimaryDone ?? 0 }}</span><span class="dm-stat-k">PC</span></div>
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $doctorSecondaryDone ?? 0 }}</span><span class="dm-stat-k">SP</span></div>
-                        </div>
-                    </div>
-
-                    <div class="dm-stat-group dm-stat-group--ot">
-                        <div class="dm-stat-head" title="OT"><i class="bi bi-scissors"></i></div>
-                        <div class="dm-stat-row">
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $activeOtStats->ot_total ?? 0 }}</span><span class="dm-stat-k">OT</span></div>
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $activeOtStats->ot_pending ?? 0 }}</span><span class="dm-stat-k">OP</span></div>
-                            <div class="dm-stat"><span class="dm-stat-n">{{ $activeOtStats->ot_complete ?? 0 }}</span><span class="dm-stat-k">OC</span></div>
-                        </div>
+                    <div class="doc-ref-bar doc-ref-bar--ot" title="OT">
+                        <span>OT: {{ $activeOtStats->ot_total ?? 0 }}</span>
+                        <span class="doc-ref-div"></span>
+                        <span>OP: {{ $activeOtStats->ot_pending ?? 0 }}</span>
+                        <span class="doc-ref-div"></span>
+                        <span>OC: {{ $activeOtStats->ot_complete ?? 0 }}</span>
                     </div>
                 </div>
             </div>
@@ -843,31 +813,19 @@
                             $docOt = $otStatsById->get($doc->id);
                         @endphp
                         <a href="{{ $cardUrl }}" class="doc-list-card">
-                            <div class="d-flex align-items-center gap-2 mb-1">
-                                <div class="doc-avatar" style="width:32px;height:32px;font-size:13px;">
-                                    {{ substr($doc->name, 0, 1) }}
-                                </div>
-                                <div class="doc-name" style="font-size:12.5px;">
-                                    {{ $doc->name }}
-                                    @if($isSelf)
-                                        <span
-                                            style="font-size:8px;font-weight:700;background:#1B4F72;color:#fff;padding:1px 6px;border-radius:20px;margin-left:4px;">You</span>
-                                    @endif
-                                </div>
+                            <div class="doc-list-name">
+                                <i class="bi bi-person-badge"></i>
+                                {{ $doc->name }}
                             </div>
-                            <div class="dm-bar-sm dm-bar-opd">
-                                <span>TP {{ $doc->assigned_today ?? 0 }}</span>
-                                <span class="dm-sep">|</span>
-                                <span>PC {{ $doc->primary_count ?? 0 }}</span>
-                                <span class="dm-sep">|</span>
-                                <span>SP {{ $doc->secondary_count ?? 0 }}</span>
+                            <div class="doc-ref-btns">
+                                <span class="doc-ref-btn" title="Patients"><i class="bi bi-people-fill"></i>{{ $doc->assigned_today ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Primary"><i class="bi bi-clipboard2-pulse"></i>{{ $doc->primary_count ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Secondary"><i class="bi bi-display"></i>{{ $doc->secondary_count ?? 0 }}</span>
                             </div>
-                            <div class="dm-bar-sm dm-bar-ot">
-                                <span>OT {{ $docOt->ot_total ?? 0 }}</span>
-                                <span class="dm-sep">|</span>
-                                <span>OP {{ $docOt->ot_pending ?? 0 }}</span>
-                                <span class="dm-sep">|</span>
-                                <span>OC {{ $docOt->ot_complete ?? 0 }}</span>
+                            <div class="doc-ref-btns doc-ref-btns--ot">
+                                <span class="doc-ref-btn" title="OT"><i class="bi bi-scissors"></i>{{ $docOt->ot_total ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Pending"><i class="bi bi-hourglass-split"></i>{{ $docOt->ot_pending ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Complete"><i class="bi bi-check2-circle"></i>{{ $docOt->ot_complete ?? 0 }}</span>
                             </div>
                         </a>
                     @empty
@@ -921,8 +879,8 @@
                                 style="font-size: 13.5px; border-color: #e2e8f0;">
                                 <thead class="table-light text-secondary">
                                     <tr>
-                                        <th>{{ $drIndexLabel }}</th>
-                                        <th class="text-start">Patient Name</th>
+                                        <th style="width:80px;">{{ $drIndexLabel }}</th>
+                                        <th style="width:240px;">Patient Name</th>
                                         <th>Gender</th>
                                         <th>Age</th>
                                         <th>City</th>
@@ -1017,8 +975,8 @@
                                 style="font-size: 13.5px; border-color: #e2e8f0;">
                                 <thead class="table-light text-secondary">
                                     <tr>
-                                        <th>{{ $drIndexLabel }}</th>
-                                        <th class="text-start">Patient Name</th>
+                                        <th style="width:80px;">{{ $drIndexLabel }}</th>
+                                        <th style="width:240px;">Patient Name</th>
                                         <th>Gender</th>
                                         <th>Age</th>
                                         <th>City</th>
