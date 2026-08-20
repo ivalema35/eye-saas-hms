@@ -482,14 +482,33 @@
             }
 
             .hms-content-topbar {
-                flex-wrap: nowrap;
+                flex-wrap: wrap;
                 gap: .65rem;
-                overflow: hidden;
+                overflow: visible;
             }
 
             .hms-content-topbar-right {
                 gap: .5rem;
                 flex-shrink: 0;
+                width: 100%;
+                order: 3;
+                justify-content: space-between;
+                margin-left: 0;
+            }
+
+            .reception-register-actions {
+                margin-left: 0;
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            .reception-register-btn {
+                padding: .4rem .55rem;
+                font-size: .75rem;
+            }
+
+            .reception-register-btn span {
+                display: none;
             }
 
             .hms-main {
@@ -579,8 +598,10 @@
             align-items: center;
             gap: .5rem;
             margin-left: .65rem;
-            margin-top: .85rem;
-            align-self: flex-end;
+            margin-top: 0;
+            align-self: center;
+            flex-wrap: wrap;
+            max-width: 100%;
         }
 
         .reception-register-btn {
@@ -598,6 +619,8 @@
             text-decoration: none;
             line-height: 1;
             transition: background 160ms ease, transform 160ms ease;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .reception-register-btn i,
@@ -1072,19 +1095,68 @@
             }
 
             .black-menu-bar {
-                background: #1a1a1a;
+                background: #1B4F72;
                 width: 100%;
                 padding: 10px 20px;
                 display: flex;
                 gap: 20px;
                 color: white;
+                align-items: center;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
             }
 
-            .black-menu-bar a {
+            .black-menu-bar a,
+            .black-menu-bar .dropdown > a {
                 color: white;
                 text-decoration: none;
+                white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: .4rem;
+                flex-shrink: 0;
+                font-size: .9rem;
+                font-weight: 600;
             }
 
+            .black-menu-bar .dropdown-toggle::after {
+                margin-left: .35rem;
+            }
+
+            @media (max-width: 768px) {
+                .hms-navbar {
+                    padding: 8px 12px !important;
+                }
+
+                .top-header {
+                    margin-bottom: 8px;
+                    gap: .75rem;
+                }
+
+                .top-header .fs-4 {
+                    font-size: 1rem !important;
+                    max-width: 42vw;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .top-header img {
+                    height: 32px !important;
+                    margin-right: 8px !important;
+                }
+
+                .top-header .user-info {
+                    display: none !important;
+                }
+
+                .black-menu-bar {
+                    padding: 8px 12px;
+                    gap: 14px;
+                }
+            }
         @endif
         /* Reduce-motion support */
         @media (prefers-reduced-motion: reduce) {
@@ -1268,30 +1340,17 @@
                     </ul>
                 </div>
             </div>
-            <div class="black-menu-bar d-flex align-items-center"
-                style="gap: 25px; padding: 10px 20px; background: #1b4f72; color: white;">
+            <div class="black-menu-bar d-flex align-items-center doctor-black-menu">
 
                 {{-- Dashboard --}}
                 <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
-                    class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> Dashboards</a>
-
-                {{-- Basic Master Dropdown --}}
-                <!-- <div class="dropdown">
-                                                                                                                                                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
-                                                                                                                                                        <i class="bi bi-list-task"></i> Basic Master
-                                                                                                                                                    </a>
-                                                                                                                                                    <ul class="dropdown-menu">
-                                                                                                                                                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/cases') }}">Case Type</a></li>
-                                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/locations') }}">Location</a></li>
-                                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/referrers') }}">Refered By</a></li>
-                                                                                                                                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/basic/durations') }}">Duration</a></li>
-                                                                                                                                                    </ul>
-                                                                                                                                                </div> -->
+                    class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> <span>Dashboards</span></a>
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
-                    <a href="#" class="text-white text-decoration-none dropdown-toggle">
-                        <i class="bi bi-info-circle-fill"></i> Diagnosis Master
+                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="bi bi-info-circle-fill"></i> <span>Diagnosis Master</span>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a>
@@ -1332,8 +1391,9 @@
                 </div>
 
                 <div class="dropdown">
-                    <a href="#" class="text-white text-decoration-none dropdown-toggle">
-                        <i class="bi bi-capsule"></i> Medicine Master
+                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                        <i class="bi bi-capsule"></i> <span>Medicine Master</span>
                     </a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ url($slug . '/medicine-dosages') }}">Dosage</a></li>
@@ -1350,7 +1410,7 @@
                 {{-- History --}}
                 <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}"
                     class="text-white text-decoration-none">
-                    <i class="bi bi-clock-history"></i> History
+                    <i class="bi bi-clock-history"></i> <span>History</span>
                 </a>
             </div>
 

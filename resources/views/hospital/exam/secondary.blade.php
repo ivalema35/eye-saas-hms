@@ -617,10 +617,26 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
             @media (max-width: 991.98px) {
                 .exam-layout-wrapper {
                     grid-template-columns: 1fr;
+                    gap: 12px;
                 }
 
                 .doctor-stepper-sidebar {
                     position: static;
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+                    gap: 8px;
+                }
+
+                .doctor-stepper-sidebar .step-btn {
+                    text-align: center !important;
+                    padding: 8px 10px !important;
+                    font-size: .82rem;
+                }
+
+                .main-canvas {
+                    min-width: 0;
+                    max-width: 100%;
+                    overflow-x: auto;
                 }
             }
         </style>
