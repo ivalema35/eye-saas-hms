@@ -1395,3 +1395,43 @@ table.js-datatable {
         font-size: 0.85rem;
     }
 }
+
+/* Notification compose + list shell */
+.sa-notify-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+@media (max-width: 992px) {
+    .sa-notify-shell {
+        grid-template-columns: 1fr !important;
+    }
+
+    .sa-kpi-grid,
+    .hms-stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+@media (max-width: 640px) {
+    .sa-kpi-grid,
+    .hms-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .sa-topbar {
+        flex-wrap: wrap;
+        gap: 0.65rem;
+    }
+
+    .sa-topbar-search {
+        max-width: none;
+        width: 100%;
+        order: 3;
+        flex: 1 1 100%;
+    }
+
+    .sa-tenant-layout {
+        grid-template-columns: 1fr !important;
+    }
+}

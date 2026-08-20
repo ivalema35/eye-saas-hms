@@ -587,11 +587,125 @@ svg {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 1rem;
 }
+.patient-registration-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    width: 100%;
+    max-width: 100%;
+}
+@media (max-width: 992px) {
+    .patient-registration-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
 @media (max-width: 768px) {
     .hms-form-grid-2,
-    .hms-form-grid-3 {
+    .hms-form-grid-3,
+    .patient-registration-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================================
+   Global responsive safety net (inline grids / overflow)
+============================================================ */
+@media (max-width: 992px) {
+    .hms-card,
+    .hms-main,
+    .sa-main {
+        max-width: 100%;
+    }
+
+    /* Common SuperAdmin / Hospital inline 2–4 column grids */
+    .hms-card [style*="grid-template-columns:1fr 1fr"],
+    .hms-card [style*="grid-template-columns: 1fr 1fr"],
+    .hms-card [style*="grid-template-columns:1fr 1fr 1fr"],
+    .hms-card [style*="grid-template-columns: 1fr 1fr 1fr"],
+    .hms-card [style*="repeat(3, 1fr)"],
+    .hms-card [style*="repeat(3,1fr)"],
+    .hms-card [style*="repeat(4, 1fr)"],
+    .hms-card [style*="repeat(4,1fr)"],
+    .hms-card [style*="1fr 320px"],
+    .hms-card [style*="1fr 380px"],
+    [style*="grid-template-columns:380px 1fr"],
+    [style*="grid-template-columns: 380px 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .hms-main {
+        padding: .85rem !important;
+        overflow-x: hidden;
+    }
+
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_filter {
+        float: none !important;
+        text-align: left !important;
+        width: 100%;
+        margin-bottom: .65rem;
+    }
+
+    .dataTables_wrapper .dataTables_filter input {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    .dataTables_wrapper .row > [class*="col-"] {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    /* Filter toolbars: each field full width */
+    .hms-card form[style*="display:flex"] .hms-form-group,
+    .hms-filters .hms-form-group,
+    .sa-filters .hms-form-group {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        width: 100%;
+    }
+
+    .hms-page-header,
+    .sa-page-header {
+        flex-wrap: wrap;
+        gap: .75rem;
+    }
+
+    .hms-page-actions,
+    .sa-page-actions {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .hms-page-actions .hms-btn,
+    .sa-page-actions .hms-btn {
+        flex: 1 1 auto;
+    }
+}
+
+#pgPickerGrid {
+    grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+}
+#axisPickerGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+}
+@media (max-width: 992px) {
+    #pgPickerGrid { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+    #axisPickerGrid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 640px) {
+    #pgPickerGrid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+    #axisPickerGrid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 400px) {
+    #pgPickerGrid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    #axisPickerGrid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
 
 /* Required asterisk */

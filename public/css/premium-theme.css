@@ -180,6 +180,7 @@ label {
     border: 1px solid var(--border-color);
     border-radius: 10px;
     min-width: 240px;
+    max-width: min(280px, calc(100vw - 2rem));
     box-shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
     padding: .35rem;
 }
