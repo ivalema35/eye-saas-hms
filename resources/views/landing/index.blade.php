@@ -24,6 +24,63 @@ Cloud multi-tenant Eye Hospital CRM: patients, OPD, primary/secondary exam, OT c
         </div>
     </section>
 
+    {{-- Before / With EYENOSIS (IVClasses-style split cards) --}}
+    <section class="ecrm-section ecrm-compare-section" id="transform" aria-labelledby="compare-heading">
+        <div class="ecrm-container">
+            <div class="ecrm-head ecrm-reveal">
+                <span class="ecrm-kicker">Before → With EYENOSIS</span>
+                <h2 id="compare-heading">Stop running your hospital on paper</h2>
+                <p>See the difference between scattered registers and one live eye-hospital CRM.</p>
+            </div>
+
+            <div class="ecrm-compare-stack">
+                {{-- Before --}}
+                <article class="ecrm-compare-card ecrm-reveal">
+                    <div class="ecrm-compare-media">
+                        <img src="{{ asset('images/landing/before-manual-desk.png') }}?v=2"
+                            alt="Stressed hospital receptionist buried in patient paper files and MRD registers" width="900"
+                            height="675" loading="lazy" decoding="async">
+                    </div>
+                    <div class="ecrm-compare-copy">
+                        <span class="ecrm-compare-pill">Before EYENOSIS</span>
+                        <h3>Manual work slows your hospital every day</h3>
+                        <p>Paper registers, WhatsApp follow-ups and scattered Excel sheets waste staff time and hide the
+                            real patient picture.</p>
+                        <ul class="ecrm-compare-list ecrm-compare-list--bad">
+                            <li><i class="fa-solid fa-xmark" aria-hidden="true"></i> Patient follow-ups lost in chats &amp; slips</li>
+                            <li><i class="fa-solid fa-xmark" aria-hidden="true"></i> MRD files hard to find at the desk</li>
+                            <li><i class="fa-solid fa-xmark" aria-hidden="true"></i> OPD / OT status unclear across roles</li>
+                            <li><i class="fa-solid fa-xmark" aria-hidden="true"></i> Billing &amp; reports take hours to reconcile</li>
+                            <li><i class="fa-solid fa-xmark" aria-hidden="true"></i> No single view of clinic operations</li>
+                        </ul>
+                    </div>
+                </article>
+
+                {{-- With --}}
+                <article class="ecrm-compare-card ecrm-compare-card--reverse ecrm-reveal">
+                    <div class="ecrm-compare-copy">
+                        <span class="ecrm-compare-pill">With EYENOSIS</span>
+                        <h3>Everything runs on one live SaaS CRM</h3>
+                        <p>Reception, doctors, OT, accounts and discharge share one cloud platform — role-aware desks,
+                            hospital isolation, live queues.</p>
+                        <ul class="ecrm-compare-list ecrm-compare-list--good">
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Patient → OPD → exam → OT in one CRM</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Live queues for every hospital role</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Package payments, refunds &amp; invoices</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Clinical history on the patient timeline</li>
+                            <li><i class="fa-solid fa-check" aria-hidden="true"></i> Ops reports without spreadsheet chaos</li>
+                        </ul>
+                    </div>
+                    <div class="ecrm-compare-media">
+                        <img src="{{ asset('images/landing/with-digital-crm.png') }}?v=2"
+                            alt="Hospital receptionist using EYENOSIS CRM for patient registration at a clean desk" width="900"
+                            height="675" loading="lazy" decoding="async">
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
     {{-- CRM Modules --}}
     <section class="ecrm-section" id="modules" aria-labelledby="modules-heading">
         <div class="ecrm-container">

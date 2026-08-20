@@ -44,7 +44,7 @@
 
                     {{-- MRD Number --}}
                     <div class="hms-card-body patient-create-card-body" style="padding-bottom:0">
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem">
+                        <div class="patient-registration-grid">
                             <div class="form-group">
                                 <label class="form-label">MRD No.</label>
                                 <input type="text" value="{{ $patient->patient_code }}" class="form-control hms-input" readonly
@@ -54,7 +54,7 @@
                     </div>
 
                     <div class="hms-card-body patient-create-card-body">
-                        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem">
+                        <div class="patient-registration-grid">
 
                             {{-- Appointment Date --}}
                             <div class="form-group">
@@ -452,7 +452,23 @@
         .flatpickr-calendar { border-radius: 20px !important; box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2) !important; border: 1px solid #e2e8f0 !important; }
         .flatpickr-day.selected { background: #1B4F72 !important; border-color: #1B4F72 !important; }
 
-        @media (max-width: 768px) {
+        .patient-registration-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1.25rem;
+            width: 100%;
+        }
+
+        @media (max-width: 992px) {
+            .patient-registration-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .patient-registration-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
             .hms-card-body { padding: 1.25rem !important; }
         }
     </style>

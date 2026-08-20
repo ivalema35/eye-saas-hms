@@ -694,6 +694,40 @@
             .hms-sidebar-collapse-btn {
                 display: none;
             }
+
+            /* Never keep mini-rail margin on phones — drawer is off-canvas */
+            body.hms-sidebar-collapsed .hms-sidebar {
+                width: var(--hms-sidebar-w) !important;
+            }
+
+            body.hms-sidebar-collapsed .hms-main {
+                margin-left: 0 !important;
+            }
+
+            body.hms-sidebar-collapsed .sidebar-brand-copy,
+            body.hms-sidebar-collapsed .hms-nav-item span,
+            body.hms-sidebar-collapsed .hms-nav-group-label-wrap .hms-nav-section-label,
+            body.hms-sidebar-collapsed .hms-nav-group-toggle .hms-nav-chevron,
+            body.hms-sidebar-collapsed .hms-sidebar-logout span {
+                display: initial !important;
+            }
+
+            body.hms-sidebar-collapsed .premium-sidebar-brand-link,
+            body.hms-sidebar-collapsed .hms-nav-item,
+            body.hms-sidebar-collapsed .hms-nav-group-toggle,
+            body.hms-sidebar-collapsed .hms-sidebar-logout {
+                justify-content: flex-start !important;
+                padding-left: .875rem !important;
+            }
+
+            body.hms-sidebar-collapsed .sidebar-brand-mark {
+                max-width: none !important;
+            }
+
+            body.hms-sidebar-collapsed .sidebar-brand-mark .sidebar-logo {
+                max-height: none !important;
+                width: auto !important;
+            }
         }
 
         /* Collapsed (mini icon-rail) state — desktop only */
@@ -1123,7 +1157,9 @@
     <script>
         (function () {
             try {
-                if (localStorage.getItem('hms_sidebar_collapsed') === '1') {
+                // Collapsed mini-rail is desktop-only; ignore stored state on phones
+                if (window.matchMedia('(min-width: 769px)').matches
+                    && localStorage.getItem('hms_sidebar_collapsed') === '1') {
                     document.body.classList.add('hms-sidebar-collapsed');
                 }
             } catch (e) { }

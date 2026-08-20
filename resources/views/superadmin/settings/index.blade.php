@@ -17,7 +17,7 @@
                     General Settings
                 </h3>
             </div>
-            <div style="padding:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="hms-form-grid-2" style="padding:1.25rem">
                 <div class="hms-form-group">
                     <label class="hms-label">Platform Name</label>
                     <input type="text" name="platform_name" class="hms-input @error('platform_name') is-invalid @enderror"
@@ -60,7 +60,7 @@
                     <i class="bi bi-shield-fill"></i>
                     <span>Razorpay keys are stored encrypted. Leave blank to keep existing values.</span>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-grid-2">
                     <div class="hms-form-group">
                         <label class="hms-label">Razorpay Key ID</label>
                         <input type="text" name="razorpay_key" class="hms-input" value="{{ old('razorpay_key') }}"
@@ -93,7 +93,7 @@
                     <i class="bi bi-info-circle-fill"></i>
                     Subscription reminder emails isi SMTP se jayenge. Local dev me MAIL_MAILER=log rakho.
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="hms-form-grid-2">
                     <div class="hms-form-group">
                         <label class="hms-label">SMTP Host</label>
                         <input type="text" name="mail_host" class="hms-input"
@@ -142,7 +142,7 @@
                     <i class="bi bi-layers-fill"></i> Manage Plans
                 </a>
             </div>
-            <div style="padding:1.25rem;display:grid;grid-template-columns:repeat(3,1fr);gap:1rem">
+            <div class="hms-form-grid-3" style="padding:1.25rem">
                 <div class="hms-form-group" style="margin-bottom:0">
                     <label class="hms-label">Monthly Base Price</label>
                     <input type="number" name="monthly_price" class="hms-input"

@@ -34,7 +34,7 @@
 
                 {{-- MRD Number --}}
                 <div class="hms-card-body patient-create-card-body" style="padding-bottom:0;margin-bottom:1.5rem">
-                    <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
+                    <div class="patient-registration-grid">
                         <div class="form-group">
                             <label class="form-label">MRD No.</label>
                             <input type="text" value="{{ $patient->patient_code }}" class="form-control hms-input" readonly
@@ -44,7 +44,7 @@
                 </div>
 
                 <div class="hms-card-body patient-create-card-body">
-                    <div style="display:grid;grid-template-columns: repeat(3, 1fr);gap:1.25rem">
+                    <div class="patient-registration-grid">
 
                         {{-- Appointment Date --}}
                         <div class="form-group">

@@ -2343,6 +2343,19 @@ body {
     .pub-cta-banner { padding: 3.5rem 1rem; }
 }
 
+@media (max-width: 768px) {
+    .plan-cards {
+        grid-template-columns: 1fr;
+    }
+    .reg-stepper {
+        gap: 0.15rem;
+    }
+    .reg-step-label {
+        font-size: 0.6rem;
+        max-width: 4.5rem;
+    }
+}
+
 /* ============================================================
    Desktop Wide (> 1440px)
 ============================================================ */

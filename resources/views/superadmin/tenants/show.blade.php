@@ -19,7 +19,7 @@
 @section('content')
 
     {{-- Mini Stat Bar --}}
-    <div class="hms-stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:1.25rem">
+    <div class="hms-stats-grid" style="margin-bottom:1.25rem">
         <div class="hms-stat-card">
             <div class="hms-stat-icon hsi-blue"><i class="bi bi-hospital-fill"></i></div>
             <div class="hms-stat-body">
@@ -59,7 +59,7 @@
     </div>
 
     {{-- Hospital Info + Quick Actions (side by side) --}}
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:1.25rem;align-items:start;margin-bottom:1.25rem">
+    <div class="sa-tenant-layout" style="display:grid;grid-template-columns:1fr 320px;gap:1.25rem;align-items:start;margin-bottom:1.25rem">
 
         {{-- Hospital Information --}}
         <div class="hms-card" style="padding:0">
@@ -69,7 +69,7 @@
                     Hospital Information
                 </h3>
             </div>
-            <div style="padding:1.25rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+            <div class="hms-form-grid-2" style="padding:1.25rem">
                 @php
                     $fields = [
                         ['Hospital Name', $tenant->name],

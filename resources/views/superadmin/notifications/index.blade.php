@@ -4,7 +4,7 @@
 
 @section('content')
 
-    <div style="display:grid;grid-template-columns:380px 1fr;gap:1.5rem;align-items:start">
+    <div class="sa-notify-shell" style="display:grid;grid-template-columns:380px 1fr;gap:1.5rem;align-items:start">
 
         {{-- ===== COMPOSE FORM ===== --}}
         <div class="hms-card" style="padding:0">
