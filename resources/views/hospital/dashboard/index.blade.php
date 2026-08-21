@@ -2735,7 +2735,13 @@
                         <i class="fa-solid fa-database" style="font-size:24px;color:#34495E"></i>
                         <span>Masters</span>
                     </a>
-@endhaspermission
+                @endhaspermission
+                @haspermission('masters.hospital')
+                    <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => 'diagnosis']) }}" class="qa-pill">
+                        <i class="fa-solid fa-stethoscope" style="font-size:24px;color:#34495E"></i>
+                        <span>Diagnosis</span>
+                    </a>
+                @endhaspermission
             </div>
         </div>
     </div>

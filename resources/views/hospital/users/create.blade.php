@@ -184,7 +184,7 @@ across the rest of the app. --}}
                 </div>
 
                 <div class="user-create-actions">
-                    <button type="submit" class="hms-btn hms-btn-primary user-create-submit-btn">
+                    <button type="submit" class="hms-btn hms-btn-primary user-create-submit-btn" style="color: #ffffff;">
                         <i class="fa-solid fa-check"></i> Save User
                     </button>
                     <a href="{{ route('hospital.users.index', ['slug' => $slug]) }}"
