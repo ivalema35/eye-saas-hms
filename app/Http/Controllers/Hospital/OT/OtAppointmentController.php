@@ -27,6 +27,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -56,7 +57,7 @@ class OtAppointmentController extends Controller
                     ->orWhere('mobile_no', 'like', "%{$search}%");
 
                 if (str_starts_with(strtoupper($search), 'APT-') && ctype_digit(ltrim(substr($search, 4), '0'))) {
-                    $q->orWhere('id', (int) ltrim(substr($search, 4), '0'));
+                    $q->orWhere('appointment_seq', (int) ltrim(substr($search, 4), '0'));
                 }
             });
         }
@@ -82,8 +83,8 @@ class OtAppointmentController extends Controller
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
         $slots = OtSlot::query()->orderBy('start_time')->get();
 
-        $nextId = ((int) OtAppointment::withoutTenantScope()->max('id')) + 1;
-        $nextAppointmentNumber = 'APT-' . str_pad((string) $nextId, 6, '0', STR_PAD_LEFT);
+        $nextSeq = OtAppointment::peekNextSequenceForTenant($tenantId);
+        $nextAppointmentNumber = OtAppointment::formatAppointmentNumber($nextSeq);
 
         $loadDate = now()->toDateString();
 
@@ -129,12 +130,15 @@ class OtAppointmentController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
         ], array_merge(PhoneRules::messages('mobile_no'), PhoneRules::messages('whatsapp_no')));
 
-        OtAppointment::create([
-            ...$validated,
-            'tenant_id' => $tenantId,
-            'status' => OtAppointment::STATUS_BOOKED,
-            'created_by' => (int) auth('hospital_user')->id(),
-        ]);
+        DB::transaction(function () use ($validated, $tenantId): void {
+            OtAppointment::create([
+                ...$validated,
+                'tenant_id' => $tenantId,
+                'appointment_seq' => OtAppointment::allocateNextSequenceForTenant($tenantId),
+                'status' => OtAppointment::STATUS_BOOKED,
+                'created_by' => (int) auth('hospital_user')->id(),
+            ]);
+        });
 
         return redirect()
             ->route('hospital.dashboard', ['slug' => $slug])
@@ -238,7 +242,7 @@ class OtAppointmentController extends Controller
             ->whereIn('status', [OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED]);
 
         if (preg_match('/^APT-?0*(\d+)$/i', $term, $matches)) {
-            $query->where('id', (int) $matches[1]);
+            $query->where('appointment_seq', (int) $matches[1]);
         } else {
             $query->where(function ($q) use ($term): void {
                 $q->where('mobile_no', 'like', "%{$term}%")

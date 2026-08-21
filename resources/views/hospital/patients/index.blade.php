@@ -132,115 +132,46 @@ design. --}}
         }
 
         /* Stats Cards */
-        @keyframes statCardPop {
-            from { opacity: 0; transform: translateY(12px) scale(.96); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @keyframes statGlossSweep {
-            0%   { transform: translateX(-50%) rotate(18deg); opacity: 0; }
-            20%  { opacity: .45; }
-            50%  { transform: translateX(40%) rotate(18deg); opacity: .35; }
-            80%  { opacity: .2; }
-            100% { transform: translateX(130%) rotate(18deg); opacity: 0; }
-        }
-
         .stat-card {
             --stat-accent: #1B4F72;
-            --stat-tint: rgba(27, 79, 114, .05);
             position: relative;
-            overflow: hidden;
-            isolation: isolate;
-            background: linear-gradient(135deg, var(--stat-tint) 0%, rgba(255, 255, 255, .98) 55%);
-            border-radius: 14px;
-            padding: .85rem 1.05rem;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
             display: flex;
             align-items: center;
-            gap: .75rem;
-            box-shadow: 0 4px 14px rgba(27, 79, 114, 0.07);
-            transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+            gap: .85rem;
+            box-shadow: 0 1px 3px rgba(27, 79, 114, 0.08);
             border: 1px solid var(--patients-border);
-            border-left: 4px solid var(--stat-accent);
-            animation: statCardPop 500ms cubic-bezier(.22,1,.36,1) both;
-            animation-delay: var(--stat-d, 0s);
+            border-left: 4px solid #1b4f72;
         }
 
-        .stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 16px 32px rgba(27, 79, 114, 0.15);
-            border-color: var(--patients-border-strong);
+        .stat-card-primary {
+            --stat-accent: #1B4F72;
         }
 
-        .stat-card-primary { --stat-accent: #1B4F72; --stat-tint: rgba(27, 79, 114, .06); }
-        .stat-card-warning { --stat-accent: #D97706; --stat-tint: rgba(217, 119, 6, .08); }
-        .stat-card-info    { --stat-accent: #1D4ED8; --stat-tint: rgba(29, 78, 216, .07); }
-        .stat-card-success { --stat-accent: #15803D; --stat-tint: rgba(21, 128, 61, .07); }
-
-        .stat-gloss {
-            position: absolute;
-            inset: -40% -20%;
-            background: linear-gradient(115deg,
-                transparent 35%,
-                rgba(255, 255, 255, .8) 48%,
-                rgba(27, 79, 114, .12) 52%,
-                transparent 65%);
-            pointer-events: none;
-            z-index: 0;
-            animation: statGlossSweep 3.4s ease-in-out infinite;
-            animation-delay: calc(var(--stat-d, 0s) + .3s);
+        .stat-card-warning {
+            --stat-accent: #D97706;
         }
 
-        .stat-icon,
-        .stat-info {
-            position: relative;
-            z-index: 1;
+        .stat-card-info {
+            --stat-accent: #1D4ED8;
+        }
+
+        .stat-card-success {
+            --stat-accent: #15803D;
         }
 
         .stat-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 19px;
             flex-shrink: 0;
-            box-shadow: 0 6px 14px rgba(27, 79, 114, 0.16);
-            transition: transform .3s ease, box-shadow .3s ease;
-        }
-
-        .stat-card:hover .stat-icon {
-            transform: scale(1.08) rotate(-4deg);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .stat-card,
-            .stat-gloss,
-            .stat-icon {
-                animation: none;
-                transition: none;
-            }
-            .stat-card:hover {
-                transform: none;
-            }
-        }
-
-        .bg-primary-soft {
-            background: linear-gradient(135deg, #2C6FAC 0%, #1B4F72 100%);
-            color: #ffffff;
-        }
-
-        .bg-warning-soft {
-            background: linear-gradient(135deg, #FBBF24 0%, #D97706 100%);
-            color: #ffffff;
-        }
-
-        .bg-info-soft {
-            background: linear-gradient(135deg, #60A5FA 0%, #1D4ED8 100%);
-            color: #ffffff;
-        }
-
-        .bg-success-soft {
-            background: linear-gradient(135deg, #34D399 0%, #15803D 100%);
+            background: #1b4f72;
             color: #ffffff;
         }
 
@@ -250,24 +181,23 @@ design. --}}
 
         .stat-value {
             font-size: 22px;
-            font-weight: 800;
+            font-weight: 700;
             margin: 0;
-            color: var(--stat-accent);
-            letter-spacing: -.02em;
+            color: #1f2937;
             line-height: 1.15;
         }
 
         .stat-label {
-            font-size: 10.5px;
+            font-size: 11px;
             color: var(--patients-muted);
-            margin: 1px 0 0 0;
-            font-weight: 700;
+            margin: 2px 0 0 0;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: .04em;
         }
 
         /* Modern Card — nested inside .patients-inner-panel, which now owns
-                       the border/shadow, so this is just a content wrapper. */
+                               the border/shadow, so this is just a content wrapper. */
         .modern-card {
             background: var(--patients-surface);
             overflow: hidden;
@@ -751,9 +681,8 @@ design. --}}
             <div class="patients-stats-wrap">
                 <div class="row g-4">
                     <div class="col-md-3">
-                        <div class="stat-card stat-card-primary" style="--stat-d:.04s">
-                            <span class="stat-gloss" aria-hidden="true"></span>
-                            <div class="stat-icon bg-primary-soft">
+                        <div class="stat-card stat-card-primary">
+                            <div class="stat-icon">
                                 <i class="bi bi-person-arms-up"></i>
                             </div>
                             <div class="stat-info">
@@ -763,9 +692,8 @@ design. --}}
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="stat-card stat-card-warning" style="--stat-d:.09s">
-                            <span class="stat-gloss" aria-hidden="true"></span>
-                            <div class="stat-icon bg-warning-soft">
+                        <div class="stat-card stat-card-warning">
+                            <div class="stat-icon">
                                 <i class="bi bi-hourglass-split"></i>
                             </div>
                             <div class="stat-info">
@@ -775,9 +703,8 @@ design. --}}
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="stat-card stat-card-info" style="--stat-d:.14s">
-                            <span class="stat-gloss" aria-hidden="true"></span>
-                            <div class="stat-icon bg-info-soft">
+                        <div class="stat-card stat-card-info">
+                            <div class="stat-icon">
                                 <i class="bi bi-clipboard2-check"></i>
                             </div>
                             <div class="stat-info">
@@ -787,9 +714,8 @@ design. --}}
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="stat-card stat-card-success" style="--stat-d:.19s">
-                            <span class="stat-gloss" aria-hidden="true"></span>
-                            <div class="stat-icon bg-success-soft">
+                        <div class="stat-card stat-card-success">
+                            <div class="stat-icon">
                                 <i class="bi bi-check2-all"></i>
                             </div>
                             <div class="stat-info">

@@ -5,22 +5,22 @@
 
 @push('styles')
 <style>
-/* ── Receptionist 5-card row (Enhanced) ────────────────────────────────────── */
+/* ── Receptionist 6-card row (Enhanced) ────────────────────────────────────── */
 .rec-5row {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
 }
 .rec-5card {
     background: #ffffff;
     border: 1px solid rgba(27, 79, 114, 0.12);
-    border-radius: 18px;
-    min-height: 118px;
-    padding: 1rem 1.05rem .95rem;
+    border-radius: 16px;
+    min-height: 104px;
+    padding: .75rem .8rem .7rem;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: .55rem;
+    gap: .4rem;
     transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
     text-decoration: none;
     color: inherit;
@@ -48,14 +48,14 @@
     animation: bentoGlossSweep 3.2s ease-in-out infinite;
 }
 .rec-5icon {
-    width: 38px;
-    height: 38px;
-    border-radius: 11px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
     border: 1px solid rgba(27, 79, 114, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.05rem;
+    font-size: .92rem;
     flex-shrink: 0;
     font-weight: 600;
     background: #EBF5FB;
@@ -71,10 +71,10 @@
     order: 2;
     position: relative;
     z-index: 1;
-    font-size: 10.5px;
+    font-size: 9.5px;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: .1em;
+    letter-spacing: .08em;
     color: rgba(27,79,114,.68);
     margin: 0;
 }
@@ -82,13 +82,23 @@
     order: 1;
     position: relative;
     z-index: 1;
-    font-size: clamp(1.35rem, 1.8vw, 1.65rem);
+    font-size: clamp(1.15rem, 1.35vw, 1.4rem);
     font-weight: 900;
     color: #1B4F72;
     line-height: 1.1;
     letter-spacing: -.035em;
 }
-@media (max-width: 900px) { .rec-5row { grid-template-columns: repeat(3,1fr); } }
+.rec-5meta {
+    order: 3;
+    position: relative;
+    z-index: 1;
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(27, 79, 114, .55);
+    margin: 0;
+    line-height: 1.25;
+}
+@media (max-width: 1100px) { .rec-5row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 576px) { .rec-5row { grid-template-columns: 1fr 1fr; } }
 
 /*
@@ -1519,7 +1529,7 @@
 @else
 
 {{-- ════════════════════════════════════════════════════════════════════════
-     RECEPTIONIST — 5 stat cards in a single row (own grid, outside bento)
+     RECEPTIONIST — 6 stat cards in a single row (own grid, outside bento)
 ════════════════════════════════════════════════════════════════════════════ --}}
 @if($isReceptionistUser && $receptionistTodayCollection !== null)
 <div class="rec-5row mb-4">
@@ -1562,7 +1572,7 @@
             <i class="bi bi-bar-chart-line-fill"></i>
         </div>
         <p class="rec-5label">Reports</p>
-        <div class="rec-5value" style="font-size:1.3rem">View →</div>
+        <div class="rec-5value" style="font-size:1.15rem">View →</div>
     </a>
     @endhaspermission
 
@@ -1575,6 +1585,19 @@
         <p class="rec-5label">Phone Appt</p>
         <div class="rec-5value">{{ $receptionistTodayPhone }}</div>
     </a>
+
+    {{-- OT Appointment --}}
+    @if($hasOt)
+    <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+        <span class="bento-gloss" aria-hidden="true"></span>
+        <div class="rec-5icon" style="background:#FCE4EC;color:#C2185B">
+            <i class="bi bi-activity"></i>
+        </div>
+        <p class="rec-5label">OT Appointment</p>
+        <div class="rec-5value">{{ $otToday }}</div>
+        <p class="rec-5meta">Confirmed: {{ $otOperated }} • Booked: {{ $otPending }}</p>
+    </a>
+    @endif
 
 </div>
 @endif
@@ -2006,7 +2029,8 @@
             </div>
         </a>
     {{-- OT Appointment (ot.patient.list / ot.appointment.view) --}}
-    @elseif($hasOt)
+    {{-- Receptionist: shown in the top 6-card row instead --}}
+    @elseif($hasOt && !$isReceptionistUser)
         <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
            class="bento-card span-3 text-decoration-none">
             <div class="bento-stat">
