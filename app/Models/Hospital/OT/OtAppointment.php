@@ -48,6 +48,7 @@ class OtAppointment extends Model
 
     protected $fillable = [
         'tenant_id',
+        'appointment_seq',
         'appointment_type',
         'referrer_id',
         'appointment_date',
@@ -70,12 +71,47 @@ class OtAppointment extends Model
 
     protected $casts = [
         'appointment_date' => 'date',
+        'appointment_seq' => 'integer',
     ];
 
     /** Human-friendly appointment number shown to reception/patient, e.g. APT-000123. */
     public function getAppointmentNumberAttribute(): string
     {
-        return 'APT-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+        $seq = (int) ($this->appointment_seq ?: $this->id);
+
+        return 'APT-' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Next APT sequence for a hospital (starts at 1). Includes soft-deleted rows
+     * so cancelled/deleted appointments do not recycle numbers.
+     */
+    public static function peekNextSequenceForTenant(int $tenantId): int
+    {
+        return (int) static::withoutTenantScope()
+            ->withTrashed()
+            ->where('tenant_id', $tenantId)
+            ->max('appointment_seq') + 1;
+    }
+
+    /**
+     * Allocate and return the next sequence under a row lock (call inside a transaction).
+     */
+    public static function allocateNextSequenceForTenant(int $tenantId): int
+    {
+        static::withoutTenantScope()
+            ->withTrashed()
+            ->where('tenant_id', $tenantId)
+            ->orderByDesc('appointment_seq')
+            ->lockForUpdate()
+            ->first();
+
+        return static::peekNextSequenceForTenant($tenantId);
+    }
+
+    public static function formatAppointmentNumber(int $seq): string
+    {
+        return 'APT-' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT);
     }
 
     public function doctor()

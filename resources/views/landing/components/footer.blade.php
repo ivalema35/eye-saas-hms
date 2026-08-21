@@ -43,7 +43,8 @@
                 </div>
             </div>
             <div class="ecrm-footer-bottom">
-                <p>&copy; {{ date('Y') }} EYENOSIS. All rights reserved.</p>
+                <span>&copy; {{ date('Y') }} EYENOSIS. All rights reserved. | Designed &amp; Developed by <a
+                        href="https://ivinfotech.com" target="_blank" rel="noopener noreferrer">IV Infotech</a></span>
                 <div class="ecrm-footer-links">
                     <a href="{{ route('home') }}">Home</a>
                     <a href="{{ route('pricing') }}">Pricing</a>
