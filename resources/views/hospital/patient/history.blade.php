@@ -63,8 +63,40 @@
         }
 
         .history-summary-card {
-            top: 80px;
             animation-delay: 80ms;
+        }
+
+        .history-patient-info-bar {
+            background: linear-gradient(135deg, #f0f7ff, #e8f4fd);
+            border: 1px solid rgba(27, 79, 114, .2) !important;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        .history-patient-info-bar .hpib-sep {
+            width: 1px;
+            height: 16px;
+            background: #cbd5e1;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .history-patient-info-bar .hpib-label {
+            color: #94a3b8;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+        }
+
+        .history-patient-info-bar .hpib-value {
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .history-patient-info-bar .hpib-mrd {
+            color: #1B4F72;
+            font-weight: 800;
         }
 
         .history-timeline-card {
@@ -552,8 +584,8 @@
         }
 
         @media (max-width: 992px) {
-            .history-summary-card {
-                position: static !important;
+            .history-patient-info-bar {
+                row-gap: .65rem;
             }
         }
 
@@ -571,6 +603,10 @@
                 max-width: none;
                 min-width: 100%;
                 width: 100%;
+            }
+
+            .history-patient-info-bar .hpib-sep {
+                display: none;
             }
 
             .timeline {
@@ -821,73 +857,71 @@
             @endif
 
             @if($patient)
-                <div class="row g-4">
-                    <div class="col-lg-4">
-                        <div class="card premium-card history-summary-card border-0 shadow-sm sticky-top" style="top: 80px;">
-                            <div class="card-body p-4 text-center">
-                                <div class="history-avatar mx-auto mb-3" style="width:80px;height:80px;font-size:2rem;">
-                                    <i class="bi bi-person-fill"></i>
-                                </div>
-                                <h5 class="history-patient-name fw-bold mb-2">
-                                    {{ $patient->first_name }}
-                                    @if($patient->middle_name) {{ $patient->middle_name }} @endif
-                                    {{ $patient->last_name }}
-                                </h5>
-                                <p class="history-patient-code mb-0 small">
-                                    {{ $patient->patient_code }}
-                                    &nbsp;|&nbsp;
-                                    {{ ucfirst($patient->gender) }},
-                                    {{ $patient->age }} yrs
-                                </p>
+                @php
+                    $visitDays = $history->groupBy(fn($e) => \Carbon\Carbon::parse($e->examined_at)->format('d M Y'))->count();
+                    $patientFullName = trim(collect([
+                        $patient->first_name,
+                        $patient->middle_name,
+                        $patient->last_name,
+                    ])->filter()->implode(' '));
+                @endphp
 
-                                <ul class="history-detail-list list-group list-group-flush text-start mt-4">
-                                    <li class="list-group-item px-0 py-2 border-0">
-                                        <i class="bi bi-telephone text-muted me-2"></i>
-                                        {{ $patient->contact_no }}
-                                    </li>
-                                    <li class="list-group-item px-0 py-2 border-0">
-                                        <i class="bi bi-geo-alt text-muted me-2"></i>
-                                        {{ $patient->locationLabel }}
-                                    </li>
-                                    <li class="list-group-item px-0 py-2 border-0">
-                                        <i class="bi bi-calendar-plus text-muted me-2"></i>
-                                        Registered: {{ $patient->created_at->format('d M Y') }}
-                                    </li>
-                                    @php
-                                        $visitDays = $history->groupBy(fn($e) => \Carbon\Carbon::parse($e->examined_at)->format('d M Y'))->count();
-                                    @endphp
-                                    <li class="list-group-item px-0 py-2 border-0">
-                                        <i class="bi bi-journal-medical text-muted me-2"></i>
-                                        <span class="history-count-badge badge bg-primary">{{ $visitDays }}</span>
-                                        visit{{ $visitDays === 1 ? '' : 's' }} recorded
-                                    </li>
-                                </ul>
-                            </div>
+                <div class="history-patient-info-bar mb-4 px-3 py-2 d-flex flex-wrap align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="hpib-label">MRD</span>
+                        <span class="hpib-mrd ms-1">{{ $patient->patient_code ?? '-' }}</span>
+                    </div>
+                    <span class="hpib-sep"></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-person-fill" style="color:#1B4F72;font-size:13px;"></i>
+                        <span class="hpib-value ms-1">{{ $patientFullName !== '' ? $patientFullName : ($patient->full_name ?? '-') }}</span>
+                    </div>
+                    <span class="hpib-sep"></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="hpib-label">Age/Gender</span>
+                        <span class="hpib-value ms-1">{{ $patient->age ?? '-' }} / {{ ucfirst($patient->gender ?? '-') }}</span>
+                    </div>
+                    <span class="hpib-sep"></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <i class="bi bi-telephone-fill" style="color:#1B4F72;font-size:12px;"></i>
+                        <span class="hpib-value ms-1">{{ $patient->contact_no ?? '-' }}</span>
+                    </div>
+                    <span class="hpib-sep"></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="hpib-label">Location</span>
+                        <span class="hpib-value ms-1">{{ $patient->locationLabel ?: '-' }}</span>
+                    </div>
+                    <span class="hpib-sep"></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="hpib-label">Registered</span>
+                        <span class="hpib-value ms-1">{{ $patient->created_at->format('d M Y') }}</span>
+                    </div>
+                    <span class="hpib-sep"></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span class="hpib-label">Visits</span>
+                        <span class="history-count-badge badge bg-primary ms-1">{{ $visitDays }}</span>
+                    </div>
+                </div>
+
+                <div class="card premium-card history-timeline-card border-0 shadow-sm">
+                    <div class="card-header history-timeline-header bg-white p-4 border-bottom">
+                        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+                            <h5 class="history-timeline-title mb-0 fw-bold" style="color: var(--color-primary);">
+                                <i class="bi bi-clock-history me-2"></i> Clinical Timeline
+                            </h5>
+                            <a href="{{ route('hospital.patients.history.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
+                                class="history-print-btn" title="Print patient history" aria-label="Print patient history"
+                                target="_blank" rel="noopener">
+                                <i class="bi bi-printer"></i>
+                            </a>
                         </div>
                     </div>
+                    <div class="card-body p-4">
 
-                    <div class="col-lg-8">
-                        <div class="card premium-card history-timeline-card border-0 shadow-sm">
-                            <div class="card-header history-timeline-header bg-white p-4 border-bottom">
-                                <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
-                                    <h5 class="history-timeline-title mb-0 fw-bold" style="color: var(--color-primary);">
-                                        <i class="bi bi-clock-history me-2"></i> Clinical Timeline
-                                    </h5>
-                                    <a href="{{ route('hospital.patients.history.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                        class="history-print-btn" title="Print patient history" aria-label="Print patient history"
-                                        target="_blank" rel="noopener">
-                                        <i class="bi bi-printer"></i>
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="card-body p-4">
+                        @include('hospital.patient._exam_timeline')
 
-                                @include('hospital.patient._exam_timeline')
-
-                            </div>{{-- /card-body --}}
-                        </div>{{-- /card (timeline) --}}
-                    </div>{{-- /col-lg-8 --}}
-                </div>{{-- /row g-4 --}}
+                    </div>{{-- /card-body --}}
+                </div>{{-- /card (timeline) --}}
 
                 {{-- ═══ Partner Hospital History ═══ --}}
                 @if(isset($partnerHistoryGroups) && $partnerHistoryGroups->isNotEmpty())

@@ -1027,6 +1027,7 @@
             border-radius: 4px;
             padding: 5px 0;
             min-width: 150px;
+            z-index: 1080;
         }
 
         .black-menu-bar .dropdown::after {
@@ -1038,10 +1039,11 @@
             height: 8px;
         }
 
-        .black-menu-bar .dropdown:hover>.dropdown-menu {
+        /* Hover (desktop) + Bootstrap .show (click / mobile) */
+        .black-menu-bar .dropdown:hover > .dropdown-menu,
+        .black-menu-bar .dropdown > .dropdown-menu.show {
             display: block;
         }
-
 
         .black-menu-bar .dropdown-item {
             color: #333 !important;
@@ -1057,20 +1059,27 @@
             position: relative;
         }
 
-        .dropdown-menu .dropend>.dropdown-menu {
+        .dropdown-menu .dropend > .dropdown-menu {
             top: 0;
             left: 100%;
             margin-top: -0.25rem;
             display: none;
+            position: absolute;
+            z-index: 1081;
         }
 
-        .dropdown-menu .dropend:hover>.dropdown-menu,
-        .dropdown-menu .dropend.show>.dropdown-menu {
+        .dropdown-menu .dropend:hover > .dropdown-menu,
+        .dropdown-menu .dropend.show > .dropdown-menu {
             display: block;
         }
 
         .black-menu-bar .dropdown-menu .dropdown-menu {
             display: none;
+        }
+
+        .black-menu-bar .dropdown-menu .dropend:hover > .dropdown-menu,
+        .black-menu-bar .dropdown-menu .dropend.show > .dropdown-menu {
+            display: block;
         }
 
         .dropdown-menu .dropdown-toggle::after {
@@ -1102,10 +1111,8 @@
                 gap: 20px;
                 color: white;
                 align-items: center;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-                scrollbar-width: thin;
+                flex-wrap: wrap;
+                overflow: visible;
             }
 
             .black-menu-bar a,
@@ -1155,6 +1162,7 @@
                 .black-menu-bar {
                     padding: 8px 12px;
                     gap: 14px;
+                    overflow: visible;
                 }
             }
         @endif
@@ -1349,7 +1357,7 @@
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
                     <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                        data-bs-auto-close="outside" aria-expanded="false" role="button">
                         <i class="bi bi-info-circle-fill"></i> <span>Diagnosis Master</span>
                     </a>
                     <ul class="dropdown-menu">
@@ -1392,7 +1400,7 @@
 
                 <div class="dropdown">
                     <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
-                        aria-expanded="false">
+                        data-bs-auto-close="outside" aria-expanded="false" role="button">
                         <i class="bi bi-capsule"></i> <span>Medicine Master</span>
                     </a>
                     <ul class="dropdown-menu">
@@ -2047,6 +2055,22 @@
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.doctor-black-menu > .dropdown > .dropdown-toggle').forEach(function (toggle) {
+                toggle.addEventListener('click', function (event) {
+                    event.preventDefault();
+                });
+
+                if (window.bootstrap && window.bootstrap.Dropdown) {
+                    bootstrap.Dropdown.getOrCreateInstance(toggle, {
+                        autoClose: 'outside',
+                        popperConfig: {
+                            strategy: 'fixed',
+                            modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }]
+                        }
+                    });
+                }
+            });
+
             document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
                 var trigger = item.querySelector(':scope > .dropdown-toggle');
 

@@ -78,6 +78,8 @@ class SettingsController extends Controller
             );
         }
 
-        return back()->with('success', 'Settings updated successfully.');
+        return redirect()
+            ->route('superadmin.dashboard')
+            ->with('success', 'Settings updated successfully.');
     }
 }

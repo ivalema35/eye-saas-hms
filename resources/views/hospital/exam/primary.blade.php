@@ -1520,7 +1520,6 @@ $pgMasterOpts = [
                                     <tr style="background:white;">
                                         <td style="background:#fafbfc;">
                                             <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">IOP</span>
-                                            <div style="font-size:11px;color:#94a3b8;font-weight:500;">mmHg</div>
                                         </td>
                                         @foreach(['re', 'le'] as $eye)
                                             @php $sv = old('exam_data.nct.iop_' . $eye, $nct['iop_' . $eye] ?? ''); @endphp
@@ -1533,7 +1532,6 @@ $pgMasterOpts = [
                                                     <input type="hidden" name="exam_data[nct][iop_{{ $eye }}]" value="{{ $sv }}">
                                                     <i class="bi bi-chevron-down nct-inp-chevron"></i>
                                                 </div>
-                                                <div style="font-size:10px;color:#94a3b8;margin-top:4px;font-weight:500;">mmHg</div>
                                             </td>
                                         @endforeach
                                     </tr>
@@ -1617,7 +1615,6 @@ foreach ($oeFieldMeta as $meta) {
                                         <tr>
                                             <td class="oe-label-cell">
                                                 <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">{{ $meta['label'] }}</span>
-                                                <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">{{ $meta['full'] }}</div>
                                             </td>
                                             @foreach(['re' => 'oe-cell-re', 'le' => 'oe-cell-le'] as $eye => $cellCls)
                                                 @php $sv = old('exam_data.oe.' . $key . '_' . $eye, $oe[$key . '_' . $eye] ?? ''); @endphp
@@ -1646,7 +1643,6 @@ foreach ($oeFieldMeta as $meta) {
                                     <tr>
                                         <td class="oe-label-cell">
                                             <span class="fw-bold" style="font-size:13px;color:#1e293b;letter-spacing:.02em;">OTHER</span>
-                                            <div style="font-size:10px;color:#94a3b8;font-weight:500;margin-top:1px;">Other findings</div>
                                         </td>
                                         @foreach(['re' => ['cls' => 'oe-cell-re', 'ph' => 'Right eye findings...'], 'le' => ['cls' => 'oe-cell-le', 'ph' => 'Left eye findings...']] as $eye => $em)
                                             <td class="{{ $em['cls'] }} py-2 px-3">
@@ -1734,7 +1730,7 @@ foreach ($oeFieldMeta as $meta) {
                                 </div>
                                 <div class="p-3">
                                     <div class="mb-3">
-                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">DISC <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">CDR / Appearance</span></label>
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">DISC</label>
                                         <div class="fundus-dd-wrap" style="position:relative;">
                                             <input type="text" class="form-control form-control-sm fundus-dd-inp"
                                                 placeholder="Search or select..." autocomplete="off"
@@ -1746,7 +1742,7 @@ foreach ($oeFieldMeta as $meta) {
                                         </div>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">FR <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">Foveal Reflex</span></label>
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">FR</label>
                                         <div class="fundus-dd-wrap" style="position:relative;">
                                             <input type="text" class="form-control form-control-sm fundus-dd-inp"
                                                 placeholder="Search or select..." autocomplete="off"
@@ -1758,7 +1754,7 @@ foreach ($oeFieldMeta as $meta) {
                                         </div>
                                     </div>
                                     <div>
-                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">COMMENT <span style="font-weight:400;color:#64748b;text-transform:none;letter-spacing:0;">Additional findings</span></label>
+                                        <label class="fw-semibold mb-1" style="font-size:11px;letter-spacing:.06em;color:#1B4F72;">COMMENT</label>
                                         <textarea name="exam_data[fundus][comment_{{ $eye }}]"
                                             class="form-control form-control-sm"
                                             rows="3"

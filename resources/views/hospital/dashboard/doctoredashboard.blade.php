@@ -606,53 +606,56 @@
 
         .doctor-list-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+            gap: 14px;
         }
 
         .doc-list-card {
             display: block;
             background: #fff;
-            border: 1px solid rgba(15, 79, 134, 0.1);
-            border-radius: 10px;
-            padding: 10px 10px 9px;
+            border: 1px solid #1c1c1c;
+            outline: 2px solid #0f4f86;
+            outline-offset: 1px;
+            border-radius: 8px;
+            padding: 12px 12px 11px;
             text-decoration: none;
             color: inherit;
-            box-shadow: 0 2px 8px rgba(15, 79, 134, 0.05);
-            transition: transform .18s ease, border-color .18s ease;
+            box-shadow: none;
+            transition: transform .18s ease, outline-color .18s ease;
         }
 
         .doc-list-card:hover {
             transform: translateY(-2px);
-            border-color: #0f4f86;
+            outline-color: #0a2f52;
         }
 
         .doc-list-card.doc-selected {
-            border-color: #0f4f86 !important;
+            outline-color: #0a2f52 !important;
+            background: #f4f9fc;
         }
 
         .doc-list-name {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 8px;
-            font-size: 12.5px;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
             font-weight: 800;
             color: #0f4f86;
         }
 
         .doc-list-name i {
             color: #0d9488;
-            font-size: 15px;
+            font-size: 18px;
         }
 
         .doc-ref-btns {
             display: flex;
-            gap: 5px;
+            gap: 6px;
         }
 
         .doc-ref-btns + .doc-ref-btns {
-            margin-top: 5px;
+            margin-top: 6px;
         }
 
         .doc-ref-btn {
@@ -660,26 +663,22 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 5px;
             background: #0a2f52;
             color: #fff;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
-            padding: 5px 4px;
+            padding: 7px 5px;
             border-radius: 6px;
         }
 
         .doc-ref-btn i {
-            font-size: 10px;
+            font-size: 11px;
             opacity: .9;
         }
 
         .doc-ref-btns--ot .doc-ref-btn {
             background: #0d9488;
-        }
-
-        .doc-list-card.doc-selected {
-            border-color: #0f4f86 !important;
         }
 
         .doctor-list-empty {
@@ -701,7 +700,7 @@
 
         @media(max-width:768px) {
             .doctor-list-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
             }
         }
     </style>
