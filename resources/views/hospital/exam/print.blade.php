@@ -531,6 +531,7 @@
             window.print();
         }
     </script>
+    @unless($forPdf ?? false)
     <div class="no-print toolbar">
         <button class="toolbar__print" onclick="_doPrint()">Print</button>
 
@@ -539,6 +540,7 @@
             Back
         </a>
     </div>
+    @endunless
 
     @php
         $complaintMasters = $complaintMasters ?? collect();
