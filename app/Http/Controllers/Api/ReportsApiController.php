@@ -6,8 +6,8 @@ use App\Exports\PatientReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\CaseType;
 use App\Models\Hospital\HospitalUser;
-use App\Models\Hospital\Location;
 use App\Models\Hospital\Patient;
+use App\Models\Platform\MasterCity;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -25,9 +25,15 @@ class ReportsApiController extends Controller
             ->paginate(25)
             ->withQueryString();
 
-        $totalCollection = collect($patients->items())
-            ->filter(fn (Patient $p) => $this->isWalkIn($p->type))
-            ->sum(fn (Patient $p) => (float) ($p->case_fee ?? 0));
+        // Full-dataset SQL sum, not a per-page PHP sum — mirrors
+        // Hospital\Report\ReportController::index() exactly (same rule
+        // channelCounts() below already gets right; index() previously
+        // summed only the current page). See
+        // REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 1.1.
+        $totalCollection = (float) $this->buildQuery($request, true)
+            ->where('type', 'walkin')
+            ->whereDoesntHave('otAppointmentSource')
+            ->sum('case_fee');
 
         return response()->json([
             'success'          => true,
@@ -48,17 +54,21 @@ class ReportsApiController extends Controller
     {
         $tenantId = app('tenant')->id;
 
+        // Doctors and OT assistants are kept as separate lists — mirrors
+        // web's channel-conditional dropdown (doctors for every channel
+        // except ot_appointment, which shows assistants instead). This
+        // used to be one merged list; splitting it here matches
+        // showChannel()'s already-correct behaviour below. See
+        // REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 1.8.
         $doctors = HospitalUser::active()
             ->where('tenant_id', $tenantId)
-            ->where(function (Builder $q) {
-                $q->whereNotNull('doctor_type')
-                    ->orWhereHas('role', function (Builder $r) {
-                        $r->where(function (Builder $i) {
-                            $i->whereIn('slug', ['doctor', 'ot_assistant'])
-                                ->orWhereIn('name', ['doctor', 'ot_assistant']);
-                        });
-                    });
-            })
+            ->whereHas('role', fn (Builder $q) => $q->where('slug', 'doctor'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $assistants = HospitalUser::active()
+            ->where('tenant_id', $tenantId)
+            ->whereHas('role', fn (Builder $q) => $q->where('slug', 'ot_assistant'))
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -67,14 +77,15 @@ class ReportsApiController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $locations = Location::query()
-            ->orderBy('city')
-            ->get(['id', 'city', 'district', 'state'])
-            ->map(fn ($l) => [
-                'id'   => $l->id,
-                'city' => $l->city,
-                'name' => $l->name,
-            ]);
+        // MasterCity, country-scoped to the current tenant — mirrors
+        // Hospital\Report\ReportController::showChannel() exactly. The old
+        // Location-table lookup returned IDs from the wrong table:
+        // patients.location_id is validated against tbl_master_cities, not
+        // tbl_locations. See REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 1.2.
+        $hospitalCountry = app('tenant')->country;
+        $locations = MasterCity::whereHas('state.country', fn ($q) => $q->where('name', $hospitalCountry))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         $caseTypes = CaseType::query()->orderBy('case_type')->get(['id', 'case_type']);
 
@@ -82,6 +93,7 @@ class ReportsApiController extends Controller
             'success' => true,
             'data'    => [
                 'doctors'       => $doctors,
+                'assistants'    => $assistants,
                 'receptionists' => $receptionists,
                 'locations'     => $locations,
                 'case_types'    => $caseTypes,
@@ -142,6 +154,22 @@ class ReportsApiController extends Controller
             $doctors = HospitalUser::active()->whereHas('role', fn (Builder $q) => $q->where('slug', 'doctor'))->orderBy('name')->get(['id', 'name']);
         }
 
+        // receptionists / locations / case_types were missing from this
+        // response even though filterData() already returned them —
+        // channel drill-down needs the same filter set. See
+        // REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 1.9.
+        $receptionists = HospitalUser::active()
+            ->whereHas('role', fn (Builder $q) => $q->where('slug', 'receptionist'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $hospitalCountry = app('tenant')->country;
+        $locations = MasterCity::whereHas('state.country', fn ($q) => $q->where('name', $hospitalCountry))
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $caseTypes = CaseType::query()->orderBy('case_type')->get(['id', 'case_type']);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -151,6 +179,9 @@ class ReportsApiController extends Controller
                 'meta' => ['current_page' => $patients->currentPage(), 'last_page' => $patients->lastPage(), 'total' => $patients->total(), 'per_page' => $patients->perPage()],
                 'doctors' => $doctors,
                 'assistants' => $assistants,
+                'receptionists' => $receptionists,
+                'locations' => $locations,
+                'case_types' => $caseTypes,
             ],
         ]);
     }
@@ -190,7 +221,7 @@ class ReportsApiController extends Controller
 
     private function buildQuery(Request $request, bool $excludeChannelFilter = false): Builder
     {
-        $query = Patient::query()->with(['doctor', 'reception', 'location', 'caseType', 'otAppointmentSource']);
+        $query = Patient::query()->with(['doctor', 'reception', 'location', 'masterCity.district', 'masterCity.state', 'caseType', 'otAppointmentSource']);
 
         $query->when($request->filled('reception_id'), fn (Builder $b) =>
             $b->where('reception_id', (int) $request->input('reception_id'))
@@ -264,14 +295,19 @@ class ReportsApiController extends Controller
 
     private function formatPatient(Patient $p): array
     {
+        // 'd M, Y h:i A' (date + time), not date-only — mirrors web's
+        // display format exactly. See
+        // REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 1.5.
         $apptDate = $p->appointment_date
-            ? $p->appointment_date->format('d M, Y')
-            : ($p->created_at?->format('d M, Y') ?? '-');
+            ? $p->appointment_date->format('d M, Y h:i A')
+            : ($p->created_at?->format('d M, Y h:i A') ?? '-');
 
         return [
             'id'               => $p->id,
             'patient_code'     => $p->patient_code ?? 'N/A',
-            'full_name'        => trim(($p->first_name ?? '').' '.($p->last_name ?? '')),
+            // full_name accessor (handles middle name); manual
+            // first+last concatenation was dropping it. See TASK 1.6.
+            'full_name'        => $p->full_name,
             'appointment_date' => $apptDate,
             'created_at'       => $p->created_at?->toISOString(),
             'contact_no'       => $p->contact_no ?? '-',
@@ -282,7 +318,9 @@ class ReportsApiController extends Controller
             'case_type_label'  => $this->resolveCaseTypeLabel($p->caseType?->case_type),
             'doctor'           => $p->doctor ? ['name' => $p->doctor->name] : null,
             'receptionist'     => $p->reception ? ['name' => $p->reception->name] : null,
-            'location'         => $p->location ? ['city' => $p->location->city ?? $p->location->name] : null,
+            // masterCity is the correct relation; location (tbl_locations)
+            // is legacy and often unset. See TASK 1.3.
+            'location'         => ['city' => $p->masterCity?->name ?? $p->location?->city ?? ''],
         ];
     }
 }

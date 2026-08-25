@@ -671,6 +671,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         Route::get('/', [OtReportApiController::class, 'apiIndex'])
                             ->name('index')
                             ->middleware('permission:reports.view');
+                        Route::get('prescription/{patient}/pdf', [OtReportApiController::class, 'apiPrescriptionPdf'])
+                            ->name('prescription-pdf')
+                            ->middleware('permission:reports.view');
                         Route::get('{type}', [OtReportApiController::class, 'apiShow'])
                             ->name('show')
                             ->middleware('permission:reports.view');

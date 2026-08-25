@@ -36,12 +36,19 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Hospital\Report\OtReportController;
+use App\Models\Hospital\Dosage;
+use App\Models\Hospital\MedicineRoute;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtLensDetail;
 use App\Models\Hospital\OT\OtPayment;
+use App\Models\Hospital\Patient;
+use App\Models\Hospital\PrimaryExamination;
+use App\Models\Hospital\SecondaryExamination;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class OtReportApiController extends OtReportController
 {
@@ -74,6 +81,104 @@ class OtReportApiController extends OtReportController
                 'to' => $to,
             ],
         ]);
+    }
+
+    /**
+     * API mirror of OtReportController::patientPrescriptionPdf() — web returns a
+     * browser-printable View (relies on window.print()); the app instead needs an
+     * actual downloadable PDF, so this renders the same blade views through
+     * DomPDF. Same secondary-exam-preferred / primary-exam-fallback lookup as web.
+     *
+     * 'forPdf' => true is passed so the templates skip rendering their on-screen
+     * Print/Back toolbar (normally hidden only via `@media print`, which DomPDF's
+     * default 'screen' media type never applies — see
+     * REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 2.1). Without this the toolbar
+     * buttons would leak into the exported PDF.
+     */
+    public function apiPrescriptionPdf(Request $request, string $slug, int $patient)
+    {
+        // Permission enforced by the route's 'permission:reports.view' middleware
+        // (authorizePermission() on the parent is private, not inheritable — same
+        // reason apiIndex()/apiShow() above don't call it either).
+        $patientModel = Patient::findOrFail($patient);
+        $tenant = app('tenant');
+
+        $secondaryExam = SecondaryExamination::where('patient_id', $patient)
+            ->where('tenant_id', $tenant->id)
+            ->with('doctor')
+            ->first();
+
+        $primaryExam = PrimaryExamination::where('patient_id', $patient)
+            ->where('tenant_id', $tenant->id)
+            ->with('prescriptions.medicine.medicineType', 'prescriptions.dosage', 'doctor')
+            ->first();
+
+        abort_if(! $primaryExam && ! $secondaryExam, 404, 'No examination found for this patient.');
+
+        $primaryDoctorName = $primaryExam?->doctor?->name;
+        $secondaryDoctorName = $secondaryExam?->doctor?->name;
+
+        $diagnosisMasters = collect(DB::table('tbl_master_diagnosis')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as diagnosis')]));
+
+        $complaintMasters = collect(DB::table('chief_complaints')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as complaint')]));
+
+        $kcoMasters = collect(DB::table('kcos')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as kco')]));
+
+        $filename = 'Prescription_'.$patientModel->patient_code.'_'.now()->format('Y-m-d').'.pdf';
+
+        if ($secondaryExam) {
+            $dosages = Dosage::orderBy('dosage')->get(['id', 'dosage']);
+            $routes = MedicineRoute::where('tenant_id', $tenant->id)->orderBy('name')->get(['id', 'name']);
+
+            $pdf = Pdf::loadView('hospital.exam.secondary_print', [
+                'patient' => $patientModel,
+                'exam' => $secondaryExam,
+                'tenant' => $tenant,
+                'slug' => $slug,
+                'diagnosisMasters' => $diagnosisMasters,
+                'complaintMasters' => $complaintMasters,
+                'kcoMasters' => $kcoMasters,
+                'dosages' => $dosages,
+                'routes' => $routes,
+                'primaryDoctorName' => $primaryDoctorName,
+                'secondaryDoctorName' => $secondaryDoctorName,
+                'backUrl' => null,
+                'forPdf' => true,
+            ]);
+
+            return $pdf->download($filename);
+        }
+
+        $adviceMasters = collect(DB::table('tbl_master_advice')
+            ->where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->get(['id', DB::raw('value as advice')]));
+
+        $pdf = Pdf::loadView('hospital.exam.print', [
+            'patient' => $patientModel,
+            'exam' => $primaryExam,
+            'tenant' => $tenant,
+            'slug' => $slug,
+            'diagnosisMasters' => $diagnosisMasters,
+            'adviceMasters' => $adviceMasters,
+            'complaintMasters' => $complaintMasters,
+            'kcoMasters' => $kcoMasters,
+            'primaryDoctorName' => $primaryDoctorName,
+            'secondaryDoctorName' => $secondaryDoctorName,
+            'backUrl' => null,
+            'forPdf' => true,
+        ]);
+
+        return $pdf->download($filename);
     }
 
     /**
