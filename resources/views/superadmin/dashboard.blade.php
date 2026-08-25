@@ -15,9 +15,9 @@
             <p>Platform overview — hospitals, revenue, trials and subscriptions.</p>
         </div>
         <div class="sa-welcome-actions">
-            <a href="{{ route('superadmin.hospitals.create') }}" class="sa-btn-solid">
+            <button type="button" class="sa-btn-solid" data-bs-toggle="modal" data-bs-target="#addHospitalModal">
                 <i class="bi bi-plus-lg"></i> Add Hospital
-            </a>
+            </button>
             <a href="{{ route('superadmin.hospitals.index') }}" class="sa-btn-ghost">
                 <i class="bi bi-hospital"></i> View Hospitals
             </a>
@@ -494,4 +494,8 @@
     }
 }());
 </script>
+@endpush
+
+@push('modals')
+    @include('superadmin.tenants._create_modal')
 @endpush

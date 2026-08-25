@@ -7,10 +7,10 @@
     <a href="{{ route('superadmin.hospitals.index') }}" class="hms-btn hms-btn-outline hms-btn-sm">
         <i class="bi bi-arrow-left"></i> Back
     </a>
-    <a href="{{ route('superadmin.hospitals.edit', $tenant) }}" class="hms-btn hms-btn-primary hms-btn-sm"
-        style="color: #1B4F72;">
+    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" style="color: #1B4F72;"
+        data-bs-toggle="modal" data-bs-target="#editHospitalModal">
         <i class="bi bi-pencil-fill"></i> Edit
-    </a>
+    </button>
     <a href="{{ url($tenant->slug . '/login') }}" target="_blank" class="hms-btn hms-btn-outline hms-btn-sm">
         <i class="bi bi-box-arrow-up-right"></i> Open Portal
     </a>
@@ -281,3 +281,41 @@
     </div>
 
 @endsection
+
+@push('modals')
+    <div class="modal fade" id="editHospitalModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content" style="border-radius:14px;border:none;box-shadow:0 25px 80px rgba(0,0,0,.2)">
+                <div class="modal-header" style="border-bottom:1px solid rgba(27,79,114,.12);padding:1.25rem 1.5rem">
+                    <h5 class="modal-title"
+                        style="font-weight:700;font-size:1rem;color:#1B4F72;display:flex;align-items:center;gap:.5rem">
+                        <i class="bi bi-pencil-square"></i>
+                        Edit Hospital: {{ $tenant->name }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding:1.5rem">
+                    @include('superadmin.tenants._form', [
+                        'tenant' => $tenant,
+                        'action' => route('superadmin.hospitals.update', $tenant),
+                        'editTenantId' => $tenant->id,
+                        'submitLabel' => 'Save Changes',
+                    ])
+                </div>
+            </div>
+        </div>
+    </div>
+@endpush
+
+@push('scripts')
+    @if($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                var modal = document.getElementById('editHospitalModal');
+                if (modal && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(modal).show();
+                }
+            });
+        </script>
+    @endif
+@endpush

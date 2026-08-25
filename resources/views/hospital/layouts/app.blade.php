@@ -811,6 +811,63 @@
             justify-content: center;
         }
 
+        /* Hover peek: only when permanently collapsed (desktop).
+           Expands as overlay — main content margin stays collapsed. */
+        @media (min-width: 769px) {
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-sidebar {
+                width: var(--hms-sidebar-w);
+                z-index: 980;
+                box-shadow: 8px 0 28px rgba(15, 23, 42, 0.12);
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-copy,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-item span,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-label-wrap .hms-nav-section-label,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-toggle .hms-nav-chevron,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-sidebar-logout span {
+                display: initial !important;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .premium-sidebar-brand-link,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-item,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-toggle,
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-sidebar-logout {
+                justify-content: flex-start !important;
+                padding-left: .875rem !important;
+                padding-right: .875rem !important;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .premium-sidebar-brand-link {
+                padding: .85rem 1rem !important;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark {
+                max-width: none !important;
+                width: auto;
+                justify-content: flex-start;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark > span {
+                width: auto !important;
+                height: auto !important;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark .sidebar-logo {
+                max-width: 165px !important;
+                max-height: none !important;
+                width: auto !important;
+                height: 60px !important;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-label-wrap {
+                justify-content: flex-start;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-copy {
+                display: flex !important;
+            }
+        }
+
         /* Keep logo readable: brand strip in secondary */
         .premium-sidebar-brand {
             background: var(--shell-secondary);
@@ -1263,9 +1320,32 @@
             if (collapseBtn) {
                 collapseBtn.addEventListener('click', function () {
                     var collapsed = document.body.classList.toggle('hms-sidebar-collapsed');
+                    document.body.classList.remove('hms-sidebar-hover-expand');
                     try {
                         localStorage.setItem('hms_sidebar_collapsed', collapsed ? '1' : '0');
                     } catch (e) { }
+                });
+            }
+
+            // Hover peek expand — only while permanently collapsed (desktop)
+            if (sidebar) {
+                var hoverLeaveTimer = null;
+                var canHoverPeek = function () {
+                    return document.body.classList.contains('hms-sidebar-collapsed')
+                        && window.matchMedia('(min-width: 769px)').matches;
+                };
+
+                sidebar.addEventListener('mouseenter', function () {
+                    if (!canHoverPeek()) { return; }
+                    clearTimeout(hoverLeaveTimer);
+                    document.body.classList.add('hms-sidebar-hover-expand');
+                });
+
+                sidebar.addEventListener('mouseleave', function () {
+                    clearTimeout(hoverLeaveTimer);
+                    hoverLeaveTimer = setTimeout(function () {
+                        document.body.classList.remove('hms-sidebar-hover-expand');
+                    }, 140);
                 });
             }
 
@@ -1307,7 +1387,7 @@
     {{-- ================================================
     Top Navigation Bar
     ================================================ --}}
-    @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+        @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
         <nav class="hms-navbar">
             <div class="top-header">
                 <div class="d-flex align-items-center">
@@ -1422,8 +1502,8 @@
                 </a>
             </div>
 
-        </nav>
-    @endif
+            </nav>
+                @endif
 
     <div class="hms-layout">
 
@@ -1488,7 +1568,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-opd">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-person-lines-fill hms-nav-group-icon"></i>
-                            <span class="hms-nav-section-label" style="padding:0;margin:0">OPD</span>
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">OPD</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -1521,7 +1601,7 @@
                         <div class="hms-nav-group-toggle" data-target="nav-clinical">
                             <span class="hms-nav-group-label-wrap">
                                 <i class="bi bi-heart-pulse-fill hms-nav-group-icon"></i>
-                                <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
                             </span>
                             <i class="bi bi-chevron-down hms-nav-chevron"></i>
                         </div>
@@ -1584,7 +1664,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-ot">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-hospital-fill hms-nav-group-icon"></i>
-                            <span class="hms-nav-section-label" style="padding:0;margin:0">OT / Surgery</span>
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">OT / Surgery</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -1630,11 +1710,11 @@
                                 || $permSvc->can('ot.surgery.record');
                         @endphp
                         @if($showAssistant)
-                            <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
-                                <i class="bi bi-eyeglasses"></i>
-                                <span>OT Assistant Dashboard</span>
-                            </a>
+                        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
+                            <i class="bi bi-eyeglasses"></i>
+                            <span>OT Assistant Dashboard</span>
+                        </a>
                         @endif
 
                         {{-- Discharge Counter owns this desk (not Accountant). --}}
@@ -1660,7 +1740,7 @@
                         <div class="hms-nav-group-toggle" data-target="nav-reports">
                             <span class="hms-nav-group-label-wrap">
                                 <i class="bi bi-bar-chart-line-fill hms-nav-group-icon"></i>
-                                <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
                             </span>
                             <i class="bi bi-chevron-down hms-nav-chevron"></i>
                         </div>
@@ -1690,7 +1770,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-medicines">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-capsule hms-nav-group-icon"></i>
-                            <span class="hms-nav-section-label" style="padding:0;margin:0">Medicines</span>
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">Medicines</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -1741,7 +1821,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-config">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-gear-fill hms-nav-group-icon"></i>
-                            <span class="hms-nav-section-label" style="padding:0;margin:0">Config</span>
+                        <span class="hms-nav-section-label" style="padding:0;margin:0">Config</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
