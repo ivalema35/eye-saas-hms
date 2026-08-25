@@ -52,11 +52,11 @@ class TenantController extends Controller
     }
 
     /**
-     * create() — Manual hospital creation form.
+     * create() — Hospital is added from dashboard / list modal.
      */
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        return view('superadmin.tenants.create');
+        return redirect()->route('superadmin.hospitals.index');
     }
 
     /**
@@ -152,11 +152,11 @@ class TenantController extends Controller
     }
 
     /**
-     * edit() — Edit hospital details form.
+     * edit() — Hospital details are edited from the show-page modal.
      */
-    public function edit(Tenant $tenant): View
+    public function edit(Tenant $tenant): RedirectResponse
     {
-        return view('superadmin.tenants.edit', compact('tenant'));
+        return redirect()->route('superadmin.hospitals.show', $tenant);
     }
 
     /**

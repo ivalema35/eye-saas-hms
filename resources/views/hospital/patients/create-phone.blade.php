@@ -945,6 +945,27 @@
                     if (el && val !== null && val !== undefined) { el.value = val; }
                 };
 
+                var selectAndTrigger = function (el, value) {
+                    if (!el || value === null || value === undefined || value === '') { return; }
+                    var strVal = String(value);
+                    if (!el.querySelector('option[value="' + strVal + '"]')) { return; }
+                    if (typeof $ !== 'undefined') {
+                        $(el).val(strVal).trigger('change');
+                    } else {
+                        el.value = strVal;
+                        el.dispatchEvent(new Event('change'));
+                    }
+                };
+
+                var normalizeGender = function (raw) {
+                    if (!raw) { return ''; }
+                    var g = String(raw).trim().toLowerCase();
+                    if (g === 'm' || g === 'male') { return 'male'; }
+                    if (g === 'f' || g === 'female') { return 'female'; }
+                    if (g === 'other' || g === 'o') { return 'other'; }
+                    return g;
+                };
+
                 setVal('firstName', p.first_name);
                 setVal('middleName', p.middle_name);
                 setVal('lastName', p.last_name);
@@ -952,18 +973,9 @@
                 setVal('whatsappNo', p.whatsapp_no);
                 setVal('occupation', p.occupation);
 
-                var genderEl = document.getElementById('gender');
-                if (genderEl && p.gender) { genderEl.value = p.gender; }
+                selectAndTrigger(document.getElementById('gender'), normalizeGender(p.gender));
 
-                var locEl = document.getElementById('locationSelect');
-                if (locEl && p.location_id) {
-                    locEl.value = p.location_id;
-                    if (typeof $ !== 'undefined') {
-                        $(locEl).trigger('change');
-                    } else {
-                        locEl.dispatchEvent(new Event('change'));
-                    }
-                }
+                selectAndTrigger(document.getElementById('locationSelect'), p.location_id);
 
                 var oldPatientCb = document.getElementById('isOldPatient');
                 if (oldPatientCb) { oldPatientCb.checked = true; }

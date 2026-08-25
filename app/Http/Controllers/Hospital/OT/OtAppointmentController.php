@@ -227,7 +227,7 @@ class OtAppointmentController extends Controller
     /**
      * AJAX search used by Reception check-in (Patient registration) — matches by
      * appointment number (APT-000123), mobile number, or patient name; returns only
-     * appointments not yet converted/cancelled.
+     * today's booked/confirmed appointments not yet converted/cancelled.
      */
     public function search(Request $request): JsonResponse
     {
@@ -239,7 +239,9 @@ class OtAppointmentController extends Controller
 
         $query = OtAppointment::query()
             ->with(['doctor:id,name', 'location:id,name'])
-            ->whereIn('status', [OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED]);
+            ->whereDate('appointment_date', Carbon::today())
+            ->whereIn('status', [OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED])
+            ->whereNull('converted_patient_id');
 
         if (preg_match('/^APT-?0*(\d+)$/i', $term, $matches)) {
             $query->where('appointment_seq', (int) $matches[1]);

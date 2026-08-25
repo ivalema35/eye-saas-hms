@@ -121,7 +121,8 @@
                     <span>Requests</span>
                     @php $saPendingCount = \App\Models\Platform\Tenant::where('status', 'pending')->count(); @endphp
                     @if($saPendingCount > 0)
-                        <span style="margin-left:auto;background:#0f4f86;color:#fff;font-size:.65rem;font-weight:700;padding:.1rem .4rem;border-radius:999px">{{ $saPendingCount }}</span>
+                        <span
+                            style="margin-left:auto;background:#0f4f86;color:#fff;font-size:.65rem;font-weight:700;padding:.1rem .4rem;border-radius:999px">{{ $saPendingCount }}</span>
                     @endif
                 </a>
                 <a href="{{ route('superadmin.plans.index') }}"

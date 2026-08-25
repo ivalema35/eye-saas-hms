@@ -101,9 +101,9 @@ design. --}}
             display: inline-flex;
             align-items: center;
             gap: .4rem;
-            background: #ffffff;
-            color: var(--patients-primary);
-            border: none;
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 8px;
             padding: .5rem 1rem;
             font-weight: 700;
@@ -197,7 +197,7 @@ design. --}}
         }
 
         /* Modern Card — nested inside .patients-inner-panel, which now owns
-                               the border/shadow, so this is just a content wrapper. */
+                                   the border/shadow, so this is just a content wrapper. */
         .modern-card {
             background: var(--patients-surface);
             overflow: hidden;

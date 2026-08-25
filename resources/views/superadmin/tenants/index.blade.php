@@ -4,9 +4,10 @@
 @section('page-header', 'Hospitals')
 
 @section('page-actions')
-    <a href="{{ route('superadmin.hospitals.create') }}" class="hms-btn hms-btn-primary hms-btn-sm" style="color:#1b4f72;">
+    <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" style="color:#1b4f72;"
+        data-bs-toggle="modal" data-bs-target="#addHospitalModal">
         <i class="bi bi-plus-lg"></i> Add Hospital
-    </a>
+    </button>
 @endsection
 
 @section('content')
@@ -183,6 +184,8 @@
 @endsection
 
 @push('modals')
+    @include('superadmin.tenants._create_modal')
+
     @foreach($tenants as $tenant)
         <div class="modal fade" id="editHospitalModal-{{ $tenant->id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-lg">

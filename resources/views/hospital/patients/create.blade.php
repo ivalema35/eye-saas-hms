@@ -259,6 +259,28 @@
                 setTimeout(function () { toast.style.display = 'none'; }, 3500);
             }
 
+            // Select2-backed dropdowns need jQuery .val().trigger('change'), not plain .value
+            function normalizeGender(raw) {
+                if (!raw) { return ''; }
+                var g = String(raw).trim().toLowerCase();
+                if (g === 'm' || g === 'male') { return 'male'; }
+                if (g === 'f' || g === 'female') { return 'female'; }
+                if (g === 'other' || g === 'o') { return 'other'; }
+                return g;
+            }
+
+            function selectAndTrigger(el, value) {
+                if (!el || value === null || value === undefined || value === '') { return; }
+                var strVal = String(value);
+                if (!el.querySelector('option[value="' + strVal + '"]')) { return; }
+                if (typeof $ !== 'undefined') {
+                    $(el).val(strVal).trigger('change');
+                } else {
+                    el.value = strVal;
+                    el.dispatchEvent(new Event('change'));
+                }
+            }
+
             // ── Contact → Patient Dropdown Selection ──────────────────────
             var contactInput = document.getElementById('contactNo');
             var patientSuggestions = document.getElementById('patientSuggestions');
@@ -286,18 +308,9 @@
                 setVal('whatsappNo', p.whatsapp_no);
                 setVal('occupation', p.occupation);
 
-                var genderEl = document.getElementById('gender');
-                if (genderEl && p.gender) { genderEl.value = p.gender; }
+                selectAndTrigger(document.getElementById('gender'), normalizeGender(p.gender));
 
-                var locEl = document.getElementById('locationSelect');
-                if (locEl && p.location_id && locEl.querySelector('option[value="' + p.location_id + '"]')) {
-                    locEl.value = p.location_id;
-                    if (typeof $ !== 'undefined') {
-                        $(locEl).trigger('change');
-                    } else {
-                        locEl.dispatchEvent(new Event('change'));
-                    }
-                }
+                selectAndTrigger(document.getElementById('locationSelect'), p.location_id);
 
                 var oldPatientCb = document.getElementById('isOldPatient');
                 if (oldPatientCb) { oldPatientCb.checked = true; }
@@ -383,14 +396,7 @@
                 var contactEl = document.getElementById('contactNo');
                 if (contactEl && a.mobile_no) { contactEl.value = a.mobile_no; }
 
-                var genderEl = document.getElementById('gender');
-                if (genderEl && a.gender) { genderEl.value = a.gender; }
-
-                var selectAndTrigger = function (el, value) {
-                    if (!el || !value || !el.querySelector('option[value="' + value + '"]')) { return; }
-                    el.value = value;
-                    if (typeof $ !== 'undefined') { $(el).trigger('change'); } else { el.dispatchEvent(new Event('change')); }
-                };
+                selectAndTrigger(document.getElementById('gender'), normalizeGender(a.gender));
 
                 selectAndTrigger(document.getElementById('locationSelect'), a.location_id);
                 selectAndTrigger(document.getElementById('doctorSelect'), a.doctor_id);
