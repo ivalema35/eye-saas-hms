@@ -126,7 +126,7 @@ class ReportsApiController extends Controller
      * Dedicated per-channel patient list (Round 3.5 gap-fill) — mirrors
      * Hospital\Report\ReportController::showChannel() exactly.
      */
-    public function showChannel(Request $request, string $channel): JsonResponse
+    public function showChannel(Request $request, string $slug, string $channel): JsonResponse
     {
         $labels = [
             'ot_appointment' => 'OT Appointment Patients',
