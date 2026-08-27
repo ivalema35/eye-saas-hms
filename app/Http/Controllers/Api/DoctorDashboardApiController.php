@@ -57,6 +57,16 @@ class DoctorDashboardApiController extends Controller
                 ->whereNotNull('secondary_done_at')->count();
         }
 
+        // ── Hospital-wide today/primary/secondary (shown alongside the
+        // doctor's own stats — mirrors doctoredashboard.blade.php:756-760,
+        // sourced from Hospital\DashboardController.php:89-98). Tenant-wide,
+        // no doctor_id filter. See DASHBOARD_PARITY_FIX_PLAN.md Phase 3.
+        $tenantTodayPatients  = Patient::whereDate('appointment_date', $today)->count();
+        $tenantTodayPrimary   = Patient::whereDate('appointment_date', $today)
+            ->whereNotNull('primary_done_at')->count();
+        $tenantTodaySecondary = Patient::whereDate('appointment_date', $today)
+            ->whereNotNull('secondary_done_at')->count();
+
         // ── Doctor cards (all OPD doctors, skip OT Doctor) ────────────────────
         $doctorCards = HospitalUser::with('role')
             ->whereHas('role', fn ($q) => $q->where('slug', 'doctor'))
@@ -208,6 +218,9 @@ class DoctorDashboardApiController extends Controller
                     'primary_done'   => $primaryDone,
                     'secondary_done' => $secondaryDone,
                 ],
+                'tenant_today_patients'  => $tenantTodayPatients,
+                'tenant_today_primary'   => $tenantTodayPrimary,
+                'tenant_today_secondary' => $tenantTodaySecondary,
                 'doctor_cards'   => $doctorCards,
                 'ot_doctor_cards'=> $otDoctorCards,
                 'ot_summary'     => $otSummary,
