@@ -184,6 +184,9 @@ class AuthController extends Controller
         return [
             'name' => $tenant->name,
             'slug' => $tenant->slug,
+            'currency_code' => $tenant->currency_code,
+            'currency_symbol' => $tenant->currency_symbol,
+            'timezone' => $tenant->timezone,
         ];
     }
 }

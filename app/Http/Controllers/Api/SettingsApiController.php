@@ -64,6 +64,12 @@ class SettingsApiController extends Controller
             'hospital_district_id'=> $districtRecord?->id,
             'hospital_city'       => $stored->get('hospital_city', $tenant?->city ?? ''),
             'hospital_timezone'   => $stored->get('hospital_timezone', $tenant?->timezone ?? 'UTC'),
+            // Currency — settingsUpdate() already writes these on country
+            // change; settingsShow() was never reading them back. See
+            // LOCATION_CURRENCY_PARITY_PRD.md Phase 1.
+            'currency_code'          => $tenant?->currency_code,
+            'currency_symbol'        => $tenant?->currency_symbol,
+            'is_currency_override'   => $tenant?->is_currency_override ?? false,
             // Billing
             'invoice_prefix'     => $stored->get('invoice_prefix', 'INV-'),
             'tax_percentage'     => (float) $stored->get('tax_percentage', '0'),

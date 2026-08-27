@@ -102,6 +102,7 @@ class PlatformHospitalApiController extends Controller
                 },
             ],
             'password' => ['required', 'string', 'min:8'],
+            'country'  => ['nullable', 'string', 'max:100'],
             'city'     => ['nullable', 'string', 'max:100'],
             'state'    => ['nullable', 'string', 'max:100'],
             'plan'     => ['nullable', 'in:monthly,quarterly,yearly'],

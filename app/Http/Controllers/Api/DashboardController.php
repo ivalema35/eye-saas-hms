@@ -39,6 +39,13 @@ class DashboardController extends Controller
         // ── OPD Stats ──────────────────────────────────────────────────
         $todayPatients = Patient::whereDate('appointment_date', $today)->count();
 
+        // Web's separate "Pending Exams" card (Hospital\DashboardController.php:90-92)
+        // — deliberately no type/checked_in_at filter, unlike primaryQueueCount
+        // below. See DASHBOARD_PARITY_FIX_PLAN.md Phase 5.
+        $pendingExams = Patient::whereDate('appointment_date', $today)
+            ->whereNull('primary_done_at')
+            ->count();
+
         $primaryQueueCount = Patient::whereDate('appointment_date', $today)
             ->whereNull('primary_done_at')
             ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
@@ -132,7 +139,22 @@ class DashboardController extends Controller
 
         // ── Staff ──────────────────────────────────────────────────────
         $totalDoctors    = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
-        $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))->count();
+        $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
+
+        // ── Hospital Admin's own 8-card set (Hospital\DashboardController.php:527-552)
+        // — a completely separate, simpler card set from everything above,
+        // shown ONLY to the tenant's Hospital Admin (is_super), never to any
+        // other role. See DASHBOARD_PARITY_FIX_PLAN.md Phase 7.
+        $todayPrimary = Patient::whereDate('appointment_date', $today)
+            ->whereNotNull('primary_done_at')
+            ->count();
+        $todaySecondary = Patient::whereDate('appointment_date', $today)
+            ->whereNotNull('secondary_done_at')
+            ->count();
+        $otTotalToday = 0;
+        try {
+            $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
+        } catch (\Throwable) {}
 
         // ── Subscription days remaining ────────────────────────────────
         $subscriptionDaysLeft = null;
@@ -303,6 +325,7 @@ class DashboardController extends Controller
                 'my_primary_pending'          => $myPrimaryPending,
                 'my_secondary_pending'        => $mySecondaryPending,
                 'today_patients'              => $todayPatients,
+                'pending_exams'               => $pendingExams,
                 'primary_queue_count'         => $primaryQueueCount,
                 'secondary_queue_count'       => $secondaryQueueCount,
                 'today_walkin'                => $todayWalkin,
@@ -315,6 +338,11 @@ class DashboardController extends Controller
                 'ot_operated'                 => $otOperated,
                 'ot_pending'                  => $otPending,
                 'total_staff'                 => $totalDoctors + $totalReceptions,
+                'total_doctors'               => $totalDoctors,
+                'total_receptions'            => $totalReceptions,
+                'today_primary'               => $todayPrimary,
+                'today_secondary'             => $todaySecondary,
+                'ot_total_today'              => $otTotalToday,
                 'primary_queue'               => $primaryQueue,
                 'receptionists'               => $receptionists,
                 'wait_thresholds'             => $thresholds,
