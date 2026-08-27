@@ -1,4 +1,4 @@
-@extends('superadmin.layouts.app')
+﻿@extends('superadmin.layouts.app')
 
 @section('title', 'Location Master')
 {{-- Layout page-header intentionally unused — the heading, breadcrumb, tabs
@@ -744,12 +744,22 @@ panel design. --}}
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Country Code (ISO) <span style="color:#E53E3E">*</span></label>
-                            <select name="country_code" id="addCountryCode" class="hms-input" required>
+                            <select id="addCountryCodePreset" class="hms-input" required>
                                 <option value="">— Select Code —</option>
+                                <option value="__other__">➕ Other / Not in list — type manually</option>
                                 @foreach(\App\Services\Platform\CurrencyService::commonCountryCodes() as $iso => $hint)
                                     <option value="{{ $iso }}" @selected($iso === 'IN')>{{ $iso }} — {{ $hint }}</option>
                                 @endforeach
                             </select>
+                            <div id="addCountryCodeCustomWrap" class="mt-2 d-none">
+                                <input type="text" id="addCountryCodeCustom" class="hms-input"
+                                    maxlength="2" pattern="[A-Za-z]{2}" placeholder="e.g. PH"
+                                    style="text-transform:uppercase;letter-spacing:.08em;max-width:120px">
+                                <p style="font-size:.78rem;color:#64748B;margin:.4rem 0 0">
+                                    Enter 2-letter ISO code (e.g. PH for Philippines, VN for Vietnam).
+                                </p>
+                            </div>
+                            <input type="hidden" name="country_code" id="addCountryCode" value="IN">
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Default Timezone <span style="color:#E53E3E">*</span></label>
@@ -765,7 +775,8 @@ panel design. --}}
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Currency <span style="color:#E53E3E">*</span></label>
-                            <select name="currency_code" id="addCountryCurrency" class="hms-input" required>
+                            <select id="addCountryCurrencyPreset" class="hms-input" required>
+                                <option value="__other__">➕ Other / Not in list — type manually</option>
                                 @foreach(\App\Services\Platform\CurrencyService::commonCurrencies() as $cur)
                                     <option value="{{ $cur['code'] }}" data-symbol="{{ $cur['symbol'] }}"
                                         data-name="{{ $cur['name'] }}"
@@ -775,6 +786,29 @@ panel design. --}}
                                     </option>
                                 @endforeach
                             </select>
+                            <div id="addCountryCurrencyCustomWrap" class="mt-2 d-none"
+                                style="display:none;grid-template-columns:1fr 1fr 1.4fr;gap:.5rem">
+                                <div>
+                                    <label class="hms-label" style="font-size:.72rem">Code *</label>
+                                    <input type="text" id="addCurrencyCodeCustom" class="hms-input"
+                                        maxlength="3" pattern="[A-Za-z]{3}" placeholder="PHP"
+                                        style="text-transform:uppercase">
+                                </div>
+                                <div>
+                                    <label class="hms-label" style="font-size:.72rem">Symbol *</label>
+                                    <input type="text" id="addCurrencySymbolCustom" class="hms-input"
+                                        maxlength="10" placeholder="₱">
+                                </div>
+                                <div>
+                                    <label class="hms-label" style="font-size:.72rem">Name</label>
+                                    <input type="text" id="addCurrencyNameCustom" class="hms-input"
+                                        maxlength="50" placeholder="Philippine Peso">
+                                </div>
+                            </div>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">
+                                List ma nathi? <strong>Other</strong> select kari code / symbol / name nakho.
+                            </p>
+                            <input type="hidden" name="currency_code" id="addCountryCurrency" value="INR">
                             <input type="hidden" name="currency_symbol" id="addCountryCurrencySymbol" value="₹">
                             <input type="hidden" name="currency_name" id="addCountryCurrencyName" value="Indian Rupee">
                         </div>
@@ -836,12 +870,22 @@ panel design. --}}
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Country Code (ISO) <span style="color:#E53E3E">*</span></label>
-                            <select name="country_code" id="editCountryCode" class="hms-input" required>
+                            <select id="editCountryCodePreset" class="hms-input" required>
                                 <option value="">— Select Code —</option>
+                                <option value="__other__">➕ Other / Not in list — type manually</option>
                                 @foreach(\App\Services\Platform\CurrencyService::commonCountryCodes() as $iso => $hint)
                                     <option value="{{ $iso }}">{{ $iso }} — {{ $hint }}</option>
                                 @endforeach
                             </select>
+                            <div id="editCountryCodeCustomWrap" class="mt-2 d-none">
+                                <input type="text" id="editCountryCodeCustom" class="hms-input"
+                                    maxlength="2" pattern="[A-Za-z]{2}" placeholder="e.g. PH"
+                                    style="text-transform:uppercase;letter-spacing:.08em;max-width:120px">
+                                <p style="font-size:.78rem;color:#64748B;margin:.4rem 0 0">
+                                    Enter 2-letter ISO code (e.g. PH for Philippines).
+                                </p>
+                            </div>
+                            <input type="hidden" name="country_code" id="editCountryCode" value="">
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Default Timezone <span style="color:#E53E3E">*</span></label>
@@ -862,7 +906,8 @@ panel design. --}}
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Currency <span style="color:#E53E3E">*</span></label>
-                            <select name="currency_code" id="editCountryCurrency" class="hms-input" required>
+                            <select id="editCountryCurrencyPreset" class="hms-input" required>
+                                <option value="__other__">➕ Other / Not in list — type manually</option>
                                 @foreach(\App\Services\Platform\CurrencyService::commonCurrencies() as $cur)
                                     <option value="{{ $cur['code'] }}" data-symbol="{{ $cur['symbol'] }}"
                                         data-name="{{ $cur['name'] }}"
@@ -871,12 +916,33 @@ panel design. --}}
                                     </option>
                                 @endforeach
                             </select>
-                            <input type="hidden" name="currency_symbol" id="editCountryCurrencySymbol" value="₹">
-                            <input type="hidden" name="currency_name" id="editCountryCurrencyName" value="">
+                            <div id="editCountryCurrencyCustomWrap" class="mt-2 d-none"
+                                style="display:none;grid-template-columns:1fr 1fr 1.4fr;gap:.5rem">
+                                <div>
+                                    <label class="hms-label" style="font-size:.72rem">Code *</label>
+                                    <input type="text" id="editCurrencyCodeCustom" class="hms-input"
+                                        maxlength="3" pattern="[A-Za-z]{3}" placeholder="PHP"
+                                        style="text-transform:uppercase">
+                                </div>
+                                <div>
+                                    <label class="hms-label" style="font-size:.72rem">Symbol *</label>
+                                    <input type="text" id="editCurrencySymbolCustom" class="hms-input"
+                                        maxlength="10" placeholder="₱">
+                                </div>
+                                <div>
+                                    <label class="hms-label" style="font-size:.72rem">Name</label>
+                                    <input type="text" id="editCurrencyNameCustom" class="hms-input"
+                                        maxlength="50" placeholder="Philippine Peso">
+                                </div>
+                            </div>
                             <p style="font-size:.78rem;color:#F59E0B;margin:.5rem 0 0">
                                 <i class="bi bi-exclamation-triangle-fill me-1"></i>
                                 Currency cascades to hospitals that have not overridden it.
+                                List ma nathi to <strong>Other</strong> select karo.
                             </p>
+                            <input type="hidden" name="currency_code" id="editCountryCurrency" value="">
+                            <input type="hidden" name="currency_symbol" id="editCountryCurrencySymbol" value="₹">
+                            <input type="hidden" name="currency_name" id="editCountryCurrencyName" value="">
                         </div>
                         <div class="mb-3">
                             <label class="hms-label">Plan price (INR)</label>
@@ -1379,24 +1445,191 @@ panel design. --}}
                 });
             });
 
-            /* ── Currency select → fill hidden symbol/name + FX ── */
-            function bindCurrencySelect(selId, symbolId, nameId, fxId) {
-                const sel = document.getElementById(selId);
-                if (!sel) return;
-                const sync = () => {
-                    const opt = sel.options[sel.selectedIndex];
-                    const symbolEl = document.getElementById(symbolId);
-                    const nameEl = document.getElementById(nameId);
-                    const fxEl = document.getElementById(fxId);
-                    if (symbolEl) symbolEl.value = opt?.dataset?.symbol || '';
-                    if (nameEl) nameEl.value = opt?.dataset?.name || '';
-                    if (fxEl && opt?.dataset?.fx) fxEl.value = opt.dataset.fx;
-                };
-                sel.addEventListener('change', sync);
-                sync();
+            /* ── Country code / currency: preset + Other (manual) ── */
+            function setWrapVisible(wrap, visible) {
+                if (!wrap) return;
+                if (visible) {
+                    wrap.classList.remove('d-none');
+                    wrap.style.display = wrap.dataset.display || '';
+                } else {
+                    wrap.classList.add('d-none');
+                    if (wrap.dataset.display === 'grid') wrap.style.display = 'none';
+                }
             }
-            bindCurrencySelect('addCountryCurrency', 'addCountryCurrencySymbol', 'addCountryCurrencyName', 'addCountryFx');
-            bindCurrencySelect('editCountryCurrency', 'editCountryCurrencySymbol', 'editCountryCurrencyName', 'editCountryFx');
+
+            function bindCountryCodePicker(presetId, customWrapId, customInputId, hiddenId) {
+                const preset = document.getElementById(presetId);
+                const wrap = document.getElementById(customWrapId);
+                const custom = document.getElementById(customInputId);
+                const hidden = document.getElementById(hiddenId);
+                if (!preset || !hidden) return;
+
+                const sync = () => {
+                    if (preset.value === '__other__') {
+                        setWrapVisible(wrap, true);
+                        if (custom) {
+                            custom.required = true;
+                            hidden.value = (custom.value || '').trim().toUpperCase();
+                        }
+                    } else {
+                        setWrapVisible(wrap, false);
+                        if (custom) {
+                            custom.required = false;
+                            custom.value = '';
+                        }
+                        hidden.value = preset.value || '';
+                    }
+                };
+
+                preset.addEventListener('change', sync);
+                if (custom) {
+                    custom.addEventListener('input', function () {
+                        this.value = this.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 2);
+                        hidden.value = this.value;
+                    });
+                }
+                sync();
+
+                return {
+                    setValue: function (code) {
+                        const v = String(code || '').toUpperCase();
+                        const hasOption = !!preset.querySelector('option[value="' + v + '"]');
+                        if (v && hasOption) {
+                            preset.value = v;
+                        } else if (v) {
+                            preset.value = '__other__';
+                            if (custom) custom.value = v;
+                        } else {
+                            preset.value = '';
+                        }
+                        sync();
+                    }
+                };
+            }
+
+            function bindCurrencyPicker(presetId, customWrapId, codeCustomId, symbolCustomId, nameCustomId, hiddenCodeId, hiddenSymbolId, hiddenNameId, fxId) {
+                const preset = document.getElementById(presetId);
+                const wrap = document.getElementById(customWrapId);
+                const codeCustom = document.getElementById(codeCustomId);
+                const symbolCustom = document.getElementById(symbolCustomId);
+                const nameCustom = document.getElementById(nameCustomId);
+                const hiddenCode = document.getElementById(hiddenCodeId);
+                const hiddenSymbol = document.getElementById(hiddenSymbolId);
+                const hiddenName = document.getElementById(hiddenNameId);
+                const fxEl = document.getElementById(fxId);
+                if (!preset || !hiddenCode) return;
+
+                if (wrap) wrap.dataset.display = 'grid';
+
+                const syncFromPreset = () => {
+                    if (preset.value === '__other__') {
+                        setWrapVisible(wrap, true);
+                        if (wrap) wrap.style.display = 'grid';
+                        if (codeCustom) codeCustom.required = true;
+                        if (symbolCustom) symbolCustom.required = true;
+                        hiddenCode.value = (codeCustom?.value || '').trim().toUpperCase();
+                        hiddenSymbol.value = (symbolCustom?.value || '').trim();
+                        hiddenName.value = (nameCustom?.value || '').trim();
+                    } else {
+                        setWrapVisible(wrap, false);
+                        if (wrap) wrap.style.display = 'none';
+                        if (codeCustom) { codeCustom.required = false; codeCustom.value = ''; }
+                        if (symbolCustom) { symbolCustom.required = false; symbolCustom.value = ''; }
+                        if (nameCustom) nameCustom.value = '';
+                        const opt = preset.options[preset.selectedIndex];
+                        hiddenCode.value = preset.value || '';
+                        hiddenSymbol.value = opt?.dataset?.symbol || '';
+                        hiddenName.value = opt?.dataset?.name || '';
+                        if (fxEl && opt?.dataset?.fx) fxEl.value = opt.dataset.fx;
+                    }
+                };
+
+                const syncFromCustom = () => {
+                    if (preset.value !== '__other__') return;
+                    if (codeCustom) {
+                        codeCustom.value = codeCustom.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3);
+                        hiddenCode.value = codeCustom.value;
+                    }
+                    if (symbolCustom) hiddenSymbol.value = symbolCustom.value.trim();
+                    if (nameCustom) hiddenName.value = nameCustom.value.trim();
+                };
+
+                preset.addEventListener('change', syncFromPreset);
+                [codeCustom, symbolCustom, nameCustom].forEach(function (el) {
+                    if (el) el.addEventListener('input', syncFromCustom);
+                });
+                syncFromPreset();
+
+                return {
+                    setValue: function (code, symbol, name) {
+                        const v = String(code || '').toUpperCase();
+                        const hasOption = !!preset.querySelector('option[value="' + v + '"]');
+                        if (v && hasOption) {
+                            preset.value = v;
+                            syncFromPreset();
+                        } else if (v) {
+                            preset.value = '__other__';
+                            syncFromPreset();
+                            if (codeCustom) codeCustom.value = v;
+                            if (symbolCustom) symbolCustom.value = symbol || '';
+                            if (nameCustom) nameCustom.value = name || '';
+                            syncFromCustom();
+                        } else {
+                            preset.value = 'INR';
+                            syncFromPreset();
+                        }
+                    }
+                };
+            }
+
+            const addCountryCodePicker = bindCountryCodePicker(
+                'addCountryCodePreset', 'addCountryCodeCustomWrap', 'addCountryCodeCustom', 'addCountryCode'
+            );
+            const editCountryCodePicker = bindCountryCodePicker(
+                'editCountryCodePreset', 'editCountryCodeCustomWrap', 'editCountryCodeCustom', 'editCountryCode'
+            );
+            const addCurrencyPicker = bindCurrencyPicker(
+                'addCountryCurrencyPreset', 'addCountryCurrencyCustomWrap',
+                'addCurrencyCodeCustom', 'addCurrencySymbolCustom', 'addCurrencyNameCustom',
+                'addCountryCurrency', 'addCountryCurrencySymbol', 'addCountryCurrencyName', 'addCountryFx'
+            );
+            const editCurrencyPicker = bindCurrencyPicker(
+                'editCountryCurrencyPreset', 'editCountryCurrencyCustomWrap',
+                'editCurrencyCodeCustom', 'editCurrencySymbolCustom', 'editCurrencyNameCustom',
+                'editCountryCurrency', 'editCountryCurrencySymbol', 'editCountryCurrencyName', 'editCountryFx'
+            );
+
+            /* Validate before submit: Other fields must be filled */
+            function guardCountryForm(form, codeHiddenId, currencyHiddenId, symbolHiddenId) {
+                if (!form) return;
+                form.addEventListener('submit', function (e) {
+                    const code = (document.getElementById(codeHiddenId)?.value || '').trim();
+                    const cur = (document.getElementById(currencyHiddenId)?.value || '').trim();
+                    const sym = (document.getElementById(symbolHiddenId)?.value || '').trim();
+                    if (!/^[A-Z]{2}$/.test(code)) {
+                        e.preventDefault();
+                        alert('Country Code 2 letters ma nakho (e.g. PH, IN). List ma nathi to Other select karo.');
+                        return;
+                    }
+                    if (!/^[A-Z]{3}$/.test(cur)) {
+                        e.preventDefault();
+                        alert('Currency Code 3 letters ma nakho (e.g. PHP, INR). List ma nathi to Other select karo.');
+                        return;
+                    }
+                    if (!sym) {
+                        e.preventDefault();
+                        alert('Currency symbol required che (e.g. ₱, ₹, $).');
+                    }
+                });
+            }
+            guardCountryForm(
+                document.querySelector('#addCountryModal form'),
+                'addCountryCode', 'addCountryCurrency', 'addCountryCurrencySymbol'
+            );
+            guardCountryForm(
+                document.getElementById('editCountryForm'),
+                'editCountryCode', 'editCountryCurrency', 'editCountryCurrencySymbol'
+            );
 
             /* ── Edit Country ── */
             document.querySelectorAll('.edit-country-btn').forEach(btn => {
@@ -1404,14 +1637,17 @@ panel design. --}}
                     document.getElementById('editCountryForm').action =
                         '{{ route("superadmin.locations.countries.update", ":id") }}'.replace(':id', this.dataset.id);
                     document.getElementById('editCountryName').value = this.dataset.name;
-                    const codeSel = document.getElementById('editCountryCode');
-                    if (codeSel) codeSel.value = this.dataset.countryCode || '';
+                    if (editCountryCodePicker) {
+                        editCountryCodePicker.setValue(this.dataset.countryCode || '');
+                    }
                     const tzSel = document.getElementById('editCountryTimezone');
                     if (tzSel) tzSel.value = this.dataset.timezone || 'UTC';
-                    const curSel = document.getElementById('editCountryCurrency');
-                    if (curSel) {
-                        curSel.value = this.dataset.currencyCode || 'INR';
-                        curSel.dispatchEvent(new Event('change'));
+                    if (editCurrencyPicker) {
+                        editCurrencyPicker.setValue(
+                            this.dataset.currencyCode || 'INR',
+                            this.dataset.currencySymbol || '',
+                            this.dataset.currencyName || ''
+                        );
                     }
                     const fxEl = document.getElementById('editCountryFx');
                     if (fxEl) fxEl.value = this.dataset.fx || '1';
