@@ -69,8 +69,9 @@ class TenantController extends Controller
             'hospital_code' => [
                 'required',
                 'string',
-                'size:3',
-                'regex:/^[A-Za-z]{3}$/',
+                'min:3',
+                'max:4',
+                'regex:/^[A-Za-z]{3,4}$/',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     if (Tenant::where('hospital_code', strtoupper($value))->exists()) {
                         $fail('This hospital code is already taken by another hospital.');
@@ -86,8 +87,8 @@ class TenantController extends Controller
                 'unique:tenants,slug',
                 function (string $attribute, mixed $value, \Closure $fail): void {
                     $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'api', 'health', 'webhook'];
-                    if (in_array(strtolower((string) $value), $reserved, true)) {
-                        $fail('This slug is reserved.');
+                    if (in_array(strtolower($value), $reserved)) {
+                        $fail('This URL slug is reserved and cannot be used.');
                     }
                 },
             ],
@@ -120,14 +121,15 @@ class TenantController extends Controller
                     }
                 },
             ],
-            'password' => ['required', 'string', 'min:8'],
-            'city' => ['nullable', 'string', 'max:100'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'country' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
-            'plan' => ['nullable', 'in:monthly,quarterly,yearly'],
+            'district' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:150'],
+            'plan' => ['required', 'in:monthly,quarterly,yearly'],
             'start_trial' => ['nullable', 'in:1'],
         ], array_merge(EmailRules::messages('admin_email'), PhoneRules::messages('admin_phone')));
 
-        $validated['plan'] = $validated['plan'] ?? 'monthly';
         $validated['start_trial'] = '1';
         $validated['skip_approval'] = true;
 

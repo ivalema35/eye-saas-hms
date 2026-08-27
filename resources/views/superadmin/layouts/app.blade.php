@@ -521,7 +521,6 @@
                     backdrop.classList.remove('show');
                 });
             }
-
             /* Set initial max-height on open groups so CSS transition works */
             document.querySelectorAll('.hms-nav-group-items').forEach(function (items) {
                 if (!items.classList.contains('collapsed')) {
@@ -563,44 +562,45 @@
         });
     </script>
 
-    {{-- SweetAlert2 Flash Toast --}}
-    @if(session('success'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                Swal.fire({
-                    toast: true, position: 'top-end', icon: 'success',
-                    title: @json(session('success')), showConfirmButton: false, timer: 3500,
-                    timerProgressBar: true, customClass: { popup: 'sa-swal-toast' }
-                });
+</body>
+{{-- SweetAlert2 Flash Toast --}}
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'success',
+                title: @json(session('success')), showConfirmButton: false, timer: 3500,
+                timerProgressBar: true, customClass: { popup: 'sa-swal-toast' }
             });
-        </script>
-    @endif
-    @if(session('error'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                Swal.fire({
-                    toast: true, position: 'top-end', icon: 'error',
-                    title: @json(session('error')), showConfirmButton: false, timer: 4500,
-                    timerProgressBar: true, customClass: { popup: 'sa-swal-toast' }
-                });
+        });
+    </script>
+@endif
+@if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'error',
+                title: @json(session('error')), showConfirmButton: false, timer: 4500,
+                timerProgressBar: true, customClass: { popup: 'sa-swal-toast' }
             });
-        </script>
-    @endif
-    @if(session('warning'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                Swal.fire({
-                    toast: true, position: 'top-end', icon: 'warning',
-                    title: @json(session('warning')), showConfirmButton: false, timer: 4000,
-                    timerProgressBar: true, customClass: { popup: 'sa-swal-toast' }
-                });
+        });
+    </script>
+@endif
+@if(session('warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            Swal.fire({
+                toast: true, position: 'top-end', icon: 'warning',
+                title: @json(session('warning')), showConfirmButton: false, timer: 4000,
+                timerProgressBar: true, customClass: { popup: 'sa-swal-toast' }
             });
-        </script>
-    @endif
+        });
+    </script>
+@endif
 
-    @stack('scripts')
-    @stack('modals')
-    <script src="{{ asset('js/intl-phone-input.js') }}"></script>
+@stack('scripts')
+@stack('modals')
+<script src="{{ asset('js/intl-phone-input.js') }}"></script>
 </body>
 
 </html>

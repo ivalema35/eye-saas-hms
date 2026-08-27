@@ -72,8 +72,12 @@
         </tr>
         <tr>
             <td style="padding:1.25rem 2.5rem;text-align:center;border-top:1px solid #E2E8F0;">
-                <span>&copy; {{ date('Y') }} EYENOSIS. All rights reserved. | Designed &amp; Developed by <a
-                        href="https://ivinfotech.com" target="_blank" rel="noopener noreferrer">IV Infotech</a></span>
+                <span>
+                    &copy; {{ date('Y') }}
+                    <a href="https://eyenosis.com" target="_blank" rel="noopener noreferrer">
+                        Eyenosis.com
+                    </a>
+                </span>
             </td>
         </tr>
     </table>
