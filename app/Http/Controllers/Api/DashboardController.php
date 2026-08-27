@@ -12,6 +12,7 @@ use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use App\Models\Platform\HospitalShareRequest;
+use App\Services\Hospital\HospitalCollectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -23,7 +24,7 @@ class DashboardController extends Controller
      * GET /api/v1/{slug}/admin/dashboard
      * Auth: sanctum + subscription.active
      */
-    public function adminDashboard(Request $request): JsonResponse
+    public function adminDashboard(Request $request, HospitalCollectionService $collectionService): JsonResponse
     {
         $tenant   = app('tenant');
         $authUser = auth('sanctum')->user();
@@ -57,22 +58,76 @@ class DashboardController extends Controller
             ->count();
 
         // ── Revenue ────────────────────────────────────────────────────
-        $revenueToday = (float) Patient::whereDate('appointment_date', $today)->sum('case_fee');
-        $revenueMonth = (float) Patient::whereMonth('appointment_date', now()->month)
-            ->whereYear('appointment_date', now()->year)
-            ->sum('case_fee');
-        $revenueYear = (float) Patient::whereYear('appointment_date', now()->year)->sum('case_fee');
+        // Unified OPD + OT net (payments − refunds), same formula web uses
+        // via HospitalCollectionService — see DASHBOARD_PARITY_FIX_PLAN.md
+        // Phase 2. Plain `Patient.case_fee` sums used to miss OT revenue
+        // entirely.
+        $revenueToday = $collectionService->summaryForDay($today)['total'];
+        $revenueMonth = $collectionService->summaryForCalendarMonth()['total'];
+        $revenueYear  = $collectionService->summaryForCalendarYear()['total'];
 
         // ── OT Stats ───────────────────────────────────────────────────
+        // Web's real "OT Today" card (Hospital\DashboardController.php:371-384)
+        // is OtAppointment-based (appointment_date + confirmed/booked status),
+        // not OtBooking — see DASHBOARD_PARITY_FIX_PLAN.md Phase 2 Task 2.2.
         $otToday = $otOperated = $otPending = 0;
         try {
-            $otToday    = OtBooking::whereDate('surgery_date', $today)->count();
-            $otOperated = OtBooking::whereDate('surgery_date', $today)
-                ->where('ot_status', OtBooking::STATUS_OPERATED)
+            $otToday    = OtAppointment::whereDate('appointment_date', $today)->count();
+            $otOperated = OtAppointment::whereDate('appointment_date', $today)
+                ->where('status', OtAppointment::STATUS_CONFIRMED)
                 ->count();
-            $otPending  = OtBooking::whereDate('surgery_date', $today)
-                ->whereNotIn('ot_status', [OtBooking::STATUS_OPERATED, OtBooking::STATUS_DISCHARGED])
+            $otPending  = OtAppointment::whereDate('appointment_date', $today)
+                ->where('status', OtAppointment::STATUS_BOOKED)
                 ->count();
+        } catch (\Throwable) {}
+
+        // ── Role-specific "pending" cards (Accountant/Ward Management/OT
+        // Assistant/Discharge Counter) ────────────────────────────────────
+        // Mirrors Hospital\DashboardController.php:386-460 — on web, each of
+        // these 4 roles sees this pending-count card in place of the generic
+        // OT Appointment card on the same dashboard page. See
+        // DASHBOARD_PARITY_FIX_PLAN.md Phase 4.
+        $accountantPendingCount = $accountantRefundsCount = $accountantCompletedCount = null;
+        $wardPendingCount = null;
+        $otAssistantPendingCount = null;
+        $dischargePendingCount = null;
+
+        try {
+            if ($roleSlug === 'accountant') {
+                $accountantPendingCount = OtBooking::whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])->count();
+
+                $accountantRefundsCount = OtBooking::where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                    ->with(['payments', 'refunds'])
+                    ->get()
+                    ->filter(fn (OtBooking $b) => ! $b->isFullyRefunded() && $b->refundable_balance > 0)
+                    ->count();
+
+                $accountantCompletedCount = OtBooking::whereIn('ot_status', [
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                    OtBooking::STATUS_READY,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                    OtBooking::STATUS_SURGERY_REFUSED,
+                ])->count();
+            } elseif ($roleSlug === 'ward_management') {
+                $wardPendingCount = OtBooking::whereIn('ot_status', [
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                ])->count();
+            } elseif ($isOtDoctor) {
+                // $isOtDoctor === role slug 'ot_assistant', see line 35 above.
+                $otAssistantReadyQuery = OtBooking::where('ot_status', OtBooking::STATUS_READY);
+                $seeAll = $isAdmin || $roleSlug === 'hospital_admin';
+                if (! $seeAll) {
+                    $otAssistantReadyQuery->where('ot_assistant_id', (int) $authUser->id);
+                }
+                $otAssistantPendingCount = $otAssistantReadyQuery->count();
+            } elseif ($roleSlug === 'discharge_counter') {
+                $dischargePendingCount = OtBooking::whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])->count();
+            }
         } catch (\Throwable) {}
 
         // ── Staff ──────────────────────────────────────────────────────
@@ -266,6 +321,12 @@ class DashboardController extends Controller
                 'receptionist_stats'          => $receptionistStats,
                 'doctor_cards'                => $doctorCards,
                 'pending_share_requests_count'=> $pendingShareRequestsCount,
+                'accountant_pending_count'    => $accountantPendingCount,
+                'accountant_refunds_count'    => $accountantRefundsCount,
+                'accountant_completed_count'  => $accountantCompletedCount,
+                'ward_pending_count'          => $wardPendingCount,
+                'ot_assistant_pending_count'  => $otAssistantPendingCount,
+                'discharge_pending_count'     => $dischargePendingCount,
             ],
         ]);
     }
