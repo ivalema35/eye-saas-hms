@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\HospitalMedicineSampleExport;
 use App\Http\Controllers\Controller;
+use App\Imports\HospitalMedicineImport;
 use App\Models\Hospital\Dosage;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MedicineApiController extends Controller
 {
@@ -86,6 +89,29 @@ class MedicineApiController extends Controller
         Medicine::findOrFail($id)->delete();
 
         return response()->json(['success' => true, 'message' => 'Medicine deleted successfully.']);
+    }
+
+    public function import(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:5120'],
+        ]);
+
+        $import = new HospitalMedicineImport();
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'success'  => true,
+            'message'  => "Imported {$import->imported}, skipped {$import->skipped}.",
+            'imported' => $import->imported,
+            'skipped'  => $import->skipped,
+            'errors'   => $import->errors,
+        ]);
+    }
+
+    public function downloadSample()
+    {
+        return Excel::download(new HospitalMedicineSampleExport(), 'medicine-sample.xlsx');
     }
 
     private function format(Medicine $m): array
