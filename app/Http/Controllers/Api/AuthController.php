@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * API Authentication Controller
@@ -181,12 +183,18 @@ class AuthController extends Controller
 
     private function formatHospital(Tenant $tenant): array
     {
+        $logoPath = HospitalSetting::get('hospital_logo');
+        $nobgPath = HospitalSetting::get('hospital_logo_nobg');
+
         return [
             'name' => $tenant->name,
             'slug' => $tenant->slug,
             'currency_code' => $tenant->currency_code,
             'currency_symbol' => $tenant->currency_symbol,
             'timezone' => $tenant->timezone,
+            'logo_url' => $logoPath ? Storage::disk('public')->url($logoPath) : '',
+            'logo_nobg_url' => $nobgPath ? Storage::disk('public')->url($nobgPath) : '',
+            'logo_sidebar_style' => HospitalSetting::get('logo_sidebar_style', 'white'),
         ];
     }
 }

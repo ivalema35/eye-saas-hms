@@ -41,10 +41,15 @@ class SettingsApiController extends Controller
                 ->whereRaw('LOWER(name) = ?', [strtolower($stored->get('hospital_district'))])->first()
             : null;
 
-        // Build logo URL from stored path
+        // Build logo URLs from stored paths
         $logoPath = $stored->get('hospital_logo', '');
         $logoUrl  = ($logoPath && Storage::disk('public')->exists($logoPath))
             ? Storage::disk('public')->url($logoPath)
+            : '';
+
+        $nobgPath = $stored->get('hospital_logo_nobg', '');
+        $nobgUrl  = ($nobgPath && Storage::disk('public')->exists($nobgPath))
+            ? Storage::disk('public')->url($nobgPath)
             : '';
 
         $data = [
@@ -54,7 +59,9 @@ class SettingsApiController extends Controller
             'hospital_phone'     => $stored->get('hospital_phone', $tenant?->admin_phone ?? ''),
             'hospital_address'   => $stored->get('hospital_address', ''),
             // Logo
-            'hospital_logo_url'  => $logoUrl,
+            'hospital_logo_url'       => $logoUrl,
+            'hospital_logo_nobg_url'  => $nobgUrl,
+            'logo_sidebar_style'      => $stored->get('logo_sidebar_style', 'white'),
             // Location (names + resolved IDs for cascade pickers)
             'hospital_country'    => $stored->get('hospital_country', $tenant?->country ?? ''),
             'hospital_country_id' => $countryRecord?->id,
@@ -121,6 +128,8 @@ class SettingsApiController extends Controller
             'letter_pad'            => ['nullable', 'in:available,unavailable'],
             'print_header_note'     => ['nullable', 'string', 'max:255'],
             'print_footer_note'     => ['nullable', 'string', 'max:255'],
+            // Logo
+            'logo_sidebar_style'    => ['nullable', 'in:white,original_blur'],
             // Pagination
             'pagination_limit'      => ['required', 'integer', 'in:10,25,50,100'],
             // Queue
@@ -202,6 +211,17 @@ class SettingsApiController extends Controller
             Storage::disk('public')->delete($oldPath);
         }
 
+        // The app has no way to produce a matching background-removed version
+        // for a newly-uploaded original, so the existing nobg variant (if any)
+        // would now mismatch the new logo — delete it rather than leave a
+        // stale silhouette showing on web's sidebar. It's regenerated next
+        // time this tenant uploads a logo via the website.
+        $oldNobgPath = HospitalSetting::get('hospital_logo_nobg');
+        if ($oldNobgPath && Storage::disk('public')->exists($oldNobgPath)) {
+            Storage::disk('public')->delete($oldNobgPath);
+        }
+        HospitalSetting::set('hospital_logo_nobg', null);
+
         // Store new logo
         $file     = $request->file('logo');
         $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
@@ -210,9 +230,10 @@ class SettingsApiController extends Controller
         HospitalSetting::set('hospital_logo', $path);
 
         return response()->json([
-            'success' => true,
-            'data'    => ['url' => Storage::disk('public')->url($path)],
-            'message' => 'Logo updated successfully.',
+            'success'      => true,
+            'data'         => ['url' => Storage::disk('public')->url($path)],
+            'nobg_cleared' => (bool) $oldNobgPath,
+            'message'      => 'Logo updated successfully.',
         ]);
     }
 
