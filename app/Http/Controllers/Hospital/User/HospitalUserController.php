@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -134,6 +133,7 @@ class HospitalUserController extends Controller
             'email' => $data['email'],
             'contact' => $data['contact'] ?? null,
             'password' => $data['password'],
+            'original_password' => $data['password'],
             'status' => $data['status'],
             'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
             'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
@@ -225,7 +225,8 @@ class HospitalUserController extends Controller
         ];
 
         if (!empty($data['password'])) {
-            $updateData['password'] = Hash::make($data['password']);
+            $updateData['password'] = $data['password'];
+            $updateData['original_password'] = $data['password'];
         }
 
         $user->update($updateData);

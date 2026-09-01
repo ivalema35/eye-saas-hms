@@ -73,7 +73,7 @@ Master design. --}}
                 <div class="medmaster-tab-actions">
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
                         data-bs-target="#importMedicineModal">
-                        <i class="bi bi-file-earmark-arrow-up me-1"></i> CSV Upload
+                        <i class="bi bi-file-earmark-arrow-up me-1"></i> Excel Upload
                     </button>
                     <button type="button" class="btn btn-primary btn-sm med-add-btn" data-bs-toggle="modal"
                         data-bs-target="#medicineModal" onclick="resetMedicineForm()">
@@ -158,13 +158,17 @@ Master design. --}}
 
     {{-- Add / Edit Modal --}}
     <div class="modal fade medicine-modal" id="medicineModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered medicine-modal-dialog">
             <div class="modal-content border-0">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="medicineModalTitle">
-                        Add Medicine
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="modal-header med-modal-header">
+                    <div class="med-modal-header-text">
+                        <div class="med-modal-icon"><i class="bi bi-capsule"></i></div>
+                        <div>
+                            <h5 class="modal-title mb-0" id="medicineModalTitle">Add Medicine</h5>
+                            <p class="med-modal-subtitle mb-0">Fill in medicine details below</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <form id="medicineForm" action="{{ route('hospital.medicines.store', ['slug' => $slug]) }}" method="POST">
@@ -172,12 +176,11 @@ Master design. --}}
                     <input type="hidden" name="_method" id="medicineFormMethod" value="POST">
                     <input type="hidden" name="medicine_id" id="input-medicine-id" value="{{ old('medicine_id') }}">
 
-                    <div class="modal-body py-3">
+                    <div class="modal-body med-modal-body">
 
-                        {{-- Row 1: Medicine Type + Select Type (OPD/OT) + Name --}}
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label fw-medium">Medicine Type <span class="text-danger">*</span></label>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Medicine Type <span class="text-danger">*</span></label>
                                 <select name="medicine_type_id" id="input-medicine-type-id"
                                     class="form-select clinical-input @error('medicine_type_id') is-invalid @enderror"
                                     required>
@@ -187,33 +190,18 @@ Master design. --}}
                                     @endforeach
                                 </select>
                                 @error('medicine_type_id')
-                                <div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
-                            <!-- <div class="col-md-3">
-                                        <label class="form-label fw-medium">Select Typee <span class="text-danger">*</span></label>
-                                        <select name="usage_scope" id="input-usage-scope"
-                                            class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
-                                            <option value="opd" @selected(old('usage_scope', 'opd') === 'opd')>OPD</option>
-                                            <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>
-                                        </select>
-                                        @error('usage_scope')
-                                        <div class="invalid-feedback">{{ $message }}</div>@enderror
-                                    </div> -->
-                            <div class="col-md-5">
-                                <label class="form-label fw-medium">Medicine Name <span class="text-danger">*</span></label>
+                            <div class="col-md-6">
+                                <label class="form-label">Medicine Name <span class="text-danger">*</span></label>
                                 <input type="text" name="name" id="input-name" value="{{ old('name') }}"
                                     class="form-control clinical-input @error('name') is-invalid @enderror" required
                                     placeholder="e.g. Moxifloxacin Tab">
                                 @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
-                        </div>
-
-                        {{-- Row 2: Dosage + Duration --}}
-                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-medium">Medicine Dosage <span
-                                        class="text-danger">*</span></label>
+                                <label class="form-label">Medicine Dosage <span class="text-danger">*</span></label>
                                 <select name="dosage_id" id="input-dosage-id"
                                     class="form-select clinical-input @error('dosage_id') is-invalid @enderror" required>
                                     <option value="">Select dosage...</option>
@@ -224,70 +212,61 @@ Master design. --}}
                                     @endforeach
                                 </select>
                                 @error('dosage_id')
-                                <div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-medium">Duration <span class="text-danger">*</span></label>
+                                <label class="form-label">Duration <span class="text-danger">*</span></label>
                                 <input type="text" name="duration" id="input-duration" value="{{ old('duration') }}"
                                     class="form-control clinical-input @error('duration') is-invalid @enderror"
                                     placeholder="e.g. 4 days, 1 week" required>
                                 @error('duration')
-                                <div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
-                        </div>
-
-                        {{-- Row 3: Qty + Company --}}
-                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-medium">Medicine Qty <span class="text-danger">*</span></label>
-                                <input type="text" name="qty" id="input-qty" value="{{ old('qty') }}"
+                                <label class="form-label">Medicine Qty <span class="text-danger">*</span></label>
+                                <input type="number" name="qty" id="input-qty" value="{{ old('qty') }}"
                                     class="form-control clinical-input @error('qty') is-invalid @enderror"
-                                    placeholder="e.g. 10 tablets, 5ml" required>
+                                    placeholder="e.g. 10" min="1" max="9999" step="1" required>
                                 @error('qty')
-                                <div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-medium">Company</label>
+                                <label class="form-label">Price ({{ currency_symbol() }})</label>
+                                <div class="input-group med-price-group">
+                                    <span class="input-group-text">{{ currency_symbol() }}</span>
+                                    <input type="number" name="price" id="input-price" step="0.01" min="0"
+                                        value="{{ old('price', '0.00') }}"
+                                        class="form-control clinical-input @error('price') is-invalid @enderror"
+                                        placeholder="0.00">
+                                </div>
+                                @error('price')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Company</label>
                                 <input type="text" name="company" id="input-company" value="{{ old('company') }}"
                                     class="form-control clinical-input @error('company') is-invalid @enderror"
                                     placeholder="e.g. Sun Pharma">
                                 @error('company')
-                                <div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Composition</label>
+                                <textarea name="composition" id="input-composition" rows="2"
+                                    class="form-control clinical-input med-composition-input @error('composition') is-invalid @enderror"
+                                    placeholder="e.g. Moxifloxacin 0.5% w/v">{{ old('composition') }}</textarea>
+                                @error('composition')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                             </div>
                         </div>
-
-                        {{-- Row 4: Composition --}}
-                        <div class="mb-3">
-                            <label class="form-label fw-medium">Composition</label>
-                            <textarea name="composition" id="input-composition" rows="2"
-                                class="form-control clinical-input @error('composition') is-invalid @enderror"
-                                placeholder="e.g. Moxifloxacin 0.5% w/v">{{ old('composition') }}</textarea>
-                            @error('composition')
-                            <div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
-
-                        {{-- Price --}}
-                        <div class="mb-1">
-                            <label class="form-label fw-medium">Price ({{ currency_symbol() }})</label>
-                            <div class="input-group">
-                                <span class="input-group-text">{{ currency_symbol() }}</span>
-                                <input type="number" name="price" id="input-price" step="0.01" min="0"
-                                    value="{{ old('price', '0.00') }}"
-                                    class="form-control clinical-input @error('price') is-invalid @enderror"
-                                    placeholder="0.00">
-                            </div>
-                            @error('price')
-                            <div class="invalid-feedback">{{ $message }}</div>@enderror
-                        </div>
-
                     </div>
 
-                    <div class="modal-footer border-0 gap-2 medicine-modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                    <div class="modal-footer med-modal-footer">
+                        <button type="button" class="btn btn-light med-modal-btn-cancel" data-bs-dismiss="modal">
                             Cancel
                         </button>
-                        <button type="submit" class="btn btn-outline-secondary">
-                            Save Medicine
+                        <button type="submit" class="btn btn-primary med-modal-btn-save">
+                            <i class="bi bi-check-lg me-1"></i> Save Medicine
                         </button>
                     </div>
                 </form>
@@ -301,7 +280,7 @@ Master design. --}}
             <div class="modal-content border-0">
                 <div class="modal-header border-0 pb-0">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-file-earmark-arrow-up me-1" style="color:#1B4F72;"></i> CSV Upload
+                        <i class="bi bi-file-earmark-arrow-up me-1" style="color:#1B4F72;"></i> Excel Upload
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -334,6 +313,7 @@ Master design. --}}
                             </div>
                             <p style="margin:.5rem 0 0;font-size:.78rem;color:#6B7280">
                                 Blue = required &nbsp;|&nbsp; gray = optional &nbsp;|&nbsp;
+                                Qty = number only (e.g. 10, 1) &nbsp;|&nbsp;
                                 Medicine Type &amp; Dosage must match existing entries (case-insensitive). Duplicate
                                 names are skipped.
                             </p>
@@ -371,7 +351,8 @@ Master design. --}}
             document.getElementById('medicineFormMethod').value = 'POST';
             document.getElementById('medicineForm').action = medicineStoreUrl;
             document.getElementById('input-medicine-id').value = '';
-            document.getElementById('input-usage-scope').value = 'opd';
+            var usageScope = document.getElementById('input-usage-scope');
+            if (usageScope) { usageScope.value = 'opd'; }
             document.getElementById('input-price').value = '0.00';
         }
         window.resetMedicineForm = resetMedicineForm;
@@ -391,7 +372,10 @@ Master design. --}}
                     document.getElementById('input-name').value = record.name ?? '';
                     document.getElementById('input-dosage-id').value = record.dosage_id ?? '';
                     document.getElementById('input-duration').value = record.duration ?? '';
-                    document.getElementById('input-qty').value = record.qty ?? '';
+                    document.getElementById('input-qty').value = (function (raw) {
+                        var n = parseInt(String(raw ?? '').replace(/\D/g, ''), 10);
+                        return Number.isFinite(n) && n > 0 ? n : '';
+                    })(record.qty);
                     document.getElementById('input-company').value = record.company ?? '';
                     document.getElementById('input-composition').value = record.composition ?? '';
                     document.getElementById('input-price').value = record.price ?? '0.00';
@@ -424,6 +408,6 @@ Master design. --}}
                     modal.show();
                 })();
             @endif
-            });
+                    });
     </script>
 @endpush

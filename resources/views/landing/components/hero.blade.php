@@ -6,15 +6,13 @@
     </div>
     <div class="ecrm-container ecrm-hero-grid">
         <div class="ecrm-hero-copy ecrm-reveal">
-            <p class="ecrm-hero-brand">EYE<em>NOSIS</em></p>
-            <h1>
-                One SaaS CRM for your
-                <span>entire eye hospital</span>
-            </h1>
+            <p class="ecrm-hero-eyebrow">The Complete Digital Platform for Ophthalmology</p>
+            <h1>Run Your Eye Hospital. Simplify Every Workflow.</h1>
             <p class="ecrm-hero-lead">
-                Register patients, run OPD exams, counsel packages, collect OT payments,
-                manage ward &amp; surgery, discharge invoices and reports — role-aware desks,
-                hospital isolation, cloud access.
+                EYENOSIS.com connects your entire ophthalmology operation — from reception and
+                patient registration to consultation, counselling, admission, ward, OT, surgery,
+                billing, discharge and follow-up — in one powerful platform with access across
+                Web, Android, iOS and Tablet.
             </p>
             <div class="ecrm-hero-ctas">
                 <a href="{{ route('register.show') }}" class="ecrm-btn ecrm-btn-primary ecrm-btn-lg">
@@ -24,20 +22,11 @@
                     Explore modules
                 </a>
             </div>
-            <ul class="ecrm-hero-stats">
-                <li>
-                    <strong>No card</strong>
-                    <span>Needed for free trial</span>
-                </li>
-                <li>
-                    <strong>{{ platform_currency_symbol() }}0</strong>
-                    <span>Setup fee</span>
-                </li>
-                <li>
-                    <strong>Roles</strong>
-                    <span>Hospital workspace</span>
-                </li>
-            </ul>
+            <p class="ecrm-hero-apps">
+                <span>Web App</span>
+                <span>Android App (Mobile/Tablet)</span>
+                <span>iOS App (Mobile/Tablet)</span>
+            </p>
         </div>
 
         <div class="ecrm-hero-stage ecrm-reveal">

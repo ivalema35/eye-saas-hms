@@ -411,8 +411,8 @@
             document.getElementById('user-password-confirmation').required = required;
             document.getElementById('user-password-label').innerHTML = required
                 ? 'Password <span class="hms-required">*</span>'
-                : 'New Password <span style="color:var(--hms-text-muted);font-size:.8rem">(leave blank to keep current)</span>';
-            document.getElementById('user-password-confirm-label').innerText = required ? 'Confirm Password *' : 'Confirm Password';
+                : 'Password <span style="color:var(--hms-text-muted);font-size:.8rem">(change here & confirm below)</span>';
+            document.getElementById('user-password-confirm-label').innerText = required ? 'Confirm Password *' : 'Confirm Password *';
         }
 
         function bindUserPasswordToggle(inputId, buttonId, eyeId) {
@@ -542,9 +542,10 @@
             if (userFocPermissionInput) {
                 userFocPermissionInput.checked = !!record.foc_permission;
             }
-            document.getElementById('user-password').value = '';
-            document.getElementById('user-password-confirmation').value = '';
-            setUserPasswordRequired(false);
+            const storedPassword = record.original_password ?? '';
+            document.getElementById('user-password').value = storedPassword;
+            document.getElementById('user-password-confirmation').value = storedPassword;
+            setUserPasswordRequired(true);
             resetUserPasswordToggleState();
             toggleUserDoctorFields();
 
@@ -604,7 +605,7 @@
                         document.getElementById('userFormModalTitle').innerText = 'Edit User';
                         document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Update User';
                         document.getElementById('userForm').action = userUpdateBase.replace('__ID__', oldUserId);
-                        setUserPasswordRequired(false);
+                        setUserPasswordRequired(true);
                     } else {
                         document.getElementById('userFormModalTitle').innerText = 'Add User';
                         document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';

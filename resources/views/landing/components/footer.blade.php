@@ -8,8 +8,10 @@
                             <img src="{{ platform_logo_url() }}" alt="Eye Nosis" class="brand-logo-img">
                         </span>
                     </a>
-                    <p>Multi-tenant cloud CRM for ophthalmology clinics — patients, OPD, exams, OT, billing and
-                        role-based hospital desks in one platform.</p>
+                    <p>EYENOSIS.com connects your entire ophthalmology operation — from reception and patient
+                        registration to consultation, counselling, admission, ward, OT, surgery, billing, discharge
+                        and follow-up — in one powerful platform with access across Web, Android, iOS and
+                        Tablet.</p>
                     <a href="{{ route('register.show') }}" class="ecrm-footer-cta">
                         Start free trial <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                     </a>

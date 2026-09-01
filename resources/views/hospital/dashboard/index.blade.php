@@ -101,6 +101,83 @@
 @media (max-width: 1100px) { .rec-5row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 576px) { .rec-5row { grid-template-columns: 1fr 1fr; } }
 
+/* Receptionist dashboard — fit viewport, scroll only inside patient table */
+html:has(.bento-page--receptionist),
+body.hms-body:has(.bento-page--receptionist) {
+    overflow: hidden;
+    height: 100%;
+}
+.hms-main:has(.bento-page--receptionist) {
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0.75rem;
+    box-sizing: border-box;
+}
+.bento-page--receptionist {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0.35rem 1.25rem 0;
+    min-height: auto;
+}
+.bento-page--receptionist .rec-5row {
+    flex-shrink: 0;
+    margin-bottom: 0.65rem !important;
+}
+.bento-page--receptionist .rec-5card {
+    min-height: 92px;
+    padding: 0.65rem 0.75rem 0.6rem;
+}
+.bento-page--receptionist .rec-dash-patients {
+    flex: 1 1 auto;
+    min-height: 0;
+    margin-bottom: 0 !important;
+    --bs-gutter-y: 0;
+}
+.bento-page--receptionist .rec-dash-patients > .col-12 {
+    height: 100%;
+    min-height: 0;
+}
+.bento-page--receptionist .tap-table-wrap {
+    height: 90%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.bento-page--receptionist #today-patients-results {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+.bento-page--receptionist .tap-panes {
+    height: 100%;
+    min-height: 0;
+}
+.bento-page--receptionist .tap-pane.is-active {
+    height: 100%;
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0;
+}
+.bento-page--receptionist .tap-pane.is-active .table-responsive {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 768px) {
+    .hms-main:has(.bento-page--receptionist) {
+        height: 100dvh;
+    }
+    .bento-page--receptionist {
+        padding: 0.25rem 0.75rem 0;
+    }
+}
+
 /*
   Hospital Admin Dashboard Theme
   Primary soft: #EBF5FB · Secondary: #1B4F72
@@ -122,7 +199,7 @@
     --dash-shadow-hover: 0 12px 30px rgba(15, 23, 42, 0.10);
 
     background: #f7fafc;
-    padding: 0.25rem 2rem;
+    padding: 2.25rem 2rem;
     min-height: 100%;
     font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, sans-serif;
     color: var(--dash-secondary);
@@ -1417,7 +1494,7 @@
 @endpush
 
 @section('content')
-<div class="bento-page">
+<div class="bento-page{{ ($isReceptionistUser ?? false) ? ' bento-page--receptionist' : '' }}">
 
 {{-- ────────────────────────────────────────────────────────────────────────
      PHP flags — each is null when the user's role lacks the gate permission
@@ -1468,7 +1545,8 @@
     $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
 @endphp
 
-{{-- Welcome banner (design refresh) --}}
+{{-- Welcome banner (hidden for receptionist — cleaner dashboard) --}}
+@if(!$isReceptionistUser)
 <div class="dash-welcome-card">
     <div class="dash-welcome-left">
         <span class="dash-welcome-date"><i class="bi bi-calendar-check"></i> {{ now()->format('d M, Y') }}</span>
@@ -1476,9 +1554,10 @@
         <p class="dash-welcome-sub">Here's what's happening with {{ $tenant?->name ?? config('app.name') }} today.</p>
     </div>
 </div>
+@endif
 
-{{-- Subscription Alert --}}
-@if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
+{{-- Subscription Alert (hidden for receptionist) --}}
+@if(!$isReceptionistUser && $subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
     @php
         $isHospitalAdmin = auth('hospital_user')->user()?->role?->is_super;
     @endphp
@@ -1603,8 +1682,9 @@
 @endif
 
 {{-- ════════════════════════════════════════════════════════════════════════
-     BENTO GRID — ROW 1: Stat Metric Cards
+     BENTO GRID — ROW 1: Stat Metric Cards (not used on receptionist dashboard)
 ════════════════════════════════════════════════════════════════════════════ --}}
+@if(!$isReceptionistUser)
 <div class="bento-dashboard mb-4">
 
 @if($isHospitalAdmin)
@@ -2083,6 +2163,7 @@
 
 @endif
 </div>
+@endif
 
 @if($isDoctorUser && $doctorStripCards->isNotEmpty())
 <div class="mb-3 fw-bold" style="color:#1B4F72;font-size:1.05rem;letter-spacing:.02em">
@@ -2388,7 +2469,7 @@
     .tap-table-wrap { border-radius:14px; }
 }
 </style>
-<div class="row g-4 mb-4">
+<div class="row g-4 mb-4 rec-dash-patients">
     <div class="col-12">
         <div class="tap-table-wrap">
             <!-- <div class="tap-header">
@@ -2414,11 +2495,11 @@
             </div>
 
             <div class="tap-tabs" id="today-patients-tabs">
-                <button type="button" class="tap-tab-btn tap-tab-active" data-tap-tab="phone">
-                    <i class="bi bi-telephone"></i> Phone <span class="tap-tab-n" data-tap-n="phone">0</span>
-                </button>
-                <button type="button" class="tap-tab-btn" data-tap-tab="walkin">
+                <button type="button" class="tap-tab-btn tap-tab-active" data-tap-tab="walkin">
                     <i class="bi bi-person-walking"></i> Walk-in <span class="tap-tab-n" data-tap-n="walkin">0</span>
+                </button>
+                <button type="button" class="tap-tab-btn" data-tap-tab="phone">
+                    <i class="bi bi-telephone"></i> Phone <span class="tap-tab-n" data-tap-n="phone">0</span>
                 </button>
                 <button type="button" class="tap-tab-btn" data-tap-tab="ot">
                     <i class="bi bi-hospital"></i> OT <span class="tap-tab-n" data-tap-n="ot">0</span>
@@ -2434,10 +2515,10 @@
                     var results = document.getElementById('today-patients-results');
                     if (!tabsWrap || !results) return;
 
-                    window.__todayPatientsTab = window.__todayPatientsTab || 'phone';
+                    window.__todayPatientsTab = window.__todayPatientsTab || 'walkin';
 
                     window.applyTodayPatientsTabFilter = function () {
-                        var tab = window.__todayPatientsTab || 'phone';
+                        var tab = window.__todayPatientsTab || 'walkin';
                         results.querySelectorAll('[data-tap-pane]').forEach(function (pane) {
                             var on = pane.getAttribute('data-tap-pane') === tab;
                             pane.classList.toggle('is-active', on);
@@ -2448,7 +2529,7 @@
                         });
                         var marker = results.querySelector('[data-patient-count]');
                         if (marker) {
-                            ['phone', 'walkin', 'ot'].forEach(function (key) {
+                            ['walkin', 'phone', 'ot'].forEach(function (key) {
                                 var n = marker.getAttribute('data-tap-count-' + key);
                                 var el = tabsWrap.querySelector('[data-tap-n="' + key + '"]');
                                 if (el && n !== null) el.textContent = n;
@@ -2681,10 +2762,9 @@
 @endif
 
 {{-- ════════════════════════════════════════════════════════════════════════
-     ROW 3: Quick Actions — full width, qa-pill grid inside bento-card
-     Icons have explicit font-size so they render correctly.
-     @haspermission gates preserved exactly.
+     ROW 3: Quick Actions — hidden for receptionist (top bar + stat cards cover links)
 ════════════════════════════════════════════════════════════════════════════ --}}
+@if(!$isReceptionistUser)
 <div class="row">
     <div class="col-12">
         <div class="bento-card">
@@ -2698,14 +2778,6 @@
                         <span>Add Patient</span>
                     </a>
                 @endhaspermission
-                @if($isReceptionistUser)
-                    @haspermission('opd.patient.register_phone')
-                        <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}" class="qa-pill">
-                            <i class="fa-solid fa-phone" style="font-size:24px;color:#1ABC9C"></i>
-                            <span>Phone Register</span>
-                        </a>
-                    @endhaspermission
-                @endif
                 @haspermission('opd.patient.view')
                     <a href="{{ route('hospital.patients.index', $slug) }}" class="qa-pill">
                         <i class="fa-solid fa-users" style="font-size:24px;color:#1ABC9C"></i>
@@ -2770,6 +2842,7 @@
         </div>
     </div>
 </div>{{-- /row quick actions --}}
+@endif
 
 @endif {{-- /hasAnyData --}}
 

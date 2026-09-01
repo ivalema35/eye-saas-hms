@@ -11,6 +11,7 @@ use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\MedicineRoute;
 use App\Models\Hospital\Patient;
+use App\Models\Platform\MasterCity;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use App\Services\Hospital\ExaminationService;
@@ -111,6 +112,12 @@ class SecondaryExamController extends Controller
 
         [$otSurgeryTypes, $existingOtRecommendation, $otDefaultDiagnosisHint, $otAssistants, $otDoctors] = $this->otRecommendContext((int) $tenantId, (int) $patient->id);
 
+        $hospitalCountry = $user->tenant->country;
+        $locations = MasterCity::with(['district', 'state', 'state.country'])
+            ->whereHas('state.country', fn($q) => $q->where('name', $hospitalCountry))
+            ->orderBy('name')
+            ->get();
+
         return view('hospital.exam.secondary', compact(
             'patient',
             'primaryExam',
@@ -127,7 +134,8 @@ class SecondaryExamController extends Controller
             'existingOtRecommendation',
             'otDefaultDiagnosisHint',
             'otAssistants',
-            'otDoctors'
+            'otDoctors',
+            'locations'
         ));
     }
 

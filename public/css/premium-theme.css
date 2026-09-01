@@ -82,12 +82,11 @@ label {
 }
 
 .sidebar-logo {
-    height: 48px;
+    height: 72px;
     width: auto;
-    max-width: 52px;
+    max-width: 220px;
     object-fit: contain;
     image-rendering: auto;
-    filter: brightness(0) invert(1);
 }
 
 .hms-nav-item {

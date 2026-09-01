@@ -243,7 +243,7 @@
         {{-- Brand --}}
         <div class="wizard-brand">
             <a href="#">
-                <img src="{{ platform_logo_url() }}" alt="Eye HMS" style="height:40px;width:auto;object-fit:contain;">
+                <img src="{{ platform_logo_light_url() }}" alt="Eye HMS" class="platform-logo-on-light" style="height:40px;width:auto;object-fit:contain;mix-blend-mode:normal;">
             </a>
         </div>
 

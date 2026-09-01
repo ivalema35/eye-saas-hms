@@ -48,6 +48,7 @@ class HospitalUser extends Authenticatable
         'name',
         'email',
         'password',
+        'original_password',
         'contact',
         'status',
         'doctor_type',         // Only for Doctor role: primary | secondary

@@ -252,6 +252,20 @@ used across the rest of the app. --}}
     .oe-table td.oe-cell-re { background: #fffafa; }
     .oe-table td.oe-cell-le { background: #f8faff; }
     .oe-table td.oe-label-cell { background: #f8fafc; vertical-align: middle; }
+    /* O/E modal — fit all rows without internal scroll */
+    #modalOE .modal-dialog { max-width: 920px; margin: 0.75rem auto; }
+    #modalOE .modal-content { overflow: visible; }
+    #modalOE .modal-body { overflow: visible !important; max-height: none !important; padding: 0.65rem 0.85rem !important; }
+    #modalOE .modal-header { padding: 0.55rem 1rem !important; }
+    #modalOE .modal-footer { padding: 0.5rem 1rem !important; }
+    #modalOE .oe-table { font-size: 12px !important; margin-bottom: 0 !important; }
+    #modalOE .oe-table th.oe-eye-col { padding: 6px 10px !important; }
+    #modalOE .oe-table td { padding: 4px 8px !important; }
+    #modalOE .oe-table td.py-2 { padding-top: 4px !important; padding-bottom: 4px !important; }
+    #modalOE .oe-table td.px-3 { padding-left: 8px !important; padding-right: 8px !important; }
+    #modalOE .oe-select-wrap .oe-inp,
+    #modalOE .exam-plain-inp { min-height: 30px; padding-top: 0.2rem; padding-bottom: 0.2rem; font-size: 12px; }
+    #modalOE .table-responsive { overflow: visible !important; }
     .oe-select-wrap { position: relative; }
     .oe-select-wrap .oe-inp {
         padding-right: 28px;
@@ -1232,11 +1246,11 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                 <div class="modal-body p-3">
 
                     @php
-$vnCols = [
-    ['abbr' => 'VN', 'full' => '', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
-    ['abbr' => 'PnVn', 'full' => '', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
-    ['abbr' => 'NrVn', 'full' => '', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
-];
+                    $vnCols = [
+                        ['abbr' => 'VN', 'full' => '', 'master' => 'vn', 'field_re' => 'vn_re', 'field_le' => 'vn_le'],
+                        ['abbr' => 'PnVn', 'full' => '', 'master' => 'pnvn', 'field_re' => 'pnvn_re', 'field_le' => 'pnvn_le'],
+                        ['abbr' => 'NrVn', 'full' => '', 'master' => 'nrvn', 'field_re' => 'nrvn_re', 'field_le' => 'nrvn_le'],
+                    ];
                     @endphp
 
                     @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
@@ -1302,30 +1316,30 @@ $vnCols = [
                 </div>
                 <div class="modal-body p-3">
                     @php
-$pgMasterOpts = [
-    'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
-    'axis' => collect($masters['axis'])->map(fn($o) => ltrim(trim($o->value), '+-'))->reject(fn($v) => $v === '')->unique()->values()->all(),
-    'vn' => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
-    'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
-];
+                    $pgMasterOpts = [
+                        'sph_cyl' => collect($masters['sph_cyl'])->pluck('value')->filter()->values()->all(),
+                        'axis' => collect($masters['axis'])->map(fn($o) => ltrim(trim($o->value), '+-'))->reject(fn($v) => $v === '')->unique()->values()->all(),
+                        'vn' => collect($masters['vn'])->pluck('value')->filter()->values()->all(),
+                        'nrvn' => collect($masters['nrvn'])->pluck('value')->filter()->values()->all(),
+                    ];
                     @endphp
 
                     @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                     @php
-    $pgRows = [
-        'DISTANCE' => [
-            'sph' => ['key' => 'ds', 'val' => $pg[$eye]['ds'] ?? ''],
-            'cyl' => ['key' => 'dc', 'val' => $pg[$eye]['dc'] ?? ''],
-            'ax' => ['key' => 'ax', 'val' => $pg[$eye]['ax'] ?? ''],
-            'vn' => ['key' => 'vn', 'val' => $pg[$eye]['vn'] ?? '', 'master' => 'vn'],
-        ],
-        'NEAR' => [
-            'sph' => ['key' => 'ns', 'val' => $pg[$eye]['ns'] ?? ''],
-            'cyl' => ['key' => 'nc', 'val' => $pg[$eye]['nc'] ?? ''],
-            'ax' => ['key' => 'na', 'val' => $pg[$eye]['na'] ?? ''],
-            'vn' => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
-        ],
-    ];
+                    $pgRows = [
+                        'DISTANCE' => [
+                            'sph' => ['key' => 'ds', 'val' => $pg[$eye]['ds'] ?? ''],
+                            'cyl' => ['key' => 'dc', 'val' => $pg[$eye]['dc'] ?? ''],
+                            'ax' => ['key' => 'ax', 'val' => $pg[$eye]['ax'] ?? ''],
+                            'vn' => ['key' => 'vn', 'val' => $pg[$eye]['vn'] ?? '', 'master' => 'vn'],
+                        ],
+                        'NEAR' => [
+                            'sph' => ['key' => 'ns', 'val' => $pg[$eye]['ns'] ?? ''],
+                            'cyl' => ['key' => 'nc', 'val' => $pg[$eye]['nc'] ?? ''],
+                            'ax' => ['key' => 'na', 'val' => $pg[$eye]['na'] ?? ''],
+                            'vn' => ['key' => 'near_vn', 'val' => $pg[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+                        ],
+                    ];
                     @endphp
                     <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
@@ -1451,20 +1465,20 @@ $pgMasterOpts = [
 
                     @foreach(['re' => 'Right Eye', 'le' => 'Left Eye'] as $eye => $eyeLabel)
                     @php
-    $stRows = [
-        'DISTANCE' => [
-            'sph' => ['key' => 'ds', 'val' => $st[$eye]['ds'] ?? ''],
-            'cyl' => ['key' => 'dc', 'val' => $st[$eye]['dc'] ?? ''],
-            'ax' => ['key' => 'ax', 'val' => $st[$eye]['ax'] ?? ''],
-            'vn' => ['key' => 'vn', 'val' => $st[$eye]['vn'] ?? '', 'master' => 'vn'],
-        ],
-        'NEAR' => [
-            'sph' => ['key' => 'ns', 'val' => $st[$eye]['ns'] ?? ''],
-            'cyl' => ['key' => 'nc', 'val' => $st[$eye]['nc'] ?? ''],
-            'ax' => ['key' => 'na', 'val' => $st[$eye]['na'] ?? ''],
-            'vn' => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
-        ],
-    ];
+                    $stRows = [
+                        'DISTANCE' => [
+                            'sph' => ['key' => 'ds', 'val' => $st[$eye]['ds'] ?? ''],
+                            'cyl' => ['key' => 'dc', 'val' => $st[$eye]['dc'] ?? ''],
+                            'ax' => ['key' => 'ax', 'val' => $st[$eye]['ax'] ?? ''],
+                            'vn' => ['key' => 'vn', 'val' => $st[$eye]['vn'] ?? '', 'master' => 'vn'],
+                        ],
+                        'NEAR' => [
+                            'sph' => ['key' => 'ns', 'val' => $st[$eye]['ns'] ?? ''],
+                            'cyl' => ['key' => 'nc', 'val' => $st[$eye]['nc'] ?? ''],
+                            'ax' => ['key' => 'na', 'val' => $st[$eye]['na'] ?? ''],
+                            'vn' => ['key' => 'near_vn', 'val' => $st[$eye]['near_vn'] ?? '', 'master' => 'nrvn'],
+                        ],
+                    ];
                     @endphp
                     <div class="mb-4 rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#1B4F72;">
@@ -1500,8 +1514,8 @@ $pgMasterOpts = [
                                         </td>
                                         @else
                                         @php
-            $stAddVal = old('exam_data.st.' . $eye . '.add', $st[$eye]['add'] ?? '');
-            $stNsVal = old('exam_data.st.' . $eye . '.ns', $st[$eye]['ns'] ?? '');
+                                        $stAddVal = old('exam_data.st.' . $eye . '.add', $st[$eye]['add'] ?? '');
+                                        $stNsVal = old('exam_data.st.' . $eye . '.ns', $st[$eye]['ns'] ?? '');
                                         @endphp
                                         <td class="text-center py-2">
                                             <div class="d-flex align-items-center justify-content-center gap-1">
@@ -1580,11 +1594,11 @@ $pgMasterOpts = [
                     <div class="rounded-3 p-3" style="border:1px solid #dde3ea;background:#fafbfc;">
                         <div class="d-flex flex-wrap gap-4">
                             @foreach([
-    'bifocal' => 'Bifocal',
-    'nd_separate' => 'Near & Distance Separate',
-    'progressive' => 'Progressive',
-    'computer_uses' => 'Computer Uses',
-] as $cbKey => $cbLabel)
+                            'bifocal' => 'Bifocal',
+                            'nd_separate' => 'Near & Distance Separate',
+                            'progressive' => 'Progressive',
+                            'computer_uses' => 'Computer Uses',
+                        ] as $cbKey => $cbLabel)
                             @php $cbVal = old('exam_data.st.' . $cbKey, $st[$cbKey] ?? false); @endphp
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" name="exam_data[st][{{ $cbKey }}]" value="1" id="st_{{ $cbKey }}" {{ $cbVal ? 'checked' : '' }}>
@@ -1679,7 +1693,7 @@ $pgMasterOpts = [
 
     {{-- MODAL: O/E --}}
     <div class="modal fade" id="modalOE" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-dialog modal-xl modal-dialog-centered oe-modal-dialog">
             <div class="modal-content">
                 <div class="modal-header" style="background:#1B4F72;">
                     <h5 class="modal-title fw-semibold text-white">
@@ -1689,28 +1703,28 @@ $pgMasterOpts = [
                 </div>
                 <div class="modal-body p-3">
                     @php
-$oeFieldMeta = [
-    'sac' => ['label' => 'SAC', 'full' => 'Sac', 'master' => 'sac', 'fav' => 'sac'],
-    'lid' => ['label' => 'LID', 'full' => 'Lid', 'master' => 'lid', 'fav' => 'lid'],
-    'conj' => ['label' => 'CONJ', 'full' => 'Conjunctiva', 'master' => 'conj', 'fav' => 'conj'],
-    'cornea' => ['label' => 'CORNEA', 'full' => 'Cornea', 'master' => 'cornea', 'fav' => 'cornea'],
-    'ac' => ['label' => 'AC', 'full' => 'Anterior Chamber', 'master' => 'ac', 'fav' => 'ac'],
-    'iris' => ['label' => 'IRIS', 'full' => 'Iris', 'master' => 'iris', 'fav' => 'iris'],
-    'pupil' => ['label' => 'PUPIL', 'full' => 'Pupil', 'master' => 'pupil', 'fav' => 'pupil'],
-    'lens' => ['label' => 'LENS', 'full' => 'Lens', 'master' => 'lens_master', 'fav' => 'lens'],
-    'em' => ['label' => 'EM', 'full' => 'Extraocular Mov.', 'master' => 'em', 'fav' => 'em'],
-    'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test', 'master' => 'covertest', 'fav' => 'covertest'],
-];
-$oeMasterData = [];
-foreach ($oeFieldMeta as $meta) {
-    if (!isset($oeMasterData[$meta['master']])) {
-        $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn($o) => [
-            'id' => $o->id,
-            'value' => $o->value,
-            'is_favourite' => (bool) ($o->is_favourite ?? false),
-        ])->values()->all();
-    }
-}
+                    $oeFieldMeta = [
+                        'sac' => ['label' => 'SAC', 'full' => 'Sac', 'master' => 'sac', 'fav' => 'sac'],
+                        'lid' => ['label' => 'LID', 'full' => 'Lid', 'master' => 'lid', 'fav' => 'lid'],
+                        'conj' => ['label' => 'CONJ', 'full' => 'Conjunctiva', 'master' => 'conj', 'fav' => 'conj'],
+                        'cornea' => ['label' => 'CORNEA', 'full' => 'Cornea', 'master' => 'cornea', 'fav' => 'cornea'],
+                        'ac' => ['label' => 'AC', 'full' => 'Anterior Chamber', 'master' => 'ac', 'fav' => 'ac'],
+                        'iris' => ['label' => 'IRIS', 'full' => 'Iris', 'master' => 'iris', 'fav' => 'iris'],
+                        'pupil' => ['label' => 'PUPIL', 'full' => 'Pupil', 'master' => 'pupil', 'fav' => 'pupil'],
+                        'lens' => ['label' => 'LENS', 'full' => 'Lens', 'master' => 'lens_master', 'fav' => 'lens'],
+                        'em' => ['label' => 'EM', 'full' => 'Extraocular Mov.', 'master' => 'em', 'fav' => 'em'],
+                        'covertest' => ['label' => 'COVERTEST', 'full' => 'Cover Test', 'master' => 'covertest', 'fav' => 'covertest'],
+                    ];
+                    $oeMasterData = [];
+                    foreach ($oeFieldMeta as $meta) {
+                        if (!isset($oeMasterData[$meta['master']])) {
+                            $oeMasterData[$meta['master']] = collect($masters[$meta['master']])->map(fn($o) => [
+                                'id' => $o->id,
+                                'value' => $o->value,
+                                'is_favourite' => (bool) ($o->is_favourite ?? false),
+                            ])->values()->all();
+                        }
+                    }
                     @endphp
                     <div class="rounded-3 overflow-hidden" style="border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.07);">
                         <div class="table-responsive">
@@ -1912,17 +1926,17 @@ foreach ($oeFieldMeta as $meta) {
                     </div>
                     <div class="d-flex flex-wrap gap-2" id="diagnosis-tags">
                         @php
-$dxGroupCount = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
-$dxAdviceCount = [];
-foreach ($masters['advices'] as $_a) {
-    foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
-        $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
-    }
-}
-                        @endphp
-                        @foreach($masters['diagnoses'] as $d)
-                            @php $gc = $dxGroupCount[$d->id] ?? 0;
-    $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
+                        $dxGroupCount = collect($masters['med_groups'])->groupBy('diagnosis_id')->map->count();
+                        $dxAdviceCount = [];
+                        foreach ($masters['advices'] as $_a) {
+                            foreach ($_a->diagnosis_ids ?? [] as $_dxId) {
+                                $dxAdviceCount[$_dxId] = ($dxAdviceCount[$_dxId] ?? 0) + 1;
+                            }
+                        }
+                                                @endphp
+                                                @foreach($masters['diagnoses'] as $d)
+                                                    @php $gc = $dxGroupCount[$d->id] ?? 0;
+                            $ac = $dxAdviceCount[$d->id] ?? 0; @endphp
                             <div class="dx-tag-wrap">
                                 <input class="btn-check" type="checkbox" name="exam_data[diagnoses][]" id="dx_{{ $d->id }}" value="{{ $d->id }}" data-name="{{ $d->diagnosis }}"
                                     {{ in_array($d->id, $ed['diagnoses'] ?? []) ? 'checked' : '' }}>
@@ -4734,178 +4748,7 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 })();
 </script>
 
-{{-- Patient Info Modal --}}
-<div class="modal fade d-print-none" id="patientInfoModalExam" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content"
-            style="border-radius:14px; overflow:hidden; border:none; box-shadow:0 20px 60px rgba(0,0,0,.18);">
-
-            {{-- Header --}}
-            <div class="modal-header text-white py-3 px-4" style="background:#1B4F72;">
-                <div class="d-flex align-items-center gap-2">
-                    <i class="bi bi-person-badge-fill fs-5"></i>
-                    <div>
-                        <div class="fw-bold fs-6">{{ $patient->first_name }} {{ $patient->middle_name }}
-                            {{ $patient->last_name }}</div>
-                        <small style="opacity:.8;">MRD: {{ $patient->patient_code ?? '—' }}</small>
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
-            </div>
-
-            {{-- Body --}}
-            <div class="modal-body p-4" style="background:#f8fafc;">
-                <div class="row g-3">
-
-                    {{-- Personal Info --}}
-                    <div class="col-12">
-                        <div class="fw-bold mb-2"
-                            style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
-                            <i class="bi bi-person-fill me-1"></i> Personal Information
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Full Name</div>
-                                    <div class="fw-semibold">
-                                        {{ trim($patient->first_name . ' ' . $patient->middle_name . ' ' . $patient->last_name) }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Age</div>
-                                    <div class="fw-semibold">{{ $patient->age ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-2">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Gender</div>
-                                    <div class="fw-semibold">{{ ucfirst($patient->gender ?? '—') }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Occupation</div>
-                                    <div class="fw-semibold">{{ $patient->occupation ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Contact No.</div>
-                                    <div class="fw-semibold">{{ $patient->contact_no ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">WhatsApp No.</div>
-                                    <div class="fw-semibold">{{ $patient->whatsapp_no ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-4">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">City</div>
-                                    <div class="fw-semibold">{{ $patient->cityName ?: '—' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Appointment Info --}}
-                    <div class="col-12">
-                        <div class="fw-bold mb-2"
-                            style="color:#1B4F72; font-size:13px; text-transform:uppercase; letter-spacing:.5px; border-bottom:2px solid #e2e8f0; padding-bottom:6px;">
-                            <i class="bi bi-calendar2-check-fill me-1"></i> Appointment Information
-                        </div>
-                        <div class="row g-2">
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Appointment Date</div>
-                                    <div class="fw-semibold">
-                                        {{ $patient->appointment_date ? $patient->appointment_date->format('d M, Y') : '—' }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Type</div>
-                                    <div class="fw-semibold">
-                                        @if($patient->type === 'walkin')
-                                            <span class="badge" style="background:#dcfce7; color:#166534;">Walk-in</span>
-                                        @elseif($patient->type === 'phone')
-                                            <span class="badge" style="background:#dbeafe; color:#1e40af;">Phone</span>
-                                        @else
-                                            {{ ucfirst($patient->type ?? '—') }}
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Patient Status</div>
-                                    <div class="fw-semibold">
-                                        @if($patient->is_old_patient)
-                                            <span class="badge" style="background:#fef3c7; color:#92400e;">Old
-                                                Patient</span>
-                                        @else
-                                            <span class="badge" style="background:#d1fae5; color:#065f46;">New
-                                                Patient</span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Doctor</div>
-                                    <div class="fw-semibold">{{ $patient->doctor->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Case Type</div>
-                                    <div class="fw-semibold">{{ $patient->caseType->case_type ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Case Fee</div>
-                                    <div class="fw-semibold">{{ money($patient->case_fee ?? 0, 2) }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Receptionist</div>
-                                    <div class="fw-semibold">{{ $patient->reception->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="p-2 bg-white rounded-3 border" style="font-size:13px;">
-                                    <div class="text-muted" style="font-size:11px;">Referrer</div>
-                                    <div class="fw-semibold">{{ $patient->referrer->name ?? '—' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
-            {{-- Footer --}}
-            <div class="modal-footer px-4 py-3" style="background:#fff; border-top:1px solid #e2e8f0;">
-                <button type="button" class="btn btn-sm px-4" data-bs-dismiss="modal"
-                    style="background:#e2e8f0; color:#475569; border-radius:8px; font-weight:600; border:none;">
-                    Close
-                </button>
-                <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                    class="btn btn-sm px-4 text-white fw-semibold"
-                    style="background:#1B4F72; border-radius:8px; border:none;">
-                    <i class="bi bi-pencil-fill me-1"></i> Edit Patient
-                </a>
-            </div>
-
-        </div>
-    </div>
-</div>
+@include('hospital.exam._patient_info_modal')
 
 <script>
 (function () {

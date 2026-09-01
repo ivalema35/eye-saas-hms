@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'SuperAdmin') — EYENOSIS</title>
-    <link rel="icon" type="image/png" href="{{ platform_logo_url() }}">
+    <link rel="icon" type="image/png" href="{{ platform_favicon_url() }}">
 
     {{-- Design System CSS --}}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
@@ -88,11 +88,8 @@
 
         <a href="{{ route('superadmin.dashboard') }}" class="sa-sidebar-brand">
             <span class="sa-sidebar-brand-mark">
-                <img src="{{ platform_logo_url() }}" alt="Eye HMS">
+                <img src="{{ platform_logo_light_url() }}" alt="Eye HMS" class="platform-logo-on-light">
             </span>
-            <div class="sa-sidebar-brand-text">
-                <small>Platform Admin</small>
-            </div>
         </a>
 
         <nav class="hms-sidenav">
