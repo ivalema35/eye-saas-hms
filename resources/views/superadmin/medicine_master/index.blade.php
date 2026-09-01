@@ -792,9 +792,9 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                 <code
                                     style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Name</code>
                                 <code
-                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Type</code>
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Type</code>
                                 <code
-                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Dosage</code>
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Dosage</code>
                                 <code
                                     style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Company</code>
                                 <code
@@ -803,9 +803,9 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                     style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Price</code>
                             </div>
                             <p style="margin:.5rem 0 0;font-size:.78rem;color:#6B7280">
-                                Blue = required &nbsp;|&nbsp; gray = optional &nbsp;|&nbsp;
-                                Medicine Type &amp; Dosage must match existing master data (case-insensitive). Duplicate
-                                names are skipped.
+                                Only <strong>Medicine Name</strong> is required — other columns can be left blank.
+                                If Type or Dosage is filled, it must match existing master data (case-insensitive).
+                                Duplicate names are skipped.
                             </p>
                             <p style="margin:1.5rem 0 0;font-size:1rem">
                                 <a href="{{ route('superadmin.medicine-master.medicines.sample') }}"><i

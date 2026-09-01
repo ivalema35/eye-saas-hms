@@ -1092,7 +1092,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                     <th style="width:120px;">Duration</th>
                                     <th style="width:110px;">Eye</th>
                                     <th>Comment</th>
-                                    <th style="width:38px;"></th>
+                                    <th style="width:72px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="coBody">
@@ -1123,7 +1123,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                         </select>
                                     </td>
                                     <td><input type="text" name="exam_data[co_rows][{{ $ri }}][comment]" value="{{ $row['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress();">&times;</button></td>
+                                    <td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 co-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 co-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -1169,7 +1169,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                     <th style="width:80px;">Since</th>
                                     <th style="width:120px;">Duration</th>
                                     <th>Comment</th>
-                                    <th style="width:38px;"></th>
+                                    <th style="width:72px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="kcoBody">
@@ -1192,7 +1192,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                         </select>
                                     </td>
                                     <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][comment]" value="{{ $krow['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                    <td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 kco-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 kco-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -2512,13 +2512,24 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
     });
 
     let coRowIndex = document.querySelectorAll('#coBody .co-row').length;
-    function addCoRow(complaintVal) {
-        const complaint = (complaintVal || (activeCoInput === coSearch ? coSearch?.value : '') || '').trim();
-        if (!complaint) {
-            activeCoInput = coSearch;
-            coSearch?.focus();
-            renderCoDropdown();
-            return;
+    const coRowActionsHtml = `<td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 co-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 co-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>`;
+    function syncCoEmptyMsg() {
+        const msg = document.getElementById('coEmptyMsg');
+        if (msg) { msg.style.display = document.querySelectorAll('#coBody .co-row').length ? 'none' : ''; }
+    }
+    function addCoRow(complaintVal, opts) {
+        opts = opts || {};
+        const forceBlank = opts.blank === true;
+        const afterTr = opts.afterTr || null;
+        let complaint = '';
+        if (!forceBlank) {
+            complaint = (complaintVal ?? (activeCoInput === coSearch ? coSearch?.value : '') ?? '').trim();
+            if (!complaint) {
+                activeCoInput = coSearch;
+                coSearch?.focus();
+                renderCoDropdown();
+                return;
+            }
         }
         const i = coRowIndex++;
         const tr = document.createElement('tr');
@@ -2535,13 +2546,19 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             <td><select name="exam_data[co_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
             <td><select name="exam_data[co_rows][${i}][eye]" class="form-select form-select-sm">${eyeOpts}</select></td>
             <td><input type="text" name="exam_data[co_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
-        document.getElementById('coBody').appendChild(tr);
-        const msg = document.getElementById('coEmptyMsg');
-        if (msg) { msg.style.display = 'none'; }
+            ${coRowActionsHtml}`;
+        if (afterTr) {
+            afterTr.insertAdjacentElement('afterend', tr);
+        } else {
+            document.getElementById('coBody').appendChild(tr);
+        }
+        syncCoEmptyMsg();
         if (coSearch) { coSearch.value = ''; }
         coDropdown?.classList.remove('show');
         activeCoInput = null;
+        if (forceBlank) {
+            tr.querySelector('.row-co-search')?.focus();
+        }
         checkProgress();
         updateLivePreview();
         form.dispatchEvent(new Event('input', { bubbles: false }));
@@ -2549,6 +2566,21 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
     window._addCoRow = addCoRow;
     document.getElementById('addCoRow')?.addEventListener('click', function () {
         addCoRow(coSearch ? coSearch.value.trim() : '');
+    });
+    document.getElementById('coBody')?.addEventListener('click', function (e) {
+        const addBtn = e.target.closest('.co-row-add-btn');
+        if (addBtn) {
+            addCoRow('', { blank: true, afterTr: addBtn.closest('tr') });
+            return;
+        }
+        const delBtn = e.target.closest('.co-row-del-btn');
+        if (delBtn) {
+            delBtn.closest('tr')?.remove();
+            syncCoEmptyMsg();
+            checkProgress();
+            updateLivePreview();
+            form.dispatchEvent(new Event('input', { bubbles: false }));
+        }
     });
 
     // ── KCO dropdown ──────────────────────────────────────────────────────────
@@ -2659,9 +2691,20 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
 
         renderKcoFavPills();
 
-        function addKcoRow(val) {
-            const condition = (val || (activeKcoInput === kcoSearch ? kcoSearch.value : '') || '').trim();
-            if (!condition) { activeKcoInput = kcoSearch; kcoSearch.focus(); renderKcoDropdown(''); return; }
+        const kcoRowActionsHtml = `<td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 kco-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 kco-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>`;
+        function syncKcoEmptyMsg() {
+            const msg = document.getElementById('kcoEmptyMsg');
+            if (msg) { msg.style.display = document.querySelectorAll('#kcoBody .kco-row').length ? 'none' : ''; }
+        }
+        function addKcoRow(val, opts) {
+            opts = opts || {};
+            const forceBlank = opts.blank === true;
+            const afterTr = opts.afterTr || null;
+            let condition = '';
+            if (!forceBlank) {
+                condition = (val ?? (activeKcoInput === kcoSearch ? kcoSearch.value : '') ?? '').trim();
+                if (!condition) { activeKcoInput = kcoSearch; kcoSearch.focus(); renderKcoDropdown(''); return; }
+            }
             const i  = kcoRowIndex++;
             const tr = document.createElement('tr');
             tr.className = 'kco-row';
@@ -2674,13 +2717,19 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
                 <td><select name="exam_data[kco_rows][${i}][since]" class="form-select form-select-sm">${sinceOpts}</select></td>
                 <td><select name="exam_data[kco_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
                 <td><input type="text" name="exam_data[kco_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
-            document.getElementById('kcoBody').appendChild(tr);
-            const msg = document.getElementById('kcoEmptyMsg');
-            if (msg) { msg.style.display = 'none'; }
+                ${kcoRowActionsHtml}`;
+            if (afterTr) {
+                afterTr.insertAdjacentElement('afterend', tr);
+            } else {
+                document.getElementById('kcoBody').appendChild(tr);
+            }
+            syncKcoEmptyMsg();
             kcoSearch.value = '';
             kcoDropdown.classList.remove('show');
             activeKcoInput = null;
+            if (forceBlank) {
+                tr.querySelector('.row-kco-search')?.focus();
+            }
             checkProgress();
             updateLivePreview();
             form.dispatchEvent(new Event('input', { bubbles: false }));
@@ -2691,6 +2740,21 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         kcoSearch.addEventListener('input', function () { activeKcoInput = this; renderKcoDropdown(); });
         kcoSearch.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addKcoRow(this.value.trim()); } });
         document.getElementById('addKcoRow')?.addEventListener('click', () => addKcoRow(kcoSearch.value.trim()));
+        document.getElementById('kcoBody')?.addEventListener('click', function (e) {
+            const addBtn = e.target.closest('.kco-row-add-btn');
+            if (addBtn) {
+                addKcoRow('', { blank: true, afterTr: addBtn.closest('tr') });
+                return;
+            }
+            const delBtn = e.target.closest('.kco-row-del-btn');
+            if (delBtn) {
+                delBtn.closest('tr')?.remove();
+                syncKcoEmptyMsg();
+                checkProgress();
+                updateLivePreview();
+                form.dispatchEvent(new Event('input', { bubbles: false }));
+            }
+        });
 
         document.getElementById('kcoBody')?.addEventListener('focusin', function (e) {
             const input = e.target.closest('.row-kco-search');

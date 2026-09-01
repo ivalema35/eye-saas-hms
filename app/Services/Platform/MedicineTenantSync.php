@@ -29,9 +29,6 @@ class MedicineTenantSync
             }
 
             $typeId = static::resolveTenantTypeId($tenantId, $medicine);
-            if (! $typeId) {
-                continue; // medicine_type_id is NOT NULL on tenant medicines table
-            }
 
             Medicine::withoutTenantScope()->create([
                 'tenant_id' => $tenantId,
@@ -70,9 +67,6 @@ class MedicineTenantSync
             }
 
             $typeId = static::resolveTenantTypeId($tenantId, $medicine);
-            if (! $typeId) {
-                continue;
-            }
 
             $existing->update([
                 'medicine_type_id' => $typeId,

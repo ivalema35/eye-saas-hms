@@ -48,6 +48,7 @@ class SystemRolesSeeder extends Seeder
             'opd.bill.print',
             'opd.foc.accept',
             'reports.view',
+            'reports.export',
             'master.receptions',
             'master.locations',
             'ot.appointment.view',
