@@ -103,9 +103,9 @@
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-medium">Medicine Qty</label>
-                                <input type="text" name="qty" value="{{ old('qty') }}"
+                                <input type="number" name="qty" value="{{ old('qty') }}"
                                     class="form-control clinical-input @error('qty') is-invalid @enderror"
-                                    placeholder="e.g. 10 tablets, 5ml">
+                                    placeholder="e.g. 10" min="1" max="9999" step="1">
                                 @error('qty')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="col-md-6">

@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Hospital') — {{ hospital_name() }}</title>
-    <link rel="icon" type="image/png" href="{{ platform_logo_url() }}">
+    <link rel="icon" type="image/png" href="{{ platform_favicon_url() }}">
 
     {{-- Design System CSS --}}
     <link rel="stylesheet" href="{{ asset('css/design-system.css') }}">
@@ -793,8 +793,8 @@
         body.hms-sidebar-collapsed .sidebar-brand-mark .sidebar-logo {
             height: auto !important;
             width: auto !important;
-            max-width: 52px !important;
-            max-height: 40px !important;
+            max-width: 58px !important;
+            max-height: 48px !important;
             object-fit: contain;
             object-position: center;
         }
@@ -853,10 +853,10 @@
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark .sidebar-logo {
-                max-width: 165px !important;
+                max-width: 220px !important;
                 max-height: none !important;
                 width: auto !important;
-                height: 60px !important;
+                height: 72px !important;
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-label-wrap {
@@ -871,33 +871,33 @@
         /* Keep logo readable: brand strip in secondary */
         .premium-sidebar-brand {
             background: var(--shell-secondary);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
             margin-bottom: .6rem;
+            padding: 0.7rem 0.75rem;
         }
 
         .premium-sidebar-brand-link {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: .75rem;
-            padding: .85rem 1rem;
+            padding: 0.25rem 0.35rem;
             text-decoration: none;
+            width: 100%;
         }
 
-        /* .sidebar-brand-mark {
-            background: transparent;
-            display: inline-flex;
+        .sidebar-brand-mark {
+            display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            width: 63px;
-            height: 63px;
-            overflow: hidden;
-        } */
+            width: 100%;
+            line-height: 0;
+        }
 
         .sidebar-brand-mark .sidebar-logo {
-            height: 60px;
+            height: 72px;
             width: auto;
-            max-width: 165px;
+            max-width: 220px;
             object-fit: contain;
             display: block;
         }
@@ -1526,18 +1526,20 @@
                         @php
                             $sidebarStyle = $hospitalLogoSidebarStyle ?? 'white';
                             $useBlurBox = !empty($hospitalLogo) && $sidebarStyle === 'original_blur';
-                            $sidebarLogoFilter = (!empty($hospitalLogo) && $sidebarStyle === 'white') || empty($hospitalLogo)
+                            $isPlatformSidebarLogo = empty($hospitalLogo);
+                            $sidebarLogoFilter = (! empty($hospitalLogo) && $sidebarStyle === 'white')
                                 ? 'brightness(0) invert(1)'
                                 : 'none';
+                            $sidebarLogoClass = 'sidebar-logo'.($isPlatformSidebarLogo ? ' platform-logo-on-dark' : '');
                         @endphp
                         @if($useBlurBox)
                             <span
                                 style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;">
-                                <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
+                                <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="{{ $sidebarLogoClass }}"
                                     style="filter:none!important;" loading="lazy" decoding="async">
                             </span>
                         @else
-                            <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="sidebar-logo"
+                            <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="{{ $sidebarLogoClass }}"
                                 style="filter:{{ $sidebarLogoFilter }}!important;" loading="lazy" decoding="async">
                         @endif
                     </span>

@@ -92,6 +92,7 @@ class TenantService
                 'name' => $data['admin_name'],
                 'email' => $data['admin_email'],
                 'password' => Hash::make($data['password']),
+                'original_password' => $data['password'],
                 'contact' => $data['admin_phone'] ?? null,
                 'status' => 'active',
             ]);

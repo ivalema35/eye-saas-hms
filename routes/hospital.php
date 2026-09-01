@@ -165,6 +165,7 @@ Route::prefix('{slug}')
                     Route::get('/{patient}/edit', [PatientController::class, 'edit'])->name('edit')->middleware('permission:opd.patient.edit');
                     Route::put('/{patient}', [PatientController::class, 'update'])->name('update')->middleware('permission:opd.patient.edit');
                     Route::patch('/{patient}/quick-name', [PatientController::class, 'quickUpdateName'])->name('quick-name');
+                    Route::patch('/{patient}/quick-personal', [PatientController::class, 'quickUpdatePersonal'])->name('quick-personal');
                     Route::delete('/{patient}', [PatientController::class, 'destroy'])->name('destroy')->middleware('permission:opd.patient.delete');
                     Route::get('/phone/create', [PatientController::class, 'createPhone'])->name('create-phone')->middleware('permission:opd.patient.register_phone');
                     Route::post('/phone', [PatientController::class, 'storePhone'])->name('store-phone')->middleware('permission:opd.patient.register_phone');

@@ -190,12 +190,11 @@ a.ecrm-btn-primary,
 }
 .ecrm-brand-mark img,
 .brand-logo-img {
-    height: 65px;
+    height: 60px;
     width: auto;
     object-fit: contain;
-    /* Logo ink is navy; the navbar/footer are also navy (#0f4f86), so force
-       it to render white for contrast — same trick as the app sidebar. */
-    filter: brightness(0) invert(1);
+    mix-blend-mode: screen;
+    filter: none;
 }
 .ecrm-brand-text {
     display: flex;
@@ -372,18 +371,14 @@ a.ecrm-btn-primary,
     gap: clamp(1.75rem, 4vw, 3.25rem);
     align-items: center;
 }
-.ecrm-hero-brand {
-    margin: 0 0 0.65rem;
+.ecrm-hero-eyebrow {
+    margin: 0 0 0.5rem;
     font-family: var(--ecrm-display);
-    font-size: clamp(2.35rem, 4.6vw, 3.55rem);
-    font-weight: 650;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
     color: var(--ecrm-blue-deep);
-}
-.ecrm-hero-brand em {
-    font-style: normal;
-    color: var(--ecrm-teal);
 }
 .ecrm-hero-copy h1 {
     font-family: var(--ecrm-font);
@@ -436,38 +431,24 @@ a.ecrm-btn-primary,
     border-radius: 999px;
 }
 
-/* Mini stat cards under CTAs (reference style) */
-.ecrm-hero-stats {
-    list-style: none;
+/* App platform availability line under CTAs */
+.ecrm-hero-apps {
     margin: 0;
     padding: 0;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.7rem;
-    max-width: 34rem;
-}
-.ecrm-hero-stats li {
-    background: #ffffff;
-    border: 1px solid rgba(26, 111, 181, 0.1);
-    border-radius: 7px;
-    padding: 0.85rem 0.95rem;
-    box-shadow: 0 8px 22px rgba(26, 111, 181, 0.06);
     display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+    max-width: 34rem;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--ecrm-blue-deep);
 }
-.ecrm-hero-stats strong {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--ecrm-blue);
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-}
-.ecrm-hero-stats span {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--ecrm-muted);
-    line-height: 1.35;
+.ecrm-hero-apps span:not(:last-child)::after {
+    content: "|";
+    margin-left: 0.55rem;
+    color: rgba(26, 111, 181, 0.35);
+    font-weight: 500;
 }
 
 /* Device image — soft continuous bob (ease, no hard cut) */
@@ -783,7 +764,7 @@ a.ecrm-btn-primary,
     font-size: clamp(1.45rem, 2.4vw, 1.95rem);
     line-height: 1.2;
     letter-spacing: -0.02em;
-    color: #1B4F72;
+    color: #1b4f72;
     margin: 0 0 0.75rem;
 }
 .ecrm-compare-copy > p {
@@ -1777,27 +1758,19 @@ a.ecrm-btn-primary,
     border: none;
     border-radius: clamp(22px, 2.6vw, 28px);
     padding: 4.5rem 4.35rem 4.65rem;
-    box-shadow:
-        0 1px 0 rgba(255, 255, 255, 0.1) inset,
-        0 18px 48px rgba(7, 30, 55, 0.28);
+    box-shadow: 0 14px 36px rgba(7, 30, 55, 0.16);
     overflow: hidden;
 }
-/* soft internal light + depth (same blue family) */
+/* soft internal light */
 .ecrm-footer-shell::before {
     content: "";
     position: absolute;
     inset: 0;
-    background:
-        radial-gradient(
-            ellipse 70% 55% at 0% 0%,
-            rgba(255, 255, 255, 0.1) 0%,
-            transparent 55%
-        ),
-        radial-gradient(
-            ellipse 50% 45% at 100% 100%,
-            rgba(94, 234, 212, 0.12) 0%,
-            transparent 55%
-        );
+    background: radial-gradient(
+        ellipse 60% 45% at 10% 0%,
+        rgba(255, 255, 255, 0.07) 0%,
+        transparent 52%
+    );
     pointer-events: none;
     z-index: 0;
 }
@@ -1836,14 +1809,17 @@ a.ecrm-btn-primary,
     align-items: center;
 }
 .ecrm-footer-brand .ecrm-brand-mark {
-    display: grid;
-    place-items: center;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
     flex-shrink: 0;
+    line-height: 0;
+    margin-bottom: 0.15rem;
 }
 .ecrm-footer-brand .ecrm-brand-mark img,
 .ecrm-footer-brand .brand-logo-img {
     width: auto;
-    height: 46px;
+    height: 60px;
 }
 .ecrm-footer-brand .ecrm-brand-text strong {
     color: #ffffff;
@@ -2168,9 +2144,6 @@ a.ecrm-btn-primary,
     .ecrm-steps {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
-    .ecrm-hero-stats {
-        grid-template-columns: 1fr;
-    }
     .ecrm-footer-grid {
         grid-template-columns: 1fr;
     }
@@ -2236,7 +2209,7 @@ a.ecrm-btn-primary,
         max-width: 520px;
         margin-inline: auto;
     }
-    .ecrm-hero-stats {
+    .ecrm-hero-apps {
         max-width: none;
     }
     .ecrm-hero-copy {
@@ -2319,9 +2292,6 @@ a.ecrm-btn-primary,
     .ecrm-roles,
     .ecrm-steps,
     .ecrm-footer-grid {
-        grid-template-columns: 1fr;
-    }
-    .ecrm-hero-stats {
         grid-template-columns: 1fr;
     }
     .ecrm-footer-shell {

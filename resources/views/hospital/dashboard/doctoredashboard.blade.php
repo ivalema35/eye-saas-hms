@@ -23,7 +23,7 @@
             background: var(--shell-secondary) !important;
             color: #ffffff !important;
             border-radius: 10px 10px 0 0;
-            padding: .6rem 1rem !important;
+            padding: -0.4rem 1rem !important;
             font-weight: 800;
         }
 
@@ -486,14 +486,16 @@
         .doc-overview-panel {
             display: flex;
             align-items: stretch;
-            gap: 18px;
-            background: #eef4f9;
-            border: 1px solid rgba(15, 79, 134, 0.1);
-            border-radius: 14px;
-            padding: 14px;
+            gap: 14px;
+            background: #f4f8fb;
+            border: 1px solid rgba(15, 79, 134, 0.08);
+            border-radius: 12px;
+            padding: 10px 12px;
         }
 
-        .doc-overview-featured { flex: 0 0 auto; }
+        .doc-overview-featured {
+            flex: 0 0 auto;
+        }
 
         .doc-overview-divider {
             width: 1px;
@@ -507,25 +509,32 @@
         }
 
         @media(max-width:768px) {
-            .doc-overview-panel { flex-direction: column; }
-            .doc-overview-divider { display: none; }
-            .doc-main-card { max-width: 100%; width: 100%; }
+            .doc-overview-panel {
+                flex-direction: column;
+            }
+
+            .doc-overview-divider {
+                display: none;
+            }
+
+            .doc-main-card {
+                max-width: 100%;
+                width: 100%;
+            }
         }
 
         .doc-main-card {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 4px;
             background: #fff;
-            border: 1px solid #1c1c1c;
-            outline: 2px solid #0f4f86;
-            outline-offset: 1px;
+            border: 1px solid rgba(15, 79, 134, 0.22);
             border-radius: 8px;
-            padding: 8px;
-            width: 228px;
-            max-width: 228px;
+            padding: 6px;
+            width: 196px;
+            max-width: 196px;
             overflow: visible;
-            box-shadow: none;
+            box-shadow: 0 1px 4px rgba(15, 79, 134, 0.06);
         }
 
         .doc-ref-bar {
@@ -534,18 +543,18 @@
             justify-content: center;
             gap: 0;
             color: #fff;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             letter-spacing: .02em;
-            line-height: 1.2;
-            border-radius: 6px;
+            line-height: 1.15;
+            border-radius: 5px;
             overflow: hidden;
         }
 
         .doc-ref-bar span {
             flex: 1;
             text-align: center;
-            padding: 7px 4px;
+            padding: 4px 3px;
         }
 
         .doc-ref-bar .doc-ref-div {
@@ -571,37 +580,52 @@
         .doc-ref-mid {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 6px 8px;
+            gap: 8px;
+            padding: 4px 6px;
             background: #fff;
         }
 
         .doc-main-card .doc-avatar {
-            width: 42px;
-            height: 42px;
-            font-size: 18px;
+            width: 34px;
+            height: 34px;
+            font-size: 15px;
             background: #0d9488;
             color: #fff;
             border-radius: 50%;
         }
 
         .doc-main-card .doc-name {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 800;
             color: #0f4f86;
-            margin-bottom: 2px;
+            margin-bottom: 0;
+            line-height: 1.2;
         }
 
         .doc-you-pill {
-            display: inline-flex;
-            font-size: 8px;
+            display: none;
+        }
+
+        .patient-queue-no {
+            display: inline-block;
+            font-size: 13px;
             font-weight: 800;
-            letter-spacing: .06em;
-            text-transform: uppercase;
-            background: #0f4f86;
-            color: #fff;
-            padding: 1px 7px;
-            border-radius: 999px;
+            color: #0f4f86;
+            min-width: 28px;
+        }
+
+        .doctor-page-wrap .patient-col-no {
+            width: 44px;
+            min-width: 44px;
+            max-width: 44px;
+            padding-left: 6px !important;
+            padding-right: 6px !important;
+        }
+
+        .doctor-page-wrap .patient-col-name {
+            min-width: 220px;
+            width: 32%;
+            text-align: left !important;
         }
 
         .doctor-list-grid {
@@ -613,20 +637,18 @@
         .doc-list-card {
             display: block;
             background: #fff;
-            border: 1px solid #1c1c1c;
-            outline: 2px solid #0f4f86;
-            outline-offset: 1px;
+            border: 1px solid rgba(15, 79, 134, 0.2);
             border-radius: 8px;
-            padding: 12px 12px 11px;
+            padding: 8px 10px 7px;
             text-decoration: none;
             color: inherit;
-            box-shadow: none;
-            transition: transform .18s ease, outline-color .18s ease;
+            box-shadow: 0 1px 3px rgba(15, 79, 134, 0.05);
+            transition: transform .18s ease, border-color .18s ease;
         }
 
         .doc-list-card:hover {
-            transform: translateY(-2px);
-            outline-color: #0a2f52;
+            transform: translateY(-1px);
+            border-color: #0f4f86;
         }
 
         .doc-list-card.doc-selected {
@@ -637,16 +659,16 @@
         .doc-list-name {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            font-size: 14px;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 13px;
             font-weight: 800;
             color: #0f4f86;
         }
 
         .doc-list-name i {
             color: #0d9488;
-            font-size: 18px;
+            font-size: 15px;
         }
 
         .doc-ref-btns {
@@ -654,7 +676,7 @@
             gap: 6px;
         }
 
-        .doc-ref-btns + .doc-ref-btns {
+        .doc-ref-btns+.doc-ref-btns {
             margin-top: 6px;
         }
 
@@ -663,13 +685,13 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 4px;
             background: #0a2f52;
             color: #fff;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
-            padding: 7px 5px;
-            border-radius: 6px;
+            padding: 5px 4px;
+            border-radius: 5px;
         }
 
         .doc-ref-btn i {
@@ -710,8 +732,7 @@
     <div class="doctor-page-wrap">
 
         @php
-            $drIndexLabel = $drIndexLabel ?? 'No';
-            $waitStatusLabel = $waitStatusLabel ?? 'Wait Status';
+            $waitStatusLabel = $waitStatusLabel ?? 'Waiting';
             $wGreen = (int) hospital_setting('wait_green_max', 30);
             $wOrange = (int) hospital_setting('wait_orange_max', 60);
             $wRed = (int) hospital_setting('wait_red_max', 120);
@@ -721,6 +742,13 @@
             $wNdGreen = (int) hospital_setting('wait_nd_green_max', 20);
             $wNdOrange = (int) hospital_setting('wait_nd_orange_max', 60);
             $wNdRed = (int) hospital_setting('wait_nd_red_max', 120);
+            $formatQueueNo = function ($patient): string {
+                if (empty($patient->doctor_patient_no)) {
+                    return '—';
+                }
+
+                return '#' . (int) $patient->doctor_patient_no;
+            };
         @endphp
 
         {{-- Subscription Alert --}}
@@ -765,9 +793,7 @@
                         </div>
                         <div>
                             <div class="doc-name">{{ $doctorName ?? 'Doctor' }}</div>
-                            @if(!$viewingDoctor)
-                                <span class="doc-you-pill">You</span>
-                            @else
+                            @if($viewingDoctor)
                                 <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="text-decoration-none"
                                     style="font-size:10px;font-weight:700;color:#0f4f86;">
                                     &larr; Back
@@ -817,14 +843,20 @@
                                 {{ $doc->name }}
                             </div>
                             <div class="doc-ref-btns">
-                                <span class="doc-ref-btn" title="Patients"><i class="bi bi-people-fill"></i>{{ $doc->assigned_today ?? 0 }}</span>
-                                <span class="doc-ref-btn" title="Primary"><i class="bi bi-clipboard2-pulse"></i>{{ $doc->primary_count ?? 0 }}</span>
-                                <span class="doc-ref-btn" title="Secondary"><i class="bi bi-display"></i>{{ $doc->secondary_count ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Patients"><i
+                                        class="bi bi-people-fill"></i>{{ $doc->assigned_today ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Primary"><i
+                                        class="bi bi-clipboard2-pulse"></i>{{ $doc->primary_count ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Secondary"><i
+                                        class="bi bi-display"></i>{{ $doc->secondary_count ?? 0 }}</span>
                             </div>
                             <div class="doc-ref-btns doc-ref-btns--ot">
-                                <span class="doc-ref-btn" title="OT"><i class="bi bi-scissors"></i>{{ $docOt->ot_total ?? 0 }}</span>
-                                <span class="doc-ref-btn" title="Pending"><i class="bi bi-hourglass-split"></i>{{ $docOt->ot_pending ?? 0 }}</span>
-                                <span class="doc-ref-btn" title="Complete"><i class="bi bi-check2-circle"></i>{{ $docOt->ot_complete ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="OT"><i
+                                        class="bi bi-scissors"></i>{{ $docOt->ot_total ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Pending"><i
+                                        class="bi bi-hourglass-split"></i>{{ $docOt->ot_pending ?? 0 }}</span>
+                                <span class="doc-ref-btn" title="Complete"><i
+                                        class="bi bi-check2-circle"></i>{{ $docOt->ot_complete ?? 0 }}</span>
                             </div>
                         </a>
                     @empty
@@ -878,8 +910,8 @@
                                 style="font-size: 13.5px; border-color: #e2e8f0;">
                                 <thead class="table-light text-secondary">
                                     <tr>
-                                        <th style="width:80px;">{{ $drIndexLabel }}</th>
-                                        <th style="width:240px;">Patient Name</th>
+                                        <th class="patient-col-no">#</th>
+                                        <th class="patient-col-name">Patient Name</th>
                                         <th>Gender</th>
                                         <th>Age</th>
                                         <th>City</th>
@@ -890,10 +922,9 @@
                                 <tbody>
                                     @forelse($primaryQueue ?? [] as $i => $patient)
                                         <tr>
-                                            <td><span
-                                                    class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span>
-                                            </td>
-                                            <td class="text-start fw-semibold" style="color: #1B4F72;">
+                                            <td class="patient-col-no"><span
+                                                    class="patient-queue-no">{{ $formatQueueNo($patient) }}</span></td>
+                                            <td class="patient-col-name fw-semibold" style="color: #1B4F72;">
                                                 {{ $patient->first_name }} {{ $patient->last_name }}
                                             </td>
                                             <td>{{ $patient->gender ? ucfirst($patient->gender) : '—' }}</td>
@@ -974,8 +1005,8 @@
                                 style="font-size: 13.5px; border-color: #e2e8f0;">
                                 <thead class="table-light text-secondary">
                                     <tr>
-                                        <th style="width:80px;">{{ $drIndexLabel }}</th>
-                                        <th style="width:240px;">Patient Name</th>
+                                        <th class="patient-col-no">#</th>
+                                        <th class="patient-col-name">Patient Name</th>
                                         <th>Gender</th>
                                         <th>Age</th>
                                         <th>City</th>
@@ -1010,10 +1041,9 @@
                                             }
                                         @endphp
                                         <tr>
-                                            <td><span
-                                                    class="badge rounded-pill text-bg-light border px-3 py-2 fw-semibold">{{ $patient->display_doctor_index ?? '-' }}</span>
-                                            </td>
-                                            <td class="text-start fw-semibold" style="color: #1B4F72;">
+                                            <td class="patient-col-no"><span
+                                                    class="patient-queue-no">{{ $formatQueueNo($patient) }}</span></td>
+                                            <td class="patient-col-name fw-semibold" style="color: #1B4F72;">
                                                 {{ $patient->first_name }} {{ $patient->last_name }}
                                             </td>
                                             <td>{{ $patient->gender ? ucfirst($patient->gender) : '—' }}</td>

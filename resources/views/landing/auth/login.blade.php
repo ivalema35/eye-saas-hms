@@ -250,7 +250,7 @@
         }
 
         .banner-logo img {
-            height: 60px;
+            height: 62px;
             width: auto;
             object-fit: contain;
         }
@@ -382,9 +382,10 @@
 
         .form-side-logo {
             display: block;
-            height: 55px;
+            height: 60px;
             width: auto;
             margin: 0 auto 2.1rem;
+            mix-blend-mode: normal;
         }
 
         .back-link {
@@ -818,7 +819,7 @@
 
                 <div class="banner-content">
                     <div class="banner-logo">
-                        <img src="{{ platform_logo_url() }}" alt="Eye HMS Logo">
+                        <img src="{{ platform_logo_light_url() }}" alt="Eye HMS Logo" class="platform-logo-on-light">
                     </div>
                     <div class="hero-pet">
                         <i class="fa-solid fa-hospital-user"></i>
@@ -836,7 +837,8 @@
             <div class="auth-form-side">
                 <div class="auth-form-box">
 
-                    <img src="{{ platform_logo_url() }}" alt="{{ config('app.name') }}" class="form-side-logo">
+                    <img src="{{ platform_logo_light_url() }}" alt="{{ config('app.name') }}"
+                        class="form-side-logo platform-logo-on-light">
 
                     <a href="{{ route('home') }}" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to
                         EYENOSIS</a>

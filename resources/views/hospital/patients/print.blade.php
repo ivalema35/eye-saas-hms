@@ -8,7 +8,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 15mm;
+            margin: 12mm 14mm;
         }
 
         * {
@@ -20,66 +20,70 @@
         body {
             font-family: Arial, Helvetica, sans-serif;
             color: #000;
-            background: #F4F6F9;
+            background: #fff;
         }
 
         .bill-page {
-            max-width: 700px;
-            margin: 20px auto;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 0;
         }
 
         .bill-box {
+            width: 100%;
             background: #fff;
             border: 1.5px solid #000;
-            padding: 10px 14px 12px;
+            padding: 6px 10px 10px;
         }
 
         .bill-header {
             text-align: center;
-            padding-bottom: 8px;
+            padding-bottom: 4px;
             border-bottom: 1px solid #000;
         }
 
         .bill-header h1 {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.02em;
-            line-height: 1.2;
+            line-height: 1.15;
         }
 
         .bill-header p {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 400;
-            margin-top: 3px;
-            line-height: 1.35;
+            margin-top: 2px;
+            line-height: 1.25;
         }
 
         .bill-title {
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             text-transform: uppercase;
-            padding: 8px 0;
+            padding: 5px 0;
             border-bottom: 1px solid #000;
         }
 
         .bill-fields {
             width: 100%;
             border-collapse: collapse;
-            margin: 0;
+            border-bottom: 1px solid #000;
         }
 
         .bill-fields td {
             width: 50%;
-            padding: 5px 4px;
-            font-size: 13px;
+            padding: 3px 2px;
+            font-size: 12px;
             vertical-align: top;
-            line-height: 1.35;
+            line-height: 1.3;
+            text-align: left;
         }
 
-        .bill-fields td.right {
-            text-align: right;
+        .bill-fields td.col-right {
+            padding-left: 10px;
         }
 
         .bill-fields strong {
@@ -89,14 +93,12 @@
         .bill-charge {
             width: 100%;
             border-collapse: collapse;
-            border-top: 1px solid #000;
             border-bottom: 1px solid #000;
-            margin-top: 4px;
         }
 
         .bill-charge td {
-            padding: 8px 4px;
-            font-size: 13px;
+            padding: 5px 2px;
+            font-size: 12px;
             font-weight: 700;
         }
 
@@ -108,14 +110,15 @@
         .bill-signature {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 14px;
+            margin-top: 8px;
         }
 
         .bill-signature td {
             width: 50%;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 700;
             vertical-align: bottom;
+            padding: 2px;
         }
 
         .bill-signature td.right {
@@ -123,8 +126,8 @@
         }
 
         .bill-stamp {
-            font-size: 12px;
-            margin-top: 8px;
+            font-size: 11px;
+            margin-top: 6px;
             padding-left: 2px;
         }
 
@@ -163,6 +166,18 @@
             display: inline-block;
         }
 
+        @media screen {
+            body {
+                background: #f4f6f9;
+            }
+
+            .bill-page {
+                max-width: 820px;
+                margin: 16px auto;
+                padding: 0 12px;
+            }
+        }
+
         @media print {
             body {
                 background: #fff;
@@ -170,6 +185,7 @@
 
             .bill-page {
                 margin: 0;
+                padding: 0;
                 width: 100%;
             }
 
@@ -182,7 +198,6 @@
 
 <body>
     @php
-        // Ensure print uses this hospital's currency (tenant snapshot)
         if (!empty($tenant?->currency_code)) {
             config(['app.hospital_currency_code' => $tenant->currency_code]);
         }
@@ -223,19 +238,19 @@
             <table class="bill-fields">
                 <tr>
                     <td><strong>MRD No.:</strong> {{ $patient->patient_code }}</td>
-                    <td class="right"><strong>Bill Date:</strong> {{ now()->format('d-m-Y H:i:s') }}</td>
+                    <td class="col-right"><strong>Bill Date:</strong> {{ now()->format('d-m-Y H:i:s') }}</td>
                 </tr>
                 <tr>
                     <td><strong>Name:</strong> {{ strtoupper($patient->full_name) }}</td>
-                    <td class="right"><strong>Phone No.:</strong> {{ $patient->contact_no }}</td>
+                    <td class="col-right"><strong>Phone No.:</strong> {{ $patient->contact_no }}</td>
                 </tr>
                 <tr>
                     <td><strong>Age, Sex:</strong> {{ $ageSex }}</td>
-                    <td class="right"><strong>Consultant Name:</strong> {{ $consultant }}</td>
+                    <td class="col-right"><strong>Consultant Name:</strong> {{ $consultant }}</td>
                 </tr>
                 <tr>
                     <td><strong>City:</strong> {{ $city }}</td>
-                    <td class="right"><strong>Index No.:</strong> {{ $patient->doctor_patient_no ?? '—' }}</td>
+                    <td class="col-right"><strong>Index No.:</strong> {{ $patient->doctor_patient_no ?? '—' }}</td>
                 </tr>
             </table>
 

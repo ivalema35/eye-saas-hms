@@ -15,17 +15,18 @@
             font-family: DejaVu Sans, Arial, Helvetica, sans-serif;
             color: #000;
             font-size: 12px;
-            padding: 28px 32px;
+            padding: 20px 24px;
         }
 
         .bill-box {
+            width: 100%;
             border: 1.5px solid #000;
-            padding: 8px 12px 10px;
+            padding: 6px 10px 10px;
         }
 
         .bill-header {
             text-align: center;
-            padding-bottom: 6px;
+            padding-bottom: 4px;
             border-bottom: 1px solid #000;
         }
 
@@ -40,7 +41,7 @@
         .bill-header p {
             font-size: 10px;
             margin-top: 2px;
-            line-height: 1.3;
+            line-height: 1.25;
         }
 
         .bill-title {
@@ -48,25 +49,27 @@
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
-            padding: 6px 0;
+            padding: 5px 0;
             border-bottom: 1px solid #000;
         }
 
         .bill-fields {
             width: 100%;
             border-collapse: collapse;
+            border-bottom: 1px solid #000;
         }
 
         .bill-fields td {
             width: 50%;
-            padding: 4px 3px;
+            padding: 3px 2px;
             font-size: 11px;
             vertical-align: top;
             line-height: 1.3;
+            text-align: left;
         }
 
-        .bill-fields td.right {
-            text-align: right;
+        .bill-fields td.col-right {
+            padding-left: 10px;
         }
 
         .bill-fields strong {
@@ -76,13 +79,11 @@
         .bill-charge {
             width: 100%;
             border-collapse: collapse;
-            border-top: 1px solid #000;
             border-bottom: 1px solid #000;
-            margin-top: 3px;
         }
 
         .bill-charge td {
-            padding: 6px 3px;
+            padding: 5px 2px;
             font-size: 11px;
             font-weight: 700;
         }
@@ -95,7 +96,7 @@
         .bill-signature {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .bill-signature td {
@@ -103,6 +104,7 @@
             font-size: 11px;
             font-weight: 700;
             vertical-align: bottom;
+            padding: 2px;
         }
 
         .bill-signature td.right {
@@ -119,7 +121,6 @@
 
 <body>
     @php
-        // Ensure PDF uses this hospital's currency (tenant snapshot)
         if (!empty($tenant?->currency_code)) {
             config(['app.hospital_currency_code' => $tenant->currency_code]);
         }
@@ -160,19 +161,19 @@
         <table class="bill-fields">
             <tr>
                 <td><strong>MRD No.:</strong> {{ $patient->patient_code }}</td>
-                <td class="right"><strong>Bill Date:</strong> {{ now()->format('d-m-Y H:i:s') }}</td>
+                <td class="col-right"><strong>Bill Date:</strong> {{ now()->format('d-m-Y H:i:s') }}</td>
             </tr>
             <tr>
                 <td><strong>Name:</strong> {{ strtoupper($patient->full_name) }}</td>
-                <td class="right"><strong>Phone No.:</strong> {{ $patient->contact_no }}</td>
+                <td class="col-right"><strong>Phone No.:</strong> {{ $patient->contact_no }}</td>
             </tr>
             <tr>
                 <td><strong>Age, Sex:</strong> {{ $ageSex }}</td>
-                <td class="right"><strong>Consultant Name:</strong> {{ $consultant }}</td>
+                <td class="col-right"><strong>Consultant Name:</strong> {{ $consultant }}</td>
             </tr>
             <tr>
                 <td><strong>City:</strong> {{ $city }}</td>
-                <td class="right"><strong>Index No.:</strong> {{ $patient->doctor_patient_no ?? '—' }}</td>
+                <td class="col-right"><strong>Index No.:</strong> {{ $patient->doctor_patient_no ?? '—' }}</td>
             </tr>
         </table>
 

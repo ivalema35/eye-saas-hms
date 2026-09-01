@@ -70,13 +70,21 @@ class HospitalMedicineImport implements ToCollection, WithHeadingRow, WithChunkR
             }
 
             $duration = trim((string) ($row['duration'] ?? ''));
-            $qty = trim((string) ($row['qty'] ?? ''));
+            $qtyRaw = trim((string) ($row['qty'] ?? ''));
 
-            if ($duration === '' || $qty === '') {
+            if ($duration === '' || $qtyRaw === '') {
                 $this->skipped++;
                 $this->errors[] = "Row {$rowNumber}: Duration and Qty are required.";
                 continue;
             }
+
+            if (! preg_match('/^\d+$/', $qtyRaw)) {
+                $this->skipped++;
+                $this->errors[] = "Row {$rowNumber}: Qty must be a whole number (e.g. 10, 1).";
+                continue;
+            }
+
+            $qty = (string) (int) $qtyRaw;
 
             $price = $row['price'] ?? null;
 

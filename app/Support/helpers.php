@@ -179,10 +179,31 @@ if (! function_exists('platform_logo_url')) {
         $relativePath = 'images/eye-hms-logo.png';
         $absolutePath = public_path($relativePath);
 
-        // Cache-bust with the file's mtime so browsers (which cache favicons
-        // very aggressively, separately from normal page assets) pick up the
-        // new logo immediately after it's replaced instead of keeping the
-        // stale/broken one indefinitely.
+        $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
+
+        return asset($relativePath).($version ? '?v='.$version : '');
+    }
+}
+
+if (! function_exists('platform_favicon_url')) {
+    function platform_favicon_url(): string
+    {
+        $relativePath = 'images/favicon.png';
+        $absolutePath = public_path($relativePath);
+
+        $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
+
+        return asset($relativePath).($version ? '?v='.$version : '');
+    }
+}
+
+if (! function_exists('platform_logo_light_url')) {
+    /** Blue logo for white/light backgrounds (sidebar, login forms). */
+    function platform_logo_light_url(): string
+    {
+        $relativePath = 'images/eye-hms-logo1.png';
+        $absolutePath = public_path($relativePath);
+
         $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
 
         return asset($relativePath).($version ? '?v='.$version : '');

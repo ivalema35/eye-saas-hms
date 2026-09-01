@@ -840,10 +840,6 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                     <div class="modal-body" style="padding:1.25rem">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="hms-label">Medicine Name <span style="color:#E53E3E">*</span></label>
-                                <input type="text" name="name" class="hms-input" placeholder="e.g. Moxifloxacin" required>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="hms-label">Medicine Type <span style="color:#E53E3E">*</span></label>
                                 <select name="master_medicine_type_id" class="hms-select" required>
                                     <option value="">— Select Type —</option>
@@ -853,7 +849,11 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="hms-label">Dosage <span style="color:#E53E3E">*</span></label>
+                                <label class="hms-label">Medicine Name <span style="color:#E53E3E">*</span></label>
+                                <input type="text" name="name" class="hms-input" placeholder="e.g. Moxifloxacin" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="hms-label">Medicine Dosage <span style="color:#E53E3E">*</span></label>
                                 <select name="master_dosage_id" class="hms-select" required>
                                     <option value="">— Select Dosage —</option>
                                     @foreach($allDosages as $d)
@@ -866,19 +866,19 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                 <input type="text" name="duration" class="hms-input" placeholder="e.g. 7 days">
                             </div>
                             <div class="col-md-6">
-                                <label class="hms-label">Quantity</label>
+                                <label class="hms-label">Medicine Qty</label>
                                 <input type="text" name="qty" class="hms-input" placeholder="e.g. 1 bottle">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="hms-label">Company</label>
-                                <input type="text" name="company" class="hms-input" placeholder="e.g. Sun Pharma">
                             </div>
                             <div class="col-md-6">
                                 <label class="hms-label">Price</label>
                                 <input type="number" step="0.01" min="0" name="price" class="hms-input"
                                     placeholder="e.g. 120.00">
                             </div>
-                            <div class="col-12">
+                            <div class="col-md-6">
+                                <label class="hms-label">Company</label>
+                                <input type="text" name="company" class="hms-input" placeholder="e.g. Sun Pharma">
+                            </div>
+                            <div class="col-6">
                                 <label class="hms-label">Composition</label>
                                 <textarea name="composition" class="hms-input" rows="2"
                                     placeholder="e.g. Moxifloxacin 0.5% w/v"></textarea>
@@ -910,10 +910,6 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                     <div class="modal-body" style="padding:1.25rem">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="hms-label">Medicine Name <span style="color:#E53E3E">*</span></label>
-                                <input type="text" name="name" id="editMedicineName" class="hms-input" required>
-                            </div>
-                            <div class="col-md-6">
                                 <label class="hms-label">Medicine Type <span style="color:#E53E3E">*</span></label>
                                 <select name="master_medicine_type_id" id="editMedicineType" class="hms-select" required>
                                     <option value="">— Select Type —</option>
@@ -923,7 +919,11 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="hms-label">Dosage <span style="color:#E53E3E">*</span></label>
+                                <label class="hms-label">Medicine Name <span style="color:#E53E3E">*</span></label>
+                                <input type="text" name="name" id="editMedicineName" class="hms-input" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="hms-label">Medicine Dosage <span style="color:#E53E3E">*</span></label>
                                 <select name="master_dosage_id" id="editMedicineDosage" class="hms-select" required>
                                     <option value="">— Select Dosage —</option>
                                     @foreach($allDosages as $d)
@@ -936,17 +936,17 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                 <input type="text" name="duration" id="editMedicineDuration" class="hms-input">
                             </div>
                             <div class="col-md-6">
-                                <label class="hms-label">Quantity</label>
+                                <label class="hms-label">Medicine Qty</label>
                                 <input type="text" name="qty" id="editMedicineQty" class="hms-input">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="hms-label">Company</label>
-                                <input type="text" name="company" id="editMedicineCompany" class="hms-input">
                             </div>
                             <div class="col-md-6">
                                 <label class="hms-label">Price</label>
                                 <input type="number" step="0.01" min="0" name="price" id="editMedicinePrice"
                                     class="hms-input">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="hms-label">Company</label>
+                                <input type="text" name="company" id="editMedicineCompany" class="hms-input">
                             </div>
                             <div class="col-12">
                                 <label class="hms-label">Composition</label>

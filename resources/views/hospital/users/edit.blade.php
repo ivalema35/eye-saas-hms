@@ -61,14 +61,16 @@
                 </div>
 
                 <div class="hms-form-group">
-                    <label>New Password <span style="color:var(--hms-text-muted);font-size:.8rem">(leave blank to keep current)</span></label>
-                    <input type="password" name="password" class="hms-input @error('password') is-invalid @enderror">
+                    <label>Password <span class="hms-required">*</span></label>
+                    <input type="text" name="password" class="hms-input @error('password') is-invalid @enderror"
+                           value="{{ old('password', $user->original_password) }}" autocomplete="new-password">
                     @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
 
                 <div class="hms-form-group">
-                    <label>Confirm Password</label>
-                    <input type="password" name="password_confirmation" class="hms-input">
+                    <label>Confirm Password <span class="hms-required">*</span></label>
+                    <input type="text" name="password_confirmation" class="hms-input"
+                           value="{{ old('password_confirmation', $user->original_password) }}" autocomplete="new-password">
                 </div>
 
                 <div class="hms-form-group">

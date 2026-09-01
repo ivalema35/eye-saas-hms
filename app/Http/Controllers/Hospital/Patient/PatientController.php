@@ -416,6 +416,48 @@ class PatientController extends Controller
         ]);
     }
 
+    public function quickUpdatePersonal(Request $request, string $slug, Patient $patient): JsonResponse
+    {
+        abort_unless(Auth::guard('hospital_user')->user()?->role?->slug === 'doctor', 403);
+
+        $data = $request->validate([
+            'full_name' => ['required', 'string', 'max:150'],
+            'age' => ['required', 'integer', 'min:0', 'max:150'],
+            'gender' => ['required', 'in:male,female,other'],
+            'contact_no' => PhoneRules::required(),
+            'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
+        ]);
+
+        $parts = preg_split('/\s+/', trim($data['full_name']));
+        $firstName = array_shift($parts);
+        $lastName = count($parts) ? array_pop($parts) : '';
+        $middleName = count($parts) ? implode(' ', $parts) : '';
+
+        $patient->update([
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'last_name' => $lastName,
+            'age' => $data['age'],
+            'gender' => $data['gender'],
+            'contact_no' => $data['contact_no'],
+            'location_id' => $data['location_id'],
+        ]);
+
+        $patient = $patient->fresh(['masterCity.district', 'masterCity.state']);
+
+        return response()->json([
+            'full_name' => $patient->full_name,
+            'age' => $patient->age,
+            'gender' => $patient->gender,
+            'gender_label' => ucfirst($patient->gender ?? ''),
+            'contact_no' => $patient->contact_no,
+            'location_id' => $patient->location_id,
+            'city_name' => $patient->cityName ?: '—',
+            'district_name' => $patient->districtName ?: '—',
+            'state_name' => $patient->stateName ?: '—',
+        ]);
+    }
+
     public function destroy(string $slug, Patient $patient): RedirectResponse
     {
         $patient->delete();

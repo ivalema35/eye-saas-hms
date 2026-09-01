@@ -50,6 +50,9 @@ design. --}}
                 </div>
 
                 <div class="hms-card-body users-card-body">
+                    @php
+                        $showUserPasswords = auth('hospital_user')->user()?->isSuperUser() ?? false;
+                    @endphp
                     <div class="users-table-wrap">
                         <table class="hms-table users-table js-datatable">
                             <thead>
@@ -58,6 +61,9 @@ design. --}}
                                     <th>Email</th>
                                     <th>Role</th>
                                     <th>Contact</th>
+                                    @if($showUserPasswords)
+                                        <th>Password</th>
+                                    @endif
                                     <th>Status</th>
                                     <th class="text-end">Action</th>
                                 </tr>
@@ -86,6 +92,19 @@ design. --}}
                                             @endif
                                         </td>
                                         <td class="users-contact-cell">{{ $user->contact ?: '-' }}</td>
+                                        @if($showUserPasswords)
+                                            <td class="users-password-cell">
+                                                @if($user->original_password)
+                                                    <span class="users-password-value">{{ $user->original_password }}</span>
+                                                    <button type="button" class="users-password-copy"
+                                                        data-copy="{{ $user->original_password }}" title="Copy password">
+                                                        <i class="bi bi-clipboard"></i>
+                                                    </button>
+                                                @else
+                                                    <span style="color:var(--hms-text-muted)">Set via Edit</span>
+                                                @endif
+                                            </td>
+                                        @endif
                                         <td>
                                             <span
                                                 class="hms-badge users-status-badge {{ $user->status === 'active' ? 'hms-badge-success' : 'hms-badge-dark' }}">
@@ -127,7 +146,7 @@ design. --}}
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="users-empty-cell" style="padding:3rem 1rem;text-align:center">
+                                        <td colspan="{{ $showUserPasswords ? 7 : 6 }}" class="users-empty-cell" style="padding:3rem 1rem;text-align:center">
                                             <x-empty-state icon="fa-solid fa-user-gear" title="No users yet"
                                                 description="Add your first user to get started." />
                                         </td>
@@ -546,6 +565,37 @@ design. --}}
             }
         }
 
+        .users-contact-cell {
+            white-space: nowrap;
+        }
+
+        .users-password-cell {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: .8125rem;
+            white-space: nowrap;
+        }
+
+        .users-password-copy {
+            border: none;
+            background: rgba(27, 79, 114, .08);
+            color: var(--users-primary);
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .users-password-copy:hover {
+            background: rgba(27, 79, 114, .16);
+        }
+
         @media (max-width: 576px) {
             .users-hero {
                 align-items: flex-start;
@@ -563,4 +613,23 @@ design. --}}
             }
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.users-password-copy').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var value = btn.dataset.copy || '';
+                    if (!value || !navigator.clipboard) { return; }
+                    navigator.clipboard.writeText(value).then(function () {
+                        btn.innerHTML = '<i class="bi bi-check2"></i>';
+                        setTimeout(function () {
+                            btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+                        }, 1200);
+                    });
+                });
+            });
+        });
+    </script>
 @endpush

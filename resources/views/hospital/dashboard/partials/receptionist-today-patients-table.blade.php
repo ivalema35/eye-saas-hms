@@ -1,4 +1,4 @@
-{{-- Receptionist "Today Added Patients" — three separate tables (Phone / Walk-in / OT).
+{{-- Receptionist "Today Added Patients" — three separate tables (Walk-in / Phone / OT).
      Tabs show/hide panes; mixed types cannot appear in one table. --}}
 @php
     $wGreen = (int) hospital_setting('wait_green_max', 30);
@@ -39,10 +39,10 @@
     data-tap-count-phone="{{ $tapGroups['phone']->count() }}"
     data-tap-count-walkin="{{ $tapGroups['walkin']->count() }}"
     data-tap-count-ot="{{ $tapGroups['ot']->count() }}">
-    @foreach (['phone', 'walkin', 'ot'] as $tapKey)
-        <div class="tap-pane{{ $tapKey === 'phone' ? ' is-active' : '' }}"
+    @foreach (['walkin', 'phone', 'ot'] as $tapKey)
+        <div class="tap-pane{{ $tapKey === 'walkin' ? ' is-active' : '' }}"
             data-tap-pane="{{ $tapKey }}"
-            @if($tapKey !== 'phone') hidden @endif>
+            @if($tapKey !== 'walkin') hidden @endif>
             <div class="table-responsive">
                 <table class="tap-table">
                     <thead>

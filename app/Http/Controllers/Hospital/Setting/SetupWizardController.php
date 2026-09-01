@@ -169,6 +169,7 @@ class SetupWizardController extends Controller
             'contact' => $data['contact'] ?? null,
             'doctor_prefix' => $data['doctor_prefix'] ?? null,
             'password' => Hash::make($data['password']),
+            'original_password' => $data['password'],
             // 'doctor_type' => $data['doctor_type'] ?? null,
             'status' => 'active',
         ]);
@@ -210,6 +211,7 @@ class SetupWizardController extends Controller
             'email' => $data['email'],
             'contact' => $data['contact'] ?? null,
             'password' => Hash::make($data['password']),
+            'original_password' => $data['password'],
             'status' => 'active',
         ]);
     }
