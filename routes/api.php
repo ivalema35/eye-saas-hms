@@ -700,6 +700,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         Route::post('/', [MedicineApiController::class, 'store'])->name('store');
                         Route::put('/{id}', [MedicineApiController::class, 'update'])->name('update');
                         Route::delete('/{id}', [MedicineApiController::class, 'destroy'])->name('destroy');
+                        Route::post('/import', [MedicineApiController::class, 'import'])->name('import');
+                        Route::get('/import/sample', [MedicineApiController::class, 'downloadSample'])->name('import.sample');
                     });
 
                     // Medicine Groups
