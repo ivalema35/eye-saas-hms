@@ -11,7 +11,7 @@ class MedicineMasterSampleExport implements FromArray, WithHeadings
     {
         return [
             ['Moxifloxacin Eye Drop', 'Eye Drop', '1-0-0', 'Sun Pharma', 'Moxifloxacin 0.5% w/v', 85.00],
-            ['Paracetamol 500mg', 'Tablet', '1-1-1', 'Cipla', 'Paracetamol 500mg', 20.00],
+            ['Vitamin C Tablet', '', '', '', '', ''],
         ];
     }
 

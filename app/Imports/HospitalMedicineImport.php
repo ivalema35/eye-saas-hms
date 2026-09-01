@@ -13,13 +13,12 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 /**
  * Hospital-level Medicine Excel import (tenant-scoped).
  *
- * Mirrors MedicineMasterImport (Super Admin's global catalog import) but
- * resolves Medicine Type / Dosage against this hospital's own tenant-scoped
- * tables and creates directly into the tenant's `medicines` table.
+ * Only Medicine Name is required; all other columns are optional.
  */
-class HospitalMedicineImport implements ToCollection, WithHeadingRow, WithChunkReading
+class HospitalMedicineImport implements ToCollection, WithChunkReading, WithHeadingRow
 {
     public int $imported = 0;
+
     public int $skipped = 0;
 
     /** @var array<int, string> */
@@ -28,7 +27,7 @@ class HospitalMedicineImport implements ToCollection, WithHeadingRow, WithChunkR
     public function collection(Collection $rows): void
     {
         foreach ($rows as $i => $row) {
-            $rowNumber = $i + 2; // +1 for zero-index, +1 for the heading row
+            $rowNumber = $i + 2;
 
             $name = trim((string) ($row['medicine_name'] ?? ''));
             if ($name === '') {
@@ -44,55 +43,48 @@ class HospitalMedicineImport implements ToCollection, WithHeadingRow, WithChunkR
             }
 
             $typeName = trim((string) ($row['medicine_type'] ?? ''));
-            $type = $typeName !== ''
-                ? MedicineType::whereRaw('LOWER(name) = ?', [strtolower($typeName)])->first()
-                : null;
-
-            if (!$type) {
-                $this->skipped++;
-                $this->errors[] = $typeName === ''
-                    ? "Row {$rowNumber}: Medicine Type is required."
-                    : "Row {$rowNumber}: Medicine Type \"{$typeName}\" not found.";
-                continue;
+            $type = null;
+            if ($typeName !== '') {
+                $type = MedicineType::whereRaw('LOWER(name) = ?', [strtolower($typeName)])->first();
+                if (! $type) {
+                    $this->skipped++;
+                    $this->errors[] = "Row {$rowNumber}: Medicine Type \"{$typeName}\" not found.";
+                    continue;
+                }
             }
 
             $dosageValue = trim((string) ($row['dosage'] ?? ''));
-            $dosage = $dosageValue !== ''
-                ? Dosage::whereRaw('LOWER(dosage) = ?', [strtolower($dosageValue)])->first()
-                : null;
-
-            if (!$dosage) {
-                $this->skipped++;
-                $this->errors[] = $dosageValue === ''
-                    ? "Row {$rowNumber}: Dosage is required."
-                    : "Row {$rowNumber}: Dosage \"{$dosageValue}\" not found.";
-                continue;
+            $dosage = null;
+            if ($dosageValue !== '') {
+                $dosage = Dosage::whereRaw('LOWER(dosage) = ?', [strtolower($dosageValue)])->first();
+                if (! $dosage) {
+                    $this->skipped++;
+                    $this->errors[] = "Row {$rowNumber}: Dosage \"{$dosageValue}\" not found.";
+                    continue;
+                }
             }
 
             $duration = trim((string) ($row['duration'] ?? ''));
             $qtyRaw = trim((string) ($row['qty'] ?? ''));
+            $qty = null;
 
-            if ($duration === '' || $qtyRaw === '') {
-                $this->skipped++;
-                $this->errors[] = "Row {$rowNumber}: Duration and Qty are required.";
-                continue;
+            if ($qtyRaw !== '') {
+                if (! preg_match('/^\d+$/', $qtyRaw)) {
+                    $this->skipped++;
+                    $this->errors[] = "Row {$rowNumber}: Qty must be a whole number (e.g. 10, 1).";
+                    continue;
+                }
+
+                $qty = (string) (int) $qtyRaw;
             }
-
-            if (! preg_match('/^\d+$/', $qtyRaw)) {
-                $this->skipped++;
-                $this->errors[] = "Row {$rowNumber}: Qty must be a whole number (e.g. 10, 1).";
-                continue;
-            }
-
-            $qty = (string) (int) $qtyRaw;
 
             $price = $row['price'] ?? null;
 
             Medicine::create([
-                'medicine_type_id' => $type->id,
-                'dosage_id' => $dosage->id,
+                'medicine_type_id' => $type?->id,
+                'dosage_id' => $dosage?->id,
                 'name' => $name,
-                'duration' => $duration,
+                'duration' => $duration !== '' ? $duration : null,
                 'qty' => $qty,
                 'company' => trim((string) ($row['company'] ?? '')) ?: null,
                 'composition' => trim((string) ($row['composition'] ?? '')) ?: null,
