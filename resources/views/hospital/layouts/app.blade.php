@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                                                       now runs full height and the search/profile bar lives
-                                                                       inside the scrollable content column (design refresh). */
+                                                                           now runs full height and the search/profile bar lives
+                                                                           inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -799,9 +799,9 @@
         body.hms-sidebar-collapsed .sidebar-brand-mark .sidebar-logo {
             height: auto !important;
             width: auto !important;
-            max-width: 58px !important;
-            max-height: 48px !important;
-            transform: scale(1.35) !important;
+            max-width: 46px !important;
+            max-height: 40px !important;
+            transform: none !important;
             object-fit: contain;
             object-position: center;
         }
@@ -860,15 +860,15 @@
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark .sidebar-logo {
-                max-width: 100% !important;
-                max-height: none !important;
-                width: 100% !important;
-                height: 72px !important;
-                transform: scale(1.85) !important;
+                max-width: min(100%, 210px) !important;
+                max-height: 52px !important;
+                width: auto !important;
+                height: auto !important;
+                transform: none !important;
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark .sidebar-logo.platform-logo-on-dark {
-                transform: scale(2.15) !important;
+                transform: none !important;
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-label-wrap {
@@ -914,19 +914,21 @@
         }
 
         .sidebar-brand-mark .sidebar-logo {
-            height: 30px;
-            width: 100%;
-            max-width: 100%;
+            display: block;
+            width: auto;
+            height: auto;
+            max-height: 52px;
+            max-width: min(100%, 210px);
             object-fit: contain;
             object-position: center;
-            display: block;
-            transform: scale(1.85);
-            transform-origin: center center;
+            transform: none;
         }
 
-        .sidebar-brand-mark .sidebar-logo.platform-logo-on-dark {
-            transform: scale(2.15);
-            transform-origin: center center;
+        .sidebar-brand-mark .sidebar-logo.platform-logo-on-dark,
+        .sidebar-brand-mark .sidebar-logo.hospital-brand-logo {
+            max-height: 106px;
+            max-width: min(100%, 210px);
+            transform: none;
         }
 
         .sidebar-brand-copy {
@@ -1560,7 +1562,8 @@
                             $sidebarLogoFilter = (!empty($hospitalLogo) && $sidebarStyle === 'white')
                                 ? 'brightness(0) invert(1)'
                                 : 'none';
-                            $sidebarLogoClass = 'sidebar-logo' . ($isPlatformSidebarLogo ? ' platform-logo-on-dark' : '');
+                            $sidebarLogoClass = 'sidebar-logo'
+                                . ($isPlatformSidebarLogo ? ' platform-logo-on-dark' : ' hospital-brand-logo');
                         @endphp
                         @if($useBlurBox)
                             <span
@@ -2159,51 +2162,51 @@
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     <script src="{{ asset('js/intl-phone-input.js') }}"></script>
     <script>
-        if (typeof window.bootstrap === 'undefined') {
+            if (typeof window.bootstrap === 'undefined') {
             var fallbackScript = document.createElement('script');
-        fallbackScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
-        fallbackScript.integrity = 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz';
-        fallbackScript.crossOrigin = 'anonymous';
-        document.head.appendChild(fallbackScript);
+            fallbackScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
+            fallbackScript.integrity = 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz';
+            fallbackScript.crossOrigin = 'anonymous';
+            document.head.appendChild(fallbackScript);
         }
     </script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            document.querySelectorAll('.doctor-black-menu > .dropdown > .dropdown-toggle').forEach(function (toggle) {
-                toggle.addEventListener('click', function (event) {
-                    event.preventDefault();
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.doctor-black-menu > .dropdown > .dropdown-toggle').forEach(function (toggle) {
+                    toggle.addEventListener('click', function (event) {
+                        event.preventDefault();
+                    });
+
+                    if (window.bootstrap && window.bootstrap.Dropdown) {
+                        bootstrap.Dropdown.getOrCreateInstance(toggle, {
+                            autoClose: 'outside',
+                            popperConfig: {
+                                strategy: 'fixed',
+                                modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }]
+                            }
+                        });
+                    }
                 });
 
-                if (window.bootstrap && window.bootstrap.Dropdown) {
-                    bootstrap.Dropdown.getOrCreateInstance(toggle, {
-                        autoClose: 'outside',
-                        popperConfig: {
-                            strategy: 'fixed',
-                            modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }]
-                        }
-                    });
-                }
-            });
-
-        document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
+            document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
                 var trigger = item.querySelector(':scope > .dropdown-toggle');
 
-        if (!trigger) {
+            if (!trigger) {
                     return;
                 }
 
-        item.addEventListener('mouseenter', function () {
-            item.classList.add('show');
+            item.addEventListener('mouseenter', function () {
+                item.classList.add('show');
                 });
 
-        item.addEventListener('mouseleave', function () {
-            item.classList.remove('show');
+            item.addEventListener('mouseleave', function () {
+                item.classList.remove('show');
                 });
 
-        trigger.addEventListener('click', function (event) {
-            event.preventDefault();
-        event.stopPropagation();
-        item.classList.toggle('show');
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+            event.stopPropagation();
+            item.classList.toggle('show');
                 });
             });
         });
@@ -2211,13 +2214,13 @@
 
     {{-- Global search box: Ctrl+/ focuses it from anywhere --}}
     <script>
-        document.addEventListener('keydown', function (event) {
+            document.addEventListener('keydown', function (event) {
             if (event.ctrlKey && event.key === '/') {
                 var searchInput = document.getElementById('hmsGlobalSearch');
-        if (searchInput) {
-            event.preventDefault();
-        searchInput.focus();
-        searchInput.select();
+            if (searchInput) {
+                event.preventDefault();
+            searchInput.focus();
+            searchInput.select();
                 }
             }
         });
@@ -2232,55 +2235,55 @@
     {{-- Select2 --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        /**
-         * Global Select2 for hospital CRM dropdowns.
-         * Skips: already inited, .no-select2, .form-select-sm (dense tables), DataTables length.
-         */
-        window.initHmsSelect2 = function (root) {
+            /**
+             * Global Select2 for hospital CRM dropdowns.
+             * Skips: already inited, .no-select2, .form-select-sm (dense tables), DataTables length.
+             */
+            window.initHmsSelect2 = function (root) {
             if (typeof jQuery === 'undefined' || !jQuery.fn.select2) {
                 return;
             }
 
-        var $root = root ? jQuery(root) : jQuery(document);
+            var $root = root ? jQuery(root) : jQuery(document);
 
-        $root.find('select.form-select, select.hms-select, select.js-select2, select.select2, select.clinical-input').each(function () {
+            $root.find('select.form-select, select.hms-select, select.js-select2, select.select2, select.clinical-input').each(function () {
                 var $el = jQuery(this);
 
-        if ($el.hasClass('select2-hidden-accessible')) {
+            if ($el.hasClass('select2-hidden-accessible')) {
                     return;
                 }
-        if ($el.hasClass('no-select2') || $el.hasClass('form-select-sm')) {
+            if ($el.hasClass('no-select2') || $el.hasClass('form-select-sm')) {
                     return;
                 }
-        if ($el.closest('.no-select2-scope').length) {
+            if ($el.closest('.no-select2-scope').length) {
                     return;
                 }
-        if ($el.closest('.dataTables_length').length) {
+            if ($el.closest('.dataTables_length').length) {
                     return;
                 }
-        // Native multi-select without explicit opt-in can be awkward; allow if already classed select2/js-select2
-        if ($el.prop('multiple') && !$el.hasClass('select2') && !$el.hasClass('js-select2') && !$el.data('select2Multiple')) {
+            // Native multi-select without explicit opt-in can be awkward; allow if already classed select2/js-select2
+            if ($el.prop('multiple') && !$el.hasClass('select2') && !$el.hasClass('js-select2') && !$el.data('select2Multiple')) {
                     return;
                 }
 
-        var $modal = $el.closest('.modal');
-        var placeholder = $el.data('placeholder')
-        || jQuery.trim($el.find('option[value=""]').first().text())
-        || 'Select...';
+            var $modal = $el.closest('.modal');
+            var placeholder = $el.data('placeholder')
+            || jQuery.trim($el.find('option[value=""]').first().text())
+            || 'Select...';
                 var allowClear = !$el.prop('required') && $el.find('option[value=""]').length > 0;
 
-        var options = {
-            width: '100%',
-        placeholder: placeholder,
-        allowClear: allowClear,
-        dropdownAutoWidth: false
+            var options = {
+                width: '100%',
+            placeholder: placeholder,
+            allowClear: allowClear,
+            dropdownAutoWidth: false
                 };
 
-        if ($modal.length) {
-            options.dropdownParent = $modal;
+            if ($modal.length) {
+                options.dropdownParent = $modal;
                 }
 
-        $el.select2(options);
+            $el.select2(options);
             });
         };
     </script>
@@ -2288,145 +2291,145 @@
     {{-- Flatpickr --}}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
-        /**
-         * Shared date-range filter (flatpickr range).
-         * Use on a text input:
-         *   data-hms-date-range
-         *   data-range-mode="split|combined"   default split
-         *   data-start-name / data-end-name    default start_date / end_date
-         *   data-start-value / data-end-value
-         *   data-auto-submit="1|0"             default 1 (submit form when range complete)
-         * combined mode posts the visible input value as "YYYY-MM-DD to YYYY-MM-DD"
-         */
-        window.initHmsDateRange = function (root) {
+            /**
+             * Shared date-range filter (flatpickr range).
+             * Use on a text input:
+             *   data-hms-date-range
+             *   data-range-mode="split|combined"   default split
+             *   data-start-name / data-end-name    default start_date / end_date
+             *   data-start-value / data-end-value
+             *   data-auto-submit="1|0"             default 1 (submit form when range complete)
+             * combined mode posts the visible input value as "YYYY-MM-DD to YYYY-MM-DD"
+             */
+            window.initHmsDateRange = function (root) {
             if (typeof flatpickr === 'undefined') {
                 return;
             }
 
-        var scope = root || document;
+            var scope = root || document;
 
-        scope.querySelectorAll('[data-hms-date-range]').forEach(function (el) {
+            scope.querySelectorAll('[data-hms-date-range]').forEach(function (el) {
                 if (el._hmsDateRangeInit) {
                     return;
                 }
-        el._hmsDateRangeInit = true;
+            el._hmsDateRangeInit = true;
 
-        var mode = el.getAttribute('data-range-mode') || 'split';
-        var startName = el.getAttribute('data-start-name') || 'start_date';
-        var endName = el.getAttribute('data-end-name') || 'end_date';
-        var startVal = (el.getAttribute('data-start-value') || '').trim();
-        var endVal = (el.getAttribute('data-end-value') || '').trim();
-        var autoSubmit = el.getAttribute('data-auto-submit') !== '0';
-        var form = el.closest('form');
-        var isSubmitting = false;
+            var mode = el.getAttribute('data-range-mode') || 'split';
+            var startName = el.getAttribute('data-start-name') || 'start_date';
+            var endName = el.getAttribute('data-end-name') || 'end_date';
+            var startVal = (el.getAttribute('data-start-value') || '').trim();
+            var endVal = (el.getAttribute('data-end-value') || '').trim();
+            var autoSubmit = el.getAttribute('data-auto-submit') !== '0';
+            var form = el.closest('form');
+            var isSubmitting = false;
 
-        // Parse existing combined value if present
-        if (mode === 'combined' && el.value && el.value.indexOf(' to ') !== -1) {
+            // Parse existing combined value if present
+            if (mode === 'combined' && el.value && el.value.indexOf(' to ') !== -1) {
                     var parts = el.value.split(' to ');
-        startVal = (parts[0] || '').trim();
-        endVal = (parts[1] || '').trim();
+            startVal = (parts[0] || '').trim();
+            endVal = (parts[1] || '').trim();
                 }
 
-        function ensureHidden(name, value) {
+            function ensureHidden(name, value) {
                     if (!form || !name) {
                         return null;
                     }
-        // Drop any non-hidden inputs with this name so only our values post
-        form.querySelectorAll('input[name="' + name + '"]').forEach(function (node) {
+            // Drop any non-hidden inputs with this name so only our values post
+            form.querySelectorAll('input[name="' + name + '"]').forEach(function (node) {
                         if (node !== el && node.type !== 'hidden') {
-            node.remove();
+                node.remove();
                         }
                     });
-        var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
-        if (existing) {
+            var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
+            if (existing) {
                         if (value !== undefined && value !== null && value !== '') {
-            existing.value = value;
+                existing.value = value;
                         }
-        return existing;
+            return existing;
                     }
-        var inp = document.createElement('input');
-        inp.type = 'hidden';
-        inp.name = name;
-        inp.value = value || '';
-        form.appendChild(inp);
-        return inp;
+            var inp = document.createElement('input');
+            inp.type = 'hidden';
+            inp.name = name;
+            inp.value = value || '';
+            form.appendChild(inp);
+            return inp;
                 }
 
-        var startInput = null;
-        var endInput = null;
-        if (mode === 'split') {
-            el.removeAttribute('name');
-        startInput = ensureHidden(startName, startVal);
-        endInput = ensureHidden(endName, endVal || startVal);
+            var startInput = null;
+            var endInput = null;
+            if (mode === 'split') {
+                el.removeAttribute('name');
+            startInput = ensureHidden(startName, startVal);
+            endInput = ensureHidden(endName, endVal || startVal);
                 }
 
-        var defaultDates = null;
-        if (startVal && endVal) {
-            defaultDates = [startVal, endVal];
+            var defaultDates = null;
+            if (startVal && endVal) {
+                defaultDates = [startVal, endVal];
                 } else if (startVal) {
-            defaultDates = [startVal, startVal];
+                defaultDates = [startVal, startVal];
                 }
 
-        function applyDates(selectedDates, instance) {
+            function applyDates(selectedDates, instance) {
                     if (!selectedDates || !selectedDates.length) {
                         if (mode === 'combined') {
-            el.value = '';
+                el.value = '';
                         } else {
                             if (startInput) startInput.value = '';
-        if (endInput) endInput.value = '';
+            if (endInput) endInput.value = '';
                         }
-        return false;
+            return false;
                     }
 
-        var a = instance.formatDate(selectedDates[0], 'Y-m-d');
+            var a = instance.formatDate(selectedDates[0], 'Y-m-d');
                     var b = selectedDates.length > 1
-        ? instance.formatDate(selectedDates[1], 'Y-m-d')
-        : a;
+            ? instance.formatDate(selectedDates[1], 'Y-m-d')
+            : a;
 
-        if (mode === 'combined') {
-            el.value = a === b ? a : (a + ' to ' + b);
+            if (mode === 'combined') {
+                el.value = a === b ? a : (a + ' to ' + b);
                     } else {
                         if (startInput) startInput.value = a;
-        if (endInput) endInput.value = b;
+            if (endInput) endInput.value = b;
                     }
                     return selectedDates.length >= 2 || selectedDates.length === 1;
                 }
 
-        function submitIfReady(selectedDates) {
+            function submitIfReady(selectedDates) {
                     if (!autoSubmit || !form || isSubmitting) {
                         return;
                     }
                     // Complete when user picked end date, or confirmed single day on close
                     if (selectedDates.length >= 2 || selectedDates.length === 1) {
-            isSubmitting = true;
-        setTimeout(function () {
+                isSubmitting = true;
+            setTimeout(function () {
                             if (typeof form.requestSubmit === 'function') {
-            form.requestSubmit();
+                form.requestSubmit();
                             } else {
-            form.submit();
+                form.submit();
                             }
                         }, 30);
                     }
                 }
 
-        flatpickr(el, {
-            mode: 'range',
-        dateFormat: 'Y-m-d',
-        defaultDate: defaultDates,
-        allowInput: false,
-        clickOpens: true,
-        onChange: function (selectedDates, _dateStr, instance) {
-            applyDates(selectedDates, instance);
-        // Auto-filter as soon as end date is chosen
-        if (selectedDates.length === 2) {
-            submitIfReady(selectedDates);
+            flatpickr(el, {
+                mode: 'range',
+            dateFormat: 'Y-m-d',
+            defaultDate: defaultDates,
+            allowInput: false,
+            clickOpens: true,
+            onChange: function (selectedDates, _dateStr, instance) {
+                applyDates(selectedDates, instance);
+            // Auto-filter as soon as end date is chosen
+            if (selectedDates.length === 2) {
+                submitIfReady(selectedDates);
                         }
                     },
-        onClose: function (selectedDates, _dateStr, instance) {
+            onClose: function (selectedDates, _dateStr, instance) {
                         // Single day: start only → treat as that day and filter
                         if (selectedDates.length === 1) {
-            applyDates(selectedDates, instance);
-        submitIfReady(selectedDates);
+                applyDates(selectedDates, instance);
+            submitIfReady(selectedDates);
                         }
                     }
                 });
@@ -2438,76 +2441,76 @@
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        window.initHmsDataTables = function (root) {
+            window.initHmsDataTables = function (root) {
             if (typeof jQuery === 'undefined' || !jQuery.fn.DataTable) {
                 return;
             }
 
-        var $root = root ? jQuery(root) : jQuery(document);
+            var $root = root ? jQuery(root) : jQuery(document);
 
-        $root.find('table.js-datatable').each(function () {
+            $root.find('table.js-datatable').each(function () {
                 var table = this;
-        var $table = jQuery(table);
+            var $table = jQuery(table);
 
-        if (jQuery.fn.DataTable.isDataTable(table)) {
+            if (jQuery.fn.DataTable.isDataTable(table)) {
                     return;
                 }
 
-        // Placeholder empty rows (colspan) break DataTables column count
-        $table.find('tbody tr').each(function () {
+            // Placeholder empty rows (colspan) break DataTables column count
+            $table.find('tbody tr').each(function () {
                     var $cells = jQuery(this).children('td');
-        if ($cells.length === 1 && $cells.first().attr('colspan')) {
-            jQuery(this).remove();
+            if ($cells.length === 1 && $cells.first().attr('colspan')) {
+                jQuery(this).remove();
                     }
                 });
 
-        var headers = $table.find('thead th').map(function () {
+            var headers = $table.find('thead th').map(function () {
                     return jQuery(this).text().replace(/\s+/g, ' ').trim().toLowerCase();
                 }).get();
 
-        var nonInteractive = [];
-        headers.forEach(function (label, index) {
+            var nonInteractive = [];
+            headers.forEach(function (label, index) {
                     if (label === '#' || label === 'actions' || label === 'favourite' || label === 'action') {
-            nonInteractive.push(index);
+                nonInteractive.push(index);
                     }
                 });
 
-        $table.DataTable({
-            pageLength: 25,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+            $table.DataTable({
+                pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
                     order: headers[0] === '#' && headers.length > 1 ? [[1, 'asc']] : [[0, 'asc']],
-        autoWidth: false,
-        columnDefs: nonInteractive.length
-        ? [{orderable: false, searchable: false, targets: nonInteractive }]
-        : [],
-        language: {
-            search: 'Search:',
-        lengthMenu: 'Show _MENU_',
-        info: 'Showing _START_ to _END_ of _TOTAL_',
-        infoEmpty: 'Showing 0 entries',
-        emptyTable: 'No records found.',
-        zeroRecords: 'No matching records.'
+            autoWidth: false,
+            columnDefs: nonInteractive.length
+            ? [{orderable: false, searchable: false, targets: nonInteractive }]
+            : [],
+            language: {
+                search: 'Search:',
+            lengthMenu: 'Show _MENU_',
+            info: 'Showing _START_ to _END_ of _TOTAL_',
+            infoEmpty: 'Showing 0 entries',
+            emptyTable: 'No records found.',
+            zeroRecords: 'No matching records.'
                     },
-        drawCallback: function () {
+            drawCallback: function () {
                         var api = this.api();
-        if (headers[0] === '#') {
+            if (headers[0] === '#') {
                             var info = api.page.info();
-        api.column(0, {search: 'applied', order: 'applied', page: 'current' })
-        .nodes()
-        .each(function (cell, i) {
-            cell.innerHTML = info.start + i + 1;
+            api.column(0, {search: 'applied', order: 'applied', page: 'current' })
+            .nodes()
+            .each(function (cell, i) {
+                cell.innerHTML = info.start + i + 1;
                                 });
                         }
-        if (window.lucide && typeof window.lucide.createIcons === 'function') {
-            window.lucide.createIcons();
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
                         }
                     }
                 });
             });
         };
 
-        jQuery(function () {
-            window.initHmsDataTables();
+            jQuery(function () {
+                window.initHmsDataTables();
         });
     </script>
 
@@ -2515,45 +2518,45 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function () {
             if (typeof Swal === 'undefined') {
                 return;
             }
 
-        const Toast = Swal.mixin({
-            toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: function (toast) {
-            toast.addEventListener('mouseenter', Swal.stopTimer);
-        toast.addEventListener('mouseleave', Swal.resumeTimer);
+            const Toast = Swal.mixin({
+                toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: function (toast) {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+            toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
 
-        const flashMessages = [
-        {icon: 'success', title: @json(session('success')) },
-        {icon: 'error', title: @json(session('error')) },
-        {icon: 'warning', title: @json(session('warning')) },
-        {icon: 'info', title: @json(session('info')) }
-        ].filter(function (message) {
+            const flashMessages = [
+            {icon: 'success', title: @json(session('success')) },
+            {icon: 'error', title: @json(session('error')) },
+            {icon: 'warning', title: @json(session('warning')) },
+            {icon: 'info', title: @json(session('info')) }
+            ].filter(function (message) {
                 return Boolean(message.title);
             });
 
-        flashMessages.forEach(function (message) {
-            Toast.fire(message);
+            flashMessages.forEach(function (message) {
+                Toast.fire(message);
             });
         });
     </script>
 
     <script>
-        window.HMS_CURRENCY = {
-            code: @json(currency_code()),
-        symbol: @json(currency_symbol())
+            window.HMS_CURRENCY = {
+                code: @json(currency_code()),
+            symbol: @json(currency_symbol())
         };
-        var currencyCode = window.HMS_CURRENCY.code;
-        var currencySymbol = window.HMS_CURRENCY.symbol;
+            var currencyCode = window.HMS_CURRENCY.code;
+            var currencySymbol = window.HMS_CURRENCY.symbol;
     </script>
 
     @stack('modals')
@@ -2561,17 +2564,17 @@
 
     {{-- Global Select2 + date-range AFTER page scripts so page-specific inits win; then fill the rest --}}
     <script>
-        jQuery(function () {
-            window.initHmsSelect2();
-        if (typeof window.initHmsDateRange === 'function') {
-            window.initHmsDateRange();
+            jQuery(function () {
+                window.initHmsSelect2();
+            if (typeof window.initHmsDateRange === 'function') {
+                window.initHmsDateRange();
             }
         });
 
-        jQuery(document).on('shown.bs.modal', '.modal', function () {
-            window.initHmsSelect2(this);
-        if (typeof window.initHmsDateRange === 'function') {
-            window.initHmsDateRange(this);
+            jQuery(document).on('shown.bs.modal', '.modal', function () {
+                window.initHmsSelect2(this);
+            if (typeof window.initHmsDateRange === 'function') {
+                window.initHmsDateRange(this);
             }
         });
     </script>

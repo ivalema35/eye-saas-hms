@@ -809,6 +809,9 @@ rendered above the hero card instead. --}}
                                                 <i class="bi bi-magic me-1"></i> White background will be auto-removed for
                                                 sidebar style.
                                             </div>
+                                            <p class="mt-1 mb-0" style="font-size:.75rem;color:var(--settings-muted);">
+                                                Best: square or wide logo (max 400×120 px). Upload is auto-resized for sidebar &amp; login.
+                                            </p>
                                         </div>
 
                                     </div>

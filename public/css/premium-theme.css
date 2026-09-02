@@ -87,19 +87,22 @@ label {
 }
 
 .sidebar-logo {
-    height: 72px;
-    width: 100%;
-    max-width: 100%;
+    display: block;
+    width: auto;
+    height: auto;
+    max-height: 52px;
+    max-width: min(100%, 210px);
     object-fit: contain;
     object-position: center;
     image-rendering: auto;
-    transform: scale(1.85);
-    transform-origin: center center;
+    transform: none;
 }
 
-.sidebar-logo.platform-logo-on-dark {
-    transform: scale(2.15);
-    transform-origin: center center;
+.sidebar-logo.platform-logo-on-dark,
+.sidebar-logo.hospital-brand-logo {
+    max-height: 52px;
+    max-width: min(100%, 210px);
+    transform: none;
 }
 
 .hms-nav-item {
