@@ -250,7 +250,7 @@
         }
 
         .banner-logo img {
-            height: 62px;
+            height: 160px;
             width: auto;
             object-fit: contain;
         }
