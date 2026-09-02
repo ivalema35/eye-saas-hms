@@ -55,6 +55,7 @@ Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
 Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 Route::get('/register/pending/{slug}', [RegisterController::class, 'pending'])->name('register.pending');
+Route::get('/register/pending/{slug}/status', [RegisterController::class, 'pendingStatus'])->name('register.pending.status');
 
 // Hospital code availability check (AJAX, rate limited)
 Route::get('/check-code', [RegisterController::class, 'checkCode'])
@@ -150,6 +151,8 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
             ->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])
             ->name('settings.update');
+        Route::post('/settings/test-mail', [SettingsController::class, 'testMail'])
+            ->name('settings.test-mail');
 
         // SuperAdmin Profile
         Route::get('/profile', [ProfileController::class, 'show'])

@@ -14,9 +14,8 @@
         <tr>
             <td
                 style="padding:2rem 2.5rem;text-align:center;background:linear-gradient(135deg,#0070C0,#00B0A0);border-radius:12px 12px 0 0;">
-                <h1 style="color:#fff;margin:0;font-size:1.5rem;font-weight:800;">Welcome to EYENOSIS</h1>
-                <p style="color:rgba(255,255,255,.85);margin:.5rem 0 0;font-size:.9rem;">Your hospital management
-                    platform is ready!</p>
+                <h1 style="color:#fff;margin:0;font-size:1.5rem;font-weight:800;">Your Hospital Is Approved</h1>
+                <p style="color:rgba(255,255,255,.85);margin:.5rem 0 0;font-size:.9rem;">You can now log in to EYENOSIS</p>
             </td>
         </tr>
         <tr>
@@ -25,8 +24,7 @@
                     Hello <strong>{{ $tenant->admin_name }}</strong>,
                 </p>
                 <p style="font-size:.95rem;color:#1A202C;line-height:1.6;">
-                    Your hospital <strong>{{ $tenant->name }}</strong> has been successfully registered on EYENOSIS
-                    platform.
+                    Your hospital <strong>{{ $tenant->name }}</strong> has been approved on EYENOSIS.
                     You have a <strong>{{ $platformTrialLabel }} free trial</strong> to explore all features.
                 </p>
 
@@ -46,6 +44,12 @@
                                     <td style="padding:.25rem 1rem .25rem 0;font-weight:600;">Email:</td>
                                     <td style="padding:.25rem 0;">{{ $tenant->admin_email }}</td>
                                 </tr>
+                                @if(!empty($loginPassword))
+                                <tr>
+                                    <td style="padding:.25rem 1rem .25rem 0;font-weight:600;">Password:</td>
+                                    <td style="padding:.25rem 0;font-weight:700;">{{ $loginPassword }}</td>
+                                </tr>
+                                @endif
                                 <tr>
                                     <td style="padding:.25rem 1rem .25rem 0;font-weight:600;">Trial Ends:</td>
                                     <td style="padding:.25rem 0;">
@@ -56,6 +60,12 @@
                         </td>
                     </tr>
                 </table>
+
+                @if(!empty($loginPassword))
+                <p style="font-size:.85rem;color:#92400E;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:.75rem 1rem;line-height:1.5;margin:0 0 1.25rem;">
+                    (After your first login, please reset your password from your profile settings.)
+                </p>
+                @endif
 
                 <p style="text-align:center;margin:1.5rem 0;">
                     <a href="{{ url('/' . $tenant->slug . '/login') }}"

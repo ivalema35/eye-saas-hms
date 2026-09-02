@@ -157,11 +157,25 @@ class RegisterController extends Controller
         $tenant = Tenant::where('slug', $slug)->firstOrFail();
 
         if ($tenant->status !== 'pending') {
-            return redirect()->route('hospital.login', ['slug' => $tenant->slug]);
+            return redirect()
+                ->route('hospital.login', ['slug' => $tenant->slug])
+                ->with('success', 'Your hospital has been approved. You can log in now.');
         }
 
         return view('landing.register-pending', [
             'hospitalName' => $tenant->name,
+            'slug' => $tenant->slug,
+        ]);
+    }
+
+    public function pendingStatus(string $slug): JsonResponse
+    {
+        $tenant = Tenant::where('slug', $slug)->firstOrFail();
+
+        return response()->json([
+            'status' => $tenant->status,
+            'approved' => $tenant->status !== 'pending',
+            'login_url' => route('hospital.login', ['slug' => $tenant->slug]),
         ]);
     }
 

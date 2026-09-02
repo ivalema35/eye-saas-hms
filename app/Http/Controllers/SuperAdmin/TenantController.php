@@ -267,14 +267,15 @@ class TenantController extends Controller
 
     public function approve(Tenant $tenant): RedirectResponse
     {
-        if ($tenant->status !== 'pending') {
-            return back()->with('error', 'This hospital is not waiting for approval.');
+        try {
+            $this->tenantService->approveRegistration($tenant);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
         }
 
-        $this->tenantService->approveRegistration($tenant);
         $this->auditLog('hospital.registration.approved', $tenant->id, "Registration approved: {$tenant->slug}");
 
-        return back()->with('success', "Hospital '{$tenant->name}' approved. Admin can now login. Trial has started.");
+        return back()->with('success', "Hospital '{$tenant->name}' approved. Login is now open and welcome email has been sent.");
     }
 
     public function reject(Tenant $tenant): RedirectResponse

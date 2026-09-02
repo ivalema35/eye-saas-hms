@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Services\Auth\RolePermissionService;
+use App\Services\Platform\MailConfigService;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -41,6 +43,14 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Paginator::defaultView('vendor.pagination.hms');
+
+        try {
+            if (Schema::hasTable('platform_settings')) {
+                MailConfigService::apply();
+            }
+        } catch (\Throwable) {
+            // DB may be unavailable during install/migrate.
+        }
 
         View::composer('landing.*', function ($view): void {
             $view->with([

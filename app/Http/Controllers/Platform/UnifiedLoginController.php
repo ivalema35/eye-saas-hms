@@ -58,13 +58,15 @@ class UnifiedLoginController extends Controller
         if ($user && Hash::check($password, $user->password)) {
             $tenant = Tenant::find($user->tenant_id);
 
-            if (!$tenant) {
+            if (! $tenant) {
                 $request->hitRateLimiter();
 
                 return back()
                     ->withErrors(['email' => __('auth.failed')])
                     ->withInput(['email' => $login]);
             }
+
+            $tenant->refresh();
 
             if ($tenant->status === 'pending') {
                 $request->hitRateLimiter();
@@ -85,7 +87,7 @@ class UnifiedLoginController extends Controller
             $tenant->markExpiredIfNeeded();
             $tenant->refresh();
 
-            if (!$tenant->hasAccess()) {
+            if (! $tenant->hasAccess()) {
                 $request->hitRateLimiter();
 
                 return back()

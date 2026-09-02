@@ -34,10 +34,10 @@ class PlatformSettingsApiController extends Controller
                 : $setting?->value;
         }
 
-        $data['has_razorpay_key']            = (bool) $settings->get('razorpay_key');
-        $data['has_razorpay_secret']         = (bool) $settings->get('razorpay_secret');
-        $data['has_razorpay_webhook_secret'] = (bool) $settings->get('razorpay_webhook_secret');
-        $data['has_mail_password']           = (bool) $settings->get('mail_password');
+        $data['has_razorpay_key']            = PlatformSetting::has('razorpay_key');
+        $data['has_razorpay_secret']         = PlatformSetting::has('razorpay_secret');
+        $data['has_razorpay_webhook_secret'] = PlatformSetting::has('razorpay_webhook_secret');
+        $data['has_mail_password']           = PlatformSetting::has('mail_password');
 
         return response()->json(['success' => true, 'data' => $data]);
     }
@@ -75,10 +75,7 @@ class PlatformSettingsApiController extends Controller
                 default                             => 'general',
             };
 
-            PlatformSetting::updateOrCreate(
-                ['key' => $key],
-                ['value' => $value, 'is_encrypted' => $isEncrypted, 'group' => $group]
-            );
+            PlatformSetting::set($key, $value, $isEncrypted, $group);
         }
 
         return response()->json(['success' => true, 'message' => 'Settings saved successfully.']);

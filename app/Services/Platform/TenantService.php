@@ -117,13 +117,26 @@ class TenantService
 
     public function approveRegistration(Tenant $tenant): void
     {
+        $tenant->refresh();
+
+        if ($tenant->status !== 'pending') {
+            throw new \RuntimeException("Hospital '{$tenant->name}' is not waiting for approval.");
+        }
+
         $trialDays = platform_trial_days();
-        $tenant->update([
+        $updated = $tenant->update([
             'status' => 'trial',
             'trial_ends_at' => Carbon::now()->addDays($trialDays),
         ]);
+
+        if (! $updated) {
+            throw new \RuntimeException("Could not approve hospital '{$tenant->name}'. Please try again.");
+        }
+
+        $tenant->refresh();
+
         SendWelcomeEmail::dispatch($tenant);
-        Log::info("Tenant registration approved: #{$tenant->id} ({$tenant->slug})");
+        Log::info("Tenant registration approved: #{$tenant->id} ({$tenant->slug}) — status {$tenant->status}");
     }
 
     public function rejectRegistration(Tenant $tenant): void

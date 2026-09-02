@@ -15,9 +15,11 @@ namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Platform\PlatformSetting;
+use App\Services\Platform\MailConfigService;
 use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class SettingsController extends Controller
@@ -68,18 +70,41 @@ class SettingsController extends Controller
                 default => 'general',
             };
 
-            PlatformSetting::updateOrCreate(
-                ['key' => $key],
-                [
-                    'value' => $value,
-                    'is_encrypted' => $isEncrypted,
-                    'group' => $group,
-                ]
-            );
+            PlatformSetting::set($key, $value, $isEncrypted, $group);
         }
 
         return redirect()
-            ->route('superadmin.dashboard')
+            ->route('superadmin.settings')
             ->with('success', 'Settings updated successfully.');
+    }
+
+    public function testMail(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'test_email' => EmailRules::required(100),
+        ], EmailRules::messages('test_email'));
+
+        if (! MailConfigService::apply()) {
+            return redirect()
+                ->route('superadmin.settings')
+                ->with('error', 'SMTP is not configured. Save SMTP host and credentials first.');
+        }
+
+        try {
+            Mail::send('emails.test-smtp', [
+                'platformName' => PlatformSetting::get('platform_name', config('app.name')),
+            ], function ($message) use ($validated) {
+                $message->to($validated['test_email'])
+                    ->subject('EYENOSIS SMTP Test — Success');
+            });
+
+            return redirect()
+                ->route('superadmin.settings')
+                ->with('success', "Test email sent to {$validated['test_email']}. Check inbox (and spam).");
+        } catch (\Throwable $exception) {
+            return redirect()
+                ->route('superadmin.settings')
+                ->with('error', 'Test email failed: '.$exception->getMessage());
+        }
     }
 }
