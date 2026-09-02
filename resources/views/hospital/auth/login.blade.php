@@ -795,8 +795,8 @@
 
                 <div class="banner-content">
                     <div class="banner-logo">
-                        <img src="{{ $hospitalLogo ? asset('storage/' . $hospitalLogo) : platform_logo_light_url() }}"
-                            alt="{{ $hospitalName }} Logo" @class(['platform-logo-on-light' => !$hospitalLogo])>
+                        <img src="{{ hospital_logo_light_url() }}"
+                            alt="{{ $hospitalName }} Logo" @class(['platform-logo-on-light' => !hospital_logo_path()])>
                     </div>
                     <div class="hero-pet">
                         <i class="fa-solid fa-hospital-user"></i>
@@ -817,8 +817,8 @@
             <div class="auth-form-side">
                 <div class="auth-form-box">
                     <div class="form-logo">
-                        <img src="{{ $hospitalLogo ? asset('storage/' . $hospitalLogo) : platform_logo_light_url() }}"
-                            alt="{{ $hospitalName }} Logo" @class(['platform-logo-on-light' => !$hospitalLogo])>
+                        <img src="{{ hospital_logo_light_url() }}"
+                            alt="{{ $hospitalName }} Logo" @class(['platform-logo-on-light' => !hospital_logo_path()])>
                     </div>
                     <a href="{{ route('home') }}" class="back-link">
                         <i class="fa-solid fa-arrow-left"></i> Back to EYENOSIS

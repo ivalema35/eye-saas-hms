@@ -32,8 +32,14 @@ use App\Http\Controllers\SuperAdmin\DiagnosisMasterController;
 use App\Http\Controllers\SuperAdmin\LocationMasterController;
 use App\Http\Controllers\SuperAdmin\MedicineMasterController;
 use App\Http\Controllers\SuperAdmin\TimezoneMasterController;
+use App\Http\Controllers\PublicFileController;
 use App\Http\Controllers\SuperAdmin\TenantController;
 use Illuminate\Support\Facades\Route;
+
+// Public disk files — works when public/storage symlink is missing on live hosting
+Route::get('/files/{path}', [PublicFileController::class, 'show'])
+    ->where('path', '.*')
+    ->name('public.files');
 
 // ====================================================================
 // Public Platform Pages (koi auth nahi)

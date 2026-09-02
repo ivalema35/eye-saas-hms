@@ -210,6 +210,16 @@ if (! function_exists('platform_logo_light_url')) {
     }
 }
 
+if (! function_exists('public_storage_url')) {
+    /**
+     * URL for a file on the public disk — uses /files/ route (no symlink required).
+     */
+    function public_storage_url(?string $relativePath): ?string
+    {
+        return \App\Support\PublicStorage::url($relativePath);
+    }
+}
+
 if (! function_exists('hospital_logo_path')) {
     function hospital_logo_path(): ?string
     {
@@ -224,9 +234,35 @@ if (! function_exists('hospital_logo_url')) {
     {
         $path = hospital_logo_path();
 
-        return $path
-            ? asset('storage/'.$path)
-            : platform_logo_url();
+        return public_storage_url($path) ?? platform_logo_url();
+    }
+}
+
+if (! function_exists('hospital_logo_light_url')) {
+    /** Hospital logo for white/light backgrounds (login, settings preview). */
+    function hospital_logo_light_url(): string
+    {
+        $path = hospital_logo_path();
+
+        return public_storage_url($path) ?? platform_logo_light_url();
+    }
+}
+
+if (! function_exists('hospital_sidebar_logo_url')) {
+    function hospital_sidebar_logo_url(): string
+    {
+        $nobg = hospital_setting('hospital_logo_nobg');
+        $style = hospital_setting('logo_sidebar_style') ?? 'white';
+
+        if ($style === 'white' && is_string($nobg) && $nobg !== '') {
+            if ($url = public_storage_url($nobg)) {
+                return $url;
+            }
+        }
+
+        $path = hospital_logo_path();
+
+        return public_storage_url($path) ?? platform_logo_url();
     }
 }
 
