@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\NotificationMail;
 use App\Models\Platform\PlatformNotification;
 use App\Models\Platform\Tenant;
+use App\Services\Platform\MailConfigService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -58,6 +59,8 @@ class NotificationController extends Controller
 
         $tenants = $query->get();
         $sentCount = 0;
+
+        MailConfigService::apply();
 
         foreach ($tenants as $tenant) {
             try {

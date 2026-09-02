@@ -3026,6 +3026,62 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         }
     }
 
+    function openNativeSelect(selectEl) {
+        if (!selectEl) { return; }
+        selectEl.focus();
+        requestAnimationFrame(function () {
+            if (typeof selectEl.showPicker === 'function') {
+                try { selectEl.showPicker(); return; } catch (err) { /* fallback below */ }
+            }
+            selectEl.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            selectEl.click();
+        });
+    }
+
+    function getExamRowFields(tr, config) {
+        const fields = [];
+        if (config.search) {
+            const search = tr.querySelector(config.search);
+            if (search) { fields.push(search); }
+        }
+        (config.selects || []).forEach(function (key) {
+            const sel = tr.querySelector('select[name*="[' + key + ']"]');
+            if (sel) { fields.push(sel); }
+        });
+        (config.textInputs || []).forEach(function (key) {
+            const inp = tr.querySelector('input[name*="[' + key + ']"]');
+            if (inp) { fields.push(inp); }
+        });
+        return fields;
+    }
+
+    function advanceExamRowField(tr, currentEl, config, onCustomSearchOpen) {
+        const chain = getExamRowFields(tr, config);
+        const idx = chain.indexOf(currentEl);
+        if (idx < 0 || idx >= chain.length - 1) { return false; }
+        const next = chain[idx + 1];
+        setTimeout(function () {
+            if (next.tagName === 'SELECT') {
+                openNativeSelect(next);
+            } else if (config.search && next.matches(config.search) && typeof onCustomSearchOpen === 'function') {
+                onCustomSearchOpen(next, '');
+            } else {
+                next.focus();
+            }
+        }, 50);
+        return true;
+    }
+
+    function wireExamRowSelectChain(containerId, config, onCustomSearchOpen) {
+        document.getElementById(containerId)?.addEventListener('change', function (e) {
+            const sel = e.target.closest('select.form-select');
+            if (!sel) { return; }
+            const tr = sel.closest('tr');
+            if (!tr) { return; }
+            advanceExamRowField(tr, sel, config, onCustomSearchOpen);
+        });
+    }
+
     function sortedCoComplaints() {
         return [...coComplaints].sort((a, b) => {
             if (Boolean(a.is_favourite) !== Boolean(b.is_favourite)) {
@@ -3042,6 +3098,47 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         if (!activeCoInput || !coDropdown) { return; }
         positionFixedDropdown(coDropdown, activeCoInput, 300);
     }
+
+    function openCoDropdownForInput(input, query) {
+        if (!input || !coDropdown) { return; }
+        activeCoInput = input;
+        input.focus();
+        renderCoDropdown(query !== undefined ? query : '');
+    }
+
+    function openSinceDropdownForRow(tr) {
+        if (!tr) { return; }
+        openNativeSelect(tr.querySelector('select[name*="[since]"]'));
+    }
+
+    function getCoModalFocusTarget() {
+        const body = document.getElementById('coBody');
+        if (!body) { return coSearch; }
+        const rows = body.querySelectorAll('.co-row');
+        if (!rows.length) { return coSearch; }
+        for (let i = rows.length - 1; i >= 0; i--) {
+            const inp = rows[i].querySelector('.row-co-search');
+            if (inp && !inp.value.trim()) { return inp; }
+        }
+        return rows[rows.length - 1]?.querySelector('.row-co-search') || coSearch;
+    }
+
+    function initCoModalFocus() {
+        const target = getCoModalFocusTarget();
+        if (target) {
+            setTimeout(function () { openCoDropdownForInput(target, ''); }, 120);
+        }
+    }
+
+    document.getElementById('modalClinical')?.addEventListener('shown.bs.modal', function () {
+        initCoModalFocus();
+    });
+
+    wireExamRowSelectChain('coBody', {
+        search: '.row-co-search',
+        selects: ['since', 'unit', 'eye'],
+        textInputs: ['comment'],
+    }, openCoDropdownForInput);
 
     // Render favourite complaints as quick-access pills above the search bar
     function renderCoFavPills() {
@@ -3165,13 +3262,16 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         if (!item || e.target.closest('.co-fav-btn') || !activeCoInput) { return; }
         e.preventDefault();
         const name = item.dataset.name || '';
+        const row = activeCoInput.closest('tr');
         activeCoInput.value = name;
         coDropdown.classList.remove('show');
         // If it's the top search, also trigger addCoRow
         if (activeCoInput === coSearch) {
             addCoRow(name);
+        } else {
+            activeCoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(function () { openSinceDropdownForRow(row); }, 50);
         }
-        activeCoInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     document.addEventListener('mousedown', function (e) {
@@ -3227,7 +3327,11 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         coDropdown?.classList.remove('show');
         activeCoInput = null;
         if (forceBlank) {
-            tr.querySelector('.row-co-search')?.focus();
+            setTimeout(function () {
+                openCoDropdownForInput(tr.querySelector('.row-co-search'), '');
+            }, 50);
+        } else if (complaint) {
+            setTimeout(function () { openSinceDropdownForRow(tr); }, 50);
         }
         checkProgress();
         updateLivePreview();
@@ -3275,6 +3379,47 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (!activeKcoInput) { return; }
             positionFixedDropdown(kcoDropdown, activeKcoInput, 300);
         }
+
+        function openKcoDropdownForInput(input, query) {
+            if (!input || !kcoDropdown) { return; }
+            activeKcoInput = input;
+            input.focus();
+            renderKcoDropdown(query !== undefined ? query : '');
+        }
+
+        function openKcoSinceForRow(tr) {
+            if (!tr) { return; }
+            openNativeSelect(tr.querySelector('select[name*="[since]"]'));
+        }
+
+        function getKcoModalFocusTarget() {
+            const body = document.getElementById('kcoBody');
+            if (!body) { return kcoSearch; }
+            const rows = body.querySelectorAll('.kco-row');
+            if (!rows.length) { return kcoSearch; }
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const inp = rows[i].querySelector('.row-kco-search');
+                if (inp && !inp.value.trim()) { return inp; }
+            }
+            return rows[rows.length - 1]?.querySelector('.row-kco-search') || kcoSearch;
+        }
+
+        function initKcoModalFocus() {
+            const target = getKcoModalFocusTarget();
+            if (target) {
+                setTimeout(function () { openKcoDropdownForInput(target, ''); }, 120);
+            }
+        }
+
+        document.getElementById('modalHko')?.addEventListener('shown.bs.modal', function () {
+            initKcoModalFocus();
+        });
+
+        wireExamRowSelectChain('kcoBody', {
+            search: '.row-kco-search',
+            selects: ['since', 'unit'],
+            textInputs: ['comment'],
+        }, openKcoDropdownForInput);
 
         function renderKcoFavPills() {
             const wrap = document.getElementById('kcoFavPillsWrap');
@@ -3398,7 +3543,11 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             kcoDropdown.classList.remove('show');
             activeKcoInput = null;
             if (forceBlank) {
-                tr.querySelector('.row-kco-search')?.focus();
+                setTimeout(function () {
+                    openKcoDropdownForInput(tr.querySelector('.row-kco-search'), '');
+                }, 50);
+            } else if (condition) {
+                setTimeout(function () { openKcoSinceForRow(tr); }, 50);
             }
             checkProgress();
             updateLivePreview();
@@ -3456,16 +3605,31 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (!item || e.target.closest('.co-fav-btn') || !activeKcoInput) { return; }
             e.preventDefault();
             const name = item.dataset.name || '';
+            const row = activeKcoInput.closest('tr');
             activeKcoInput.value = name;
             kcoDropdown.classList.remove('show');
-            if (activeKcoInput === kcoSearch) { addKcoRow(name); }
-            activeKcoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            if (activeKcoInput === kcoSearch) {
+                addKcoRow(name);
+            } else {
+                activeKcoInput.dispatchEvent(new Event('input', { bubbles: true }));
+                setTimeout(function () { openKcoSinceForRow(row); }, 50);
+            }
         });
 
         document.addEventListener('mousedown', function (e) {
             if (!e.target.closest('#kcoDropdown') && !e.target.closest('.row-kco-search') && e.target !== kcoSearch) {
                 kcoDropdown.classList.remove('show');
                 activeKcoInput = null;
+            }
+        });
+
+        document.getElementById('kcoBody')?.addEventListener('keydown', function (e) {
+            const comment = e.target.closest('input[name*="[comment]"]');
+            if (!comment || e.key !== 'Enter') { return; }
+            e.preventDefault();
+            const hno = document.getElementById('hnoSearch');
+            if (hno) {
+                setTimeout(function () { hno.focus(); }, 50);
             }
         });
 
@@ -3669,16 +3833,43 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                     e.preventDefault();
                     if (!activeVInp) { return; }
                     const val = this.dataset.val;
-                    activeVInp.value = val;
-                    const hidden = activeVInp.closest('.vision-select-wrap')?.querySelector('input[type="hidden"]');
+                    const currentInp = activeVInp;
+                    currentInp.value = val;
+                    const hidden = currentInp.closest('.vision-select-wrap')?.querySelector('input[type="hidden"]');
                     if (hidden) { hidden.value = val; }
                     vdd.classList.remove('show');
                     activeVInp = null;
                     checkProgress();
                     updateLivePreview();
+                    advanceVisionField(currentInp);
                 });
             });
         }
+
+        function getVisionInputs() {
+            return Array.from(document.querySelectorAll('#modalVision .vision-inp'));
+        }
+
+        function openVisionDropdownForInput(inp, query) {
+            if (!inp) { return; }
+            activeVInp = inp;
+            inp.focus();
+            renderVdd(query !== undefined ? query : '');
+        }
+
+        function advanceVisionField(currentInp) {
+            const inputs = getVisionInputs();
+            const idx = inputs.indexOf(currentInp);
+            if (idx < 0 || idx >= inputs.length - 1) { return; }
+            setTimeout(function () { openVisionDropdownForInput(inputs[idx + 1], ''); }, 50);
+        }
+
+        document.getElementById('modalVision')?.addEventListener('shown.bs.modal', function () {
+            const inputs = getVisionInputs();
+            if (inputs.length) {
+                setTimeout(function () { openVisionDropdownForInput(inputs[0], ''); }, 120);
+            }
+        });
 
         document.querySelectorAll('.vision-inp').forEach(inp => {
             inp.addEventListener('focus',  function () { activeVInp = this; renderVdd(''); });
@@ -4775,6 +4966,10 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         hnoSearch.value = '';
         hnoDropdown.classList.remove('show');
         syncHnoHidden();
+        setTimeout(function () {
+            hnoSearch.focus();
+            renderHnoDropdown('');
+        }, 50);
     }
     window._addHnoChip = addHnoChip;
 

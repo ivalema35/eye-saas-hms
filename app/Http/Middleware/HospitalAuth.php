@@ -29,8 +29,11 @@ class HospitalAuth
             if ($tenant && $user->tenant_id !== $tenant->id) {
                 auth('hospital_user')->logout();
                 // Fall through to redirect below
-            } elseif ($tenant && !$tenant->hasAccess()) {
+            } elseif ($tenant && ! $tenant->hasAccess()) {
+                $tenant->refresh();
                 $tenant->markExpiredIfNeeded();
+                $tenant->refresh();
+
                 auth('hospital_user')->logout();
 
                 if ($request->expectsJson()) {
@@ -39,11 +42,15 @@ class HospitalAuth
 
                 $slug = $request->segment(1) ?? '';
 
+                $message = match ($tenant->status) {
+                    'pending' => 'Your hospital registration is waiting for Eyenosis approval.',
+                    'suspended' => 'This hospital is suspended. Please contact support.',
+                    default => 'Your hospital plan has expired. Please contact the administrator.',
+                };
+
                 return redirect()
                     ->route('hospital.login', ['slug' => $slug])
-                    ->with('error', $tenant->status === 'pending'
-                        ? 'Your hospital registration is waiting for Eyenosis approval.'
-                        : 'Your hospital plan has expired. Please contact the administrator.');
+                    ->with('error', $message);
             } else {
                 return $next($request);
             }

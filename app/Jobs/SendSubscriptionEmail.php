@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Mail\SubscriptionMail;
 use App\Models\Platform\PlatformNotification;
 use App\Models\Platform\Tenant;
+use App\Services\Platform\MailConfigService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -53,6 +54,8 @@ class SendSubscriptionEmail implements ShouldQueue
         }
 
         try {
+            MailConfigService::apply();
+
             Mail::to($email)->send(new SubscriptionMail($this->tenant, $this->emailType));
 
             PlatformNotification::create([

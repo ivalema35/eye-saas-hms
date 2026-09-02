@@ -91,7 +91,7 @@
             <div style="padding:1.25rem">
                 <div class="hms-alert hms-alert-info" style="margin-bottom:1rem">
                     <i class="bi bi-info-circle-fill"></i>
-                    Subscription reminder emails isi SMTP se jayenge. Local dev me MAIL_MAILER=log rakho.
+                    <span>Platform emails (welcome, subscription, notifications) use these SMTP settings — not .env. Save first, then send a test email.</span>
                 </div>
                 <div class="hms-form-grid-2">
                     <div class="hms-form-group">
@@ -127,6 +127,22 @@
                             value="{{ old('mail_from_email', $settings->get('mail_from_email')?->value) }}"
                             placeholder="noreply@yourdomain.com">
                     </div>
+                </div>
+
+                <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid #E2E8F0">
+                    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.75rem">
+                        <div class="hms-form-group" style="margin-bottom:0;flex:1;min-width:220px">
+                            <label class="hms-label">Test recipient email</label>
+                            <input type="email" form="smtp-test-form" name="test_email" class="hms-input @error('test_email') is-invalid @enderror"
+                                value="{{ old('test_email', $settings->get('support_email')?->value ?? auth('superadmin')->user()?->email) }}"
+                                placeholder="you@example.com" required>
+                            @error('test_email') <span class="hms-error">{{ $message }}</span> @enderror
+                        </div>
+                        <button type="submit" form="smtp-test-form" class="hms-btn hms-btn-outline" style="white-space:nowrap">
+                            <i class="bi bi-send-fill"></i> Send Test Email
+                        </button>
+                    </div>
+                    <small class="text-muted" style="display:block;margin-top:.5rem">Uses saved SMTP settings. Save changes above before testing new credentials.</small>
                 </div>
             </div>
         </div>
@@ -170,6 +186,10 @@
                 <i class="bi bi-floppy-fill"></i> Save Settings
             </button>
         </div>
+    </form>
+
+    <form id="smtp-test-form" method="POST" action="{{ route('superadmin.settings.test-mail') }}" style="display:none">
+        @csrf
     </form>
 
 @endsection

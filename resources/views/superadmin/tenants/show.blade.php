@@ -103,7 +103,8 @@
             </div>
             <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.625rem">
                 @if($tenant->status === 'pending')
-                    <form method="POST" action="{{ route('superadmin.hospitals.approve', $tenant) }}">
+                    <form method="POST" action="{{ route('superadmin.hospitals.approve', $tenant) }}"
+                        onsubmit="this.querySelector('button[type=submit]').disabled=true">
                         @csrf
                         <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="width:100%; color: #1B4F72;">
                             <i class="bi bi-check-lg"></i> Accept Registration

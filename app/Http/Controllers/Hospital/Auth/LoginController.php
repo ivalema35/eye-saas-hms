@@ -62,6 +62,8 @@ class LoginController extends Controller
             ->first();
 
         if ($user && Hash::check($password, $user->password)) {
+            $tenant->refresh();
+
             if ($tenant->status === 'pending') {
                 $request->hitRateLimiter();
 

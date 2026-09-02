@@ -7,6 +7,7 @@ use App\Mail\NotificationMail;
 use App\Models\Platform\AuditLog;
 use App\Models\Platform\PlatformNotification;
 use App\Models\Platform\Tenant;
+use App\Services\Platform\MailConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -62,6 +63,8 @@ class PlatformNotificationApiController extends Controller
 
         $tenants   = $query->get();
         $sentCount = 0;
+
+        MailConfigService::apply();
 
         foreach ($tenants as $tenant) {
             try {
