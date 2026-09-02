@@ -753,7 +753,7 @@ rendered above the hero card instead. --}}
                                             <div class="settings-logo-box" style="cursor:pointer;">
                                                 @if(!empty($settings['hospital_logo']))
                                                     <img id="logoPreviewOriginal"
-                                                        src="{{ asset('storage/' . $settings['hospital_logo']) }}"
+                                                        src="{{ public_storage_url($settings['hospital_logo']) ?? platform_logo_url() }}"
                                                         alt="Hospital Logo"
                                                         style="max-width:88%;max-height:88%;object-fit:contain;">
                                                     <i id="logoPlaceholder1" class="bi bi-image text-muted"
@@ -772,11 +772,9 @@ rendered above the hero card instead. --}}
 
                                         {{-- Option 2: Pure White --}}
                                         @php
-                                            $sidebarPreviewSrc = !empty($settings['hospital_logo_nobg'])
-                                                ? asset('storage/' . $settings['hospital_logo_nobg'])
-                                                : (!empty($settings['hospital_logo'])
-                                                    ? asset('storage/' . $settings['hospital_logo'])
-                                                    : platform_logo_url());
+                                            $sidebarPreviewSrc = public_storage_url($settings['hospital_logo_nobg'] ?? null)
+                                                ?? public_storage_url($settings['hospital_logo'] ?? null)
+                                                ?? platform_logo_url();
                                             $sidebarPreviewFilter = 'brightness(0) invert(1)';
                                         @endphp
                                         <label class="logo-style-option {{ $currentLogoStyle === 'white' ? 'active' : '' }}"

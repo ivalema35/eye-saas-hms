@@ -82,12 +82,8 @@ class AppServiceProvider extends ServiceProvider
                 'hospitalOfficialEmail' => $hospitalOfficialEmail,
                 'hospitalContactNumber' => $hospitalContactNumber,
                 'hospitalLogo' => $hospitalLogoPath,
-                'hospitalLogoUrl' => $hospitalLogoPath
-                    ? asset('storage/' . $hospitalLogoPath)
-                    : platform_logo_url(),
-                'hospitalSidebarLogoUrl' => $sidebarLogoPath
-                    ? asset('storage/' . $sidebarLogoPath)
-                    : platform_logo_url(),
+                'hospitalLogoUrl' => hospital_logo_url(),
+                'hospitalSidebarLogoUrl' => hospital_sidebar_logo_url(),
                 'hospitalLogoSidebarStyle' => $logoSidebarStyle,
             ]);
         });

@@ -12,6 +12,7 @@ use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use App\Support\EmailRules;
 use App\Support\PhoneRules;
+use App\Support\PublicStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -156,6 +157,7 @@ class HospitalSettingController extends Controller
                 $filename = 'logo_'.time().'.'.$file->getClientOriginalExtension();
                 $origPath = $file->storeAs("tenants/{$tenantId}/logo", $filename, 'public');
                 $settingsData['hospital_logo'] = $origPath;
+                PublicStorage::mirror($origPath);
 
                 // Save bg-removed version if provided
                 if ($request->filled('logo_processed_base64') && str_starts_with($request->logo_processed_base64, 'data:image')) {
@@ -164,6 +166,7 @@ class HospitalSettingController extends Controller
                     $nobgPath  = "tenants/{$tenantId}/logo/logo_nobg_".time().'.png';
                     Storage::disk('public')->put($nobgPath, $imageData);
                     $settingsData['hospital_logo_nobg'] = $nobgPath;
+                    PublicStorage::mirror($nobgPath);
                 }
             }
 
