@@ -250,8 +250,11 @@
         }
 
         .banner-logo img {
-            height: 160px;
+            display: block;
+            max-height: 120px;
+            max-width: 240px;
             width: auto;
+            height: auto;
             object-fit: contain;
         }
 
@@ -762,8 +765,11 @@
         }
 
         .form-logo img {
-            height: 168px;
+            display: block;
+            max-height: 120px;
+            max-width: 240px;
             width: auto;
+            height: auto;
             object-fit: contain;
             mix-blend-mode: normal;
         }
@@ -795,8 +801,10 @@
 
                 <div class="banner-content">
                     <div class="banner-logo">
-                        <img src="{{ hospital_logo_light_url() }}"
-                            alt="{{ $hospitalName }} Logo" @class(['platform-logo-on-light' => !hospital_logo_path()])>
+                        <img src="{{ hospital_logo_light_url() }}" alt="{{ $hospitalName }} Logo" @class([
+                            'platform-logo-on-light' => !hospital_logo_path(),
+                            'hospital-brand-logo' => (bool) hospital_logo_path(),
+                        ])>
                     </div>
                     <div class="hero-pet">
                         <i class="fa-solid fa-hospital-user"></i>
@@ -817,8 +825,10 @@
             <div class="auth-form-side">
                 <div class="auth-form-box">
                     <div class="form-logo">
-                        <img src="{{ hospital_logo_light_url() }}"
-                            alt="{{ $hospitalName }} Logo" @class(['platform-logo-on-light' => !hospital_logo_path()])>
+                        <img src="{{ hospital_logo_light_url() }}" alt="{{ $hospitalName }} Logo" @class([
+                            'platform-logo-on-light' => !hospital_logo_path(),
+                            'hospital-brand-logo' => (bool) hospital_logo_path(),
+                        ])>
                     </div>
                     <a href="{{ route('home') }}" class="back-link">
                         <i class="fa-solid fa-arrow-left"></i> Back to EYENOSIS

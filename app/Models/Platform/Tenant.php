@@ -209,4 +209,20 @@ class Tenant extends Model
     {
         return $query->whereIn('status', ['trial', 'grace']);
     }
+
+    /**
+     * Hospitals that can currently log in (same rules as UnifiedLoginController).
+     *
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    public static function loginable(): \Illuminate\Support\Collection
+    {
+        return static::query()
+            ->whereNotIn('status', ['suspended', 'pending'])
+            ->with('subscriptions')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'status', 'trial_ends_at'])
+            ->filter(fn (self $tenant) => $tenant->hasAccess())
+            ->values();
+    }
 }
