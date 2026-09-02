@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -30,25 +29,45 @@ final class PublicStorage
     }
 
     /**
-     * Copy storage/app/public/{path} → public/storage/{path}
+     * Best-effort copy to public/storage (optional — /files/ route does not need this).
+     * Never throws; upload must succeed even when public/storage is not writable.
      */
-    public static function mirror(?string $relativePath): void
+    public static function mirror(?string $relativePath): bool
     {
-        $path = $relativePath ? self::normalizePath($relativePath) : null;
-        if ($path === null || ! Storage::disk('public')->exists($path)) {
-            return;
+        try {
+            $path = $relativePath ? self::normalizePath($relativePath) : null;
+            if ($path === null || ! Storage::disk('public')->exists($path)) {
+                return false;
+            }
+
+            $source = storage_path('app/public/'.$path);
+            if (! is_file($source) || ! is_readable($source)) {
+                return false;
+            }
+
+            $destDir = public_path('storage');
+            if (! is_dir($destDir) && ! @mkdir($destDir, 0755, true) && ! is_dir($destDir)) {
+                return false;
+            }
+
+            if (! is_writable($destDir)) {
+                return false;
+            }
+
+            $dest = public_path('storage/'.$path);
+            $destParent = dirname($dest);
+            if (! is_dir($destParent) && ! @mkdir($destParent, 0755, true) && ! is_dir($destParent)) {
+                return false;
+            }
+
+            if (! is_writable($destParent)) {
+                return false;
+            }
+
+            return @copy($source, $dest);
+        } catch (\Throwable) {
+            return false;
         }
-
-        $source = storage_path('app/public/'.$path);
-        $dest = public_path('storage/'.$path);
-
-        File::ensureDirectoryExists(dirname($dest));
-
-        if (! is_file($source)) {
-            return;
-        }
-
-        copy($source, $dest);
     }
 
     public static function mirrorDirectory(string $directory = ''): int
@@ -58,8 +77,9 @@ final class PublicStorage
 
         $files = Storage::disk('public')->allFiles($directory);
         foreach ($files as $file) {
-            self::mirror($file);
-            $count++;
+            if (self::mirror($file)) {
+                $count++;
+            }
         }
 
         return $count;
