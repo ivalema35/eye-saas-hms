@@ -770,9 +770,15 @@
             display: none !important;
         }
 
+        body.hms-sidebar-collapsed .premium-sidebar-brand {
+            height: 72px;
+            min-height: 72px;
+            max-height: 72px;
+        }
+
         body.hms-sidebar-collapsed .premium-sidebar-brand-link {
             justify-content: center;
-            padding: .65rem .4rem;
+            padding: 0;
         }
 
         body.hms-sidebar-collapsed .sidebar-brand-mark {
@@ -795,6 +801,7 @@
             width: auto !important;
             max-width: 58px !important;
             max-height: 48px !important;
+            transform: scale(1.35) !important;
             object-fit: contain;
             object-position: center;
         }
@@ -838,13 +845,13 @@
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .premium-sidebar-brand-link {
-                padding: .85rem 1rem !important;
+                padding: 0 !important;
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark {
                 max-width: none !important;
-                width: auto;
-                justify-content: flex-start;
+                width: 100%;
+                justify-content: center;
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark > span {
@@ -853,10 +860,15 @@
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark .sidebar-logo {
-                max-width: 220px !important;
+                max-width: 100% !important;
                 max-height: none !important;
-                width: auto !important;
+                width: 100% !important;
                 height: 72px !important;
+                transform: scale(1.85) !important;
+            }
+
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark .sidebar-logo.platform-logo-on-dark {
+                transform: scale(2.15) !important;
             }
 
             body.hms-sidebar-collapsed.hms-sidebar-hover-expand .hms-nav-group-label-wrap {
@@ -868,12 +880,17 @@
             }
         }
 
-        /* Keep logo readable: brand strip in secondary */
+        /* Fixed-height brand strip — logo scales inside, blue bg does not grow */
         .premium-sidebar-brand {
             background: var(--shell-secondary);
             border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-            margin-bottom: .6rem;
-            padding: 0.7rem 0.75rem;
+            margin-bottom: .45rem;
+            height: 72px;
+            min-height: 72px;
+            max-height: 72px;
+            padding: 0;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
         .premium-sidebar-brand-link {
@@ -881,9 +898,10 @@
             align-items: center;
             justify-content: center;
             gap: .75rem;
-            padding: 0.25rem 0.35rem;
+            padding: 0;
             text-decoration: none;
             width: 100%;
+            height: 100%;
         }
 
         .sidebar-brand-mark {
@@ -891,15 +909,24 @@
             align-items: center;
             justify-content: center;
             width: 100%;
+            height: 100%;
             line-height: 0;
         }
 
         .sidebar-brand-mark .sidebar-logo {
             height: 72px;
-            width: auto;
-            max-width: 220px;
+            width: 100%;
+            max-width: 100%;
             object-fit: contain;
+            object-position: center;
             display: block;
+            transform: scale(1.85);
+            transform-origin: center center;
+        }
+
+        .sidebar-brand-mark .sidebar-logo.platform-logo-on-dark {
+            transform: scale(2.15);
+            transform-origin: center center;
         }
 
         .sidebar-brand-copy {
