@@ -250,7 +250,7 @@
         }
 
         .banner-logo img {
-            height: 160px;
+            height: 60px;
             width: auto;
             object-fit: contain;
         }
@@ -762,7 +762,7 @@
         }
 
         .form-logo img {
-            height: 168px;
+            height: 60px;
             width: auto;
             object-fit: contain;
             mix-blend-mode: normal;

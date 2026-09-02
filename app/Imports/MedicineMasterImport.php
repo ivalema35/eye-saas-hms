@@ -7,6 +7,7 @@ use App\Models\Platform\MasterMedicine;
 use App\Models\Platform\MasterMedicineType;
 use App\Services\Platform\MedicineTenantSync;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
@@ -19,6 +20,11 @@ class MedicineMasterImport implements ToCollection, WithChunkReading, WithHeadin
 
     /** @var array<int, string> */
     public array $errors = [];
+
+    /** @param  list<int>  $tenantIds */
+    public function __construct(
+        private readonly array $tenantIds = [],
+    ) {}
 
     public function collection(Collection $rows): void
     {
@@ -76,19 +82,27 @@ class MedicineMasterImport implements ToCollection, WithChunkReading, WithHeadin
 
             $price = $row['price'] ?? null;
 
-            $medicine = MasterMedicine::create([
-                'master_medicine_type_id' => $type?->id,
-                'master_dosage_id' => $dosage?->id,
-                'name' => $name,
-                'duration' => $duration !== '' ? $duration : null,
-                'qty' => $qty,
-                'company' => trim((string) ($row['company'] ?? '')) ?: null,
-                'composition' => trim((string) ($row['composition'] ?? '')) ?: null,
-                'price' => is_numeric($price) ? (float) $price : null,
-                'is_active' => true,
-            ]);
+            try {
+                DB::transaction(function () use ($type, $dosage, $name, $duration, $qty, $price, $row) {
+                    $medicine = MasterMedicine::create([
+                        'master_medicine_type_id' => $type?->id,
+                        'master_dosage_id' => $dosage?->id,
+                        'name' => $name,
+                        'duration' => $duration !== '' ? $duration : null,
+                        'qty' => $qty,
+                        'company' => trim((string) ($row['company'] ?? '')) ?: null,
+                        'composition' => trim((string) ($row['composition'] ?? '')) ?: null,
+                        'price' => is_numeric($price) ? (float) $price : null,
+                        'is_active' => true,
+                    ]);
 
-            MedicineTenantSync::pushCreate($medicine);
+                    MedicineTenantSync::pushCreateForTenants($medicine, $this->tenantIds);
+                });
+            } catch (\Throwable $e) {
+                $this->skipped++;
+                $this->errors[] = "Row {$rowNumber}: {$name} — sync failed ({$e->getMessage()}).";
+                continue;
+            }
 
             $this->imported++;
         }

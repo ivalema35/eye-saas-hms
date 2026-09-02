@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                                                   now runs full height and the search/profile bar lives
-                                                                   inside the scrollable content column (design refresh). */
+                                                                       now runs full height and the search/profile bar lives
+                                                                       inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -790,7 +790,7 @@
             overflow: hidden;
         }
 
-        body.hms-sidebar-collapsed .sidebar-brand-mark > span {
+        body.hms-sidebar-collapsed .sidebar-brand-mark>span {
             width: 44px !important;
             height: 44px !important;
             padding: 3px;
@@ -854,7 +854,7 @@
                 justify-content: center;
             }
 
-            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark > span {
+            body.hms-sidebar-collapsed.hms-sidebar-hover-expand .sidebar-brand-mark>span {
                 width: auto !important;
                 height: auto !important;
             }
@@ -914,7 +914,7 @@
         }
 
         .sidebar-brand-mark .sidebar-logo {
-            height: 72px;
+            height: 30px;
             width: 100%;
             max-width: 100%;
             object-fit: contain;
@@ -1124,8 +1124,8 @@
         }
 
         /* Hover (desktop) + Bootstrap .show (click / mobile) */
-        .black-menu-bar .dropdown:hover > .dropdown-menu,
-        .black-menu-bar .dropdown > .dropdown-menu.show {
+        .black-menu-bar .dropdown:hover>.dropdown-menu,
+        .black-menu-bar .dropdown>.dropdown-menu.show {
             display: block;
         }
 
@@ -1143,7 +1143,7 @@
             position: relative;
         }
 
-        .dropdown-menu .dropend > .dropdown-menu {
+        .dropdown-menu .dropend>.dropdown-menu {
             top: 0;
             left: 100%;
             margin-top: -0.25rem;
@@ -1152,8 +1152,8 @@
             z-index: 1081;
         }
 
-        .dropdown-menu .dropend:hover > .dropdown-menu,
-        .dropdown-menu .dropend.show > .dropdown-menu {
+        .dropdown-menu .dropend:hover>.dropdown-menu,
+        .dropdown-menu .dropend.show>.dropdown-menu {
             display: block;
         }
 
@@ -1161,8 +1161,8 @@
             display: none;
         }
 
-        .black-menu-bar .dropdown-menu .dropend:hover > .dropdown-menu,
-        .black-menu-bar .dropdown-menu .dropend.show > .dropdown-menu {
+        .black-menu-bar .dropdown-menu .dropend:hover>.dropdown-menu,
+        .black-menu-bar .dropdown-menu .dropend.show>.dropdown-menu {
             display: block;
         }
 
@@ -1200,7 +1200,7 @@
             }
 
             .black-menu-bar a,
-            .black-menu-bar .dropdown > a {
+            .black-menu-bar .dropdown>a {
                 color: white;
                 text-decoration: none;
                 white-space: nowrap;
@@ -1249,6 +1249,7 @@
                     overflow: visible;
                 }
             }
+
         @endif
         /* Reduce-motion support */
         @media (prefers-reduced-motion: reduce) {
@@ -1331,13 +1332,14 @@
     </script>
 
     {{-- Sidebar toggle & collapsible groups — kept early (before the jQuery/Select2/
-    DataTables/SweetAlert2 CDN <script> tags further down) since this is plain
-    vanilla JS with zero dependency on them. If any of those CDN scripts are slow
+    DataTables/SweetAlert2 CDN
+    <script> tags further down) since this is plain
+    vanilla JS with zero dependency on them.If any of those CDN scripts are slow
     or blocked, they hold up every later inline script on the page; this one used
     to sit after them, so the collapse button could silently stop responding
     whenever that happened. --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
             var sidebar = document.getElementById('hmsSidebar');
             var backdrop = document.getElementById('hmsSidebarBackdrop');
             var toggle = document.getElementById('hmsSidebarToggle');
@@ -1357,21 +1359,21 @@
             // Hover peek expand — only while permanently collapsed (desktop)
             if (sidebar) {
                 var hoverLeaveTimer = null;
-                var canHoverPeek = function () {
+            var canHoverPeek = function () {
                     return document.body.classList.contains('hms-sidebar-collapsed')
-                        && window.matchMedia('(min-width: 769px)').matches;
+            && window.matchMedia('(min-width: 769px)').matches;
                 };
 
-                sidebar.addEventListener('mouseenter', function () {
+            sidebar.addEventListener('mouseenter', function () {
                     if (!canHoverPeek()) { return; }
-                    clearTimeout(hoverLeaveTimer);
-                    document.body.classList.add('hms-sidebar-hover-expand');
+            clearTimeout(hoverLeaveTimer);
+            document.body.classList.add('hms-sidebar-hover-expand');
                 });
 
-                sidebar.addEventListener('mouseleave', function () {
-                    clearTimeout(hoverLeaveTimer);
-                    hoverLeaveTimer = setTimeout(function () {
-                        document.body.classList.remove('hms-sidebar-hover-expand');
+            sidebar.addEventListener('mouseleave', function () {
+                clearTimeout(hoverLeaveTimer);
+            hoverLeaveTimer = setTimeout(function () {
+                document.body.classList.remove('hms-sidebar-hover-expand');
                     }, 140);
                 });
             }
@@ -1393,17 +1395,17 @@
             // Collapsible nav groups
             document.querySelectorAll('.hms-nav-group-toggle').forEach(function (el) {
                 var target = document.getElementById(el.getAttribute('data-target'));
-                if (!target) return;
+            if (!target) return;
 
-                // Auto-collapse groups that don't contain the active link
-                if (!target.querySelector('.hms-nav-item.active')) {
-                    target.classList.add('collapsed');
-                    el.classList.add('collapsed');
+            // Auto-collapse groups that don't contain the active link
+            if (!target.querySelector('.hms-nav-item.active')) {
+                target.classList.add('collapsed');
+            el.classList.add('collapsed');
                 }
 
-                el.addEventListener('click', function () {
-                    target.classList.toggle('collapsed');
-                    el.classList.toggle('collapsed');
+            el.addEventListener('click', function () {
+                target.classList.toggle('collapsed');
+            el.classList.toggle('collapsed');
                 });
             });
         });
@@ -1414,7 +1416,7 @@
     {{-- ================================================
     Top Navigation Bar
     ================================================ --}}
-        @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
+    @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
         <nav class="hms-navbar">
             <div class="top-header">
                 <div class="d-flex align-items-center">
@@ -1459,7 +1461,8 @@
 
                 {{-- Dashboard --}}
                 <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
-                    class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i> <span>Dashboards</span></a>
+                    class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i>
+                    <span>Dashboards</span></a>
 
                 {{-- Diagnosis Master Dropdown --}}
                 <div class="dropdown">
@@ -1529,8 +1532,8 @@
                 </a>
             </div>
 
-            </nav>
-                @endif
+        </nav>
+    @endif
 
     <div class="hms-layout">
 
@@ -1554,20 +1557,22 @@
                             $sidebarStyle = $hospitalLogoSidebarStyle ?? 'white';
                             $useBlurBox = !empty($hospitalLogo) && $sidebarStyle === 'original_blur';
                             $isPlatformSidebarLogo = empty($hospitalLogo);
-                            $sidebarLogoFilter = (! empty($hospitalLogo) && $sidebarStyle === 'white')
+                            $sidebarLogoFilter = (!empty($hospitalLogo) && $sidebarStyle === 'white')
                                 ? 'brightness(0) invert(1)'
                                 : 'none';
-                            $sidebarLogoClass = 'sidebar-logo'.($isPlatformSidebarLogo ? ' platform-logo-on-dark' : '');
+                            $sidebarLogoClass = 'sidebar-logo' . ($isPlatformSidebarLogo ? ' platform-logo-on-dark' : '');
                         @endphp
                         @if($useBlurBox)
                             <span
                                 style="display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:rgba(255,255,255,.22);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:10px;">
-                                <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="{{ $sidebarLogoClass }}"
-                                    style="filter:none!important;" loading="lazy" decoding="async">
+                                <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo"
+                                    class="{{ $sidebarLogoClass }}" style="filter:none!important;" loading="lazy"
+                                    decoding="async">
                             </span>
                         @else
-                            <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo" class="{{ $sidebarLogoClass }}"
-                                style="filter:{{ $sidebarLogoFilter }}!important;" loading="lazy" decoding="async">
+                            <img src="{{ $hospitalSidebarLogoUrl }}" alt="{{ $hospitalName }} Logo"
+                                class="{{ $sidebarLogoClass }}" style="filter:{{ $sidebarLogoFilter }}!important;"
+                                loading="lazy" decoding="async">
                         @endif
                     </span>
                 </a>
@@ -1597,7 +1602,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-opd">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-person-lines-fill hms-nav-group-icon"></i>
-                        <span class="hms-nav-section-label" style="padding:0;margin:0">OPD</span>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">OPD</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -1630,7 +1635,7 @@
                         <div class="hms-nav-group-toggle" data-target="nav-clinical">
                             <span class="hms-nav-group-label-wrap">
                                 <i class="bi bi-heart-pulse-fill hms-nav-group-icon"></i>
-                            <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
+                                <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
                             </span>
                             <i class="bi bi-chevron-down hms-nav-chevron"></i>
                         </div>
@@ -1693,7 +1698,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-ot">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-hospital-fill hms-nav-group-icon"></i>
-                        <span class="hms-nav-section-label" style="padding:0;margin:0">OT / Surgery</span>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">OT / Surgery</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -1739,11 +1744,11 @@
                                 || $permSvc->can('ot.surgery.record');
                         @endphp
                         @if($showAssistant)
-                        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
-                            class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
-                            <i class="bi bi-eyeglasses"></i>
-                            <span>OT Assistant Dashboard</span>
-                        </a>
+                            <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
+                                class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
+                                <i class="bi bi-eyeglasses"></i>
+                                <span>OT Assistant Dashboard</span>
+                            </a>
                         @endif
 
                         {{-- Discharge Counter owns this desk (not Accountant). --}}
@@ -1769,7 +1774,7 @@
                         <div class="hms-nav-group-toggle" data-target="nav-reports">
                             <span class="hms-nav-group-label-wrap">
                                 <i class="bi bi-bar-chart-line-fill hms-nav-group-icon"></i>
-                            <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
+                                <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
                             </span>
                             <i class="bi bi-chevron-down hms-nav-chevron"></i>
                         </div>
@@ -1799,7 +1804,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-medicines">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-capsule hms-nav-group-icon"></i>
-                        <span class="hms-nav-section-label" style="padding:0;margin:0">Medicines</span>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Medicines</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -1850,7 +1855,7 @@
                     <div class="hms-nav-group-toggle" data-target="nav-config">
                         <span class="hms-nav-group-label-wrap">
                             <i class="bi bi-gear-fill hms-nav-group-icon"></i>
-                        <span class="hms-nav-section-label" style="padding:0;margin:0">Config</span>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Config</span>
                         </span>
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
@@ -2156,10 +2161,10 @@
     <script>
         if (typeof window.bootstrap === 'undefined') {
             var fallbackScript = document.createElement('script');
-            fallbackScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
-            fallbackScript.integrity = 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz';
-            fallbackScript.crossOrigin = 'anonymous';
-            document.head.appendChild(fallbackScript);
+        fallbackScript.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js';
+        fallbackScript.integrity = 'sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz';
+        fallbackScript.crossOrigin = 'anonymous';
+        document.head.appendChild(fallbackScript);
         }
     </script>
     <script>
@@ -2180,25 +2185,25 @@
                 }
             });
 
-            document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
+        document.querySelectorAll('.dropdown-menu .dropend').forEach(function (item) {
                 var trigger = item.querySelector(':scope > .dropdown-toggle');
 
-                if (!trigger) {
+        if (!trigger) {
                     return;
                 }
 
-                item.addEventListener('mouseenter', function () {
-                    item.classList.add('show');
+        item.addEventListener('mouseenter', function () {
+            item.classList.add('show');
                 });
 
-                item.addEventListener('mouseleave', function () {
-                    item.classList.remove('show');
+        item.addEventListener('mouseleave', function () {
+            item.classList.remove('show');
                 });
 
-                trigger.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    item.classList.toggle('show');
+        trigger.addEventListener('click', function (event) {
+            event.preventDefault();
+        event.stopPropagation();
+        item.classList.toggle('show');
                 });
             });
         });
@@ -2209,10 +2214,10 @@
         document.addEventListener('keydown', function (event) {
             if (event.ctrlKey && event.key === '/') {
                 var searchInput = document.getElementById('hmsGlobalSearch');
-                if (searchInput) {
-                    event.preventDefault();
-                    searchInput.focus();
-                    searchInput.select();
+        if (searchInput) {
+            event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
                 }
             }
         });
@@ -2236,46 +2241,46 @@
                 return;
             }
 
-            var $root = root ? jQuery(root) : jQuery(document);
+        var $root = root ? jQuery(root) : jQuery(document);
 
-            $root.find('select.form-select, select.hms-select, select.js-select2, select.select2, select.clinical-input').each(function () {
+        $root.find('select.form-select, select.hms-select, select.js-select2, select.select2, select.clinical-input').each(function () {
                 var $el = jQuery(this);
 
-                if ($el.hasClass('select2-hidden-accessible')) {
+        if ($el.hasClass('select2-hidden-accessible')) {
                     return;
                 }
-                if ($el.hasClass('no-select2') || $el.hasClass('form-select-sm')) {
+        if ($el.hasClass('no-select2') || $el.hasClass('form-select-sm')) {
                     return;
                 }
-                if ($el.closest('.no-select2-scope').length) {
+        if ($el.closest('.no-select2-scope').length) {
                     return;
                 }
-                if ($el.closest('.dataTables_length').length) {
+        if ($el.closest('.dataTables_length').length) {
                     return;
                 }
-                // Native multi-select without explicit opt-in can be awkward; allow if already classed select2/js-select2
-                if ($el.prop('multiple') && !$el.hasClass('select2') && !$el.hasClass('js-select2') && !$el.data('select2Multiple')) {
+        // Native multi-select without explicit opt-in can be awkward; allow if already classed select2/js-select2
+        if ($el.prop('multiple') && !$el.hasClass('select2') && !$el.hasClass('js-select2') && !$el.data('select2Multiple')) {
                     return;
                 }
 
-                var $modal = $el.closest('.modal');
-                var placeholder = $el.data('placeholder')
-                    || jQuery.trim($el.find('option[value=""]').first().text())
-                    || 'Select...';
+        var $modal = $el.closest('.modal');
+        var placeholder = $el.data('placeholder')
+        || jQuery.trim($el.find('option[value=""]').first().text())
+        || 'Select...';
                 var allowClear = !$el.prop('required') && $el.find('option[value=""]').length > 0;
 
-                var options = {
-                    width: '100%',
-                    placeholder: placeholder,
-                    allowClear: allowClear,
-                    dropdownAutoWidth: false
+        var options = {
+            width: '100%',
+        placeholder: placeholder,
+        allowClear: allowClear,
+        dropdownAutoWidth: false
                 };
 
-                if ($modal.length) {
-                    options.dropdownParent = $modal;
+        if ($modal.length) {
+            options.dropdownParent = $modal;
                 }
 
-                $el.select2(options);
+        $el.select2(options);
             });
         };
     </script>
@@ -2298,130 +2303,130 @@
                 return;
             }
 
-            var scope = root || document;
+        var scope = root || document;
 
-            scope.querySelectorAll('[data-hms-date-range]').forEach(function (el) {
+        scope.querySelectorAll('[data-hms-date-range]').forEach(function (el) {
                 if (el._hmsDateRangeInit) {
                     return;
                 }
-                el._hmsDateRangeInit = true;
+        el._hmsDateRangeInit = true;
 
-                var mode = el.getAttribute('data-range-mode') || 'split';
-                var startName = el.getAttribute('data-start-name') || 'start_date';
-                var endName = el.getAttribute('data-end-name') || 'end_date';
-                var startVal = (el.getAttribute('data-start-value') || '').trim();
-                var endVal = (el.getAttribute('data-end-value') || '').trim();
-                var autoSubmit = el.getAttribute('data-auto-submit') !== '0';
-                var form = el.closest('form');
-                var isSubmitting = false;
+        var mode = el.getAttribute('data-range-mode') || 'split';
+        var startName = el.getAttribute('data-start-name') || 'start_date';
+        var endName = el.getAttribute('data-end-name') || 'end_date';
+        var startVal = (el.getAttribute('data-start-value') || '').trim();
+        var endVal = (el.getAttribute('data-end-value') || '').trim();
+        var autoSubmit = el.getAttribute('data-auto-submit') !== '0';
+        var form = el.closest('form');
+        var isSubmitting = false;
 
-                // Parse existing combined value if present
-                if (mode === 'combined' && el.value && el.value.indexOf(' to ') !== -1) {
+        // Parse existing combined value if present
+        if (mode === 'combined' && el.value && el.value.indexOf(' to ') !== -1) {
                     var parts = el.value.split(' to ');
-                    startVal = (parts[0] || '').trim();
-                    endVal = (parts[1] || '').trim();
+        startVal = (parts[0] || '').trim();
+        endVal = (parts[1] || '').trim();
                 }
 
-                function ensureHidden(name, value) {
+        function ensureHidden(name, value) {
                     if (!form || !name) {
                         return null;
                     }
-                    // Drop any non-hidden inputs with this name so only our values post
-                    form.querySelectorAll('input[name="' + name + '"]').forEach(function (node) {
+        // Drop any non-hidden inputs with this name so only our values post
+        form.querySelectorAll('input[name="' + name + '"]').forEach(function (node) {
                         if (node !== el && node.type !== 'hidden') {
-                            node.remove();
+            node.remove();
                         }
                     });
-                    var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
-                    if (existing) {
+        var existing = form.querySelector('input[type="hidden"][name="' + name + '"]');
+        if (existing) {
                         if (value !== undefined && value !== null && value !== '') {
-                            existing.value = value;
+            existing.value = value;
                         }
-                        return existing;
+        return existing;
                     }
-                    var inp = document.createElement('input');
-                    inp.type = 'hidden';
-                    inp.name = name;
-                    inp.value = value || '';
-                    form.appendChild(inp);
-                    return inp;
+        var inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = name;
+        inp.value = value || '';
+        form.appendChild(inp);
+        return inp;
                 }
 
-                var startInput = null;
-                var endInput = null;
-                if (mode === 'split') {
-                    el.removeAttribute('name');
-                    startInput = ensureHidden(startName, startVal);
-                    endInput = ensureHidden(endName, endVal || startVal);
+        var startInput = null;
+        var endInput = null;
+        if (mode === 'split') {
+            el.removeAttribute('name');
+        startInput = ensureHidden(startName, startVal);
+        endInput = ensureHidden(endName, endVal || startVal);
                 }
 
-                var defaultDates = null;
-                if (startVal && endVal) {
-                    defaultDates = [startVal, endVal];
+        var defaultDates = null;
+        if (startVal && endVal) {
+            defaultDates = [startVal, endVal];
                 } else if (startVal) {
-                    defaultDates = [startVal, startVal];
+            defaultDates = [startVal, startVal];
                 }
 
-                function applyDates(selectedDates, instance) {
+        function applyDates(selectedDates, instance) {
                     if (!selectedDates || !selectedDates.length) {
                         if (mode === 'combined') {
-                            el.value = '';
+            el.value = '';
                         } else {
                             if (startInput) startInput.value = '';
-                            if (endInput) endInput.value = '';
+        if (endInput) endInput.value = '';
                         }
-                        return false;
+        return false;
                     }
 
-                    var a = instance.formatDate(selectedDates[0], 'Y-m-d');
+        var a = instance.formatDate(selectedDates[0], 'Y-m-d');
                     var b = selectedDates.length > 1
-                        ? instance.formatDate(selectedDates[1], 'Y-m-d')
-                        : a;
+        ? instance.formatDate(selectedDates[1], 'Y-m-d')
+        : a;
 
-                    if (mode === 'combined') {
-                        el.value = a === b ? a : (a + ' to ' + b);
+        if (mode === 'combined') {
+            el.value = a === b ? a : (a + ' to ' + b);
                     } else {
                         if (startInput) startInput.value = a;
-                        if (endInput) endInput.value = b;
+        if (endInput) endInput.value = b;
                     }
                     return selectedDates.length >= 2 || selectedDates.length === 1;
                 }
 
-                function submitIfReady(selectedDates) {
+        function submitIfReady(selectedDates) {
                     if (!autoSubmit || !form || isSubmitting) {
                         return;
                     }
                     // Complete when user picked end date, or confirmed single day on close
                     if (selectedDates.length >= 2 || selectedDates.length === 1) {
-                        isSubmitting = true;
-                        setTimeout(function () {
+            isSubmitting = true;
+        setTimeout(function () {
                             if (typeof form.requestSubmit === 'function') {
-                                form.requestSubmit();
+            form.requestSubmit();
                             } else {
-                                form.submit();
+            form.submit();
                             }
                         }, 30);
                     }
                 }
 
-                flatpickr(el, {
-                    mode: 'range',
-                    dateFormat: 'Y-m-d',
-                    defaultDate: defaultDates,
-                    allowInput: false,
-                    clickOpens: true,
-                    onChange: function (selectedDates, _dateStr, instance) {
-                        applyDates(selectedDates, instance);
-                        // Auto-filter as soon as end date is chosen
-                        if (selectedDates.length === 2) {
-                            submitIfReady(selectedDates);
+        flatpickr(el, {
+            mode: 'range',
+        dateFormat: 'Y-m-d',
+        defaultDate: defaultDates,
+        allowInput: false,
+        clickOpens: true,
+        onChange: function (selectedDates, _dateStr, instance) {
+            applyDates(selectedDates, instance);
+        // Auto-filter as soon as end date is chosen
+        if (selectedDates.length === 2) {
+            submitIfReady(selectedDates);
                         }
                     },
-                    onClose: function (selectedDates, _dateStr, instance) {
+        onClose: function (selectedDates, _dateStr, instance) {
                         // Single day: start only → treat as that day and filter
                         if (selectedDates.length === 1) {
-                            applyDates(selectedDates, instance);
-                            submitIfReady(selectedDates);
+            applyDates(selectedDates, instance);
+        submitIfReady(selectedDates);
                         }
                     }
                 });
@@ -2438,63 +2443,63 @@
                 return;
             }
 
-            var $root = root ? jQuery(root) : jQuery(document);
+        var $root = root ? jQuery(root) : jQuery(document);
 
-            $root.find('table.js-datatable').each(function () {
+        $root.find('table.js-datatable').each(function () {
                 var table = this;
-                var $table = jQuery(table);
+        var $table = jQuery(table);
 
-                if (jQuery.fn.DataTable.isDataTable(table)) {
+        if (jQuery.fn.DataTable.isDataTable(table)) {
                     return;
                 }
 
-                // Placeholder empty rows (colspan) break DataTables column count
-                $table.find('tbody tr').each(function () {
+        // Placeholder empty rows (colspan) break DataTables column count
+        $table.find('tbody tr').each(function () {
                     var $cells = jQuery(this).children('td');
-                    if ($cells.length === 1 && $cells.first().attr('colspan')) {
-                        jQuery(this).remove();
+        if ($cells.length === 1 && $cells.first().attr('colspan')) {
+            jQuery(this).remove();
                     }
                 });
 
-                var headers = $table.find('thead th').map(function () {
+        var headers = $table.find('thead th').map(function () {
                     return jQuery(this).text().replace(/\s+/g, ' ').trim().toLowerCase();
                 }).get();
 
-                var nonInteractive = [];
-                headers.forEach(function (label, index) {
+        var nonInteractive = [];
+        headers.forEach(function (label, index) {
                     if (label === '#' || label === 'actions' || label === 'favourite' || label === 'action') {
-                        nonInteractive.push(index);
+            nonInteractive.push(index);
                     }
                 });
 
-                $table.DataTable({
-                    pageLength: 25,
-                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
+        $table.DataTable({
+            pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'All']],
                     order: headers[0] === '#' && headers.length > 1 ? [[1, 'asc']] : [[0, 'asc']],
-                    autoWidth: false,
-                    columnDefs: nonInteractive.length
-                        ? [{ orderable: false, searchable: false, targets: nonInteractive }]
-                        : [],
-                    language: {
-                        search: 'Search:',
-                        lengthMenu: 'Show _MENU_',
-                        info: 'Showing _START_ to _END_ of _TOTAL_',
-                        infoEmpty: 'Showing 0 entries',
-                        emptyTable: 'No records found.',
-                        zeroRecords: 'No matching records.'
+        autoWidth: false,
+        columnDefs: nonInteractive.length
+        ? [{orderable: false, searchable: false, targets: nonInteractive }]
+        : [],
+        language: {
+            search: 'Search:',
+        lengthMenu: 'Show _MENU_',
+        info: 'Showing _START_ to _END_ of _TOTAL_',
+        infoEmpty: 'Showing 0 entries',
+        emptyTable: 'No records found.',
+        zeroRecords: 'No matching records.'
                     },
-                    drawCallback: function () {
+        drawCallback: function () {
                         var api = this.api();
-                        if (headers[0] === '#') {
+        if (headers[0] === '#') {
                             var info = api.page.info();
-                            api.column(0, { search: 'applied', order: 'applied', page: 'current' })
-                                .nodes()
-                                .each(function (cell, i) {
-                                    cell.innerHTML = info.start + i + 1;
+        api.column(0, {search: 'applied', order: 'applied', page: 'current' })
+        .nodes()
+        .each(function (cell, i) {
+            cell.innerHTML = info.start + i + 1;
                                 });
                         }
-                        if (window.lucide && typeof window.lucide.createIcons === 'function') {
-                            window.lucide.createIcons();
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
                         }
                     }
                 });
@@ -2515,29 +2520,29 @@
                 return;
             }
 
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                didOpen: function (toast) {
-                    toast.addEventListener('mouseenter', Swal.stopTimer);
-                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+        const Toast = Swal.mixin({
+            toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: function (toast) {
+            toast.addEventListener('mouseenter', Swal.stopTimer);
+        toast.addEventListener('mouseleave', Swal.resumeTimer);
                 }
             });
 
-            const flashMessages = [
-                { icon: 'success', title: @json(session('success')) },
-                { icon: 'error', title: @json(session('error')) },
-                { icon: 'warning', title: @json(session('warning')) },
-                { icon: 'info', title: @json(session('info')) }
-            ].filter(function (message) {
+        const flashMessages = [
+        {icon: 'success', title: @json(session('success')) },
+        {icon: 'error', title: @json(session('error')) },
+        {icon: 'warning', title: @json(session('warning')) },
+        {icon: 'info', title: @json(session('info')) }
+        ].filter(function (message) {
                 return Boolean(message.title);
             });
 
-            flashMessages.forEach(function (message) {
-                Toast.fire(message);
+        flashMessages.forEach(function (message) {
+            Toast.fire(message);
             });
         });
     </script>
@@ -2545,7 +2550,7 @@
     <script>
         window.HMS_CURRENCY = {
             code: @json(currency_code()),
-            symbol: @json(currency_symbol())
+        symbol: @json(currency_symbol())
         };
         var currencyCode = window.HMS_CURRENCY.code;
         var currencySymbol = window.HMS_CURRENCY.symbol;
@@ -2558,15 +2563,15 @@
     <script>
         jQuery(function () {
             window.initHmsSelect2();
-            if (typeof window.initHmsDateRange === 'function') {
-                window.initHmsDateRange();
+        if (typeof window.initHmsDateRange === 'function') {
+            window.initHmsDateRange();
             }
         });
 
         jQuery(document).on('shown.bs.modal', '.modal', function () {
             window.initHmsSelect2(this);
-            if (typeof window.initHmsDateRange === 'function') {
-                window.initHmsDateRange(this);
+        if (typeof window.initHmsDateRange === 'function') {
+            window.initHmsDateRange(this);
             }
         });
     </script>

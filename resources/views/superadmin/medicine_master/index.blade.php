@@ -812,6 +812,29 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                         class="bi bi-download"></i> Download a sample file</a>
                             </p>
                         </div>
+                        <div class="hms-form-group" style="margin-bottom:1.25rem">
+                            <label class="hms-label">Select Hospitals <span style="color:#B91C1C">*</span></label>
+                            <select name="tenant_ids[]" id="importTenantSelect"
+                                class="hms-select @error('tenant_ids') is-invalid @enderror @error('tenant_ids.*') is-invalid @enderror"
+                                multiple required>
+                                <option value="__select_all__">— Select All Hospitals —</option>
+                                @foreach($tenants as $tenant)
+                                    <option value="{{ $tenant->id }}"
+                                        {{ is_array(old('tenant_ids')) && in_array($tenant->id, old('tenant_ids')) ? 'selected' : '' }}>
+                                        {{ $tenant->name }} ({{ $tenant->slug }}) — {{ ucfirst($tenant->status) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('tenant_ids')
+                                <div class="hms-field-error">{{ $message }}</div>
+                            @enderror
+                            @error('tenant_ids.*')
+                                <div class="hms-field-error">{{ $message }}</div>
+                            @enderror
+                            <p style="margin:.5rem 0 0;font-size:.78rem;color:#6B7280">
+                                Only active hospitals (login allowed) are listed. Imported medicines sync to selected hospitals only.
+                            </p>
+                        </div>
                         <label class="hms-label">Select File (.xlsx, .xls, .csv)</label>
                         <input type="file" name="file" class="hms-input" accept=".xlsx,.xls,.csv" required>
                     </div>
@@ -1045,6 +1068,41 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                     });
                 });
             });
+
+            /* ── Import modal: hospital multi-select ── */
+            const importTenantSelect = document.getElementById('importTenantSelect');
+            if (importTenantSelect && typeof $ !== 'undefined' && $.fn.select2) {
+                const $importTenantSelect = $('#importTenantSelect');
+
+                $importTenantSelect.select2({
+                    placeholder: 'Search and select hospitals...',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#importMedicineModal'),
+                });
+
+                $importTenantSelect.on('select2:select', function (e) {
+                    if (e.params.data.id === '__select_all__') {
+                        const allIds = $importTenantSelect.find('option')
+                            .map(function () {
+                                const val = this.value;
+                                return val && val !== '__select_all__' ? val : null;
+                            })
+                            .get();
+
+                        $importTenantSelect.val(allIds).trigger('change');
+                    }
+                });
+
+                $importTenantSelect.closest('form').on('submit', function () {
+                    const selected = ($importTenantSelect.val() || []).filter(id => id !== '__select_all__');
+                    $importTenantSelect.val(selected);
+                });
+
+                @if($errors->has('tenant_ids') || $errors->has('tenant_ids.*') || $errors->has('file'))
+                    new bootstrap.Modal(document.getElementById('importMedicineModal')).show();
+                @endif
+            }
 
             /* ── Delete confirm ── */
             document.querySelectorAll('.del-form').forEach(form => {
