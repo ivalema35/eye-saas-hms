@@ -80,6 +80,43 @@
         </span>
     </div>
 
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+        @php
+            $pwdFieldId = isset($editTenantId) ? 'saAdminPassword-' . $editTenantId : 'saAdminPassword';
+            $pwdConfirmFieldId = isset($editTenantId) ? 'saAdminPasswordConfirm-' . $editTenantId : 'saAdminPasswordConfirm';
+        @endphp
+        <div class="hms-form-group">
+            <label>New Admin Password</label>
+            <div style="position:relative">
+                <input type="password" name="admin_password" id="{{ $pwdFieldId }}"
+                       class="hms-input sa-pwd-input @error('admin_password') is-invalid @enderror"
+                       value="{{ old('admin_password') }}"
+                       autocomplete="new-password"
+                       placeholder="Leave blank to keep current">
+                <button type="button" class="sa-pwd-toggle" onclick="toggleSaPwd('{{ $pwdFieldId }}', this)" aria-label="Show password">
+                    <i class="bi bi-eye-fill"></i>
+                </button>
+            </div>
+            @error('admin_password') <span class="hms-error">{{ $message }}</span> @enderror
+        </div>
+        <div class="hms-form-group">
+            <label>Confirm Password</label>
+            <div style="position:relative">
+                <input type="password" name="admin_password_confirmation" id="{{ $pwdConfirmFieldId }}"
+                       class="hms-input sa-pwd-input @error('admin_password') is-invalid @enderror"
+                       value="{{ old('admin_password_confirmation') }}"
+                       autocomplete="new-password"
+                       placeholder="Re-enter new password">
+                <button type="button" class="sa-pwd-toggle" onclick="toggleSaPwd('{{ $pwdConfirmFieldId }}', this)" aria-label="Show password">
+                    <i class="bi bi-eye-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <p style="font-size:.75rem;color:var(--hms-text-muted);margin:-.5rem 0 0">
+        Password change thay to hospital admin ne SMTP thi notification email jashe.
+    </p>
+
     <div style="display:flex;gap:.75rem;margin-top:1.5rem">
         <button type="submit" class="hms-btn hms-btn-primary">
             <i class="bi bi-floppy-fill"></i> {{ $submitLabel ?? 'Save Changes' }}
@@ -91,3 +128,50 @@
         @endif
     </div>
 </form>
+
+@once
+    @push('styles')
+        <style>
+            .sa-pwd-input {
+                padding-right: 2.5rem !important;
+            }
+
+            .sa-pwd-toggle {
+                position: absolute;
+                right: .75rem;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: #94A3B8;
+                cursor: pointer;
+                padding: 0;
+                font-size: .9rem;
+                transition: color .15s;
+            }
+
+            .sa-pwd-toggle:hover {
+                color: #1B4F72;
+            }
+        </style>
+    @endpush
+
+    @push('scripts')
+        <script>
+            function toggleSaPwd(id, btn) {
+                var input = document.getElementById(id);
+                var icon = btn.querySelector('i');
+                if (!input || !icon) { return; }
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
+                    btn.setAttribute('aria-label', 'Hide password');
+                } else {
+                    input.type = 'password';
+                    icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
+                    btn.setAttribute('aria-label', 'Show password');
+                }
+            }
+        </script>
+    @endpush
+@endonce
