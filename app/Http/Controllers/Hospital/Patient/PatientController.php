@@ -248,7 +248,7 @@ class PatientController extends Controller
                 ]);
         }
 
-        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'dashboard'])
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
             ->with('success', 'Patient registered successfully.');
     }
 
@@ -302,7 +302,7 @@ class PatientController extends Controller
 
         $patient = $this->patientService->registerPhone($data, $tenant->id);
 
-        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'dashboard'])
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create-phone'])
             ->with('success', 'Phone appointment registered and ready for printing.');
     }
 
