@@ -115,8 +115,8 @@ design. --}}
         }
 
         .patients-top-btn:hover {
-            background: #eaf3fa;
-            color: #154160;
+            /* background: #eaf3fa; */
+            color: #ffffff;
         }
 
         .patients-top-btn-outline {
@@ -197,7 +197,7 @@ design. --}}
         }
 
         /* Modern Card — nested inside .patients-inner-panel, which now owns
-                                   the border/shadow, so this is just a content wrapper. */
+                                           the border/shadow, so this is just a content wrapper. */
         .modern-card {
             background: var(--patients-surface);
             overflow: hidden;
