@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\SuperAdmin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendHospitalPasswordChangedEmail;
 use App\Jobs\SeedTenantDefaultMasters;
+use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\AuditLog;
 use App\Models\Platform\Tenant;
+use App\Models\Role\Role;
 use App\Services\Platform\TenantService;
 use App\Support\EmailRules;
 use App\Support\PhoneRules;
@@ -149,8 +152,9 @@ class TenantController extends Controller
     public function show(Tenant $tenant): View
     {
         $tenant->load('subscriptions', 'payments');
+        $adminUser = $this->resolveHospitalAdmin($tenant);
 
-        return view('superadmin.tenants.show', compact('tenant'));
+        return view('superadmin.tenants.show', compact('tenant', 'adminUser'));
     }
 
     /**
@@ -186,10 +190,39 @@ class TenantController extends Controller
             'admin_phone' => PhoneRules::required(),
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
+            'admin_password' => ['nullable', 'string', 'min:8', 'confirmed'],
         ], PhoneRules::messages('admin_phone'));
 
         $oldValues = $tenant->only(['name', 'slug', 'admin_name', 'admin_phone', 'city', 'state']);
+        $newPassword = $validated['admin_password'] ?? null;
+        unset($validated['admin_password']);
         $tenant->update($validated);
+
+        $passwordChanged = false;
+
+        if ($newPassword) {
+            $adminUser = $this->resolveHospitalAdmin($tenant);
+
+            if (! $adminUser) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Hospital admin account not found. Password was not updated.');
+            }
+
+            $adminUser->update([
+                'password' => $newPassword,
+                'original_password' => $newPassword,
+            ]);
+
+            SendHospitalPasswordChangedEmail::dispatch($tenant->fresh(), $newPassword);
+            $passwordChanged = true;
+
+            $this->auditLog(
+                'hospital.admin_password_changed',
+                $tenant->id,
+                'Hospital admin password changed by SuperAdmin'
+            );
+        }
 
         $this->auditLog(
             'hospital.updated',
@@ -199,7 +232,11 @@ class TenantController extends Controller
             $tenant->fresh()->only(['name', 'slug', 'admin_name', 'admin_phone', 'city', 'state'])
         );
 
-        return back()->with('success', 'Hospital updated successfully.');
+        $message = $passwordChanged
+            ? 'Hospital updated. New password saved and notification email sent to '.$tenant->admin_email.'.'
+            : 'Hospital updated successfully.';
+
+        return back()->with('success', $message);
     }
 
     /**
@@ -267,14 +304,15 @@ class TenantController extends Controller
 
     public function approve(Tenant $tenant): RedirectResponse
     {
-        if ($tenant->status !== 'pending') {
-            return back()->with('error', 'This hospital is not waiting for approval.');
+        try {
+            $this->tenantService->approveRegistration($tenant);
+        } catch (\RuntimeException $exception) {
+            return back()->with('error', $exception->getMessage());
         }
 
-        $this->tenantService->approveRegistration($tenant);
         $this->auditLog('hospital.registration.approved', $tenant->id, "Registration approved: {$tenant->slug}");
 
-        return back()->with('success', "Hospital '{$tenant->name}' approved. Admin can now login. Trial has started.");
+        return back()->with('success', "Hospital '{$tenant->name}' approved. Login is now open and welcome email has been sent.");
     }
 
     public function reject(Tenant $tenant): RedirectResponse
@@ -301,6 +339,23 @@ class TenantController extends Controller
         return redirect()
             ->route('superadmin.hospitals.index')
             ->with('success', "'{$tenant->name}' archived. Data safe for 30 days.");
+    }
+
+    private function resolveHospitalAdmin(Tenant $tenant): ?HospitalUser
+    {
+        $adminRoleId = Role::withoutTenantScope()
+            ->where('tenant_id', $tenant->id)
+            ->where('slug', 'hospital_admin')
+            ->value('id');
+
+        if (! $adminRoleId) {
+            return null;
+        }
+
+        return HospitalUser::withoutTenantScope()
+            ->where('tenant_id', $tenant->id)
+            ->where('role_id', $adminRoleId)
+            ->first();
     }
 
     /**

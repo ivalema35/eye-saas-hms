@@ -230,6 +230,8 @@ class CurrencyService
         }
         if (in_array($timezone, timezone_identifiers_list(), true)) {
             Config::set('app.hospital_timezone', $timezone);
+            // Carbon::now() / now() use config('app.timezone') — must match hospital country TZ
+            Config::set('app.timezone', $timezone);
             date_default_timezone_set($timezone);
         }
     }

@@ -19,6 +19,7 @@ use App\Services\Platform\MedicineTenantSync;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -60,6 +61,7 @@ class MedicineMasterController extends Controller
 
         $allTypes = MasterMedicineType::orderBy('name')->get();
         $allDosages = MasterDosage::orderBy('dosage')->get();
+        $tenants = Tenant::loginable();
 
         return view('superadmin.medicine_master.index', compact(
             'tab',
@@ -69,7 +71,8 @@ class MedicineMasterController extends Controller
             'routes',
             'medicines',
             'allTypes',
-            'allDosages'
+            'allDosages',
+            'tenants',
         ));
     }
 
@@ -334,14 +337,20 @@ class MedicineMasterController extends Controller
 
     public function importMedicines(Request $request): RedirectResponse
     {
+        $loginableTenantIds = Tenant::loginable()->pluck('id')->all();
+
         $request->validate([
+            'tenant_ids' => ['required', 'array', 'min:1'],
+            'tenant_ids.*' => ['integer', Rule::in($loginableTenantIds)],
             'file' => 'required|file|mimes:xlsx,xls,csv|max:5120',
         ]);
 
-        $import = new MedicineMasterImport();
+        $tenantIds = array_map('intval', $request->input('tenant_ids', []));
+        $import = new MedicineMasterImport($tenantIds);
         Excel::import($import, $request->file('file'));
 
-        $summary = "Imported {$import->imported}, skipped {$import->skipped}.";
+        $hospitalCount = count(array_unique($tenantIds));
+        $summary = "Imported {$import->imported}, skipped {$import->skipped} (synced to {$hospitalCount} hospital(s)).";
 
         if (empty($import->errors)) {
             return back()->with('success', $summary)->with('open_tab', 'medicines');

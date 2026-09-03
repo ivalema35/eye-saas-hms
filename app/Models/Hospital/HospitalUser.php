@@ -26,6 +26,7 @@ namespace App\Models\Hospital;
 
 use App\Models\Platform\Tenant;
 use App\Models\Role\Role;
+use App\Services\Platform\MailConfigService;
 use App\Support\EmailRules;
 use App\Traits\BelongsToTenant;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -105,6 +106,8 @@ class HospitalUser extends Authenticatable
             'slug' => $slug,
             'token' => $token,
         ]).'?email='.urlencode($this->email);
+
+        MailConfigService::apply();
 
         Mail::send('emails.hospital-reset-password', ['url' => $url], function ($message) {
             $message->to($this->email, $this->name)

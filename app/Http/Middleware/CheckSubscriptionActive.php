@@ -28,12 +28,16 @@ class CheckSubscriptionActive
             abort(404);
         }
 
-        if ($tenant->status === 'suspended' || !$tenant->hasAccess()) {
+        if ($tenant->status === 'suspended' || ! $tenant->hasAccess()) {
+            $tenant->refresh();
             $tenant->markExpiredIfNeeded();
+            $tenant->refresh();
 
-            $message = $tenant->status === 'pending'
-                ? 'Your hospital registration is waiting for Eyenosis approval.'
-                : 'Your hospital plan has expired. Please contact the administrator.';
+            $message = match ($tenant->status) {
+                'pending' => 'Your hospital registration is waiting for Eyenosis approval.',
+                'suspended' => 'This hospital is suspended. Please contact support.',
+                default => 'Your hospital plan has expired. Please contact the administrator.',
+            };
 
             if ($request->expectsJson()) {
                 return response()->json(['error' => $message], 403);

@@ -69,10 +69,24 @@ class Tenant extends Model
     /** Effective timezone — falls back to country default if not overridden */
     public function effectiveTimezone(): string
     {
-        if ($this->timezone && $this->timezone !== 'UTC') {
+        if ($this->is_timezone_override && $this->timezone && in_array($this->timezone, timezone_identifiers_list(), true)) {
             return $this->timezone;
         }
-        return 'UTC';
+
+        if ($this->timezone && $this->timezone !== 'UTC' && in_array($this->timezone, timezone_identifiers_list(), true)) {
+            return $this->timezone;
+        }
+
+        if ($this->country) {
+            $countryTz = MasterCountry::whereRaw('LOWER(name) = ?', [strtolower(MasterCountry::normalize($this->country))])
+                ->value('default_timezone');
+
+            if ($countryTz && in_array($countryTz, timezone_identifiers_list(), true)) {
+                return $countryTz;
+            }
+        }
+
+        return config('app.hospital_timezone', config('app.timezone', 'UTC'));
     }
 
     /** Active subscription for this tenant */
@@ -208,5 +222,21 @@ class Tenant extends Model
     public function scopePartnerVisible($query)
     {
         return $query->whereIn('status', ['trial', 'grace']);
+    }
+
+    /**
+     * Hospitals that can currently log in (same rules as UnifiedLoginController).
+     *
+     * @return \Illuminate\Support\Collection<int, self>
+     */
+    public static function loginable(): \Illuminate\Support\Collection
+    {
+        return static::query()
+            ->whereNotIn('status', ['suspended', 'pending'])
+            ->with('subscriptions')
+            ->orderBy('name')
+            ->get(['id', 'name', 'slug', 'status', 'trial_ends_at'])
+            ->filter(fn (self $tenant) => $tenant->hasAccess())
+            ->values();
     }
 }

@@ -122,7 +122,7 @@
                                         </a>
                                         @if($tenant->status === 'pending')
                                             <form method="POST" action="{{ route('superadmin.hospitals.approve', $tenant) }}"
-                                                style="margin:0">
+                                                style="margin:0" onsubmit="this.querySelector('button[type=submit]').disabled=true">
                                                 @csrf
                                                 <button type="submit" class="hms-btn-icon hms-btn-icon-success"
                                                     data-tooltip="Accept registration">

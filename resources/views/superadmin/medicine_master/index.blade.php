@@ -792,9 +792,9 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                 <code
                                     style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Name</code>
                                 <code
-                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Type</code>
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Medicine Type</code>
                                 <code
-                                    style="background:#DBEAFE;color:#1D4ED8;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Dosage</code>
+                                    style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Dosage</code>
                                 <code
                                     style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Company</code>
                                 <code
@@ -803,13 +803,36 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                     style="background:#F3F4F6;color:#6B7280;padding:.15rem .4rem;border-radius:4px;font-size:.78rem">Price</code>
                             </div>
                             <p style="margin:.5rem 0 0;font-size:.78rem;color:#6B7280">
-                                Blue = required &nbsp;|&nbsp; gray = optional &nbsp;|&nbsp;
-                                Medicine Type &amp; Dosage must match existing master data (case-insensitive). Duplicate
-                                names are skipped.
+                                Only <strong>Medicine Name</strong> is required — other columns can be left blank.
+                                If Type or Dosage is filled, it must match existing master data (case-insensitive).
+                                Duplicate names are skipped.
                             </p>
                             <p style="margin:1.5rem 0 0;font-size:1rem">
                                 <a href="{{ route('superadmin.medicine-master.medicines.sample') }}"><i
                                         class="bi bi-download"></i> Download a sample file</a>
+                            </p>
+                        </div>
+                        <div class="hms-form-group" style="margin-bottom:1.25rem">
+                            <label class="hms-label">Select Hospitals <span style="color:#B91C1C">*</span></label>
+                            <select name="tenant_ids[]" id="importTenantSelect"
+                                class="hms-select @error('tenant_ids') is-invalid @enderror @error('tenant_ids.*') is-invalid @enderror"
+                                multiple required>
+                                <option value="__select_all__">— Select All Hospitals —</option>
+                                @foreach($tenants as $tenant)
+                                    <option value="{{ $tenant->id }}"
+                                        {{ is_array(old('tenant_ids')) && in_array($tenant->id, old('tenant_ids')) ? 'selected' : '' }}>
+                                        {{ $tenant->name }} ({{ $tenant->slug }}) — {{ ucfirst($tenant->status) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('tenant_ids')
+                                <div class="hms-field-error">{{ $message }}</div>
+                            @enderror
+                            @error('tenant_ids.*')
+                                <div class="hms-field-error">{{ $message }}</div>
+                            @enderror
+                            <p style="margin:.5rem 0 0;font-size:.78rem;color:#6B7280">
+                                Only active hospitals (login allowed) are listed. Imported medicines sync to selected hospitals only.
                             </p>
                         </div>
                         <label class="hms-label">Select File (.xlsx, .xls, .csv)</label>
@@ -1045,6 +1068,41 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                     });
                 });
             });
+
+            /* ── Import modal: hospital multi-select ── */
+            const importTenantSelect = document.getElementById('importTenantSelect');
+            if (importTenantSelect && typeof $ !== 'undefined' && $.fn.select2) {
+                const $importTenantSelect = $('#importTenantSelect');
+
+                $importTenantSelect.select2({
+                    placeholder: 'Search and select hospitals...',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#importMedicineModal'),
+                });
+
+                $importTenantSelect.on('select2:select', function (e) {
+                    if (e.params.data.id === '__select_all__') {
+                        const allIds = $importTenantSelect.find('option')
+                            .map(function () {
+                                const val = this.value;
+                                return val && val !== '__select_all__' ? val : null;
+                            })
+                            .get();
+
+                        $importTenantSelect.val(allIds).trigger('change');
+                    }
+                });
+
+                $importTenantSelect.closest('form').on('submit', function () {
+                    const selected = ($importTenantSelect.val() || []).filter(id => id !== '__select_all__');
+                    $importTenantSelect.val(selected);
+                });
+
+                @if($errors->has('tenant_ids') || $errors->has('tenant_ids.*') || $errors->has('file'))
+                    new bootstrap.Modal(document.getElementById('importMedicineModal')).show();
+                @endif
+            }
 
             /* ── Delete confirm ── */
             document.querySelectorAll('.del-form').forEach(form => {

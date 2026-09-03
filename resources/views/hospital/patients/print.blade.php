@@ -217,6 +217,9 @@
         };
         $ageSex = trim(($patient->age !== null && $patient->age !== '' ? (string) $patient->age : '—') . ($sex !== '' ? ', ' . $sex : ''));
         $city = trim(collect([$patient->city_name, $patient->district_name])->filter()->implode(', ')) ?: '—';
+        $hospitalTz = $tenant?->effectiveTimezone()
+            ?? \App\Services\Platform\TimezoneService::current();
+        $billDateTime = now($hospitalTz)->format('d-m-Y H:i:s');
     @endphp
     <div class="bill-page">
         <div class="bill-box">
@@ -238,7 +241,7 @@
             <table class="bill-fields">
                 <tr>
                     <td><strong>MRD No.:</strong> {{ $patient->patient_code }}</td>
-                    <td class="col-right"><strong>Bill Date:</strong> {{ now()->format('d-m-Y H:i:s') }}</td>
+                    <td class="col-right"><strong>Bill Date:</strong> {{ $billDateTime }}</td>
                 </tr>
                 <tr>
                     <td><strong>Name:</strong> {{ strtoupper($patient->full_name) }}</td>
@@ -269,7 +272,7 @@
             </table>
         </div>
 
-        <div class="bill-stamp">Date &amp; Time Stamp:</div>
+        <div class="bill-stamp">Date &amp; Time Stamp: {{ $billDateTime }}</div>
 
         <div class="bill-actions">
             <button class="btn-print" type="button" onclick="window.print()">Print Bill</button>

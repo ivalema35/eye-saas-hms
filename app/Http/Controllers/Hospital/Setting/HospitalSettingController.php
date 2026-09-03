@@ -11,7 +11,9 @@ use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\RolePermissionService;
 use App\Support\EmailRules;
+use App\Support\HospitalLogoProcessor;
 use App\Support\PhoneRules;
+use App\Support\PublicStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -151,19 +153,17 @@ class HospitalSettingController extends Controller
                     }
                 }
 
-                // Save original file
-                $file     = $request->file('hospital_logo');
-                $filename = 'logo_'.time().'.'.$file->getClientOriginalExtension();
-                $origPath = $file->storeAs("tenants/{$tenantId}/logo", $filename, 'public');
+                // Save original file (normalized dimensions for consistent display)
+                $file = $request->file('hospital_logo');
+                $origPath = HospitalLogoProcessor::storeUploadedLogo($file, $tenantId);
                 $settingsData['hospital_logo'] = $origPath;
+                PublicStorage::mirror($origPath);
 
                 // Save bg-removed version if provided
                 if ($request->filled('logo_processed_base64') && str_starts_with($request->logo_processed_base64, 'data:image')) {
-                    $base64    = preg_replace('#^data:image/\w+;base64,#i', '', $request->logo_processed_base64);
-                    $imageData = base64_decode($base64);
-                    $nobgPath  = "tenants/{$tenantId}/logo/logo_nobg_".time().'.png';
-                    Storage::disk('public')->put($nobgPath, $imageData);
+                    $nobgPath = HospitalLogoProcessor::storeProcessedBase64($request->logo_processed_base64, $tenantId);
                     $settingsData['hospital_logo_nobg'] = $nobgPath;
+                    PublicStorage::mirror($nobgPath);
                 }
             }
 

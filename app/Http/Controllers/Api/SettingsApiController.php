@@ -10,7 +10,9 @@ use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
 use App\Models\Platform\Tenant;
 use App\Support\EmailRules;
+use App\Support\HospitalLogoProcessor;
 use App\Support\PhoneRules;
+use App\Support\PublicStorage;
 use DateTimeZone;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,14 +45,10 @@ class SettingsApiController extends Controller
 
         // Build logo URLs from stored paths
         $logoPath = $stored->get('hospital_logo', '');
-        $logoUrl  = ($logoPath && Storage::disk('public')->exists($logoPath))
-            ? Storage::disk('public')->url($logoPath)
-            : '';
+        $logoUrl  = public_storage_url(is_string($logoPath) && $logoPath !== '' ? $logoPath : null) ?? '';
 
         $nobgPath = $stored->get('hospital_logo_nobg', '');
-        $nobgUrl  = ($nobgPath && Storage::disk('public')->exists($nobgPath))
-            ? Storage::disk('public')->url($nobgPath)
-            : '';
+        $nobgUrl  = public_storage_url(is_string($nobgPath) && $nobgPath !== '' ? $nobgPath : null) ?? '';
 
         $data = [
             // General
@@ -222,16 +220,16 @@ class SettingsApiController extends Controller
         }
         HospitalSetting::set('hospital_logo_nobg', null);
 
-        // Store new logo
-        $file     = $request->file('logo');
-        $filename = 'logo_' . time() . '.' . $file->getClientOriginalExtension();
-        $path     = $file->storeAs("tenants/{$tenantId}/logo", $filename, 'public');
+        // Store new logo (normalized dimensions for consistent display)
+        $file = $request->file('logo');
+        $path = HospitalLogoProcessor::storeUploadedLogo($file, $tenantId);
 
         HospitalSetting::set('hospital_logo', $path);
+        PublicStorage::mirror($path);
 
         return response()->json([
             'success'      => true,
-            'data'         => ['url' => Storage::disk('public')->url($path)],
+            'data'         => ['url' => public_storage_url($path)],
             'nobg_cleared' => (bool) $oldNobgPath,
             'message'      => 'Logo updated successfully.',
         ]);

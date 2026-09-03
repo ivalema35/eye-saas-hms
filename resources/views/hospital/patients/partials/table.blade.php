@@ -144,12 +144,6 @@
                             <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $p->id]) }}"
                                 class="pta pta-edit" title="Edit"><i class="bi bi-pencil-fill"></i></a>
 
-                            {{-- Delete --}}
-                            <!-- <form method="POST" action="{{ route('hospital.patients.destroy', ['slug' => $slug, 'patient' => $p->id]) }}" class="d-contents delete-form">
-                                                    @csrf @method('DELETE')
-                                                    <button type="button" class="pta pta-delete delete-btn" title="Delete"><i class="bi bi-trash3-fill"></i></button>
-                                                </form> -->
-
                             {{-- Check-in (phone only) --}}
                             @if($p->type === 'phone' && !$p->case_id)
                                 <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $p->id]) }}"

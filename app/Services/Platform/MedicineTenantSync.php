@@ -9,17 +9,29 @@ use App\Models\Platform\MasterMedicine;
 use App\Models\Platform\Tenant;
 
 /**
- * Pushes a Super Admin global Medicine down into every hospital's own
- * tenant-scoped `medicines` table, resolving the tenant's own MedicineType/
- * Dosage rows by name (these already exist per tenant via the Dosage/Type/
- * Category/Route cascade). Deletes are intentionally never cascaded — a
- * hospital may already have prescriptions referencing the medicine.
+ * Pushes a Super Admin global Medicine down into hospital tenant-scoped
+ * `medicines` tables, resolving each tenant's MedicineType/Dosage by name.
+ * Deletes are intentionally never cascaded.
  */
 class MedicineTenantSync
 {
     public static function pushCreate(MasterMedicine $medicine): void
     {
-        foreach (Tenant::query()->pluck('id') as $tenantId) {
+        $tenantIds = Tenant::query()->pluck('id')->all();
+
+        static::pushCreateForTenants($medicine, $tenantIds);
+    }
+
+    /**
+     * @param  list<int>  $tenantIds
+     */
+    public static function pushCreateForTenants(MasterMedicine $medicine, array $tenantIds): void
+    {
+        foreach (array_unique(array_map('intval', $tenantIds)) as $tenantId) {
+            if ($tenantId < 1) {
+                continue;
+            }
+
             if (Medicine::withoutTenantScope()
                 ->where('tenant_id', $tenantId)
                 ->whereRaw('LOWER(name) = ?', [strtolower($medicine->name)])
@@ -29,21 +41,14 @@ class MedicineTenantSync
             }
 
             $typeId = static::resolveTenantTypeId($tenantId, $medicine);
-            if (! $typeId) {
-                continue; // medicine_type_id is NOT NULL on tenant medicines table
-            }
+            $dosageId = static::resolveTenantDosageId($tenantId, $medicine);
 
-            Medicine::withoutTenantScope()->create([
-                'tenant_id' => $tenantId,
-                'medicine_type_id' => $typeId,
-                'dosage_id' => static::resolveTenantDosageId($tenantId, $medicine),
-                'name' => $medicine->name,
-                'duration' => $medicine->duration,
-                'qty' => $medicine->qty,
-                'composition' => $medicine->composition,
-                'company' => $medicine->company,
-                'price' => $medicine->price,
-            ]);
+            Medicine::withoutTenantScope()->create(static::tenantMedicinePayload(
+                $tenantId,
+                $medicine,
+                $typeId,
+                $dosageId,
+            ));
         }
     }
 
@@ -70,21 +75,37 @@ class MedicineTenantSync
             }
 
             $typeId = static::resolveTenantTypeId($tenantId, $medicine);
-            if (! $typeId) {
-                continue;
-            }
+            $dosageId = static::resolveTenantDosageId($tenantId, $medicine);
 
-            $existing->update([
-                'medicine_type_id' => $typeId,
-                'dosage_id' => static::resolveTenantDosageId($tenantId, $medicine),
-                'name' => $medicine->name,
-                'duration' => $medicine->duration,
-                'qty' => $medicine->qty,
-                'composition' => $medicine->composition,
-                'company' => $medicine->company,
-                'price' => $medicine->price,
-            ]);
+            $existing->update(static::tenantMedicinePayload(
+                $tenantId,
+                $medicine,
+                $typeId,
+                $dosageId,
+            ));
         }
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function tenantMedicinePayload(
+        int $tenantId,
+        MasterMedicine $medicine,
+        ?int $typeId,
+        ?int $dosageId,
+    ): array {
+        return [
+            'tenant_id' => $tenantId,
+            'medicine_type_id' => $typeId,
+            'dosage_id' => $dosageId,
+            'name' => $medicine->name,
+            'duration' => $medicine->duration,
+            'qty' => $medicine->qty,
+            'composition' => $medicine->composition,
+            'company' => $medicine->company,
+            'price' => $medicine->price,
+        ];
     }
 
     private static function resolveTenantTypeId(int $tenantId, MasterMedicine $medicine): ?int

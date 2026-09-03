@@ -5,74 +5,30 @@
         : ($nextAppointmentNumber ?? 'Auto on save');
 @endphp
 
-<style>
-    .ot-slot-occupancy {
-        margin-top: .5rem;
-        border: 1px solid rgba(27, 79, 114, .15);
-        border-radius: 10px;
-        background: rgba(235, 245, 251, .55);
-        padding: .5rem .6rem;
-    }
-
-    .ot-slot-occupancy-title {
-        font-size: .74rem;
-        font-weight: 700;
-        color: #1B4F72;
-        margin-bottom: .35rem;
-    }
-
-    .ot-slot-occupancy-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .3rem;
-        max-height: 108px;
-        overflow-y: auto;
-    }
-
-    .ot-slot-chip {
-        display: inline-flex;
-        align-items: center;
-        max-width: 100%;
-        padding: .18rem .55rem;
-        border-radius: 999px;
-        background: #fff;
-        border: 1px solid rgba(27, 79, 114, .18);
-        color: #1B4F72;
-        font-size: .74rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-</style>
-
-<div class="row g-3">
-    <div class="col-md-3">
+{{-- Row 1 --}}
+<div class="rpc-grid rpc-grid--4">
+    <div class="rpc-field">
         <label class="form-label">Appointment ID</label>
-        <input type="text" class="form-control" value="{{ $appointmentIdDisplay }}" readonly
-            style="background:#f8fafc; font-weight:600; letter-spacing:.02em;"
+        <input type="text" class="form-control hms-input" value="{{ $appointmentIdDisplay }}" readonly tabindex="-1"
             title="Auto-generated appointment number">
-        <!-- @unless($appointment)
-            <div class="form-text">Auto-filled — confirmed on save.</div>
-        @endunless -->
     </div>
-    <div class="col-md-3">
-        <label class="form-label">Appointment Type <span class="text-danger">*</span></label>
-        <select name="appointment_type" class="form-select" required>
+    <div class="rpc-field">
+        <label class="form-label">Appointment Type <span class="req">*</span></label>
+        <select name="appointment_type" class="form-select hms-select rpc-auto-open" required>
             @foreach(['phone' => 'Phone', 'walk_in' => 'Walk-in', 'online' => 'Online', 'ot' => 'OT'] as $value => $label)
                 <option value="{{ $value }}" {{ old('appointment_type', $appointment->appointment_type ?? 'ot') === $value ? 'selected' : '' }}>{{ $label }}</option>
             @endforeach
         </select>
     </div>
-    <div class="col-md-3">
-        <label class="form-label">Appointment Date <span class="text-danger">*</span></label>
-        <input type="text" name="appointment_date" id="appointment_date" class="form-control"
+    <div class="rpc-field">
+        <label class="form-label">Appointment Date <span class="req">*</span></label>
+        <input type="text" name="appointment_date" id="appointment_date" class="form-control flatpickr hms-input"
             value="{{ old('appointment_date', optional($appointment?->appointment_date)->format('Y-m-d') ?? ($doctorLoadDate ?? now()->toDateString())) }}"
             required>
     </div>
-    <div class="col-md-3">
+    <div class="rpc-field">
         <label class="form-label">Appointment Time</label>
-        <select name="appointment_time" id="appointment_time" class="form-select">
+        <select name="appointment_time" id="appointment_time" class="form-select hms-select rpc-auto-open">
             <option value="">Select slot...</option>
             @foreach($slots as $slot)
                 @php $slotValue = \Carbon\Carbon::parse($slot->start_time)->format('H:i'); @endphp
@@ -90,44 +46,44 @@
             <div id="slotAppointmentsChips" class="ot-slot-occupancy-chips"></div>
         </div>
     </div>
+</div>
 
-    <div class="col-md-3">
-        <label class="form-label">Contact Number <span class="text-danger">*</span></label>
-        <input type="text" name="mobile_no" class="form-control @error('mobile_no') is-invalid @enderror"
-            value="{{ old('mobile_no', $appointment->mobile_no ?? '') }}" data-intl-phone required
-            placeholder="+919876543210">
-        @error('mobile_no')
-            <div class="invalid-feedback d-block">{{ $message }}</div>
-        @enderror
+{{-- Row 2 --}}
+<div class="rpc-grid rpc-grid--4">
+    <div class="rpc-field">
+        <label class="form-label">Contact Number <span class="req">*</span></label>
+        <input type="text" name="mobile_no" id="mobile_no" class="form-control hms-input @error('mobile_no') is-invalid @enderror"
+            value="{{ old('mobile_no', $appointment->mobile_no ?? '') }}" data-intl-phone required placeholder="10-digit number">
+        @error('mobile_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
-    <div class="col-md-3">
+    <div class="rpc-field">
         <label class="form-label">WhatsApp Number</label>
-        <input type="text" name="whatsapp_no" class="form-control @error('whatsapp_no') is-invalid @enderror"
-            value="{{ old('whatsapp_no', $appointment->whatsapp_no ?? '') }}" data-intl-phone
-            placeholder="Same if blank">
-        @error('whatsapp_no')
-            <div class="invalid-feedback d-block">{{ $message }}</div>
-        @enderror
+        <input type="text" name="whatsapp_no" class="form-control hms-input @error('whatsapp_no') is-invalid @enderror"
+            value="{{ old('whatsapp_no', $appointment->whatsapp_no ?? '') }}" data-intl-phone placeholder="Same if blank">
+        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
-    <div class="col-md-3">
-        <label class="form-label">First Name <span class="text-danger">*</span></label>
-        <input type="text" name="patient_name" class="form-control"
-            value="{{ old('patient_name', $appointment->patient_name ?? '') }}" required>
+    <div class="rpc-field">
+        <label class="form-label">First Name <span class="req">*</span></label>
+        <input type="text" name="patient_name" class="form-control hms-input"
+            value="{{ old('patient_name', $appointment->patient_name ?? '') }}" required placeholder="First name">
     </div>
-    <div class="col-md-3">
-        <label class="form-label">Surname <span class="text-danger">*</span></label>
-        <input type="text" name="surname" class="form-control" value="{{ old('surname', $appointment->surname ?? '') }}"
-            required>
+    <div class="rpc-field">
+        <label class="form-label">Surname <span class="req">*</span></label>
+        <input type="text" name="surname" class="form-control hms-input"
+            value="{{ old('surname', $appointment->surname ?? '') }}" required placeholder="Surname">
     </div>
+</div>
 
-    <div class="col-md-6">
+{{-- Row 3 --}}
+<div class="rpc-grid rpc-grid--2">
+    <div class="rpc-field">
         <label class="form-label">Middle Name</label>
-        <input type="text" name="middle_name" class="form-control"
-            value="{{ old('middle_name', $appointment->middle_name ?? '') }}">
+        <input type="text" name="middle_name" class="form-control hms-input"
+            value="{{ old('middle_name', $appointment->middle_name ?? '') }}" placeholder="Middle name">
     </div>
-    <div class="col-md-6">
-        <label class="form-label">Doctor Name <span class="text-danger">*</span></label>
-        <select name="doctor_id" id="doctor_id" class="form-select" required>
+    <div class="rpc-field">
+        <label class="form-label">Doctor Name <span class="req">*</span></label>
+        <select name="doctor_id" id="doctor_id" class="form-control select2 hms-select rpc-auto-open" required>
             <option value="">Select doctor...</option>
             @foreach($doctors as $doctor)
                 <option value="{{ $doctor->id }}" {{ (string) old('doctor_id', $appointment->doctor_id ?? '') === (string) $doctor->id ? 'selected' : '' }}>
@@ -136,11 +92,14 @@
             @endforeach
         </select>
     </div>
+</div>
 
-    <div class="col-md-4">
-        <label class="form-label">City <span class="text-danger">*</span></label>
-        <div style="display:flex;gap:5px">
-            <select name="location_id" id="location_id" class="form-select" required>
+{{-- Row 4 --}}
+<div class="rpc-grid rpc-grid--3">
+    <div class="rpc-field">
+        <label class="form-label">City <span class="req">*</span></label>
+        <div class="rpc-city-row">
+            <select name="location_id" id="location_id" class="form-control select2 hms-select rpc-auto-open" required>
                 <option value="">Select city...</option>
                 @foreach($locations as $loc)
                     <option value="{{ $loc->id }}" data-district="{{ $loc->district?->name }}"
@@ -149,29 +108,29 @@
                     </option>
                 @endforeach
             </select>
-            <button type="button" id="btnAddOtLocation" class="hms-btn hms-btn-outline"
-                style="width:40px;flex-shrink:0">+</button>
+            <button type="button" id="btnAddOtLocation" class="hms-btn hms-btn-outline rpc-city-add">+</button>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="rpc-field">
         <label class="form-label">District</label>
-        <input type="text" id="district" class="form-control" readonly placeholder="Auto-filled"
-            style="background:#f8fafc;">
+        <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto-filled" tabindex="-1">
     </div>
-    <div class="col-md-4">
+    <div class="rpc-field">
         <label class="form-label">State</label>
-        <input type="text" id="state" class="form-control" readonly placeholder="Auto-filled"
-            style="background:#f8fafc;">
+        <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto-filled" tabindex="-1">
     </div>
+</div>
 
-    <div class="col-md-3">
-        <label class="form-label">Age <span class="text-danger">*</span></label>
-        <input type="number" min="0" max="150" name="age" class="form-control"
-            value="{{ old('age', $appointment->age ?? '') }}" required>
+{{-- Row 5 --}}
+<div class="rpc-grid rpc-grid--4">
+    <div class="rpc-field">
+        <label class="form-label">Age <span class="req">*</span></label>
+        <input type="number" min="0" max="150" name="age" class="form-control hms-input"
+            value="{{ old('age', $appointment->age ?? '') }}" required placeholder="Age">
     </div>
-    <div class="col-md-3">
-        <label class="form-label">Gender <span class="text-danger">*</span></label>
-        <select name="gender" class="form-select" required>
+    <div class="rpc-field">
+        <label class="form-label">Gender <span class="req">*</span></label>
+        <select name="gender" class="form-select hms-select rpc-auto-open" required>
             <option value="">Select...</option>
             @foreach(['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $label)
                 <option value="{{ $value }}" {{ old('gender', $appointment->gender ?? '') === $value ? 'selected' : '' }}>
@@ -180,14 +139,14 @@
             @endforeach
         </select>
     </div>
-    <div class="col-md-3">
+    <div class="rpc-field">
         <label class="form-label">Occupation</label>
-        <input type="text" name="occupation" class="form-control"
-            value="{{ old('occupation', $appointment->occupation ?? '') }}">
+        <input type="text" name="occupation" class="form-control hms-input"
+            value="{{ old('occupation', $appointment->occupation ?? '') }}" placeholder="Occupation">
     </div>
-    <div class="col-md-3">
+    <div class="rpc-field">
         <label class="form-label">Referred By</label>
-        <select name="referrer_id" class="form-select">
+        <select name="referrer_id" class="form-control select2 hms-select rpc-auto-open">
             <option value="">Select Referrer</option>
             @foreach($referrers as $referrer)
                 <option value="{{ $referrer->id }}" {{ (string) old('referrer_id', $appointment->referrer_id ?? '') === (string) $referrer->id ? 'selected' : '' }}>
@@ -204,66 +163,47 @@
             var addBtn = document.getElementById('btnAddOtLocation');
             if (!addBtn) return;
 
-            var modalHtml = '\n<div class="modal fade" id="modalAddOtLocation" tabindex="-1" aria-hidden="true">\n  <div class="modal-dialog modal-sm modal-dialog-centered">\n    <div class="modal-content">\n      <div class="modal-header">\n        <h5 class="modal-title" style="color:#fff">Add City</h5>\n        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>\n      </div>\n      <div class="modal-body">\n        <div id="addOtLocErrors" class="text-danger mb-2"></div>\n        <div class="mb-2">\n          <label class="form-label">City</label>\n          <input type="text" id="newOtCity" class="form-control" placeholder="City name">\n        </div>\n        <div class="mb-2">\n          <label class="form-label">District</label>\n          <input type="text" id="newOtDistrict" class="form-control" placeholder="District">\n        </div>\n        <div class="mb-2">\n          <label class="form-label">State</label>\n          <input type="text" id="newOtState" class="form-control" placeholder="State">\n        </div>\n      </div>\n      <div class="modal-footer">\n        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>\n        <button type="button" id="saveOtLocationBtn" class="btn btn-primary">Add</button>\n      </div>\n    </div>\n  </div>\n</div>\n';
-
+            var modalHtml = '<div class="modal fade" id="modalAddOtLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#fff">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addOtLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newOtCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newOtDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newOtState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveOtLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
             var modalEl = document.getElementById('modalAddOtLocation');
-            var saveBtn = document.getElementById('saveOtLocationBtn');
-            var newCity = document.getElementById('newOtCity');
-            var newDistrict = document.getElementById('newOtDistrict');
-            var newState = document.getElementById('newOtState');
-            var addLocErrors = document.getElementById('addOtLocErrors');
-
             addBtn.addEventListener('click', function () {
-                var modal = new bootstrap.Modal(modalEl);
-                addLocErrors.innerHTML = '';
-                newCity.value = '';
-                newDistrict.value = '';
-                newState.value = '';
-                modal.show();
+                bootstrap.Modal.getOrCreateInstance(modalEl).show();
             });
 
-            if (saveBtn) {
-                saveBtn.addEventListener('click', function () {
-                    addLocErrors.innerHTML = '';
-                    var city = newCity.value.trim();
-                    var district = newDistrict.value.trim();
-                    var state = newState.value.trim();
-                    if (!city) { addLocErrors.textContent = 'City is required.'; return; }
-                    if (!state) { addLocErrors.textContent = 'State is required.'; return; }
+            document.getElementById('saveOtLocationBtn').addEventListener('click', function () {
+                var city = document.getElementById('newOtCity').value.trim();
+                var district = document.getElementById('newOtDistrict').value.trim();
+                var state = document.getElementById('newOtState').value.trim();
+                var addLocErrors = document.getElementById('addOtLocErrors');
+                addLocErrors.textContent = '';
+                if (!city) { addLocErrors.textContent = 'City is required.'; return; }
+                if (!state) { addLocErrors.textContent = 'State is required.'; return; }
 
-                    var url = '{{ route("hospital.masters.basic.ajax.store", ["slug" => $slug, "type" => "locations"]) }}';
-                    var token = '{{ csrf_token() }}';
-
-                    fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'X-Requested-With': 'XMLHttpRequest' },
-                        body: JSON.stringify({ city: city, district: district, state: state })
+                fetch('{{ route("hospital.masters.basic.ajax.store", ["slug" => $slug, "type" => "locations"]) }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
+                    body: JSON.stringify({ city: city, district: district, state: state })
+                })
+                    .then(function (res) { return res.json(); })
+                    .then(function (data) {
+                        if (!data || !data.success) {
+                            addLocErrors.textContent = (data && data.message) || 'Failed to add city.';
+                            return;
+                        }
+                        var sel = document.getElementById('location_id');
+                        var opt = document.createElement('option');
+                        opt.value = data.id;
+                        opt.text = city;
+                        opt.setAttribute('data-district', district);
+                        opt.setAttribute('data-state', state);
+                        sel.appendChild(opt);
+                        if (typeof $ !== 'undefined') { $(sel).val(data.id).trigger('change'); }
+                        else { sel.value = data.id; sel.dispatchEvent(new Event('change')); }
+                        bootstrap.Modal.getInstance(modalEl).hide();
                     })
-                        .then(function (res) { return res.json(); })
-                        .then(function (data) {
-                            if (!data || !data.success) {
-                                addLocErrors.textContent = (data && data.message) || 'Failed to add city.';
-                                return;
-                            }
-
-                            var sel = document.getElementById('location_id');
-                            var opt = document.createElement('option');
-                            opt.value = data.id;
-                            opt.text = city;
-                            opt.setAttribute('data-district', district);
-                            opt.setAttribute('data-state', state);
-                            sel.appendChild(opt);
-                            if (typeof $ !== 'undefined') { $(sel).val(data.id).trigger('change'); }
-                            else { sel.value = data.id; sel.dispatchEvent(new Event('change')); }
-
-                            var modal = bootstrap.Modal.getInstance(modalEl);
-                            if (modal) modal.hide();
-                        })
-                        .catch(function () { addLocErrors.textContent = 'Network error.'; });
-                });
-            }
+                    .catch(function () { addLocErrors.textContent = 'Network error.'; });
+            });
         });
     </script>
 @endpush
@@ -290,7 +230,6 @@
             var loadSlotAppointments = function () {
                 var date = dateEl.value.trim();
                 var time = timeEl.value.trim();
-
                 if (!date || !time) { hideSlotAppointments(); return; }
 
                 var url = slotAppointmentsUrl + '?date=' + encodeURIComponent(date) + '&time=' + encodeURIComponent(time);
@@ -301,7 +240,6 @@
                     .then(function (data) {
                         var appointments = (data && data.appointments) || [];
                         if (appointments.length === 0) { hideSlotAppointments(); return; }
-
                         titleEl.textContent = appointments.length + ' patient' + (appointments.length > 1 ? 's' : '') + ' already booked in this slot:';
                         chipsEl.innerHTML = '';
                         appointments.forEach(function (a) {
@@ -318,7 +256,6 @@
 
             timeEl.addEventListener('change', loadSlotAppointments);
             dateEl.addEventListener('change', loadSlotAppointments);
-
             if (dateEl.value && timeEl.value) { loadSlotAppointments(); }
         });
     </script>

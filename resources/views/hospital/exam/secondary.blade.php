@@ -1092,7 +1092,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                     <th style="width:120px;">Duration</th>
                                     <th style="width:110px;">Eye</th>
                                     <th>Comment</th>
-                                    <th style="width:38px;"></th>
+                                    <th style="width:72px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="coBody">
@@ -1123,7 +1123,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                         </select>
                                     </td>
                                     <td><input type="text" name="exam_data[co_rows][{{ $ri }}][comment]" value="{{ $row['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress();">&times;</button></td>
+                                    <td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 co-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 co-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -1169,7 +1169,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                     <th style="width:80px;">Since</th>
                                     <th style="width:120px;">Duration</th>
                                     <th>Comment</th>
-                                    <th style="width:38px;"></th>
+                                    <th style="width:72px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="kcoBody">
@@ -1192,7 +1192,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                                         </select>
                                     </td>
                                     <td><input type="text" name="exam_data[kco_rows][{{ $ki }}][comment]" value="{{ $krow['comment'] ?? '' }}" class="form-control form-control-sm" placeholder="Comment"></td>
-                                    <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>
+                                    <td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 kco-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 kco-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -2356,6 +2356,62 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         }
     }
 
+    function openNativeSelect(selectEl) {
+        if (!selectEl) { return; }
+        selectEl.focus();
+        requestAnimationFrame(function () {
+            if (typeof selectEl.showPicker === 'function') {
+                try { selectEl.showPicker(); return; } catch (err) { /* fallback below */ }
+            }
+            selectEl.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            selectEl.click();
+        });
+    }
+
+    function getExamRowFields(tr, config) {
+        const fields = [];
+        if (config.search) {
+            const search = tr.querySelector(config.search);
+            if (search) { fields.push(search); }
+        }
+        (config.selects || []).forEach(function (key) {
+            const sel = tr.querySelector('select[name*="[' + key + ']"]');
+            if (sel) { fields.push(sel); }
+        });
+        (config.textInputs || []).forEach(function (key) {
+            const inp = tr.querySelector('input[name*="[' + key + ']"]');
+            if (inp) { fields.push(inp); }
+        });
+        return fields;
+    }
+
+    function advanceExamRowField(tr, currentEl, config, onCustomSearchOpen) {
+        const chain = getExamRowFields(tr, config);
+        const idx = chain.indexOf(currentEl);
+        if (idx < 0 || idx >= chain.length - 1) { return false; }
+        const next = chain[idx + 1];
+        setTimeout(function () {
+            if (next.tagName === 'SELECT') {
+                openNativeSelect(next);
+            } else if (config.search && next.matches(config.search) && typeof onCustomSearchOpen === 'function') {
+                onCustomSearchOpen(next, '');
+            } else {
+                next.focus();
+            }
+        }, 50);
+        return true;
+    }
+
+    function wireExamRowSelectChain(containerId, config, onCustomSearchOpen) {
+        document.getElementById(containerId)?.addEventListener('change', function (e) {
+            const sel = e.target.closest('select.form-select');
+            if (!sel) { return; }
+            const tr = sel.closest('tr');
+            if (!tr) { return; }
+            advanceExamRowField(tr, sel, config, onCustomSearchOpen);
+        });
+    }
+
     function sortedCoComplaints() {
         return [...coComplaints].sort((a, b) => {
             if (Boolean(a.is_favourite) !== Boolean(b.is_favourite)) {
@@ -2372,6 +2428,47 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         if (!activeCoInput || !coDropdown) { return; }
         positionFixedDropdown(coDropdown, activeCoInput, 300);
     }
+
+    function openCoDropdownForInput(input, query) {
+        if (!input || !coDropdown) { return; }
+        activeCoInput = input;
+        input.focus();
+        renderCoDropdown(query !== undefined ? query : '');
+    }
+
+    function openSinceDropdownForRow(tr) {
+        if (!tr) { return; }
+        openNativeSelect(tr.querySelector('select[name*="[since]"]'));
+    }
+
+    function getCoModalFocusTarget() {
+        const body = document.getElementById('coBody');
+        if (!body) { return coSearch; }
+        const rows = body.querySelectorAll('.co-row');
+        if (!rows.length) { return coSearch; }
+        for (let i = rows.length - 1; i >= 0; i--) {
+            const inp = rows[i].querySelector('.row-co-search');
+            if (inp && !inp.value.trim()) { return inp; }
+        }
+        return rows[rows.length - 1]?.querySelector('.row-co-search') || coSearch;
+    }
+
+    function initCoModalFocus() {
+        const target = getCoModalFocusTarget();
+        if (target) {
+            setTimeout(function () { openCoDropdownForInput(target, ''); }, 120);
+        }
+    }
+
+    document.getElementById('modalClinical')?.addEventListener('shown.bs.modal', function () {
+        initCoModalFocus();
+    });
+
+    wireExamRowSelectChain('coBody', {
+        search: '.row-co-search',
+        selects: ['since', 'unit', 'eye'],
+        textInputs: ['comment'],
+    }, openCoDropdownForInput);
 
     // Render favourite complaints as quick-access pills above the search bar
     function renderCoFavPills() {
@@ -2495,13 +2592,16 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         if (!item || e.target.closest('.co-fav-btn') || !activeCoInput) { return; }
         e.preventDefault();
         const name = item.dataset.name || '';
+        const row = activeCoInput.closest('tr');
         activeCoInput.value = name;
         coDropdown.classList.remove('show');
         // If it's the top search, also trigger addCoRow
         if (activeCoInput === coSearch) {
             addCoRow(name);
+        } else {
+            activeCoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            setTimeout(function () { openSinceDropdownForRow(row); }, 50);
         }
-        activeCoInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
     document.addEventListener('mousedown', function (e) {
@@ -2512,13 +2612,24 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
     });
 
     let coRowIndex = document.querySelectorAll('#coBody .co-row').length;
-    function addCoRow(complaintVal) {
-        const complaint = (complaintVal || (activeCoInput === coSearch ? coSearch?.value : '') || '').trim();
-        if (!complaint) {
-            activeCoInput = coSearch;
-            coSearch?.focus();
-            renderCoDropdown();
-            return;
+    const coRowActionsHtml = `<td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 co-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 co-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>`;
+    function syncCoEmptyMsg() {
+        const msg = document.getElementById('coEmptyMsg');
+        if (msg) { msg.style.display = document.querySelectorAll('#coBody .co-row').length ? 'none' : ''; }
+    }
+    function addCoRow(complaintVal, opts) {
+        opts = opts || {};
+        const forceBlank = opts.blank === true;
+        const afterTr = opts.afterTr || null;
+        let complaint = '';
+        if (!forceBlank) {
+            complaint = (complaintVal ?? (activeCoInput === coSearch ? coSearch?.value : '') ?? '').trim();
+            if (!complaint) {
+                activeCoInput = coSearch;
+                coSearch?.focus();
+                renderCoDropdown();
+                return;
+            }
         }
         const i = coRowIndex++;
         const tr = document.createElement('tr');
@@ -2535,13 +2646,23 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             <td><select name="exam_data[co_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
             <td><select name="exam_data[co_rows][${i}][eye]" class="form-select form-select-sm">${eyeOpts}</select></td>
             <td><input type="text" name="exam_data[co_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
-            <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
-        document.getElementById('coBody').appendChild(tr);
-        const msg = document.getElementById('coEmptyMsg');
-        if (msg) { msg.style.display = 'none'; }
+            ${coRowActionsHtml}`;
+        if (afterTr) {
+            afterTr.insertAdjacentElement('afterend', tr);
+        } else {
+            document.getElementById('coBody').appendChild(tr);
+        }
+        syncCoEmptyMsg();
         if (coSearch) { coSearch.value = ''; }
         coDropdown?.classList.remove('show');
         activeCoInput = null;
+        if (forceBlank) {
+            setTimeout(function () {
+                openCoDropdownForInput(tr.querySelector('.row-co-search'), '');
+            }, 50);
+        } else if (complaint) {
+            setTimeout(function () { openSinceDropdownForRow(tr); }, 50);
+        }
         checkProgress();
         updateLivePreview();
         form.dispatchEvent(new Event('input', { bubbles: false }));
@@ -2549,6 +2670,21 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
     window._addCoRow = addCoRow;
     document.getElementById('addCoRow')?.addEventListener('click', function () {
         addCoRow(coSearch ? coSearch.value.trim() : '');
+    });
+    document.getElementById('coBody')?.addEventListener('click', function (e) {
+        const addBtn = e.target.closest('.co-row-add-btn');
+        if (addBtn) {
+            addCoRow('', { blank: true, afterTr: addBtn.closest('tr') });
+            return;
+        }
+        const delBtn = e.target.closest('.co-row-del-btn');
+        if (delBtn) {
+            delBtn.closest('tr')?.remove();
+            syncCoEmptyMsg();
+            checkProgress();
+            updateLivePreview();
+            form.dispatchEvent(new Event('input', { bubbles: false }));
+        }
     });
 
     // ── KCO dropdown ──────────────────────────────────────────────────────────
@@ -2573,6 +2709,47 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             if (!activeKcoInput) { return; }
             positionFixedDropdown(kcoDropdown, activeKcoInput, 300);
         }
+
+        function openKcoDropdownForInput(input, query) {
+            if (!input || !kcoDropdown) { return; }
+            activeKcoInput = input;
+            input.focus();
+            renderKcoDropdown(query !== undefined ? query : '');
+        }
+
+        function openKcoSinceForRow(tr) {
+            if (!tr) { return; }
+            openNativeSelect(tr.querySelector('select[name*="[since]"]'));
+        }
+
+        function getKcoModalFocusTarget() {
+            const body = document.getElementById('kcoBody');
+            if (!body) { return kcoSearch; }
+            const rows = body.querySelectorAll('.kco-row');
+            if (!rows.length) { return kcoSearch; }
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const inp = rows[i].querySelector('.row-kco-search');
+                if (inp && !inp.value.trim()) { return inp; }
+            }
+            return rows[rows.length - 1]?.querySelector('.row-kco-search') || kcoSearch;
+        }
+
+        function initKcoModalFocus() {
+            const target = getKcoModalFocusTarget();
+            if (target) {
+                setTimeout(function () { openKcoDropdownForInput(target, ''); }, 120);
+            }
+        }
+
+        document.getElementById('modalHko')?.addEventListener('shown.bs.modal', function () {
+            initKcoModalFocus();
+        });
+
+        wireExamRowSelectChain('kcoBody', {
+            search: '.row-kco-search',
+            selects: ['since', 'unit'],
+            textInputs: ['comment'],
+        }, openKcoDropdownForInput);
 
         function renderKcoFavPills() {
             const wrap = document.getElementById('kcoFavPillsWrap');
@@ -2659,9 +2836,20 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
 
         renderKcoFavPills();
 
-        function addKcoRow(val) {
-            const condition = (val || (activeKcoInput === kcoSearch ? kcoSearch.value : '') || '').trim();
-            if (!condition) { activeKcoInput = kcoSearch; kcoSearch.focus(); renderKcoDropdown(''); return; }
+        const kcoRowActionsHtml = `<td class="text-center" style="white-space:nowrap;"><div class="d-inline-flex gap-1"><button type="button" class="btn btn-sm btn-danger px-2 kco-row-add-btn" title="Add blank row"><i class="bi bi-plus-lg"></i></button><button type="button" class="btn btn-sm btn-outline-danger px-2 kco-row-del-btn" title="Remove row"><i class="bi bi-trash"></i></button></div></td>`;
+        function syncKcoEmptyMsg() {
+            const msg = document.getElementById('kcoEmptyMsg');
+            if (msg) { msg.style.display = document.querySelectorAll('#kcoBody .kco-row').length ? 'none' : ''; }
+        }
+        function addKcoRow(val, opts) {
+            opts = opts || {};
+            const forceBlank = opts.blank === true;
+            const afterTr = opts.afterTr || null;
+            let condition = '';
+            if (!forceBlank) {
+                condition = (val ?? (activeKcoInput === kcoSearch ? kcoSearch.value : '') ?? '').trim();
+                if (!condition) { activeKcoInput = kcoSearch; kcoSearch.focus(); renderKcoDropdown(''); return; }
+            }
             const i  = kcoRowIndex++;
             const tr = document.createElement('tr');
             tr.className = 'kco-row';
@@ -2674,13 +2862,23 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
                 <td><select name="exam_data[kco_rows][${i}][since]" class="form-select form-select-sm">${sinceOpts}</select></td>
                 <td><select name="exam_data[kco_rows][${i}][unit]" class="form-select form-select-sm">${unitOpts}</select></td>
                 <td><input type="text" name="exam_data[kco_rows][${i}][comment]" class="form-control form-control-sm" placeholder="Comment"></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="this.closest('tr').remove(); checkProgress(); updateLivePreview();">&times;</button></td>`;
-            document.getElementById('kcoBody').appendChild(tr);
-            const msg = document.getElementById('kcoEmptyMsg');
-            if (msg) { msg.style.display = 'none'; }
+                ${kcoRowActionsHtml}`;
+            if (afterTr) {
+                afterTr.insertAdjacentElement('afterend', tr);
+            } else {
+                document.getElementById('kcoBody').appendChild(tr);
+            }
+            syncKcoEmptyMsg();
             kcoSearch.value = '';
             kcoDropdown.classList.remove('show');
             activeKcoInput = null;
+            if (forceBlank) {
+                setTimeout(function () {
+                    openKcoDropdownForInput(tr.querySelector('.row-kco-search'), '');
+                }, 50);
+            } else if (condition) {
+                setTimeout(function () { openKcoSinceForRow(tr); }, 50);
+            }
             checkProgress();
             updateLivePreview();
             form.dispatchEvent(new Event('input', { bubbles: false }));
@@ -2691,6 +2889,21 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
         kcoSearch.addEventListener('input', function () { activeKcoInput = this; renderKcoDropdown(); });
         kcoSearch.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addKcoRow(this.value.trim()); } });
         document.getElementById('addKcoRow')?.addEventListener('click', () => addKcoRow(kcoSearch.value.trim()));
+        document.getElementById('kcoBody')?.addEventListener('click', function (e) {
+            const addBtn = e.target.closest('.kco-row-add-btn');
+            if (addBtn) {
+                addKcoRow('', { blank: true, afterTr: addBtn.closest('tr') });
+                return;
+            }
+            const delBtn = e.target.closest('.kco-row-del-btn');
+            if (delBtn) {
+                delBtn.closest('tr')?.remove();
+                syncKcoEmptyMsg();
+                checkProgress();
+                updateLivePreview();
+                form.dispatchEvent(new Event('input', { bubbles: false }));
+            }
+        });
 
         document.getElementById('kcoBody')?.addEventListener('focusin', function (e) {
             const input = e.target.closest('.row-kco-search');
@@ -2720,16 +2933,31 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             if (!item || e.target.closest('.co-fav-btn') || !activeKcoInput) { return; }
             e.preventDefault();
             const name = item.dataset.name || '';
+            const row = activeKcoInput.closest('tr');
             activeKcoInput.value = name;
             kcoDropdown.classList.remove('show');
-            if (activeKcoInput === kcoSearch) { addKcoRow(name); }
-            activeKcoInput.dispatchEvent(new Event('input', { bubbles: true }));
+            if (activeKcoInput === kcoSearch) {
+                addKcoRow(name);
+            } else {
+                activeKcoInput.dispatchEvent(new Event('input', { bubbles: true }));
+                setTimeout(function () { openKcoSinceForRow(row); }, 50);
+            }
         });
 
         document.addEventListener('mousedown', function (e) {
             if (!e.target.closest('#kcoDropdown') && !e.target.closest('.row-kco-search') && e.target !== kcoSearch) {
                 kcoDropdown.classList.remove('show');
                 activeKcoInput = null;
+            }
+        });
+
+        document.getElementById('kcoBody')?.addEventListener('keydown', function (e) {
+            const comment = e.target.closest('input[name*="[comment]"]');
+            if (!comment || e.key !== 'Enter') { return; }
+            e.preventDefault();
+            const hno = document.getElementById('hnoSearch');
+            if (hno) {
+                setTimeout(function () { hno.focus(); }, 50);
             }
         });
 
@@ -2856,6 +3084,10 @@ $medicinesForJs = $masters['medicines']->map(fn($m) => [
             hnoSearch.value = '';
             hnoDropdown.classList.remove('show');
             syncHnoHidden();
+            setTimeout(function () {
+                hnoSearch.focus();
+                renderHnoDropdown('');
+            }, 50);
         }
         window._addHnoChip = addHnoChip;
 
@@ -3813,16 +4045,43 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                     e.preventDefault();
                     if (!activeVInp) { return; }
                     const val = this.dataset.val;
-                    activeVInp.value = val;
-                    const hidden = activeVInp.closest('.vision-select-wrap')?.querySelector('input[type="hidden"]');
+                    const currentInp = activeVInp;
+                    currentInp.value = val;
+                    const hidden = currentInp.closest('.vision-select-wrap')?.querySelector('input[type="hidden"]');
                     if (hidden) { hidden.value = val; }
                     vdd.classList.remove('show');
                     activeVInp = null;
                     checkProgress();
                     updateLivePreview();
+                    advanceVisionField(currentInp);
                 });
             });
         }
+
+        function getVisionInputs() {
+            return Array.from(document.querySelectorAll('#modalVision .vision-inp'));
+        }
+
+        function openVisionDropdownForInput(inp, query) {
+            if (!inp) { return; }
+            activeVInp = inp;
+            inp.focus();
+            renderVdd(query !== undefined ? query : '');
+        }
+
+        function advanceVisionField(currentInp) {
+            const inputs = getVisionInputs();
+            const idx = inputs.indexOf(currentInp);
+            if (idx < 0 || idx >= inputs.length - 1) { return; }
+            setTimeout(function () { openVisionDropdownForInput(inputs[idx + 1], ''); }, 50);
+        }
+
+        document.getElementById('modalVision')?.addEventListener('shown.bs.modal', function () {
+            const inputs = getVisionInputs();
+            if (inputs.length) {
+                setTimeout(function () { openVisionDropdownForInput(inputs[0], ''); }, 120);
+            }
+        });
 
         document.querySelectorAll('.vision-inp').forEach(inp => {
             inp.addEventListener('focus',  function () { activeVInp = this; renderVdd(''); });

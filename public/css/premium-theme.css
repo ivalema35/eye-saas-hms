@@ -76,17 +76,33 @@ label {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 72px;
+    min-height: 72px;
+    max-height: 72px;
     padding: 0;
+    overflow: hidden;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    margin-bottom: .4rem;
+    margin-bottom: .45rem;
+    flex-shrink: 0;
 }
 
 .sidebar-logo {
-    height: 72px;
+    display: block;
     width: auto;
-    max-width: 220px;
+    height: auto;
+    max-height: 52px;
+    max-width: min(100%, 210px);
     object-fit: contain;
+    object-position: center;
     image-rendering: auto;
+    transform: none;
+}
+
+.sidebar-logo.platform-logo-on-dark,
+.sidebar-logo.hospital-brand-logo {
+    max-height: 52px;
+    max-width: min(100%, 210px);
+    transform: none;
 }
 
 .hms-nav-item {

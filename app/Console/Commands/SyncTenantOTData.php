@@ -201,6 +201,7 @@ class SyncTenantOTData extends Command
                 'opd.patient.view',
                 'opd.exam.history',
                 'reports.view',
+                'reports.export',
             ],
             'accountant' => [
                 'ot.patient.list',

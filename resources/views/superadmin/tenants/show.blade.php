@@ -90,6 +90,48 @@
                         <div style="font-size:.9rem;font-weight:500;color:#1A202C">{{ $value }}</div>
                     </div>
                 @endforeach
+
+                <div>
+                    <div
+                        style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B;margin-bottom:.25rem">
+                        Admin Password
+                    </div>
+                    <div style="font-size:.9rem;font-weight:500;color:#1A202C">
+                        @if($adminUser?->original_password)
+                            @php
+                                $adminPassword = $adminUser->original_password;
+                                $maskedPassword = str_repeat('•', max(strlen($adminPassword), 8));
+                            @endphp
+                            <span class="sa-admin-password-cell" style="display:inline-flex;align-items:center;gap:.35rem;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace">
+                                <span class="sa-password-mask" data-password="{{ $adminPassword }}">{{ $maskedPassword }}</span>
+                                <button type="button" class="sa-password-reveal" title="Show password"
+                                    style="border:none;background:rgba(27,79,114,.08);color:#1B4F72;width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                <button type="button" class="sa-password-copy"
+                                    data-copy="{{ $adminPassword }}" title="Copy password"
+                                    style="border:none;background:rgba(27,79,114,.08);color:#1B4F72;width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </span>
+                        @else
+                            <span style="color:#64748B">Not stored — set a new password via Edit</span>
+                        @endif
+                    </div>
+                </div>
+
+                <div>
+                    <div
+                        style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#64748B;margin-bottom:.25rem">
+                        Login URL
+                    </div>
+                    <div style="font-size:.9rem;font-weight:500;color:#1A202C">
+                        <a href="{{ url($tenant->slug . '/login') }}" target="_blank" rel="noopener"
+                            style="color:#2980B9;text-decoration:none">
+                            {{ url($tenant->slug . '/login') }}
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -103,7 +145,8 @@
             </div>
             <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.625rem">
                 @if($tenant->status === 'pending')
-                    <form method="POST" action="{{ route('superadmin.hospitals.approve', $tenant) }}">
+                    <form method="POST" action="{{ route('superadmin.hospitals.approve', $tenant) }}"
+                        onsubmit="this.querySelector('button[type=submit]').disabled=true">
                         @csrf
                         <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm" style="width:100%; color: #1B4F72;">
                             <i class="bi bi-check-lg"></i> Accept Registration
@@ -318,4 +361,43 @@
             });
         </script>
     @endif
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.sa-password-reveal').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var cell = btn.closest('.sa-admin-password-cell');
+                    if (!cell) { return; }
+                    var mask = cell.querySelector('.sa-password-mask');
+                    var icon = btn.querySelector('i');
+                    var pwd = mask ? (mask.dataset.password || '') : '';
+                    if (!mask || !icon) { return; }
+
+                    if (mask.dataset.visible === '1') {
+                        mask.textContent = '•'.repeat(Math.max(pwd.length, 8));
+                        mask.dataset.visible = '0';
+                        icon.classList.replace('bi-eye-slash-fill', 'bi-eye-fill');
+                        btn.setAttribute('title', 'Show password');
+                    } else {
+                        mask.textContent = pwd;
+                        mask.dataset.visible = '1';
+                        icon.classList.replace('bi-eye-fill', 'bi-eye-slash-fill');
+                        btn.setAttribute('title', 'Hide password');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.sa-password-copy').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var value = btn.dataset.copy || '';
+                    if (!value || !navigator.clipboard) { return; }
+                    navigator.clipboard.writeText(value).then(function () {
+                        btn.innerHTML = '<i class="bi bi-check2"></i>';
+                        setTimeout(function () {
+                            btn.innerHTML = '<i class="bi bi-clipboard"></i>';
+                        }, 1200);
+                    });
+                });
+            });
+        });
+    </script>
 @endpush
