@@ -43,11 +43,12 @@ class UserApiController extends Controller
         }
 
         $users = $query->orderBy('name')->paginate(25);
+        $viewerIsAdmin = (bool) $request->user()->role?->is_super;
 
         return response()->json([
             'success' => true,
             'data' => [
-                'users' => $users->map(fn ($u) => $this->formatUser($u)),
+                'users' => $users->map(fn ($u) => $this->formatUser($u, viewerIsAdmin: $viewerIsAdmin)),
                 'meta'  => [
                     'current_page' => $users->currentPage(),
                     'last_page'    => $users->lastPage(),
@@ -88,13 +89,14 @@ class UserApiController extends Controller
 
     // ── GET /config/users/{id} ─────────────────────────────────────────────────
 
-    public function show(string $slug, string $id): JsonResponse
+    public function show(Request $request, string $slug, string $id): JsonResponse
     {
         $user = HospitalUser::with('role.grantedPermissions')->findOrFail($id);
+        $viewerIsAdmin = (bool) $request->user()->role?->is_super;
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: $viewerIsAdmin),
         ]);
     }
 
@@ -135,6 +137,7 @@ class UserApiController extends Controller
             'contact'           => $validated['contact'] ?? null,
             'role_id'           => $validated['role_id'],
             'password'          => $validated['password'],
+            'original_password' => $validated['password'],
             'status'            => $validated['status'],
             'doctor_type'       => $validated['doctor_type'] ?? null,
             'doctor_prefix'     => isset($validated['doctor_prefix'])
@@ -151,7 +154,7 @@ class UserApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: true),
             'message' => 'User created successfully.',
         ], 201);
     }
@@ -230,6 +233,7 @@ class UserApiController extends Controller
 
         if (! empty($validated['password'])) {
             $user->password = $validated['password'];
+            $user->original_password = $validated['password'];
             $user->save();
         }
 
@@ -237,7 +241,7 @@ class UserApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: true),
             'message' => 'User updated successfully.',
         ]);
     }
@@ -281,7 +285,7 @@ class UserApiController extends Controller
 
     // ── Private Helpers ────────────────────────────────────────────────────────
 
-    private function formatUser(HospitalUser $user, bool $full = false): array
+    private function formatUser(HospitalUser $user, bool $full = false, bool $viewerIsAdmin = false): array
     {
         $base = [
             'id'       => $user->id,
@@ -300,6 +304,13 @@ class UserApiController extends Controller
             'foc_permission'  => (bool) $user->foc_permission,
             'last_login_at'   => $user->last_login_at?->toISOString(),
         ];
+
+        // Plain-text password, shown only to Hospital Admins — mirrors
+        // web's $showUserPasswords gate exactly. See
+        // USER_PASSWORD_VISIBILITY_PARITY_PLAN.md.
+        if ($viewerIsAdmin) {
+            $base['original_password'] = $user->original_password;
+        }
 
         if ($full) {
             $base['doctor_type']       = $user->doctor_type;
