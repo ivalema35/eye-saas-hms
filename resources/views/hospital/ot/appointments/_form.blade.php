@@ -52,15 +52,20 @@
 <div class="rpc-grid rpc-grid--4">
     <div class="rpc-field">
         <label class="form-label">Contact Number <span class="req">*</span></label>
-        <input type="text" name="mobile_no" id="mobile_no" class="form-control hms-input @error('mobile_no') is-invalid @enderror"
-            value="{{ old('mobile_no', $appointment->mobile_no ?? '') }}" data-intl-phone required placeholder="10-digit number">
-        @error('mobile_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+        <input type="text" name="mobile_no" id="mobile_no"
+            class="form-control hms-input @error('mobile_no') is-invalid @enderror"
+            value="{{ old('mobile_no', $appointment->mobile_no ?? '') }}" data-intl-phone required
+            placeholder="10-digit number">
+        @error('mobile_no')
+        <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="rpc-field">
         <label class="form-label">WhatsApp Number</label>
         <input type="text" name="whatsapp_no" class="form-control hms-input @error('whatsapp_no') is-invalid @enderror"
-            value="{{ old('whatsapp_no', $appointment->whatsapp_no ?? '') }}" data-intl-phone placeholder="Same if blank">
-        @error('whatsapp_no')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
+            value="{{ old('whatsapp_no', $appointment->whatsapp_no ?? '') }}" data-intl-phone
+            placeholder="Same if blank">
+        @error('whatsapp_no')
+        <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
     <div class="rpc-field">
         <label class="form-label">First Name <span class="req">*</span></label>
@@ -113,7 +118,8 @@
     </div>
     <div class="rpc-field">
         <label class="form-label">District</label>
-        <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto-filled" tabindex="-1">
+        <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto-filled"
+            tabindex="-1">
     </div>
     <div class="rpc-field">
         <label class="form-label">State</label>
@@ -163,7 +169,7 @@
             var addBtn = document.getElementById('btnAddOtLocation');
             if (!addBtn) return;
 
-            var modalHtml = '<div class="modal fade" id="modalAddOtLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#fff">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addOtLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newOtCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newOtDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newOtState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveOtLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
+            var modalHtml = '<div class="modal fade" id="modalAddOtLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#1b4f72">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addOtLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newOtCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newOtDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newOtState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveOtLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
             document.body.insertAdjacentHTML('beforeend', modalHtml);
 
             var modalEl = document.getElementById('modalAddOtLocation');

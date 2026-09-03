@@ -18,12 +18,14 @@
             <div class="rpc-form-body">
                 @if($errors->any())
                     <div class="alert alert-danger py-2 px-3 mb-2" style="font-size:.82rem;border-radius:8px">
-                        <ul class="mb-0 ps-3">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
-                    </div>
+                        <ul class="mb-0 ps-3">@foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>@endforeach
+                        </ul>
+                </div>
                 @endif
-                <form method="POST" action="{{ route('hospital.patients.store-phone', ['slug' => $slug]) }}"
+            <form method="POST" action="{{ route('hospital.patients.store-phone', ['slug' => $slug]) }}"
                     class="patient-create-form" id="phonePatientForm">
-                    @csrf
+                @csrf
 
                     {{-- Row 1 --}}
                     <div class="rpc-grid">
@@ -37,7 +39,8 @@
                             <label class="form-label">Contact <span class="req">*</span></label>
                             <input type="text" name="contact_no" id="contactNo" value="{{ old('contact_no') }}"
                                 class="form-control hms-input" data-intl-phone required placeholder="10-digit number">
-                            <div id="patientSuggestions" class="position-absolute w-100 bg-white rounded d-none rpc-suggestions"
+                            <div id="patientSuggestions"
+                                class="position-absolute w-100 bg-white rounded d-none rpc-suggestions"
                                 style="top:100%;margin-top:4px"></div>
                         </div>
                         <div class="rpc-field">
@@ -67,7 +70,8 @@
                         <div class="rpc-field">
                             <label class="form-label">City <span class="req">*</span></label>
                             <div class="rpc-city-row">
-                                <select name="location_id" id="locationSelect" class="form-control select2 hms-select rpc-auto-open" required>
+                                <select name="location_id" id="locationSelect"
+                                    class="form-control select2 hms-select rpc-auto-open" required>
                                     <option value="">Select or add</option>
                                     @foreach($locations as $loc)
                                         <option value="{{ $loc->id }}" data-district="{{ $loc->district?->name }}"
@@ -76,23 +80,28 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline rpc-city-add">+</button>
+                                <button type="button" id="btnAddLocation"
+                                    class="hms-btn hms-btn-outline rpc-city-add">+</button>
                             </div>
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">District</label>
-                            <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto" tabindex="-1">
+                            <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto"
+                                tabindex="-1">
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">State</label>
-                            <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto" tabindex="-1">
+                            <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto"
+                                tabindex="-1">
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">Doctor <span class="req">*</span></label>
-                            <select name="doctor_id" id="doctorSelect" class="form-control select2 hms-select rpc-auto-open" required>
+                            <select name="doctor_id" id="doctorSelect" class="form-control select2 hms-select rpc-auto-open"
+                                required>
                                 <option value="">--Select--</option>
                                 @foreach($doctors as $doc)
-                                    <option value="{{ $doc->id }}" @selected(old('doctor_id') == $doc->id)>{{ $doc->name }}</option>
+                                    <option value="{{ $doc->id }}" @selected(old('doctor_id') == $doc->id)>{{ $doc->name }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -105,7 +114,8 @@
                             <select name="slot_id" id="slotSelect" class="form-control select2 hms-select rpc-auto-open">
                                 <option value="">--Select--</option>
                                 @foreach($slots as $s)
-                                    <option value="{{ $s->id }}" @selected(old('slot_id') == $s->id)>{{ $s->slot_name ?? $s->id }}</option>
+                                    <option value="{{ $s->id }}" @selected(old('slot_id') == $s->id)>{{ $s->slot_name ?? $s->id }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
@@ -130,7 +140,8 @@
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">Referred By</label>
-                            <select name="referrer_id" id="referrerSelect" class="form-control select2 hms-select rpc-auto-open">
+                            <select name="referrer_id" id="referrerSelect"
+                                class="form-control select2 hms-select rpc-auto-open">
                                 <option value="">Select referrer</option>
                                 @foreach($referrers as $r)
                                     <option value="{{ $r->id }}" @selected(old('referrer_id') == $r->id)>{{ $r->name }}</option>
@@ -145,7 +156,7 @@
                         </button>
                     </div>
                 </form>
-            </div>
+                </div>
         </div>
     </div>
 
@@ -162,10 +173,10 @@
             var searchUrl = '{{ route('hospital.patients.search-by-contact', ['slug' => $slug]) }}';
 
             ReceptionPatientForm.initPlugins({
-                dateFormat: 'Y-m-d',
-                defaultDate: new Date().fp_incr(1),
+                    dateFormat: 'Y-m-d',
+                    defaultDate: new Date().fp_incr(1),
                 minDate: 'today'
-            });
+                });
             ReceptionPatientForm.bindAutoOpenSelects(document.querySelector('.rpc-page'));
             ReceptionPatientForm.bindSubmitFocus('#phonePatientForm', '#rpcSubmitBtn');
 
@@ -271,10 +282,10 @@
 
             var addBtn = document.getElementById('btnAddLocation');
             if (addBtn) {
-                var modalHtml = '<div class="modal fade" id="modalAddLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#fff">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
-                document.body.insertAdjacentHTML('beforeend', modalHtml);
-                var modalEl = document.getElementById('modalAddLocation');
-                addBtn.addEventListener('click', function () {
+                var modalHtml = '<div class="modal fade" id="modalAddLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#1b4f72">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            var modalEl = document.getElementById('modalAddLocation');
+            addBtn.addEventListener('click', function () {
                     bootstrap.Modal.getOrCreateInstance(modalEl).show();
                 });
                 document.getElementById('saveLocationBtn').addEventListener('click', function () {

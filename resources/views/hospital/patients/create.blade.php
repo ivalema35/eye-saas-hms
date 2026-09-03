@@ -18,10 +18,13 @@
             <div class="rpc-form-body">
                 @if($errors->any())
                     <div class="alert alert-danger py-2 px-3 mb-2" style="font-size:.82rem;border-radius:8px">
-                        <ul class="mb-0 ps-3">@foreach($errors->all() as $err)<li>{{ $err }}</li>@endforeach</ul>
+                        <ul class="mb-0 ps-3">@foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>@endforeach
+                        </ul>
                     </div>
                 @endif
-                <form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}" class="patient-create-form" id="walkinPatientForm">
+                <form method="POST" action="{{ route('hospital.patients.store', ['slug' => $slug]) }}"
+                    class="patient-create-form" id="walkinPatientForm">
                     @csrf
                     <input type="hidden" name="ot_appointment_id" id="otAppointmentId"
                         value="{{ old('ot_appointment_id', $prefillOtAppointment['id'] ?? '') }}">
@@ -35,7 +38,8 @@
                             <label class="form-label">Search OT Appointment</label>
                             <input type="text" id="appointmentSearch" class="form-control hms-input"
                                 placeholder="Name, mobile, or APT number...">
-                            <div id="appointmentSuggestions" class="position-absolute w-100 bg-white rounded d-none rpc-suggestions"
+                            <div id="appointmentSuggestions"
+                                class="position-absolute w-100 bg-white rounded d-none rpc-suggestions"
                                 style="top:100%;margin-top:4px"></div>
                             <div id="appointmentLinkedNote" class="rpc-ot-linked d-none">
                                 <i class="bi bi-check2-circle"></i> Linked to <strong id="appointmentLinkedNumber"></strong>
@@ -54,7 +58,8 @@
                             <label class="form-label">Contact <span class="req">*</span></label>
                             <input type="text" name="contact_no" id="contactNo" class="form-control hms-input"
                                 data-intl-phone required placeholder="10-digit number">
-                            <div id="patientSuggestions" class="position-absolute w-100 bg-white rounded d-none rpc-suggestions"
+                            <div id="patientSuggestions"
+                                class="position-absolute w-100 bg-white rounded d-none rpc-suggestions"
                                 style="top:100%;margin-top:4px"></div>
                         </div>
                         <div class="rpc-field">
@@ -87,7 +92,8 @@
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">Case Type <span class="req">*</span></label>
-                            <select name="case_id" id="caseSelect" class="form-control select2 hms-select rpc-auto-open" required>
+                            <select name="case_id" id="caseSelect" class="form-control select2 hms-select rpc-auto-open"
+                                required>
                                 <option value="">--Select--</option>
                                 @foreach($cases as $c)
                                     <option value="{{ $c->id }}" data-fee="{{ $c->fee ?? 0 }}">{{ $c->name }}</option>
@@ -96,28 +102,33 @@
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">Case Fee ({{ currency_symbol() }}) <span class="req">*</span></label>
-                            <input type="number" name="case_fee" id="caseFee" class="form-control hms-input" required readonly>
+                            <input type="number" name="case_fee" id="caseFee" class="form-control hms-input" required
+                                readonly>
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">City <span class="req">*</span></label>
                             <div class="rpc-city-row">
-                                <select name="location_id" id="locationSelect" class="form-control select2 hms-select rpc-auto-open" required>
+                                <select name="location_id" id="locationSelect"
+                                    class="form-control select2 hms-select rpc-auto-open" required>
                                     <option value="">Select or add</option>
                                     @foreach($locations as $loc)
                                         <option value="{{ $loc->id }}" data-district="{{ $loc->district?->name }}"
                                             data-state="{{ $loc->state?->name }}">{{ $loc->name }}</option>
                                     @endforeach
                                 </select>
-                                <button type="button" id="btnAddLocation" class="hms-btn hms-btn-outline rpc-city-add">+</button>
+                                <button type="button" id="btnAddLocation"
+                                    class="hms-btn hms-btn-outline rpc-city-add">+</button>
                             </div>
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">District</label>
-                            <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto" tabindex="-1">
+                            <input type="text" id="district" class="form-control hms-input" readonly placeholder="Auto"
+                                tabindex="-1">
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">State</label>
-                            <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto" tabindex="-1">
+                            <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto"
+                                tabindex="-1">
                         </div>
                     </div>
 
@@ -125,7 +136,8 @@
                     <div class="rpc-grid">
                         <div class="rpc-field">
                             <label class="form-label">Doctor <span class="req">*</span></label>
-                            <select name="doctor_id" id="doctorSelect" class="form-control select2 hms-select rpc-auto-open" required>
+                            <select name="doctor_id" id="doctorSelect" class="form-control select2 hms-select rpc-auto-open"
+                                required>
                                 <option value="">--Select--</option>
                                 @foreach($doctors as $doc)
                                     <option value="{{ $doc->id }}">{{ $doc->name }}</option>
@@ -153,7 +165,8 @@
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">Referred By</label>
-                            <select name="referrer_id" id="referrerSelect" class="form-control select2 hms-select rpc-auto-open">
+                            <select name="referrer_id" id="referrerSelect"
+                                class="form-control select2 hms-select rpc-auto-open">
                                 <option value="">Select referrer</option>
                                 @foreach($referrers as $r)
                                     <option value="{{ $r->id }}">{{ $r->name }}</option>
@@ -395,7 +408,7 @@
 
             var addBtn = document.getElementById('btnAddLocation');
             if (addBtn) {
-                var modalHtml = '<div class="modal fade" id="modalAddLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#fff">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
+                var modalHtml = '<div class="modal fade" id="modalAddLocation" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-sm modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" style="color:#1b4f72">Add City</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="addLocErrors" class="text-danger mb-2"></div><div class="mb-2"><label class="form-label">City</label><input type="text" id="newCity" class="form-control"></div><div class="mb-2"><label class="form-label">District</label><input type="text" id="newDistrict" class="form-control"></div><div class="mb-2"><label class="form-label">State</label><input type="text" id="newState" class="form-control"></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" id="saveLocationBtn" class="btn btn-primary">Add</button></div></div></div></div>';
                 document.body.insertAdjacentHTML('beforeend', modalHtml);
                 var modalEl = document.getElementById('modalAddLocation');
                 addBtn.addEventListener('click', function () {
