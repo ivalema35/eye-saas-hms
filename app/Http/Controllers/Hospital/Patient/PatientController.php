@@ -593,6 +593,9 @@ class PatientController extends Controller
         ]);
         $tenant = app('tenant');
 
+        // Ensure PDF generation uses hospital country timezone
+        \App\Services\Platform\CurrencyService::applyTenantCurrencyToConfig($tenant);
+
         $pdf = Pdf::loadView('pdfs.opd-bill', compact('patient', 'tenant'))
             ->setPaper('a4', 'portrait');
 
