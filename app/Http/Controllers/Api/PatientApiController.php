@@ -10,6 +10,7 @@ use App\Models\Hospital\Patient;
 use App\Models\Platform\HospitalShareRequest;
 use App\Services\Hospital\PatientService;
 use App\Support\PhoneRules;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -245,7 +246,20 @@ class PatientApiController extends Controller
             'referrer_id'      => ['nullable', 'integer'],
             'is_old_patient'   => ['nullable', 'boolean'],
             'slot_id'          => ['nullable', 'integer'],
+            'expected_updated_at' => ['sometimes', 'nullable', 'date'],
         ]);
+
+        // Optimistic concurrency check — reject a save if the record changed
+        // elsewhere (web/another platform) since the client last fetched it.
+        // See ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 1 Task 1.2.
+        if (! empty($validated['expected_updated_at'])
+            && ! $patient->updated_at->equalTo(Carbon::parse($validated['expected_updated_at']))) {
+            return response()->json([
+                'error' => 'This record was changed elsewhere. Please reload before saving.',
+                'code'  => 'stale_record',
+            ], 409);
+        }
+        unset($validated['expected_updated_at']);
 
         $patient->update($validated);
         $patient->load(['doctor:id,name', 'location:id,city,district,state', 'caseType:id,case_type']);

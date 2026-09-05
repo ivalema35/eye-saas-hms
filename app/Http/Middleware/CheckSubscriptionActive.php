@@ -39,8 +39,14 @@ class CheckSubscriptionActive
                 default => 'Your hospital plan has expired. Please contact the administrator.',
             };
 
+            $code = match ($tenant->status) {
+                'pending' => 'pending_approval',
+                'suspended' => 'suspended',
+                default => 'subscription_expired',
+            };
+
             if ($request->expectsJson()) {
-                return response()->json(['error' => $message], 403);
+                return response()->json(['error' => $message, 'code' => $code], 403);
             }
 
             return redirect()

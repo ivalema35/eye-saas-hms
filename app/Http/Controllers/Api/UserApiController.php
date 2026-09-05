@@ -7,6 +7,7 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Role\Role;
 use App\Support\EmailRules;
 use App\Support\PhoneRules;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -188,7 +189,19 @@ class UserApiController extends Controller
             // Explicit clear flags (mobile sends "1" to remove existing file)
             'clear_signature'    => ['nullable', 'boolean'],
             'clear_profile_photo'=> ['nullable', 'boolean'],
+            'expected_updated_at'=> ['nullable', 'date'],
         ], array_merge(EmailRules::messages('email'), PhoneRules::messages('contact')));
+
+        // Optimistic concurrency check — reject a save if the record changed
+        // elsewhere (web/another platform) since the client last fetched it.
+        // See ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 1 Task 1.2.
+        if (! empty($validated['expected_updated_at'])
+            && ! $user->updated_at->equalTo(Carbon::parse($validated['expected_updated_at']))) {
+            return response()->json([
+                'error' => 'This record was changed elsewhere. Please reload before saving.',
+                'code'  => 'stale_record',
+            ], 409);
+        }
 
         $tenantId = (int) config('app.tenant_id');
 
@@ -303,6 +316,9 @@ class UserApiController extends Controller
             ] : null,
             'foc_permission'  => (bool) $user->foc_permission,
             'last_login_at'   => $user->last_login_at?->toISOString(),
+            // Round-tripped by the app as `expected_updated_at` on the next
+            // edit — see ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 5.
+            'updated_at'      => $user->updated_at?->toISOString(),
         ];
 
         // Plain-text password, shown only to Hospital Admins — mirrors
