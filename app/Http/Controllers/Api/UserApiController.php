@@ -7,6 +7,7 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Role\Role;
 use App\Support\EmailRules;
 use App\Support\PhoneRules;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -43,11 +44,12 @@ class UserApiController extends Controller
         }
 
         $users = $query->orderBy('name')->paginate(25);
+        $viewerIsAdmin = (bool) $request->user()->role?->is_super;
 
         return response()->json([
             'success' => true,
             'data' => [
-                'users' => $users->map(fn ($u) => $this->formatUser($u)),
+                'users' => $users->map(fn ($u) => $this->formatUser($u, viewerIsAdmin: $viewerIsAdmin)),
                 'meta'  => [
                     'current_page' => $users->currentPage(),
                     'last_page'    => $users->lastPage(),
@@ -88,13 +90,14 @@ class UserApiController extends Controller
 
     // ── GET /config/users/{id} ─────────────────────────────────────────────────
 
-    public function show(string $slug, string $id): JsonResponse
+    public function show(Request $request, string $slug, string $id): JsonResponse
     {
         $user = HospitalUser::with('role.grantedPermissions')->findOrFail($id);
+        $viewerIsAdmin = (bool) $request->user()->role?->is_super;
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: $viewerIsAdmin),
         ]);
     }
 
@@ -135,6 +138,7 @@ class UserApiController extends Controller
             'contact'           => $validated['contact'] ?? null,
             'role_id'           => $validated['role_id'],
             'password'          => $validated['password'],
+            'original_password' => $validated['password'],
             'status'            => $validated['status'],
             'doctor_type'       => $validated['doctor_type'] ?? null,
             'doctor_prefix'     => isset($validated['doctor_prefix'])
@@ -151,7 +155,7 @@ class UserApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: true),
             'message' => 'User created successfully.',
         ], 201);
     }
@@ -185,7 +189,19 @@ class UserApiController extends Controller
             // Explicit clear flags (mobile sends "1" to remove existing file)
             'clear_signature'    => ['nullable', 'boolean'],
             'clear_profile_photo'=> ['nullable', 'boolean'],
+            'expected_updated_at'=> ['nullable', 'date'],
         ], array_merge(EmailRules::messages('email'), PhoneRules::messages('contact')));
+
+        // Optimistic concurrency check — reject a save if the record changed
+        // elsewhere (web/another platform) since the client last fetched it.
+        // See ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 1 Task 1.2.
+        if (! empty($validated['expected_updated_at'])
+            && ! $user->updated_at->equalTo(Carbon::parse($validated['expected_updated_at']))) {
+            return response()->json([
+                'error' => 'This record was changed elsewhere. Please reload before saving.',
+                'code'  => 'stale_record',
+            ], 409);
+        }
 
         $tenantId = (int) config('app.tenant_id');
 
@@ -230,6 +246,7 @@ class UserApiController extends Controller
 
         if (! empty($validated['password'])) {
             $user->password = $validated['password'];
+            $user->original_password = $validated['password'];
             $user->save();
         }
 
@@ -237,7 +254,7 @@ class UserApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: true),
             'message' => 'User updated successfully.',
         ]);
     }
@@ -281,7 +298,7 @@ class UserApiController extends Controller
 
     // ── Private Helpers ────────────────────────────────────────────────────────
 
-    private function formatUser(HospitalUser $user, bool $full = false): array
+    private function formatUser(HospitalUser $user, bool $full = false, bool $viewerIsAdmin = false): array
     {
         $base = [
             'id'       => $user->id,
@@ -299,7 +316,17 @@ class UserApiController extends Controller
             ] : null,
             'foc_permission'  => (bool) $user->foc_permission,
             'last_login_at'   => $user->last_login_at?->toISOString(),
+            // Round-tripped by the app as `expected_updated_at` on the next
+            // edit — see ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 5.
+            'updated_at'      => $user->updated_at?->toISOString(),
         ];
+
+        // Plain-text password, shown only to Hospital Admins — mirrors
+        // web's $showUserPasswords gate exactly. See
+        // USER_PASSWORD_VISIBILITY_PARITY_PLAN.md.
+        if ($viewerIsAdmin) {
+            $base['original_password'] = $user->original_password;
+        }
 
         if ($full) {
             $base['doctor_type']       = $user->doctor_type;

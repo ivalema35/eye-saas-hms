@@ -10,6 +10,7 @@ use App\Models\Hospital\Patient;
 use App\Models\Platform\HospitalShareRequest;
 use App\Services\Hospital\PatientService;
 use App\Support\PhoneRules;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,24 @@ class PatientApiController extends Controller
 {
     public function __construct(private PatientService $patientService) {}
 
+    /**
+     * Patient::location() points at the legacy `locations` table, but
+     * `location_id` is actually validated/populated as a `tbl_master_cities`
+     * id (see web's PatientController validation rule). Build the response
+     * shape the apps expect ({id, city, district, state}) from the correct
+     * masterCity relation instead of the broken `location` eager-load.
+     * See PATIENT_DATA_EMPTY_FIELDS_AUDIT.md.
+     */
+    private function locationArray(Patient $patient): array
+    {
+        return [
+            'id'       => $patient->location_id,
+            'city'     => $patient->cityName,
+            'district' => $patient->districtName,
+            'state'    => $patient->stateName,
+        ];
+    }
+
     public function index(Request $request): JsonResponse
     {
         $today = now()->toDateString();
@@ -25,11 +44,15 @@ class PatientApiController extends Controller
         $search = trim((string) $request->input('search', ''));
 
         $authUser = auth('sanctum')->user();
-        $doctorUserId = ($authUser && $authUser->doctor_type !== null) ? $authUser->id : null;
+        // Matches web's PatientController::index() exactly — scope by role
+        // slug, not doctor_type (a separate, not-guaranteed-in-sync column).
+        // See ROLES_PERMISSIONS_PARITY_AUDIT.md.
+        $doctorUserId = ($authUser && $authUser->role?->slug === 'doctor') ? $authUser->id : null;
 
         $query = Patient::with([
             'doctor:id,name',
-            'location:id,city,district,state',
+            'masterCity.district',
+            'masterCity.state',
             'caseType:id,case_type',
             'referrer:id,name',
             'primaryExamination:id,patient_id,exam_data,dilation_time,updated_at',
@@ -85,6 +108,7 @@ class PatientApiController extends Controller
         $items = $patients->getCollection()->map(function (Patient $p) {
             $arr = $p->toArray();
             $arr['full_name'] = $p->full_name;
+            $arr['location'] = $this->locationArray($p);
 
             // Dilation logic
             $arr['unlock_time_ms'] = null;
@@ -130,7 +154,8 @@ class PatientApiController extends Controller
     {
         $patient->load([
             'doctor:id,name',
-            'location:id,city,district,state',
+            'masterCity.district',
+            'masterCity.state',
             'caseType:id,case_type',
             'referrer:id,name',
             'primaryExamination',
@@ -139,6 +164,7 @@ class PatientApiController extends Controller
 
         $arr = $patient->toArray();
         $arr['full_name'] = $patient->full_name;
+        $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr]);
     }
@@ -187,10 +213,11 @@ class PatientApiController extends Controller
                 ]);
         }
 
-        $patient->load(['doctor:id,name', 'location:id,city,district,state', 'caseType:id,case_type']);
+        $patient->load(['doctor:id,name', 'masterCity.district', 'masterCity.state', 'caseType:id,case_type']);
 
         $arr = $patient->toArray();
         $arr['full_name'] = $patient->full_name;
+        $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr, 'message' => 'Patient registered successfully.'], 201);
     }
@@ -218,10 +245,11 @@ class PatientApiController extends Controller
         $validated['reception_id'] = auth('sanctum')->id();
 
         $patient = $this->patientService->registerPhone($validated, $tenant->id);
-        $patient->load(['doctor:id,name', 'location:id,city,district,state']);
+        $patient->load(['doctor:id,name', 'masterCity.district', 'masterCity.state']);
 
         $arr = $patient->toArray();
         $arr['full_name'] = $patient->full_name;
+        $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr, 'message' => 'Phone appointment registered.'], 201);
     }
@@ -245,13 +273,27 @@ class PatientApiController extends Controller
             'referrer_id'      => ['nullable', 'integer'],
             'is_old_patient'   => ['nullable', 'boolean'],
             'slot_id'          => ['nullable', 'integer'],
+            'expected_updated_at' => ['sometimes', 'nullable', 'date'],
         ]);
 
+        // Optimistic concurrency check — reject a save if the record changed
+        // elsewhere (web/another platform) since the client last fetched it.
+        // See ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 1 Task 1.2.
+        if (! empty($validated['expected_updated_at'])
+            && ! $patient->updated_at->equalTo(Carbon::parse($validated['expected_updated_at']))) {
+            return response()->json([
+                'error' => 'This record was changed elsewhere. Please reload before saving.',
+                'code'  => 'stale_record',
+            ], 409);
+        }
+        unset($validated['expected_updated_at']);
+
         $patient->update($validated);
-        $patient->load(['doctor:id,name', 'location:id,city,district,state', 'caseType:id,case_type']);
+        $patient->load(['doctor:id,name', 'masterCity.district', 'masterCity.state', 'caseType:id,case_type']);
 
         $arr = $patient->toArray();
         $arr['full_name'] = $patient->full_name;
+        $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr, 'message' => 'Patient updated successfully.']);
     }
@@ -378,10 +420,11 @@ class PatientApiController extends Controller
         });
 
         $patient->refresh();
-        $patient->load(['doctor:id,name', 'location:id,city,district,state', 'caseType:id,case_type']);
+        $patient->load(['doctor:id,name', 'masterCity.district', 'masterCity.state', 'caseType:id,case_type']);
 
         $arr = $patient->toArray();
         $arr['full_name'] = $patient->full_name;
+        $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr, 'message' => 'Patient checked in successfully.']);
     }

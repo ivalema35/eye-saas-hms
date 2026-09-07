@@ -67,7 +67,10 @@ class ExamApiController extends Controller
     public function showSecondary(string $slug, int $patientId): JsonResponse
     {
         $patient = Patient::findOrFail($patientId);
-        $exam = $patient->secondaryExamination()->with('prescriptions.medicine', 'prescriptions.dosage')->first();
+        // Secondary exams have no `prescriptions` relationship — unlike
+        // Primary, their medicines are stored inline in exam_data['rx']
+        // via PatientPrescription (exam_type: 'secondary'), not a hasMany.
+        $exam = $patient->secondaryExamination()->first();
 
         if (! $exam) {
             return response()->json([
