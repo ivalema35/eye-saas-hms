@@ -44,7 +44,10 @@ class PatientApiController extends Controller
         $search = trim((string) $request->input('search', ''));
 
         $authUser = auth('sanctum')->user();
-        $doctorUserId = ($authUser && $authUser->doctor_type !== null) ? $authUser->id : null;
+        // Matches web's PatientController::index() exactly — scope by role
+        // slug, not doctor_type (a separate, not-guaranteed-in-sync column).
+        // See ROLES_PERMISSIONS_PARITY_AUDIT.md.
+        $doctorUserId = ($authUser && $authUser->role?->slug === 'doctor') ? $authUser->id : null;
 
         $query = Patient::with([
             'doctor:id,name',

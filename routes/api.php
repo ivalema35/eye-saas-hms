@@ -367,59 +367,65 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::delete('masters/referrers-crud/{id}', [MasterApiController::class, 'referrerDestroy'])
                         ->middleware('permission:master.locations');
 
-                    // Masters — OT Lens Options CRUD (Round 3 gap-fill; previously only
-                    // reachable via the wrongly-permissioned masters/detail/lens-options)
-                    Route::get('masters/ot-lens-options',         [MasterApiController::class, 'otLensOptionIndex'])
-                        ->middleware('permission:master.ot_inventory');
-                    Route::post('masters/ot-lens-options',        [MasterApiController::class, 'otLensOptionStore'])
-                        ->middleware('permission:master.ot_inventory');
-                    Route::put('masters/ot-lens-options/{id}',    [MasterApiController::class, 'otLensOptionUpdate'])
-                        ->middleware('permission:master.ot_inventory');
-                    Route::delete('masters/ot-lens-options/{id}', [MasterApiController::class, 'otLensOptionDestroy'])
-                        ->middleware('permission:master.ot_inventory');
+                    // Mirrors web's routes/hospital.php:372 role:admin gate on these
+                    // same OT sub-masters — the permission alone previously let a
+                    // non-admin custom role manage these via the API even though
+                    // web blocks them. See ROLES_PERMISSIONS_PARITY_AUDIT.md.
+                    Route::middleware('role:admin')->group(function () {
+                        // Masters — OT Lens Options CRUD (Round 3 gap-fill; previously only
+                        // reachable via the wrongly-permissioned masters/detail/lens-options)
+                        Route::get('masters/ot-lens-options',         [MasterApiController::class, 'otLensOptionIndex'])
+                            ->middleware('permission:master.ot_inventory');
+                        Route::post('masters/ot-lens-options',        [MasterApiController::class, 'otLensOptionStore'])
+                            ->middleware('permission:master.ot_inventory');
+                        Route::put('masters/ot-lens-options/{id}',    [MasterApiController::class, 'otLensOptionUpdate'])
+                            ->middleware('permission:master.ot_inventory');
+                        Route::delete('masters/ot-lens-options/{id}', [MasterApiController::class, 'otLensOptionDestroy'])
+                            ->middleware('permission:master.ot_inventory');
 
-                    // Masters — OT Type (broad category) CRUD (Round 3 gap-fill; previously
-                    // only reachable via the wrongly-permissioned masters/detail/ot-types)
-                    Route::get('masters/ot-type',         [MasterApiController::class, 'otTypeIndex'])
-                        ->middleware('permission:master.ot_types');
-                    Route::post('masters/ot-type',        [MasterApiController::class, 'otTypeStore'])
-                        ->middleware('permission:master.ot_types');
-                    Route::put('masters/ot-type/{id}',    [MasterApiController::class, 'otTypeUpdate'])
-                        ->middleware('permission:master.ot_types');
-                    Route::delete('masters/ot-type/{id}', [MasterApiController::class, 'otTypeDestroy'])
-                        ->middleware('permission:master.ot_types');
+                        // Masters — OT Type (broad category) CRUD (Round 3 gap-fill; previously
+                        // only reachable via the wrongly-permissioned masters/detail/ot-types)
+                        Route::get('masters/ot-type',         [MasterApiController::class, 'otTypeIndex'])
+                            ->middleware('permission:master.ot_types');
+                        Route::post('masters/ot-type',        [MasterApiController::class, 'otTypeStore'])
+                            ->middleware('permission:master.ot_types');
+                        Route::put('masters/ot-type/{id}',    [MasterApiController::class, 'otTypeUpdate'])
+                            ->middleware('permission:master.ot_types');
+                        Route::delete('masters/ot-type/{id}', [MasterApiController::class, 'otTypeDestroy'])
+                            ->middleware('permission:master.ot_types');
 
-                    // Masters — OT Slots CRUD
-                    Route::get('masters/ot-slots',         [MasterApiController::class, 'otSlotIndex'])
-                        ->middleware('permission:master.ot_slots');
-                    Route::post('masters/ot-slots',        [MasterApiController::class, 'otSlotStore'])
-                        ->middleware('permission:master.ot_slots');
-                    Route::put('masters/ot-slots/{id}',    [MasterApiController::class, 'otSlotUpdate'])
-                        ->middleware('permission:master.ot_slots');
-                    Route::delete('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotDestroy'])
-                        ->middleware('permission:master.ot_slots');
+                        // Masters — OT Slots CRUD
+                        Route::get('masters/ot-slots',         [MasterApiController::class, 'otSlotIndex'])
+                            ->middleware('permission:master.ot_slots');
+                        Route::post('masters/ot-slots',        [MasterApiController::class, 'otSlotStore'])
+                            ->middleware('permission:master.ot_slots');
+                        Route::put('masters/ot-slots/{id}',    [MasterApiController::class, 'otSlotUpdate'])
+                            ->middleware('permission:master.ot_slots');
+                        Route::delete('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotDestroy'])
+                            ->middleware('permission:master.ot_slots');
 
-                    // Masters — OT Charge Heads CRUD
-                    Route::get('masters/ot-charge-heads',         [MasterApiController::class, 'otChargeHeadIndex'])
-                        ->middleware('permission:master.ot_charges');
-                    Route::post('masters/ot-charge-heads',        [MasterApiController::class, 'otChargeHeadStore'])
-                        ->middleware('permission:master.ot_charges');
-                    Route::put('masters/ot-charge-heads/{id}',    [MasterApiController::class, 'otChargeHeadUpdate'])
-                        ->middleware('permission:master.ot_charges');
-                    Route::delete('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadDestroy'])
-                        ->middleware('permission:master.ot_charges');
+                        // Masters — OT Charge Heads CRUD
+                        Route::get('masters/ot-charge-heads',         [MasterApiController::class, 'otChargeHeadIndex'])
+                            ->middleware('permission:master.ot_charges');
+                        Route::post('masters/ot-charge-heads',        [MasterApiController::class, 'otChargeHeadStore'])
+                            ->middleware('permission:master.ot_charges');
+                        Route::put('masters/ot-charge-heads/{id}',    [MasterApiController::class, 'otChargeHeadUpdate'])
+                            ->middleware('permission:master.ot_charges');
+                        Route::delete('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadDestroy'])
+                            ->middleware('permission:master.ot_charges');
 
-                    // Masters — OT Surgery Types CRUD
-                    Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList'])
-                        ->middleware('permission:master.ot_types');
-                    Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex'])
-                        ->middleware('permission:master.ot_types');
-                    Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore'])
-                        ->middleware('permission:master.ot_types');
-                    Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate'])
-                        ->middleware('permission:master.ot_types');
-                    Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy'])
-                        ->middleware('permission:master.ot_types');
+                        // Masters — OT Surgery Types CRUD
+                        Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList'])
+                            ->middleware('permission:master.ot_types');
+                        Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex'])
+                            ->middleware('permission:master.ot_types');
+                        Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore'])
+                            ->middleware('permission:master.ot_types');
+                        Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate'])
+                            ->middleware('permission:master.ot_types');
+                        Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy'])
+                            ->middleware('permission:master.ot_types');
+                    });
 
                     // Examinations
                     Route::get('exams/primary/{patientId}', [ExamApiController::class, 'showPrimary'])
@@ -642,7 +648,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // OT Inventory Masters — Phase 7 of OT Workflow Upgrade
                     // (docs/ROUND3_OT_MOBILE_API_PRD_PLAN.md §11, FR-OT-37/38)
                     // ========================================================
-                    Route::prefix('masters/ot')->name('masters.ot.')->middleware('permission:master.ot_inventory')->group(function () {
+                    // Mirrors web's routes/hospital.php:372 role:admin gate on the
+                    // same OT sub-masters — the permission alone previously let a
+                    // non-admin custom role manage these via the API even though
+                    // web blocks them. See ROLES_PERMISSIONS_PARITY_AUDIT.md.
+                    Route::prefix('masters/ot')->name('masters.ot.')->middleware(['permission:master.ot_inventory', 'role:admin'])->group(function () {
                         Route::get('lens-inventory', [OtInventoryApiController::class, 'lensInventoryIndex'])->name('lens-inventory.index');
                         Route::post('lens-inventory', [OtInventoryApiController::class, 'lensInventoryStore'])->name('lens-inventory.store');
                         Route::put('lens-inventory/{id}', [OtInventoryApiController::class, 'lensInventoryUpdate'])->name('lens-inventory.update')->whereNumber('id');
