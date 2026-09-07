@@ -260,8 +260,10 @@ class PatientHistoryApiController extends Controller
             }
         }
 
-        // Patient profile
-        $patient->load('location');
+        // Patient profile — masterCity is the correct relation for
+        // location_id (validated against tbl_master_cities, not the legacy
+        // `location` table). See PATIENT_DATA_EMPTY_FIELDS_AUDIT.md.
+        $patient->load('masterCity.district', 'masterCity.state');
 
         return response()->json([
             'success' => true,
@@ -277,9 +279,7 @@ class PatientHistoryApiController extends Controller
                     'gender'       => $patient->gender,
                     'age'          => $patient->age,
                     'contact_no'   => $patient->contact_no,
-                    'location'     => $patient->location?->name
-                        ?? $patient->location?->city
-                        ?? 'N/A',
+                    'location'     => $patient->locationLabel,
                     'created_at'   => $patient->created_at?->toISOString(),
                     'visit_days'   => $visitDays,
                 ],
