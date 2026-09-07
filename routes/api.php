@@ -704,8 +704,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->name('clinical-queue')
                         ->middleware('permission:opd.exam.primary|opd.exam.secondary');
 
-                    // Medicines
-                    Route::prefix('medicines')->name('medicines.')->group(function () {
+                    // Medicines — previously had NO permission middleware at
+                    // all on these 5 groups (only medicine-instructions
+                    // below had it), unlike web which correctly requires
+                    // master.medicines on all of them. See
+                    // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND2.md Part C2.
+                    Route::prefix('medicines')->name('medicines.')->middleware('permission:master.medicines')->group(function () {
                         Route::get('/', [MedicineApiController::class, 'index'])->name('index');
                         Route::post('/', [MedicineApiController::class, 'store'])->name('store');
                         Route::put('/{id}', [MedicineApiController::class, 'update'])->name('update');
@@ -715,7 +719,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     });
 
                     // Medicine Groups
-                    Route::prefix('medicine-groups')->name('medicine-groups.')->group(function () {
+                    Route::prefix('medicine-groups')->name('medicine-groups.')->middleware('permission:master.medicines')->group(function () {
                         Route::get('/', [MedicineGroupApiController::class, 'index'])->name('index');
                         Route::get('/form-data', [MedicineGroupApiController::class, 'formData'])->name('form-data');
                         Route::get('/{id}', [MedicineGroupApiController::class, 'show'])->name('show')->where('id', '[0-9]+');
@@ -725,25 +729,25 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     });
 
                     // Medicine Masters (dosages, types, categories, routes)
-                    Route::prefix('medicine-dosages')->name('medicine-dosages.')->group(function () {
+                    Route::prefix('medicine-dosages')->name('medicine-dosages.')->middleware('permission:master.medicines')->group(function () {
                         Route::get('/', [MedicineMasterApiController::class, 'dosages'])->name('index');
                         Route::post('/', [MedicineMasterApiController::class, 'storeDosage'])->name('store');
                         Route::put('/{id}', [MedicineMasterApiController::class, 'updateDosage'])->name('update');
                         Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyDosage'])->name('destroy');
                     });
-                    Route::prefix('medicine-types')->name('medicine-types.')->group(function () {
+                    Route::prefix('medicine-types')->name('medicine-types.')->middleware('permission:master.medicines')->group(function () {
                         Route::get('/', [MedicineMasterApiController::class, 'types'])->name('index');
                         Route::post('/', [MedicineMasterApiController::class, 'storeType'])->name('store');
                         Route::put('/{id}', [MedicineMasterApiController::class, 'updateType'])->name('update');
                         Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyType'])->name('destroy');
                     });
-                    Route::prefix('medicine-categories')->name('medicine-categories.')->group(function () {
+                    Route::prefix('medicine-categories')->name('medicine-categories.')->middleware('permission:master.medicines')->group(function () {
                         Route::get('/', [MedicineMasterApiController::class, 'categories'])->name('index');
                         Route::post('/', [MedicineMasterApiController::class, 'storeCategory'])->name('store');
                         Route::put('/{id}', [MedicineMasterApiController::class, 'updateCategory'])->name('update');
                         Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyCategory'])->name('destroy');
                     });
-                    Route::prefix('medicine-routes')->name('medicine-routes.')->group(function () {
+                    Route::prefix('medicine-routes')->name('medicine-routes.')->middleware('permission:master.medicines')->group(function () {
                         Route::get('/', [MedicineMasterApiController::class, 'medicineRoutes'])->name('index');
                         Route::post('/', [MedicineMasterApiController::class, 'storeMedicineRoute'])->name('store');
                         Route::put('/{id}', [MedicineMasterApiController::class, 'updateMedicineRoute'])->name('update');
@@ -833,8 +837,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                             ->where('id', '[0-9]+');
                     });
 
-                    // Share History
-                    Route::prefix('share-history')->name('share-history.')->group(function () {
+                    // Share History — matches web's own single-permission
+                    // bundling of this whole feature (its sidebar "Share
+                    // History" link uses the identical opd.patient.view
+                    // check as "Patients"). Previously had NO permission
+                    // middleware at all on any of these 8 routes — any
+                    // authenticated user could hit them regardless of
+                    // granted permissions. See
+                    // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND2.md Part C1.
+                    Route::prefix('share-history')->name('share-history.')
+                        ->middleware('permission:opd.patient.view')->group(function () {
                         Route::get('patients', [ShareHistoryApiController::class, 'patients'])
                             ->name('patients');
                         Route::get('hospitals', [ShareHistoryApiController::class, 'hospitals'])
