@@ -334,6 +334,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('masters/doctors', [MastersApiController::class, 'doctors'])->name('masters.doctors');
                     Route::get('masters/locations', [MastersApiController::class, 'locations'])->name('masters.locations');
                     Route::post('masters/locations', [MastersApiController::class, 'storeLocation'])->name('masters.locations.store');
+                    Route::put('masters/locations/{id}', [MastersApiController::class, 'updateLocation'])
+                        ->name('masters.locations.update')
+                        ->whereNumber('id')
+                        ->middleware('permission:master.locations');
+                    Route::delete('masters/locations/{id}', [MastersApiController::class, 'destroyLocation'])
+                        ->name('masters.locations.destroy')
+                        ->whereNumber('id')
+                        ->middleware('permission:master.locations');
                     Route::get('masters/slots', [MastersApiController::class, 'slots'])->name('masters.slots');
                     Route::get('masters/referrers', [MastersApiController::class, 'referrers'])->name('masters.referrers');
 
