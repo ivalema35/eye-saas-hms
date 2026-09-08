@@ -129,6 +129,88 @@ class MastersApiController extends Controller
         ], 201);
     }
 
+    /**
+     * Mirrors Hospital\Master\BasicMasterController::updateLocation()
+     * exactly — same find-or-create state/district, same duplicate-city
+     * check, same fields updated. Web already lets a Hospital Admin (or
+     * anyone with `master.locations`) edit locations; the app previously
+     * had no route for this at all. See OT_BUGS_ROUND4_FIX_PLAN.md
+     * "Locations master read-only" follow-up.
+     */
+    public function updateLocation(string $slug, Request $request, int $id): JsonResponse
+    {
+        $request->validate([
+            'city'     => ['required', 'string', 'max:150'],
+            'state'    => ['required', 'string', 'max:150'],
+            'district' => ['nullable', 'string', 'max:150'],
+        ]);
+
+        $masterCity = MasterCity::with('state.country')->findOrFail($id);
+        $country = $masterCity->state->country;
+
+        $stateName = MasterState::normalize($request->state);
+        $state = MasterState::where('country_id', $country->id)
+            ->whereRaw('LOWER(name) = ?', [strtolower($stateName)])
+            ->first()
+            ?? MasterState::create(['country_id' => $country->id, 'name' => $stateName, 'is_active' => true]);
+
+        $district = null;
+        if ($request->filled('district')) {
+            $districtName = MasterDistrict::normalize($request->district);
+            $district = MasterDistrict::where('state_id', $state->id)
+                ->whereRaw('LOWER(name) = ?', [strtolower($districtName)])
+                ->first()
+                ?? MasterDistrict::create(['state_id' => $state->id, 'name' => $districtName, 'is_active' => true]);
+        }
+
+        $cityName = MasterCity::normalize($request->city);
+        $dup = MasterCity::where('state_id', $state->id)
+            ->where('district_id', $district?->id)
+            ->whereRaw('LOWER(name) = ?', [strtolower($cityName)])
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($dup) {
+            return response()->json([
+                'success' => false,
+                'message' => "City \"{$cityName}\" already exists in this location.",
+            ], 422);
+        }
+
+        $masterCity->update([
+            'state_id'    => $state->id,
+            'district_id' => $district?->id,
+            'name'        => $cityName,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Location updated successfully.',
+            'data' => [
+                'id'       => $masterCity->id,
+                'city'     => $masterCity->name,
+                'district' => $district?->name ?? '',
+                'state'    => $state->name,
+            ],
+        ]);
+    }
+
+    /**
+     * Mirrors Hospital\Master\BasicMasterController::destroy() for the
+     * 'locations' type exactly — a bare delete with no reference check.
+     * Same behavior/risk as web (MasterCity is a shared platform table,
+     * not tenant-scoped) — not introduced by this endpoint, not fixed
+     * here either, since that would be a unilateral behavior change
+     * beyond matching web.
+     */
+    public function destroyLocation(string $slug, int $id): JsonResponse
+    {
+        $city = MasterCity::findOrFail($id);
+        $city->delete();
+
+        return response()->json(['success' => true, 'message' => 'Location deleted successfully.']);
+    }
+
     public function slots(): JsonResponse
     {
         $tenantId = app('tenant')->id;
