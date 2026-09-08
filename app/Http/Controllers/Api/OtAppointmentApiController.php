@@ -105,8 +105,11 @@ class OtAppointmentApiController extends Controller
         $tenantId = (int) app('tenant')->id;
 
         $validated = $request->validate([
+            // TYPE_OT (not TYPE_REFERRAL, which never existed on the model —
+            // caused a fatal error on every save/update). Matches web's real
+            // 4 types exactly (_form.blade.php). See OT_BUGS_ROUND4_AUDIT.md.
             'appointment_type' => ['required', Rule::in([
-                OtAppointment::TYPE_PHONE, OtAppointment::TYPE_WALK_IN, OtAppointment::TYPE_ONLINE, OtAppointment::TYPE_REFERRAL,
+                OtAppointment::TYPE_PHONE, OtAppointment::TYPE_WALK_IN, OtAppointment::TYPE_ONLINE, OtAppointment::TYPE_OT,
             ])],
             'appointment_date' => ['required', 'date', 'after_or_equal:today'],
             'appointment_time' => ['nullable', 'date_format:H:i'],
@@ -151,8 +154,11 @@ class OtAppointmentApiController extends Controller
         }
 
         $validated = $request->validate([
+            // TYPE_OT (not TYPE_REFERRAL, which never existed on the model —
+            // caused a fatal error on every save/update). Matches web's real
+            // 4 types exactly (_form.blade.php). See OT_BUGS_ROUND4_AUDIT.md.
             'appointment_type' => ['required', Rule::in([
-                OtAppointment::TYPE_PHONE, OtAppointment::TYPE_WALK_IN, OtAppointment::TYPE_ONLINE, OtAppointment::TYPE_REFERRAL,
+                OtAppointment::TYPE_PHONE, OtAppointment::TYPE_WALK_IN, OtAppointment::TYPE_ONLINE, OtAppointment::TYPE_OT,
             ])],
             'appointment_date' => ['required', 'date'],
             'appointment_time' => ['nullable', 'date_format:H:i'],
