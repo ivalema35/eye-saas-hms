@@ -37,14 +37,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Hospital\Report\OtReportController;
 use App\Models\Hospital\Dosage;
-use App\Models\Hospital\MedicineRoute;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtLensDetail;
 use App\Models\Hospital\OT\OtPayment;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -84,18 +82,25 @@ class OtReportApiController extends OtReportController
     }
 
     /**
-     * API mirror of OtReportController::patientPrescriptionPdf() — web returns a
-     * browser-printable View (relies on window.print()); the app instead needs an
-     * actual downloadable PDF, so this renders the same blade views through
-     * DomPDF. Same secondary-exam-preferred / primary-exam-fallback lookup as web.
+     * Returns this patient's most relevant exam (secondary-preferred, same as
+     * web) as JSON, for the app to render as a PDF natively (the `pdf`/
+     * `printing` packages, same as the OPD prescription screen) instead of
+     * downloading a DomPDF-rendered file. Switched away from
+     * `Pdf::loadView('hospital.exam.print'/'secondary_print')->download()`
+     * because that blade is written and tested only against real browsers
+     * (web's own print action calls `window.print()`, never DomPDF) — DomPDF's
+     * much weaker CSS support was producing visibly broken formatting. See
+     * OT_BUGS_ROUND4_AUDIT.md Bug #6 / OT_BUGS_ROUND4_FIX_PLAN.md Phase 4.
      *
-     * 'forPdf' => true is passed so the templates skip rendering their on-screen
-     * Print/Back toolbar (normally hidden only via `@media print`, which DomPDF's
-     * default 'screen' media type never applies — see
-     * REPORTS_MODULE_WEB_PARITY_FIX_PLAN.md TASK 2.1). Without this the toolbar
-     * buttons would leak into the exported PDF.
+     * Same route, same `reports.view` permission, same URL as before —
+     * deliberately NOT switched to reuse `PatientHistoryApiController`'s
+     * `opd.exam.history`-gated endpoint, since that would change who can
+     * print from here (a `reports.view`-only user currently can). JSON shape
+     * mirrors `PatientHistoryApiController::buildHistory()`'s per-exam
+     * serialization exactly, so the app's existing `ExamRecord`/
+     * `PatientHistorySummary` models parse it unchanged.
      */
-    public function apiPrescriptionPdf(Request $request, string $slug, int $patient)
+    public function apiPrescriptionPdf(Request $request, string $slug, int $patient): JsonResponse
     {
         // Permission enforced by the route's 'permission:reports.view' middleware
         // (authorizePermission() on the parent is private, not inheritable — same
@@ -110,75 +115,96 @@ class OtReportApiController extends OtReportController
 
         $primaryExam = PrimaryExamination::where('patient_id', $patient)
             ->where('tenant_id', $tenant->id)
-            ->with('prescriptions.medicine.medicineType', 'prescriptions.dosage', 'doctor')
+            ->with('prescriptions.medicine', 'prescriptions.dosage', 'doctor')
             ->first();
 
         abort_if(! $primaryExam && ! $secondaryExam, 404, 'No examination found for this patient.');
 
-        $primaryDoctorName = $primaryExam?->doctor?->name;
-        $secondaryDoctorName = $secondaryExam?->doctor?->name;
+        $exam = $secondaryExam
+            ? $this->secondaryExamToJson($secondaryExam, Dosage::all(['id', 'dosage'])->keyBy('id'))
+            : $this->primaryExamToJson($primaryExam);
 
-        $diagnosisMasters = collect(DB::table('tbl_master_diagnosis')
-            ->where('tenant_id', $tenant->id)
-            ->orderBy('id')
-            ->get(['id', DB::raw('value as diagnosis')]));
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'patient' => [
+                    'id' => $patientModel->id,
+                    'name' => trim(implode(' ', array_filter([
+                        $patientModel->first_name, $patientModel->middle_name, $patientModel->last_name,
+                    ]))),
+                    'patient_code' => $patientModel->patient_code,
+                    'gender' => $patientModel->gender,
+                    'age' => $patientModel->age,
+                    'contact_no' => $patientModel->contact_no,
+                    'location' => $patientModel->locationLabel,
+                    'created_at' => $patientModel->created_at?->toISOString(),
+                    'visit_days' => 1,
+                ],
+                'exam' => $exam,
+            ],
+        ]);
+    }
 
-        $complaintMasters = collect(DB::table('chief_complaints')
-            ->where('tenant_id', $tenant->id)
-            ->orderBy('id')
-            ->get(['id', DB::raw('value as complaint')]));
-
-        $kcoMasters = collect(DB::table('kcos')
-            ->where('tenant_id', $tenant->id)
-            ->orderBy('id')
-            ->get(['id', DB::raw('value as kco')]));
-
-        $filename = 'Prescription_'.$patientModel->patient_code.'_'.now()->format('Y-m-d').'.pdf';
-
-        if ($secondaryExam) {
-            $dosages = Dosage::orderBy('dosage')->get(['id', 'dosage']);
-            $routes = MedicineRoute::where('tenant_id', $tenant->id)->orderBy('name')->get(['id', 'name']);
-
-            $pdf = Pdf::loadView('hospital.exam.secondary_print', [
-                'patient' => $patientModel,
-                'exam' => $secondaryExam,
-                'tenant' => $tenant,
-                'slug' => $slug,
-                'diagnosisMasters' => $diagnosisMasters,
-                'complaintMasters' => $complaintMasters,
-                'kcoMasters' => $kcoMasters,
-                'dosages' => $dosages,
-                'routes' => $routes,
-                'primaryDoctorName' => $primaryDoctorName,
-                'secondaryDoctorName' => $secondaryDoctorName,
-                'backUrl' => null,
-                'forPdf' => true,
-            ]);
-
-            return $pdf->download($filename);
+    /**
+     * Re-index list fields inside exam_data so they always JSON-encode as
+     * arrays [], not objects {} — same guard as
+     * PatientHistoryApiController::normalizeExamData(), duplicated here
+     * rather than shared since this is currently the only other caller;
+     * worth factoring out if a third caller appears.
+     */
+    private function normalizeExamDataForJson(mixed $raw): array|\stdClass
+    {
+        if (! is_array($raw) || count($raw) === 0) {
+            return new \stdClass();
+        }
+        foreach (['co_rows', 'kco_rows', 'diagnoses', 'rx'] as $field) {
+            if (isset($raw[$field]) && is_array($raw[$field])) {
+                $raw[$field] = array_values($raw[$field]);
+            }
         }
 
-        $adviceMasters = collect(DB::table('tbl_master_advice')
-            ->where('tenant_id', $tenant->id)
-            ->orderBy('id')
-            ->get(['id', DB::raw('value as advice')]));
+        return $raw;
+    }
 
-        $pdf = Pdf::loadView('hospital.exam.print', [
-            'patient' => $patientModel,
-            'exam' => $primaryExam,
-            'tenant' => $tenant,
-            'slug' => $slug,
-            'diagnosisMasters' => $diagnosisMasters,
-            'adviceMasters' => $adviceMasters,
-            'complaintMasters' => $complaintMasters,
-            'kcoMasters' => $kcoMasters,
-            'primaryDoctorName' => $primaryDoctorName,
-            'secondaryDoctorName' => $secondaryDoctorName,
-            'backUrl' => null,
-            'forPdf' => true,
-        ]);
+    private function primaryExamToJson(PrimaryExamination $exam): array
+    {
+        return [
+            'id' => $exam->id,
+            'type' => 'primary',
+            'examined_at' => $exam->examined_at?->toISOString(),
+            'doctor' => $exam->doctor?->name,
+            'exam_data' => $this->normalizeExamDataForJson($exam->exam_data),
+            'prescriptions' => $exam->prescriptions->map(fn ($rx) => [
+                'medicine_name' => $rx->medicine?->brand_name ?: ($rx->medicine?->name ?? '-'),
+                'dosage' => $rx->dosage?->dosage ?? '-',
+                'duration' => $rx->duration ? $rx->duration.' D' : '-',
+                'eye' => $rx->eye ?? '-',
+            ])->values()->all(),
+        ];
+    }
 
-        return $pdf->download($filename);
+    private function secondaryExamToJson(SecondaryExamination $exam, $dosageMasters): array
+    {
+        $prescriptions = collect($exam->exam_data['rx'] ?? [])
+            ->map(fn ($rx) => [
+                'medicine_name' => $rx['name'] ?? '-',
+                'dosage' => isset($rx['dosage_id'])
+                    ? ($dosageMasters->get((int) $rx['dosage_id'])?->dosage ?? '-')
+                    : '-',
+                'duration' => ! empty($rx['duration']) ? $rx['duration'].' D' : '-',
+                'eye' => $rx['eye'] ?? '-',
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'id' => $exam->id,
+            'type' => 'secondary',
+            'examined_at' => $exam->examined_at?->toISOString(),
+            'doctor' => $exam->doctor?->name,
+            'exam_data' => $this->normalizeExamDataForJson($exam->exam_data),
+            'prescriptions' => $prescriptions,
+        ];
     }
 
     /**

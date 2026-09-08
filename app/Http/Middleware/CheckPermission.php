@@ -72,8 +72,14 @@ class CheckPermission
         // Check permission via service (Redis cached)
         if (! $hasPermission) {
             if ($request->expectsJson()) {
+                // Also send `message` (not just `error`) — the Flutter apps'
+                // generic error handling reads `message` and was showing an
+                // unhelpful hardcoded fallback for every permission-denied
+                // action since this key was missing. See
+                // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
                 return response()->json([
                     'error' => 'Access denied.',
+                    'message' => 'Access denied.',
                     'permission' => implode('|', $permissionKeys),
                 ], 403);
             }
