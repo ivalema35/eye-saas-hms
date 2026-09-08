@@ -164,13 +164,17 @@ class DoctorDashboardApiController extends Controller
                 'patient_name' => $p->full_name,
                 'dr_index_no'  => $buildIndex($p),
                 'age'          => $p->age,
+                'gender'       => $p->gender,
                 'city'         => $p->city_name,
                 'registered_at'=> $p->created_at?->toISOString(),
                 'has_history'  => isset($primaryContactHistory[$p->contact_no]),
             ])->values();
 
             // ── Secondary queue ────────────────────────────────────────────────
-            $dilationLockMinutes = (int) HospitalSetting::get('wait_d_green_max', 40);
+            // Fallback only for a patient whose primary exam has no recorded
+            // dilation_time at all — the real value below always wins when
+            // present. See DOCTOR_DASHBOARD_WEB_PARITY_STUDY.md.
+            $dilationLockMinutesFallback = (int) HospitalSetting::get('wait_d_green_max', 40);
 
             $secondaryPatients = Patient::with(['doctor:id,name,doctor_prefix', 'masterCity', 'location', 'primaryExamination'])
                 ->where('doctor_id', $targetDoctorId)
@@ -183,7 +187,7 @@ class DoctorDashboardApiController extends Controller
 
             $secondaryContactHistory = $this->resolveContactHistory($secondaryPatients->pluck('contact_no'));
 
-            $secondaryQueue = $secondaryPatients->map(function ($p) use ($buildIndex, $dilationLockMinutes, $secondaryContactHistory) {
+            $secondaryQueue = $secondaryPatients->map(function ($p) use ($buildIndex, $dilationLockMinutesFallback, $secondaryContactHistory) {
                 $examData = [];
                 if ($p->primaryExamination) {
                     $examData = is_array($p->primaryExamination->exam_data)
@@ -192,6 +196,17 @@ class DoctorDashboardApiController extends Controller
                 }
                 $isDilated = ($examData['dilate'] ?? '') === 'Yes';
 
+                // Per-exam dilation duration — the doctor's own recorded
+                // decision for THIS patient, not a hospital-wide display
+                // setting. Mirrors the already-correct pattern in
+                // PatientApiController.php:125-128. Previously this sent the
+                // same flat setting-derived number for every patient in the
+                // queue, which could show the wrong unlock time. See
+                // DOCTOR_DASHBOARD_WEB_PARITY_STUDY.md.
+                $dilationLockMinutes = $p->primaryExamination?->dilation_time
+                    ? (int) $p->primaryExamination->dilation_time
+                    : $dilationLockMinutesFallback;
+
                 return [
                     'id'                    => $p->id,
                     'patient_code'          => $p->patient_code,
@@ -199,6 +214,7 @@ class DoctorDashboardApiController extends Controller
                     'patient_name'          => $p->full_name,
                     'dr_index_no'           => $buildIndex($p),
                     'age'                   => $p->age,
+                    'gender'                => $p->gender,
                     'city'                  => $p->city_name,
                     'registered_at'         => $p->created_at?->toISOString(),
                     'primary_done_at'       => $p->primary_done_at?->toISOString(),
@@ -229,6 +245,22 @@ class DoctorDashboardApiController extends Controller
                     : null,
                 'primary_queue'  => $primaryQueue,
                 'secondary_queue'=> $secondaryQueue,
+                // Hospital-configurable wait-pill color thresholds — same
+                // shape/defaults as DashboardController::todayPatients(),
+                // so a hospital that customizes these sees the same colors
+                // here as on web/the regular dashboard. See
+                // DOCTOR_DASHBOARD_FIX_PLAN.md Phase 4.
+                'wait_thresholds' => [
+                    'r_green'  => (int) HospitalSetting::get('wait_green_max', 30),
+                    'r_orange' => (int) HospitalSetting::get('wait_orange_max', 60),
+                    'r_red'    => (int) HospitalSetting::get('wait_red_max', 120),
+                    'd_green'  => (int) HospitalSetting::get('wait_d_green_max', 40),
+                    'd_orange' => (int) HospitalSetting::get('wait_d_orange_max', 90),
+                    'd_red'    => (int) HospitalSetting::get('wait_d_red_max', 120),
+                    'nd_green' => (int) HospitalSetting::get('wait_nd_green_max', 20),
+                    'nd_orange'=> (int) HospitalSetting::get('wait_nd_orange_max', 60),
+                    'nd_red'   => (int) HospitalSetting::get('wait_nd_red_max', 120),
+                ],
             ],
         ]);
     }

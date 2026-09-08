@@ -12,12 +12,16 @@ use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
 use App\Models\Platform\HospitalShareRequest;
+use App\Services\Auth\RolePermissionService;
 use App\Services\Hospital\HospitalCollectionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly RolePermissionService $perm) {}
+
     /**
      * Admin Dashboard Stats
      *
@@ -30,48 +34,101 @@ class DashboardController extends Controller
         $authUser = auth('sanctum')->user();
         $today    = now()->toDateString();
 
+        // RolePermissionService resolves the current user off the
+        // hospital_user session guard, not sanctum — bind it explicitly the
+        // same way CheckPermission middleware does for routes that use it.
+        // This route has no permission middleware of its own (it must stay
+        // reachable by every role), so nothing else would do this binding.
+        if ($authUser) {
+            Auth::guard('hospital_user')->setUser($authUser);
+        }
+
         $roleSlug    = $authUser?->role?->slug ?? '';
         $isDoctor    = in_array($roleSlug, ['doctor', 'ot_assistant'], true);
         $isOtDoctor  = $roleSlug === 'ot_assistant';
         $isReceptionist = in_array($roleSlug, ['receptionist', 'receptionist_opd'], true);
         $isAdmin     = (bool) ($authUser?->role?->is_super ?? false);
 
-        // ── OPD Stats ──────────────────────────────────────────────────
-        $todayPatients = Patient::whereDate('appointment_date', $today)->count();
+        // Web's role-based bypass for clinical data (Hospital\DashboardController.php:55,88)
+        // includes the legacy 'ot_doctor' slug alongside 'doctor' — mirrored
+        // exactly here, distinct from this file's own $isDoctor (which means
+        // something different: 'doctor' or 'ot_assistant', used elsewhere
+        // below for queue-scoping and doctor-card visibility).
+        $isDoctorRoleForClinicalGate = in_array($roleSlug, ['doctor', 'ot_doctor'], true);
 
-        // Web's separate "Pending Exams" card (Hospital\DashboardController.php:90-92)
-        // — deliberately no type/checked_in_at filter, unlike primaryQueueCount
-        // below. See DASHBOARD_PARITY_FIX_PLAN.md Phase 5.
-        $pendingExams = Patient::whereDate('appointment_date', $today)
-            ->whereNull('primary_done_at')
-            ->count();
+        // ── OPD Stats — gated: web only computes this section for a user
+        // who can perform exams, or who is a doctor by role regardless of
+        // permission (Hospital\DashboardController.php:88). Previously this
+        // whole section, including the real per-patient primary queue further
+        // below, was computed unconditionally for any authenticated user
+        // regardless of permission. See ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
+        $canSeeClinical = $this->perm->can('opd.exam.primary')
+            || $this->perm->can('opd.exam.secondary')
+            || $isDoctorRoleForClinicalGate;
 
-        $primaryQueueCount = Patient::whereDate('appointment_date', $today)
-            ->whereNull('primary_done_at')
-            ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
-            ->count();
+        $todayPatients = null;
+        $pendingExams = null;
+        $primaryQueueCount = null;
+        $secondaryQueueCount = null;
 
-        $secondaryQueueCount = Patient::whereDate('appointment_date', $today)
-            ->whereNotNull('primary_done_at')
-            ->whereNull('secondary_done_at')
-            ->count();
+        if ($canSeeClinical) {
+            $todayPatients = Patient::whereDate('appointment_date', $today)->count();
 
-        $todayWalkin = Patient::whereDate('appointment_date', $today)
-            ->where('type', 'walkin')
-            ->count();
+            // Web's separate "Pending Exams" card (Hospital\DashboardController.php:90-92)
+            // — deliberately no type/checked_in_at filter, unlike primaryQueueCount
+            // below. See DASHBOARD_PARITY_FIX_PLAN.md Phase 5.
+            $pendingExams = Patient::whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->count();
 
-        $todayPhone = Patient::whereDate('appointment_date', $today)
-            ->where('type', 'phone')
-            ->count();
+            $primaryQueueCount = Patient::whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+                ->count();
 
-        // ── Revenue ────────────────────────────────────────────────────
-        // Unified OPD + OT net (payments − refunds), same formula web uses
-        // via HospitalCollectionService — see DASHBOARD_PARITY_FIX_PLAN.md
-        // Phase 2. Plain `Patient.case_fee` sums used to miss OT revenue
-        // entirely.
-        $revenueToday = $collectionService->summaryForDay($today)['total'];
-        $revenueMonth = $collectionService->summaryForCalendarMonth()['total'];
-        $revenueYear  = $collectionService->summaryForCalendarYear()['total'];
+            $secondaryQueueCount = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')
+                ->whereNull('secondary_done_at')
+                ->count();
+        }
+
+        // ── Reception Data — gated: web only computes this for a user who
+        // can register patients (Hospital\DashboardController.php:300).
+        // See ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
+        $canSeeReception = $this->perm->can('opd.patient.register');
+
+        $todayWalkin = null;
+        $todayPhone = null;
+
+        if ($canSeeReception) {
+            $todayWalkin = Patient::whereDate('appointment_date', $today)
+                ->where('type', 'walkin')
+                ->count();
+
+            $todayPhone = Patient::whereDate('appointment_date', $today)
+                ->where('type', 'phone')
+                ->count();
+        }
+
+        // ── Revenue — gated: web computes this only with `opd.reports.view`
+        // (Hospital\DashboardController.php:356), not the more general
+        // `reports.view` this API previously used no gate for at all. See
+        // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
+        $canSeeRevenue = $this->perm->can('opd.reports.view');
+
+        $revenueToday = null;
+        $revenueMonth = null;
+        $revenueYear = null;
+
+        if ($canSeeRevenue) {
+            // Unified OPD + OT net (payments − refunds), same formula web uses
+            // via HospitalCollectionService — see DASHBOARD_PARITY_FIX_PLAN.md
+            // Phase 2. Plain `Patient.case_fee` sums used to miss OT revenue
+            // entirely.
+            $revenueToday = $collectionService->summaryForDay($today)['total'];
+            $revenueMonth = $collectionService->summaryForCalendarMonth()['total'];
+            $revenueYear  = $collectionService->summaryForCalendarYear()['total'];
+        }
 
         // ── OT Stats ───────────────────────────────────────────────────
         // Web's real "OT Today" card (Hospital\DashboardController.php:371-384)
@@ -168,33 +225,41 @@ class DashboardController extends Controller
         } catch (\Throwable) {}
 
         // ── Primary Queue (top 20; scoped to own patients for doctors) ────
-        $primaryQueueQuery = Patient::with(['doctor:id,name,doctor_prefix'])
-            ->whereDate('appointment_date', $today)
-            ->whereNull('primary_done_at')
-            ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
-            ->orderBy('doctor_patient_no')
-            ->take(20);
+        // Gated by the same $canSeeClinical check as the OPD stats above —
+        // this is real per-patient data (name, age, gender), previously
+        // returned to any authenticated user regardless of permission. See
+        // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
+        $primaryQueue = collect();
 
-        if ($isDoctor) {
-            $primaryQueueQuery->where('doctor_id', $authUser->id);
+        if ($canSeeClinical) {
+            $primaryQueueQuery = Patient::with(['doctor:id,name,doctor_prefix'])
+                ->whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+                ->orderBy('doctor_patient_no')
+                ->take(20);
+
+            if ($isDoctor) {
+                $primaryQueueQuery->where('doctor_id', $authUser->id);
+            }
+
+            $primaryPatients = $primaryQueueQuery->get();
+
+            // Batch has_history — match by name+contact_no (not contact alone)
+            $primaryQueue = $this->attachHasHistory($primaryPatients)->map(fn ($p) => [
+                'id'                => $p->id,
+                'patient_code'      => $p->patient_code,
+                'full_name'         => $p->full_name,
+                'age'               => $p->age,
+                'gender'            => $p->gender,
+                'doctor_patient_no' => $p->doctor_patient_no,
+                'checked_in_at'     => $p->checked_in_at?->toISOString(),
+                'registered_at'     => $p->created_at?->toISOString(),
+                'doctor_name'       => $p->doctor?->name,
+                'doctor_prefix'     => $p->doctor?->doctor_prefix,
+                'has_history'       => (bool) ($p->has_history ?? false),
+            ]);
         }
-
-        $primaryPatients = $primaryQueueQuery->get();
-
-        // Batch has_history — match by name+contact_no (not contact alone)
-        $primaryQueue = $this->attachHasHistory($primaryPatients)->map(fn ($p) => [
-            'id'                => $p->id,
-            'patient_code'      => $p->patient_code,
-            'full_name'         => $p->full_name,
-            'age'               => $p->age,
-            'gender'            => $p->gender,
-            'doctor_patient_no' => $p->doctor_patient_no,
-            'checked_in_at'     => $p->checked_in_at?->toISOString(),
-            'registered_at'     => $p->created_at?->toISOString(),
-            'doctor_name'       => $p->doctor?->name,
-            'doctor_prefix'     => $p->doctor?->doctor_prefix,
-            'has_history'       => (bool) ($p->has_history ?? false),
-        ]);
 
         // ── Receptionists Performance ──────────────────────────────────
         $receptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
@@ -330,7 +395,7 @@ class DashboardController extends Controller
                 'secondary_queue_count'       => $secondaryQueueCount,
                 'today_walkin'                => $todayWalkin,
                 'today_phone'                 => $todayPhone,
-                'today_registrations'         => $todayWalkin + $todayPhone,
+                'today_registrations'         => $canSeeReception ? ($todayWalkin + $todayPhone) : null,
                 'revenue_today'               => $revenueToday,
                 'revenue_month'               => $revenueMonth,
                 'revenue_year'                => $revenueYear,
