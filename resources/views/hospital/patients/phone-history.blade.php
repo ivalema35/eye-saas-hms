@@ -399,12 +399,14 @@ Roles / History / OT Patients panel design. --}}
                                             <i class="bi bi-eye"></i> View
                                         </button>
                                         {{-- Check In button — only for pending --}}
+                                        @haspermission('patient_register')
                                         @if(!$checkedIn)
                                             <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"
                                                class="ph-checkin-btn ms-1">
                                                 <i class="bi bi-person-check-fill"></i> Check In
                                             </a>
                                         @endif
+                                        @endhaspermission
                                     </td>
                                 </tr>
                             @endforeach

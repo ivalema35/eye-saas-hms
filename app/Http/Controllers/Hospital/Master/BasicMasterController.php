@@ -13,6 +13,7 @@ use App\Models\Platform\MasterCity;
 use App\Models\Platform\MasterCountry;
 use App\Models\Platform\MasterDistrict;
 use App\Models\Platform\MasterState;
+use App\Services\Auth\PermissionMatrix;
 use App\Services\Auth\RolePermissionService;
 use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
@@ -53,11 +54,120 @@ class BasicMasterController extends Controller
 
     public function landing(string $slug): View
     {
-        return view('hospital.masters.index', compact('slug'));
+        $basicMasters = collect([
+            ['type' => 'cases', 'label' => 'Case Types', 'icon' => 'bi-folder2-open', 'color' => 'primary', 'feature' => 'casetype'],
+            ['type' => 'locations', 'label' => 'Locations', 'icon' => 'bi-geo-alt-fill', 'color' => 'success', 'feature' => 'location'],
+            ['type' => 'referrers', 'label' => 'Referrers', 'icon' => 'bi-person-lines-fill', 'color' => 'warning', 'feature' => 'referrer'],
+            ['type' => 'durations', 'label' => 'Durations', 'icon' => 'bi-hourglass-split', 'color' => 'secondary', 'feature' => 'duration'],
+        ])->filter(fn (array $item) => $this->perm->canAny(PermissionMatrix::crudKeys($item['feature'])))->values();
+
+        $otMasters = collect([
+            ['route' => 'hospital.masters.ot.lens-options.index', 'label' => 'Lens Options', 'icon' => 'bi-eyeglasses', 'color' => 'dark', 'feature' => 'ot_lens_option'],
+            ['route' => 'hospital.masters.ot.lens-powers.index', 'label' => 'Lens Powers', 'icon' => 'bi-rulers', 'color' => 'dark', 'feature' => 'ot_lens_power'],
+            ['route' => 'hospital.masters.ot.lens-inventory.index', 'label' => 'Lens Inventory', 'icon' => 'bi-box-seam', 'color' => 'dark', 'feature' => 'ot_inventory'],
+            ['route' => 'hospital.masters.ot.slots.index', 'label' => 'OT Slots', 'icon' => 'bi-clock-history', 'color' => 'primary', 'feature' => 'ot_slot'],
+            ['route' => 'hospital.masters.ot.types.index', 'label' => 'OT Types', 'icon' => 'bi-tags-fill', 'color' => 'success', 'feature' => 'ot_type'],
+            ['route' => 'hospital.masters.ot.surgery-types.index', 'label' => 'Surgery Types', 'icon' => 'bi-scissors', 'color' => 'warning', 'feature' => 'ot_type'],
+            ['route' => 'hospital.masters.ot.charge-heads.index', 'label' => 'Charge Heads', 'icon' => 'bi-cash-stack', 'color' => 'info', 'feature' => 'ot_charge'],
+            ['route' => 'hospital.masters.ot.packages.index', 'label' => 'OT Packages', 'icon' => 'bi-box2-heart', 'color' => 'primary', 'feature' => 'ot_package_master'],
+        ])->filter(fn (array $item) => $this->perm->canAny(PermissionMatrix::crudKeys($item['feature'])))->values();
+
+        $showEyeExamMasters = $this->perm->canAny(PermissionMatrix::crudKeys('eye_exam_master'));
+
+        $eyeExamGroups = [];
+        if ($showEyeExamMasters) {
+            $eyeExamGroups = [
+                [
+                    'title' => 'Clinical',
+                    'items' => [
+                        ['type' => 'chief-complaints', 'label' => 'Chief Complaints', 'icon' => 'bi-clipboard2-pulse', 'color' => 'danger'],
+                        ['type' => 'kcos', 'label' => 'K/C/O', 'icon' => 'bi-heart-pulse', 'color' => 'warning'],
+                        ['type' => 'hno', 'label' => 'H/O', 'icon' => 'bi-clock-history', 'color' => 'info'],
+                        ['type' => 'diagnosis', 'label' => 'Diagnoses', 'icon' => 'bi-patch-check', 'color' => 'success'],
+                        ['type' => 'advice', 'label' => 'Advice', 'icon' => 'bi-chat-left-text', 'color' => 'primary'],
+                    ],
+                ],
+                [
+                    'title' => 'Vision Values',
+                    'items' => [
+                        ['type' => 'vn', 'label' => 'V/N', 'icon' => 'bi-eye', 'color' => 'info'],
+                        ['type' => 'vngl', 'label' => 'Vn C GL', 'icon' => 'bi-eyeglasses', 'color' => 'primary'],
+                        ['type' => 'vnst', 'label' => 'Vn C ST', 'icon' => 'bi-view-list', 'color' => 'primary'],
+                        ['type' => 'pnvn', 'label' => 'PH NV/N', 'icon' => 'bi-eye-fill', 'color' => 'info'],
+                        ['type' => 'nrvn', 'label' => 'NR V/N', 'icon' => 'bi-binoculars', 'color' => 'info'],
+                        ['type' => 'sph_cyl', 'label' => 'SPH / CYL', 'icon' => 'bi-circle-half', 'color' => 'primary'],
+                        ['type' => 'axis', 'label' => 'Axis', 'icon' => 'bi-arrows-angle-expand', 'color' => 'secondary'],
+                        ['type' => 'nct', 'label' => 'NCT (IOP)', 'icon' => 'bi-activity', 'color' => 'warning'],
+                    ],
+                ],
+                [
+                    'title' => 'Anterior Segment (O/E)',
+                    'items' => [
+                        ['type' => 'sac', 'label' => 'SAC', 'icon' => 'bi-droplet', 'color' => 'info'],
+                        ['type' => 'lid', 'label' => 'Lid', 'icon' => 'bi-eye-slash', 'color' => 'secondary'],
+                        ['type' => 'conj', 'label' => 'Conjunctiva', 'icon' => 'bi-circle-fill', 'color' => 'danger'],
+                        ['type' => 'cornea', 'label' => 'Cornea', 'icon' => 'bi-record-circle', 'color' => 'primary'],
+                        ['type' => 'ac', 'label' => 'A/C', 'icon' => 'bi-layers', 'color' => 'info'],
+                        ['type' => 'iris', 'label' => 'Iris', 'icon' => 'bi-bullseye', 'color' => 'warning'],
+                        ['type' => 'pupil', 'label' => 'Pupil', 'icon' => 'bi-dot', 'color' => 'dark'],
+                        ['type' => 'lens', 'label' => 'Lens', 'icon' => 'bi-camera-lens', 'color' => 'success'],
+                        ['type' => 'em', 'label' => 'E/M', 'icon' => 'bi-arrows-move', 'color' => 'secondary'],
+                        ['type' => 'covertest', 'label' => 'Cover Test', 'icon' => 'bi-shield-check', 'color' => 'success'],
+                    ],
+                ],
+                [
+                    'title' => 'Posterior Segment (FUNDUS)',
+                    'items' => [
+                        ['type' => 'disc', 'label' => 'Disc', 'icon' => 'bi-circle', 'color' => 'secondary'],
+                        ['type' => 'fr', 'label' => 'F/R', 'icon' => 'bi-reception-4', 'color' => 'secondary'],
+                    ],
+                ],
+            ];
+        }
+
+        return view('hospital.masters.index', [
+            'slug' => $slug,
+            'basicMasters' => $basicMasters,
+            'showBasicMasters' => $basicMasters->isNotEmpty(),
+            'otMasters' => $otMasters,
+            'showOtMasters' => $otMasters->isNotEmpty(),
+            'showEyeExamMasters' => $showEyeExamMasters,
+            'eyeExamGroups' => $eyeExamGroups,
+        ]);
+    }
+
+    private function featureForBasicType(string $type): string
+    {
+        return match ($type) {
+            'cases' => 'casetype',
+            'locations' => 'location',
+            'referrers' => 'referrer',
+            'durations' => 'duration',
+            'advices', 'instructions' => 'casetype',
+            default => 'casetype',
+        };
+    }
+
+    private function authorizeBasicAction(string $type, string $action): void
+    {
+        $feature = $this->featureForBasicType($type);
+        abort_unless($this->perm->can("{$feature}_{$action}"), 403, 'Access denied.');
     }
 
     public function index(string $slug, string $type): View
     {
+        $feature = $this->featureForBasicType($type);
+        abort_unless(
+            $this->perm->canAny([
+                "{$feature}_view",
+                "{$feature}_add",
+                "{$feature}_edit",
+                "{$feature}_delete",
+            ]),
+            403,
+            'Access denied.'
+        );
+
         $modelClass = $this->resolveModel($type);
         $instance = new $modelClass;
         if ($type === 'locations') {
@@ -84,15 +194,22 @@ class BasicMasterController extends Controller
         $columns = array_values(array_diff($instance->getFillable(), ['tenant_id']));
         $title = Str::headline($type);
         $routeGroup = 'hospital.masters.basic';
+        $feature = $this->featureForBasicType($type);
+        $canAdd = $this->perm->can("{$feature}_add");
+        $canEdit = $this->perm->can("{$feature}_edit");
+        $canDelete = $this->perm->can("{$feature}_delete");
+        $canWrite = $canAdd || $canEdit || $canDelete;
 
         return view(
             'hospital.masters.dynamic_index',
-            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup')
+            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup', 'canWrite', 'canAdd', 'canEdit', 'canDelete')
         );
     }
 
     public function store(Request $request, string $slug, string $type): RedirectResponse
     {
+        $this->authorizeBasicAction($type, 'add');
+
         if ($type === 'locations') {
             return $this->storeLocation($request);
         }
@@ -169,7 +286,7 @@ class BasicMasterController extends Controller
         $roleSlug = $user?->role?->slug;
 
         $allowedByRole = in_array($roleSlug, ['hospital_admin', 'reception', 'receptionist', 'receptionist_opd'], true);
-        $allowedByPermission = $this->perm->canAny(['opd.patient.register', 'opd.patient.register_phone', 'master.locations', 'ot.appointment.create', 'ot.appointment.edit']);
+        $allowedByPermission = $this->perm->canAny(['patient_register', 'patient_register_phone', 'location_manage', 'ot_appointment_create', 'ot_appointment_edit']);
 
         if (! $allowedByRole && ! $allowedByPermission) {
             return response()->json(['success' => false, 'message' => 'Forbidden'], 403);
@@ -276,6 +393,8 @@ class BasicMasterController extends Controller
 
     public function update(Request $request, string $slug, string $type, int $id): RedirectResponse
     {
+        $this->authorizeBasicAction($type, 'edit');
+
         if ($type === 'locations') {
             return $this->updateLocation($request, $id);
         }
@@ -342,6 +461,8 @@ class BasicMasterController extends Controller
 
     public function destroy(string $slug, string $type, int $id): RedirectResponse
     {
+        $this->authorizeBasicAction($type, 'delete');
+
         if ($type === 'locations') {
             MasterCity::findOrFail($id)->delete();
 

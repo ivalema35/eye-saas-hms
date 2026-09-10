@@ -101,6 +101,7 @@
                             <div class="pta-divider"></div>
 
                             {{-- Primary Exam --}}
+                            @haspermission('exam_primary')
                             @if($isPrimaryDone)
                                 <span class="pta pta-done" title="Primary Done"><i
                                         class="bi bi-clipboard2-check-fill"></i></span>
@@ -110,8 +111,10 @@
                                     <i class="bi bi-clipboard2-pulse"></i>
                                 </a>
                             @endif
+                            @endhaspermission
 
                             {{-- Secondary Exam --}}
+                            @haspermission('exam_secondary')
                             @if(!$isPrimaryDone)
                                 <span class="pta pta-locked" title="Complete Primary First"><i
                                         class="bi bi-lock-fill"></i></span>
@@ -129,26 +132,35 @@
                                     <i class="bi bi-file-earmark-medical"></i>
                                 </a>
                             @endif
+                            @endhaspermission
 
                             <div class="pta-divider"></div>
 
                             {{-- History --}}
+                            @haspermission('exam_history')
                             <a href="{{ route('hospital.patients.history', ['slug' => $slug, 'patient_ids' => $p->id]) }}"
                                 class="pta pta-util" title="History"><i class="bi bi-clock-history"></i></a>
+                            @endhaspermission
 
                             {{-- Print --}}
+                            @haspermission('bill_print')
                             <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $p->id, 'auto_print' => 1, 'return_to' => 'back']) }}"
                                 class="pta pta-util" title="Print"><i class="bi bi-printer-fill"></i></a>
+                            @endhaspermission
 
                             {{-- Edit --}}
+                            @haspermission('patient_edit')
                             <a href="{{ route('hospital.patients.edit', ['slug' => $slug, 'patient' => $p->id]) }}"
                                 class="pta pta-edit" title="Edit"><i class="bi bi-pencil-fill"></i></a>
+                            @endhaspermission
 
                             {{-- Check-in (phone only) --}}
+                            @haspermission('patient_register')
                             @if($p->type === 'phone' && !$p->case_id)
                                 <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $p->id]) }}"
                                     class="pta pta-checkin" title="Check In"><i class="bi bi-person-check-fill"></i></a>
                             @endif
+                            @endhaspermission
                         </div>
                     </td>
                 </tr>

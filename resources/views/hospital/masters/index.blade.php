@@ -18,8 +18,8 @@ rendered above the sections instead. --}}
             </nav>
         </div>
 
-
         {{-- ── Basic Masters ──────────────────────────────────────────────── --}}
+        @if(! empty($showBasicMasters))
         <div class="mb-2 masters-section">
             <h6 class="text-uppercase fw-bold letter-spacing-1 mb-3 masters-section-title"
                 style="color: var(--color-primary); font-size: .72rem; letter-spacing: .08em;">
@@ -27,15 +27,6 @@ rendered above the sections instead. --}}
             </h6>
 
             <div class="row g-3">
-                @php
-                    $basicMasters = [
-                        ['type' => 'cases', 'label' => 'Case Types', 'icon' => 'bi-folder2-open', 'color' => 'primary'],
-                        ['type' => 'locations', 'label' => 'Locations', 'icon' => 'bi-geo-alt-fill', 'color' => 'success'],
-                        ['type' => 'referrers', 'label' => 'Referrers', 'icon' => 'bi-person-lines-fill', 'color' => 'warning'],
-                        ['type' => 'durations', 'label' => 'Durations', 'icon' => 'bi-hourglass-split', 'color' => 'secondary'],
-                    ];
-                @endphp
-
                 @foreach($basicMasters as $m)
                     <div class="col-6 col-sm-4 col-md-3 col-xl-2">
                         <a href="{{ route('hospital.masters.basic.index', ['slug' => $slug, 'type' => $m['type']]) }}"
@@ -55,10 +46,12 @@ rendered above the sections instead. --}}
                 @endforeach
             </div>
         </div>
+        @endif
 
+        @if(! empty($showOtMasters))
+        @if(! empty($showBasicMasters))
         <hr class="my-4">
-
-        {{-- ── OT Masters ─────────────────────────────────────────────────── --}}
+        @endif
         <div class="mb-4 masters-section">
             <h6 class="text-uppercase fw-bold mb-3 masters-section-title"
                 style="color: var(--color-primary); font-size: .72rem; letter-spacing: .08em;">
@@ -66,19 +59,6 @@ rendered above the sections instead. --}}
             </h6>
 
             <div class="row g-3">
-                @php
-                    $otMasters = [
-                        ['route' => 'hospital.masters.ot.lens-options.index', 'label' => 'Lens Options', 'icon' => 'bi-eyeglasses', 'color' => 'dark'],
-                        ['route' => 'hospital.masters.ot.lens-powers.index', 'label' => 'Lens Powers', 'icon' => 'bi-rulers', 'color' => 'dark'],
-                        ['route' => 'hospital.masters.ot.lens-inventory.index', 'label' => 'Lens Inventory', 'icon' => 'bi-box-seam', 'color' => 'dark'],
-                        ['route' => 'hospital.masters.ot.slots.index', 'label' => 'OT Slots', 'icon' => 'bi-clock-history', 'color' => 'primary'],
-                        ['route' => 'hospital.masters.ot.types.index', 'label' => 'OT Types', 'icon' => 'bi-tags-fill', 'color' => 'success'],
-                        ['route' => 'hospital.masters.ot.surgery-types.index', 'label' => 'Surgery Types', 'icon' => 'bi-scissors', 'color' => 'warning'],
-                        ['route' => 'hospital.masters.ot.charge-heads.index', 'label' => 'Charge Heads', 'icon' => 'bi-cash-stack', 'color' => 'info'],
-                        ['route' => 'hospital.masters.ot.packages.index', 'label' => 'OT Packages', 'icon' => 'bi-box2-heart', 'color' => 'primary'],
-                    ];
-                @endphp
-
                 @foreach($otMasters as $m)
                     <div class="col-6 col-sm-4 col-md-3 col-xl-2">
                         <a href="{{ route($m['route'], ['slug' => $slug]) }}" class="text-decoration-none">
@@ -97,145 +77,42 @@ rendered above the sections instead. --}}
                 @endforeach
             </div>
         </div>
+        @endif
 
+        @if(! empty($showEyeExamMasters))
+        @if(! empty($showBasicMasters) || ! empty($showOtMasters))
         <hr class="my-4">
-
-        {{-- ── Eye Exam Masters ────────────────────────────────────────────── --}}
+        @endif
         <div class="masters-section">
             <h6 class="text-uppercase fw-bold mb-3 masters-section-title"
                 style="color: var(--color-primary); font-size: .72rem; letter-spacing: .08em;">
                 <i class="bi bi-eye me-1"></i> Eye Exam Masters
             </h6>
 
-            {{-- Clinical / Complaint / Diagnosis --}}
-            <p class="text-muted small mb-2 fw-medium masters-subsection-title">Clinical</p>
-            <div class="row g-3 mb-4">
-                @php
-                    $clinicalMasters = [
-                        ['type' => 'chief-complaints', 'label' => 'Chief Complaints', 'icon' => 'bi-clipboard2-pulse', 'color' => 'danger'],
-                        ['type' => 'kcos', 'label' => 'K/C/O', 'icon' => 'bi-heart-pulse', 'color' => 'warning'],
-                        ['type' => 'hno', 'label' => 'H/O', 'icon' => 'bi-clock-history', 'color' => 'info'],
-                        ['type' => 'diagnosis', 'label' => 'Diagnoses', 'icon' => 'bi-patch-check', 'color' => 'success'],
-                        ['type' => 'advice', 'label' => 'Advice', 'icon' => 'bi-chat-left-text', 'color' => 'primary'],
-                    ];
-                @endphp
-                @foreach($clinicalMasters as $m)
-                    <div class="col-6 col-sm-4 col-md-3 col-xl-2">
-                        <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => $m['type']]) }}"
-                            class="text-decoration-none">
-                            <div class="card border-0 shadow-sm h-100 master-nav-card">
-                                <div
-                                    class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3 gap-2">
-                                    <div class="master-icon-box bg-{{ $m['color'] }}-subtle text-{{ $m['color'] }}">
-                                        <i class="bi {{ $m['icon'] }} fs-5"></i>
+            @foreach($eyeExamGroups as $group)
+                <p class="text-muted small mb-2 fw-medium masters-subsection-title">{{ $group['title'] }}</p>
+                <div class="row g-3 mb-4">
+                    @foreach($group['items'] as $m)
+                        <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                            <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => $m['type']]) }}"
+                                class="text-decoration-none">
+                                <div class="card border-0 shadow-sm h-100 master-nav-card">
+                                    <div
+                                        class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3 gap-2">
+                                        <div class="master-icon-box bg-{{ $m['color'] }}-subtle text-{{ $m['color'] }}">
+                                            <i class="bi {{ $m['icon'] }} fs-5"></i>
+                                        </div>
+                                        <span class="fw-semibold small"
+                                            style="color: var(--color-primary);">{{ $m['label'] }}</span>
                                     </div>
-                                    <span class="fw-semibold small"
-                                        style="color: var(--color-primary);">{{ $m['label'] }}</span>
                                 </div>
-                            </div>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Vision --}}
-            <p class="text-muted small mb-2 fw-medium masters-subsection-title">Vision Values</p>
-            <div class="row g-3 mb-4">
-                @php
-                    $visionMasters = [
-                        ['type' => 'vn', 'label' => 'V/N', 'icon' => 'bi-eye', 'color' => 'info'],
-                        ['type' => 'vngl', 'label' => 'Vn C GL', 'icon' => 'bi-eyeglasses', 'color' => 'primary'],
-                        ['type' => 'vnst', 'label' => 'Vn C ST', 'icon' => 'bi-view-list', 'color' => 'primary'],
-                        ['type' => 'pnvn', 'label' => 'PH NV/N', 'icon' => 'bi-eye-fill', 'color' => 'info'],
-                        ['type' => 'nrvn', 'label' => 'NR V/N', 'icon' => 'bi-binoculars', 'color' => 'info'],
-                        ['type' => 'sph_cyl', 'label' => 'SPH / CYL', 'icon' => 'bi-circle-half', 'color' => 'primary'],
-                        ['type' => 'axis', 'label' => 'Axis', 'icon' => 'bi-arrows-angle-expand', 'color' => 'secondary'],
-                        ['type' => 'nct', 'label' => 'NCT (IOP)', 'icon' => 'bi-activity', 'color' => 'warning'],
-                    ];
-                @endphp
-                @foreach($visionMasters as $m)
-                    <div class="col-6 col-sm-4 col-md-3 col-xl-2">
-                        <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => $m['type']]) }}"
-                            class="text-decoration-none">
-                            <div class="card border-0 shadow-sm h-100 master-nav-card">
-                                <div
-                                    class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3 gap-2">
-                                    <div class="master-icon-box bg-{{ $m['color'] }}-subtle text-{{ $m['color'] }}">
-                                        <i class="bi {{ $m['icon'] }} fs-5"></i>
-                                    </div>
-                                    <span class="fw-semibold small"
-                                        style="color: var(--color-primary);">{{ $m['label'] }}</span>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Anterior Segment --}}
-            <p class="text-muted small mb-2 fw-medium masters-subsection-title">Anterior Segment (O/E)</p>
-            <div class="row g-3 mb-4">
-                @php
-                    $anteriorMasters = [
-                        ['type' => 'sac', 'label' => 'SAC', 'icon' => 'bi-droplet', 'color' => 'info'],
-                        ['type' => 'lid', 'label' => 'Lid', 'icon' => 'bi-eye-slash', 'color' => 'secondary'],
-                        ['type' => 'conj', 'label' => 'Conjunctiva', 'icon' => 'bi-circle-fill', 'color' => 'danger'],
-                        ['type' => 'cornea', 'label' => 'Cornea', 'icon' => 'bi-record-circle', 'color' => 'primary'],
-                        ['type' => 'ac', 'label' => 'A/C', 'icon' => 'bi-layers', 'color' => 'info'],
-                        ['type' => 'iris', 'label' => 'Iris', 'icon' => 'bi-bullseye', 'color' => 'warning'],
-                        ['type' => 'pupil', 'label' => 'Pupil', 'icon' => 'bi-dot', 'color' => 'dark'],
-                        ['type' => 'lens', 'label' => 'Lens', 'icon' => 'bi-camera-lens', 'color' => 'success'],
-                        ['type' => 'em', 'label' => 'E/M', 'icon' => 'bi-arrows-move', 'color' => 'secondary'],
-                        ['type' => 'covertest', 'label' => 'Cover Test', 'icon' => 'bi-shield-check', 'color' => 'success'],
-                    ];
-                @endphp
-                @foreach($anteriorMasters as $m)
-                    <div class="col-6 col-sm-4 col-md-3 col-xl-2">
-                        <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => $m['type']]) }}"
-                            class="text-decoration-none">
-                            <div class="card border-0 shadow-sm h-100 master-nav-card">
-                                <div
-                                    class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3 gap-2">
-                                    <div class="master-icon-box bg-{{ $m['color'] }}-subtle text-{{ $m['color'] }}">
-                                        <i class="bi {{ $m['icon'] }} fs-5"></i>
-                                    </div>
-                                    <span class="fw-semibold small"
-                                        style="color: var(--color-primary);">{{ $m['label'] }}</span>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
-
-            {{-- Posterior Segment --}}
-            <p class="text-muted small mb-2 fw-medium masters-subsection-title">Posterior Segment (FUNDUS)</p>
-            <div class="row g-3 mb-4">
-                @php
-                    $posteriorMasters = [
-                        ['type' => 'disc', 'label' => 'Disc', 'icon' => 'bi-circle', 'color' => 'secondary'],
-                        ['type' => 'fr', 'label' => 'F/R', 'icon' => 'bi-reception-4', 'color' => 'secondary'],
-                    ];
-                @endphp
-                @foreach($posteriorMasters as $m)
-                    <div class="col-6 col-sm-4 col-md-3 col-xl-2">
-                        <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => $m['type']]) }}"
-                            class="text-decoration-none">
-                            <div class="card border-0 shadow-sm h-100 master-nav-card">
-                                <div
-                                    class="card-body d-flex flex-column align-items-center justify-content-center text-center p-3 gap-2">
-                                    <div class="master-icon-box bg-{{ $m['color'] }}-subtle text-{{ $m['color'] }}">
-                                        <i class="bi {{ $m['icon'] }} fs-5"></i>
-                                    </div>
-                                    <span class="fw-semibold small"
-                                        style="color: var(--color-primary);">{{ $m['label'] }}</span>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                @endforeach
-            </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            @endforeach
         </div>
+        @endif
 
     </div>
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
+use App\Services\Auth\PermissionMatrix;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -176,9 +177,32 @@ class AuthController extends Controller
                 'is_super'    => (bool) $user->role->is_super,
                 'permissions' => $user->role->is_super
                     ? ['*']
-                    : $user->role->getGrantedPermissionKeys(),
+                    : $this->apiPermissionKeys($user),
             ] : null,
         ];
+    }
+
+    /**
+     * New matrix keys + reverse-mapped legacy dotted keys so Flutter can
+     * migrate gradually (checks for either style still work).
+     *
+     * @return list<string>
+     */
+    private function apiPermissionKeys(HospitalUser $user): array
+    {
+        $granted = $user->role->getGrantedPermissionKeys();
+        $out = $granted;
+
+        foreach (PermissionMatrix::legacyMap() as $old => $new) {
+            if (in_array($new, $granted, true)) {
+                $out[] = $old;
+            }
+            if (in_array($old, $granted, true)) {
+                $out[] = $new;
+            }
+        }
+
+        return array_values(array_unique($out));
     }
 
     private function formatHospital(Tenant $tenant): array

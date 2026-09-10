@@ -327,6 +327,7 @@ Master design. --}}
         </li> --}}
     </ul>
     <div class="medmaster-tab-actions">
+        @haspermission('medicine_add')
         <button type="button"
                 class="btn btn-primary btn-sm med-add-btn group-add-btn"
                 data-bs-toggle="modal"
@@ -334,6 +335,7 @@ Master design. --}}
                 onclick="resetGroupForm()">
             <i class="bi bi-plus-lg me-1"></i> New Group
         </button>
+        @endhaspermission
     </div>
 </div>
 
@@ -397,18 +399,16 @@ Master design. --}}
                                             <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
                                         </span>
                                     @endif
-                                    @if(($group->usage_scope ?? 'opd') !== 'opd')
-                                        <span class="badge {{ $group->usage_scope === 'ot' ? 'text-bg-warning' : 'text-bg-info' }} text-uppercase">
-                                            {{ $group->usage_scope === 'ot' ? 'OT only' : 'OPD + OT' }}
-                                        </span>
-                                    @endif
                                     <div class="gti-crud-wrap">
+                                        @haspermission('medicine_edit')
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-secondary group-icon-btn group-edit-btn edit-group-modal-btn"
                                                 data-record="{{ json_encode($groupRecord) }}"
                                                 title="Edit">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
+                                        @endhaspermission
+                                        @haspermission('medicine_delete')
                                         <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
                                               method="POST"
                                               onsubmit="return confirm('Delete this medicine group?')">
@@ -417,6 +417,7 @@ Master design. --}}
                                                 <i class="bi bi-trash3-fill"></i>
                                             </button>
                                         </form>
+                                        @endhaspermission
                                     </div>
                                 </td>
                                 @endif
@@ -445,18 +446,16 @@ Master design. --}}
                                             <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
                                         </span>
                                     @endif
-                                    @if(($group->usage_scope ?? 'opd') !== 'opd')
-                                        <span class="badge {{ $group->usage_scope === 'ot' ? 'text-bg-warning' : 'text-bg-info' }} text-uppercase">
-                                            {{ $group->usage_scope === 'ot' ? 'OT only' : 'OPD + OT' }}
-                                        </span>
-                                    @endif
                                     <div class="gti-crud-wrap">
+                                        @haspermission('medicine_edit')
                                         <button type="button"
                                                 class="btn btn-sm btn-outline-secondary group-icon-btn group-edit-btn edit-group-modal-btn"
                                                 data-record="{{ json_encode($groupRecord) }}"
                                                 title="Edit">
                                             <i class="bi bi-pencil-fill"></i>
                                         </button>
+                                        @endhaspermission
+                                        @haspermission('medicine_delete')
                                         <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
                                               method="POST"
                                               onsubmit="return confirm('Delete this medicine group?')">
@@ -465,6 +464,7 @@ Master design. --}}
                                                 <i class="bi bi-trash3-fill"></i>
                                             </button>
                                         </form>
+                                        @endhaspermission
                                     </div>
                                 </td>
                                 <td colspan="5" class="gti-empty-med">No medicines added yet.</td>

@@ -43,9 +43,11 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                 @endforeach
                             </select>
                         </form>
+                        @haspermission('ot_appointment_create')
                         <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="ot-add-btn">
                             <i class="bi bi-plus-lg"></i> New Appointment
                         </a>
+                        @endhaspermission
                     </div>
                 </div>
 
@@ -92,11 +94,14 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                             </td>
                                             <td class="ot-actions-cell">
                                                 @if(in_array($appointment->status, ['booked', 'confirmed']))
+                                                    @haspermission('ot_appointment_edit')
                                                     <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
                                                         class="btn btn-sm ot-icon-btn ot-icon-btn-edit me-1" title="Edit">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
+                                                    @endhaspermission
                                                     @if($appointment->status === 'booked')
+                                                        @haspermission('ot_appointment_confirm')
                                                         <form method="POST"
                                                             action="{{ route('hospital.ot.appointments.confirm', ['slug' => $slug, 'id' => $appointment->id]) }}"
                                                             class="d-inline">
@@ -105,7 +110,9 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                                                 class="btn btn-sm ot-icon-btn ot-icon-btn-confirm me-1"
                                                                 title="Confirm"><i class="bi bi-check2"></i></button>
                                                         </form>
+                                                        @endhaspermission
                                                     @endif
+                                                    @haspermission('ot_appointment_cancel')
                                                     <form method="POST"
                                                         action="{{ route('hospital.ot.appointments.cancel', ['slug' => $slug, 'id' => $appointment->id]) }}"
                                                         class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
@@ -113,6 +120,14 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                                         <button type="submit" class="btn btn-sm ot-icon-btn ot-icon-btn-cancel"
                                                             title="Cancel"><i class="bi bi-x-lg"></i></button>
                                                     </form>
+                                                    @endhaspermission
+                                                    @unless(
+                                                        hospital_can('ot_appointment_edit')
+                                                        || ($appointment->status === 'booked' && hospital_can('ot_appointment_confirm'))
+                                                        || hospital_can('ot_appointment_cancel')
+                                                    )
+                                                        <span class="text-muted small">-</span>
+                                                    @endunless
                                                 @else
                                                     <span class="text-muted small">-</span>
                                                 @endif

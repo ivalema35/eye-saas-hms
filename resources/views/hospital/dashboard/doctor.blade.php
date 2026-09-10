@@ -5,7 +5,6 @@
 @section('content')
 
     @php
-        $focReceptionists = $focReceptionists ?? collect();
         $doctorTodayPatients = $doctorAssignedPatients ?? $todayPatients;
     @endphp
 
@@ -27,13 +26,6 @@
                 <div class="hms-stat-label">Primary Queue</div>
                 <div class="hms-stat-value">{{ $doctorPrimaryDone }}</div>
                 <div class="hms-stat-meta">Secondary Queue: {{ $doctorSecondaryDone }}</div>
-            </div>
-        </div>
-        <div class="hms-stat-card">
-            <div class="hms-stat-icon hsi-orange"><i class="fa-solid fa-hand-holding-heart"></i></div>
-            <div class="hms-stat-body">
-                <div class="hms-stat-label">FOC Given Today</div>
-                <div class="hms-stat-value">{{ $todayFoc }}</div>
             </div>
         </div>
     </div>
@@ -69,70 +61,12 @@
                             <td>{{ $patient->contact_no }}</td>
                             <td>{{ $patient->created_at->format('h:i A') }}</td>
                             <td>
+                                @haspermission('exam_primary')
                                 <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
                                     class="hms-btn hms-btn-sm hms-btn-primary">
                                     <i class="fa-solid fa-stethoscope"></i> Examine
                                 </a>
-                                <!-- <button type="button"
-                                            class="hms-btn hms-btn-sm hms-btn-outline"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#focRequestModal{{ $patient->id }}">
-                                        <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-                                    </button> -->
-
-                                <div class="modal fade" id="focRequestModal{{ $patient->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <form method="POST" action="{{ route('hospital.foc.request', ['slug' => $slug]) }}">
-                                                @csrf
-                                                <!-- <div class="modal-header">
-                                                        <h5 class="modal-title">Request FOC</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div> -->
-                                                <div class="modal-body">
-                                                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
-                                                    <input type="hidden" name="doctor_id"
-                                                        value="{{ auth('hospital_user')->id() }}">
-
-                                                    <div class="mb-2">
-                                                        <label class="form-label mb-1">Patient Name</label>
-                                                        <input type="text" class="form-control"
-                                                            value="{{ $patient->full_name }}" readonly>
-                                                    </div>
-
-                                                    <div class="mb-2">
-                                                        <label class="form-label mb-1">Case Fee</label>
-                                                        <input type="number" step="0.01" name="foc_fee" class="form-control"
-                                                            value="{{ $patient->case_fee }}" readonly>
-                                                    </div>
-
-                                                    <div class="mb-2">
-                                                        <label class="form-label mb-1">Select Receptionist</label>
-                                                        <select name="reception_id" class="form-select" required>
-                                                            <option value="">Select Receptionist</option>
-                                                            @foreach($focReceptionists as $receptionist)
-                                                                <option value="{{ $receptionist->id }}">{{ $receptionist->name }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                    </div>
-
-                                                    <div>
-                                                        <label class="form-label mb-1">Reason</label>
-                                                        <textarea name="reason" class="form-control" rows="2"
-                                                            placeholder="Why FOC is requested" required></textarea>
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="hms-btn hms-btn-sm hms-btn-outline"
-                                                        data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="hms-btn hms-btn-sm hms-btn-primary">Submit
-                                                        Request</button>
-                                                </div>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
+                                @endhaspermission
                             </td>
                         </tr>
                     @empty
@@ -177,10 +111,12 @@
                             <td>{{ $patient->contact_no }}</td>
                             <td>{{ $patient->primary_done_at->format('h:i A') }}</td>
                             <td>
+                                @haspermission('exam_secondary')
                                 <a href="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
                                     class="hms-btn hms-btn-sm hms-btn-success">
                                     <i class="fa-solid fa-stethoscope"></i> Examine
                                 </a>
+                                @endhaspermission
                             </td>
                         </tr>
                     @empty

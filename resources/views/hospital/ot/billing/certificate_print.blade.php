@@ -9,21 +9,19 @@
             size: A5 portrait;
             margin: 13mm 14mm;
         }
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
         body {
             font-family: "Times New Roman", Times, Georgia, serif;
-            margin: 0;
             background: #fff;
             color: #111;
             font-size: 13px;
             line-height: 1.5;
         }
-        /* Base styles must already fit inside @page's own margin — DomPDF
-           (used for the app's PDF export) ignores @media print entirely, so
-           a "card preview" width/padding here would overflow the printable
-           canvas and get clipped. Real browsers reset to this exact layout
-           via @media print anyway, so there's no visual loss when printing
-           from web. See OT_DISCHARGE_INVOICES_WEB_PARITY_FIX_PLAN.md
-           Addendum (PDF clipping bug). */
+        /* DomPDF ignores @media print — keep base layout margin-free so PDF
+           fits the A5 canvas. Screen preview is sized to A5 below. */
         .page {
             width: 100%;
             min-height: auto;
@@ -32,6 +30,18 @@
             padding: 0;
             box-sizing: border-box;
             position: relative;
+        }
+        @media screen {
+            body {
+                background: #e5e7eb;
+            }
+            .page {
+                width: 148mm;          /* A5 width */
+                min-height: 210mm;     /* A5 height — vertical */
+                margin: 18px auto;
+                padding: 13mm 14mm;
+                box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
+            }
         }
         .date-row {
             text-align: right;
@@ -98,9 +108,21 @@
             cursor: pointer;
             font-family: Arial, sans-serif;
             font-size: 13px;
+            z-index: 10;
         }
         @media print {
-            .print-btn { display: none; }
+            html, body {
+                width: 148mm;
+                background: #fff;
+            }
+            .page {
+                width: 100%;
+                min-height: auto;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+            .print-btn { display: none !important; }
         }
     </style>
 </head>

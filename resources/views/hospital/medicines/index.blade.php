@@ -71,6 +71,7 @@ Master design. --}}
                     </li> --}}
                 </ul>
                 <div class="medmaster-tab-actions">
+                    @haspermission('medicine_add')
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
                         data-bs-target="#importMedicineModal">
                         <i class="bi bi-file-earmark-arrow-up me-1"></i> Excel Upload
@@ -79,6 +80,7 @@ Master design. --}}
                         data-bs-target="#medicineModal" onclick="resetMedicineForm()">
                         <i class="bi bi-plus-lg me-1"></i> Add Medicine
                     </button>
+                    @endhaspermission
                 </div>
             </div>
 
@@ -96,7 +98,6 @@ Master design. --}}
                                 <tr>
                                     <th style="width:50px">#</th>
                                     <th>Medicine Name</th>
-                                    <th>Type</th>
                                     <th>Dosage</th>
                                     <th>Pricing</th>
                                     <th class="text-end" style="width:120px">Actions</th>
@@ -109,24 +110,20 @@ Master design. --}}
                                         <td class="fw-semibold">
                                             <span class="med-name-cell">{{ $med->name }}</span>
                                         </td>
-                                        <td>
-                                            @php $scope = $med->usage_scope ?? 'opd'; @endphp
-                                            <span
-                                                class="badge {{ $scope === 'ot' ? 'text-bg-warning' : 'text-bg-primary' }} text-uppercase">
-                                                {{ strtoupper($scope) }}
-                                            </span>
-                                        </td>
                                         <td class="text-muted">{{ $med->dosage?->dosage ?? '—' }}</td>
                                         <td><span
                                                 class="med-price-pill">{{ $med->price !== null ? money($med->price, 2) : '—' }}</span>
                                         </td>
                                         <td class="text-end">
                                             <div class="d-flex justify-content-end gap-1 action-btn-group">
+                                                @haspermission('medicine_edit')
                                                 <button type="button"
                                                     class="btn btn-sm btn-outline-secondary med-icon-btn med-edit-btn edit-medicine-btn"
                                                     data-record="{{ json_encode($med) }}" title="Edit">
                                                     <i class="bi bi-pencil-fill"></i>
                                                 </button>
+                                                @endhaspermission
+                                                @haspermission('medicine_delete')
                                                 <form
                                                     action="{{ route('hospital.medicines.destroy', ['slug' => $slug, 'medicine' => $med->id]) }}"
                                                     method="POST" onsubmit="return confirm('Delete this medicine?')">
@@ -137,6 +134,7 @@ Master design. --}}
                                                         <i class="bi bi-trash3-fill"></i>
                                                     </button>
                                                 </form>
+                                                @endhaspermission
                                             </div>
                                         </td>
                                     </tr>

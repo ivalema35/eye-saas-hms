@@ -18,13 +18,11 @@ return [
     ['key' => 'opd_secondary_exam', 'label' => 'Secondary Eye Examination',  'actions' => ['view', 'create', 'edit']],
     ['key' => 'opd_bill_print',     'label' => 'OPD Bill Print',             'actions' => ['view']],
     ['key' => 'prescription_print', 'label' => 'Prescription Print',         'actions' => ['view']],
-    ['key' => 'foc_create',         'label' => 'FOC — Create (Doctor)',      'actions' => ['create']],
-    ['key' => 'foc_accept',         'label' => 'FOC — Accept (Reception)',   'actions' => ['create', 'edit']],
     ['key' => 'reports_opd',        'label' => 'OPD Reports & Export',       'actions' => ['view', 'create']],
     ['key' => 'patient_history',    'label' => 'Patient History Search',     'actions' => ['view']],
 
     // ─── OT MODULE ───────────────────────────────────────────────────
-    ['key' => 'ot_appointment',     'label' => 'OT Appointments (Pre-Registration)', 'actions' => ['view', 'create', 'edit']],
+    ['key' => 'ot_appointment',     'label' => 'OT Appointments (Pre-Registration)', 'actions' => ['view', 'create', 'edit', 'confirm', 'cancel']],
     ['key' => 'ot_booking',         'label' => 'OT Booking & Counselling',   'actions' => ['view', 'create', 'edit', 'delete']],
     ['key' => 'ot_consent',         'label' => 'OT Patient Consent',         'actions' => ['view', 'create']],
     ['key' => 'ot_package',         'label' => 'OT Package & Payment',       'actions' => ['view', 'create', 'edit']],

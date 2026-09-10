@@ -15,7 +15,7 @@ use Illuminate\View\View;
  * Role & Permission Management — Hospital Admin
  *
  * ROUTES: /{slug}/roles
- * ACCESS: permission:master.roles
+ * ACCESS: permission:role_manage
  */
 class RoleController extends Controller
 {

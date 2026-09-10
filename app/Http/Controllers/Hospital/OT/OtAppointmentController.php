@@ -9,8 +9,8 @@
  *          searches these by appointment number/mobile to pre-fill OPD registration.
  *          See docs/OT_WORKFLOW_UPGRADE_PRD.md §2.
  *
- * PERMISSIONS: ot.appointment.view (index/search), ot.appointment.create (store),
- *              ot.appointment.edit (update/cancel/confirm)
+ * PERMISSIONS: ot_appointment_view (index/search), ot_appointment_create (store),
+ *              ot_appointment_edit (update), ot_appointment_confirm, ot_appointment_cancel
  */
 
 namespace App\Http\Controllers\Hospital\OT;

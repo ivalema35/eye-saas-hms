@@ -11,7 +11,7 @@
     );
 @endphp
 
-@haspermission('ot.surgery.recommend')
+@haspermission('ot_surgery_recommend')
 <div class="modal fade ot-recommend-modal" id="recommendSurgeryModal" tabindex="-1"
     aria-labelledby="recommendSurgeryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">

@@ -4,15 +4,6 @@
 
 @section('content')
 <div class="assistant-home-page">
-    @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
-        <div class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>
-                Subscription expires in <strong>{{ $subscriptionDaysLeft }} days</strong>. Please renew soon.
-            </span>
-        </div>
-    @endif
-
     <div class="row g-3">
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('hospital.dashboard.assistant-ot', ['slug' => $slug]) }}"

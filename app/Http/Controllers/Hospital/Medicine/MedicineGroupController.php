@@ -49,7 +49,6 @@ class MedicineGroupController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'group_code' => ['nullable', 'string', 'max:50'],
             'diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id'],
-            'usage_scope' => ['required', 'in:opd,ot,both'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.medicine_id' => ['required', 'exists:medicines,id'],
             'items.*.dosage_id' => ['nullable', 'exists:dosages,id'],
@@ -66,7 +65,7 @@ class MedicineGroupController extends Controller
                 'name' => $request->name,
                 'group_code' => $request->group_code ?? null,
                 'diagnosis_id' => $request->diagnosis_id ?: null,
-                'usage_scope' => $request->usage_scope,
+                'usage_scope' => 'both',
             ]);
 
             $tenantId = config('app.tenant_id');
@@ -126,7 +125,6 @@ class MedicineGroupController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'group_code' => ['nullable', 'string', 'max:50'],
             'diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id'],
-            'usage_scope' => ['required', 'in:opd,ot,both'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.medicine_id' => ['required', 'exists:medicines,id'],
             'items.*.dosage_id' => ['nullable', 'exists:dosages,id'],
@@ -142,7 +140,7 @@ class MedicineGroupController extends Controller
                 'name' => $request->name,
                 'group_code' => $request->group_code ?? null,
                 'diagnosis_id' => $request->diagnosis_id ?: null,
-                'usage_scope' => $request->usage_scope,
+                'usage_scope' => 'both',
             ]);
 
             $group->items()->delete();

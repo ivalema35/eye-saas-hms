@@ -11,10 +11,12 @@
                 </a>
                 <p class="text-muted small mb-0">Keep your OT master data organized and easy to update.</p>
             </div>
+            @haspermission('ot_slot_add')
             <button type="button" class="btn btn-primary ot-master-add-btn" data-bs-toggle="modal"
                 data-bs-target="#slotFormModal" onclick="resetForm()">
                 <i class="bi bi-plus-lg me-1"></i> Add OT Slot
             </button>
+            @endhaspermission
         </div>
 
         <div class="card border-0 shadow-sm rounded-4 ot-master-card">
@@ -39,10 +41,13 @@
                                     <td>{{ $record->end_time }}</td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group shadow-sm rounded-3" role="group">
+                                            @haspermission('ot_slot_edit')
                                             <button class="btn btn-light border-0 text-primary ot-master-icon-btn" type="button"
                                                 onclick='editRecord(@json($record))' title="Edit">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
+                                            @endhaspermission
+                                            @haspermission('ot_slot_delete')
                                             <form method="POST" class="d-inline"
                                                 action="{{ route('hospital.masters.ot.slots.destroy', ['slug' => $slug, 'id' => $record->id]) }}"
                                                 onsubmit="return confirm('Delete this OT slot?');">
@@ -53,6 +58,7 @@
                                                     <i class="bi bi-trash3-fill"></i>
                                                 </button>
                                             </form>
+                                            @endhaspermission
                                         </div>
                                     </td>
                                 </tr>

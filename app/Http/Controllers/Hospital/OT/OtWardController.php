@@ -13,7 +13,7 @@
  *          Ready for OT → OT Assistant; Hold/Complicated/Preparing → Doctor.
  *          See docs/OT_WORKFLOW_UPGRADE_PRD.md §3.
  *
- * PERMISSIONS: ot.ward.entry (view), ot.preop.entry (vitals), ot.dilation.track (eye drops)
+ * PERMISSIONS: ot_ward_entry (view), ot_preop_entry (vitals), ot_dilation_track (eye drops)
  */
 
 namespace App\Http\Controllers\Hospital\OT;
@@ -93,10 +93,9 @@ class OtWardController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Eye Drop Register — Medicine Master (OT scope only)
+        // Eye Drop Register — all medicines from Medicine Master
         $otMedicines = Medicine::query()
             ->where('tenant_id', $tenantId)
-            ->where('usage_scope', 'ot')
             ->orderBy('name')
             ->get(['id', 'name']);
 
@@ -250,7 +249,6 @@ class OtWardController extends Controller
                 'max:150',
                 Rule::exists('medicines', 'name')->where(function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId)
-                        ->where('usage_scope', 'ot')
                         ->whereNull('deleted_at');
                 }),
             ],
@@ -259,7 +257,7 @@ class OtWardController extends Controller
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
         ], [
-            'medicine_name.exists' => 'Select a valid OT medicine from the master list.',
+            'medicine_name.exists' => 'Select a valid medicine from the master list.',
             'eye.in' => 'Eye must match Recommend Surgery selection'
                 .(in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' ('.$booking->eye.').' : '.'),
         ]);

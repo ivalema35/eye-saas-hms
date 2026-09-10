@@ -1,7 +1,6 @@
 @extends('hospital.layouts.app')
 @section('title', 'Dashboard')
-{{-- Layout page-header intentionally unused — replaced by the "Welcome
-     back" banner rendered inside the page content (design refresh). --}}
+{{-- Layout page-header unused; hospital admin welcome banner is in content. --}}
 
 @push('styles')
 <style>
@@ -246,7 +245,7 @@ body.hms-body:has(.bento-page--receptionist) {
     pointer-events: none;
 }
 
-/* ── Welcome banner ────────────────────────────────────────────────────── */
+/* ── Welcome banner (hospital admin) ───────────────────────────────────── */
 .dash-welcome-card {
     position: relative;
     z-index: 1;
@@ -687,52 +686,7 @@ body.hms-body:has(.bento-page--receptionist) {
     margin: 8px 0 0;
 }
 
-/* ── Quick actions ─────────────────────────────────────────────────────── */
-.qa-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 16px;
-    padding: 1.5rem 1.5rem 1.75rem;
-}
-.qa-pill {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: .7rem;
-    padding: 1.2rem 1rem;
-    background: #ffffff;
-    border: 1px solid rgba(27, 79, 114, 0.12);
-    border-radius: 16px;
-    text-decoration: none !important;
-    color: var(--dash-secondary);
-    font-weight: 800;
-    font-size: 13px;
-    text-align: center;
-    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease, color .22s ease;
-    box-shadow: var(--dash-shadow);
-}
-.qa-pill i,
-.qa-pill svg {
-    color: var(--dash-secondary) !important;
-    stroke: var(--dash-secondary) !important;
-    font-size: 1.4rem;
-}
-.qa-pill:hover {
-    background: var(--dash-secondary);
-    border-color: var(--dash-secondary);
-    color: var(--dash-white);
-    text-decoration: none;
-    transform: translateY(-4px);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
-}
-.qa-pill:hover i,
-.qa-pill:hover svg {
-    color: var(--dash-white) !important;
-    stroke: var(--dash-white) !important;
-}
-
-/* ── Alerts ────────────────────────────────────────────────────────────── */
+/* ── Alerts (hospital admin subscription) ──────────────────────────────── */
 .bento-alert {
     border-radius: 18px;
     padding: 1.1rem 1.25rem;
@@ -770,27 +724,6 @@ body.hms-body:has(.bento-page--receptionist) {
     opacity: .85;
 }
 
-/* ── FOC badge pulse (same secondary palette with enhanced animation) ──────── */
-.foc-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 26px;
-    height: 26px;
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--dash-secondary) 0%, rgba(27,79,114,.88) 100%);
-    color: var(--dash-white);
-    font-size: 11px;
-    font-weight: 900;
-    padding: 0 .5rem;
-    animation: dash-pulse 2s infinite;
-    border: 1px solid rgba(255,255,255,.2);
-}
-@keyframes dash-pulse {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.1); }
-}
-
 /* ── Buttons (normalize HMS button colors to match theme) ───────────────── */
 .hms-btn {
     border-radius: 14px !important;
@@ -808,14 +741,12 @@ body.hms-body:has(.bento-page--receptionist) {
     border-color: var(--dash-secondary) !important;
     color: var(--dash-white) !important;
 }
-.hms-btn-outline,
-.foc-view-btn {
+.hms-btn-outline {
     background: rgba(255, 255, 255, 0.96) !important;
     border-color: rgba(27,79,114,.2) !important;
     color: var(--dash-secondary) !important;
 }
-.hms-btn-outline:hover,
-.foc-view-btn:hover {
+.hms-btn-outline:hover {
     background: var(--dash-secondary) !important;
     border-color: var(--dash-secondary) !important;
     color: var(--dash-white) !important;
@@ -842,368 +773,6 @@ body.hms-body:has(.bento-page--receptionist) {
     border-color: #BFD6FF !important;
     color: #ffffff !important;
 }
-
-/* Keep premium FOC section consistent */
-.foc-premium-card {
-    border-radius: 18px !important;
-    border: 2px solid rgba(27,79,114,.2) !important;
-    background: linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(235,245,251,.75) 100%) !important;
-}
-.foc-premium-table thead tr { background: var(--dash-secondary) !important; }
-.foc-premium-table thead th {
-    color: var(--dash-white) !important;
-    border-bottom: 1px solid rgba(255,255,255,.18) !important;
-}
-.foc-accept-btn {
-    background: var(--dash-secondary) !important;
-    border-color: var(--dash-secondary) !important;
-    color: var(--dash-white) !important;
-    border-radius: 12px !important;
-}
-
-.foc-detail-modal .modal-dialog {
-    max-width: 620px;
-}
-
-.foc-request-modal .modal-dialog {
-    max-width: 680px;
-}
-
-.foc-detail-modal .modal-content {
-    border: 2px solid rgba(27,79,114,.2);
-    border-radius: 24px;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,251,253,.98));
-}
-
-.foc-request-modal .modal-content {
-    border: 2px solid rgba(27,79,114,.2);
-    border-radius: 24px;
-    overflow: hidden;
-    background: linear-gradient(180deg, rgba(255,255,255,.99), rgba(248,251,253,.98));
-}
-
-.foc-detail-modal .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1.2rem 1.35rem 1rem;
-    border-bottom: 0;
-    background: linear-gradient(135deg, var(--dash-secondary), rgba(27, 79, 114, 0.9));
-    color: var(--dash-white);
-    position: relative;
-}
-
-.foc-request-modal .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1.2rem 1.35rem 1rem;
-    border-bottom: 0;
-    background: linear-gradient(135deg, var(--dash-secondary), rgba(27, 79, 114, 0.9));
-    color: var(--dash-white);
-    position: relative;
-}
-
-.foc-request-modal .modal-header::after {
-    content: "";
-    position: absolute;
-    left: 1.35rem;
-    right: 1.35rem;
-    bottom: 0;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.16);
-}
-
-.foc-detail-modal .modal-header::after {
-    content: "";
-    position: absolute;
-    left: 1.35rem;
-    right: 1.35rem;
-    bottom: 0;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.16);
-}
-
-.foc-detail-modal .modal-title {
-    display: flex;
-    align-items: center;
-    gap: .8rem;
-    flex: 1 1 auto;
-    min-width: 0;
-    margin: 0;
-    font-size: 1.02rem;
-    font-weight: 800;
-    letter-spacing: -.01em;
-    color: var(--dash-white);
-    line-height: 1.2;
-    background: transparent !important;
-    text-decoration: none !important;
-    white-space: normal;
-}
-
-.foc-request-modal .modal-title {
-    display: flex;
-    align-items: center;
-    gap: .8rem;
-    flex: 1 1 auto;
-    min-width: 0;
-    margin: 0;
-    font-size: 1.02rem;
-    font-weight: 800;
-    letter-spacing: -.01em;
-    color: var(--dash-white);
-    line-height: 1.2;
-    background: transparent !important;
-    text-decoration: none !important;
-    white-space: normal;
-}
-
-.foc-detail-modal .modal-title-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255,255,255,.15);
-    flex-shrink: 0;
-}
-
-.foc-detail-modal .modal-title-icon i {
-    font-size: 1.05rem;
-    color: #fff !important;
-    line-height: 1;
-}
-
-.foc-request-modal .modal-title-icon {
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255,255,255,.15);
-    flex-shrink: 0;
-}
-
-.foc-request-modal .modal-title-icon i {
-    font-size: 1.05rem;
-    color: #fff !important;
-    line-height: 1;
-}
-
-.foc-detail-modal .btn-close {
-    width: 2.15rem;
-    height: 2.15rem;
-    margin: 0;
-    border-radius: 999px;
-    background-color: rgba(255,255,255,.14);
-    border: 1px solid rgba(255,255,255,.18);
-    opacity: 1;
-    filter: invert(1) grayscale(100%) brightness(200%);
-    flex-shrink: 0;
-}
-
-.foc-detail-modal .modal-body {
-    padding: 1.35rem;
-    background:
-        radial-gradient(circle at top right, rgba(27, 79, 114, 0.08), transparent 34%),
-        linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,248,251,.98));
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .95rem;
-}
-
-.foc-detail-modal .modal-body > p {
-    margin: 0 !important;
-    border: 2px solid rgba(27,79,114,.15);
-    border-radius: 18px;
-    background: rgba(255,255,255,.9);
-    padding: .95rem 1rem;
-    color: var(--dash-secondary);
-    font-size: 1rem;
-    font-weight: 800;
-    line-height: 1.45;
-    word-break: break-word;
-}
-
-.foc-request-modal .modal-body {
-    padding: 1.35rem;
-    background:
-        radial-gradient(circle at top right, rgba(27, 79, 114, 0.08), transparent 34%),
-        linear-gradient(180deg, rgba(255,255,255,.98), rgba(244,248,251,.98));
-}
-
-.foc-request-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .95rem;
-}
-
-.foc-request-card {
-    border: 2px solid rgba(27,79,114,.15);
-    border-radius: 18px;
-    background: rgba(255,255,255,.9);
-    padding: .95rem 1rem;
-}
-
-.foc-request-card.is-full {
-    grid-column: 1 / -1;
-}
-
-.foc-request-label {
-    display: block;
-    margin-bottom: .35rem;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--dash-s2-70);
-}
-
-.foc-request-value {
-    color: var(--dash-secondary);
-    font-size: 1.02rem;
-    font-weight: 800;
-    line-height: 1.45;
-    word-break: break-word;
-}
-
-.foc-request-fee {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    padding: .5rem .8rem;
-    border-radius: 999px;
-    background: rgba(27, 79, 114, 0.08);
-    color: var(--dash-secondary);
-    font-size: 1rem;
-    font-weight: 900;
-}
-
-.foc-request-select,
-.foc-request-textarea {
-    border-radius: 14px;
-    border-color: var(--dash-s2-18);
-    background: rgba(255,255,255,.96);
-    color: var(--dash-secondary);
-    box-shadow: none;
-}
-
-.foc-request-select:focus,
-.foc-request-textarea:focus {
-    border-color: var(--dash-secondary);
-    outline: none;
-}
-
-.foc-request-modal .modal-footer {
-    padding: 1rem 1.35rem 1.35rem;
-    border-top: 1px solid var(--dash-s2-12);
-    background: rgba(255,255,255,.92);
-}
-
-.foc-request-modal .modal-footer .hms-btn {
-    min-width: 118px;
-}
-
-.foc-modal-kicker {
-    font-size: .72rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: .12em;
-    color: rgba(255,255,255,.78);
-    margin-bottom: .25rem;
-}
-
-.foc-detail-modal .modal-body > p strong {
-    display: block;
-    margin-bottom: .35rem;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--dash-s2-70);
-}
-
-.foc-detail-modal .modal-body > p:last-child {
-    grid-column: 1 / -1;
-}
-
-.foc-detail-modal .modal-body > p:nth-child(4) {
-    background: linear-gradient(180deg, rgba(27,79,114,.08), rgba(255,255,255,.96));
-}
-
-.foc-detail-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .95rem;
-}
-
-.foc-detail-card {
-    border: 2px solid rgba(27,79,114,.15);
-    border-radius: 18px;
-    background: rgba(255,255,255,.9);
-    padding: .95rem 1rem;
-}
-
-.foc-detail-card.is-full {
-    grid-column: 1 / -1;
-}
-
-.foc-detail-label {
-    display: block;
-    margin-bottom: .35rem;
-    font-size: .72rem;
-    font-weight: 800;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--dash-s2-70);
-}
-
-.foc-detail-value {
-    color: var(--dash-secondary);
-    font-size: 1.02rem;
-    font-weight: 800;
-    line-height: 1.45;
-    word-break: break-word;
-}
-
-.foc-detail-value.is-muted {
-    color: var(--dash-s2-70);
-    font-weight: 700;
-}
-
-.foc-detail-fee {
-    display: inline-flex;
-    align-items: center;
-    gap: .45rem;
-    padding: .5rem .8rem;
-    border-radius: 999px;
-    background: rgba(27, 79, 114, 0.08);
-    color: var(--dash-secondary);
-    font-size: 1rem;
-    font-weight: 900;
-}
-
-.foc-detail-modal .modal-footer {
-    padding: 1rem 1.35rem 1.35rem;
-    border-top: 1px solid var(--dash-s2-12);
-    background: rgba(255,255,255,.92);
-}
-
-.foc-detail-modal .modal-footer .hms-btn {
-    min-width: 118px;
-}
-
-
-
-
-
 
 /* ── Receptionist doctor strip ────────────────────────────────────────── */
 .doctor-strip-wrap {
@@ -1337,37 +906,6 @@ body.hms-body:has(.bento-page--receptionist) {
 
 
 @media (max-width: 576px) {
-    .foc-detail-modal .modal-dialog {
-        margin: .85rem;
-    }
-
-    .foc-detail-modal .modal-body {
-        grid-template-columns: 1fr;
-    }
-
-    .foc-request-modal .modal-dialog {
-        margin: .85rem;
-    }
-
-    .foc-request-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .foc-detail-modal .modal-body > p:last-child {
-        grid-column: auto;
-    }
-
-    .foc-detail-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .foc-request-card.is-full {
-        grid-column: auto;
-    }
-
-
-
-
     .doctor-strip-grid {
         grid-template-columns: 1fr;
     }
@@ -1508,11 +1046,8 @@ body.hms-body:has(.bento-page--receptionist) {
     $hasQueue     = $primaryQueue       !== null;
     $hasPerf      = $receptionists      !== null;
     $hasOt        = $otToday            !== null;
-    $hasFocAlert  = $focAlerts          !== null;
     $isHospitalAdmin = $isHospitalAdmin ?? false;
     $otTotalToday = $otTotalToday ?? null;
-    $focReceptionists = $focReceptionists ?? collect();
-    $pendingFocRequests = $pendingFocRequests ?? collect();
     $doctorName = $doctorName ?? auth('hospital_user')->user()?->name;
     $doctorAssignedPatients = $doctorAssignedPatients ?? null;
     $doctorPrimaryDone = $doctorPrimaryDone ?? null;
@@ -1541,12 +1076,22 @@ body.hms-body:has(.bento-page--receptionist) {
         $doctorStripCards = $doctorCards->reject(fn ($doctor) => (int) $doctor->id === (int) auth('hospital_user')->id())->values();
     }
 
-    $hasAnyData   = $isHospitalAdmin || $hasClinical || $hasReception || $hasRevenue || $hasStaff || $hasOt || $hasFocAlert || $dischargePendingCount !== null;
+    $hasAnyData   = $isHospitalAdmin
+        || $hasClinical
+        || $hasReception
+        || $hasReceptionistSummary
+        || $hasRevenue
+        || $hasStaff
+        || $hasOt
+        || $dischargePendingCount !== null
+        || ($accountantPendingCount ?? null) !== null
+        || ($wardPendingCount ?? null) !== null
+        || ($otAssistantPendingCount ?? null) !== null;
     $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
 @endphp
 
-{{-- Welcome banner (hidden for receptionist — cleaner dashboard) --}}
-@if(!$isReceptionistUser)
+{{-- Welcome + subscription — hospital admin only --}}
+@if($isHospitalAdmin)
 <div class="dash-welcome-card">
     <div class="dash-welcome-left">
         <span class="dash-welcome-date"><i class="bi bi-calendar-check"></i> {{ now()->format('d M, Y') }}</span>
@@ -1554,38 +1099,21 @@ body.hms-body:has(.bento-page--receptionist) {
         <p class="dash-welcome-sub">Here's what's happening with {{ $tenant?->name ?? config('app.name') }} today.</p>
     </div>
 </div>
-@endif
 
-{{-- Subscription Alert (hidden for receptionist) --}}
-@if(!$isReceptionistUser && $subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
-    @php
-        $isHospitalAdmin = auth('hospital_user')->user()?->role?->is_super;
-    @endphp
-    @if($isHospitalAdmin)
-        <a href="{{ route('hospital.subscription.index', ['slug' => $slug]) }}"
-           class="bento-alert bento-alert-link {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>
-                @if($subscriptionDaysLeft <= 0)
-                    Your subscription has <strong>expired</strong>. Please renew now.
-                @else
-                    Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
-                @endif
-            </span>
-            <i class="fa-solid fa-chevron-right bento-alert-arrow"></i>
-        </a>
-    @else
-        <div class="bento-alert {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>
-                @if($subscriptionDaysLeft <= 0)
-                    Your subscription has <strong>expired</strong>. Please contact administrator.
-                @else
-                    Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
-                @endif
-            </span>
-        </div>
-    @endif
+@if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
+    <a href="{{ route('hospital.subscription.index', ['slug' => $slug]) }}"
+       class="bento-alert bento-alert-link {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>
+            @if($subscriptionDaysLeft <= 0)
+                Your subscription has <strong>expired</strong>. Please renew now.
+            @else
+                Subscription expires in <strong>{{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
+            @endif
+        </span>
+        <i class="fa-solid fa-chevron-right bento-alert-arrow"></i>
+    </a>
+@endif
 @endif
 
 {{-- ────────────────────────────────────────────────────────────────────────
@@ -1603,7 +1131,7 @@ body.hms-body:has(.bento-page--receptionist) {
             Logged in as <strong>{{ $authUser?->name }}</strong>
             @if($authUser?->role?->name) &mdash; {{ $authUser->role->name }} @endif
         </p>
-        <p class="text-muted small mb-0">Your role has no dashboard widgets assigned yet. Contact your administrator to configure the appropriate permissions.</p>
+        <p class="text-muted small mb-0">No dashboard widgets are enabled for this role. Open <strong>Roles &amp; Permissions → Dashboard → Home widgets</strong> and check the cards you want (Clinical, Reception, Revenue, OT, Staff). Empty counts still show as 0.</p>
     </div>
 @else
 
@@ -1644,7 +1172,7 @@ body.hms-body:has(.bento-page--receptionist) {
     </a>
 
     {{-- Reports --}}
-    @haspermission('reports.view')
+    @haspermission('report_view')
     <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
         <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#F5EEF8;color:#8E44AD">
@@ -1982,7 +1510,7 @@ body.hms-body:has(.bento-page--receptionist) {
 </div>
     @endif
 
-    {{-- Today's Registrations (opd.patient.register) --}}
+    {{-- Today's Registrations (patient_register) --}}
     @if($hasReception && !$isReceptionistUser)
         <div class="bento-card span-3">
             <div class="bento-stat">
@@ -2108,7 +1636,7 @@ body.hms-body:has(.bento-page--receptionist) {
                 </div>
             </div>
         </a>
-    {{-- OT Appointment (ot.patient.list / ot.appointment.view) --}}
+    {{-- OT Appointment (ot_patient_list / ot_appointment_view) --}}
     {{-- Receptionist: shown in the top 6-card row instead --}}
     @elseif($hasOt && !$isReceptionistUser)
         <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
@@ -2126,26 +1654,7 @@ body.hms-body:has(.bento-page--receptionist) {
         </a>
     @endif
 
-    {{-- FOC Approval Alert (opd.foc.accept) --}}
-    <!-- @if($hasFocAlert)
-        <div class="bento-card span-3">
-            <div class="bento-stat">
-                <div class="bento-icon ig-red">
-                    <i class="bi bi-file-earmark-check" style="font-size:22px;color:#C0392B"></i>
-                </div>
-                <div>
-                    <p class="metric-label">FOC Approval</p>
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="metric-value">{{ $focAlerts }}</div>
-                        @if($focAlerts > 0)<span class="foc-badge">!</span>@endif
-                    </div>
-                    <p class="metric-meta">Awaiting approval</p>
-                </div>
-            </div>
-        </div>
-    @endif -->
-
-    {{-- Staff Counts (master.doctors / master.receptions) --}}
+    {{-- Staff Counts (user_doctor_manage / user_reception_manage) --}}
     @if($hasStaff)
         <div class="bento-card span-3">
             <div class="bento-stat">
@@ -2262,18 +1771,12 @@ body.hms-body:has(.bento-page--receptionist) {
                                         </span>
                                     </td>
                                     <td>
+                                        @haspermission('exam_primary')
                                         <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
                                            class="hms-btn hms-btn-sm hms-btn-primary">
                                             <i class="fa-solid fa-stethoscope"></i> Examine
                                         </a>
-                                        <!-- @haspermission('opd.foc.create')
-                                            <button type="button"
-                                                    class="hms-btn hms-btn-sm hms-btn-outline"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#focRequestModal{{ $patient->id }}">
-                                                <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-                                            </button>
-                                        @endhaspermission -->
+                                        @endhaspermission
                                     </td>
                                 </tr>
                             @empty
@@ -2289,74 +1792,13 @@ body.hms-body:has(.bento-page--receptionist) {
                 </div>
             </div>
         </div>
-
-        @haspermission('opd.foc.create')
-            @foreach($primaryQueue as $patient)
-                <div class="modal fade foc-request-modal" id="focRequestModal{{ $patient->id }}" tabindex="-1" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-lg">
-                        <div class="modal-content">
-                            <form method="POST" action="{{ route('hospital.foc.request', ['slug' => $slug]) }}">
-                                @csrf
-                                <div class="modal-header">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <span class="modal-title-icon">
-                                            <i class="fa-solid fa-hand-holding-heart"></i>
-                                        </span>
-                                        <div>
-                                            <div class="foc-modal-kicker">Queue action</div>
-                                            <!-- <h5 class="modal-title">Request FOC</h5> -->
-                                        </div>
-                                    </div>
-                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
-                                    <input type="hidden" name="doctor_id" value="{{ auth('hospital_user')->id() }}">
-
-                                    <div class="foc-request-grid">
-                                        <div class="foc-request-card is-full">
-                                            <span class="foc-request-label">Patient Name</span>
-                                            <div class="foc-request-value">{{ $patient->full_name }}</div>
-                                        </div>
-
-                                        <div class="foc-request-card">
-                                            <span class="foc-request-label">Case Fee</span>
-                                            <div class="foc-request-value foc-request-fee">{{ money((float) $patient->case_fee, 2) }}</div>
-                                        </div>
-
-                                        <div class="foc-request-card">
-                                            <label class="foc-request-label mb-2" for="reception_id_{{ $patient->id }}">Select Receptionist</label>
-                                            <select id="reception_id_{{ $patient->id }}" name="reception_id" class="form-select foc-request-select" required>
-                                                <option value="">Select Receptionist</option>
-                                                @foreach($focReceptionists as $receptionist)
-                                                    <option value="{{ $receptionist->id }}">{{ $receptionist->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-
-                                        <div class="foc-request-card is-full">
-                                            <label class="foc-request-label mb-2" for="reason_{{ $patient->id }}">Reason</label>
-                                            <textarea id="reason_{{ $patient->id }}" name="reason" class="form-control foc-request-textarea" rows="3" placeholder="Why FOC is requested" required></textarea>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="hms-btn hms-btn-sm hms-btn-outline" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="hms-btn hms-btn-sm hms-btn-primary">Submit Request</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        @endhaspermission
     @endif
 
     {{-- Right pane: Revenue + Reception stacked ─────────────────────────── --}}
     @if($hasRevenue || $hasPerf)
         <div class="{{ $hasQueue ? 'col-lg-4' : 'col-12' }} d-flex flex-column gap-4">
 
-            {{-- Revenue Overview (reports.view / reports.export context) --}}
+            {{-- Revenue Overview (report_view / report_export context) --}}
             @if($hasRevenue)
                 <div class="bento-card">
                     <div class="bento-header">
@@ -2379,7 +1821,7 @@ body.hms-body:has(.bento-page--receptionist) {
                 </div>
             @endif
 
-            {{-- Reception Performance (master.receptions) --}}
+            {{-- Reception Performance (user_reception_manage) --}}
             @if($hasPerf)
                 <div class="bento-card">
                     <div class="bento-header">
@@ -2678,171 +2120,6 @@ body.hms-body:has(.bento-page--receptionist) {
     })();
 </script>
 @endpush
-
-<!-- @if($pendingFocRequests->isNotEmpty() || $hasFocAlert)
-<div class="row g-4 mb-4">
-    <div class="col-12">
-        <div class="bento-card foc-premium-card">
-            <div class="bento-header">
-                <h3 class="bento-title"><i class="fa-solid fa-hand-holding-heart me-1"></i> Pending FOC Requests</h3>
-                <span class="b-badge {{ $pendingFocRequests->count() > 0 ? 'b-badge-warn' : 'b-badge-green' }}">{{ $pendingFocRequests->count() }} pending</span>
-            </div>
-            <div class="table-responsive">
-                <table class="bento-table foc-premium-table">
-                    <thead style="background-color: #1B4F72 !important;">
-                        <tr>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">#</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">DOCTOR NAME</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">PATIENT NAME</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">MRD</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;">FEE TO WAIVE</th>
-                            <th style="color: #ffffff !important; font-weight: 600; border: none;" class="text-center">ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($pendingFocRequests as $i => $foc)
-                            <tr>
-                                <td>{{ $i + 1 }}</td>
-                                <td>{{ $foc->doctor?->name ?? '—' }}</td>
-                                <td>{{ $foc->patient?->full_name ?? '—' }}</td>
-                                <td>{{ $foc->patient?->patient_code ?? '—' }}</td>
-                                <td>{{ money((float) $foc->foc_fee, 2) }}</td>
-                                <td>
-                                    <button type="button" class="hms-btn hms-btn-sm hms-btn-outline foc-view-btn" data-bs-toggle="modal" data-bs-target="#focViewModal{{ $foc->id }}">
-                                        <i class="fa-solid fa-eye"></i> View
-                                    </button>
-
-                                    @haspermission('opd.foc.accept')
-                                        <form method="POST" action="{{ route('hospital.foc.accept', ['slug' => $slug, 'id' => $foc->id]) }}" style="display:inline">
-                                            @csrf
-                                            <button type="submit" class="hms-btn hms-btn-sm hms-btn-success foc-accept-btn">Accept</button>
-                                        </form>
-                                    @else
-                                        <span class="text-muted small">No access</span>
-                                    @endhaspermission
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center py-4" style="color:#94A3B8">No pending FOC requests</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div> -->
-
-@foreach($pendingFocRequests as $foc)
-    <div class="modal fade foc-detail-modal" id="focViewModal{{ $foc->id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <!-- <span class="modal-title-icon">
-                            <i class="fa-solid fa-hand-holding-heart"></i>
-                        </span> -->
-                        FOC Request Details
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p class="mb-1"><strong>Patient:</strong> {{ $foc->patient?->full_name ?? '—' }}</p>
-                    <p class="mb-1"><strong>MRD:</strong> {{ $foc->patient?->patient_code ?? '—' }}</p>
-                    <p class="mb-1"><strong>Doctor:</strong> {{ $foc->doctor?->name ?? '—' }}</p>
-                    <p class="mb-1"><strong>Fee to Waive:</strong> {{ money((float) $foc->foc_fee, 2) }}</p>
-                    <p class="mb-0"><strong>Reason:</strong><br>{{ $foc->reason ?: 'No reason provided.' }}</p>
-                </div>
-
-            </div>
-        </div>
-    </div>
-@endforeach
-@endif
-
-{{-- ════════════════════════════════════════════════════════════════════════
-     ROW 3: Quick Actions — hidden for receptionist (top bar + stat cards cover links)
-════════════════════════════════════════════════════════════════════════════ --}}
-@if(!$isReceptionistUser)
-<div class="row">
-    <div class="col-12">
-        <div class="bento-card">
-            <div class="bento-header">
-                <h3 class="bento-title"><i class="fa-solid fa-bolt me-1"></i> Quick Actions</h3>
-            </div>
-            <div class="qa-grid">
-                @haspermission('opd.patient.register')
-                    <a href="{{ route('hospital.patients.create', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-user-plus" style="font-size:24px;color:#1B4F72"></i>
-                        <span>Add Patient</span>
-                    </a>
-                @endhaspermission
-                @haspermission('opd.patient.view')
-                    <a href="{{ route('hospital.patients.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-users" style="font-size:24px;color:#1ABC9C"></i>
-                        <span>All Patients</span>
-                    </a>
-                @endhaspermission
-                @haspermission('ot.booking.create')
-                    <a href="{{ route('hospital.ot.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-scalpel" style="font-size:24px;color:#8E44AD"></i>
-                        <span>OT Bookings</span>
-                    </a>
-                @endhaspermission
-                <!-- @haspermission('opd.foc.create')
-                    <a href="{{ route('hospital.foc.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-hand-holding-heart" style="font-size:24px;color:#C0392B"></i>
-                        <span>FOC Cases</span>
-                    </a> -->
-                @endhaspermission
-                @haspermission('opd.reports.view')
-                    <a href="{{ route('hospital.reports.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-chart-bar" style="font-size:24px;color:#27AE60"></i>
-                        <span>Reports</span>
-                    </a>
-                @endhaspermission
-                @haspermission('master.roles')
-                    <a href="{{ route('hospital.roles.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-shield-halved" style="font-size:24px;color:#E67E22"></i>
-                        <span>Roles</span>
-                    </a>
-                @endhaspermission
-                @haspermission('master.doctors')
-                    <a href="{{ route('hospital.users.create', ['slug' => $slug]) }}" class="qa-pill">
-                        <i class="fa-solid fa-user-gear" style="font-size:24px;color:#34495E"></i>
-                        <span>Add User</span>
-                    </a>
-                @endhaspermission
-                @haspermission('settings.hospital')
-                    <a href="{{ route('hospital.settings.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-gear" style="font-size:24px;color:#34495E"></i>
-                        <span>Settings</span>
-                    </a>
-                @endhaspermission
-                @haspermission('medicine.hospital')
-                    <a href="{{ route('hospital.medicines.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-pills" style="font-size:24px;color:#34495E"></i>
-                        <span>Medicine</span>
-                    </a>
-                @endhaspermission
-                @haspermission('masters.hospital')
-                    <a href="{{ route('hospital.masters.index', $slug) }}" class="qa-pill">
-                        <i class="fa-solid fa-database" style="font-size:24px;color:#34495E"></i>
-                        <span>Masters</span>
-                    </a>
-                @endhaspermission
-                @haspermission('masters.hospital')
-                    <a href="{{ route('hospital.masters.detail.index', ['slug' => $slug, 'type' => 'diagnosis']) }}" class="qa-pill">
-                        <i class="fa-solid fa-stethoscope" style="font-size:24px;color:#34495E"></i>
-                        <span>Diagnosis</span>
-                    </a>
-                @endhaspermission
-            </div>
-        </div>
-    </div>
-</div>{{-- /row quick actions --}}
-@endif
 
 @endif {{-- /hasAnyData --}}
 

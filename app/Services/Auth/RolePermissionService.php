@@ -37,7 +37,7 @@ class RolePermissionService
     /**
      * Check if the current logged-in hospital user has the given permission.
      *
-     * @param  string  $permissionKey  e.g. 'opd.patient.register', 'opd.exam.primary'
+     * Accepts matrix keys (patient_view) or legacy dotted keys (opd.patient.view).
      */
     public function can(string $permissionKey): bool
     {
@@ -63,7 +63,13 @@ class RolePermissionService
 
         $grantedKeys = $this->getGrantedPermissionKeys($tenantId, $roleId);
 
-        return in_array($permissionKey, $grantedKeys, true);
+        foreach (PermissionMatrix::aliasesFor($permissionKey) as $alias) {
+            if (in_array($alias, $grantedKeys, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -107,39 +113,80 @@ class RolePermissionService
     }
 
     /**
-     * Get ALL permissions grouped by module, with is_granted status for a role.
-     * Used for the Role Permissions Edit UI (checkbox grid).
+     * Permissions for Role UI, ordered by permission_matrix (module → feature → actions).
      *
      * Returns:
      * [
      *   'opd' => [
-     *     ['id' => 1, 'action' => 'opd.patient.view',      'label' => 'View Patients',       'is_granted' => true],
-     *     ['id' => 2, 'action' => 'opd.patient.register',  'label' => 'Register Patient',    'is_granted' => false],
-     *     ...
+     *     'label' => 'OPD',
+     *     'features' => [
+     *       'patient' => [
+     *         'label' => 'Patients',
+     *         'permissions' => [
+     *           ['id' => 1, 'action' => 'patient_view', 'label' => '...', 'is_granted' => true],
+     *         ],
+     *       ],
+     *     ],
      *   ],
-     *   'ot' => [...],
-     *   ...
      * ]
      */
     public function getPermissionsForRoleUI(int $roleId): array
     {
-        // All platform permissions
-        $allPermissions = Permission::orderBy('module')->orderBy('sort_order')->get();
+        $byAction = Permission::query()->get()->keyBy('action');
 
-        // Currently granted permission IDs for this role
-        $grantedIds = RolePermission::where('role_id', $roleId)
-            ->where('is_granted', true)
-            ->pluck('permission_id')
-            ->toArray();
+        $grantedIds = $roleId > 0
+            ? RolePermission::where('role_id', $roleId)
+                ->where('is_granted', true)
+                ->pluck('permission_id')
+                ->map(fn ($id) => (int) $id)
+                ->all()
+            : [];
 
         $grouped = [];
-        foreach ($allPermissions as $permission) {
-            $grouped[$permission->module][] = [
-                'id' => $permission->id,
-                'action' => $permission->action,
-                'label' => $permission->label,
-                'description' => $permission->description,
-                'is_granted' => in_array($permission->id, $grantedIds, true),
+
+        foreach (PermissionMatrix::modules() as $moduleKey => $module) {
+            $featuresOut = [];
+            $features = $module['features'] ?? [];
+            uasort($features, fn ($a, $b) => ($a['sort'] ?? 100) <=> ($b['sort'] ?? 100));
+
+            foreach ($features as $featureKey => $feature) {
+                $actions = $feature['actions'] ?? [];
+                usort($actions, fn ($a, $b) => ($a['sort'] ?? 100) <=> ($b['sort'] ?? 100));
+
+                $perms = [];
+                foreach ($actions as $action) {
+                    $key = (string) ($action['key'] ?? '');
+                    $perm = $byAction->get($key);
+                    if (! $perm) {
+                        continue;
+                    }
+
+                    $perms[] = [
+                        'id' => $perm->id,
+                        'action' => $perm->action,
+                        'label' => $action['label'] ?? $perm->label,
+                        'description' => $perm->description,
+                        'is_granted' => in_array((int) $perm->id, $grantedIds, true),
+                    ];
+                }
+
+                if ($perms === []) {
+                    continue;
+                }
+
+                $featuresOut[$featureKey] = [
+                    'label' => $feature['label'] ?? $featureKey,
+                    'permissions' => $perms,
+                ];
+            }
+
+            if ($featuresOut === []) {
+                continue;
+            }
+
+            $grouped[$moduleKey] = [
+                'label' => $module['label'] ?? $moduleKey,
+                'features' => $featuresOut,
             ];
         }
 

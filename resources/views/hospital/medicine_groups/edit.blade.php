@@ -47,15 +47,6 @@
                            placeholder="e.g. CAT-001">
                     @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label fw-medium">Used In <span class="text-danger">*</span></label>
-                    <select name="usage_scope" class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
-                        <option value="opd" {{ old('usage_scope', $group->usage_scope ?? 'opd') === 'opd' ? 'selected' : '' }}>OPD only</option>
-                        <option value="ot" {{ old('usage_scope', $group->usage_scope ?? '') === 'ot' ? 'selected' : '' }}>OT only</option>
-                        <option value="both" {{ old('usage_scope', $group->usage_scope ?? '') === 'both' ? 'selected' : '' }}>Both OPD &amp; OT</option>
-                    </select>
-                    @error('usage_scope')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
             </div>
 
             <h6 class="fw-bold mb-3 pb-2 border-bottom" style="color: var(--color-primary);">

@@ -18,7 +18,13 @@ class RoleStoreRequest extends FormRequest
 
         $user->loadMissing('role');
 
-        return $user->isSuperUser();
+        if ($user->isSuperUser()) {
+            return true;
+        }
+
+        return app(\App\Services\Auth\RolePermissionService::class)->canAny([
+            'role_view', 'role_add', 'role_edit', 'role_delete', 'role_manage',
+        ]);
     }
 
     /** @return array<string, mixed> */

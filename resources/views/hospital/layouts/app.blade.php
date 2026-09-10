@@ -1422,7 +1422,8 @@
         <nav class="hms-navbar">
             <div class="top-header">
                 <div class="d-flex align-items-center">
-                    <img src="{{ $hospitalLogoUrl }}" style="height: 40px; margin-right: 15px;">
+                    <img src="{{ hospital_logo_light_url() }}" alt="{{ $hospitalName }} Logo"
+                        style="height: 40px; margin-right: 15px; object-fit: contain;">
                     <div class="fw-bold fs-4">{{ $hospitalName }}</div>
                 </div>
                 <div class="dropdown user-dropdown">
@@ -1466,7 +1467,8 @@
                     class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i>
                     <span>Dashboards</span></a>
 
-                {{-- Diagnosis Master Dropdown --}}
+                {{-- Diagnosis Master — eye exam masters only --}}
+                @hasanypermission('eye_exam_master_view|eye_exam_master_add|eye_exam_master_edit|eye_exam_master_manage')
                 <div class="dropdown">
                     <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
                         data-bs-auto-close="outside" aria-expanded="false" role="button">
@@ -1509,7 +1511,9 @@
                         <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/advice') }}">ADVICE</a></li>
                     </ul>
                 </div>
+                @endhasanypermission
 
+                @hasanypermission('medicine_view|medicine_add|medicine_edit|medicine_delete|medicine_manage')
                 <div class="dropdown">
                     <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
                         data-bs-auto-close="outside" aria-expanded="false" role="button">
@@ -1522,16 +1526,19 @@
                         </li>
                         <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Mode</a>
                         </li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Add Medicine</a></li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Add Group</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Medicines</a></li>
+                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Medicine Groups</a></li>
                     </ul>
                 </div>
+                @endhasanypermission
 
-                {{-- History --}}
+                {{-- History — exam_history only --}}
+                @haspermission('exam_history')
                 <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}"
                     class="text-white text-decoration-none">
                     <i class="bi bi-clock-history"></i> <span>History</span>
                 </a>
+                @endhaspermission
             </div>
 
         </nav>
@@ -1584,23 +1591,14 @@
                 <nav class="hms-sidenav">
 
                     {{-- Dashboard — always visible to authenticated hospital users --}}
-                    @php $permSvc = app(\App\Services\Auth\RolePermissionService::class); @endphp
                     <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
                         class="hms-nav-item {{ request()->routeIs('hospital.dashboard') ? 'active' : '' }}">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>Dashboard</span>
                     </a>
 
-                    {{-- ── OPD ─────────────────────────────────────────
-                    Visible if user has any patient permission.
-                    ── --}}
-                    @php
-                        $showOpd = $permSvc->can('opd.patient.view')
-                            || $permSvc->can('opd.patient.register')
-                            || $permSvc->can('opd.patient.register_phone');
-                    @endphp
-
-                    @if($showOpd)
+                    {{-- ── OPD ───────────────────────────────────────── --}}
+                    @hasanypermission('patient_view|patient_register|patient_register_phone|exam_history|bill_print')
                     <div class="hms-nav-divider"></div>
                     <div class="hms-nav-group-toggle" data-target="nav-opd">
                         <span class="hms-nav-group-label-wrap">
@@ -1610,30 +1608,25 @@
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
                     <div class="hms-nav-group-items" id="nav-opd">
-                        @haspermission('opd.patient.view')
+                        @haspermission('patient_view')
                         <a href="{{ route('hospital.patients.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ (request()->routeIs('hospital.patients.*') && !request()->routeIs('hospital.patients.history')) ? 'active' : '' }}">
                             <i class="bi bi-people-fill"></i>
                             <span>Patients</span>
                         </a>
+                        @endhaspermission
+                        @haspermission('exam_history')
                         <a href="{{ route('hospital.doctor.history', ['slug' => request()->route('slug')]) }}"
-                            class="hms-nav-item {{ request()->routeIs('hospital.doctor.history') ? 'active' : '' }}">
+                            class="hms-nav-item {{ request()->routeIs('hospital.doctor.history') || request()->routeIs('hospital.hospital.history') || request()->routeIs('hospital.partner.history') ? 'active' : '' }}">
                             <i class="bi bi-clock-history"></i>
                             <span>Share History</span>
                         </a>
                         @endhaspermission
                     </div>
-                    @endif
+                    @endhasanypermission
 
-                    {{-- ── CLINICAL ────────────────────────────────────
-                    Visible if user can view/write any exam.
-                    ── --}}
-                    @php
-                        $showClin = $permSvc->can('opd.exam.primary')
-                            || $permSvc->can('opd.exam.secondary');
-                    @endphp
-
-                    @if($showClin)
+                    {{-- ── CLINICAL ──────────────────────────────────── --}}
+                    @hasanypermission('exam_primary|exam_secondary')
                         <div class="hms-nav-divider"></div>
                         <div class="hms-nav-group-toggle" data-target="nav-clinical">
                             <span class="hms-nav-group-label-wrap">
@@ -1649,54 +1642,10 @@
                                 <span>Queue Dashboard</span>
                             </a>
                         </div>
-                    @endif
+                    @endhasanypermission
 
-                    {{-- ── FOC ─────────────────────────────────────────
-                    Visible if user can view or approve FOC.
-                    ── --}}
-                    <!-- @php
-                    $showFoc = $permSvc->can('opd.foc.create') || $permSvc->can('opd.foc.accept');
-                @endphp
-
-                @if($showFoc)
-                <div class="hms-nav-divider"></div>
-                <div class="hms-nav-group-toggle" data-target="nav-foc">
-                    <span class="hms-nav-section-label" style="padding:0;margin:0">FOC</span>
-                    <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                </div>
-                <div class="hms-nav-group-items" id="nav-foc">
-                    @haspermission('opd.foc.create')
-                        <a href="{{ route('hospital.foc.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ (request()->routeIs('hospital.foc.index') || request()->routeIs('hospital.foc.create') || request()->routeIs('hospital.foc.store') || request()->routeIs('hospital.foc.request') || request()->routeIs('hospital.foc.show')) ? 'active' : '' }}">
-                            <i class="bi bi-heart-fill"></i>
-                            <span>FOC Requests</span>
-                        </a>
-                    @endhaspermission
-                    @haspermission('opd.foc.accept')
-                        <a href="{{ route('hospital.foc.index', ['slug' => request()->route('slug')]) }}"
-                           class="hms-nav-item {{ (request()->routeIs('hospital.foc.accept') || request()->routeIs('hospital.foc.approve') || request()->routeIs('hospital.foc.reject')) ? 'active' : '' }}">
-                            <i class="bi bi-heart-pulse-fill"></i>
-                            <span>Approve FOC</span>
-                        </a>
-                    @endhaspermission
-                </div>
-                @endif -->
-
-                    {{-- ── OT / SURGERY ────────────────────────────────
-                    Visible if user can view OT bookings or surgery.
-                    ── --}}
-                    @php
-                        $showOt = $permSvc->can('ot.patient.list')
-                            || $permSvc->can('ot.appointment.view')
-                            || $permSvc->can('ot.counselling.fill')
-                            || $permSvc->can('ot.payment.record')
-                            || $permSvc->can('ot.ward.entry')
-                            || $permSvc->can('ot.surgery.record')
-                            || $permSvc->can('ot.lens.record')
-                            || $permSvc->can('ot.billing.manage');
-                    @endphp
-
-                    @if($showOt)
+                    {{-- ── OT / SURGERY ──────────────────────────────── --}}
+                    @hasanypermission('ot_patient_list|ot_appointment_view|ot_appointment_create|ot_counselling_fill|ot_payment_record|ot_ward_entry|ot_surgery_record|ot_lens_record|ot_billing_manage|ot_discharge_generate|ot_bill_print|ot_certificate_print')
                     <div class="hms-nav-divider"></div>
                     <div class="hms-nav-group-toggle" data-target="nav-ot">
                         <span class="hms-nav-group-label-wrap">
@@ -1706,7 +1655,7 @@
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
                     <div class="hms-nav-group-items" id="nav-ot">
-                        @haspermission('ot.appointment.view')
+                        @haspermission('ot_appointment_view')
                         <a href="{{ route('hospital.ot.appointments.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.ot.appointments.*') ? 'active' : '' }}">
                             <i class="bi bi-calendar2-week"></i>
@@ -1714,7 +1663,7 @@
                         </a>
                         @endhaspermission
 
-                        @haspermission('ot.counselling.fill')
+                        @haspermission('ot_counselling_fill')
                         <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.ot.counsellor.*') ? 'active' : '' }}">
                             <i class="bi bi-chat-left-heart"></i>
@@ -1722,7 +1671,7 @@
                         </a>
                         @endhaspermission
 
-                        @haspermission('ot.payment.record')
+                        @haspermission('ot_payment_record')
                         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.ot.accountant.*') || request()->routeIs('hospital.ot.payments.*') || request()->routeIs('hospital.ot.refunds.*') ? 'active' : '' }}">
                             <i class="bi bi-cash-coin"></i>
@@ -1730,7 +1679,7 @@
                         </a>
                         @endhaspermission
 
-                        @haspermission('ot.ward.entry')
+                        @haspermission('ot_ward_entry')
                         <a href="{{ route('hospital.ot.ward.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.ot.ward.index') ? 'active' : '' }}">
                             <i class="bi bi-hospital"></i>
@@ -1738,41 +1687,26 @@
                         </a>
                         @endhaspermission
 
-                        @php
-                            // OT Assistant now absorbs the old OT Doctor role's surgery
-                            // recording alongside its own lens-recording job (docs/tulsi.md §5).
-                            $showAssistant = $permSvc->can('ot.lens.record')
-                                || $permSvc->can('ot.lens.implant')
-                                || $permSvc->can('ot.surgery.ready')
-                                || $permSvc->can('ot.surgery.record');
-                        @endphp
-                        @if($showAssistant)
+                        @hasanypermission('ot_lens_record|ot_lens_implant|ot_surgery_ready|ot_surgery_record')
                             <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
                                 class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
                                 <i class="bi bi-eyeglasses"></i>
                                 <span>OT Assistant Dashboard</span>
                             </a>
-                        @endif
+                        @endhasanypermission
 
-                        {{-- Discharge Counter owns this desk (not Accountant). --}}
-                        @haspermission('ot.discharge.generate')
+                        @hasanypermission('ot_discharge_generate|ot_billing_manage|ot_bill_print|ot_certificate_print')
                         <a href="{{ route('hospital.ot.billing.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.ot.billing.index') || request()->routeIs('hospital.ot.invoice.*') || request()->routeIs('hospital.ot.discharge.*') || request()->routeIs('hospital.ot.summary-bill.*') || request()->routeIs('hospital.ot.certificate.*') || request()->routeIs('hospital.ot.medicine-slip.*') ? 'active' : '' }}">
                             <i class="bi bi-receipt-cutoff"></i>
                             <span>Discharge & Invoices</span>
                         </a>
-                        @endhaspermission
+                        @endhasanypermission
                     </div>
-                    @endif
+                    @endhasanypermission
 
-                    {{-- ── REPORTS ─────────────────────────────────────
-                    Visible if user has any report permission.
-                    ── --}}
-                    @php
-                        $showReports = $permSvc->can('reports.view') || $permSvc->can('reports.export');
-                    @endphp
-
-                    @if($showReports)
+                    {{-- ── REPORTS ───────────────────────────────────── --}}
+                    @hasanypermission('report_view|report_export|opd_reports_view|opd_reports_export')
                         <div class="hms-nav-divider"></div>
                         <div class="hms-nav-group-toggle" data-target="nav-reports">
                             <span class="hms-nav-group-label-wrap">
@@ -1782,27 +1716,25 @@
                             <i class="bi bi-chevron-down hms-nav-chevron"></i>
                         </div>
                         <div class="hms-nav-group-items" id="nav-reports">
+                            @hasanypermission('report_view|opd_reports_view')
                             <a href="{{ route('hospital.reports.index', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.reports.index') ? 'active' : '' }}">
+                                class="hms-nav-item {{ request()->routeIs('hospital.reports.index') || request()->routeIs('hospital.reports.channel.*') ? 'active' : '' }}">
                                 <i class="bi bi-bar-chart-line-fill"></i>
                                 <span>OPD Reports</span>
                             </a>
+                            @endhasanypermission
+                            @haspermission('report_view')
                             <a href="{{ route('hospital.reports.ot.index', ['slug' => request()->route('slug')]) }}"
                                 class="hms-nav-item {{ request()->routeIs('hospital.reports.ot.*') ? 'active' : '' }}">
                                 <i class="bi bi-file-earmark-bar-graph"></i>
                                 <span>OT Reports</span>
                             </a>
+                            @endhaspermission
                         </div>
-                    @endif
+                    @endhasanypermission
 
-                    {{-- ── MEDICINES ────────────────────────────────────
-                    Visible if user has any medicine permission.
-                    ── --}}
-                    @php
-                        $showMed = $permSvc->can('master.medicines');
-                    @endphp
-
-                    @if($showMed)
+                    {{-- ── MEDICINES ──────────────────────────────────── --}}
+                    @hasanypermission('medicine_view|medicine_add|medicine_edit|medicine_delete|medicine_manage')
                     <div class="hms-nav-divider"></div>
                     <div class="hms-nav-group-toggle" data-target="nav-medicines">
                         <span class="hms-nav-group-label-wrap">
@@ -1812,11 +1744,15 @@
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
                     <div class="hms-nav-group-items" id="nav-medicines">
-                        @haspermission('master.medicines')
                         <a href="{{ route('hospital.medicines.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.medicines.*') ? 'active' : '' }}">
                             <i class="bi bi-capsule-pill"></i>
                             <span>Medicines</span>
+                        </a>
+                        <a href="{{ route('hospital.medicine-groups.index', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.medicine-groups.*') ? 'active' : '' }}">
+                            <i class="bi bi-collection"></i>
+                            <span>Medicine Groups</span>
                         </a>
                         <a href="{{ route('hospital.medicine-types.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.medicine-types.*') ? 'active' : '' }}">
@@ -1838,22 +1774,11 @@
                             <i class="bi bi-eyedropper"></i>
                             <span>Dosages</span>
                         </a>
-                        @endhaspermission
                     </div>
-                    @endif
+                    @endhasanypermission
 
-                    {{-- ── CONFIG / MASTERS ────────────────────────────
-                    Visible if user can manage masters, settings, roles, or users.
-                    ── --}}
-                    @php
-                        $showConfig = $permSvc->can('master.case_types')
-                            || $permSvc->can('settings.hospital')
-                            || $permSvc->can('master.roles')
-                            || $permSvc->can('master.doctors')
-                            || $permSvc->can('master.receptions');
-                    @endphp
-
-                    @if($showConfig)
+                    {{-- ── CONFIG / MASTERS ──────────────────────────── --}}
+                    @hasanypermission('casetype_view|casetype_add|referrer_view|duration_view|location_view|eye_exam_master_view|ot_slot_view|ot_type_view|ot_charge_view|ot_inventory_view|ot_lens_option_view|ot_lens_power_view|ot_package_master_view|setting_hospital_view|role_view|user_doctor_view|user_reception_view|casetype_manage|location_manage|role_manage')
                     <div class="hms-nav-divider"></div>
                     <div class="hms-nav-group-toggle" data-target="nav-config">
                         <span class="hms-nav-group-label-wrap">
@@ -1863,36 +1788,36 @@
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
                     <div class="hms-nav-group-items" id="nav-config">
-                        @haspermission('master.case_types')
+                        @hasanypermission('casetype_view|casetype_add|casetype_edit|casetype_delete|referrer_view|duration_view|location_view|eye_exam_master_view|ot_slot_view|ot_type_view|ot_charge_view|ot_inventory_view|ot_lens_option_view|ot_lens_power_view|ot_package_master_view|casetype_manage|location_manage|eye_exam_master_manage')
                         <a href="{{ route('hospital.masters.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.masters.*') ? 'active' : '' }}">
                             <i class="bi bi-database-fill-gear"></i>
                             <span>Masters</span>
                         </a>
-                        @endhaspermission
-                        @haspermission('settings.hospital')
+                        @endhasanypermission
+                        @hasanypermission('setting_hospital_view|setting_hospital_edit|setting_hospital')
                         <a href="{{ route('hospital.settings.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.settings.*') ? 'active' : '' }}">
                             <i class="bi bi-gear-fill"></i>
                             <span>Settings</span>
                         </a>
-                        @endhaspermission
-                        @haspermission('master.roles')
+                        @endhasanypermission
+                        @hasanypermission('role_view|role_add|role_edit|role_delete|role_manage')
                         <a href="{{ route('hospital.roles.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.roles.*') ? 'active' : '' }}">
                             <i class="bi bi-shield-lock-fill"></i>
                             <span>Roles & Permissions</span>
                         </a>
-                        @endhaspermission
-                        @if($permSvc->can('master.doctors') || $permSvc->can('master.receptions'))
+                        @endhasanypermission
+                        @hasanypermission('user_doctor_view|user_reception_view|user_ot_staff_view|user_doctor_manage|user_reception_manage')
                             <a href="{{ route('hospital.users.index', ['slug' => request()->route('slug')]) }}"
                                 class="hms-nav-item {{ request()->routeIs('hospital.users.*') ? 'active' : '' }}">
                                 <i class="bi bi-person-gear"></i>
                                 <span>Users</span>
                             </a>
-                        @endif
+                        @endhasanypermission
                     </div>
-                    @endif
+                    @endhasanypermission
                 </nav>
             </div>{{-- /.hms-sidenav-wrap --}}
 
@@ -1919,7 +1844,6 @@
                     $contentTopbarSlug = request()->route('slug');
                     $isReceptionistUser = in_array($contentTopbarUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
                     $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
-                    $permSvcTop = app(\App\Services\Auth\RolePermissionService::class);
                 @endphp
 
                 {{-- In-content top bar: search + profile menu (design refresh) --}}
@@ -1928,7 +1852,7 @@
                         <i class="bi bi-list"></i>
                     </button>
 
-                    @if($permSvcTop->can('opd.patient.view'))
+                    @haspermission('patient_view')
                         <form class="hms-search-form"
                             action="{{ route('hospital.patients.index', ['slug' => $contentTopbarSlug]) }}" method="GET"
                             role="search">
@@ -1938,32 +1862,32 @@
                         </form>
                     @else
                         <div class="hms-search-form-spacer"></div>
-                    @endif
+                    @endhaspermission
 
                     <div class="hms-content-topbar-right">
                         @if($showReceptionRegisterActions)
                             <div class="reception-register-actions">
-                                @if($permSvcTop->can('opd.patient.register'))
+                                @haspermission('patient_register')
                                     <a href="{{ route('hospital.patients.create', ['slug' => $contentTopbarSlug]) }}"
                                         class="reception-register-btn">
                                         <i class="bi bi-person-plus"></i>
                                         <span>WALK IN</span>
                                     </a>
-                                @endif
-                                @if($permSvcTop->can('opd.patient.register_phone'))
+                                @endhaspermission
+                                @haspermission('patient_register_phone')
                                     <a href="{{ route('hospital.patients.create-phone', ['slug' => $contentTopbarSlug]) }}"
                                         class="reception-register-btn">
                                         <i class="bi bi-telephone"></i>
                                         <span>PHONE</span>
                                     </a>
-                                @endif
-                                @if($permSvcTop->can('ot.appointment.create'))
+                                @endhaspermission
+                                @haspermission('ot_appointment_create')
                                     <a href="{{ route('hospital.ot.appointments.create', ['slug' => $contentTopbarSlug]) }}"
                                         class="reception-register-btn">
                                         <i class="bi bi-calendar2-plus"></i>
                                         <span>OT APPOINTMENT</span>
                                     </a>
-                                @endif
+                                @endhaspermission
                             </div>
                         @endif
 

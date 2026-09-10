@@ -13,7 +13,7 @@
  *          (Phase B2 — docs/OT_1.0_REMAINING_PRD.md).
  *          See docs/OT_WORKFLOW_UPGRADE_PRD.md §8.
  *
- * PERMISSIONS: reports.view (index/show), reports.export (export)
+ * PERMISSIONS: report_view (index/show), report_export (export)
  */
 
 namespace App\Http\Controllers\Hospital\Report;
@@ -73,7 +73,7 @@ class OtReportController extends Controller
 
     public function index(string $slug): View
     {
-        $this->authorizePermission('reports.view');
+        $this->authorizePermission('report_view');
 
         $reportsByGroup = collect(self::REPORTS)
             ->map(fn (array $meta, string $key) => [...$meta, 'key' => $key])
@@ -87,7 +87,7 @@ class OtReportController extends Controller
 
     public function show(Request $request, string $slug, string $type): View
     {
-        $this->authorizePermission('reports.view');
+        $this->authorizePermission('report_view');
 
         abort_unless(array_key_exists($type, self::REPORTS), 404);
 
@@ -107,7 +107,7 @@ class OtReportController extends Controller
 
     public function export(Request $request, string $slug, string $type): BinaryFileResponse
     {
-        $this->authorizePermission('reports.export');
+        $this->authorizePermission('report_export');
 
         abort_unless(array_key_exists($type, self::REPORTS), 404);
 
@@ -121,7 +121,7 @@ class OtReportController extends Controller
 
     public function exportPdf(Request $request, string $slug, string $type)
     {
-        $this->authorizePermission('reports.export');
+        $this->authorizePermission('report_export');
 
         abort_unless(array_key_exists($type, self::REPORTS), 404);
 
@@ -148,7 +148,7 @@ class OtReportController extends Controller
      */
     public function patientPrescriptionPdf(Request $request, string $slug, int $patient): View
     {
-        $this->authorizePermission('reports.view');
+        $this->authorizePermission('report_view');
 
         $patientModel = Patient::findOrFail($patient);
         $tenant = app('tenant');

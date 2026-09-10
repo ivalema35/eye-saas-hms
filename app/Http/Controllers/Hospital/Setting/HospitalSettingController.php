@@ -33,7 +33,7 @@ class HospitalSettingController extends Controller
 
     public function index(): View
     {
-        $this->authorizePermission('settings.hospital');
+        $this->authorizePermission('setting_hospital');
 
         $slug   = request()->route('slug');
         $tenant = app()->bound('tenant') ? app('tenant') : null;
@@ -101,7 +101,7 @@ class HospitalSettingController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $this->authorizePermission('settings.hospital');
+        $this->authorizePermission('setting_hospital');
 
         $slug = $request->route('slug');
         $tenantId = (int) config('app.tenant_id');

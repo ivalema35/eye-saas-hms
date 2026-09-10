@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Hospital\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
-use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
@@ -70,8 +69,9 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Clinical Data (exam.primary.view) ────────────────────────────────
-        // Today's patients and pending exam queue.
+        // ── Clinical Data (dashboard_clinical) ───────────────────────────────
+        // Today's patients and pending exam queue. Counts stay 0 when empty —
+        // UI still renders; uncheck the Role → Dashboard widget to hide.
         $todayPatients = null;
         $pendingExams = null;
         $todayPrimary = null;
@@ -85,7 +85,7 @@ class DashboardController extends Controller
         $primaryQueueCount = null;
         $secondaryQueueCount = null;
 
-        if ($this->perm->can('opd.exam.primary') || $this->perm->can('opd.exam.secondary') || $isDoctorUser) {
+        if ($this->perm->can('dashboard_clinical') || $isDoctorUser) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
             $pendingExams = Patient::whereDate('appointment_date', $today)
                 ->whereNull('primary_done_at')
@@ -267,10 +267,10 @@ class DashboardController extends Controller
                     $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->count();
+                    // P = primary exam completed (any); S = secondary completed
                     $doctorPrimaryDone = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->whereNotNull('primary_done_at')
-                        ->whereNull('secondary_done_at')
                         ->count();
                     $doctorSecondaryDone = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
@@ -290,16 +290,13 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Reception Data (opd.patient.register / opd.patient.register_phone) ────────────
-        // Today's registrations and outstanding FOC requests.
+        // ── Reception Data (dashboard_reception) ─────────────────────────────
         $todayRegistrations = null;
-        $focPending = null;
         $todayWalkin = null;
         $todayPhone = null;
 
-        if ($this->perm->can('opd.patient.register')) {
+        if ($this->perm->can('dashboard_reception')) {
             $todayRegistrations = Patient::whereDate('appointment_date', $today)->count();
-            $focPending = Foc::where('accepted', false)->count();
             $todayWalkin = Patient::whereDate('appointment_date', $today)
                 ->where('type', 'walkin')
                 ->count();
@@ -317,7 +314,7 @@ class DashboardController extends Controller
         $receptionistMyPatientsToday = null;
         $receptionistTodayPhone = null;
 
-        if ($isReceptionistUser && ($this->perm->can('opd.patient.register') || $this->perm->can('opd.patient.register_phone'))) {
+        if ($isReceptionistUser && $this->perm->can('dashboard_reception')) {
             $receptionistBasePatients = Patient::whereHas('reception.role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
             $myPatientsQuery = Patient::where('reception_id', $user?->id);
 
@@ -353,7 +350,7 @@ class DashboardController extends Controller
         $revenueYear = null;
         $revenueBreakdown = null;
 
-        if ($this->perm->can('opd.reports.view')) {
+        if ($this->perm->can('dashboard_revenue')) {
             $todaySummary = $this->collectionService->summaryForDay($today);
             $monthSummary = $this->collectionService->summaryForCalendarMonth(now());
             $yearSummary = $this->collectionService->summaryForCalendarYear(now());
@@ -368,12 +365,12 @@ class DashboardController extends Controller
             ];
         }
 
-        // ── OT Appointment card (ot.patient.list / ot.appointment.view) ─────
+        // ── OT Appointment card (dashboard_ot) ──────────────────────────────
         $otToday = null;
         $otOperated = null;
         $otPending = null;
 
-        if ($this->perm->can('ot.patient.list') || $this->perm->can('ot.appointment.view')) {
+        if ($this->perm->can('dashboard_ot')) {
             $otToday = OtAppointment::whereDate('appointment_date', $today)->count();
             $otOperated = OtAppointment::whereDate('appointment_date', $today)
                 ->where('status', OtAppointment::STATUS_CONFIRMED)
@@ -391,7 +388,7 @@ class DashboardController extends Controller
         $accountantRefundsCount = null;
         $accountantCompletedCount = null;
 
-        if ($isAccountantUser && $this->perm->can('ot.payment.record')) {
+        if ($isAccountantUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_payment_record'))) {
             $accountantPendingCount = OtBooking::query()
                 ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
                 ->count();
@@ -422,7 +419,7 @@ class DashboardController extends Controller
         $isWardManagementUser = $user?->role?->slug === 'ward_management';
         $wardPendingCount = null;
 
-        if ($isWardManagementUser && $this->perm->can('ot.ward.entry')) {
+        if ($isWardManagementUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_ward_entry'))) {
             $wardPendingCount = OtBooking::query()
                 ->whereIn('ot_status', [
                     OtBooking::STATUS_PAYMENT_VERIFIED,
@@ -437,7 +434,7 @@ class DashboardController extends Controller
         $isOtAssistantUser = $user?->role?->slug === 'ot_assistant';
         $otAssistantPendingCount = null;
 
-        if ($isOtAssistantUser && $this->perm->can('ot.surgery.ready')) {
+        if ($isOtAssistantUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_surgery_ready'))) {
             $otAssistantReadyQuery = OtBooking::query()->where('ot_status', OtBooking::STATUS_READY);
 
             $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
@@ -453,7 +450,7 @@ class DashboardController extends Controller
         $isDischargeCounterUser = $user?->role?->slug === 'discharge_counter';
         $dischargePendingCount = null;
 
-        if ($isDischargeCounterUser && $this->perm->can('ot.billing.manage')) {
+        if ($isDischargeCounterUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_billing_manage'))) {
             $dischargePendingCount = OtBooking::query()
                 ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
                 ->count();
@@ -472,39 +469,12 @@ class DashboardController extends Controller
         // Dense OT lens overview cards not used on hospital admin home.
         $otOverview = null;
 
-        // ── FOC Approval Alerts (foc.approve) ────────────────────────────────
-        // Pending FOC requests awaiting this approver's decision.
-        $focAlerts = null;
-        $pendingFocRequests = null;
-        $focReceptionists = null;
-
-        if ($this->perm->can('opd.foc.accept')) {
-            $focAlerts = Foc::where('accepted', false)->count();
-
-            $pendingFocRequests = Foc::with([
-                'patient' => fn($q) => $q->withTrashed(),
-                'doctor',
-            ])
-                ->where('status', 'pending')
-                ->latest()
-                ->limit(20)
-                ->get();
-        }
-
-        if ($this->perm->can('opd.foc.create')) {
-            $focReceptionists = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'receptionist'))
-                ->active()
-                ->orderBy('name')
-                ->get(['id', 'name']);
-        }
-
-        // ── Staff Overview (master.doctors / master.receptions) ───────────────────────────
-        // Reception performance table — only for users who can see master data.
+        // ── Staff Overview (dashboard_staff) ────────────────────────────────
         $receptionists = null;
         $totalDoctors = null;
         $totalReceptions = null;
 
-        if ($this->perm->can('master.doctors') || $this->perm->can('master.case_types')) {
+        if ($this->perm->can('dashboard_staff')) {
             $totalDoctors = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'doctor'))->count();
             $totalReceptions = HospitalUser::whereHas('role', fn($q) => $q->where('slug', 'receptionist'))->count();
 
@@ -514,11 +484,7 @@ class DashboardController extends Controller
                     $base = Patient::where('reception_id', $rec->id)->whereDate('appointment_date', $today);
                     $rec->today_count = $base->count();
                     $rec->today_gross = (float) $base->sum('case_fee');
-                    $rec->today_foc = (float) Foc::where('reception_id', $rec->id)
-                        ->whereHas('patient', fn($q) => $q->whereDate('appointment_date', $today))
-                        ->where('accepted', true)
-                        ->sum('foc_fee');
-                    $rec->today_net = $rec->today_gross - $rec->today_foc;
+                    $rec->today_net = $rec->today_gross;
 
                     return $rec;
                 });
@@ -564,9 +530,8 @@ class DashboardController extends Controller
 
         if (
             ($isReceptionistUser || $isDoctorUser) && !$isPureDoctorUser && (
-                $this->perm->can('opd.patient.register')
-                || $this->perm->can('opd.exam.primary')
-                || $this->perm->can('opd.exam.secondary')
+                $this->perm->can('dashboard_clinical')
+                || $this->perm->can('dashboard_reception')
             )
         ) {
             $doctorCards = HospitalUser::whereHas('role', fn($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
@@ -647,7 +612,7 @@ class DashboardController extends Controller
 
         // AJAX-filter for the receptionist "Today Added Patients" widget (mobile
         // search). Short-circuits before the rest of the dashboard (revenue,
-        // staff, OT, FOC, etc.) is computed since none of that is needed here.
+        // staff, OT, etc.) is computed since none of that is needed here.
         // Returns the rendered partial as plain HTML — the count badge is read
         // by the frontend from a data-attribute on the partial's root element,
         // so no separate JSON envelope is needed.
@@ -669,7 +634,7 @@ class DashboardController extends Controller
                 ->whereIn('doctor_id', $doctorCards->pluck('id'))
                 ->select('doctor_id')
                 ->selectRaw('COUNT(*) as assigned_today')
-                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
+                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL THEN 1 ELSE 0 END) as primary_count')
                 ->selectRaw('SUM(CASE WHEN secondary_done_at IS NOT NULL THEN 1 ELSE 0 END) as secondary_count')
                 ->groupBy('doctor_id')
                 ->get()
@@ -688,8 +653,10 @@ class DashboardController extends Controller
                 ->sortBy(fn($doc) => $doc->id === $user->id ? 0 : 1)
                 ->values();
 
-            // OT doctor cards — same roster as OPD; counts from that doctor's OT bookings
-            // (assigned ot_doctor_id, or recommender booked_by when doctor not yet assigned).
+            // OT doctor cards:
+            // OP = ward-assigned consult queue (ot_doctor_id + not ready)
+            // OC = complete (operated / discharged / surgery_refused)
+            // OT = total for this doctor (ot_doctor_id) = complete + remaining
             $completeStatuses = [
                 OtBooking::STATUS_OPERATED,
                 OtBooking::STATUS_DISCHARGED,
@@ -698,35 +665,40 @@ class DashboardController extends Controller
             $doctorIds = $doctorCards->pluck('id')->all();
 
             $otStatsByDoctorId = collect();
+            $otConsultByDoctorId = collect();
             if ($doctorIds !== []) {
                 $otRows = OtBooking::query()
-                    ->selectRaw('COALESCE(ot_doctor_id, booked_by) as doctor_key')
+                    ->selectRaw('ot_doctor_id as doctor_key')
                     ->selectRaw('COUNT(*) as ot_total')
                     ->selectRaw(
                         'SUM(CASE WHEN ot_status IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_complete',
                         $completeStatuses
                     )
-                    ->selectRaw(
-                        'SUM(CASE WHEN ot_status NOT IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_pending',
-                        $completeStatuses
-                    )
-                    ->where(function ($q) use ($doctorIds) {
-                        $q->whereIn('ot_doctor_id', $doctorIds)
-                            ->orWhereIn('booked_by', $doctorIds);
-                    })
-                    ->groupBy(DB::raw('COALESCE(ot_doctor_id, booked_by)'))
+                    ->whereIn('ot_doctor_id', $doctorIds)
+                    ->groupBy('ot_doctor_id')
                     ->get()
                     ->keyBy('doctor_key');
 
                 $otStatsByDoctorId = $otRows;
+
+                $otConsultByDoctorId = OtBooking::query()
+                    ->doctorConsultationPending()
+                    ->whereIn('ot_doctor_id', $doctorIds)
+                    ->selectRaw('ot_doctor_id as doctor_key')
+                    ->selectRaw('COUNT(*) as ot_pending')
+                    ->groupBy('ot_doctor_id')
+                    ->get()
+                    ->keyBy('doctor_key');
             }
 
-            $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId) {
+            $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId, $otConsultByDoctorId) {
                 $stats = $otStatsByDoctorId->get($doc->id);
+                $consult = $otConsultByDoctorId->get($doc->id);
                 $clone = clone $doc;
-                $clone->ot_total = (int) ($stats->ot_total ?? 0);
-                $clone->ot_pending = (int) ($stats->ot_pending ?? 0);
                 $clone->ot_complete = (int) ($stats->ot_complete ?? 0);
+                $clone->ot_pending = (int) ($consult->ot_pending ?? 0);
+                // OT = complete + remaining (remaining includes OP consult + other active)
+                $clone->ot_total = (int) ($stats->ot_total ?? 0);
 
                 return $clone;
             });
@@ -788,7 +760,6 @@ class DashboardController extends Controller
             'doctorSecondaryDone',
             // Reception
             'todayRegistrations',
-            'focPending',
             'todayWalkin',
             'todayPhone',
             'receptionistTotalPatients',
@@ -809,10 +780,6 @@ class DashboardController extends Controller
             'otOperated',
             'otPending',
             'otTotalToday',
-            // FOC Approval
-            'focAlerts',
-            'pendingFocRequests',
-            'focReceptionists',
             // Staff
             'totalDoctors',
             'totalReceptions',

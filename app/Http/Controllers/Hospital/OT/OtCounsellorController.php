@@ -9,7 +9,7 @@
  *          consent (signatures), verifies blood reports, then sends the booking to Billing.
  *          See docs/OT_WORKFLOW_UPGRADE_PRD.md §1.
  *
- * PERMISSIONS: ot.counselling.fill (dashboard/form/counselling save), ot.consent.capture (consent save)
+ * PERMISSIONS: ot_counselling_fill (dashboard/form/counselling save), ot_consent_capture (consent save)
  */
 
 namespace App\Http\Controllers\Hospital\OT;

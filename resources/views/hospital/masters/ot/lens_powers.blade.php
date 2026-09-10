@@ -11,10 +11,12 @@
                 </a>
                 <p class="text-muted small mb-0">Quick-pick IOL power list — mark favourites for faster selection during lens entry.</p>
             </div>
+            @haspermission('ot_lens_power_add')
             <button type="button" class="btn btn-primary ot-master-add-btn" data-bs-toggle="modal"
                 data-bs-target="#lensPowerFormModal" onclick="resetForm()">
                 <i class="bi bi-plus-lg me-1"></i> Add Power
             </button>
+            @endhaspermission
         </div>
 
         <div class="card border-0 shadow-sm rounded-4 ot-master-card">
@@ -51,10 +53,13 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group shadow-sm rounded-3" role="group">
+                                            @haspermission('ot_lens_power_edit')
                                             <button class="btn btn-light border-0 text-primary ot-master-icon-btn" type="button"
                                                 onclick='editRecord(@json($record))' title="Edit">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
+                                            @endhaspermission
+                                            @haspermission('ot_lens_power_delete')
                                             <form method="POST" class="d-inline"
                                                 action="{{ route('hospital.masters.ot.lens-powers.destroy', ['slug' => $slug, 'id' => $record->id]) }}"
                                                 onsubmit="return confirm('Delete this lens power?');">
@@ -65,6 +70,7 @@
                                                     <i class="bi bi-trash3-fill"></i>
                                                 </button>
                                             </form>
+                                            @endhaspermission
                                         </div>
                                     </td>
                                 </tr>

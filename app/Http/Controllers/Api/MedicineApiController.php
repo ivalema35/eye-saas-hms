@@ -50,7 +50,6 @@ class MedicineApiController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name'             => ['required', 'string', 'max:255'],
-            'usage_scope'      => ['required', 'in:opd,ot'],
             'dosage_id'        => ['required', 'exists:dosages,id'],
             'duration'         => ['required', 'string', 'max:100'],
             'qty'              => ['required', 'string', 'max:50'],
@@ -70,7 +69,6 @@ class MedicineApiController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name'             => ['required', 'string', 'max:255'],
-            'usage_scope'      => ['required', 'in:opd,ot'],
             'dosage_id'        => ['required', 'exists:dosages,id'],
             'duration'         => ['required', 'string', 'max:100'],
             'qty'              => ['required', 'string', 'max:50'],
@@ -119,7 +117,7 @@ class MedicineApiController extends Controller
         return [
             'id'               => $m->id,
             'name'             => $m->name,
-            'usage_scope'      => $m->usage_scope,
+            'usage_scope' => $m->usage_scope ?? 'opd',
             'medicine_type_id' => $m->medicine_type_id,
             'medicine_type'    => $m->medicineType ? ['id' => $m->medicineType->id, 'name' => $m->medicineType->name] : null,
             'dosage_id'        => $m->dosage_id,

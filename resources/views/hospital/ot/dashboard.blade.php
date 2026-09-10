@@ -258,7 +258,7 @@ used across the rest of the app. --}}
                     <span class="ot-breadcrumb-current">OT Reception Dashboard</span>
                 </nav>
             </div>
-            @haspermission('ot.appointment.create')
+            @haspermission('ot_appointment_create')
             <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="hms-btn hms-btn-primary"
                 style="color: #1B4F72;">
                 <i class="bi bi-plus-circle"></i> New OT Appointment
@@ -319,13 +319,13 @@ used across the rest of the app. --}}
                 OT Workspace
             </h5>
             <div class="d-flex flex-wrap gap-2">
-                @haspermission('ot.appointment.view')
+                @haspermission('ot_appointment_view')
                 <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
                     class="hms-btn hms-btn-outline">
                     <i class="bi bi-calendar2-week"></i> OT Appointments
                 </a>
                 @endhaspermission
-                @haspermission('ot.counselling.fill')
+                @haspermission('ot_counselling_fill')
                 <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}"
                     class="hms-btn hms-btn-outline">
                     <i class="bi bi-chat-left-heart"></i> Counselling Queue

@@ -1400,9 +1400,11 @@ rendered above the hero card instead. --}}
 
                     {{-- Save Bar --}}
                     <div class="settings-save-wrap">
+                        @haspermission('setting_hospital_edit')
                         <button type="submit" class="btn btn-primary fw-bold px-5 settings-save-btn">
                             <i class="bi bi-save me-2"></i> Save All Settings
                         </button>
+                        @endhaspermission
                     </div>
 
                 </form>

@@ -309,31 +309,7 @@ across the rest of the app. --}}
             </div>
         </div>
 
-        <div class="permission-card">
-            <div class="table-responsive">
-            <table class="permission-table">
-                <tbody>
-                    @foreach($modules as $moduleName => $permissions)
-                    <tr class="perm-row">
-                        <td class="module-label">
-                            <i class="fa-solid fa-folder-open me-2 text-primary"></i>
-                                {{ str_replace('_', ' ', $moduleName) }}
-                        </td>
-                        <td class="perm-container">
-                                @foreach($permissions as $perm)
-                                <label class="perm-badge">
-                                    <input type="checkbox" class="perm-checkbox" name="permissions[]" value="{{ $perm['id'] }}"
-                                           {{ in_array($perm['id'], old('permissions', [])) ? 'checked' : '' }}>
-                                    <span>{{ $perm['label'] }}</span>
-                                </label>
-                                @endforeach
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-            </div>
-        </div>
+        @include('hospital.roles.partials.permission_matrix', ['modules' => $modules, 'isSuper' => false])
 
         <div class="role-submit-actions">
             <button type="submit" class="hms-btn hms-btn-primary" style="color: #1b4f72;">

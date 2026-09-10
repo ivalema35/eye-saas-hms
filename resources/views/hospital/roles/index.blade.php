@@ -36,10 +36,12 @@ panel design. --}}
                     </div>
                     <div class="roles-header-actions">
                         <span class="hms-badge hms-badge-info roles-count-pill">{{ $roles->count() }} roles</span>
+                        @haspermission('role_add')
                         <a href="{{ route('hospital.roles.create', ['slug' => $slug]) }}"
                             class="hms-btn hms-btn-primary roles-add-btn">
                             <i class="bi bi-plus-lg"></i> New Role
                         </a>
+                        @endhaspermission
                     </div>
                 </div>
                 <div class="hms-card-body roles-card-body">
@@ -79,11 +81,14 @@ panel design. --}}
                                             @endif
                                         </td>
                                         <td class="text-end" style="white-space:nowrap">
+                                            @haspermission('role_edit')
                                             <a href="{{ route('hospital.roles.edit', ['slug' => $slug, 'id' => $role->id]) }}"
                                                 class="btn btn-sm btn-outline-primary roles-action-btn roles-edit-btn me-2"
                                                 style="border-radius:8px;font-weight:500">
                                                 <i class="bi bi-pencil-fill"></i>
                                             </a>
+                                            @endhaspermission
+                                            @haspermission('role_delete')
                                             @if(!$role->is_system && $role->users_count === 0)
                                                 <form method="POST"
                                                     action="{{ route('hospital.roles.destroy', ['slug' => $slug, 'id' => $role->id]) }}"
@@ -98,6 +103,7 @@ panel design. --}}
                                                     </button>
                                                 </form>
                                             @endif
+                                            @endhaspermission
                                         </td>
                                     </tr>
                                 @empty

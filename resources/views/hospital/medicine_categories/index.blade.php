@@ -81,12 +81,14 @@ Master design. --}}
         </li> --}}
     </ul>
     <div class="medmaster-tab-actions">
+        @haspermission('medicine_add')
         <button class="btn btn-primary btn-sm type-add-btn"
                 data-bs-toggle="modal"
                 data-bs-target="#categoryModal"
                 onclick="resetCategoryForm()">
             <i class="bi bi-plus-lg me-1"></i> Add Medicine Category
         </button>
+        @endhaspermission
     </div>
 </div>
 
@@ -112,12 +114,15 @@ Master design. --}}
                         <td class="type-name-cell">{{ $category->name }}</td>
                         <td class="text-end">
                             <div class="d-flex justify-content-end gap-1 action-btn-group">
+                                @haspermission('medicine_edit')
                                 <button type="button"
                                         class="btn btn-sm btn-outline-secondary type-icon-btn edit-category-btn"
                                         data-record="{{ json_encode($category) }}"
                                         title="Edit">
                                     <i class="bi bi-pencil-fill"></i>
                                 </button>
+                                @endhaspermission
+                                @haspermission('medicine_delete')
                                 <form action="{{ route('hospital.medicine-categories.destroy', ['slug' => $slug, 'id' => $category->id]) }}"
                                       method="POST" class="d-inline"
                                       onsubmit="return confirm('Delete this category?');">
@@ -126,6 +131,7 @@ Master design. --}}
                                         <i class="bi bi-trash3-fill"></i>
                                     </button>
                                 </form>
+                                @endhaspermission
                             </div>
                         </td>
                     </tr>

@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use App\Services\Auth\RolePermissionService;
 use App\Services\Platform\MailConfigService;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Blade;
@@ -36,10 +35,14 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Custom Blade directive: @haspermission('opd.patient.view') ... @endhaspermission
+        // @haspermission('patient_view') ... @endhaspermission
         Blade::if('haspermission', function (string $permissionKey): bool {
-            return auth('hospital_user')->user()?->role?->is_super
-                || app(RolePermissionService::class)->can($permissionKey);
+            return hospital_can($permissionKey);
+        });
+
+        // @hasanypermission('patient_view|patient_register') ... @endhasanypermission
+        Blade::if('hasanypermission', function (string $permissionKeys): bool {
+            return hospital_can_any($permissionKeys);
         });
 
         Paginator::defaultView('vendor.pagination.hms');
