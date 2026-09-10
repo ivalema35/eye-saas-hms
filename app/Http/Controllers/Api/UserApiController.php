@@ -121,7 +121,6 @@ class UserApiController extends Controller
             'doctor_prefix'    => ['nullable', 'string', 'min:2', 'max:5', 'alpha'],
             'registration_no'  => ['nullable', 'string', 'max:50'],
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
-            'foc_permission'   => ['nullable', 'boolean'],
             // Files
             'signature'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
@@ -146,7 +145,6 @@ class UserApiController extends Controller
                                     : null,
             'registration_no'   => $validated['registration_no'] ?? null,
             'experience_years'  => $validated['experience_years'] ?? null,
-            'foc_permission'    => $validated['foc_permission'] ?? false,
             'signature_path'    => $signaturePath,
             'profile_photo_path'=> $profilePhotoPath,
         ]);
@@ -182,7 +180,6 @@ class UserApiController extends Controller
             'doctor_prefix'    => ['nullable', 'string', 'min:2', 'max:5', 'alpha'],
             'registration_no'  => ['nullable', 'string', 'max:50'],
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
-            'foc_permission'   => ['nullable', 'boolean'],
             // Files
             'signature'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
@@ -239,7 +236,6 @@ class UserApiController extends Controller
                                     : null,
             'registration_no'   => $validated['registration_no'] ?? null,
             'experience_years'  => $validated['experience_years'] ?? null,
-            'foc_permission'    => $validated['foc_permission'] ?? false,
             'signature_path'    => $signaturePath,
             'profile_photo_path'=> $profilePhotoPath,
         ]);
@@ -314,7 +310,6 @@ class UserApiController extends Controller
                 'is_super'       => (bool) $user->role->is_super,
                 'is_doctor_role' => $this->isDoctorRole($user->role),
             ] : null,
-            'foc_permission'  => (bool) $user->foc_permission,
             'last_login_at'   => $user->last_login_at?->toISOString(),
             // Round-tripped by the app as `expected_updated_at` on the next
             // edit — see ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 5.
@@ -351,7 +346,10 @@ class UserApiController extends Controller
             ? $role->grantedPermissions->pluck('action')->toArray()
             : $role->getGrantedPermissionKeys();
 
-        return in_array('opd.exam.primary', $keys) || in_array('opd.exam.secondary', $keys);
+        return in_array('exam_primary', $keys, true)
+            || in_array('exam_secondary', $keys, true)
+            || in_array('opd.exam.primary', $keys, true)
+            || in_array('opd.exam.secondary', $keys, true);
     }
 
     private function storeFile(Request $request, string $field, int $tenantId): ?string

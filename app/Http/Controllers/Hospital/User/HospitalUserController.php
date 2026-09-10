@@ -97,8 +97,8 @@ class HospitalUserController extends Controller
 
         $keys = $role->getGrantedPermissionKeys();
 
-        return in_array('opd.exam.primary', $keys, true)
-            || in_array('opd.exam.secondary', $keys, true);
+        return in_array('exam_primary', $keys, true)
+            || in_array('exam_secondary', $keys, true);
     }
 
     public function create(): View
@@ -137,7 +137,6 @@ class HospitalUserController extends Controller
             'status' => $data['status'],
             'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
             'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
-            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
             'registration_no' => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
             'experience_years' => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
             'signature_path' => $canPerformClinicalExams ? $signaturePath : null,
@@ -169,9 +168,9 @@ class HospitalUserController extends Controller
     {
         abort_unless(
             $this->permissionService->canAny([
-                'master.doctors',
-                'master.receptions',
-                'master.ot_staff',
+                'user_doctor_view', 'user_doctor_add', 'user_doctor_edit', 'user_doctor_delete',
+                'user_reception_view', 'user_reception_add', 'user_reception_edit', 'user_reception_delete',
+                'user_ot_staff_view', 'user_ot_staff_add', 'user_ot_staff_edit', 'user_ot_staff_delete',
             ]),
             403,
             'Access denied.'
@@ -217,7 +216,6 @@ class HospitalUserController extends Controller
             'status' => $data['status'],
             'doctor_type' => $canPerformClinicalExams ? ($data['doctor_type'] ?? null) : null,
             'doctor_prefix' => $canPerformClinicalExams ? (strtoupper($data['doctor_prefix'] ?? '') ?: null) : null,
-            'foc_permission' => $canPerformClinicalExams ? (bool) ($data['foc_permission'] ?? false) : false,
             'registration_no' => $canPerformClinicalExams ? ($data['registration_no'] ?? null) : null,
             'experience_years' => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
             'signature_path' => $canPerformClinicalExams ? $signaturePath : null,

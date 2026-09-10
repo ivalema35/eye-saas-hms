@@ -276,9 +276,7 @@ class OtWardApiController extends Controller
         $tenantId = (int) app('tenant')->id;
 
         // Locked to the booking's own eye (RE/LE/Both → allowed set) and
-        // sourced from Medicine Master (usage_scope=ot), not free text —
-        // matches web exactly (web pull 2026-08-07). See
-        // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+        // sourced from Medicine Master (all medicines), not free text.
         $allowedEyes = match ((string) $booking->eye) {
             'RE' => ['RE'],
             'LE' => ['LE'],
@@ -291,7 +289,6 @@ class OtWardApiController extends Controller
                 'required', 'string', 'max:150',
                 Rule::exists('medicines', 'name')->where(function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId)
-                        ->where('usage_scope', 'ot')
                         ->whereNull('deleted_at');
                 }),
             ],
@@ -300,7 +297,7 @@ class OtWardApiController extends Controller
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
         ], [
-            'medicine_name.exists' => 'Select a valid OT medicine from the master list.',
+            'medicine_name.exists' => 'Select a valid medicine from the master list.',
             'eye.in' => 'Eye must match Recommend Surgery selection'
                 . (in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' (' . $booking->eye . ').' : '.'),
         ]);
@@ -354,12 +351,9 @@ class OtWardApiController extends Controller
                 // whoever is currently assigned. See OT_WEB_PARITY_FIX_PRD.md §4.
                 'ot_doctor' => $booking->otDoctor,
                 'ot_assistant' => $booking->otAssistant,
-                // Eye Drop Register medicine picker source (Medicine Master,
-                // OT scope only) — matches web exactly (web pull 2026-08-07).
-                // See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §8.
+                // Eye Drop Register medicine picker — full Medicine Master list
                 'ot_medicines' => Medicine::query()
                     ->where('tenant_id', $tenantId)
-                    ->where('usage_scope', 'ot')
                     ->orderBy('name')
                     ->get(['id', 'name']),
             ],

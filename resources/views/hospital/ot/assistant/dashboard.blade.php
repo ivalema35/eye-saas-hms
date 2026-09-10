@@ -382,9 +382,9 @@
 @endpush
 
 @section('content')
-    <div class="ot-assistant-page">
+<div class="ot-assistant-page">
 
-        {{-- Surgery Queue — absorbed from the old OT Doctor role (docs/tulsi.md §5) --}}
+{{-- Surgery Queue — absorbed from the old OT Doctor role (docs/tulsi.md §5) --}}
         <div class="card ota2-outer-card border-0">
             <div class="ota2-header-block">
                 <div class="ota2-header-title">
@@ -403,88 +403,90 @@
 
             <div class="ota2-inner-panel">
                 <div class="ota2-card-header d-flex justify-content-between align-items-center flex-wrap">
-                    <div class="ota2-title-wrap">
-                        <span class="ota2-title-icon">
-                            <i class="bi bi-activity fs-4"></i>
-                        </span>
-                        <div>
+        <div class="ota2-title-wrap">
+            <span class="ota2-title-icon">
+                <i class="bi bi-activity fs-4"></i>
+            </span>
+            <div>
                             <h5 class="mb-0 fw-bold ota2-title">
-                                Surgery Queue
-                            </h5>
-                            <div class="ota2-subtitle">Patients ready for OT — record the surgery.</div>
-                        </div>
-                    </div>
-                </div>
+                    Surgery Queue
+                </h5>
+                <div class="ota2-subtitle">Patients ready for OT — record the surgery.</div>
+            </div>
+        </div>
+    </div>
 
-                <div class="card-body p-0">
-                    <div class="table-responsive ota2-table-wrap">
+    <div class="card-body p-0">
+        <div class="table-responsive ota2-table-wrap">
                         <div id="otaSurgeryTableContainer">
                             <table class="otaSurgery-table" id="otaSurgeryTable" style="width:100%">
                                 <thead>
-                                    <tr>
-                                        <th>Name</th>
-                                        @if(!empty($seeAll))
-                                            <th>Surgeon</th>
-                                        @endif
-                                        <th>Surgery Type</th>
-                                        <th>Package</th>
-                                        <th>Payment</th>
-                                        <th>Status</th>
-                                        <th class="text-end">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($readyBookings as $booking)
-                                        @php
-    $status = strtoupper((string) $booking->ot_status);
-                                        @endphp
-                                        <tr>
+                    <tr>
+                        <th>Name</th>
+                        @if(!empty($seeAll))
+                            <th>Surgeon</th>
+                        @endif
+                        <th>Surgery Type</th>
+                        <th>Package</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($readyBookings as $booking)
+                        @php
+                            $status = strtoupper((string) $booking->ot_status);
+                        @endphp
+                        <tr>
                                             <td><span class="otd-patient-cell"><i
                                                         class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
                                             </td>
-                                            @if(!empty($seeAll))
+                            @if(!empty($seeAll))
                                                 <td>{{ $booking->otDoctor?->name ? 'Dr. ' . $booking->otDoctor->name : '-' }}</td>
-                                            @endif
+                            @endif
                                             <td><span class="otd-surgery-cell"><i
                                                         class="bi bi-heart-pulse"></i>{{ $booking->ot_type ?? '-' }}</span></td>
                                             <td><span class="otd-amount-pill"><i
                                                         class="bi bi-cash-coin"></i>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</span>
                                             </td>
-                                            <td>
-                                                @if($booking->payment_status === 'paid')
+                            <td>
+                                @if($booking->payment_status === 'paid')
                                                     <span class="ota2-pay-badge ota2-pay-paid">Paid</span>
-                                                @elseif($booking->payment_status === 'partially_paid')
+                                @elseif($booking->payment_status === 'partially_paid')
                                                     <span class="ota2-pay-badge ota2-pay-partial">Partially Paid</span>
-                                                @else
+                                @else
                                                     <span class="ota2-pay-badge ota2-pay-pending">Pending</span>
-                                                @endif
-                                            </td>
-                                            <td>
+                                @endif
+                            </td>
+                            <td>
                                                 <span class="otd-status-badge">{{ $status }}</span>
-                                            </td>
+                            </td>
                                             <td class="text-end text-nowrap">
                                                 <button type="button" class="btn btn-sm ota2-view-btn me-2"
                                                     data-bs-toggle="modal" data-bs-target="#ota2ViewModal{{ $booking->id }}">
                                                     <i class="bi bi-eye-fill me-1"></i> View
                                                 </button>
+                                                @haspermission('ot_surgery_record')
                                                 <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                                     class="btn btn-sm otd-operate-btn">
-                                                    <i class="bi bi-heart-pulse me-1"></i> Operate
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
+                                    <i class="bi bi-heart-pulse me-1"></i> Operate
+                                </a>
+                                                @endhaspermission
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
                                             <td colspan="{{ !empty($seeAll) ? 7 : 6 }}" class="text-center otd-empty-cell">
                                                 <i class="bi bi-inbox me-1"></i> No bookings ready for surgery.
                                             </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
             </div>
         </div>
 
@@ -552,7 +554,7 @@
         'unpriced' => 'Package Not Set',
         default => 'Pending',
     };
-        @endphp
+                        @endphp
         <div class="modal fade ota2-view-modal" id="ota2ViewModal{{ $booking->id }}" tabindex="-1"
             aria-labelledby="ota2ViewModalLabel{{ $booking->id }}" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
@@ -655,13 +657,15 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        @haspermission('ot_surgery_record')
                         <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                             class="btn btn-primary">
                             <i class="bi bi-heart-pulse me-1"></i> Operate
                         </a>
-                    </div>
-                </div>
-            </div>
+                        @endhaspermission
         </div>
+    </div>
+</div>
+    </div>
     @endforeach
 @endpush

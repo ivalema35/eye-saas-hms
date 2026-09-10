@@ -42,7 +42,6 @@ use App\Http\Controllers\Api\ReportsApiController;
 use App\Http\Controllers\Api\PatientHistoryApiController;
 use App\Http\Controllers\Api\ShareHistoryApiController;
 use App\Http\Controllers\Api\UserApiController;
-use App\Http\Controllers\Api\FocApiController;
 use App\Http\Controllers\Api\RoleApiController;
 use App\Http\Controllers\Api\DoctorDashboardApiController;
 use App\Http\Controllers\Api\SuperAdmin\PlatformAuthController;
@@ -238,43 +237,43 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->name('dashboard.today-patients');
                     Route::get('/dashboard/doctor', [DoctorDashboardApiController::class, 'dashboard'])
                         ->name('dashboard.doctor')
-                        ->middleware('permission:opd.exam.primary|opd.exam.secondary');
+                        ->middleware('permission:exam_primary|exam_secondary');
 
                     // Dashboard drill-down widgets (Round 3.5 gap-fill, 2026-08-04) —
                     // permissions copied exactly from routes/hospital.php's OR-groups.
                     Route::get('/receptionist/total-patients', [DashboardDrillDownApiController::class, 'receptionistTotalPatients'])
                         ->name('receptionist.total-patients')
-                        ->middleware('permission:opd.patient.view');
+                        ->middleware('permission:patient_view');
                     Route::get('/dashboard/admin-patients', [DashboardDrillDownApiController::class, 'adminPatientsIndex'])
                         ->name('dashboard.admin-patients')
-                        ->middleware('permission:opd.patient.view|reports.view');
+                        ->middleware('permission:patient_view|report_view');
                     Route::get('/dashboard/admin-patients/export', [DashboardDrillDownApiController::class, 'adminPatientsExport'])
                         ->name('dashboard.admin-patients.export')
-                        ->middleware('permission:opd.patient.view|reports.view|reports.export');
+                        ->middleware('permission:patient_view|report_view|report_export');
                     Route::get('/dashboard/collection', [DashboardDrillDownApiController::class, 'adminCollectionIndex'])
                         ->name('dashboard.collection')
-                        ->middleware('permission:opd.patient.view|reports.view|opd.reports.view');
+                        ->middleware('permission:patient_view|report_view|opd_reports_view');
                     Route::get('/dashboard/collection/{reception}', [DashboardDrillDownApiController::class, 'adminCollectionShow'])
                         ->whereNumber('reception')
                         ->name('dashboard.collection.show')
-                        ->middleware('permission:opd.patient.view|reports.view|opd.reports.view');
+                        ->middleware('permission:patient_view|report_view|opd_reports_view');
                     Route::get('/dashboard/ot-appointments', [DashboardDrillDownApiController::class, 'otAppointmentsIndex'])
                         ->name('dashboard.ot-appointments')
-                        ->middleware('permission:ot.appointment.view|ot.patient.list');
+                        ->middleware('permission:ot_appointment_view|ot_patient_list');
                     Route::get('/dashboard/doctor-ot', [DashboardDrillDownApiController::class, 'doctorOtIndex'])
                         ->name('dashboard.doctor-ot')
-                        ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                        ->middleware('permission:exam_secondary|ot_patient_list|ot_surgery_recommend');
                     Route::post('/dashboard/doctor-ot/{bookingId}/assign-assistant', [DashboardDrillDownApiController::class, 'doctorOtAssignAssistant'])
                         ->name('dashboard.doctor-ot.assign-assistant')
                         ->whereNumber('bookingId')
-                        ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                        ->middleware('permission:exam_secondary|ot_patient_list|ot_surgery_recommend');
                     Route::post('/dashboard/doctor-ot/{bookingId}/refuse', [DashboardDrillDownApiController::class, 'doctorOtRefuseSurgery'])
                         ->name('dashboard.doctor-ot.refuse')
                         ->whereNumber('bookingId')
-                        ->middleware('permission:opd.exam.secondary|ot.patient.list|ot.surgery.recommend');
+                        ->middleware('permission:exam_secondary|ot_patient_list|ot_surgery_recommend');
                     Route::get('/dashboard/assistant-ot', [DashboardDrillDownApiController::class, 'assistantOtIndex'])
                         ->name('dashboard.assistant-ot')
-                        ->middleware('permission:ot.patient.list|ot.surgery.record|ot.lens.record|ot.surgery.ready');
+                        ->middleware('permission:ot_patient_list|ot_surgery_record|ot_lens_record|ot_surgery_ready');
 
                     // Current user
                     Route::get('/auth/me', [AuthController::class, 'me'])->name('auth.me');
@@ -285,11 +284,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // Hospital Settings
                     Route::get('settings', [SettingsApiController::class, 'settingsShow'])
-                        ->middleware('permission:settings.hospital');
+                        ->middleware('permission:setting_hospital_view');
                     Route::put('settings', [SettingsApiController::class, 'settingsUpdate'])
-                        ->middleware('permission:settings.hospital');
+                        ->middleware('permission:setting_hospital_edit');
                     Route::post('settings/logo', [SettingsApiController::class, 'logoUpload'])
-                        ->middleware('permission:settings.hospital');
+                        ->middleware('permission:setting_hospital_edit');
                     Route::post('settings/change-password', [SettingsApiController::class, 'changePassword']);
 
                     // Patients
@@ -299,28 +298,28 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->name('patients.search-by-contact');
                     Route::get('patients', [PatientApiController::class, 'index'])
                         ->name('patients.index')
-                        ->middleware('permission:opd.patient.view');
+                        ->middleware('permission:patient_view');
                     Route::get('patients/{patient}', [PatientApiController::class, 'show'])
                         ->name('patients.show')
-                        ->middleware('permission:opd.patient.view');
+                        ->middleware('permission:patient_view');
                     Route::get('patients/{patient}/history', [PatientHistoryApiController::class, 'history'])
                         ->name('patients.history')
-                        ->middleware('permission:opd.exam.history');
+                        ->middleware('permission:exam_history');
                     Route::post('patients', [PatientApiController::class, 'store'])
                         ->name('patients.store')
-                        ->middleware('permission:opd.patient.register');
+                        ->middleware('permission:patient_register');
                     Route::post('patients/phone', [PatientApiController::class, 'storePhone'])
                         ->name('patients.store-phone')
-                        ->middleware('permission:opd.patient.register');
+                        ->middleware('permission:patient_register_phone');
                     Route::put('patients/{patient}', [PatientApiController::class, 'update'])
                         ->name('patients.update')
-                        ->middleware('permission:opd.patient.edit');
+                        ->middleware('permission:patient_edit');
                     Route::delete('patients/{patient}', [PatientApiController::class, 'destroy'])
                         ->name('patients.destroy')
-                        ->middleware('permission:opd.patient.delete');
+                        ->middleware('permission:patient_delete');
                     Route::post('patients/{patient}/checkin', [PatientApiController::class, 'checkin'])
                         ->name('patients.checkin')
-                        ->middleware('permission:opd.patient.register');
+                        ->middleware('permission:patient_register');
 
                     // Location cascade — for Settings location pickers
                     Route::get('masters/location/countries',  [SettingsApiController::class, 'locationCountries']);
@@ -333,149 +332,139 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('masters/cases', [MastersApiController::class, 'cases'])->name('masters.cases');
                     Route::get('masters/doctors', [MastersApiController::class, 'doctors'])->name('masters.doctors');
                     Route::get('masters/locations', [MastersApiController::class, 'locations'])->name('masters.locations');
-                    Route::post('masters/locations', [MastersApiController::class, 'storeLocation'])->name('masters.locations.store');
+                    Route::post('masters/locations', [MastersApiController::class, 'storeLocation'])
+                        ->name('masters.locations.store')
+                        ->middleware('permission:location_add');
                     Route::put('masters/locations/{id}', [MastersApiController::class, 'updateLocation'])
                         ->name('masters.locations.update')
                         ->whereNumber('id')
-                        ->middleware('permission:master.locations');
+                        ->middleware('permission:location_edit');
                     Route::delete('masters/locations/{id}', [MastersApiController::class, 'destroyLocation'])
                         ->name('masters.locations.destroy')
                         ->whereNumber('id')
-                        ->middleware('permission:master.locations');
+                        ->middleware('permission:location_delete');
                     Route::get('masters/slots', [MastersApiController::class, 'slots'])->name('masters.slots');
                     Route::get('masters/referrers', [MastersApiController::class, 'referrers'])->name('masters.referrers');
 
                     // Masters — detail CRUD (eye exam masters)
                     Route::get('masters/detail/{type}',                        [MasterApiController::class, 'detailIndex']); // open — used by exam screens
                     Route::post('masters/detail/{type}',                       [MasterApiController::class, 'detailStore'])
-                        ->middleware('permission:master.eye_exam');
+                        ->middleware('permission:eye_exam_master_add');
                     Route::put('masters/detail/{type}/{id}',                   [MasterApiController::class, 'detailUpdate'])
-                        ->middleware('permission:master.eye_exam');
+                        ->middleware('permission:eye_exam_master_edit');
                     Route::delete('masters/detail/{type}/{id}',                [MasterApiController::class, 'detailDestroy'])
-                        ->middleware('permission:master.eye_exam');
+                        ->middleware('permission:eye_exam_master_delete');
                     Route::post('masters/detail/{type}/{id}/toggle-favourite', [MasterApiController::class, 'detailToggleFavourite']); // open — doctor favourites
 
                     // Masters — Case Types CRUD
                     Route::get('masters/case-types',         [MasterApiController::class, 'caseTypeIndex'])
-                        ->middleware('permission:master.case_types');
+                        ->middleware('permission:casetype_view');
                     Route::post('masters/case-types',        [MasterApiController::class, 'caseTypeStore'])
-                        ->middleware('permission:master.case_types');
+                        ->middleware('permission:casetype_add');
                     Route::put('masters/case-types/{id}',    [MasterApiController::class, 'caseTypeUpdate'])
-                        ->middleware('permission:master.case_types');
+                        ->middleware('permission:casetype_edit');
                     Route::delete('masters/case-types/{id}', [MasterApiController::class, 'caseTypeDestroy'])
-                        ->middleware('permission:master.case_types');
+                        ->middleware('permission:casetype_delete');
 
                     // Masters — Referrers CRUD (separate from dropdown GET masters/referrers)
                     Route::get('masters/referrers-crud',         [MasterApiController::class, 'referrerIndex'])
-                        ->middleware('permission:master.locations');
+                        ->middleware('permission:referrer_view');
                     Route::post('masters/referrers-crud',        [MasterApiController::class, 'referrerStore'])
-                        ->middleware('permission:master.locations');
+                        ->middleware('permission:referrer_add');
                     Route::put('masters/referrers-crud/{id}',    [MasterApiController::class, 'referrerUpdate'])
-                        ->middleware('permission:master.locations');
+                        ->middleware('permission:referrer_edit');
                     Route::delete('masters/referrers-crud/{id}', [MasterApiController::class, 'referrerDestroy'])
-                        ->middleware('permission:master.locations');
+                        ->middleware('permission:referrer_delete');
 
-                    // Mirrors web's routes/hospital.php:372 role:admin gate on these
-                    // same OT sub-masters — the permission alone previously let a
-                    // non-admin custom role manage these via the API even though
-                    // web blocks them. See ROLES_PERMISSIONS_PARITY_AUDIT.md.
-                    Route::middleware('role:admin')->group(function () {
-                        // Masters — OT Lens Options CRUD (Round 3 gap-fill; previously only
-                        // reachable via the wrongly-permissioned masters/detail/lens-options)
-                        Route::get('masters/ot-lens-options',         [MasterApiController::class, 'otLensOptionIndex'])
-                            ->middleware('permission:master.ot_inventory');
-                        Route::post('masters/ot-lens-options',        [MasterApiController::class, 'otLensOptionStore'])
-                            ->middleware('permission:master.ot_inventory');
-                        Route::put('masters/ot-lens-options/{id}',    [MasterApiController::class, 'otLensOptionUpdate'])
-                            ->middleware('permission:master.ot_inventory');
-                        Route::delete('masters/ot-lens-options/{id}', [MasterApiController::class, 'otLensOptionDestroy'])
-                            ->middleware('permission:master.ot_inventory');
+                    // OT masters — same permission keys as web (no role:admin gate)
+                    Route::get('masters/ot-lens-options',         [MasterApiController::class, 'otLensOptionIndex'])
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_lens_option'));
+                    Route::post('masters/ot-lens-options',        [MasterApiController::class, 'otLensOptionStore'])
+                        ->middleware('permission:ot_lens_option_add');
+                    Route::put('masters/ot-lens-options/{id}',    [MasterApiController::class, 'otLensOptionUpdate'])
+                        ->middleware('permission:ot_lens_option_edit');
+                    Route::delete('masters/ot-lens-options/{id}', [MasterApiController::class, 'otLensOptionDestroy'])
+                        ->middleware('permission:ot_lens_option_delete');
 
-                        // Masters — OT Type (broad category) CRUD (Round 3 gap-fill; previously
-                        // only reachable via the wrongly-permissioned masters/detail/ot-types)
-                        Route::get('masters/ot-type',         [MasterApiController::class, 'otTypeIndex'])
-                            ->middleware('permission:master.ot_types');
-                        Route::post('masters/ot-type',        [MasterApiController::class, 'otTypeStore'])
-                            ->middleware('permission:master.ot_types');
-                        Route::put('masters/ot-type/{id}',    [MasterApiController::class, 'otTypeUpdate'])
-                            ->middleware('permission:master.ot_types');
-                        Route::delete('masters/ot-type/{id}', [MasterApiController::class, 'otTypeDestroy'])
-                            ->middleware('permission:master.ot_types');
+                    Route::get('masters/ot-type',         [MasterApiController::class, 'otTypeIndex'])
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
+                    Route::post('masters/ot-type',        [MasterApiController::class, 'otTypeStore'])
+                        ->middleware('permission:ot_type_add');
+                    Route::put('masters/ot-type/{id}',    [MasterApiController::class, 'otTypeUpdate'])
+                        ->middleware('permission:ot_type_edit');
+                    Route::delete('masters/ot-type/{id}', [MasterApiController::class, 'otTypeDestroy'])
+                        ->middleware('permission:ot_type_delete');
 
-                        // Masters — OT Slots CRUD
-                        Route::get('masters/ot-slots',         [MasterApiController::class, 'otSlotIndex'])
-                            ->middleware('permission:master.ot_slots');
-                        Route::post('masters/ot-slots',        [MasterApiController::class, 'otSlotStore'])
-                            ->middleware('permission:master.ot_slots');
-                        Route::put('masters/ot-slots/{id}',    [MasterApiController::class, 'otSlotUpdate'])
-                            ->middleware('permission:master.ot_slots');
-                        Route::delete('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotDestroy'])
-                            ->middleware('permission:master.ot_slots');
+                    Route::get('masters/ot-slots',         [MasterApiController::class, 'otSlotIndex'])
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_slot'));
+                    Route::post('masters/ot-slots',        [MasterApiController::class, 'otSlotStore'])
+                        ->middleware('permission:ot_slot_add');
+                    Route::put('masters/ot-slots/{id}',    [MasterApiController::class, 'otSlotUpdate'])
+                        ->middleware('permission:ot_slot_edit');
+                    Route::delete('masters/ot-slots/{id}', [MasterApiController::class, 'otSlotDestroy'])
+                        ->middleware('permission:ot_slot_delete');
 
-                        // Masters — OT Charge Heads CRUD
-                        Route::get('masters/ot-charge-heads',         [MasterApiController::class, 'otChargeHeadIndex'])
-                            ->middleware('permission:master.ot_charges');
-                        Route::post('masters/ot-charge-heads',        [MasterApiController::class, 'otChargeHeadStore'])
-                            ->middleware('permission:master.ot_charges');
-                        Route::put('masters/ot-charge-heads/{id}',    [MasterApiController::class, 'otChargeHeadUpdate'])
-                            ->middleware('permission:master.ot_charges');
-                        Route::delete('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadDestroy'])
-                            ->middleware('permission:master.ot_charges');
+                    Route::get('masters/ot-charge-heads',         [MasterApiController::class, 'otChargeHeadIndex'])
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_charge'));
+                    Route::post('masters/ot-charge-heads',        [MasterApiController::class, 'otChargeHeadStore'])
+                        ->middleware('permission:ot_charge_add');
+                    Route::put('masters/ot-charge-heads/{id}',    [MasterApiController::class, 'otChargeHeadUpdate'])
+                        ->middleware('permission:ot_charge_edit');
+                    Route::delete('masters/ot-charge-heads/{id}', [MasterApiController::class, 'otChargeHeadDestroy'])
+                        ->middleware('permission:ot_charge_delete');
 
-                        // Masters — OT Surgery Types CRUD
-                        Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList'])
-                            ->middleware('permission:master.ot_types');
-                        Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex'])
-                            ->middleware('permission:master.ot_types');
-                        Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore'])
-                            ->middleware('permission:master.ot_types');
-                        Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate'])
-                            ->middleware('permission:master.ot_types');
-                        Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy'])
-                            ->middleware('permission:master.ot_types');
-                    });
+                    Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList'])
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
+                    Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex'])
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
+                    Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore'])
+                        ->middleware('permission:ot_type_add');
+                    Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate'])
+                        ->middleware('permission:ot_type_edit');
+                    Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy'])
+                        ->middleware('permission:ot_type_delete');
 
                     // Examinations
                     Route::get('exams/primary/{patientId}', [ExamApiController::class, 'showPrimary'])
                         ->name('exams.primary')
-                        ->middleware('permission:opd.exam.primary');
+                        ->middleware('permission:exam_primary');
                     Route::post('exams/primary/{patientId}', [ExamApiController::class, 'savePrimary'])
                         ->name('exams.primary.save')
-                        ->middleware('permission:opd.exam.primary');
+                        ->middleware('permission:exam_primary');
                     Route::get('exams/secondary/{patientId}', [ExamApiController::class, 'showSecondary'])
                         ->name('exams.secondary')
-                        ->middleware('permission:opd.exam.secondary');
+                        ->middleware('permission:exam_secondary');
                     Route::post('exams/secondary/{patientId}', [ExamApiController::class, 'saveSecondary'])
                         ->name('exams.secondary.save')
-                        ->middleware('permission:opd.exam.secondary');
+                        ->middleware('permission:exam_secondary');
 
                     // OT
                     Route::get('ot/bookings', [OtApiController::class, 'bookings'])
                         ->name('ot.bookings')
-                        ->middleware('permission:ot.patient.list');
+                        ->middleware('permission:ot_patient_list');
                     Route::post('ot/bookings', [OtApiController::class, 'book'])
                         ->name('ot.book')
-                        ->middleware('permission:ot.booking.create');
+                        ->middleware('permission:ot_booking_create');
                     Route::put('ot/bookings/{id}/status', [OtApiController::class, 'updateStatus'])
                         ->name('ot.status')
-                        ->middleware('permission:ot.booking.modify');
+                        ->middleware('permission:ot_booking_modify');
 
                     // Doctor Exam -> Surgery Recommended (docs/OT_1.0_REMAINING_PRD.md Phase A1) —
                     // the entry point that creates the OtBooking every Round-3 OT API depends on.
                     Route::post('ot/recommend-surgery/{patientId}', [OtBookingApiController::class, 'recommendSurgery'])
                         ->name('ot.recommend-surgery')
                         ->whereNumber('patientId')
-                        ->middleware('permission:ot.surgery.recommend');
+                        ->middleware('permission:ot_surgery_recommend');
 
                     Route::get('dashboard/ot-receptionist', [OtBookingApiController::class, 'receptionistDashboard'])
                         ->name('dashboard.ot-receptionist')
-                        ->middleware('permission:ot.patient.list');
+                        ->middleware('permission:ot_patient_list');
 
                     // ========================================================
                     // OT Counsellor — Phase 1 of OT Workflow Upgrade
                     // (docs/ROUND3_OT_MOBILE_API_PRD_PLAN.md §5, FR-OT-18..21)
                     // ========================================================
-                    Route::prefix('ot/counsellor')->name('ot.counsellor.')->middleware('permission:ot.counselling.fill')->group(function () {
+                    Route::prefix('ot/counsellor')->name('ot.counsellor.')->middleware('permission:ot_counselling_fill')->group(function () {
                         Route::get('bookings', [OtCounsellorApiController::class, 'bookings'])
                             ->name('bookings');
                         Route::get('package-lookup', [OtCounsellorApiController::class, 'lookupPackage'])
@@ -485,16 +474,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('counselling', [OtCounsellorApiController::class, 'show'])
                             ->name('ot.counselling.show')
-                            ->middleware('permission:ot.counselling.fill');
+                            ->middleware('permission:ot_counselling_fill');
                         Route::post('counselling', [OtCounsellorApiController::class, 'storeCounselling'])
                             ->name('ot.counselling.store')
-                            ->middleware('permission:ot.counselling.fill');
+                            ->middleware('permission:ot_counselling_fill');
                         Route::post('consent', [OtCounsellorApiController::class, 'storeConsent'])
                             ->name('ot.consent.store')
-                            ->middleware('permission:ot.consent.capture');
+                            ->middleware('permission:ot_consent_capture');
                         Route::post('send-to-billing', [OtCounsellorApiController::class, 'sendToBilling'])
                             ->name('ot.send-to-billing')
-                            ->middleware('permission:ot.counselling.fill');
+                            ->middleware('permission:ot_counselling_fill');
                     });
 
                     // ========================================================
@@ -504,38 +493,38 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('ot/appointments')->name('ot.appointments.')->group(function () {
                         Route::get('/', [OtAppointmentApiController::class, 'index'])
                             ->name('index')
-                            ->middleware('permission:ot.appointment.view');
+                            ->middleware('permission:ot_appointment_view');
 
                         Route::get('form-data', [OtAppointmentApiController::class, 'formData'])
                             ->name('form-data')
-                            ->middleware('permission:ot.appointment.view|ot.appointment.create');
+                            ->middleware('permission:ot_appointment_view|ot_appointment_create');
 
                         Route::post('/', [OtAppointmentApiController::class, 'store'])
                             ->name('store')
-                            ->middleware('permission:ot.appointment.create');
+                            ->middleware('permission:ot_appointment_create');
 
                         Route::get('search', [OtAppointmentApiController::class, 'search'])
                             ->name('search')
-                            ->middleware('permission:ot.appointment.view|opd.patient.register');
+                            ->middleware('permission:ot_appointment_view|patient_register');
 
                         Route::get('slot-appointments', [OtAppointmentApiController::class, 'slotAppointments'])
                             ->name('slot-appointments')
-                            ->middleware('permission:ot.appointment.view|ot.appointment.create');
+                            ->middleware('permission:ot_appointment_view|ot_appointment_create');
 
                         Route::put('{id}', [OtAppointmentApiController::class, 'update'])
                             ->name('update')
                             ->whereNumber('id')
-                            ->middleware('permission:ot.appointment.edit');
+                            ->middleware('permission:ot_appointment_edit');
 
                         Route::post('{id}/confirm', [OtAppointmentApiController::class, 'confirm'])
                             ->name('confirm')
                             ->whereNumber('id')
-                            ->middleware('permission:ot.appointment.edit');
+                            ->middleware('permission:ot_appointment_confirm');
 
                         Route::post('{id}/cancel', [OtAppointmentApiController::class, 'cancel'])
                             ->name('cancel')
                             ->whereNumber('id')
-                            ->middleware('permission:ot.appointment.edit');
+                            ->middleware('permission:ot_appointment_cancel');
                     });
 
                     // ========================================================
@@ -544,27 +533,27 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // ========================================================
                     Route::get('ot/ward/bookings', [OtWardApiController::class, 'bookings'])
                         ->name('ot.ward.bookings')
-                        ->middleware('permission:ot.ward.entry');
+                        ->middleware('permission:ot_ward_entry');
 
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('vitals', [OtWardApiController::class, 'vitals'])
                             ->name('ot.ward.vitals.show')
-                            ->middleware('permission:ot.ward.entry');
+                            ->middleware('permission:ot_ward_entry');
                         Route::post('vitals', [OtWardApiController::class, 'storeVitals'])
                             ->name('ot.ward.vitals.store')
-                            ->middleware('permission:ot.preop.entry');
+                            ->middleware('permission:ot_preop_entry');
                         Route::get('eye-drops', [OtWardApiController::class, 'eyeDrops'])
                             ->name('ot.ward.eye-drops.show')
-                            ->middleware('permission:ot.ward.entry');
+                            ->middleware('permission:ot_ward_entry');
                         Route::post('eye-drops', [OtWardApiController::class, 'addEyeDrop'])
                             ->name('ot.ward.eye-drops.store')
-                            ->middleware('permission:ot.dilation.track');
+                            ->middleware('permission:ot_dilation_track');
                         Route::get('verification-header', [OtWardApiController::class, 'verificationHeader'])
                             ->name('ot.ward.verification-header')
-                            ->middleware('permission:ot.ward.entry');
+                            ->middleware('permission:ot_ward_entry');
                         Route::post('mark-ready', [OtWardApiController::class, 'markReady'])
                             ->name('ot.ward.mark-ready')
-                            ->middleware('permission:ot.ward.entry');
+                            ->middleware('permission:ot_ward_entry');
                     });
 
                     // ========================================================
@@ -573,25 +562,25 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // ========================================================
                     Route::get('ot/assistant/bookings', [OtAssistantApiController::class, 'bookings'])
                         ->name('ot.assistant.bookings')
-                        ->middleware('permission:ot.lens.record|ot.lens.implant|ot.surgery.ready|ot.surgery.record|ot.patient.list');
+                        ->middleware('permission:ot_lens_record|ot_lens_implant|ot_surgery_ready|ot_surgery_record|ot_patient_list');
 
                     Route::get('ot/medicine-groups', [MedicineGroupApiController::class, 'index'])
                         ->name('ot.medicine-groups')
-                        ->middleware('permission:ot.surgery.record');
+                        ->middleware('permission:ot_surgery_record');
 
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('surgery-form-data', [OtAssistantApiController::class, 'surgeryFormData'])
                             ->name('ot.surgery.form-data')
-                            ->middleware('permission:ot.surgery.record');
+                            ->middleware('permission:ot_surgery_record');
                         Route::post('surgery', [OtAssistantApiController::class, 'storeSurgery'])
                             ->name('ot.surgery.store')
-                            ->middleware('permission:ot.surgery.record');
+                            ->middleware('permission:ot_surgery_record');
                         Route::get('lens', [OtAssistantApiController::class, 'lens'])
                             ->name('ot.lens.show')
-                            ->middleware('permission:ot.lens.record|ot.lens.implant');
+                            ->middleware('permission:ot_lens_record|ot_lens_implant');
                         Route::post('lens', [OtAssistantApiController::class, 'storeLens'])
                             ->name('ot.lens.store')
-                            ->middleware('permission:ot.lens.record|ot.lens.implant');
+                            ->middleware('permission:ot_lens_record|ot_lens_implant');
                     });
 
                     // ========================================================
@@ -600,40 +589,40 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // ========================================================
                     Route::get('ot/accountant/bookings', [OtAccountantApiController::class, 'bookings'])
                         ->name('ot.accountant.bookings')
-                        ->middleware('permission:ot.payment.record');
+                        ->middleware('permission:ot_payment_record');
 
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('payment-status', [OtAccountantApiController::class, 'paymentStatus'])
                             ->name('ot.payment-status')
-                            ->middleware('permission:ot.invoice.view');
+                            ->middleware('permission:ot_invoice_view');
                         Route::get('payment-form-data', [OtAccountantApiController::class, 'paymentFormData'])
                             ->name('ot.payment.form-data')
-                            ->middleware('permission:ot.payment.record');
+                            ->middleware('permission:ot_payment_record');
                         Route::post('payments', [OtAccountantApiController::class, 'storePayment'])
                             ->name('ot.payments.store')
-                            ->middleware('permission:ot.payment.record');
+                            ->middleware('permission:ot_payment_record');
                         Route::get('refund-form-data', [OtAccountantApiController::class, 'refundFormData'])
                             ->name('ot.refund.form-data')
-                            ->middleware('permission:ot.payment.record');
+                            ->middleware('permission:ot_payment_record');
                         Route::post('refunds', [OtAccountantApiController::class, 'storeRefund'])
                             ->name('ot.refunds.store')
-                            ->middleware('permission:ot.payment.record');
+                            ->middleware('permission:ot_payment_record');
                     });
 
                     Route::get('ot/payments/{paymentId}/receipt', [OtAccountantApiController::class, 'receipt'])
                         ->name('ot.payments.receipt')
                         ->whereNumber('paymentId')
-                        ->middleware('permission:ot.payment.record');
+                        ->middleware('permission:ot_payment_record');
 
                     // ========================================================
                     // OT Discharge Documents — Phase 6 of OT Workflow Upgrade
                     // (docs/ROUND3_OT_MOBILE_API_PRD_PLAN.md §11, FR-OT-33/35/36)
                     // ========================================================
-                    Route::prefix('ot/billing')->name('ot.billing.')->middleware('permission:ot.billing.manage')->group(function () {
+                    Route::prefix('ot/billing')->name('ot.billing.')->middleware('permission:ot_billing_manage')->group(function () {
                         Route::get('bookings', [OtDischargeApiController::class, 'bookings'])->name('bookings');
                     });
 
-                    Route::prefix('ot/bookings/{id}')->whereNumber('id')->middleware('permission:ot.billing.manage')->group(function () {
+                    Route::prefix('ot/bookings/{id}')->whereNumber('id')->middleware('permission:ot_billing_manage')->group(function () {
                         Route::post('invoice/generate', [OtDischargeApiController::class, 'generateInvoice'])
                             ->name('ot.invoice.generate');
                         Route::get('invoice', [OtDischargeApiController::class, 'invoiceDetail'])
@@ -654,32 +643,58 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // ========================================================
                     // OT Inventory Masters — Phase 7 of OT Workflow Upgrade
-                    // (docs/ROUND3_OT_MOBILE_API_PRD_PLAN.md §11, FR-OT-37/38)
+                    // Split to match web: ot_inventory / ot_lens_power / ot_package_master
                     // ========================================================
-                    // Mirrors web's routes/hospital.php:372 role:admin gate on the
-                    // same OT sub-masters — the permission alone previously let a
-                    // non-admin custom role manage these via the API even though
-                    // web blocks them. See ROLES_PERMISSIONS_PARITY_AUDIT.md.
-                    Route::prefix('masters/ot')->name('masters.ot.')->middleware(['permission:master.ot_inventory', 'role:admin'])->group(function () {
-                        Route::get('lens-inventory', [OtInventoryApiController::class, 'lensInventoryIndex'])->name('lens-inventory.index');
-                        Route::post('lens-inventory', [OtInventoryApiController::class, 'lensInventoryStore'])->name('lens-inventory.store');
-                        Route::put('lens-inventory/{id}', [OtInventoryApiController::class, 'lensInventoryUpdate'])->name('lens-inventory.update')->whereNumber('id');
-                        Route::delete('lens-inventory/{id}', [OtInventoryApiController::class, 'lensInventoryDestroy'])->name('lens-inventory.destroy')->whereNumber('id');
+                    Route::prefix('masters/ot')->name('masters.ot.')->group(function () {
+                        Route::get('lens-inventory', [OtInventoryApiController::class, 'lensInventoryIndex'])
+                            ->name('lens-inventory.index')
+                            ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_inventory'));
+                        Route::post('lens-inventory', [OtInventoryApiController::class, 'lensInventoryStore'])
+                            ->name('lens-inventory.store')
+                            ->middleware('permission:ot_inventory_add');
+                        Route::put('lens-inventory/{id}', [OtInventoryApiController::class, 'lensInventoryUpdate'])
+                            ->name('lens-inventory.update')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_inventory_edit');
+                        Route::delete('lens-inventory/{id}', [OtInventoryApiController::class, 'lensInventoryDestroy'])
+                            ->name('lens-inventory.destroy')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_inventory_delete');
 
-                        Route::get('lens-powers', [OtInventoryApiController::class, 'lensPowerIndex'])->name('lens-powers.index');
-                        Route::post('lens-powers', [OtInventoryApiController::class, 'lensPowerStore'])->name('lens-powers.store');
-                        Route::put('lens-powers/{id}', [OtInventoryApiController::class, 'lensPowerUpdate'])->name('lens-powers.update')->whereNumber('id');
-                        Route::delete('lens-powers/{id}', [OtInventoryApiController::class, 'lensPowerDestroy'])->name('lens-powers.destroy')->whereNumber('id');
+                        Route::get('lens-powers', [OtInventoryApiController::class, 'lensPowerIndex'])
+                            ->name('lens-powers.index')
+                            ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_lens_power'));
+                        Route::post('lens-powers', [OtInventoryApiController::class, 'lensPowerStore'])
+                            ->name('lens-powers.store')
+                            ->middleware('permission:ot_lens_power_add');
+                        Route::put('lens-powers/{id}', [OtInventoryApiController::class, 'lensPowerUpdate'])
+                            ->name('lens-powers.update')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_lens_power_edit');
+                        Route::delete('lens-powers/{id}', [OtInventoryApiController::class, 'lensPowerDestroy'])
+                            ->name('lens-powers.destroy')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_lens_power_delete');
 
-                        Route::get('packages', [OtInventoryApiController::class, 'packageIndex'])->name('packages.index');
-                        Route::post('packages', [OtInventoryApiController::class, 'packageStore'])->name('packages.store');
-                        Route::put('packages/{id}', [OtInventoryApiController::class, 'packageUpdate'])->name('packages.update')->whereNumber('id');
-                        Route::delete('packages/{id}', [OtInventoryApiController::class, 'packageDestroy'])->name('packages.destroy')->whereNumber('id');
+                        Route::get('packages', [OtInventoryApiController::class, 'packageIndex'])
+                            ->name('packages.index')
+                            ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_package_master'));
+                        Route::post('packages', [OtInventoryApiController::class, 'packageStore'])
+                            ->name('packages.store')
+                            ->middleware('permission:ot_package_master_add');
+                        Route::put('packages/{id}', [OtInventoryApiController::class, 'packageUpdate'])
+                            ->name('packages.update')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_package_master_edit');
+                        Route::delete('packages/{id}', [OtInventoryApiController::class, 'packageDestroy'])
+                            ->name('packages.destroy')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_package_master_delete');
                     });
 
                     Route::get('ot/lens-inventory/search', [OtInventoryApiController::class, 'lensInventorySearch'])
                         ->name('ot.lens-inventory.search')
-                        ->middleware('permission:ot.counselling.fill|ot.lens.record|ot.lens.implant');
+                        ->middleware('permission:ot_counselling_fill|ot_lens_record|ot_lens_implant');
 
                     // ========================================================
                     // OT Reports & Dashboard — Phase 8 of OT Workflow Upgrade
@@ -688,173 +703,180 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('reports/ot')->name('reports.ot.')->group(function () {
                         Route::get('/', [OtReportApiController::class, 'apiIndex'])
                             ->name('index')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('prescription/{patient}/pdf', [OtReportApiController::class, 'apiPrescriptionPdf'])
                             ->name('prescription-pdf')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('{type}', [OtReportApiController::class, 'apiShow'])
                             ->name('show')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('{type}/export', [OtReportApiController::class, 'export'])
                             ->name('export')
-                            ->middleware('permission:reports.export');
+                            ->middleware('permission:report_export');
                         Route::get('{type}/export-pdf', [OtReportApiController::class, 'exportPdf'])
                             ->name('export-pdf')
-                            ->middleware('permission:reports.export');
+                            ->middleware('permission:report_export');
                     });
 
                     Route::get('dashboard/ot-summary', [OtReportApiController::class, 'dashboardSummary'])
                         ->name('dashboard.ot-summary')
-                        ->middleware('permission:reports.view');
+                        ->middleware('permission:report_view');
 
                     // Clinical Queue
                     Route::get('clinical-queue', [ClinicalQueueApiController::class, 'index'])
                         ->name('clinical-queue')
-                        ->middleware('permission:opd.exam.primary|opd.exam.secondary');
+                        ->middleware('permission:exam_primary|exam_secondary');
 
-                    // Medicines — previously had NO permission middleware at
-                    // all on these 5 groups (only medicine-instructions
-                    // below had it), unlike web which correctly requires
-                    // master.medicines on all of them. See
-                    // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND2.md Part C2.
-                    Route::prefix('medicines')->name('medicines.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineApiController::class, 'index'])->name('index');
-                        Route::post('/', [MedicineApiController::class, 'store'])->name('store');
-                        Route::put('/{id}', [MedicineApiController::class, 'update'])->name('update');
-                        Route::delete('/{id}', [MedicineApiController::class, 'destroy'])->name('destroy');
-                        Route::post('/import', [MedicineApiController::class, 'import'])->name('import');
-                        Route::get('/import/sample', [MedicineApiController::class, 'downloadSample'])->name('import.sample');
+                    // Medicines — CRUD split to match web (view/add/edit/delete)
+                    Route::prefix('medicines')->name('medicines.')->group(function () {
+                        Route::get('/', [MedicineApiController::class, 'index'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineApiController::class, 'store'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineApiController::class, 'update'])->name('update')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineApiController::class, 'destroy'])->name('destroy')
+                            ->middleware('permission:medicine_delete');
+                        Route::post('/import', [MedicineApiController::class, 'import'])->name('import')
+                            ->middleware('permission:medicine_add');
+                        Route::get('/import/sample', [MedicineApiController::class, 'downloadSample'])->name('import.sample')
+                            ->middleware('permission:medicine_add');
                     });
 
                     // Medicine Groups
-                    Route::prefix('medicine-groups')->name('medicine-groups.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineGroupApiController::class, 'index'])->name('index');
-                        Route::get('/form-data', [MedicineGroupApiController::class, 'formData'])->name('form-data');
-                        Route::get('/{id}', [MedicineGroupApiController::class, 'show'])->name('show')->where('id', '[0-9]+');
-                        Route::post('/', [MedicineGroupApiController::class, 'store'])->name('store');
-                        Route::put('/{id}', [MedicineGroupApiController::class, 'update'])->name('update')->where('id', '[0-9]+');
-                        Route::delete('/{id}', [MedicineGroupApiController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+                    Route::prefix('medicine-groups')->name('medicine-groups.')->group(function () {
+                        Route::get('/', [MedicineGroupApiController::class, 'index'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::get('/form-data', [MedicineGroupApiController::class, 'formData'])->name('form-data')
+                            ->middleware('permission:medicine_view');
+                        Route::get('/{id}', [MedicineGroupApiController::class, 'show'])->name('show')->where('id', '[0-9]+')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineGroupApiController::class, 'store'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineGroupApiController::class, 'update'])->name('update')->where('id', '[0-9]+')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineGroupApiController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+')
+                            ->middleware('permission:medicine_delete');
                     });
 
                     // Medicine Masters (dosages, types, categories, routes)
-                    Route::prefix('medicine-dosages')->name('medicine-dosages.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineMasterApiController::class, 'dosages'])->name('index');
-                        Route::post('/', [MedicineMasterApiController::class, 'storeDosage'])->name('store');
-                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateDosage'])->name('update');
-                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyDosage'])->name('destroy');
+                    Route::prefix('medicine-dosages')->name('medicine-dosages.')->group(function () {
+                        Route::get('/', [MedicineMasterApiController::class, 'dosages'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineMasterApiController::class, 'storeDosage'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateDosage'])->name('update')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyDosage'])->name('destroy')
+                            ->middleware('permission:medicine_delete');
                     });
-                    Route::prefix('medicine-types')->name('medicine-types.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineMasterApiController::class, 'types'])->name('index');
-                        Route::post('/', [MedicineMasterApiController::class, 'storeType'])->name('store');
-                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateType'])->name('update');
-                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyType'])->name('destroy');
+                    Route::prefix('medicine-types')->name('medicine-types.')->group(function () {
+                        Route::get('/', [MedicineMasterApiController::class, 'types'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineMasterApiController::class, 'storeType'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateType'])->name('update')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyType'])->name('destroy')
+                            ->middleware('permission:medicine_delete');
                     });
-                    Route::prefix('medicine-categories')->name('medicine-categories.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineMasterApiController::class, 'categories'])->name('index');
-                        Route::post('/', [MedicineMasterApiController::class, 'storeCategory'])->name('store');
-                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateCategory'])->name('update');
-                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyCategory'])->name('destroy');
+                    Route::prefix('medicine-categories')->name('medicine-categories.')->group(function () {
+                        Route::get('/', [MedicineMasterApiController::class, 'categories'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineMasterApiController::class, 'storeCategory'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateCategory'])->name('update')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyCategory'])->name('destroy')
+                            ->middleware('permission:medicine_delete');
                     });
-                    Route::prefix('medicine-routes')->name('medicine-routes.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineMasterApiController::class, 'medicineRoutes'])->name('index');
-                        Route::post('/', [MedicineMasterApiController::class, 'storeMedicineRoute'])->name('store');
-                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateMedicineRoute'])->name('update');
-                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyMedicineRoute'])->name('destroy');
+                    Route::prefix('medicine-routes')->name('medicine-routes.')->group(function () {
+                        Route::get('/', [MedicineMasterApiController::class, 'medicineRoutes'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineMasterApiController::class, 'storeMedicineRoute'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateMedicineRoute'])->name('update')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyMedicineRoute'])->name('destroy')
+                            ->middleware('permission:medicine_delete');
                     });
 
-                    // Medicine Instructions (Round 3 gap-fill — was missing entirely)
-                    Route::prefix('medicine-instructions')->name('medicine-instructions.')->middleware('permission:master.medicines')->group(function () {
-                        Route::get('/', [MedicineMasterApiController::class, 'instructions'])->name('index');
-                        Route::post('/', [MedicineMasterApiController::class, 'storeInstruction'])->name('store');
-                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateInstruction'])->name('update');
-                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyInstruction'])->name('destroy');
+                    // Medicine Instructions
+                    Route::prefix('medicine-instructions')->name('medicine-instructions.')->group(function () {
+                        Route::get('/', [MedicineMasterApiController::class, 'instructions'])->name('index')
+                            ->middleware('permission:medicine_view');
+                        Route::post('/', [MedicineMasterApiController::class, 'storeInstruction'])->name('store')
+                            ->middleware('permission:medicine_add');
+                        Route::put('/{id}', [MedicineMasterApiController::class, 'updateInstruction'])->name('update')
+                            ->middleware('permission:medicine_edit');
+                        Route::delete('/{id}', [MedicineMasterApiController::class, 'destroyInstruction'])->name('destroy')
+                            ->middleware('permission:medicine_delete');
                     });
 
                     // Reports
                     Route::prefix('reports')->name('reports.')->group(function () {
                         Route::get('/', [ReportsApiController::class, 'index'])
                             ->name('index')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('filter-data', [ReportsApiController::class, 'filterData'])
                             ->name('filter-data')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('channel-counts', [ReportsApiController::class, 'channelCounts'])
                             ->name('channel-counts')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('channel/{channel}', [ReportsApiController::class, 'showChannel'])
                             ->name('channel.show')
-                            ->middleware('permission:reports.view');
+                            ->middleware('permission:report_view');
                         Route::get('export/excel', [ReportsApiController::class, 'exportExcel'])
                             ->name('export.excel')
-                            ->middleware('permission:reports.export');
+                            ->middleware('permission:report_export');
                         Route::get('export/pdf', [ReportsApiController::class, 'exportPdf'])
                             ->name('export.pdf')
-                            ->middleware('permission:reports.export');
+                            ->middleware('permission:report_export');
                     });
 
-                    // Config — Users (CRUD)
+                    // Config — Users (CRUD) — match web manage keys (expand to full CRUD)
                     Route::get('config/users/form-data', [UserApiController::class, 'formData'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff');
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
                     Route::get('config/users', [UserApiController::class, 'index'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff');
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
                     Route::post('config/users', [UserApiController::class, 'store'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff');
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
                     Route::get('config/users/{id}', [UserApiController::class, 'show'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
                         ->where('id', '[0-9]+');
                     Route::post('config/users/{id}', [UserApiController::class, 'update'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
                         ->where('id', '[0-9]+');
                     Route::delete('config/users/{id}', [UserApiController::class, 'destroy'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
                         ->where('id', '[0-9]+');
                     Route::patch('config/users/{id}/toggle-status', [UserApiController::class, 'toggleStatus'])
-                        ->middleware('permission:master.doctors|master.receptions|master.ot_staff')
+                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
                         ->where('id', '[0-9]+');
 
-                    // FOC (Free of Charge)
-                    Route::prefix('foc')->name('foc.')->group(function () {
-                        Route::get('/', [FocApiController::class, 'index'])->name('index')
-                            ->middleware('permission:opd.foc.create|opd.foc.accept');
-                        Route::post('/', [FocApiController::class, 'store'])->name('store')
-                            ->middleware('permission:opd.foc.create');
-                        Route::post('/{id}/accept', [FocApiController::class, 'accept'])->name('accept')
-                            ->middleware('permission:opd.foc.accept')
-                            ->where('id', '[0-9]+');
-                        Route::post('/{id}/reject', [FocApiController::class, 'reject'])->name('reject')
-                            ->middleware('permission:opd.foc.accept')
-                            ->where('id', '[0-9]+');
-                    });
-
-                    // Roles & Permissions
+                    // Roles & Permissions — match web role_manage (expands to view/add/edit/delete)
                     Route::prefix('config/roles')->name('config.roles.')->group(function () {
                         Route::get('/permissions', [RoleApiController::class, 'permissions'])->name('permissions')
-                            ->middleware('permission:master.roles');
+                            ->middleware('permission:role_view');
                         Route::get('/', [RoleApiController::class, 'index'])->name('index')
-                            ->middleware('permission:master.roles');
+                            ->middleware('permission:role_view');
                         Route::post('/', [RoleApiController::class, 'store'])->name('store')
-                            ->middleware('permission:master.roles');
+                            ->middleware('permission:role_add');
                         Route::get('/{id}', [RoleApiController::class, 'show'])->name('show')
-                            ->middleware('permission:master.roles')
+                            ->middleware('permission:role_view')
                             ->where('id', '[0-9]+');
                         Route::put('/{id}', [RoleApiController::class, 'update'])->name('update')
-                            ->middleware('permission:master.roles')
+                            ->middleware('permission:role_edit')
                             ->where('id', '[0-9]+');
                         Route::delete('/{id}', [RoleApiController::class, 'destroy'])->name('destroy')
-                            ->middleware('permission:master.roles')
+                            ->middleware('permission:role_delete')
                             ->where('id', '[0-9]+');
                     });
 
-                    // Share History — matches web's own single-permission
-                    // bundling of this whole feature (its sidebar "Share
-                    // History" link uses the identical opd.patient.view
-                    // check as "Patients"). Previously had NO permission
-                    // middleware at all on any of these 8 routes — any
-                    // authenticated user could hit them regardless of
-                    // granted permissions. See
-                    // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND2.md Part C1.
+                    // Share History — web uses exam_history (not patient_view)
                     Route::prefix('share-history')->name('share-history.')
-                        ->middleware('permission:opd.patient.view')->group(function () {
+                        ->middleware('permission:exam_history')->group(function () {
                         Route::get('patients', [ShareHistoryApiController::class, 'patients'])
                             ->name('patients');
                         Route::get('hospitals', [ShareHistoryApiController::class, 'hospitals'])

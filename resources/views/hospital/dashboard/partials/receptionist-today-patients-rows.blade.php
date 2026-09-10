@@ -58,16 +58,20 @@
                 <span class="{{ $otBadgeClass }}"><i class="bi bi-calendar2-check"></i> {{ $otStatusLabel }}</span>
             </td>
             <td style="text-align:center">
+                @haspermission('patient_register')
                 <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $patient->ot_appointment_id]) }}"
                     style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:#5b21b6;color:#fff;border-radius:20px;font-size:.7rem;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px rgba(91,33,182,.3);">
                     <i class="bi bi-person-walking"></i> Walk-In
                 </a>
+                @endhaspermission
             </td>
             <td style="text-align:center">
+                @haspermission('ot_appointment_edit')
                 <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $patient->ot_appointment_id]) }}"
                     class="tap-print-btn" title="Open OT Appointment">
                     <i class="bi bi-box-arrow-up-right" style="font-size:14px;"></i>
                 </a>
+                @endhaspermission
             </td>
         </tr>
     @else
@@ -136,10 +140,12 @@
                     <span style="color:#16a34a; font-size:11px; font-weight:700;"><i class="bi bi-check2-circle"></i>
                         Done</span>
                 @elseif($isPhone && !$patient->checked_in_at)
+                    @haspermission('patient_register')
                     <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"
                         style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;background:#1B4F72;color:#fff;border-radius:20px;font-size:.7rem;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px rgba(27,79,114,.35);animation:checkin-pulse 1.4s ease-in-out infinite alternate;">
                         <i class="bi bi-box-arrow-in-right"></i> Check In
                     </a>
+                    @endhaspermission
                 @else
                     <div class="d-flex flex-column align-items-center gap-1">
                         <span class="wait-pill {{ $waitClass }}"
@@ -167,10 +173,12 @@
                 @endif
             </td>
             <td style="text-align:center">
+                @haspermission('bill_print')
                 <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
                     class="tap-print-btn" title="Print">
                     <i class="bi bi-printer" style="font-size:14px;"></i>
                 </a>
+                @endhaspermission
             </td>
         </tr>
     @endif

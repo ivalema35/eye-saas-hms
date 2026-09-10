@@ -173,27 +173,42 @@ if (! function_exists('hospital_contact_number')) {
     }
 }
 
+if (! function_exists('public_asset_url')) {
+    /**
+     * URL for a file under /public that works in subdirectory installs
+     * (e.g. http://localhost/eye-saas/public/...) even when APP_URL is only the host.
+     */
+    function public_asset_url(string $relativePath): string
+    {
+        $relativePath = ltrim(str_replace('\\', '/', $relativePath), '/');
+        $absolutePath = public_path($relativePath);
+        $version = is_file($absolutePath) ? (string) filemtime($absolutePath) : null;
+
+        if (! app()->runningInConsole() && isset($_SERVER['SCRIPT_NAME'])) {
+            $script = str_replace('\\', '/', (string) $_SERVER['SCRIPT_NAME']);
+            $base = str_ends_with($script, '/index.php')
+                ? substr($script, 0, -strlen('/index.php'))
+                : rtrim(dirname($script), '/');
+            $url = ($base === '' || $base === '/' ? '' : $base).'/'.$relativePath;
+        } else {
+            $url = asset($relativePath);
+        }
+
+        return $version !== null ? $url.'?v='.$version : $url;
+    }
+}
+
 if (! function_exists('platform_logo_url')) {
     function platform_logo_url(): string
     {
-        $relativePath = 'images/eye-hms-logo.png';
-        $absolutePath = public_path($relativePath);
-
-        $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
-
-        return asset($relativePath).($version ? '?v='.$version : '');
+        return public_asset_url('images/eye-hms-logo.png');
     }
 }
 
 if (! function_exists('platform_favicon_url')) {
     function platform_favicon_url(): string
     {
-        $relativePath = 'images/favicon.png';
-        $absolutePath = public_path($relativePath);
-
-        $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
-
-        return asset($relativePath).($version ? '?v='.$version : '');
+        return public_asset_url('images/favicon.png');
     }
 }
 
@@ -201,12 +216,7 @@ if (! function_exists('platform_logo_light_url')) {
     /** Blue logo for white/light backgrounds (sidebar, login forms). */
     function platform_logo_light_url(): string
     {
-        $relativePath = 'images/eye-hms-logo1.png';
-        $absolutePath = public_path($relativePath);
-
-        $version = is_file($absolutePath) ? filemtime($absolutePath) : null;
-
-        return asset($relativePath).($version ? '?v='.$version : '');
+        return public_asset_url('images/eye-hms-logo1.png');
     }
 }
 
@@ -331,5 +341,27 @@ if (! function_exists('axis_chip_css')) {
     function axis_chip_css(): string
     {
         return '';
+    }
+}
+
+if (! function_exists('hospital_can')) {
+    /** Current hospital user has permission (matrix or legacy key). */
+    function hospital_can(string $permissionKey): bool
+    {
+        return app(\App\Services\Auth\RolePermissionService::class)->can($permissionKey);
+    }
+}
+
+if (! function_exists('hospital_can_any')) {
+    /**
+     * @param  array<int, string>|string  $permissionKeys  Array or pipe-separated keys
+     */
+    function hospital_can_any(array|string $permissionKeys): bool
+    {
+        if (is_string($permissionKeys)) {
+            $permissionKeys = array_values(array_filter(array_map('trim', explode('|', $permissionKeys))));
+        }
+
+        return app(\App\Services\Auth\RolePermissionService::class)->canAny($permissionKeys);
     }
 }

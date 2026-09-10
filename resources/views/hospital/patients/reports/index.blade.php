@@ -21,12 +21,14 @@ rendered above the content instead. --}}
     </div>
 
     <div class="d-flex gap-2">
+        @haspermission('report_export')
         <a href="{{ route('hospital.reports.export.excel', array_merge(['slug' => $slug], request()->all())) }}" class="btn btn-success">
             <i class="bi bi-file-earmark-excel me-1"></i> Excel
         </a>
         <a href="{{ route('hospital.reports.export.pdf', array_merge(['slug' => $slug], request()->all())) }}" class="btn btn-danger">
             <i class="bi bi-file-earmark-pdf me-1"></i> PDF
         </a>
+        @endhaspermission
     </div>
 </div>
 

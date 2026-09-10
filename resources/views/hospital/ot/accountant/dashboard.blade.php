@@ -807,17 +807,21 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                                                     <span class="text-muted small ota-paid-note me-2"><i
                                                             class="bi bi-exclamation-circle"></i> Package Not Set</span>
                                                 @else
+                                                    @haspermission('ot_payment_record')
                                                     <a href="{{ route('hospital.ot.payments.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                                         class="btn btn-sm btn-primary ota-add-payment-btn">
                                                         <i class="bi bi-plus-circle me-1"></i>
                                                         {{ $paymentStatus === 'partially_paid' ? 'Add Balance Payment' : 'Add Payment' }}
                                                     </a>
+                                                    @endhaspermission
                                                 @endif
                                                 @if($booking->payments->isNotEmpty() && !$isRefundsTab)
+                                                    @haspermission('ot_bill_print')
                                                     <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
                                                         class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
                                                         <i class="bi bi-printer me-1"></i> Receipt
                                                     </a>
+                                                    @endhaspermission
                                                 @endif
                                             </td>
                                         </tr>

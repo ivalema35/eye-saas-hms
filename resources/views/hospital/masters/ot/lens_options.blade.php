@@ -11,10 +11,12 @@
                 </a>
                 <p class="text-muted small mb-0">Keep your OT master data organized and easy to update.</p>
             </div>
+            @haspermission('ot_lens_option_add')
             <button type="button" class="btn btn-primary ot-master-add-btn" data-bs-toggle="modal"
                 data-bs-target="#lensFormModal" onclick="resetForm()">
                 <i class="bi bi-plus-lg me-1"></i> Add Lens Option
             </button>
+            @endhaspermission
         </div>
 
         <div class="card border-0 shadow-sm rounded-4 ot-master-card">
@@ -43,10 +45,13 @@
                                     </td>
                                     <td class="text-end pe-4">
                                         <div class="btn-group shadow-sm rounded-3" role="group">
+                                            @haspermission('ot_lens_option_edit')
                                             <button class="btn btn-light border-0 text-primary ot-master-icon-btn" type="button"
                                                 onclick='editRecord(@json($record))' title="Edit">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
+                                            @endhaspermission
+                                            @haspermission('ot_lens_option_delete')
                                             <form method="POST" class="d-inline"
                                                 action="{{ route('hospital.masters.ot.lens-options.destroy', ['slug' => $slug, 'id' => $record->id]) }}"
                                                 onsubmit="return confirm('Delete this lens option?');">
@@ -57,6 +62,7 @@
                                                     <i class="bi bi-trash3-fill"></i>
                                                 </button>
                                             </form>
+                                            @endhaspermission
                                         </div>
                                     </td>
                                 </tr>

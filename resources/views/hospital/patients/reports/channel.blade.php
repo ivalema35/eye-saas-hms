@@ -97,12 +97,14 @@
     <div class="card ot-premium-card border-0 mb-4">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
             <div class="d-flex gap-2 flex-wrap">
+                @haspermission('report_export')
                 <a href="{{ route('hospital.reports.export.excel', array_merge(['slug' => $slug], request()->all())) }}" class="btn btn-sm ot-export-btn ot-export-excel">
                     <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
                 </a>
                 <a href="{{ route('hospital.reports.export.pdf', array_merge(['slug' => $slug], request()->all())) }}" class="btn btn-sm ot-export-btn ot-export-pdf">
                     <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
                 </a>
+                @endhaspermission
             </div>
             <span class="badge ot-total-pill"><i class="bi bi-collection me-1"></i>{{ $patients->total() }} total</span>
         </div>

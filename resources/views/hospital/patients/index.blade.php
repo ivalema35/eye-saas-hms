@@ -751,13 +751,17 @@ design. --}}
                                     <i class="bi bi-list-ul"></i> All
                                 </a>
                             </div>
+                            @haspermission('patient_register')
                             <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}" class="patients-top-btn">
                                 <i class="bi bi-person-plus"></i> Walk-in
                             </a>
+                            @endhaspermission
+                            @haspermission('patient_register_phone')
                             <a href="{{ route('hospital.patients.create-phone', ['slug' => $slug]) }}"
                                 class="patients-top-btn patients-top-btn-outline">
                                 <i class="bi bi-telephone"></i> Phone Appt
                             </a>
+                            @endhaspermission
                         </div>
                     </div>
 
@@ -886,9 +890,11 @@ design. --}}
 
                 {{-- Footer --}}
                 <div class="pvm-footer">
+                    @haspermission('patient_edit')
                     <a id="pvmEditBtn" href="#" class="pvm-btn-edit">
                         <i class="bi bi-pencil-square"></i> Edit Patient
                     </a>
+                    @endhaspermission
                     <button type="button" class="pvm-btn-close" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -1333,7 +1339,10 @@ design. --}}
                 document.getElementById('pvmName').textContent = d.name || '—';
                 document.getElementById('pvmMrd').textContent = d.mrd || '—';
                 document.getElementById('pvmGenderAge').textContent = [d.gender, d.age ? d.age + 'y' : ''].filter(Boolean).join(', ') || '—';
-                document.getElementById('pvmEditBtn').href = d.editUrl || '#';
+                const pvmEditBtn = document.getElementById('pvmEditBtn');
+                if (pvmEditBtn) {
+                    pvmEditBtn.href = d.editUrl || '#';
+                }
 
                 // Status badge
                 var sb = document.getElementById('pvmStatusBadge');

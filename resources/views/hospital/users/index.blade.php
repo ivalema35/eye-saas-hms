@@ -42,10 +42,12 @@ design. --}}
                     </div>
                     <div class="users-header-actions">
                         <span class="hms-badge hms-badge-info users-count-pill">{{ $users->count() }} total</span>
+                        @hasanypermission('user_doctor_add|user_reception_add|user_ot_staff_add')
                         <button type="button" class="hms-btn hms-btn-primary users-add-btn" data-bs-toggle="modal"
                             data-bs-target="#userFormModal" onclick="resetUserForm()">
                             <i class="bi bi-person-plus-fill"></i> Add User
                         </button>
+                        @endhasanypermission
                     </div>
                 </div>
 
@@ -113,6 +115,7 @@ design. --}}
                                         </td>
                                         <td class="text-end">
                                             <div class="d-inline-flex gap-2 users-action-group">
+                                                @hasanypermission('user_doctor_edit|user_reception_edit|user_ot_staff_edit')
                                                 @if(Route::has('hospital.users.edit'))
                                                     <button type="button"
                                                         class="btn btn-sm btn-outline-primary users-action-btn users-edit-btn"
@@ -120,6 +123,8 @@ design. --}}
                                                         <i class="bi bi-pencil-fill"></i>
                                                     </button>
                                                 @endif
+                                                @endhasanypermission
+                                                @hasanypermission('user_doctor_delete|user_reception_delete|user_ot_staff_delete')
                                                 @if(Route::has('hospital.users.destroy'))
                                                     <form method="POST"
                                                         action="{{ route('hospital.users.destroy', array_filter(['slug' => $slug, 'id' => $user->id, 'role' => $roleFilterKey ?? null])) }}"
@@ -136,10 +141,7 @@ design. --}}
                                                         </button>
                                                     </form>
                                                 @endif
-                                                @if(!Route::has('hospital.users.edit') && !Route::has('hospital.users.destroy'))
-                                                    <span style="color: var(--hms-text-muted); font-size: .875rem;">No actions
-                                                        configured</span>
-                                                @endif
+                                                @endhasanypermission
                                             </div>
                                         </td>
 

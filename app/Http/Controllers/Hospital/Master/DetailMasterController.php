@@ -28,6 +28,7 @@ use App\Models\Hospital\MasterSphCyl;
 use App\Models\Hospital\MasterVn;
 use App\Models\Hospital\MasterVngl;
 use App\Models\Hospital\MasterVnst;
+use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,8 @@ use Illuminate\View\View;
 
 class DetailMasterController extends Controller
 {
+    public function __construct(private readonly RolePermissionService $perm) {}
+
     /**
      * Maps URL {type} slugs to their Eloquent model classes.
      *
@@ -139,15 +142,31 @@ class DetailMasterController extends Controller
         }
         $records = $query->get();
         $diagnoses = $this->isAdviceType($type) ? MasterDiagnosis::orderBy('value')->get() : collect();
+        abort_unless(
+            $this->perm->canAny([
+                'eye_exam_master_view',
+                'eye_exam_master_add',
+                'eye_exam_master_edit',
+                'eye_exam_master_delete',
+            ]),
+            403,
+            'Access denied.'
+        );
+        $canAdd = $this->perm->can('eye_exam_master_add');
+        $canEdit = $this->perm->can('eye_exam_master_edit');
+        $canDelete = $this->perm->can('eye_exam_master_delete');
+        $canWrite = $canAdd || $canEdit || $canDelete;
 
         return view(
             'hospital.masters.dynamic_index',
-            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup', 'diagnoses')
+            compact('records', 'columns', 'title', 'type', 'slug', 'routeGroup', 'diagnoses', 'canWrite', 'canAdd', 'canEdit', 'canDelete')
         );
     }
 
     public function store(Request $request, string $slug, string $type): RedirectResponse
     {
+        abort_unless($this->perm->can('eye_exam_master_add'), 403, 'Access denied.');
+
         $modelClass = $this->resolveModel($type);
         $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
         $columns = array_values(array_diff((new $modelClass)->getFillable(), $excludeCols));
@@ -172,6 +191,8 @@ class DetailMasterController extends Controller
 
     public function update(Request $request, string $slug, string $type, int $id): RedirectResponse
     {
+        abort_unless($this->perm->can('eye_exam_master_edit'), 403, 'Access denied.');
+
         $modelClass = $this->resolveModel($type);
         $record = $modelClass::findOrFail($id);
 
@@ -240,6 +261,8 @@ class DetailMasterController extends Controller
 
     public function destroy(string $slug, string $type, int $id): RedirectResponse
     {
+        abort_unless($this->perm->can('eye_exam_master_delete'), 403, 'Access denied.');
+
         $modelClass = $this->resolveModel($type);
         $record = $modelClass::findOrFail($id);
 

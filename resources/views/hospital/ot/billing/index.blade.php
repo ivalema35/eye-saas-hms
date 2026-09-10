@@ -72,6 +72,7 @@ Appointments / Ward Management / OT Assistant design. --}}
                                                 @endif
                                             </td>
                                             <td class="text-end">
+                                                @haspermission('ot_billing_manage')
                                                 @if(!$hasInvoice)
                                                     <form method="POST"
                                                         action="{{ route('hospital.ot.invoice.generate', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
@@ -85,21 +86,28 @@ Appointments / Ward Management / OT Assistant design. --}}
                                                         </button>
                                                     </form>
                                                 @endif
+                                                @endhaspermission
 
                                                 @if($hasInvoice)
                                                     <div class="otb-action-group">
+                                                        @haspermission('ot_bill_print')
                                                         <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                                             class="btn btn-sm otb-print-btn">
                                                             <i class="bi bi-receipt-cutoff"></i> Bill Summary
                                                         </a>
+                                                        @endhaspermission
+                                                        @haspermission('ot_discharge_generate')
                                                         <a href="{{ route('hospital.ot.discharge.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                                             class="btn btn-sm otb-print-btn otb-print-btn-discharge">
                                                             <i class="bi bi-file-medical"></i> Discharge
                                                         </a>
+                                                        @endhaspermission
+                                                        @haspermission('ot_certificate_print')
                                                         <a href="{{ route('hospital.ot.certificate.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                                             class="btn btn-sm otb-print-btn">
                                                             <i class="bi bi-patch-check"></i> Certificate
                                                         </a>
+                                                        @endhaspermission
                                                     </div>
                                                 @endif
                                             </td>

@@ -336,15 +336,6 @@
                             </div>
                             @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
-
-                        <!-- <div class="hms-form-group user-doctor-only" style="display:none">
-                            <label>&nbsp;</label>
-                            <label class="hms-checkbox-label" style="padding:.5rem 0">
-                                <input class="hms-checkbox" type="checkbox" value="1" id="user-foc-permission"
-                                       name="foc_permission" @checked(old('foc_permission'))>
-                                <span>Allow FOC Permission</span>
-                            </label>
-                        </div> -->
                     </div>
                 </div>
 
@@ -490,10 +481,6 @@
             document.getElementById('user-photo-preview').style.display = 'none';
             document.getElementById('user-signature-current').style.display = 'none';
             document.getElementById('user-photo-current').style.display = 'none';
-            const userFocPermissionInput = document.getElementById('user-foc-permission');
-            if (userFocPermissionInput) {
-                userFocPermissionInput.checked = false;
-            }
             document.getElementById('user-password').value = '';
             document.getElementById('user-password-confirmation').value = '';
             setUserPasswordRequired(true);
@@ -538,10 +525,6 @@
                 photoCurrent.style.display = 'none';
             }
 
-            const userFocPermissionInput = document.getElementById('user-foc-permission');
-            if (userFocPermissionInput) {
-                userFocPermissionInput.checked = !!record.foc_permission;
-            }
             const storedPassword = record.original_password ?? '';
             document.getElementById('user-password').value = storedPassword;
             document.getElementById('user-password-confirmation').value = storedPassword;
@@ -596,10 +579,6 @@
                     document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
                     document.getElementById('user-registration-no').value = @json(old('registration_no', ''));
                     document.getElementById('user-experience-years').value = @json(old('experience_years', ''));
-                    const userFocPermissionInput = document.getElementById('user-foc-permission');
-                    if (userFocPermissionInput) {
-                        userFocPermissionInput.checked = @json((bool) old('foc_permission'));
-                    }
 
                     if (oldMethod === 'PUT' && oldUserId) {
                         document.getElementById('userFormModalTitle').innerText = 'Edit User';

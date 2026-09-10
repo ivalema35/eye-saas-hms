@@ -16,14 +16,14 @@
 @section('content')
 
     @php
-        $permService = app(\App\Services\Auth\RolePermissionService::class);
-        $isSuper = auth('hospital_user')->user()?->role?->is_super;
-        $canWrite = $isSuper || (str_contains($routeGroup, '.detail.')
-            ? $permService->can('master.eye_exam')
-            : $permService->canAny(['master.case_types', 'master.locations']));
         $showBackButton = $useModalLayout;
         $isAdviceType = in_array($type, ['advice', 'advices'], true);
         $showDiagnosis = $isAdviceType && isset($diagnoses) && $diagnoses->isNotEmpty();
+        $canAdd = $canAdd ?? false;
+        $canEdit = $canEdit ?? false;
+        $canDelete = $canDelete ?? false;
+        $canWrite = $canWrite ?? ($canAdd || $canEdit || $canDelete);
+        $canMutate = $canAdd || $canEdit || $canDelete;
     @endphp
 
     @if($errors->any())
@@ -65,14 +65,14 @@
                 @endif
             </div>
             <div class="d-flex align-items-center gap-2 flex-wrap">
-                @if($canWrite && $showDiagnosis)
+                @if(($canAdd || $canEdit) && $showDiagnosis)
                     <button type="button" class="btn btn-outline-secondary case-master-diagnosis-btn"
                         style="border-radius:12px;font-weight:700;border-color:rgba(27,79,114,.3);color:#1B4F72;"
                         data-bs-toggle="modal" data-bs-target="#linkByDiagnosisModal">
                         <i class="bi bi-diagram-3 me-1"></i> Link by Diagnosis
                     </button>
                 @endif
-                @if($canWrite && $useModalLayout)
+                @if($canAdd && $useModalLayout)
                     <button type="button" class="btn btn-primary case-master-add-btn" data-bs-toggle="modal"
                         data-bs-target="#masterFormModal" onclick="resetForm()">
                         <i class="bi bi-plus-lg me-1"></i> Add {{ Str::singular($title) }}
@@ -82,7 +82,7 @@
         </div>
 
         <div class="row g-4">
-            @if($canWrite && !$useModalLayout)
+            @if(($canAdd || $canEdit) && !$useModalLayout)
                 <div class="col-lg-4">
                     <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 80px;">
                         <div class="card-body p-4">
@@ -140,7 +140,7 @@
                 </div>
             @endif
 
-            <div class="{{ $canWrite && !$useModalLayout ? 'col-lg-8' : 'col-12' }}">
+            <div class="{{ ($canAdd || $canEdit) && !$useModalLayout ? 'col-lg-8' : 'col-12' }}">
                 <div class="card border-0 shadow-sm rounded-4 {{ $useModalLayout ? 'case-master-card' : '' }}">
                     <div class="card-body p-0">
                         <div class="table-responsive {{ $useModalLayout ? 'case-master-table-wrap' : '' }}">
@@ -175,7 +175,7 @@
                                                 Favourite
                                             </th>
                                         @endif
-                                        @if($canWrite)
+                                        @if($canEdit || $canDelete)
                                             <th width="15%" class="text-end pe-4 py-3 text-muted text-uppercase small fw-bold">
                                                 Actions</th>
                                         @endif
@@ -228,21 +228,25 @@
                                                         data-state="{{ $record->is_favourite ? '1' : '0' }}"
                                                         data-url="{{ route('hospital.masters.detail.toggle-favourite', ['slug' => $slug, 'type' => $type, 'id' => $record->id]) }}"
                                                         title="{{ $record->is_favourite ? 'Remove favourite' : 'Mark as favourite' }}"
-                                                        style="font-size:1.4rem;line-height:1;transition:transform .15s;">
+                                                        style="font-size:1.4rem;line-height:1;transition:transform .15s;"
+                                                        @disabled(! $canEdit)>
                                                         <i class="bi {{ $record->is_favourite ? 'bi-heart-fill' : 'bi-heart' }}"
                                                             style="color:{{ $record->is_favourite ? '#e11d48' : '#cbd5e1' }};"></i>
                                                     </button>
                                                 </td>
                                             @endif
-                                            @if($canWrite)
+                                            @if($canEdit || $canDelete)
                                                 <td class="text-end pe-4">
                                                     @if(!isset($record->getCasts()['is_seeded']) || !$record->is_seeded)
                                                         <div class="btn-group shadow-sm rounded-3" role="group">
+                                                            @if($canEdit)
                                                             <button type="button"
                                                                 class="btn btn-light border-0 text-primary {{ $useModalLayout ? 'case-master-icon-btn' : '' }}"
                                                                 onclick="editRecord(@js($record))" title="Edit">
                                                                 <i class="bi bi-pencil-square"></i>
                                                             </button>
+                                                            @endif
+                                                            @if($canDelete)
                                                             <form
                                                                 action="{{ route($routeGroup . '.destroy', ['slug' => $slug, 'type' => $type, 'id' => $record->id]) }}"
                                                                 method="POST" class="d-inline"
@@ -255,6 +259,7 @@
                                                                     <i class="bi bi-trash3-fill"></i>
                                                                 </button>
                                                             </form>
+                                                            @endif
                                                         </div>
                                                     @else
                                                         <span class="text-muted small px-2">—</span>
@@ -264,13 +269,13 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="{{ count($columns) + ($canWrite ? 2 : 1) }}" class="text-center py-5">
+                                            <td colspan="{{ count($columns) + (($canEdit || $canDelete) ? 2 : 1) }}" class="text-center py-5">
                                                 <div class="text-muted opacity-50 mb-3">
                                                     <i class="bi bi-inbox-fill" style="font-size: 3rem;"></i>
                                                 </div>
                                                 <h6 class="fw-bold text-dark">No {{ $title }} Found</h6>
                                                 <p class="text-muted small mb-0">
-                                                    @if($canWrite)
+                                                    @if($canAdd)
                                                         {{ $useModalLayout ? 'Use the Add button to create your first record.' : 'Use the form on the left to add your first record.' }}
                                                     @else
                                                         No records have been added yet.
@@ -291,7 +296,7 @@
         @endif
 
         {{-- Add / Edit modal --}}
-        @if($canWrite && $useModalLayout)
+        @if(($canAdd || $canEdit) && $useModalLayout)
             <div class="modal fade case-master-modal" id="masterFormModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-dialog-centered">
                     <div class="modal-content border-0">
@@ -369,7 +374,7 @@
         @endif
 
         {{-- Link by Diagnosis modal --}}
-        @if($canWrite && $showDiagnosis)
+        @if(($canAdd || $canEdit) && $showDiagnosis)
             @php
                 $adviceDiagMap = $records->mapWithKeys(fn($r) => [
                     $r->id => collect($r->diagnoses)->pluck('id')->all()
@@ -495,7 +500,7 @@
     </div>
 @endsection
 
-@if($canWrite)
+@if($canAdd || $canEdit)
     @push('scripts')
         <script>
             const storeUrl = "{{ route($routeGroup . '.store', ['slug' => $slug, 'type' => $type]) }}";

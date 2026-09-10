@@ -332,8 +332,7 @@ panel design. --}}
                                                         data-currency-code="{{ $c->currency_code ?? 'INR' }}"
                                                         data-currency-symbol="{{ $c->currency_symbol ?? '₹' }}"
                                                         data-currency-name="{{ $c->currency_name ?? '' }}"
-                                                        data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}"
-                                                        @php
+                                                        data-fx="{{ (float) ($c->fx_inr_per_unit ?: 1) }}" @php
                                                             $cycles = collect($countryPlanPrices[$c->id] ?? $countryPlanPrices[(string) $c->id] ?? [])->keyBy('cycle');
                                                         @endphp
                                                         data-plan-monthly="{{ $cycles->get('monthly')?->price }}"
@@ -752,8 +751,8 @@ panel design. --}}
                                 @endforeach
                             </select>
                             <div id="addCountryCodeCustomWrap" class="mt-2 d-none">
-                                <input type="text" id="addCountryCodeCustom" class="hms-input"
-                                    maxlength="2" pattern="[A-Za-z]{2}" placeholder="e.g. PH"
+                                <input type="text" id="addCountryCodeCustom" class="hms-input" maxlength="2"
+                                    pattern="[A-Za-z]{2}" placeholder="e.g. PH"
                                     style="text-transform:uppercase;letter-spacing:.08em;max-width:120px">
                                 <p style="font-size:.78rem;color:#64748B;margin:.4rem 0 0">
                                     Enter 2-letter ISO code (e.g. PH for Philippines, VN for Vietnam).
@@ -790,19 +789,18 @@ panel design. --}}
                                 style="display:none;grid-template-columns:1fr 1fr 1.4fr;gap:.5rem">
                                 <div>
                                     <label class="hms-label" style="font-size:.72rem">Code *</label>
-                                    <input type="text" id="addCurrencyCodeCustom" class="hms-input"
-                                        maxlength="3" pattern="[A-Za-z]{3}" placeholder="PHP"
-                                        style="text-transform:uppercase">
+                                    <input type="text" id="addCurrencyCodeCustom" class="hms-input" maxlength="3"
+                                        pattern="[A-Za-z]{3}" placeholder="PHP" style="text-transform:uppercase">
                                 </div>
                                 <div>
                                     <label class="hms-label" style="font-size:.72rem">Symbol *</label>
-                                    <input type="text" id="addCurrencySymbolCustom" class="hms-input"
-                                        maxlength="10" placeholder="₱">
+                                    <input type="text" id="addCurrencySymbolCustom" class="hms-input" maxlength="10"
+                                        placeholder="₱">
                                 </div>
                                 <div>
                                     <label class="hms-label" style="font-size:.72rem">Name</label>
-                                    <input type="text" id="addCurrencyNameCustom" class="hms-input"
-                                        maxlength="50" placeholder="Philippine Peso">
+                                    <input type="text" id="addCurrencyNameCustom" class="hms-input" maxlength="50"
+                                        placeholder="Philippine Peso">
                                 </div>
                             </div>
                             <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">
@@ -829,7 +827,8 @@ panel design. --}}
                                 </div>
                             </div>
                             <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">
-                                Enter prices in <strong>INR</strong>. Register cards convert to this country's currency using FX.
+                                Enter prices in <strong>INR</strong>. Register cards convert to this country's currency
+                                using FX.
                                 Example: 1000 INR + Australia FX 55 → cards show A$18.
                             </p>
                         </div>
@@ -837,7 +836,8 @@ panel design. --}}
                             <label class="hms-label">FX Rate (INR per 1 unit) <span style="color:#E53E3E">*</span></label>
                             <input type="number" step="0.0001" min="0.0001" name="fx_inr_per_unit" id="addCountryFx"
                                 class="hms-input" value="1" required>
-                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert INR plan prices on register. Example: AUD ≈ 55 (₹1000 → A$18).</p>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert INR plan prices on
+                                register. Example: AUD ≈ 55 (₹1000 → A$18).</p>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
@@ -878,8 +878,8 @@ panel design. --}}
                                 @endforeach
                             </select>
                             <div id="editCountryCodeCustomWrap" class="mt-2 d-none">
-                                <input type="text" id="editCountryCodeCustom" class="hms-input"
-                                    maxlength="2" pattern="[A-Za-z]{2}" placeholder="e.g. PH"
+                                <input type="text" id="editCountryCodeCustom" class="hms-input" maxlength="2"
+                                    pattern="[A-Za-z]{2}" placeholder="e.g. PH"
                                     style="text-transform:uppercase;letter-spacing:.08em;max-width:120px">
                                 <p style="font-size:.78rem;color:#64748B;margin:.4rem 0 0">
                                     Enter 2-letter ISO code (e.g. PH for Philippines).
@@ -920,19 +920,18 @@ panel design. --}}
                                 style="display:none;grid-template-columns:1fr 1fr 1.4fr;gap:.5rem">
                                 <div>
                                     <label class="hms-label" style="font-size:.72rem">Code *</label>
-                                    <input type="text" id="editCurrencyCodeCustom" class="hms-input"
-                                        maxlength="3" pattern="[A-Za-z]{3}" placeholder="PHP"
-                                        style="text-transform:uppercase">
+                                    <input type="text" id="editCurrencyCodeCustom" class="hms-input" maxlength="3"
+                                        pattern="[A-Za-z]{3}" placeholder="PHP" style="text-transform:uppercase">
                                 </div>
                                 <div>
                                     <label class="hms-label" style="font-size:.72rem">Symbol *</label>
-                                    <input type="text" id="editCurrencySymbolCustom" class="hms-input"
-                                        maxlength="10" placeholder="₱">
+                                    <input type="text" id="editCurrencySymbolCustom" class="hms-input" maxlength="10"
+                                        placeholder="₱">
                                 </div>
                                 <div>
                                     <label class="hms-label" style="font-size:.72rem">Name</label>
-                                    <input type="text" id="editCurrencyNameCustom" class="hms-input"
-                                        maxlength="50" placeholder="Philippine Peso">
+                                    <input type="text" id="editCurrencyNameCustom" class="hms-input" maxlength="50"
+                                        placeholder="Philippine Peso">
                                 </div>
                             </div>
                             <p style="font-size:.78rem;color:#F59E0B;margin:.5rem 0 0">
@@ -969,7 +968,8 @@ panel design. --}}
                             <label class="hms-label">FX Rate (INR per 1 unit) <span style="color:#E53E3E">*</span></label>
                             <input type="number" step="0.0001" min="0.0001" name="fx_inr_per_unit" id="editCountryFx"
                                 class="hms-input" value="1" required>
-                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert INR plan prices on register. Example: AUD ≈ 55 (₹1000 → A$18).</p>
+                            <p style="font-size:.78rem;color:#64748B;margin:.5rem 0 0">Used to convert INR plan prices on
+                                register. Example: AUD ≈ 55 (₹1000 → A$18).</p>
                         </div>
                     </div>
                     <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
@@ -1310,8 +1310,8 @@ panel design. --}}
                                 Hierarchy auto-resolved. Duplicates skipped. All names auto Title-Cased.
                             </p>
                             <p style="margin:.75rem 0 0;font-size:.85rem">
-                                <a href="{{ route('superadmin.locations.import.sample') }}"><i
-                                        class="bi bi-download"></i> Download a sample file</a>
+                                <a href="{{ route('superadmin.locations.import.sample') }}"><i class="bi bi-download"></i>
+                                    Download a sample file</a>
                             </p>
                         </div>
                         <label class="hms-label">Select File (.xlsx, .xls, .csv)</label>

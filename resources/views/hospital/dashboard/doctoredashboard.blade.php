@@ -577,6 +577,21 @@
             background: #0d9488;
         }
 
+        .doc-ref-bar a.doc-ref-link {
+            color: inherit;
+            text-decoration: none;
+            font-weight: inherit;
+            border-radius: 4px;
+            padding: 0 2px;
+            transition: background .15s ease, color .15s ease;
+        }
+
+        .doc-ref-bar a.doc-ref-link:hover {
+            background: rgba(255, 255, 255, .22);
+            color: #fff;
+            text-decoration: underline;
+        }
+
         .doc-ref-mid {
             display: flex;
             align-items: center;
@@ -751,17 +766,6 @@
             };
         @endphp
 
-        {{-- Subscription Alert --}}
-        @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 14)
-            <div
-                class="alert {{ $subscriptionDaysLeft <= 3 ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center gap-2 rounded-3 mb-4 shadow-sm">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>
-                    Subscription expires in <strong>{{ $subscriptionDaysLeft }} days</strong>. Please renew soon.
-                </span>
-            </div>
-        @endif
-
         {{-- ==================== DOCTOR OVERVIEW: featured card + all-doctor list (OPD + OT combined) ====================
         --}}
         @php
@@ -802,18 +806,22 @@
                         </div>
                     </div>
                     <div class="doc-ref-bar doc-ref-bar--opd" title="My OPD">
-                        <span>Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
+                        <span title="Examination assigned today">Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
                         <span class="doc-ref-div"></span>
-                        <span>P: {{ $doctorPrimaryDone ?? 0 }}</span>
+                        <span title="Primary exam completed">P: {{ $doctorPrimaryDone ?? 0 }}</span>
                         <span class="doc-ref-div"></span>
-                        <span>S: {{ $doctorSecondaryDone ?? 0 }}</span>
+                        <span title="Secondary exam completed">S: {{ $doctorSecondaryDone ?? 0 }}</span>
                     </div>
                     <div class="doc-ref-bar doc-ref-bar--ot" title="OT">
-                        <span>OT: {{ $activeOtStats->ot_total ?? 0 }}</span>
+                        <span title="Total OT (complete + remaining)">OT: {{ $activeOtStats->ot_total ?? 0 }}</span>
                         <span class="doc-ref-div"></span>
-                        <span>OP: {{ $activeOtStats->ot_pending ?? 0 }}</span>
+                        <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId, 'queue' => 'consult']) }}"
+                            class="doc-ref-link"
+                            title="Ward-assigned OT patients — click to manage">
+                            OP: {{ $activeOtStats->ot_pending ?? 0 }}
+                        </a>
                         <span class="doc-ref-div"></span>
-                        <span>OC: {{ $activeOtStats->ot_complete ?? 0 }}</span>
+                        <span title="OT completed">OC: {{ $activeOtStats->ot_complete ?? 0 }}</span>
                     </div>
                 </div>
             </div>
@@ -851,9 +859,10 @@
                                         class="bi bi-display"></i>{{ $doc->secondary_count ?? 0 }}</span>
                             </div>
                             <div class="doc-ref-btns doc-ref-btns--ot">
-                                <span class="doc-ref-btn" title="OT"><i
+                                <span class="doc-ref-btn" title="OT Total"><i
                                         class="bi bi-scissors"></i>{{ $docOt->ot_total ?? 0 }}</span>
-                                <span class="doc-ref-btn" title="Pending"><i
+                                <span class="doc-ref-btn" title="Ward assigned (OP)"
+                                    onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $doc->id, 'queue' => 'consult']) }}';"><i
                                         class="bi bi-hourglass-split"></i>{{ $docOt->ot_pending ?? 0 }}</span>
                                 <span class="doc-ref-btn" title="Complete"><i
                                         class="bi bi-check2-circle"></i>{{ $docOt->ot_complete ?? 0 }}</span>
@@ -944,11 +953,14 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center flex-wrap">
+                                                    @haspermission('exam_primary')
                                                     <a href="{{ route('hospital.exam.primary.show', ['slug' => $slug, 'id' => $patient->id]) }}"
                                                         class="btn btn-sm text-white px-3 fw-semibold"
                                                         style="background-color: #1B4F72; border-radius: 4px;">
                                                         Examine
                                                     </a>
+                                                    @endhaspermission
+                                                    @haspermission('exam_history')
                                                     @if($patient->has_history ?? false)
                                                         <a href="{{ route('hospital.patients.history', ['slug' => $slug]) }}?patient_ids={{ $patient->all_patient_ids ?? $patient->id }}"
                                                             class="btn btn-sm px-3 fw-semibold"
@@ -957,6 +969,7 @@
                                                             <i class="bi bi-clock-history"></i> View
                                                         </a>
                                                     @endif
+                                                    @endhaspermission
                                                 </div>
                                             </td>
                                         </tr>
@@ -1074,6 +1087,7 @@
                                                 </div>
                                             </td>
                                             <td>
+                                                @haspermission('exam_secondary')
                                                 @if($isDilLocked)
                                                     <div class="tooltip-container">
                                                         <button class="btn btn-sm fw-semibold px-3 dil-override-btn"
@@ -1096,6 +1110,7 @@
                                                         Examine
                                                     </a>
                                                 @endif
+                                                @endhaspermission
                                             </td>
                                         </tr>
                                     @empty

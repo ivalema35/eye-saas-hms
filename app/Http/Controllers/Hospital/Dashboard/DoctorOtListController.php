@@ -23,15 +23,26 @@ class DoctorOtListController extends Controller
         [$startDate, $endDate] = $this->resolvedDates($request);
 
         $doctorId = $request->filled('doctor_id') ? (int) $request->input('doctor_id') : null;
+        $queue = $request->input('queue'); // consult = ward-assigned OP queue
+        $consultOnly = $queue === 'consult';
 
         $query = OtBooking::query()
             ->with([
-                'patient:id,first_name,middle_name,last_name,contact_no,age',
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender,doctor_id',
+                'patient.doctor:id,name',
                 'otDoctor:id,name',
                 'otAssistant:id,name',
                 'preOp',
-            ])
-            ->where(function ($q) use ($startDate, $endDate) {
+            ]);
+
+        if ($consultOnly) {
+            // OP drill-down: all open ward→doctor consults (no date clamp)
+            $query->doctorConsultationPending();
+            if ($doctorId) {
+                $query->where('ot_doctor_id', $doctorId);
+            }
+        } else {
+            $query->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween(DB::raw('DATE(surgery_date)'), [$startDate, $endDate])
                     ->orWhere(function ($nullDate) use ($startDate, $endDate) {
                         $today = now()->toDateString();
@@ -46,13 +57,14 @@ class DoctorOtListController extends Controller
                     });
             });
 
-        if ($doctorId) {
-            $query->where(function ($q) use ($doctorId) {
-                $q->where('ot_doctor_id', $doctorId)
-                    ->orWhere(function ($inner) use ($doctorId) {
-                        $inner->whereNull('ot_doctor_id')->where('booked_by', $doctorId);
-                    });
-            });
+            if ($doctorId) {
+                $query->where(function ($q) use ($doctorId) {
+                    $q->where('ot_doctor_id', $doctorId)
+                        ->orWhere(function ($inner) use ($doctorId) {
+                            $inner->whereNull('ot_doctor_id')->where('booked_by', $doctorId);
+                        });
+                });
+            }
         }
 
         $bookings = $query
@@ -86,6 +98,8 @@ class DoctorOtListController extends Controller
             'doctorId' => $doctorId,
             'doctors' => $doctors,
             'otAssistants' => $otAssistants,
+            'consultOnly' => $consultOnly,
+            'queue' => $queue,
         ]);
     }
 

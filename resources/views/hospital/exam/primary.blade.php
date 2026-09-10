@@ -31,11 +31,6 @@ used across the rest of the app. --}}
                     <i class="bi bi-printer"></i> Print Rx
                 </a>
             @endif
-            @haspermission('opd.foc.create')
-                <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModal">
-                    <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-                </button>
-            @endhaspermission
         </div>
     </div>
 </div> -->
@@ -122,25 +117,6 @@ used across the rest of the app. --}}
         border-color: rgba(27, 79, 114, 0.34);
         color: #1B4F72;
         box-shadow: 0 4px 10px rgba(27, 79, 114, 0.12);
-        transform: translateY(-1px);
-    }
-
-    .secondary-exam-foc-btn {
-        background: #1B4F72;
-        border: 1px solid #1B4F72;
-        color: #fff;
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 10px rgba(27, 79, 114, 0.18);
-        transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
-    }
-
-    .secondary-exam-foc-btn:hover,
-    .secondary-exam-foc-btn:focus {
-        background: #16405d;
-        border-color: #16405d;
-        color: #fff;
-        box-shadow: 0 6px 14px rgba(27, 79, 114, 0.24);
         transform: translateY(-1px);
     }
 
@@ -570,55 +546,6 @@ used across the rest of the app. --}}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-@haspermission('opd.foc.create')
-<div class="modal fade" id="focRequestExamModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('hospital.foc.request', ['slug' => $slug]) }}">
-                @csrf
-                <!-- <div class="modal-header">
-                    <h5 class="modal-title">Request FOC</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div> -->
-                <div class="modal-body">
-                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
-                    <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1">Patient Name</label>
-                        <input type="text" class="form-control" value="{{ $patient->full_name }}" readonly>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1">Case Fee</label>
-                        <input type="number" step="0.01" name="foc_fee" class="form-control" value="{{ $patient->case_fee }}" readonly>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1">Select Receptionist</label>
-                        <select name="reception_id" class="form-select" required>
-                            <option value="">Select Receptionist</option>
-                            @foreach(($focReceptionists ?? collect()) as $receptionist)
-                                <option value="{{ $receptionist->id }}">{{ $receptionist->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="form-label mb-1">Reason</label>
-                        <textarea name="reason" class="form-control" rows="2" placeholder="Why FOC is requested" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endhaspermission
 
 @php
 $ed = old('exam_data', $exam?->exam_data ?? []);

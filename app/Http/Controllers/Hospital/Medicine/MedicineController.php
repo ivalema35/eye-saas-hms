@@ -39,7 +39,6 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name' => ['required', 'string', 'max:255'],
-            // 'usage_scope'      => ['required', 'in:opd,ot'],
             'dosage_id' => ['required', 'exists:dosages,id'],
             'duration' => ['required', 'string', 'max:100'],
             'qty' => ['required', 'integer', 'min:1', 'max:9999'],
@@ -69,7 +68,6 @@ class MedicineController extends Controller
         $validated = $request->validate([
             'medicine_type_id' => ['required', 'exists:medicine_types,id'],
             'name' => ['required', 'string', 'max:255'],
-            // 'usage_scope'      => ['required', 'in:opd,ot'],
             'dosage_id' => ['required', 'exists:dosages,id'],
             'duration' => ['required', 'string', 'max:100'],
             'qty' => ['required', 'integer', 'min:1', 'max:9999'],

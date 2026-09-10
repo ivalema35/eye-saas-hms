@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Hospital\Foc;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtAppointment;
@@ -62,8 +61,7 @@ class DashboardController extends Controller
         // whole section, including the real per-patient primary queue further
         // below, was computed unconditionally for any authenticated user
         // regardless of permission. See ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
-        $canSeeClinical = $this->perm->can('opd.exam.primary')
-            || $this->perm->can('opd.exam.secondary')
+        $canSeeClinical = $this->perm->can('dashboard_clinical')
             || $isDoctorRoleForClinicalGate;
 
         $todayPatients = null;
@@ -92,10 +90,8 @@ class DashboardController extends Controller
                 ->count();
         }
 
-        // ── Reception Data — gated: web only computes this for a user who
-        // can register patients (Hospital\DashboardController.php:300).
-        // See ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
-        $canSeeReception = $this->perm->can('opd.patient.register');
+        // ── Reception Data — gated: web dashboard_reception
+        $canSeeReception = $this->perm->can('dashboard_reception');
 
         $todayWalkin = null;
         $todayPhone = null;
@@ -110,12 +106,8 @@ class DashboardController extends Controller
                 ->count();
         }
 
-        // ── Revenue — gated: web computes this only with `opd.reports.view`
-        // (Hospital\DashboardController.php:356), not the more general
-        // `reports.view` this API previously used no gate for at all. See
-        // ROLES_PERMISSIONS_DEEP_AUDIT_ROUND3.md.
-        $canSeeRevenue = $this->perm->can('opd.reports.view');
-
+        // ── Revenue — gated: web dashboard_revenue
+        $canSeeRevenue = $this->perm->can('dashboard_revenue');
         $revenueToday = null;
         $revenueMonth = null;
         $revenueYear = null;
@@ -130,34 +122,30 @@ class DashboardController extends Controller
             $revenueYear  = $collectionService->summaryForCalendarYear()['total'];
         }
 
-        // ── OT Stats ───────────────────────────────────────────────────
-        // Web's real "OT Today" card (Hospital\DashboardController.php:371-384)
-        // is OtAppointment-based (appointment_date + confirmed/booked status),
-        // not OtBooking — see DASHBOARD_PARITY_FIX_PLAN.md Phase 2 Task 2.2.
-        $otToday = $otOperated = $otPending = 0;
-        try {
-            $otToday    = OtAppointment::whereDate('appointment_date', $today)->count();
-            $otOperated = OtAppointment::whereDate('appointment_date', $today)
-                ->where('status', OtAppointment::STATUS_CONFIRMED)
-                ->count();
-            $otPending  = OtAppointment::whereDate('appointment_date', $today)
-                ->where('status', OtAppointment::STATUS_BOOKED)
-                ->count();
-        } catch (\Throwable) {}
-
-        // ── Role-specific "pending" cards (Accountant/Ward Management/OT
-        // Assistant/Discharge Counter) ────────────────────────────────────
-        // Mirrors Hospital\DashboardController.php:386-460 — on web, each of
-        // these 4 roles sees this pending-count card in place of the generic
-        // OT Appointment card on the same dashboard page. See
-        // DASHBOARD_PARITY_FIX_PLAN.md Phase 4.
+        // ── OT Stats (dashboard_ot) ─────────────────────────────────────
+        $otToday = $otOperated = $otPending = null;
+        if ($this->perm->can('dashboard_ot')) {
+            try {
+                $otToday    = OtAppointment::whereDate('appointment_date', $today)->count();
+                $otOperated = OtAppointment::whereDate('appointment_date', $today)
+                    ->where('status', OtAppointment::STATUS_CONFIRMED)
+                    ->count();
+                $otPending  = OtAppointment::whereDate('appointment_date', $today)
+                    ->where('status', OtAppointment::STATUS_BOOKED)
+                    ->count();
+            } catch (\Throwable) {
+                $otToday = $otOperated = $otPending = 0;
+            }
+        }
+        // ── Role-specific pending cards (same gates as web) ────────────
         $accountantPendingCount = $accountantRefundsCount = $accountantCompletedCount = null;
         $wardPendingCount = null;
         $otAssistantPendingCount = null;
         $dischargePendingCount = null;
+        $canSeeOtWidget = $this->perm->can('dashboard_ot');
 
         try {
-            if ($roleSlug === 'accountant') {
+            if ($roleSlug === 'accountant' && ($canSeeOtWidget || $this->perm->can('ot_payment_record'))) {
                 $accountantPendingCount = OtBooking::whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])->count();
 
                 $accountantRefundsCount = OtBooking::where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
@@ -175,44 +163,56 @@ class DashboardController extends Controller
                     OtBooking::STATUS_DISCHARGED,
                     OtBooking::STATUS_SURGERY_REFUSED,
                 ])->count();
-            } elseif ($roleSlug === 'ward_management') {
+            } elseif ($roleSlug === 'ward_management' && ($canSeeOtWidget || $this->perm->can('ot_ward_entry'))) {
                 $wardPendingCount = OtBooking::whereIn('ot_status', [
                     OtBooking::STATUS_PAYMENT_VERIFIED,
                     OtBooking::STATUS_IN_WARD,
                     OtBooking::STATUS_DILATED,
                 ])->count();
-            } elseif ($isOtDoctor) {
-                // $isOtDoctor === role slug 'ot_assistant', see line 35 above.
+            } elseif ($isOtDoctor && ($canSeeOtWidget || $this->perm->can('ot_surgery_ready'))) {
                 $otAssistantReadyQuery = OtBooking::where('ot_status', OtBooking::STATUS_READY);
                 $seeAll = $isAdmin || $roleSlug === 'hospital_admin';
                 if (! $seeAll) {
                     $otAssistantReadyQuery->where('ot_assistant_id', (int) $authUser->id);
                 }
                 $otAssistantPendingCount = $otAssistantReadyQuery->count();
-            } elseif ($roleSlug === 'discharge_counter') {
+            } elseif ($roleSlug === 'discharge_counter' && ($canSeeOtWidget || $this->perm->can('ot_billing_manage'))) {
                 $dischargePendingCount = OtBooking::whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])->count();
             }
         } catch (\Throwable) {}
 
-        // ── Staff ──────────────────────────────────────────────────────
-        $totalDoctors    = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
-        $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
+        // ── Staff (dashboard_staff) ────────────────────────────────────
+        $canSeeStaff = $this->perm->can('dashboard_staff');
+        $totalDoctors = null;
+        $totalReceptions = null;
+        if ($canSeeStaff || $isAdmin) {
+            $totalDoctors    = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
+            $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
+        }
 
-        // ── Hospital Admin's own 8-card set (Hospital\DashboardController.php:527-552)
-        // — a completely separate, simpler card set from everything above,
-        // shown ONLY to the tenant's Hospital Admin (is_super), never to any
-        // other role. See DASHBOARD_PARITY_FIX_PLAN.md Phase 7.
-        $todayPrimary = Patient::whereDate('appointment_date', $today)
-            ->whereNotNull('primary_done_at')
-            ->count();
-        $todaySecondary = Patient::whereDate('appointment_date', $today)
-            ->whereNotNull('secondary_done_at')
-            ->count();
-        $otTotalToday = 0;
-        try {
-            $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
-        } catch (\Throwable) {}
-
+        // ── Hospital Admin's own 8-card set — is_super only (web parity)
+        $todayPrimary = null;
+        $todaySecondary = null;
+        $otTotalToday = null;
+        if ($isAdmin) {
+            $todayPatients = Patient::whereDate('appointment_date', $today)->count();
+            $todayPrimary = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')
+                ->count();
+            $todaySecondary = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('secondary_done_at')
+                ->count();
+            try {
+                $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
+            } catch (\Throwable) {
+                $otTotalToday = 0;
+            }
+            if (! $canSeeRevenue) {
+                $revenueToday = $collectionService->summaryForDay($today)['total'];
+                $revenueMonth = $collectionService->summaryForCalendarMonth()['total'];
+                $revenueYear  = $collectionService->summaryForCalendarYear()['total'];
+            }
+        }
         // ── Subscription days remaining ────────────────────────────────
         $subscriptionDaysLeft = null;
         try {
@@ -261,34 +261,28 @@ class DashboardController extends Controller
             ]);
         }
 
-        // ── Receptionists Performance ──────────────────────────────────
-        $receptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
-            ->get()
-            ->map(function ($rec) use ($today) {
-                $count = Patient::whereDate('appointment_date', $today)
-                    ->where('reception_id', $rec->id)
-                    ->count();
-                $gross = (float) Patient::whereDate('appointment_date', $today)
-                    ->where('reception_id', $rec->id)
-                    ->sum('case_fee');
-                $foc = 0.0;
-                try {
-                    $foc = (float) Foc::where('reception_id', $rec->id)
-                        ->whereHas('patient', fn ($q) => $q->whereDate('appointment_date', $today))
-                        ->where('status', 'accepted')
-                        ->sum('foc_fee');
-                } catch (\Throwable) {}
+        // ── Receptionists Performance (dashboard_staff) ────────────────
+        $receptionists = null;
+        if ($canSeeStaff) {
+            $receptionists = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'receptionist'))
+                ->get()
+                ->map(function ($rec) use ($today) {
+                    $count = Patient::whereDate('appointment_date', $today)
+                        ->where('reception_id', $rec->id)
+                        ->count();
+                    $gross = (float) Patient::whereDate('appointment_date', $today)
+                        ->where('reception_id', $rec->id)
+                        ->sum('case_fee');
 
-                return [
-                    'id'          => $rec->id,
-                    'name'        => $rec->name,
-                    'today_count' => $count,
-                    'today_gross' => $gross,
-                    'today_foc'   => $foc,
-                    'today_net'   => $gross - $foc,
-                ];
-            });
-
+                    return [
+                        'id'          => $rec->id,
+                        'name'        => $rec->name,
+                        'today_count' => $count,
+                        'today_gross' => $gross,
+                        'today_net'   => $gross,
+                    ];
+                });
+        }
         // ── Wait thresholds ────────────────────────────────────────────
         $thresholds = [
             'r_green'  => (int) HospitalSetting::get('wait_green_max', 30),
@@ -318,9 +312,9 @@ class DashboardController extends Controller
             }
         }
 
-        // ── Receptionist stats (role-specific) ────────────────────────
+        // ── Receptionist stats (dashboard_reception) ───────────────────
         $receptionistStats = null;
-        if ($isReceptionist && $authUser) {
+        if ($isReceptionist && $authUser && $canSeeReception) {
             $myPatientsQuery = Patient::where('reception_id', $authUser->id);
 
             $receptionistStats = [
@@ -336,9 +330,9 @@ class DashboardController extends Controller
             ];
         }
 
-        // ── Doctor cards (for receptionist + admin view) ───────────────
+        // ── Doctor cards (dashboard_clinical | dashboard_reception) ────
         $doctorCards = null;
-        if (! $isDoctor) {
+        if (! $isDoctor && ($canSeeClinical || $canSeeReception)) {
             $allDoctors = HospitalUser::with('role:id,slug')
                 ->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_assistant']))
                 ->where('status', 'active')
@@ -382,6 +376,18 @@ class DashboardController extends Controller
         return response()->json([
             'success' => true,
             'data'    => [
+                // Flutter: show card when true (even if count is 0); hide when false/null fields
+                'widgets' => [
+                    'clinical'  => $canSeeClinical || $isAdmin,
+                    'reception' => $canSeeReception || $isAdmin,
+                    'revenue'   => $canSeeRevenue || $isAdmin,
+                    'ot'        => $canSeeOtWidget || $isAdmin
+                        || $accountantPendingCount !== null
+                        || $wardPendingCount !== null
+                        || $otAssistantPendingCount !== null
+                        || $dischargePendingCount !== null,
+                    'staff'     => $canSeeStaff || $isAdmin,
+                ],
                 'subscription_days_left'      => $subscriptionDaysLeft,
                 'is_doctor'                   => $isDoctor,
                 'is_ot_doctor'                => $isOtDoctor,
@@ -395,14 +401,16 @@ class DashboardController extends Controller
                 'secondary_queue_count'       => $secondaryQueueCount,
                 'today_walkin'                => $todayWalkin,
                 'today_phone'                 => $todayPhone,
-                'today_registrations'         => $canSeeReception ? ($todayWalkin + $todayPhone) : null,
+                'today_registrations'         => $canSeeReception ? ((int) $todayWalkin + (int) $todayPhone) : null,
                 'revenue_today'               => $revenueToday,
                 'revenue_month'               => $revenueMonth,
                 'revenue_year'                => $revenueYear,
                 'ot_today'                    => $otToday,
                 'ot_operated'                 => $otOperated,
                 'ot_pending'                  => $otPending,
-                'total_staff'                 => $totalDoctors + $totalReceptions,
+                'total_staff'                 => ($totalDoctors !== null && $totalReceptions !== null)
+                    ? ($totalDoctors + $totalReceptions)
+                    : null,
                 'total_doctors'               => $totalDoctors,
                 'total_receptions'            => $totalReceptions,
                 'today_primary'               => $todayPrimary,

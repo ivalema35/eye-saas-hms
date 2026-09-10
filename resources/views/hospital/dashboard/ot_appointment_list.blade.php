@@ -103,11 +103,15 @@ Roles / History / OT Patients panel design. --}}
                                             </td>
                                             <td class="text-center">
                                                 @if($canWalkIn)
+                                                    @haspermission('patient_register')
                                                     <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
                                                         class="ota-walkin-btn"
                                                         title="Register as walk-in (prefill from OT appointment)">
                                                         <i class="bi bi-person-walking"></i> Walk-In
                                                     </a>
+                                                    @else
+                                                    <span class="text-muted small">—</span>
+                                                    @endhaspermission
                                                 @else
                                                     <span class="text-muted small">—</span>
                                                 @endif

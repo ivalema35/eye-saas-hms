@@ -31,55 +31,12 @@
             <div class="hms-stat-meta">Scheduled surgeries</div>
         </div>
     </div>
-    <div class="hms-stat-card">
-        <div class="hms-stat-icon hsi-teal"><i class="fa-solid fa-hand-holding-heart"></i></div>
-        <div class="hms-stat-body">
-            <div class="hms-stat-label">FOC Pending</div>
-            <div class="hms-stat-value">{{ $focPending }}</div>
-            <div class="hms-stat-meta">Awaiting approval</div>
-        </div>
-    </div>
 </div>
 
 {{-- ============================================================
-     Quick Actions + Welcome Card
+     Welcome Card
 ============================================================ --}}
 <div class="hms-dashboard-row">
-
-    {{-- Quick Actions --}}
-    <div class="hms-card hms-dashboard-actions-card">
-        <div class="hms-card-header">
-            <h3 class="hms-card-title"><i class="fa-solid fa-bolt"></i> Quick Actions</h3>
-        </div>
-        <div class="hms-card-body hms-qa-grid">
-            <a href="{{ route('hospital.patients.create', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-blue"><i class="fa-solid fa-user-plus"></i></div>
-                <span>New Patient</span>
-            </a>
-            <a href="{{ route('hospital.patients.index', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-teal"><i class="fa-solid fa-users"></i></div>
-                <span>Patient List</span>
-            </a>
-            @haspermission('ot.appointment.view')
-            <a href="{{ route('hospital.ot.appointments.index', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-orange"><i class="fa-solid fa-calendar-week"></i></div>
-                <span>OT Appointments</span>
-            </a>
-            @endhaspermission
-            <!-- <a href="{{ route('hospital.foc.index', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-green"><i class="fa-solid fa-gift"></i></div>
-                <span>FOC Cases</span>
-            </a> -->
-            <a href="{{ route('hospital.reports.index', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-purple"><i class="fa-solid fa-chart-bar"></i></div>
-                <span>Reports</span>
-            </a>
-            <a href="{{ route('hospital.settings.index', $slug) }}" class="hms-qa-btn">
-                <div class="hms-qa-icon qa-gray"><i class="fa-solid fa-sliders"></i></div>
-                <span>Settings</span>
-            </a>
-        </div>
-    </div>
 
     {{-- Role Welcome Card --}}
     <div class="hms-card hms-welcome-card">

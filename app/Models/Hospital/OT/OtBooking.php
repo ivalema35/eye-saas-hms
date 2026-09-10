@@ -155,6 +155,31 @@ class OtBooking extends Model
     }
 
     /**
+     * Query scope: ward-assigned doctor consult queue (OP card count / list).
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeDoctorConsultationPending($query)
+    {
+        return $query
+            ->whereNotNull('ot_doctor_id')
+            ->whereIn('ot_status', [
+                self::STATUS_PAYMENT_VERIFIED,
+                self::STATUS_IN_WARD,
+                self::STATUS_DILATED,
+            ])
+            ->whereHas('preOp', function ($q) {
+                $q->whereIn('pre_op_status', [
+                    OtPreOp::STATUS_PREPARING,
+                    OtPreOp::STATUS_HOLD,
+                    OtPreOp::STATUS_COMPLICATED,
+                    OtPreOp::STATUS_NOT_FIT,
+                ]);
+            });
+    }
+
+    /**
      * Computed payment status — Paid / Partially Paid / Pending (PDF §5, Billing Module).
      * Deliberately NOT a stored column: derived from `payments` sum vs. `package_amount`
      * so it can never drift out of sync. See docs/OT_WORKFLOW_UPGRADE_PRD.md §5.

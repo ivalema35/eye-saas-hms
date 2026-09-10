@@ -1,21 +1,29 @@
 @extends('hospital.layouts.app')
-@section('title', $doctor ? 'OT — Dr. ' . $doctor->name : 'OT Patients')
+@section('title', $consultOnly
+    ? ($doctor ? 'OP Assigned — Dr. ' . $doctor->name : 'OP Assigned Patients')
+    : ($doctor ? 'OT — Dr. ' . $doctor->name : 'OT Patients'))
 {{-- Layout page-header intentionally unused — the heading, breadcrumb and
 list all sit inside one bordered card, matching the Medicine Master / Users /
 Roles / History panel design. --}}
 
 @section('content')
+    @php $consultOnly = $consultOnly ?? false; @endphp
     <div class="dot-list-page">
         <div class="dot-outer-card">
             <div class="dot-header-block">
                 <div>
                     <div class="dot-header-title">
-                        <i class="bi bi-clipboard2-pulse"></i> {{ $doctor ? 'OT — Dr. ' . $doctor->name : 'OT Patients' }}
+                        <i class="bi bi-clipboard2-pulse"></i>
+                        @if($consultOnly)
+                            {{ $doctor ? 'Ward → Doctor (OP) — Dr. ' . $doctor->name : 'Ward → Doctor Assigned (OP)' }}
+                        @else
+                            {{ $doctor ? 'OT — Dr. ' . $doctor->name : 'OT Patients' }}
+                        @endif
                     </div>
                     <nav class="dot-breadcrumb" aria-label="breadcrumb">
                         <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
                         <span class="dot-breadcrumb-sep">/</span>
-                        <span class="dot-breadcrumb-current">OT Patients</span>
+                        <span class="dot-breadcrumb-current">{{ $consultOnly ? 'OP Assigned' : 'OT Patients' }}</span>
                     </nav>
                 </div>
                 <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
@@ -39,6 +47,18 @@ Roles / History panel design. --}}
                 </div>
             @endif
 
+            @if($consultOnly)
+                <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
+                    <i class="bi bi-info-circle mt-1"></i>
+                    <div>
+                        <strong>Ward-assigned patients.</strong>
+                        Ready for surgery → assign <em>OT Assistant</em> (next OT process).
+                        Not ready / refuse → send to <em>Accounts</em> for refund.
+                    </div>
+                </div>
+            @endif
+
+            @unless($consultOnly)
             <div class="card dot-premium-card border-0 mb-4">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-3">
@@ -79,13 +99,18 @@ Roles / History panel design. --}}
                     </form>
                 </div>
             </div>
+            @else
+                @if($doctorId)
+                    <input type="hidden" value="{{ $doctorId }}">
+                @endif
+            @endunless
 
             <div class="card dot-premium-card border-0">
                 <div class="dot-card-header">
                     <div class="dot-title-wrap">
                         <span class="dot-title-icon" aria-hidden="true"><i class="bi bi-clipboard2-pulse"
                                 style="font-size: 1.1rem;"></i></span>
-                        <h5 class="dot-title mb-0">OT Patients</h5>
+                        <h5 class="dot-title mb-0">{{ $consultOnly ? 'Assigned OT Patients' : 'OT Patients' }}</h5>
                     </div>
                     <span class="badge dot-count-badge">{{ $bookings->count() }} total</span>
                 </div>
@@ -95,9 +120,10 @@ Roles / History panel design. --}}
                             <table class="table align-middle mb-0 dot-table js-datatable">
                                 <thead>
                                     <tr>
+                                        <th><i class="bi bi-hash me-1"></i>UHID</th>
                                         <th><i class="bi bi-person-badge me-1"></i>Patient</th>
                                         <th><i class="bi bi-telephone me-1"></i>Contact</th>
-                                        <th><i class="bi bi-person me-1"></i>Age</th>
+                                        <th><i class="bi bi-person me-1"></i>Age / Sex</th>
                                         <th><i class="bi bi-calendar-event me-1"></i>OT Date</th>
                                         <th><i class="bi bi-bandaid me-1"></i>Surgery</th>
                                         <th><i class="bi bi-eye me-1"></i>Eye</th>
@@ -118,16 +144,23 @@ Roles / History panel design. --}}
                                     @forelse($bookings as $booking)
                                         @php
                                             $consultPending = $booking->isDoctorConsultationPending();
-                                            // Like exams: any doctor can act (not only ot_doctor_id owner)
                                             $canActThis = $canActAsDoctor;
                                             $wardLabel = $booking->preOp
                                                 ? (\App\Models\Hospital\OT\OtPreOp::STATUS_LABELS[$booking->preOp->pre_op_status] ?? $booking->preOp->pre_op_status)
                                                 : '—';
+                                            $gender = $booking->patient?->gender;
+                                            $ageSex = trim(($booking->patient?->age ?: '-') . ' / ' . ($gender ? strtoupper(substr($gender, 0, 1)) : '-'));
                                         @endphp
                                         <tr>
-                                            <td>{{ $booking->patient?->full_name ?? '-' }}</td>
+                                            <td>{{ $booking->patient?->patient_code ?: '-' }}</td>
+                                            <td>
+                                                <div class="fw-semibold">{{ $booking->patient?->full_name ?? '-' }}</div>
+                                                @if($booking->otDoctor?->name)
+                                                    <div class="small text-muted">OT Dr: {{ $booking->otDoctor->name }}</div>
+                                                @endif
+                                            </td>
                                             <td>{{ $booking->patient?->contact_no ?: '-' }}</td>
-                                            <td>{{ $booking->patient?->age ?: '-' }}</td>
+                                            <td>{{ $ageSex }}</td>
                                             <td>{{ optional($booking->surgery_date)->format('d M Y') ?? '-' }}</td>
                                             <td>{{ $booking->ot_type ?: '-' }}</td>
                                             <td>{{ $booking->eye ?: '-' }}</td>
@@ -156,16 +189,18 @@ Roles / History panel design. --}}
                                                                     <option value="{{ $asst->id }}">{{ $asst->name }}</option>
                                                                 @endforeach
                                                             </select>
-                                                            <button type="submit" class="btn btn-sm btn-primary">
+                                                            <button type="submit" class="btn btn-sm btn-primary"
+                                                                title="Patient ready — continue OT with assistant">
                                                                 <i class="bi bi-person-check me-1"></i> Assign OT Assistant
                                                             </button>
                                                         </form>
                                                         <form method="POST"
                                                             action="{{ route('hospital.dashboard.doctor-ot.refuse', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                            onsubmit="return confirm('Patient refuses OT? Will mark surgery_refused and send to Accounts for full refund.');">
+                                                            onsubmit="return confirm('Patient not ready / refuses OT? Will send to Accounts for refund.');">
                                                             @csrf
-                                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                                <i class="bi bi-cash-coin me-1"></i> Send to Account (Refuse OT)
+                                                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                                                title="Not ready — Accounts will process refund">
+                                                                <i class="bi bi-cash-coin me-1"></i> Send to Account (Refund)
                                                             </button>
                                                         </form>
                                                     </div>
@@ -181,8 +216,9 @@ Roles / History panel design. --}}
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center dot-empty">
-                                                <i class="bi bi-inbox me-1"></i> No OT bookings found for selected dates.
+                                            <td colspan="10" class="text-center dot-empty">
+                                                <i class="bi bi-inbox me-1"></i>
+                                                {{ $consultOnly ? 'No ward-assigned patients awaiting doctor action.' : 'No OT bookings found for selected dates.' }}
                                             </td>
                                         </tr>
                                     @endforelse

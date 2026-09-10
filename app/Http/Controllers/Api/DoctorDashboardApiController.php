@@ -75,7 +75,7 @@ class DoctorDashboardApiController extends Controller
             ->map(function ($doc) use ($today, $authUser) {
                 $assigned  = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)->count();
                 $primary   = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)
-                    ->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count();
+                    ->whereNotNull('primary_done_at')->count();
                 $secondary = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)
                     ->whereNotNull('secondary_done_at')->count();
 
@@ -89,39 +89,43 @@ class DoctorDashboardApiController extends Controller
                 ];
             })->values();
 
-        // ── OT doctor cards (same roster as OPD; counts from that doctor's OT
-        // bookings — assigned ot_doctor_id, or recommender booked_by when a
-        // doctor isn't assigned yet). Mirrors
-        // Hospital\Dashboard\DashboardController's $otDoctorCards/$otSummary.
-        // See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §6 / FIX_PLAN TASK 5.2.
+        // OT doctor cards:
+        // OP = ward-assigned consult queue; OC = complete; OT = total (ot_doctor_id).
         $completeOtStatuses = [OtBooking::STATUS_OPERATED, OtBooking::STATUS_DISCHARGED, OtBooking::STATUS_SURGERY_REFUSED];
         $doctorIdsForOt = $doctorCards->pluck('id')->all();
 
         $otStatsByDoctorId = collect();
+        $otConsultByDoctorId = collect();
         if ($doctorIdsForOt !== []) {
             $otStatsByDoctorId = OtBooking::query()
-                ->selectRaw('COALESCE(ot_doctor_id, booked_by) as doctor_key')
+                ->selectRaw('ot_doctor_id as doctor_key')
                 ->selectRaw('COUNT(*) as ot_total')
                 ->selectRaw('SUM(CASE WHEN ot_status IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_complete', $completeOtStatuses)
-                ->selectRaw('SUM(CASE WHEN ot_status NOT IN (?, ?, ?) THEN 1 ELSE 0 END) as ot_pending', $completeOtStatuses)
-                ->where(function ($q) use ($doctorIdsForOt) {
-                    $q->whereIn('ot_doctor_id', $doctorIdsForOt)
-                        ->orWhereIn('booked_by', $doctorIdsForOt);
-                })
-                ->groupBy(DB::raw('COALESCE(ot_doctor_id, booked_by)'))
+                ->whereIn('ot_doctor_id', $doctorIdsForOt)
+                ->groupBy('ot_doctor_id')
+                ->get()
+                ->keyBy('doctor_key');
+
+            $otConsultByDoctorId = OtBooking::query()
+                ->doctorConsultationPending()
+                ->whereIn('ot_doctor_id', $doctorIdsForOt)
+                ->selectRaw('ot_doctor_id as doctor_key')
+                ->selectRaw('COUNT(*) as ot_pending')
+                ->groupBy('ot_doctor_id')
                 ->get()
                 ->keyBy('doctor_key');
         }
 
-        $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId) {
+        $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId, $otConsultByDoctorId) {
             $stats = $otStatsByDoctorId->get($doc['id']);
+            $consult = $otConsultByDoctorId->get($doc['id']);
 
             return [
                 'id' => $doc['id'],
                 'name' => $doc['name'],
                 'is_self' => $doc['is_self'],
                 'ot_total' => (int) ($stats->ot_total ?? 0),
-                'ot_pending' => (int) ($stats->ot_pending ?? 0),
+                'ot_pending' => (int) ($consult->ot_pending ?? 0),
                 'ot_complete' => (int) ($stats->ot_complete ?? 0),
             ];
         })->values();

@@ -77,12 +77,6 @@ class SecondaryExamController extends Controller
             })
             ->orderBy('name')
             ->get(['id', 'name']);
-        $focReceptionists = HospitalUser::query()
-            ->where('tenant_id', $tenantId)
-            ->active()
-            ->whereHas('role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
-            ->orderBy('name')
-            ->get(['id', 'name']);
 
         if ($doctors->isEmpty() && $user !== null) {
             $doctors = collect([$user->only(['id', 'name'])]);
@@ -128,7 +122,6 @@ class SecondaryExamController extends Controller
             'doctors',
             'currentDoctorId',
             'masters',
-            'focReceptionists',
             'initialMedicines',
             'otSurgeryTypes',
             'existingOtRecommendation',
@@ -326,7 +319,6 @@ class SecondaryExamController extends Controller
                 ->get(['id', 'name', 'brand_name', 'dosage_id', 'duration', 'qty']),
             'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
-                ->whereIn('usage_scope', ['opd', 'both'])
                 ->orderBy('name')
                 ->get(),
             'routes' => MedicineRoute::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name']),

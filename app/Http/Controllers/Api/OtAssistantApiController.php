@@ -119,7 +119,6 @@ class OtAssistantApiController extends Controller
 
         $medicineGroups = MedicineGroup::with('items.medicine')
             ->where('tenant_id', $tenantId)
-            ->whereIn('usage_scope', ['ot', 'both'])
             ->orderBy('name')
             ->get();
 
@@ -184,7 +183,7 @@ class OtAssistantApiController extends Controller
             'blood_loss' => ['nullable', 'string', 'max:100'],
             'medicine_group_id' => [
                 'nullable', 'integer',
-                Rule::exists('medicine_groups', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereIn('usage_scope', ['ot', 'both'])),
+                Rule::exists('medicine_groups', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)),
             ],
             'ot_medicines' => ['nullable', 'array'],
             'ot_medicines.*.medicine' => [

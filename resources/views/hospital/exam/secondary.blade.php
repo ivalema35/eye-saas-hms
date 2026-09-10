@@ -31,11 +31,6 @@ used across the rest of the app. --}}
                     <i class="bi bi-printer"></i> Print Rx
                 </a>
             @endif
-            @haspermission('opd.foc.create')
-                <button type="button" class="btn secondary-exam-foc-btn btn-sm" data-bs-toggle="modal" data-bs-target="#focRequestExamModalSecondary">
-                    <i class="fa-solid fa-hand-holding-heart"></i> Request FOC
-                </button>
-            @endhaspermission
         </div>
     </div>
 </div> -->
@@ -116,25 +111,6 @@ used across the rest of the app. --}}
         border-color: rgba(27, 79, 114, 0.34);
         color: #1B4F72;
         box-shadow: 0 4px 10px rgba(27, 79, 114, 0.12);
-        transform: translateY(-1px);
-    }
-
-    .secondary-exam-foc-btn {
-        background: #1B4F72;
-        border: 1px solid #1B4F72;
-        color: #fff;
-        border-radius: 8px;
-        font-weight: 600;
-        box-shadow: 0 4px 10px rgba(27, 79, 114, 0.18);
-        transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
-    }
-
-    .secondary-exam-foc-btn:hover,
-    .secondary-exam-foc-btn:focus {
-        background: #16405d;
-        border-color: #16405d;
-        color: #fff;
-        box-shadow: 0 6px 14px rgba(27, 79, 114, 0.24);
         transform: translateY(-1px);
     }
 
@@ -523,55 +499,6 @@ used across the rest of the app. --}}
     </div>
 @endif
 
-@haspermission('opd.foc.create')
-<div class="modal fade" id="focRequestExamModalSecondary" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('hospital.foc.request', ['slug' => $slug]) }}">
-                @csrf
-                <!-- <div class="modal-header">
-                    <h5 class="modal-title">Request FOC</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div> -->
-                <div class="modal-body">
-                    <input type="hidden" name="patient_id" value="{{ $patient->id }}">
-                    <input type="hidden" name="doctor_id" value="{{ old('doctor_id', $currentDoctorId ?? auth('hospital_user')->id()) }}">
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1">Patient Name</label>
-                        <input type="text" class="form-control" value="{{ $patient->full_name }}" readonly>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1">Case Fee</label>
-                        <input type="number" step="0.01" name="foc_fee" class="form-control" value="{{ $patient->case_fee }}" readonly>
-                    </div>
-
-                    <div class="mb-2">
-                        <label class="form-label mb-1">Select Receptionist</label>
-                        <select name="reception_id" class="form-select" required>
-                            <option value="">Select Receptionist</option>
-                            @foreach(($focReceptionists ?? collect()) as $receptionist)
-                                <option value="{{ $receptionist->id }}">{{ $receptionist->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="form-label mb-1">Reason</label>
-                        <textarea name="reason" class="form-control" rows="2" placeholder="Why FOC is requested" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Submit Request</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-@endhaspermission
-
 @php
 $ed = old('exam_data', $ed ?? ($exam?->exam_data ?? []));
 $vision = $ed['vision'] ?? [];
@@ -759,7 +686,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
 
                 <hr>
                                             <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
-                                                                            @haspermission('ot.surgery.recommend')
+                                                                            @haspermission('ot_surgery_recommend')
                                                                                                                         <button type="button" class="btn fw-bold w-100 mt-2 text-white"
                                                                                                                             style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);" data-bs-toggle="modal"
                                                                                                                             data-bs-target="#recommendSurgeryModal">
@@ -928,7 +855,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
             <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
-            @haspermission('ot.surgery.recommend')
+            @haspermission('ot_surgery_recommend')
                 <button type="button" class="btn btn-sm fw-bold px-3 text-white"
                         style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
                         data-bs-toggle="modal" data-bs-target="#recommendSurgeryModal">

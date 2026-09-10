@@ -5,7 +5,6 @@
 @section('content')
 
 @php
-    $pendingFocRequests = $pendingFocRequests ?? collect();
     $wGreen  = (int) hospital_setting('wait_green_max',  30);
     $wOrange = (int) hospital_setting('wait_orange_max', 60);
     $wRed    = (int) hospital_setting('wait_red_max',   120);
@@ -30,17 +29,10 @@
         </div>
     </div>
     <div class="hms-stat-card">
-        <div class="hms-stat-icon hsi-red"><i class="fa-solid fa-hand-holding-heart"></i></div>
-        <div class="hms-stat-body">
-            <div class="hms-stat-label">FOC Deductions</div>
-            <div class="hms-stat-value">{{ money($todayFocAmount, 2) }}</div>
-        </div>
-    </div>
-    <div class="hms-stat-card">
         <div class="hms-stat-icon hsi-green"><i class="fa-solid fa-wallet"></i></div>
         <div class="hms-stat-body">
             <div class="hms-stat-label">Net Collection</div>
-            <div class="hms-stat-value">{{ money($todayNet, 2) }}</div>
+            <div class="hms-stat-value">{{ money($todayNet ?? $todayGross, 2) }}</div>
         </div>
     </div>
 </div>
@@ -61,13 +53,6 @@
         <div class="hms-stat-body">
             <div class="hms-stat-label">Phone Appointments</div>
             <div class="hms-stat-value">{{ $todayPhoneCount }}</div>
-        </div>
-    </div>
-    <div class="hms-stat-card">
-        <div class="hms-stat-icon hsi-orange"><i class="fa-solid fa-clock"></i></div>
-        <div class="hms-stat-body">
-            <div class="hms-stat-label">FOC Pending</div>
-            <div class="hms-stat-value">{{ $focPendingCount }}</div>
         </div>
     </div>
 </div>
@@ -104,9 +89,11 @@
 <div class="hms-card" style="margin-top:1.5rem">
     <div class="hms-card-header">
         <h3 class="hms-card-title"><i class="fa-solid fa-users"></i> My Patients — Today</h3>
+        @haspermission('patient_register')
         <a href="{{ route('hospital.patients.create', ['slug' => $slug]) }}" class="hms-btn hms-btn-sm hms-btn-primary">
             <i class="fa-solid fa-user-plus"></i> New Patient
         </a>
+        @endhaspermission
     </div>
     <div class="hms-card-body" style="padding:0">
         <table class="hms-table">
@@ -158,10 +145,12 @@
                                     <i class="bi bi-check2-circle"></i> Done
                                 </span>
                             @elseif($p->type === 'phone' && !$p->checked_in_at)
+                                @haspermission('patient_register')
                                 <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $p->id]) }}"
                                    style="display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:4px 10px;background:#1B4F72;color:#fff;border-radius:20px;font-size:.72rem;font-weight:700;text-decoration:none;box-shadow:0 0 0 2px rgba(27,79,114,.35);animation:checkin-pulse 1.4s ease-in-out infinite alternate;">
                                     <i class="bi bi-box-arrow-in-right"></i> Check In
                                 </a>
+                                @endhaspermission
                             @else
                             <div class="d-flex flex-column align-items-start gap-1 mt-1">
                                 <span class="wait-pill {{ $rWaitClass }}" data-wait-from="{{ ($p->checked_in_at ?? $p->created_at)->toIso8601String() }}" data-badge="R">
@@ -191,46 +180,6 @@
                     </tr>
                 @empty
                     <tr><td colspan="10" class="text-center" style="color:#9CA3AF;padding:2rem">No patients registered today</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="hms-card" style="margin-top:1.5rem">
-    <div class="hms-card-header">
-        <h3 class="hms-card-title"><i class="fa-solid fa-hand-holding-heart"></i> Pending FOC Requests</h3>
-        <span class="hms-badge hms-badge-warning">{{ $pendingFocRequests->count() }} pending</span>
-    </div>
-    <div class="hms-card-body" style="padding:0">
-        <table class="hms-table">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Doctor</th>
-                    <th>Patient</th>
-                    <th>MRD</th>
-                    <th>Fee to Waive</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($pendingFocRequests as $i => $foc)
-                    <tr>
-                        <td>{{ $i + 1 }}</td>
-                        <td>{{ $foc->doctor?->name ?? '—' }}</td>
-                        <td>{{ $foc->patient?->full_name ?? '—' }}</td>
-                        <td>{{ $foc->patient?->patient_code ?? '—' }}</td>
-                        <td>{{ money((float) $foc->foc_fee, 2) }}</td>
-                        <td>
-                            <form method="POST" action="{{ route('hospital.foc.accept', ['slug' => $slug, 'id' => $foc->id]) }}" style="display:inline">
-                                @csrf
-                                <button type="submit" class="hms-btn hms-btn-sm hms-btn-success">Accept</button>
-                            </form>
-                        </td>
-                    </tr>
-                @empty
-                    <tr><td colspan="6" class="text-center" style="color:#9CA3AF;padding:2rem">No pending FOC requests</td></tr>
                 @endforelse
             </tbody>
         </table>

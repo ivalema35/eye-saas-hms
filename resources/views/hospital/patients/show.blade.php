@@ -141,6 +141,7 @@
         </div>
 
         {{-- Check-In button if not yet checked in --}}
+        @haspermission('patient_register')
         @if(!$patient->case_id)
             <div class="hms-card border-0 shadow-sm"
                 style="border-radius:14px;padding:1.25rem 1.5rem;margin-top:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;background:linear-gradient(135deg,#FFF9E6,#FFFDE7)">
@@ -156,6 +157,7 @@
                 </a>
             </div>
         @endif
+        @endhaspermission
 
     </div>
 @endsection

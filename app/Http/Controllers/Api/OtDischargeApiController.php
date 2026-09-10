@@ -273,6 +273,7 @@ class OtDischargeApiController extends Controller
         $lineItems = is_string($invoice->line_items) ? (json_decode($invoice->line_items, true) ?: []) : (array) $invoice->line_items;
 
         return Pdf::loadView('hospital.ot.billing.summary_bill_print', compact('booking', 'invoice', 'lineItems'))
+            ->setPaper('a5', 'portrait')
             ->download("SummaryBill_{$bookingId}.pdf");
     }
 
@@ -285,7 +286,8 @@ class OtDischargeApiController extends Controller
             'booking' => $booking,
             'surgery' => $surgery,
             'wardMedicines' => $surgery?->medicinesForPrint() ?? [],
-        ])->download("Discharge_{$bookingId}.pdf");
+        ])->setPaper('a5', 'portrait')
+            ->download("Discharge_{$bookingId}.pdf");
     }
 
     public function certificatePrint(string $slug, Request $request, int $bookingId): Response
@@ -305,6 +307,7 @@ class OtDischargeApiController extends Controller
         $restDays = $restDaysInput < 1 ? 7 : min(90, $restDaysInput);
 
         return Pdf::loadView('hospital.ot.billing.certificate_print', compact('booking', 'surgery', 'restDays'))
+            ->setPaper('a5', 'portrait')
             ->download("Certificate_{$bookingId}.pdf");
     }
 

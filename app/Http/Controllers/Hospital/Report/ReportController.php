@@ -27,7 +27,7 @@ class ReportController extends Controller
 
     public function index(Request $request, string $slug): View
     {
-        $this->authorizePermission('reports.view');
+        $this->authorizePermission('report_view');
 
         $totalCollection = $this->buildQuery($request, true)
             ->where('type', 'walkin')
@@ -52,7 +52,7 @@ class ReportController extends Controller
      */
     public function showChannel(Request $request, string $slug, string $channel): View
     {
-        $this->authorizePermission('reports.view');
+        $this->authorizePermission('report_view');
 
         $labels = [
             'ot_appointment' => 'OT Appointment Patients',
@@ -114,7 +114,7 @@ class ReportController extends Controller
 
     public function exportExcel(Request $request, string $slug)
     {
-        $this->authorizePermission('reports.export');
+        $this->authorizePermission('report_export');
 
         $patients = $this->buildQuery($request)
             ->latest()
@@ -128,7 +128,7 @@ class ReportController extends Controller
 
     public function exportPdf(Request $request, string $slug)
     {
-        $this->authorizePermission('reports.export');
+        $this->authorizePermission('report_export');
 
         $patients = $this->buildQuery($request)
             ->latest()
