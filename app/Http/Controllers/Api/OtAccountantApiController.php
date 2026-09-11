@@ -21,9 +21,10 @@
  * payments from mobile/tablet — added paymentFormData()/storePayment()/receipt()
  * to mirror OtAccountantController::createPayment()/storePayment()/receiptPrint().
  *
- * PERMISSIONS: ot.invoice.view (payment-status), ot.payment.record (bookings queue,
- *              payment form, store, receipt — matches the web accountant route
- *              group's single permission gate).
+ * PERMISSIONS: ot_payment_record for accountant queue, payment form, store,
+ *              receipt, and payment-status (web accountant group is a single
+ *              ot_payment_record gate). ot_invoice_view also allowed on
+ *              payment-status for invoice-only roles.
  */
 
 namespace App\Http\Controllers\Api;
