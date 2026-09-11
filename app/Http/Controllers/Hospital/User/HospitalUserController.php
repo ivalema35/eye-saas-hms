@@ -23,7 +23,7 @@ class HospitalUserController extends Controller
 
     public function index(Request $request): View
     {
-        $this->authorizeUserManagement();
+        $this->authorizeUserAction('view');
 
         $slug = $request->route('slug');
         $roleFilter = $this->normalizeRoleFilter($request->query('role'));
@@ -103,7 +103,7 @@ class HospitalUserController extends Controller
 
     public function create(): View
     {
-        $this->authorizeUserManagement();
+        $this->authorizeUserAction('add');
 
         $slug = request()->route('slug');
         $roles = $this->rolesForUserForms();
@@ -113,7 +113,7 @@ class HospitalUserController extends Controller
 
     public function store(HospitalUserStoreRequest $request): RedirectResponse
     {
-        $this->authorizeUserManagement();
+        $this->authorizeUserAction('add');
 
         $slug = $request->route('slug');
         $data = $request->validated();
@@ -164,13 +164,16 @@ class HospitalUserController extends Controller
         return $request->file($field)->store("tenants/{$tenantId}/staff", 'public');
     }
 
-    private function authorizeUserManagement(): void
+    /**
+     * @param  'view'|'add'|'edit'|'delete'  $action
+     */
+    private function authorizeUserAction(string $action): void
     {
         abort_unless(
             $this->permissionService->canAny([
-                'user_doctor_view', 'user_doctor_add', 'user_doctor_edit', 'user_doctor_delete',
-                'user_reception_view', 'user_reception_add', 'user_reception_edit', 'user_reception_delete',
-                'user_ot_staff_view', 'user_ot_staff_add', 'user_ot_staff_edit', 'user_ot_staff_delete',
+                "user_doctor_{$action}",
+                "user_reception_{$action}",
+                "user_ot_staff_{$action}",
             ]),
             403,
             'Access denied.'
@@ -179,7 +182,7 @@ class HospitalUserController extends Controller
 
     public function edit(string $slug, string $id): View
     {
-        $this->authorizeUserManagement();
+        $this->authorizeUserAction('edit');
 
         $user = HospitalUser::query()
             ->where('tenant_id', app('tenant')->id)
@@ -192,7 +195,7 @@ class HospitalUserController extends Controller
 
     public function update(HospitalUserUpdateRequest $request, string $slug, string $id): RedirectResponse
     {
-        $this->authorizeUserManagement();
+        $this->authorizeUserAction('edit');
 
         $user = HospitalUser::query()
             ->where('tenant_id', app('tenant')->id)
@@ -239,7 +242,7 @@ class HospitalUserController extends Controller
 
     public function destroy(Request $request, string $slug, string $id): RedirectResponse
     {
-        $this->authorizeUserManagement();
+        $this->authorizeUserAction('delete');
 
         $user = HospitalUser::query()
             ->where('tenant_id', app('tenant')->id)

@@ -372,6 +372,59 @@ class MasterApiController extends Controller
         return $this->ok(null, 'Referrer deleted.');
     }
 
+    // ── Durations ─────────────────────────────────────────────────────────────
+
+    public function durationIndex(string $slug): JsonResponse
+    {
+        $data = Duration::query()->orderBy('duration')->get()
+            ->map(fn($r) => [
+                'id' => $r->id,
+                'duration' => $r->duration,
+            ]);
+
+        return $this->ok($data);
+    }
+
+    public function durationStore(Request $request, string $slug): JsonResponse
+    {
+        $request->validate([
+            'duration' => ['required', 'string', 'max:255'],
+        ]);
+
+        $record = Duration::create([
+            'duration' => trim($request->string('duration')),
+        ]);
+
+        return $this->ok([
+            'id' => $record->id,
+            'duration' => $record->duration,
+        ], 'Duration added.', 201);
+    }
+
+    public function durationUpdate(Request $request, string $slug, int $id): JsonResponse
+    {
+        $request->validate([
+            'duration' => ['required', 'string', 'max:255'],
+        ]);
+
+        $record = Duration::findOrFail($id);
+        $record->update([
+            'duration' => trim($request->string('duration')),
+        ]);
+
+        return $this->ok([
+            'id' => $record->id,
+            'duration' => $record->duration,
+        ]);
+    }
+
+    public function durationDestroy(string $slug, int $id): JsonResponse
+    {
+        Duration::findOrFail($id)->delete();
+
+        return $this->ok(null, 'Duration deleted.');
+    }
+
     // ── OT Slots ──────────────────────────────────────────────────────────────
 
     public function otSlotIndex(string $slug): JsonResponse

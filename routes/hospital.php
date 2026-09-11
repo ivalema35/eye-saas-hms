@@ -422,26 +422,41 @@ Route::prefix('{slug}')
 
                 // ============================================================
                 // Roles & Permissions (Hospital Admin)
+                // Granular — same as API (role_view/add/edit/delete). Do not use
+                // role_manage here: manage expands to all verbs and lets view-only mutate.
                 // ============================================================
-                Route::prefix('roles')->name('roles.')->middleware('permission:role_manage')->group(function () {
-                    Route::get('/', [RoleController::class, 'index'])->name('index');
-                    Route::get('/create', [RoleController::class, 'create'])->name('create')->middleware('permission:role_manage');
-                    Route::post('/', [RoleController::class, 'store'])->name('store')->middleware('permission:role_manage');
-                    Route::get('/{id}/edit', [RoleController::class, 'edit'])->whereNumber('id')->name('edit')->middleware('permission:role_manage');
-                    Route::put('/{id}', [RoleController::class, 'update'])->whereNumber('id')->name('update')->middleware('permission:role_manage');
-                    Route::delete('/{id}', [RoleController::class, 'destroy'])->whereNumber('id')->name('destroy')->middleware('permission:role_manage');
+                Route::prefix('roles')->name('roles.')->group(function () {
+                    Route::get('/', [RoleController::class, 'index'])->name('index')
+                        ->middleware('permission:role_view');
+                    Route::get('/create', [RoleController::class, 'create'])->name('create')
+                        ->middleware('permission:role_add');
+                    Route::post('/', [RoleController::class, 'store'])->name('store')
+                        ->middleware('permission:role_add');
+                    Route::get('/{id}/edit', [RoleController::class, 'edit'])->whereNumber('id')->name('edit')
+                        ->middleware('permission:role_edit');
+                    Route::put('/{id}', [RoleController::class, 'update'])->whereNumber('id')->name('update')
+                        ->middleware('permission:role_edit');
+                    Route::delete('/{id}', [RoleController::class, 'destroy'])->whereNumber('id')->name('destroy')
+                        ->middleware('permission:role_delete');
                 });
 
                 // ============================================================
                 // User Management (Hospital Admin)
+                // Granular — same as API. Do not use user_*_manage (expand risk).
                 // ============================================================
                 Route::prefix('users')->name('users.')->group(function () {
-                    Route::get('/', [HospitalUserController::class, 'index'])->name('index')->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
-                    Route::get('/create', [HospitalUserController::class, 'create'])->name('create')->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
-                    Route::post('/', [HospitalUserController::class, 'store'])->name('store')->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
-                    Route::get('/{id}/edit', [HospitalUserController::class, 'edit'])->whereNumber('id')->name('edit')->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
-                    Route::put('/{id}', [HospitalUserController::class, 'update'])->whereNumber('id')->name('update')->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
-                    Route::delete('/{id}', [HospitalUserController::class, 'destroy'])->whereNumber('id')->name('destroy')->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
+                    Route::get('/', [HospitalUserController::class, 'index'])->name('index')
+                        ->middleware('permission:user_doctor_view|user_reception_view|user_ot_staff_view');
+                    Route::get('/create', [HospitalUserController::class, 'create'])->name('create')
+                        ->middleware('permission:user_doctor_add|user_reception_add|user_ot_staff_add');
+                    Route::post('/', [HospitalUserController::class, 'store'])->name('store')
+                        ->middleware('permission:user_doctor_add|user_reception_add|user_ot_staff_add');
+                    Route::get('/{id}/edit', [HospitalUserController::class, 'edit'])->whereNumber('id')->name('edit')
+                        ->middleware('permission:user_doctor_edit|user_reception_edit|user_ot_staff_edit');
+                    Route::put('/{id}', [HospitalUserController::class, 'update'])->whereNumber('id')->name('update')
+                        ->middleware('permission:user_doctor_edit|user_reception_edit|user_ot_staff_edit');
+                    Route::delete('/{id}', [HospitalUserController::class, 'destroy'])->whereNumber('id')->name('destroy')
+                        ->middleware('permission:user_doctor_delete|user_reception_delete|user_ot_staff_delete');
                 });
 
                 // ============================================================
