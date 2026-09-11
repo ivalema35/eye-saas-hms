@@ -351,6 +351,14 @@ class OtWardApiController extends Controller
                 // whoever is currently assigned. See OT_WEB_PARITY_FIX_PRD.md §4.
                 'ot_doctor' => $booking->otDoctor,
                 'ot_assistant' => $booking->otAssistant,
+                // Web embeds OT Assistant picker options on the ward show page
+                // under ot_ward_entry — do NOT force apps through /config/users.
+                'ot_assistants' => HospitalUser::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where('status', 'active')
+                    ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+                    ->orderBy('name')
+                    ->get(['id', 'name']),
                 // Eye Drop Register medicine picker — full Medicine Master list
                 'ot_medicines' => Medicine::query()
                     ->where('tenant_id', $tenantId)
