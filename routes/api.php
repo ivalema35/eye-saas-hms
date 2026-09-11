@@ -609,7 +609,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('payment-status', [OtAccountantApiController::class, 'paymentStatus'])
                             ->name('ot.payment-status')
-                            ->middleware('permission:ot_invoice_view');
+                            // Web accountant View/create are under ot_payment_record;
+                            // invoice_view alone was blocking Add-payment-only users.
+                            ->middleware('permission:ot_invoice_view|ot_payment_record');
                         Route::get('payment-form-data', [OtAccountantApiController::class, 'paymentFormData'])
                             ->name('ot.payment.form-data')
                             ->middleware('permission:ot_payment_record');
