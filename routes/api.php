@@ -739,10 +739,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->name('clinical-queue')
                         ->middleware('permission:exam_primary|exam_secondary');
 
-                    // Medicines — CRUD split to match web (view/add/edit/delete)
+                    // Medicines — CRUD split to match web (view/add/edit/delete).
+                    // GET also allows exam_* so exam Rx search works without medicine_view
+                    // (web embeds medicine lists inside the exam page under exam permission).
                     Route::prefix('medicines')->name('medicines.')->group(function () {
                         Route::get('/', [MedicineApiController::class, 'index'])->name('index')
-                            ->middleware('permission:medicine_view');
+                            ->middleware('permission:medicine_view|exam_primary|exam_secondary');
                         Route::post('/', [MedicineApiController::class, 'store'])->name('store')
                             ->middleware('permission:medicine_add');
                         Route::put('/{id}', [MedicineApiController::class, 'update'])->name('update')
@@ -755,14 +757,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                             ->middleware('permission:medicine_add');
                     });
 
-                    // Medicine Groups
+                    // Medicine Groups — GET open to exam (Rx groups on exam screens)
                     Route::prefix('medicine-groups')->name('medicine-groups.')->group(function () {
                         Route::get('/', [MedicineGroupApiController::class, 'index'])->name('index')
-                            ->middleware('permission:medicine_view');
+                            ->middleware('permission:medicine_view|exam_primary|exam_secondary');
                         Route::get('/form-data', [MedicineGroupApiController::class, 'formData'])->name('form-data')
-                            ->middleware('permission:medicine_view');
+                            ->middleware('permission:medicine_view|exam_primary|exam_secondary');
                         Route::get('/{id}', [MedicineGroupApiController::class, 'show'])->name('show')->where('id', '[0-9]+')
-                            ->middleware('permission:medicine_view');
+                            ->middleware('permission:medicine_view|exam_primary|exam_secondary');
                         Route::post('/', [MedicineGroupApiController::class, 'store'])->name('store')
                             ->middleware('permission:medicine_add');
                         Route::put('/{id}', [MedicineGroupApiController::class, 'update'])->name('update')->where('id', '[0-9]+')
@@ -772,9 +774,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     });
 
                     // Medicine Masters (dosages, types, categories, routes)
+                    // Dosages + routes GETs used by exam loadFormData — allow exam_* (web parity).
                     Route::prefix('medicine-dosages')->name('medicine-dosages.')->group(function () {
                         Route::get('/', [MedicineMasterApiController::class, 'dosages'])->name('index')
-                            ->middleware('permission:medicine_view');
+                            ->middleware('permission:medicine_view|exam_primary|exam_secondary');
                         Route::post('/', [MedicineMasterApiController::class, 'storeDosage'])->name('store')
                             ->middleware('permission:medicine_add');
                         Route::put('/{id}', [MedicineMasterApiController::class, 'updateDosage'])->name('update')
@@ -804,7 +807,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     });
                     Route::prefix('medicine-routes')->name('medicine-routes.')->group(function () {
                         Route::get('/', [MedicineMasterApiController::class, 'medicineRoutes'])->name('index')
-                            ->middleware('permission:medicine_view');
+                            ->middleware('permission:medicine_view|exam_primary|exam_secondary');
                         Route::post('/', [MedicineMasterApiController::class, 'storeMedicineRoute'])->name('store')
                             ->middleware('permission:medicine_add');
                         Route::put('/{id}', [MedicineMasterApiController::class, 'updateMedicineRoute'])->name('update')
