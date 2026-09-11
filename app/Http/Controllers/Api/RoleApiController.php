@@ -188,22 +188,15 @@ class RoleApiController extends Controller
     }
 
     /**
-     * All platform permissions grouped by module — used to build the permissions UI.
+     * All platform permissions grouped by module → feature → actions —
+     * used to build the "new role" permissions UI. Same nested shape as
+     * show()'s "permissions" key (roleId 0 = nothing granted yet), so
+     * clients only need one parser for both endpoints.
      */
     public function permissions(): JsonResponse
     {
-        $allPermissions = Permission::orderBy('module')->orderBy('sort_order')->get();
+        $modules = $this->permService->getPermissionsForRoleUI(0);
 
-        $grouped = [];
-        foreach ($allPermissions as $perm) {
-            $grouped[$perm->module][] = [
-                'id'          => $perm->id,
-                'action'      => $perm->action,
-                'label'       => $perm->label,
-                'description' => $perm->description,
-            ];
-        }
-
-        return response()->json(['success' => true, 'data' => $grouped]);
+        return response()->json(['success' => true, 'data' => $modules]);
     }
 }

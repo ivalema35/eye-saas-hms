@@ -235,9 +235,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->name('admin.dashboard');
                     Route::get('/dashboard/today-patients', [DashboardController::class, 'todayPatients'])
                         ->name('dashboard.today-patients');
+                    // Doctor dashboard — matches web hospital.dashboard for slug=doctor:
+                    // no permission middleware (auth + subscription only). Examine /
+                    // History actions remain gated client-side and on exam routes.
                     Route::get('/dashboard/doctor', [DoctorDashboardApiController::class, 'dashboard'])
-                        ->name('dashboard.doctor')
-                        ->middleware('permission:exam_primary|exam_secondary');
+                        ->name('dashboard.doctor');
 
                     // Dashboard drill-down widgets (Round 3.5 gap-fill, 2026-08-04) —
                     // permissions copied exactly from routes/hospital.php's OR-groups.
@@ -375,6 +377,16 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->middleware('permission:referrer_edit');
                     Route::delete('masters/referrers-crud/{id}', [MasterApiController::class, 'referrerDestroy'])
                         ->middleware('permission:referrer_delete');
+
+                    // Masters — Durations CRUD (separate from dropdown GET masters/detail/durations)
+                    Route::get('masters/durations-crud',         [MasterApiController::class, 'durationIndex'])
+                        ->middleware('permission:duration_view');
+                    Route::post('masters/durations-crud',        [MasterApiController::class, 'durationStore'])
+                        ->middleware('permission:duration_add');
+                    Route::put('masters/durations-crud/{id}',    [MasterApiController::class, 'durationUpdate'])
+                        ->middleware('permission:duration_edit');
+                    Route::delete('masters/durations-crud/{id}', [MasterApiController::class, 'durationDestroy'])
+                        ->middleware('permission:duration_delete');
 
                     // OT masters — same permission keys as web (no role:admin gate)
                     Route::get('masters/ot-lens-options',         [MasterApiController::class, 'otLensOptionIndex'])
@@ -835,27 +847,28 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                             ->middleware('permission:report_export');
                     });
 
-                    // Config — Users (CRUD) — match web manage keys (expand to full CRUD)
+                    // Config — Users (CRUD) — granular keys (NOT *_manage expand).
+                    // View-only must not pass mutate routes via manage→CRUD expand.
                     Route::get('config/users/form-data', [UserApiController::class, 'formData'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
+                        ->middleware('permission:user_doctor_view|user_reception_view|user_ot_staff_view');
                     Route::get('config/users', [UserApiController::class, 'index'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
+                        ->middleware('permission:user_doctor_view|user_reception_view|user_ot_staff_view');
                     Route::post('config/users', [UserApiController::class, 'store'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage');
+                        ->middleware('permission:user_doctor_add|user_reception_add|user_ot_staff_add');
                     Route::get('config/users/{id}', [UserApiController::class, 'show'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
+                        ->middleware('permission:user_doctor_view|user_reception_view|user_ot_staff_view')
                         ->where('id', '[0-9]+');
                     Route::post('config/users/{id}', [UserApiController::class, 'update'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
+                        ->middleware('permission:user_doctor_edit|user_reception_edit|user_ot_staff_edit')
                         ->where('id', '[0-9]+');
                     Route::delete('config/users/{id}', [UserApiController::class, 'destroy'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
+                        ->middleware('permission:user_doctor_delete|user_reception_delete|user_ot_staff_delete')
                         ->where('id', '[0-9]+');
                     Route::patch('config/users/{id}/toggle-status', [UserApiController::class, 'toggleStatus'])
-                        ->middleware('permission:user_doctor_manage|user_reception_manage|user_ot_staff_manage')
+                        ->middleware('permission:user_doctor_edit|user_reception_edit|user_ot_staff_edit')
                         ->where('id', '[0-9]+');
 
-                    // Roles & Permissions — match web role_manage (expands to view/add/edit/delete)
+                    // Roles & Permissions — granular (role_view/add/edit/delete); matches web hospital.php.
                     Route::prefix('config/roles')->name('config.roles.')->group(function () {
                         Route::get('/permissions', [RoleApiController::class, 'permissions'])->name('permissions')
                             ->middleware('permission:role_view');

@@ -254,7 +254,8 @@ class PatientHistoryApiController extends Controller
                         'hospital_city'     => $tenant?->city  ?? null,
                         'hospital_state'    => $tenant?->state ?? null,
                         'exams'             => $partnerExams,
-                        'diagnosis_masters' => $partnerDx,
+                        // Empty PHP arrays json_encode as [] — Flutter expects a Map {}.
+                        'diagnosis_masters' => empty($partnerDx) ? new \stdClass() : $partnerDx,
                     ];
                 }
             }
@@ -284,7 +285,8 @@ class PatientHistoryApiController extends Controller
                     'visit_days'   => $visitDays,
                 ],
                 'exams'             => $allExams,
-                'diagnosis_masters' => $diagnosisMasters,
+                // Empty PHP arrays json_encode as [] — Flutter expects a Map {}.
+                'diagnosis_masters' => empty($diagnosisMasters) ? new \stdClass() : $diagnosisMasters,
                 'partner_hospitals' => $partnerHospitals,
             ],
         ]);
