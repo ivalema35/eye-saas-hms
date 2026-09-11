@@ -599,9 +599,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // OT Accountant — Billing / Payment
                     // (docs/ROUND3_OT_MOBILE_API_PRD_PLAN.md §9, FR-OT-33/34)
                     // ========================================================
+                    // GET also allows ot_counselling_fill — counsellor dashboard
+                    // Payment Status table (web embeds that queue under counselling
+                    // alone; apps reuse this endpoint for filter=completed).
                     Route::get('ot/accountant/bookings', [OtAccountantApiController::class, 'bookings'])
                         ->name('ot.accountant.bookings')
-                        ->middleware('permission:ot_payment_record');
+                        ->middleware('permission:ot_payment_record|ot_counselling_fill');
 
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('payment-status', [OtAccountantApiController::class, 'paymentStatus'])
