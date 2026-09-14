@@ -184,7 +184,8 @@ class OtInventoryApiController extends Controller
             'tenant_id' => $tenantId,
             'power' => $validated['power'],
             'is_favourite' => (bool) ($validated['is_favourite'] ?? false),
-            'is_active' => (bool) ($validated['is_active'] ?? false),
+            // Web add modal defaults Active checkbox checked.
+            'is_active' => (bool) ($validated['is_active'] ?? true),
         ]);
 
         return response()->json(['success' => true, 'message' => 'Lens power added successfully.', 'data' => $record], 201);
@@ -221,15 +222,16 @@ class OtInventoryApiController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
 
-        $affected = OtLensPower::query()
+        // SoftDeletes: call delete() — mass-assign deleted_at is ignored by fillable.
+        $record = OtLensPower::query()
             ->where('tenant_id', $tenantId)
-            ->whereNull('deleted_at')
-            ->whereKey($id)
-            ->update(['deleted_at' => now(), 'updated_at' => now()]);
+            ->find($id);
 
-        if ($affected === 0) {
+        if (! $record) {
             return response()->json(['success' => false, 'message' => 'Lens power not found.'], 404);
         }
+
+        $record->delete();
 
         return response()->json(['success' => true, 'message' => 'Lens power deleted successfully.']);
     }
