@@ -583,7 +583,7 @@ class MasterApiController extends Controller
         $record = OtLensOption::create([
             'tenant_id' => $tenantId,
             'name' => trim($request->string('name')),
-            'is_active' => $request->boolean('is_active', false),
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         return $this->ok(['id' => $record->id, 'name' => $record->name, 'is_active' => (bool) $record->is_active], 'Lens option added.', 201);
