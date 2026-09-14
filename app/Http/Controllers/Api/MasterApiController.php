@@ -614,10 +614,10 @@ class MasterApiController extends Controller
 
     public function otLensOptionDestroy(string $slug, int $id): JsonResponse
     {
-        OtLensOption::query()->whereNull('deleted_at')->findOrFail($id)->update([
-            'deleted_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // SoftDeletes — must call delete(), not update(deleted_at): fillable is
+        // only name/is_active so mass-assigning deleted_at was a silent no-op
+        // (API 200, row still listed). Web uses DB::table() and works.
+        OtLensOption::query()->findOrFail($id)->delete();
 
         return $this->ok(null, 'Lens option deleted.');
     }
@@ -675,10 +675,10 @@ class MasterApiController extends Controller
 
     public function otTypeDestroy(string $slug, int $id): JsonResponse
     {
-        OtType::query()->whereNull('deleted_at')->findOrFail($id)->update([
-            'deleted_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // SoftDeletes — must call delete(), not update(deleted_at): fillable is
+        // only ['name'] so mass-assigning deleted_at was a silent no-op
+        // (API 200, row still listed). Web OtTypeController uses DB::table().
+        OtType::query()->findOrFail($id)->delete();
 
         return $this->ok(null, 'OT type deleted.');
     }
