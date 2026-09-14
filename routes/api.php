@@ -334,9 +334,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('masters/cases', [MastersApiController::class, 'cases'])->name('masters.cases');
                     Route::get('masters/doctors', [MastersApiController::class, 'doctors'])->name('masters.doctors');
                     Route::get('masters/locations', [MastersApiController::class, 'locations'])->name('masters.locations');
+                    // Parity with web BasicMasterController::ajaxStore — reception /
+                    // OT appointment flows can inline-add a city without location_add.
                     Route::post('masters/locations', [MastersApiController::class, 'storeLocation'])
                         ->name('masters.locations.store')
-                        ->middleware('permission:location_add');
+                        ->middleware('permission:location_add|patient_register|patient_register_phone|location_manage|ot_appointment_create|ot_appointment_edit');
                     Route::put('masters/locations/{id}', [MastersApiController::class, 'updateLocation'])
                         ->name('masters.locations.update')
                         ->whereNumber('id')
@@ -358,9 +360,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->middleware('permission:eye_exam_master_delete');
                     Route::post('masters/detail/{type}/{id}/toggle-favourite', [MasterApiController::class, 'detailToggleFavourite']); // open — doctor favourites
 
-                    // Masters — Case Types CRUD
+                    // Masters — Case Types CRUD (list = any CRUD, same as web index)
                     Route::get('masters/case-types',         [MasterApiController::class, 'caseTypeIndex'])
-                        ->middleware('permission:casetype_view');
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('casetype'));
                     Route::post('masters/case-types',        [MasterApiController::class, 'caseTypeStore'])
                         ->middleware('permission:casetype_add');
                     Route::put('masters/case-types/{id}',    [MasterApiController::class, 'caseTypeUpdate'])
@@ -370,7 +372,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // Masters — Referrers CRUD (separate from dropdown GET masters/referrers)
                     Route::get('masters/referrers-crud',         [MasterApiController::class, 'referrerIndex'])
-                        ->middleware('permission:referrer_view');
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('referrer'));
                     Route::post('masters/referrers-crud',        [MasterApiController::class, 'referrerStore'])
                         ->middleware('permission:referrer_add');
                     Route::put('masters/referrers-crud/{id}',    [MasterApiController::class, 'referrerUpdate'])
@@ -380,7 +382,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // Masters — Durations CRUD (separate from dropdown GET masters/detail/durations)
                     Route::get('masters/durations-crud',         [MasterApiController::class, 'durationIndex'])
-                        ->middleware('permission:duration_view');
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('duration'));
                     Route::post('masters/durations-crud',        [MasterApiController::class, 'durationStore'])
                         ->middleware('permission:duration_add');
                     Route::put('masters/durations-crud/{id}',    [MasterApiController::class, 'durationUpdate'])

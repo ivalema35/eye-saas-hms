@@ -202,6 +202,16 @@ class AuthController extends Controller
             }
         }
 
+        // Expand manage/bundle keys → CRUD actions so apps can check
+        // casetype_add etc. when the role only stored casetype_manage.
+        foreach (PermissionMatrix::expandMap() as $bundle => $actions) {
+            if (in_array($bundle, $out, true)) {
+                foreach ($actions as $action) {
+                    $out[] = $action;
+                }
+            }
+        }
+
         return array_values(array_unique($out));
     }
 

@@ -80,11 +80,9 @@ class MasterApiController extends Controller
             'lens' => MasterLens::class,
             'em' => MasterEm::class,
             'covertest' => MasterCoverTest::class,
-            // Basic masters
-            'durations' => Duration::class,
-            // OT masters
-            'lens-options' => OtLensOption::class,
-            'ot-types' => OtType::class,
+            // durations / lens-options / ot-types intentionally omitted —
+            // dedicated routes (durations-crud, ot-lens-options, ot-type)
+            // own those permissions. Do not gate them under eye_exam_master_*.
         ];
     }
 
@@ -94,12 +92,7 @@ class MasterApiController extends Controller
      */
     private function valueField(string $type): string
     {
-        return match ($type) {
-            'durations' => 'duration',
-            'lens-options' => 'name',
-            'ot-types' => 'name',
-            default => 'value',
-        };
+        return 'value';
     }
 
     private function hasFavourite(string $type): bool
@@ -560,15 +553,8 @@ class MasterApiController extends Controller
     }
 
     // ── OT Lens Options ───────────────────────────────────────────────────────
-    // NOTE: this data was already reachable read/write via the generic
-    // masters/detail/{type} mechanism (detailMap() has 'lens-options' =>
-    // OtLensOption::class) — but gated by permission:master.eye_exam, the wrong
-    // permission (web gates this under role:admin, alongside every other OT
-    // master). Found during a full app-parity audit (2026-08-04). These dedicated,
-    // correctly-permissioned methods are the fix — mirrors the otSlot*/
-    // otChargeHead* pattern exactly. The generic detail/{type} route is left as-is
-    // (untouched, no behavior change) since removing it could break something else
-    // already relying on it.
+    // Dedicated routes — do NOT use masters/detail/{type} (removed from detailMap;
+    // that path was wrongly gated by eye_exam_master_*).
 
     public function otLensOptionIndex(string $slug): JsonResponse
     {
