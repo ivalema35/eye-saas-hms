@@ -183,8 +183,13 @@ class AuthController extends Controller
     }
 
     /**
-     * New matrix keys + reverse-mapped legacy dotted keys so Flutter can
-     * migrate gradually (checks for either style still work).
+     * Matrix keys for Flutter (+ legacy dotted aliases for gradual migrate).
+     *
+     * Order matters:
+     * 1) Expand manage/bundle keys from the role's REAL grants only.
+     * 2) Add legacy aliases, but NEVER invent a manage/bundle key from a
+     *    concrete verb (e.g. casetype_view must not become casetype_manage,
+     *    or expand would unlock add/edit/delete — unlike web RBAC).
      *
      * @return list<string>
      */
@@ -193,22 +198,25 @@ class AuthController extends Controller
         $granted = $user->role->getGrantedPermissionKeys();
         $out = $granted;
 
-        foreach (PermissionMatrix::legacyMap() as $old => $new) {
-            if (in_array($new, $granted, true)) {
-                $out[] = $old;
-            }
-            if (in_array($old, $granted, true)) {
-                $out[] = $new;
-            }
-        }
-
-        // Expand manage/bundle keys → CRUD actions so apps can check
-        // casetype_add etc. when the role only stored casetype_manage.
+        // Expand ONLY keys actually stored on the role (web expand_map parity).
         foreach (PermissionMatrix::expandMap() as $bundle => $actions) {
-            if (in_array($bundle, $out, true)) {
+            if (in_array($bundle, $granted, true)) {
                 foreach ($actions as $action) {
                     $out[] = $action;
                 }
+            }
+        }
+
+        $expandSources = array_keys(PermissionMatrix::expandMap());
+
+        foreach (PermissionMatrix::legacyMap() as $old => $new) {
+            // Concrete → legacy alias: skip inventing manage/bundle keys
+            if (in_array($new, $out, true) && ! in_array($old, $expandSources, true)) {
+                $out[] = $old;
+            }
+            // Legacy/dotted → concrete (or expand source that was really granted)
+            if (in_array($old, $out, true)) {
+                $out[] = $new;
             }
         }
 
