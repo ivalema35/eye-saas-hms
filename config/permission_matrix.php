@@ -37,6 +37,66 @@ if (! function_exists('permission_matrix_crud_keys')) {
     }
 }
 
+if (! function_exists('eye_exam_master_types')) {
+    /**
+     * One entry per Eye Exam Masters card — each gets its own full CRUD
+     * permission set (see DetailMasterController::featureKeyForType()).
+     *
+     * @return list<array{key:string,label:string}>
+     */
+    function eye_exam_master_types(): array
+    {
+        return [
+            ['key' => 'eye_exam_chief_complaints', 'label' => 'Chief Complaints'],
+            ['key' => 'eye_exam_kco', 'label' => 'K/C/O'],
+            ['key' => 'eye_exam_hno', 'label' => 'H/O'],
+            ['key' => 'eye_exam_diagnosis', 'label' => 'Diagnoses'],
+            ['key' => 'eye_exam_advice', 'label' => 'Advice'],
+            ['key' => 'eye_exam_vn', 'label' => 'V/N'],
+            ['key' => 'eye_exam_vngl', 'label' => 'Vn C GL'],
+            ['key' => 'eye_exam_vnst', 'label' => 'Vn C ST'],
+            ['key' => 'eye_exam_pnvn', 'label' => 'PH NV/N'],
+            ['key' => 'eye_exam_nrvn', 'label' => 'NR V/N'],
+            ['key' => 'eye_exam_sph_cyl', 'label' => 'SPH / CYL'],
+            ['key' => 'eye_exam_axis', 'label' => 'Axis'],
+            ['key' => 'eye_exam_nct', 'label' => 'NCT (IOP)'],
+            ['key' => 'eye_exam_sac', 'label' => 'SAC'],
+            ['key' => 'eye_exam_lid', 'label' => 'Lid'],
+            ['key' => 'eye_exam_conj', 'label' => 'Conjunctiva'],
+            ['key' => 'eye_exam_cornea', 'label' => 'Cornea'],
+            ['key' => 'eye_exam_ac', 'label' => 'A/C'],
+            ['key' => 'eye_exam_iris', 'label' => 'Iris'],
+            ['key' => 'eye_exam_pupil', 'label' => 'Pupil'],
+            ['key' => 'eye_exam_lens', 'label' => 'Lens'],
+            ['key' => 'eye_exam_em', 'label' => 'E/M'],
+            ['key' => 'eye_exam_covertest', 'label' => 'Cover Test'],
+            ['key' => 'eye_exam_disc', 'label' => 'Disc'],
+            ['key' => 'eye_exam_fr', 'label' => 'F/R'],
+        ];
+    }
+}
+
+if (! function_exists('eye_exam_master_all_action_keys')) {
+    /** @return list<string> every view/add/edit/delete key across every Eye Exam Masters card */
+    function eye_exam_master_all_action_keys(): array
+    {
+        $keys = [];
+        foreach (eye_exam_master_types() as $type) {
+            $keys = array_merge($keys, permission_matrix_crud_keys($type['key']));
+        }
+
+        return $keys;
+    }
+}
+
+if (! function_exists('eye_exam_master_action_keys_for_verb')) {
+    /** @return list<string> e.g. every *_view key across every Eye Exam Masters card */
+    function eye_exam_master_action_keys_for_verb(string $verb): array
+    {
+        return array_map(fn (array $type) => "{$type['key']}_{$verb}", eye_exam_master_types());
+    }
+}
+
 return [
 
     'legacy_map' => [
@@ -143,8 +203,15 @@ return [
         'location_manage' => permission_matrix_crud_keys('location'),
         'master.medicines' => permission_matrix_crud_keys('medicine'),
         'medicine_manage' => permission_matrix_crud_keys('medicine'),
-        'master.eye_exam' => permission_matrix_crud_keys('eye_exam_master'),
-        'eye_exam_master_manage' => permission_matrix_crud_keys('eye_exam_master'),
+        // Eye Exam Masters split into one CRUD set per card (2026-09) — old
+        // blanket eye_exam_master_* grants expand onto the same verb across
+        // every new per-card key, preserving what each role could already do.
+        'master.eye_exam' => eye_exam_master_all_action_keys(),
+        'eye_exam_master_manage' => eye_exam_master_all_action_keys(),
+        'eye_exam_master_view' => eye_exam_master_action_keys_for_verb('view'),
+        'eye_exam_master_add' => eye_exam_master_action_keys_for_verb('add'),
+        'eye_exam_master_edit' => eye_exam_master_action_keys_for_verb('edit'),
+        'eye_exam_master_delete' => eye_exam_master_action_keys_for_verb('delete'),
         'master.ot_slots' => permission_matrix_crud_keys('ot_slot'),
         'ot_slot_manage' => permission_matrix_crud_keys('ot_slot'),
         'master.ot_types' => permission_matrix_crud_keys('ot_type'),
@@ -323,6 +390,14 @@ return [
                         ['key' => 'ot_certificate_print', 'label' => 'Print certificate', 'sort' => 30],
                     ],
                 ],
+                'ot_reports' => [
+                    'label' => 'OT Reports',
+                    'sort' => 80,
+                    'actions' => [
+                        ['key' => 'ot_reports_view', 'label' => 'View', 'sort' => 10],
+                        ['key' => 'ot_reports_export', 'label' => 'Export', 'sort' => 20],
+                    ],
+                ],
             ],
         ],
 
@@ -375,44 +450,58 @@ return [
                     'sort' => 50,
                     'actions' => permission_matrix_crud('medicine', 'medicine'),
                 ],
-                'eye_exam_master' => [
-                    'label' => 'Eye Exam Masters',
-                    'sort' => 60,
-                    'actions' => permission_matrix_crud('eye_exam_master', 'eye exam master'),
-                ],
+            ] + (function (): array {
+                // One feature per Eye Exam Masters card (sort 60-84) — each
+                // gets its own full view/add/edit/delete set.
+                $out = [];
+                foreach (eye_exam_master_types() as $i => $type) {
+                    $out[$type['key']] = [
+                        'label' => $type['label'],
+                        'sort' => 60 + $i,
+                        'actions' => permission_matrix_crud($type['key'], $type['label']),
+                    ];
+                }
+
+                return $out;
+            })() + [
                 'ot_slot' => [
                     'label' => 'OT Slots',
-                    'sort' => 70,
+                    'sort' => 90,
                     'actions' => permission_matrix_crud('ot_slot', 'OT slot'),
                 ],
                 'ot_type' => [
                     'label' => 'OT Types',
-                    'sort' => 71,
+                    'sort' => 91,
                     'actions' => permission_matrix_crud('ot_type', 'OT type'),
+                ],
+                'ot_surgery_type' => [
+                    'label' => 'Surgery Types',
+                    'sort' => 92,
+                    'actions' => permission_matrix_crud('ot_surgery_type', 'surgery type'),
                 ],
                 'ot_charge' => [
                     'label' => 'OT Charge Heads',
-                    'sort' => 72,
+                    'sort' => 93,
                     'actions' => permission_matrix_crud('ot_charge', 'charge head'),
                 ],
                 'ot_lens_option' => [
                     'label' => 'Lens Options',
-                    'sort' => 73,
+                    'sort' => 94,
                     'actions' => permission_matrix_crud('ot_lens_option', 'lens option'),
                 ],
                 'ot_lens_power' => [
                     'label' => 'Lens Powers',
-                    'sort' => 74,
+                    'sort' => 95,
                     'actions' => permission_matrix_crud('ot_lens_power', 'lens power'),
                 ],
                 'ot_inventory' => [
                     'label' => 'OT Lens Inventory',
-                    'sort' => 75,
+                    'sort' => 96,
                     'actions' => permission_matrix_crud('ot_inventory', 'lens inventory'),
                 ],
                 'ot_package_master' => [
                     'label' => 'OT Packages',
-                    'sort' => 76,
+                    'sort' => 97,
                     'actions' => permission_matrix_crud('ot_package_master', 'OT package'),
                 ],
             ],
@@ -455,7 +544,7 @@ return [
             permission_matrix_crud_keys('casetype'),
             permission_matrix_crud_keys('referrer'),
             permission_matrix_crud_keys('duration'),
-            permission_matrix_crud_keys('eye_exam_master'),
+            eye_exam_master_all_action_keys(),
             permission_matrix_crud_keys('medicine'),
             permission_matrix_crud_keys('location'),
             permission_matrix_crud_keys('role'),
@@ -475,16 +564,16 @@ return [
         'receptionist' => array_merge(
             permission_matrix_crud_keys('user_reception'),
             permission_matrix_crud_keys('location'),
+            permission_matrix_crud_keys('referrer'),
             [
-                'dashboard_clinical',
                 'dashboard_reception',
-                'dashboard_revenue',
                 'dashboard_ot',
                 'patient_register',
                 'patient_register_phone',
                 'patient_view',
                 'patient_edit',
                 'patient_delete',
+                'exam_history',
                 'bill_print',
                 'report_view',
                 'report_export',
@@ -500,22 +589,12 @@ return [
                 'ot_consent_capture',
                 'ot_patient_list',
                 'ot_package_set',
-                'ot_payment_record',
-                'ot_payment_export',
-                'ot_invoice_view',
-                'ot_bill_print',
             ]
         ),
         'accountant' => [
-            'dashboard_ot',
-            'dashboard_revenue',
             'ot_patient_list',
             'ot_payment_record',
             'ot_payment_export',
-            'ot_invoice_view',
-            'ot_invoice_edit',
-            'ot_billing_manage',
-            'ot_bill_print',
             'report_view',
             'report_export',
         ],

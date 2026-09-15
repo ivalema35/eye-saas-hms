@@ -1706,7 +1706,7 @@
                     @endhasanypermission
 
                     {{-- ── REPORTS ───────────────────────────────────── --}}
-                    @hasanypermission('report_view|report_export|opd_reports_view|opd_reports_export')
+                    @hasanypermission('report_view|report_export|opd_reports_view|opd_reports_export|ot_reports_view|ot_reports_export')
                         <div class="hms-nav-divider"></div>
                         <div class="hms-nav-group-toggle" data-target="nav-reports">
                             <span class="hms-nav-group-label-wrap">
@@ -1723,13 +1723,13 @@
                                 <span>OPD Reports</span>
                             </a>
                             @endhasanypermission
-                            @haspermission('report_view')
+                            @hasanypermission('report_view|ot_reports_view')
                             <a href="{{ route('hospital.reports.ot.index', ['slug' => request()->route('slug')]) }}"
                                 class="hms-nav-item {{ request()->routeIs('hospital.reports.ot.*') ? 'active' : '' }}">
                                 <i class="bi bi-file-earmark-bar-graph"></i>
                                 <span>OT Reports</span>
                             </a>
-                            @endhaspermission
+                            @endhasanypermission
                         </div>
                     @endhasanypermission
 
@@ -1778,7 +1778,7 @@
                     @endhasanypermission
 
                     {{-- ── CONFIG / MASTERS ──────────────────────────── --}}
-                    @hasanypermission('casetype_view|casetype_add|referrer_view|duration_view|location_view|eye_exam_master_view|ot_slot_view|ot_type_view|ot_charge_view|ot_inventory_view|ot_lens_option_view|ot_lens_power_view|ot_package_master_view|setting_hospital_view|role_view|user_doctor_view|user_reception_view|casetype_manage|location_manage|role_manage')
+                    @hasanypermission('casetype_view|casetype_add|referrer_view|duration_view|location_view|eye_exam_master_view|ot_slot_view|ot_type_view|ot_surgery_type_view|ot_charge_view|ot_inventory_view|ot_lens_option_view|ot_lens_power_view|ot_package_master_view|setting_hospital_view|role_view|user_doctor_view|user_reception_view|casetype_manage|location_manage|role_manage')
                     <div class="hms-nav-divider"></div>
                     <div class="hms-nav-group-toggle" data-target="nav-config">
                         <span class="hms-nav-group-label-wrap">
@@ -1788,7 +1788,7 @@
                         <i class="bi bi-chevron-down hms-nav-chevron"></i>
                     </div>
                     <div class="hms-nav-group-items" id="nav-config">
-                        @hasanypermission('casetype_view|casetype_add|casetype_edit|casetype_delete|referrer_view|duration_view|location_view|eye_exam_master_view|ot_slot_view|ot_type_view|ot_charge_view|ot_inventory_view|ot_lens_option_view|ot_lens_power_view|ot_package_master_view|casetype_manage|location_manage|eye_exam_master_manage')
+                        @hasanypermission('casetype_view|casetype_add|casetype_edit|casetype_delete|referrer_view|duration_view|location_view|eye_exam_master_view|ot_slot_view|ot_type_view|ot_surgery_type_view|ot_charge_view|ot_inventory_view|ot_lens_option_view|ot_lens_power_view|ot_package_master_view|casetype_manage|location_manage|eye_exam_master_manage')
                         <a href="{{ route('hospital.masters.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.masters.*') ? 'active' : '' }}">
                             <i class="bi bi-database-fill-gear"></i>

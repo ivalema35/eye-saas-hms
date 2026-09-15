@@ -122,6 +122,9 @@
                                 <span class="pta pta-done" title="Secondary Done"><i class="bi bi-check-all"></i></span>
                             @elseif($isDilating)
                                 <span class="pta pta-timer dilation-timer-btn" data-unlock-time="{{ $unlockTimeMs }}"
+                                    data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $p->id]) }}?force=1"
+                                    data-patient-name="{{ $p->full_name }}"
+                                    title="Dilating — double-click to override and proceed"
                                     id="sec-btn-{{ $p->id }}">
                                     <i class="bi bi-hourglass-top"></i><span class="timer-text"
                                         style="font-size:10px;font-weight:700"> --:--</span>

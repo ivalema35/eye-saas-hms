@@ -28,12 +28,14 @@
                         style="min-width:220px;">
                 </div>
                 <div class="col-auto ms-auto d-flex gap-2">
+                    @hasanypermission('report_export|ot_reports_export')
                     <a href="{{ route('hospital.reports.ot.export', ['slug' => $slug, 'type' => $type, 'from' => $from, 'to' => $to]) }}" class="btn btn-sm ot-export-btn ot-export-excel">
                         <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
                     </a>
                     <a href="{{ route('hospital.reports.ot.export.pdf', ['slug' => $slug, 'type' => $type, 'from' => $from, 'to' => $to]) }}" class="btn btn-sm ot-export-btn ot-export-pdf">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Download PDF
                     </a>
+                    @endhasanypermission
                 </div>
             </form>
         </div>

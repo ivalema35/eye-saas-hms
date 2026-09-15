@@ -307,18 +307,18 @@ Route::prefix('{slug}')
                 // Reports (Phase 6 me implement hoga)
                 // ============================================================
                 Route::prefix('reports')->name('reports.')->group(function () {
-                    Route::get('/', [ReportController::class, 'index'])->name('index')->middleware('permission:report_view');
-                    Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel')->middleware('permission:report_export');
-                    Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:report_export');
-                    Route::get('/channel/{channel}', [ReportController::class, 'showChannel'])->name('channel.show')->middleware('permission:report_view');
+                    Route::get('/', [ReportController::class, 'index'])->name('index')->middleware('permission:report_view|opd_reports_view');
+                    Route::get('/export/excel', [ReportController::class, 'exportExcel'])->name('export.excel')->middleware('permission:report_export|opd_reports_export');
+                    Route::get('/export/pdf', [ReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:report_export|opd_reports_export');
+                    Route::get('/channel/{channel}', [ReportController::class, 'showChannel'])->name('channel.show')->middleware('permission:report_view|opd_reports_view');
 
                     // OT Reports — Phase 8 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §8)
                     Route::prefix('ot')->name('ot.')->group(function () {
-                        Route::get('/', [OtReportController::class, 'index'])->name('index')->middleware('permission:report_view');
-                        Route::get('/{type}', [OtReportController::class, 'show'])->name('show')->middleware('permission:report_view');
-                        Route::get('/{type}/export', [OtReportController::class, 'export'])->name('export')->middleware('permission:report_export');
-                        Route::get('/{type}/export-pdf', [OtReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:report_export');
-                        Route::get('/prescription/{patient}/pdf', [OtReportController::class, 'patientPrescriptionPdf'])->name('prescription.pdf')->middleware('permission:report_view');
+                        Route::get('/', [OtReportController::class, 'index'])->name('index')->middleware('permission:report_view|ot_reports_view');
+                        Route::get('/{type}', [OtReportController::class, 'show'])->name('show')->middleware('permission:report_view|ot_reports_view');
+                        Route::get('/{type}/export', [OtReportController::class, 'export'])->name('export')->middleware('permission:report_export|ot_reports_export');
+                        Route::get('/{type}/export-pdf', [OtReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:report_export|ot_reports_export');
+                        Route::get('/prescription/{patient}/pdf', [OtReportController::class, 'patientPrescriptionPdf'])->name('prescription.pdf')->middleware('permission:report_view|ot_reports_view');
                     });
                 });
 
@@ -370,10 +370,10 @@ Route::prefix('{slug}')
                         Route::put('types/{id}', [OtTypeController::class, 'update'])->name('types.update')->whereNumber('id')->middleware('permission:ot_type_edit');
                         Route::delete('types/{id}', [OtTypeController::class, 'destroy'])->name('types.destroy')->whereNumber('id')->middleware('permission:ot_type_delete');
 
-                        Route::get('surgery-types', [OtSurgeryTypeController::class, 'index'])->name('surgery-types.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
-                        Route::post('surgery-types', [OtSurgeryTypeController::class, 'store'])->name('surgery-types.store')->middleware('permission:ot_type_add');
-                        Route::put('surgery-types/{id}', [OtSurgeryTypeController::class, 'update'])->name('surgery-types.update')->whereNumber('id')->middleware('permission:ot_type_edit');
-                        Route::delete('surgery-types/{id}', [OtSurgeryTypeController::class, 'destroy'])->name('surgery-types.destroy')->whereNumber('id')->middleware('permission:ot_type_delete');
+                        Route::get('surgery-types', [OtSurgeryTypeController::class, 'index'])->name('surgery-types.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_surgery_type'));
+                        Route::post('surgery-types', [OtSurgeryTypeController::class, 'store'])->name('surgery-types.store')->middleware('permission:ot_surgery_type_add');
+                        Route::put('surgery-types/{id}', [OtSurgeryTypeController::class, 'update'])->name('surgery-types.update')->whereNumber('id')->middleware('permission:ot_surgery_type_edit');
+                        Route::delete('surgery-types/{id}', [OtSurgeryTypeController::class, 'destroy'])->name('surgery-types.destroy')->whereNumber('id')->middleware('permission:ot_surgery_type_delete');
 
                         Route::get('charge-heads', [OtChargeHeadController::class, 'index'])->name('charge-heads.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_charge'));
                         Route::post('charge-heads', [OtChargeHeadController::class, 'store'])->name('charge-heads.store')->middleware('permission:ot_charge_add');

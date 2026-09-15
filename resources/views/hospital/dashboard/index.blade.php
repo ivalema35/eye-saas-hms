@@ -1172,7 +1172,7 @@ body.hms-body:has(.bento-page--receptionist) {
     </a>
 
     {{-- Reports --}}
-    @haspermission('report_view')
+    @hasanypermission('report_view|opd_reports_view')
     <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
         <span class="bento-gloss" aria-hidden="true"></span>
         <div class="rec-5icon" style="background:#F5EEF8;color:#8E44AD">
@@ -1181,7 +1181,7 @@ body.hms-body:has(.bento-page--receptionist) {
         <p class="rec-5label">Reports</p>
         <div class="rec-5value" style="font-size:1.15rem">View →</div>
     </a>
-    @endhaspermission
+    @endhasanypermission
 
     {{-- Phone Appointments --}}
     <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="rec-5card rec-5link">

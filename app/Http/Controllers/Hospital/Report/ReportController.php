@@ -27,7 +27,7 @@ class ReportController extends Controller
 
     public function index(Request $request, string $slug): View
     {
-        $this->authorizePermission('report_view');
+        $this->authorizeAnyPermission(['report_view', 'opd_reports_view']);
 
         $totalCollection = $this->buildQuery($request, true)
             ->where('type', 'walkin')
@@ -52,7 +52,7 @@ class ReportController extends Controller
      */
     public function showChannel(Request $request, string $slug, string $channel): View
     {
-        $this->authorizePermission('report_view');
+        $this->authorizeAnyPermission(['report_view', 'opd_reports_view']);
 
         $labels = [
             'ot_appointment' => 'OT Appointment Patients',
@@ -114,7 +114,7 @@ class ReportController extends Controller
 
     public function exportExcel(Request $request, string $slug)
     {
-        $this->authorizePermission('report_export');
+        $this->authorizeAnyPermission(['report_export', 'opd_reports_export']);
 
         $patients = $this->buildQuery($request)
             ->latest()
@@ -128,7 +128,7 @@ class ReportController extends Controller
 
     public function exportPdf(Request $request, string $slug)
     {
-        $this->authorizePermission('report_export');
+        $this->authorizeAnyPermission(['report_export', 'opd_reports_export']);
 
         $patients = $this->buildQuery($request)
             ->latest()
@@ -212,9 +212,10 @@ class ReportController extends Controller
         $query->whereDate('appointment_date', $dates[0]);
     }
 
-    private function authorizePermission(string $permissionKey): void
+    /** @param  list<string>  $permissionKeys */
+    private function authorizeAnyPermission(array $permissionKeys): void
     {
-        abort_unless($this->permissionService->can($permissionKey), 403, 'Access denied.');
+        abort_unless($this->permissionService->canAny($permissionKeys), 403, 'Access denied.');
     }
 
     private function isWalkInType(?string $type): bool

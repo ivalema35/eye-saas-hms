@@ -43,6 +43,7 @@
                                                        class="perm-checkbox"
                                                        name="permissions[]"
                                                        value="{{ $perm['id'] }}"
+                                                       data-action="{{ $perm['action'] }}"
                                                        {{ $checked ? 'checked' : '' }}
                                                        {{ $isSuper ? 'disabled' : '' }}>
                                                 <span>{{ $perm['label'] }}</span>
@@ -58,3 +59,17 @@
         </table>
     </div>
 </div>
+
+<script>
+    // Checking "Secondary Exam" also grants "Recommend Surgery" — same pairing
+    // the Doctor role template ships with, so the button on the secondary exam
+    // page shows up without admins having to know it's a separate permission.
+    document.querySelectorAll('.perm-checkbox[data-action="exam_secondary"]').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+            if (!this.checked) { return; }
+            document.querySelectorAll('.perm-checkbox[data-action="ot_surgery_recommend"]').forEach(function (dep) {
+                if (!dep.disabled) { dep.checked = true; }
+            });
+        });
+    });
+</script>
