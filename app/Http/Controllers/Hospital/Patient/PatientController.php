@@ -12,6 +12,7 @@ use App\Models\Hospital\Patient;
 use App\Models\Hospital\Referrer;
 use App\Models\Platform\HospitalShareRequest;
 use App\Models\Platform\MasterCity;
+use App\Services\Auth\RolePermissionService;
 use App\Services\Hospital\PatientService;
 use App\Support\PhoneRules;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -34,8 +35,10 @@ use Illuminate\View\View;
  */
 class PatientController extends Controller
 {
-    public function __construct(private PatientService $patientService)
-    {
+    public function __construct(
+        private PatientService $patientService,
+        private RolePermissionService $permService
+    ) {
     }
 
     public function index(Request $request): View
@@ -248,6 +251,11 @@ class PatientController extends Controller
                 ]);
         }
 
+        if (! $this->permService->can('bill_print')) {
+            return redirect()->route('hospital.patients.show', ['slug' => $slug, 'patient' => $patient->id])
+                ->with('success', 'Patient registered successfully.');
+        }
+
         return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
             ->with('success', 'Patient registered successfully.');
     }
@@ -301,6 +309,11 @@ class PatientController extends Controller
         $data['reception_id'] = Auth::guard('hospital_user')->id();
 
         $patient = $this->patientService->registerPhone($data, $tenant->id);
+
+        if (! $this->permService->can('bill_print')) {
+            return redirect()->route('hospital.patients.show', ['slug' => $slug, 'patient' => $patient->id])
+                ->with('success', 'Phone appointment registered successfully.');
+        }
 
         return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create-phone'])
             ->with('success', 'Phone appointment registered and ready for printing.');

@@ -4224,6 +4224,31 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             positionFixedDropdown(ndd, activeNctInp, 260);
         }
 
+        function getNctInputs() {
+            return Array.from(document.querySelectorAll('#modalNCT .nct-inp'));
+        }
+
+        function openNctDropdownForInput(inp, query) {
+            if (!inp) { return; }
+            activeNctInp = inp;
+            inp.focus();
+            renderNdd(query !== undefined ? query : '');
+        }
+
+        function advanceNctField(currentInp) {
+            const inputs = getNctInputs();
+            const idx = inputs.indexOf(currentInp);
+            if (idx < 0 || idx >= inputs.length - 1) { return; }
+            setTimeout(function () { openNctDropdownForInput(inputs[idx + 1], ''); }, 50);
+        }
+
+        document.getElementById('modalNCT')?.addEventListener('shown.bs.modal', function () {
+            const inputs = getNctInputs();
+            if (inputs.length) {
+                setTimeout(function () { openNctDropdownForInput(inputs[0], ''); }, 120);
+            }
+        });
+
         function renderNdd(queryOverride) {
             if (!activeNctInp) { return; }
             const query = queryOverride !== undefined ? queryOverride : (activeNctInp.value || '').trim().toLowerCase();
@@ -4245,13 +4270,15 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                     e.preventDefault();
                     if (!activeNctInp) { return; }
                     const val = this.dataset.val;
-                    activeNctInp.value = val;
-                    const hidden = activeNctInp.closest('.nct-select-wrap')?.querySelector('input[type="hidden"]');
+                    const currentInp = activeNctInp;
+                    currentInp.value = val;
+                    const hidden = currentInp.closest('.nct-select-wrap')?.querySelector('input[type="hidden"]');
                     if (hidden) { hidden.value = val; }
                     ndd.classList.remove('show');
                     activeNctInp = null;
                     checkProgress();
                     updateLivePreview();
+                    advanceNctField(currentInp);
                 });
             });
         }
@@ -4452,6 +4479,24 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
         const fundusModal = document.getElementById('modalFundus');
 
+        function getFundusInputs() {
+            return Array.from(fundusModal.querySelectorAll('.fundus-dd-inp'));
+        }
+
+        function advanceFundusField(currentInp) {
+            const inputs = getFundusInputs();
+            const idx = inputs.indexOf(currentInp);
+            if (idx < 0 || idx >= inputs.length - 1) { return; }
+            setTimeout(function () { inputs[idx + 1].focus(); }, 50);
+        }
+
+        fundusModal.addEventListener('shown.bs.modal', function () {
+            const inputs = getFundusInputs();
+            if (inputs.length) {
+                setTimeout(function () { inputs[0].focus(); }, 120);
+            }
+        });
+
         fundusModal.addEventListener('focusin', e => {
             const inp = e.target.closest('.fundus-dd-inp');
             if (!inp) { return; }
@@ -4489,13 +4534,15 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (row) {
                 e.preventDefault();
                 const v = row.dataset.val;
-                if (activeFInp) {
-                    activeFInp.value = v;
-                    const wrap = activeFInp.closest('.fundus-dd-wrap');
+                const currentInp = activeFInp;
+                if (currentInp) {
+                    currentInp.value = v;
+                    const wrap = currentInp.closest('.fundus-dd-wrap');
                     if (wrap) { const h = wrap.querySelector('input[type="hidden"]'); if (h) { h.value = v; } }
-                    activeFInp.dispatchEvent(new Event('change', { bubbles: true }));
+                    currentInp.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 fdd.style.display = 'none';
+                advanceFundusField(currentInp);
             }
         });
 
@@ -4675,6 +4722,15 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                     if (radio) { radio.checked = true; }
                 } else {
                     el.value = value;
+                    if (el.type === 'hidden') {
+                        // Vision/PG/NCT/OE/Fundus fields pair a nameless visible
+                        // proxy input with this hidden input inside a wrapper div.
+                        // Restoring only the hidden field leaves the proxy blank;
+                        // its blur handler then copies that blank back onto the
+                        // hidden field and silently erases the restored value.
+                        const proxy = el.parentElement?.querySelector('input[type="text"]:not([name])');
+                        if (proxy) { proxy.value = value; }
+                    }
                 }
                 el.dispatchEvent(new Event('change', { bubbles: true }));
             }
@@ -4721,11 +4777,16 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
 
     form.addEventListener('input', saveDraft);
     form.addEventListener('change', saveDraft);
+    // Vision/PG/NCT/OE pickers set their hidden field's value via plain JS
+    // (no dispatched input/change event), so the listeners above miss those
+    // picks entirely. A periodic snapshot catches everything regardless of
+    // whether an event fired.
+    setInterval(saveDraft, 2000);
     form.addEventListener('submit', function () {
     try {
         localStorage.removeItem(draftKey);
     } catch (_) {}
-}); 
+});
 
     // let _examConfirmed = false;
     // form.addEventListener('submit', function (e) {

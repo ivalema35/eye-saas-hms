@@ -342,6 +342,70 @@ across the rest of the app. --}}
         font-size: 0.95rem;
     }
 
+    .dil-override-btn {
+        cursor: pointer !important;
+        background: #fff8ed;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    .dil-override-btn:hover {
+        background-color: #fef3c7 !important;
+        border-color: #fbbf24 !important;
+    }
+
+    .tooltip-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .tooltip-container .tooltip-text {
+        visibility: hidden;
+        width: 250px;
+        background-color: #1B4F72;
+        color: #fff;
+        text-align: center;
+        border-radius: 8px;
+        padding: 10px 12px;
+        position: absolute;
+        z-index: 9999;
+        bottom: 140%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.3s, visibility 0.3s;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1.4;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        pointer-events: none;
+    }
+
+    .tooltip-container .tooltip-text::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -6px;
+        border-width: 6px;
+        border-style: solid;
+        border-color: #1B4F72 transparent transparent transparent;
+    }
+
+    .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+    }
+
+    @keyframes dilModalIn {
+        from { opacity: 0; transform: translateY(12px) scale(.97); }
+        to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
     .queue-table .queue-state-line {
         display: inline-flex;
         align-items: center;
@@ -719,6 +783,7 @@ across the rest of the app. --}}
                                 <th>Unlock Time</th>
                                 <th>Countdown</th>
                                 <th style="text-align:center;width:80px">Wait</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -728,6 +793,7 @@ across the rest of the app. --}}
                                     $dilationMinutes = $primary->dilation_time ?? 0;
                                     $unlockTime = $primary->updated_at->copy()->addMinutes($dilationMinutes);
                                     $countdownMs = $unlockTime->timestamp * 1000;
+                                    $dilPatientName = trim($patient->first_name . ' ' . $patient->last_name);
                                     $dWaitMins  = (int) $patient->created_at->diffInMinutes(now());
                                     $dWaitClass = $dWaitMins < $wGreen ? 'wait-green' : ($dWaitMins < $wOrange ? 'wait-orange' : ($dWaitMins < $wRed ? 'wait-red' : 'wait-fire'));
                                     $dWaitFmt   = $dWaitMins < 60 ? $dWaitMins.'m' : floor($dWaitMins/60).'h'.($dWaitMins%60>0?' '.($dWaitMins%60).'m':'');
@@ -768,6 +834,16 @@ across the rest of the app. --}}
                                                 <span class="wp-r">D</span>
                                                 <span class="wp-time">{{ $dPrimeFmt }}</span>
                                             </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="tooltip-container">
+                                            <button type="button" class="dil-override-btn"
+                                                data-force-url="{{ route('hospital.exam.secondary.show', ['slug' => $slug, 'id' => $patient->id]) }}?force=1"
+                                                data-patient-name="{{ $dilPatientName }}">
+                                                <i class="fa-solid fa-hourglass-half"></i> Override
+                                            </button>
+                                            <span class="tooltip-text">⚠️ Dilation in progress.<br>Double click to override and proceed.</span>
                                         </div>
                                     </td>
                                 </tr>
@@ -879,6 +955,37 @@ across the rest of the app. --}}
 
 </div>
 
+{{-- Dilation Override Modal --}}
+<div id="dilOverrideModal"
+    style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.5); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+    <div id="dilOverrideCard"
+        style="background:#fff; border-radius:16px; width:100%; max-width:380px; margin:0 16px; box-shadow:0 24px 64px rgba(0,0,0,.18); animation:dilModalIn .18s ease;">
+        <div style="padding:28px 24px 0; text-align:center;">
+            <div
+                style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:#fff8ed; border:2px solid #fcd34d; margin-bottom:14px;">
+                <i class="fa-solid fa-hourglass-half" style="font-size:22px; color:#f59e0b;"></i>
+            </div>
+            <h6 style="margin:0 0 6px; font-size:15px; font-weight:700; color:#1e293b; letter-spacing:.01em;">Dilation
+                In Progress</h6>
+            <p style="margin:0; font-size:13px; color:#64748b; line-height:1.55;">
+                <strong id="dilModalPatientName" style="color:#1B4F72;"></strong> is currently dilating.<br>
+                Override the lock and proceed to secondary exam?
+            </p>
+        </div>
+        <div style="margin:20px 24px 0; border-top:1px solid #f1f5f9;"></div>
+        <div style="padding:16px 24px 22px; display:flex; gap:10px;">
+            <button id="dilModalCancel"
+                style="flex:1; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer;">
+                Cancel
+            </button>
+            <a id="dilModalConfirm" href="#"
+                style="flex:1; background:#1B4F72; color:#fff; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+                <i class="fa-solid fa-circle-arrow-right" style="font-size:14px;"></i> Proceed
+            </a>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -932,5 +1039,34 @@ across the rest of the app. --}}
     }
     updateWaitPills();
     setInterval(updateWaitPills, 30000);
+
+    // Dilation override modal — double-click the lock button to proceed early
+    (function () {
+        const dilModal = document.getElementById('dilOverrideModal');
+        if (!dilModal) { return; }
+        const dilConfirm = document.getElementById('dilModalConfirm');
+        const dilCancel = document.getElementById('dilModalCancel');
+        const dilName = document.getElementById('dilModalPatientName');
+
+        function openDilModal(url, patientName) {
+            dilName.textContent = patientName;
+            dilConfirm.href = url;
+            dilModal.style.display = 'flex';
+        }
+        function closeDilModal() {
+            dilModal.style.display = 'none';
+            dilConfirm.href = '#';
+        }
+
+        document.querySelectorAll('.dil-override-btn').forEach(function (btn) {
+            btn.addEventListener('dblclick', function (e) {
+                e.stopPropagation();
+                openDilModal(btn.dataset.forceUrl, btn.dataset.patientName);
+            });
+        });
+        dilCancel.addEventListener('click', closeDilModal);
+        document.getElementById('dilOverrideCard').addEventListener('click', function (e) { e.stopPropagation(); });
+        dilModal.addEventListener('click', closeDilModal);
+    })();
 </script>
 @endpush

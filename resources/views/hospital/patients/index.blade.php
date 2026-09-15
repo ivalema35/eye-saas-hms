@@ -533,7 +533,7 @@ design. --}}
         .pta-timer {
             background: rgba(255, 152, 0, .12);
             color: #e07b00;
-            cursor: default;
+            cursor: pointer;
             min-width: 58px;
             width: auto;
             padding: 0 6px;
@@ -1446,6 +1446,67 @@ design. --}}
 
             updateDilationTimers();
             setInterval(updateDilationTimers, 1000);
+        })();
+    </script>
+
+    {{-- Dilation Override Modal --}}
+    <div id="dilOverrideModal"
+        style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,.5); backdrop-filter:blur(3px); align-items:center; justify-content:center;">
+        <div id="dilOverrideCard"
+            style="background:#fff; border-radius:16px; width:100%; max-width:380px; margin:0 16px; box-shadow:0 24px 64px rgba(0,0,0,.18);">
+            <div style="padding:28px 24px 0; text-align:center;">
+                <div
+                    style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; background:#fff8ed; border:2px solid #fcd34d; margin-bottom:14px;">
+                    <i class="bi bi-hourglass-split" style="font-size:22px; color:#f59e0b;"></i>
+                </div>
+                <h6 style="margin:0 0 6px; font-size:15px; font-weight:700; color:#1e293b; letter-spacing:.01em;">Dilation
+                    In Progress</h6>
+                <p style="margin:0; font-size:13px; color:#64748b; line-height:1.55;">
+                    <strong id="dilModalPatientName" style="color:#1B4F72;"></strong> is currently dilating.<br>
+                    Override the lock and proceed to secondary exam?
+                </p>
+            </div>
+            <div style="margin:20px 24px 0; border-top:1px solid #f1f5f9;"></div>
+            <div style="padding:16px 24px 22px; display:flex; gap:10px;">
+                <button id="dilModalCancel"
+                    style="flex:1; background:#f8fafc; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer;">
+                    Cancel
+                </button>
+                <a id="dilModalConfirm" href="#"
+                    style="flex:1; background:#1B4F72; color:#fff; border-radius:8px; padding:9px 0; font-size:13px; font-weight:600; cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <i class="bi bi-arrow-right-circle-fill" style="font-size:14px;"></i> Proceed
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var dilModal = document.getElementById('dilOverrideModal');
+            if (!dilModal) { return; }
+            var dilConfirm = document.getElementById('dilModalConfirm');
+            var dilCancel = document.getElementById('dilModalCancel');
+            var dilName = document.getElementById('dilModalPatientName');
+
+            function openDilModal(url, patientName) {
+                dilName.textContent = patientName;
+                dilConfirm.href = url;
+                dilModal.style.display = 'flex';
+            }
+            function closeDilModal() {
+                dilModal.style.display = 'none';
+                dilConfirm.href = '#';
+            }
+
+            document.addEventListener('dblclick', function (e) {
+                var btn = e.target.closest('.dilation-timer-btn');
+                if (!btn) { return; }
+                e.stopPropagation();
+                openDilModal(btn.dataset.forceUrl, btn.dataset.patientName);
+            });
+            dilCancel.addEventListener('click', closeDilModal);
+            document.getElementById('dilOverrideCard').addEventListener('click', function (e) { e.stopPropagation(); });
+            dilModal.addEventListener('click', closeDilModal);
         })();
     </script>
 @endpush
