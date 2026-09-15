@@ -428,13 +428,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('masters/ot-types-list',             [MasterApiController::class, 'otTypesList'])
                         ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
                     Route::get('masters/ot-surgery-types',          [MasterApiController::class, 'otSurgeryTypeIndex'])
-                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_surgery_type'));
                     Route::post('masters/ot-surgery-types',         [MasterApiController::class, 'otSurgeryTypeStore'])
-                        ->middleware('permission:ot_type_add');
+                        ->middleware('permission:ot_surgery_type_add');
                     Route::put('masters/ot-surgery-types/{id}',     [MasterApiController::class, 'otSurgeryTypeUpdate'])
-                        ->middleware('permission:ot_type_edit');
+                        ->middleware('permission:ot_surgery_type_edit');
                     Route::delete('masters/ot-surgery-types/{id}',  [MasterApiController::class, 'otSurgeryTypeDestroy'])
-                        ->middleware('permission:ot_type_delete');
+                        ->middleware('permission:ot_surgery_type_delete');
 
                     // Examinations
                     Route::get('exams/primary/{patientId}', [ExamApiController::class, 'showPrimary'])

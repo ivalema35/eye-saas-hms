@@ -67,63 +67,67 @@ class BasicMasterController extends Controller
             ['route' => 'hospital.masters.ot.lens-inventory.index', 'label' => 'Lens Inventory', 'icon' => 'bi-box-seam', 'color' => 'dark', 'feature' => 'ot_inventory'],
             ['route' => 'hospital.masters.ot.slots.index', 'label' => 'OT Slots', 'icon' => 'bi-clock-history', 'color' => 'primary', 'feature' => 'ot_slot'],
             ['route' => 'hospital.masters.ot.types.index', 'label' => 'OT Types', 'icon' => 'bi-tags-fill', 'color' => 'success', 'feature' => 'ot_type'],
-            ['route' => 'hospital.masters.ot.surgery-types.index', 'label' => 'Surgery Types', 'icon' => 'bi-scissors', 'color' => 'warning', 'feature' => 'ot_type'],
+            ['route' => 'hospital.masters.ot.surgery-types.index', 'label' => 'Surgery Types', 'icon' => 'bi-scissors', 'color' => 'warning', 'feature' => 'ot_surgery_type'],
             ['route' => 'hospital.masters.ot.charge-heads.index', 'label' => 'Charge Heads', 'icon' => 'bi-cash-stack', 'color' => 'info', 'feature' => 'ot_charge'],
             ['route' => 'hospital.masters.ot.packages.index', 'label' => 'OT Packages', 'icon' => 'bi-box2-heart', 'color' => 'primary', 'feature' => 'ot_package_master'],
         ])->filter(fn (array $item) => $this->perm->canAny(PermissionMatrix::crudKeys($item['feature'])))->values();
 
-        $showEyeExamMasters = $this->perm->canAny(PermissionMatrix::crudKeys('eye_exam_master'));
+        $eyeExamGroups = collect([
+            [
+                'title' => 'Clinical',
+                'items' => [
+                    ['type' => 'chief-complaints', 'label' => 'Chief Complaints', 'icon' => 'bi-clipboard2-pulse', 'color' => 'danger', 'feature' => 'eye_exam_chief_complaints'],
+                    ['type' => 'kcos', 'label' => 'K/C/O', 'icon' => 'bi-heart-pulse', 'color' => 'warning', 'feature' => 'eye_exam_kco'],
+                    ['type' => 'hno', 'label' => 'H/O', 'icon' => 'bi-clock-history', 'color' => 'info', 'feature' => 'eye_exam_hno'],
+                    ['type' => 'diagnosis', 'label' => 'Diagnoses', 'icon' => 'bi-patch-check', 'color' => 'success', 'feature' => 'eye_exam_diagnosis'],
+                    ['type' => 'advice', 'label' => 'Advice', 'icon' => 'bi-chat-left-text', 'color' => 'primary', 'feature' => 'eye_exam_advice'],
+                ],
+            ],
+            [
+                'title' => 'Vision Values',
+                'items' => [
+                    ['type' => 'vn', 'label' => 'V/N', 'icon' => 'bi-eye', 'color' => 'info', 'feature' => 'eye_exam_vn'],
+                    ['type' => 'vngl', 'label' => 'Vn C GL', 'icon' => 'bi-eyeglasses', 'color' => 'primary', 'feature' => 'eye_exam_vngl'],
+                    ['type' => 'vnst', 'label' => 'Vn C ST', 'icon' => 'bi-view-list', 'color' => 'primary', 'feature' => 'eye_exam_vnst'],
+                    ['type' => 'pnvn', 'label' => 'PH NV/N', 'icon' => 'bi-eye-fill', 'color' => 'info', 'feature' => 'eye_exam_pnvn'],
+                    ['type' => 'nrvn', 'label' => 'NR V/N', 'icon' => 'bi-binoculars', 'color' => 'info', 'feature' => 'eye_exam_nrvn'],
+                    ['type' => 'sph_cyl', 'label' => 'SPH / CYL', 'icon' => 'bi-circle-half', 'color' => 'primary', 'feature' => 'eye_exam_sph_cyl'],
+                    ['type' => 'axis', 'label' => 'Axis', 'icon' => 'bi-arrows-angle-expand', 'color' => 'secondary', 'feature' => 'eye_exam_axis'],
+                    ['type' => 'nct', 'label' => 'NCT (IOP)', 'icon' => 'bi-activity', 'color' => 'warning', 'feature' => 'eye_exam_nct'],
+                ],
+            ],
+            [
+                'title' => 'Anterior Segment (O/E)',
+                'items' => [
+                    ['type' => 'sac', 'label' => 'SAC', 'icon' => 'bi-droplet', 'color' => 'info', 'feature' => 'eye_exam_sac'],
+                    ['type' => 'lid', 'label' => 'Lid', 'icon' => 'bi-eye-slash', 'color' => 'secondary', 'feature' => 'eye_exam_lid'],
+                    ['type' => 'conj', 'label' => 'Conjunctiva', 'icon' => 'bi-circle-fill', 'color' => 'danger', 'feature' => 'eye_exam_conj'],
+                    ['type' => 'cornea', 'label' => 'Cornea', 'icon' => 'bi-record-circle', 'color' => 'primary', 'feature' => 'eye_exam_cornea'],
+                    ['type' => 'ac', 'label' => 'A/C', 'icon' => 'bi-layers', 'color' => 'info', 'feature' => 'eye_exam_ac'],
+                    ['type' => 'iris', 'label' => 'Iris', 'icon' => 'bi-bullseye', 'color' => 'warning', 'feature' => 'eye_exam_iris'],
+                    ['type' => 'pupil', 'label' => 'Pupil', 'icon' => 'bi-dot', 'color' => 'dark', 'feature' => 'eye_exam_pupil'],
+                    ['type' => 'lens', 'label' => 'Lens', 'icon' => 'bi-camera-lens', 'color' => 'success', 'feature' => 'eye_exam_lens'],
+                    ['type' => 'em', 'label' => 'E/M', 'icon' => 'bi-arrows-move', 'color' => 'secondary', 'feature' => 'eye_exam_em'],
+                    ['type' => 'covertest', 'label' => 'Cover Test', 'icon' => 'bi-shield-check', 'color' => 'success', 'feature' => 'eye_exam_covertest'],
+                ],
+            ],
+            [
+                'title' => 'Posterior Segment (FUNDUS)',
+                'items' => [
+                    ['type' => 'disc', 'label' => 'Disc', 'icon' => 'bi-circle', 'color' => 'secondary', 'feature' => 'eye_exam_disc'],
+                    ['type' => 'fr', 'label' => 'F/R', 'icon' => 'bi-reception-4', 'color' => 'secondary', 'feature' => 'eye_exam_fr'],
+                ],
+            ],
+        ])->map(function (array $group) {
+            $group['items'] = collect($group['items'])
+                ->filter(fn (array $item) => $this->perm->canAny(PermissionMatrix::crudKeys($item['feature'])))
+                ->values()
+                ->all();
 
-        $eyeExamGroups = [];
-        if ($showEyeExamMasters) {
-            $eyeExamGroups = [
-                [
-                    'title' => 'Clinical',
-                    'items' => [
-                        ['type' => 'chief-complaints', 'label' => 'Chief Complaints', 'icon' => 'bi-clipboard2-pulse', 'color' => 'danger'],
-                        ['type' => 'kcos', 'label' => 'K/C/O', 'icon' => 'bi-heart-pulse', 'color' => 'warning'],
-                        ['type' => 'hno', 'label' => 'H/O', 'icon' => 'bi-clock-history', 'color' => 'info'],
-                        ['type' => 'diagnosis', 'label' => 'Diagnoses', 'icon' => 'bi-patch-check', 'color' => 'success'],
-                        ['type' => 'advice', 'label' => 'Advice', 'icon' => 'bi-chat-left-text', 'color' => 'primary'],
-                    ],
-                ],
-                [
-                    'title' => 'Vision Values',
-                    'items' => [
-                        ['type' => 'vn', 'label' => 'V/N', 'icon' => 'bi-eye', 'color' => 'info'],
-                        ['type' => 'vngl', 'label' => 'Vn C GL', 'icon' => 'bi-eyeglasses', 'color' => 'primary'],
-                        ['type' => 'vnst', 'label' => 'Vn C ST', 'icon' => 'bi-view-list', 'color' => 'primary'],
-                        ['type' => 'pnvn', 'label' => 'PH NV/N', 'icon' => 'bi-eye-fill', 'color' => 'info'],
-                        ['type' => 'nrvn', 'label' => 'NR V/N', 'icon' => 'bi-binoculars', 'color' => 'info'],
-                        ['type' => 'sph_cyl', 'label' => 'SPH / CYL', 'icon' => 'bi-circle-half', 'color' => 'primary'],
-                        ['type' => 'axis', 'label' => 'Axis', 'icon' => 'bi-arrows-angle-expand', 'color' => 'secondary'],
-                        ['type' => 'nct', 'label' => 'NCT (IOP)', 'icon' => 'bi-activity', 'color' => 'warning'],
-                    ],
-                ],
-                [
-                    'title' => 'Anterior Segment (O/E)',
-                    'items' => [
-                        ['type' => 'sac', 'label' => 'SAC', 'icon' => 'bi-droplet', 'color' => 'info'],
-                        ['type' => 'lid', 'label' => 'Lid', 'icon' => 'bi-eye-slash', 'color' => 'secondary'],
-                        ['type' => 'conj', 'label' => 'Conjunctiva', 'icon' => 'bi-circle-fill', 'color' => 'danger'],
-                        ['type' => 'cornea', 'label' => 'Cornea', 'icon' => 'bi-record-circle', 'color' => 'primary'],
-                        ['type' => 'ac', 'label' => 'A/C', 'icon' => 'bi-layers', 'color' => 'info'],
-                        ['type' => 'iris', 'label' => 'Iris', 'icon' => 'bi-bullseye', 'color' => 'warning'],
-                        ['type' => 'pupil', 'label' => 'Pupil', 'icon' => 'bi-dot', 'color' => 'dark'],
-                        ['type' => 'lens', 'label' => 'Lens', 'icon' => 'bi-camera-lens', 'color' => 'success'],
-                        ['type' => 'em', 'label' => 'E/M', 'icon' => 'bi-arrows-move', 'color' => 'secondary'],
-                        ['type' => 'covertest', 'label' => 'Cover Test', 'icon' => 'bi-shield-check', 'color' => 'success'],
-                    ],
-                ],
-                [
-                    'title' => 'Posterior Segment (FUNDUS)',
-                    'items' => [
-                        ['type' => 'disc', 'label' => 'Disc', 'icon' => 'bi-circle', 'color' => 'secondary'],
-                        ['type' => 'fr', 'label' => 'F/R', 'icon' => 'bi-reception-4', 'color' => 'secondary'],
-                    ],
-                ],
-            ];
-        }
+            return $group;
+        })->filter(fn (array $group) => $group['items'] !== [])->values()->all();
+
+        $showEyeExamMasters = $eyeExamGroups !== [];
 
         return view('hospital.masters.index', [
             'slug' => $slug,

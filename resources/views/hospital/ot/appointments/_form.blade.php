@@ -28,11 +28,17 @@
     </div>
     <div class="rpc-field">
         <label class="form-label">Appointment Time</label>
+        @php
+            $currentAppointmentTime = old('appointment_time', $appointment->appointment_time ?? '');
+            $currentAppointmentTime = $currentAppointmentTime
+                ? \Carbon\Carbon::parse($currentAppointmentTime)->format('H:i')
+                : '';
+        @endphp
         <select name="appointment_time" id="appointment_time" class="form-select hms-select rpc-auto-open">
             <option value="">Select slot...</option>
             @foreach($slots as $slot)
                 @php $slotValue = \Carbon\Carbon::parse($slot->start_time)->format('H:i'); @endphp
-                <option value="{{ $slotValue }}" {{ old('appointment_time', $appointment->appointment_time ?? '') === $slotValue ? 'selected' : '' }}>
+                <option value="{{ $slotValue }}" {{ $currentAppointmentTime === $slotValue ? 'selected' : '' }}>
                     {{ $slot->slot_name }}
                     @if($slot->start_time && $slot->end_time)
                         ({{ \Carbon\Carbon::parse($slot->start_time)->format('h:i A') }} -

@@ -112,8 +112,62 @@ class DetailMasterController extends Controller
             || in_array($type, ['diagnosis', 'diagnoses', 'advice', 'advices'], true);
     }
 
+    /**
+     * Maps URL {type} slugs to their per-card permission feature key
+     * (see eye_exam_master_types() in config/permission_matrix.php).
+     */
+    private function featureKeyForType(string $type): string
+    {
+        return match ($type) {
+            'complaints', 'chief-complaints' => 'eye_exam_chief_complaints',
+            'kcos' => 'eye_exam_kco',
+            'hno' => 'eye_exam_hno',
+            'diagnosis', 'diagnoses' => 'eye_exam_diagnosis',
+            'advice', 'advices' => 'eye_exam_advice',
+            'vn' => 'eye_exam_vn',
+            'vngl' => 'eye_exam_vngl',
+            'vnst' => 'eye_exam_vnst',
+            'pnvn' => 'eye_exam_pnvn',
+            'nrvn' => 'eye_exam_nrvn',
+            'sph_cyl' => 'eye_exam_sph_cyl',
+            'axis' => 'eye_exam_axis',
+            'nct' => 'eye_exam_nct',
+            'disc' => 'eye_exam_disc',
+            'fr' => 'eye_exam_fr',
+            'sac' => 'eye_exam_sac',
+            'lid' => 'eye_exam_lid',
+            'conj' => 'eye_exam_conj',
+            'cornea' => 'eye_exam_cornea',
+            'ac' => 'eye_exam_ac',
+            'iris' => 'eye_exam_iris',
+            'pupil' => 'eye_exam_pupil',
+            'lens' => 'eye_exam_lens',
+            'em' => 'eye_exam_em',
+            'covertest' => 'eye_exam_covertest',
+            default => abort(404, 'Master type not found.'),
+        };
+    }
+
+    private function authorizeType(string $type, string $action): void
+    {
+        $feature = $this->featureKeyForType($type);
+        abort_unless($this->perm->can("{$feature}_{$action}"), 403, 'Access denied.');
+    }
+
+    private function authorizeAnyType(string $type): void
+    {
+        $feature = $this->featureKeyForType($type);
+        abort_unless(
+            $this->perm->canAny(["{$feature}_view", "{$feature}_add", "{$feature}_edit", "{$feature}_delete"]),
+            403,
+            'Access denied.'
+        );
+    }
+
     public function index(string $slug, string $type): View
     {
+        $this->authorizeAnyType($type);
+
         $modelClass = $this->resolveModel($type);
         $instance = new $modelClass;
 
@@ -142,19 +196,11 @@ class DetailMasterController extends Controller
         }
         $records = $query->get();
         $diagnoses = $this->isAdviceType($type) ? MasterDiagnosis::orderBy('value')->get() : collect();
-        abort_unless(
-            $this->perm->canAny([
-                'eye_exam_master_view',
-                'eye_exam_master_add',
-                'eye_exam_master_edit',
-                'eye_exam_master_delete',
-            ]),
-            403,
-            'Access denied.'
-        );
-        $canAdd = $this->perm->can('eye_exam_master_add');
-        $canEdit = $this->perm->can('eye_exam_master_edit');
-        $canDelete = $this->perm->can('eye_exam_master_delete');
+
+        $feature = $this->featureKeyForType($type);
+        $canAdd = $this->perm->can("{$feature}_add");
+        $canEdit = $this->perm->can("{$feature}_edit");
+        $canDelete = $this->perm->can("{$feature}_delete");
         $canWrite = $canAdd || $canEdit || $canDelete;
 
         return view(
@@ -165,7 +211,7 @@ class DetailMasterController extends Controller
 
     public function store(Request $request, string $slug, string $type): RedirectResponse
     {
-        abort_unless($this->perm->can('eye_exam_master_add'), 403, 'Access denied.');
+        $this->authorizeType($type, 'add');
 
         $modelClass = $this->resolveModel($type);
         $excludeCols = ['tenant_id', 'diagnosis_id', 'is_favourite'];
@@ -191,7 +237,7 @@ class DetailMasterController extends Controller
 
     public function update(Request $request, string $slug, string $type, int $id): RedirectResponse
     {
-        abort_unless($this->perm->can('eye_exam_master_edit'), 403, 'Access denied.');
+        $this->authorizeType($type, 'edit');
 
         $modelClass = $this->resolveModel($type);
         $record = $modelClass::findOrFail($id);
@@ -223,6 +269,7 @@ class DetailMasterController extends Controller
     public function toggleFavourite(string $slug, string $type, int $id)
     {
         abort_unless($this->hasFavourite($type), 404);
+        $this->authorizeType($type, 'edit');
 
         $record = $this->resolveModel($type)::findOrFail($id);
         $record->update(['is_favourite' => !$record->is_favourite]);
@@ -233,6 +280,7 @@ class DetailMasterController extends Controller
     public function syncByDiagnosis(Request $request, string $slug, string $type): RedirectResponse
     {
         abort_unless($this->isAdviceType($type), 404);
+        $this->authorizeType($type, 'edit');
 
         $request->validate([
             'link_diagnosis_id' => ['required', 'exists:tbl_master_diagnosis,id'],
@@ -261,7 +309,7 @@ class DetailMasterController extends Controller
 
     public function destroy(string $slug, string $type, int $id): RedirectResponse
     {
-        abort_unless($this->perm->can('eye_exam_master_delete'), 403, 'Access denied.');
+        $this->authorizeType($type, 'delete');
 
         $modelClass = $this->resolveModel($type);
         $record = $modelClass::findOrFail($id);
