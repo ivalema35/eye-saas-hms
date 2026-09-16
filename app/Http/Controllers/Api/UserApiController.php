@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Role\Role;
+use App\Services\Auth\RolePermissionService;
 use App\Support\EmailRules;
 use App\Support\PhoneRules;
 use Carbon\Carbon;
@@ -15,16 +16,23 @@ use Illuminate\Validation\Rule;
 
 class UserApiController extends Controller
 {
+    public function __construct(private readonly RolePermissionService $permissionService)
+    {
+    }
+
     // ── GET /config/users ──────────────────────────────────────────────────────
 
     public function index(Request $request): JsonResponse
     {
-        $query = HospitalUser::with('role')
-            ->where(function ($q) {
-                // Include users with no role, or users with non-admin roles
-                $q->whereDoesntHave('role')
-                  ->orWhereHas('role', fn ($rq) => $rq->where('slug', '!=', 'hospital_admin'));
-            });
+        $visibleRoleIds = $this->rolesAllowedFor($request, ['view'])->pluck('id');
+
+        $query = HospitalUser::with('role');
+
+        if ($request->user()->role?->is_super) {
+            $query->where(fn ($q) => $q->whereNull('role_id')->orWhereIn('role_id', $visibleRoleIds));
+        } else {
+            $query->whereIn('role_id', $visibleRoleIds);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -36,6 +44,7 @@ class UserApiController extends Controller
         }
 
         if ($request->filled('role_id')) {
+            abort_unless($visibleRoleIds->contains($request->integer('role_id')), 403, 'Access denied.');
             $query->where('role_id', $request->integer('role_id'));
         }
 
@@ -62,12 +71,9 @@ class UserApiController extends Controller
 
     // ── GET /config/users/form-data ────────────────────────────────────────────
 
-    public function formData(): JsonResponse
+    public function formData(Request $request): JsonResponse
     {
-        $roles = Role::where('slug', '!=', 'hospital_admin')
-            ->orderBy('name')
-            ->with('grantedPermissions')
-            ->get();
+        $roles = $this->rolesAllowedFor($request, ['add', 'edit']);
 
         return response()->json([
             'success' => true,
@@ -79,6 +85,8 @@ class UserApiController extends Controller
                     'color'          => $r->color ?? '#1B4F72',
                     'is_super'       => (bool) $r->is_super,
                     'is_doctor_role' => $this->isDoctorRole($r),
+                    'can_add'        => $this->canManageCategory($request, $this->roleCategory($r), 'add'),
+                    'can_edit'       => $this->canManageCategory($request, $this->roleCategory($r), 'edit'),
                 ]),
                 'doctor_types' => [
                     ['value' => 'primary',   'label' => 'Primary (Ophthalmologist)'],
@@ -93,6 +101,7 @@ class UserApiController extends Controller
     public function show(Request $request, string $slug, string $id): JsonResponse
     {
         $user = HospitalUser::with('role.grantedPermissions')->findOrFail($id);
+        $this->authorizeTarget($request, $user, 'view');
         $viewerIsAdmin = (bool) $request->user()->role?->is_super;
 
         return response()->json([
@@ -105,15 +114,15 @@ class UserApiController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if (! $request->user()->role?->is_super) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
-        }
-
         $validated = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
-            'email'            => [...EmailRules::required(), 'unique:hospital_users,email'],
+            'email'            => [
+                ...EmailRules::required(),
+                Rule::unique('hospital_users', 'email')
+                    ->where(fn ($query) => $query->where('tenant_id', (int) app('tenant')->id)),
+            ],
             'contact'          => PhoneRules::nullable(),
-            'role_id'          => ['required', 'integer', 'exists:roles,id'],
+            'role_id'          => ['required', 'integer'],
             'password'         => ['required', 'string', 'min:8', 'confirmed'],
             'status'           => ['required', 'in:active,inactive'],
             // Doctor fields
@@ -125,6 +134,9 @@ class UserApiController extends Controller
             'signature'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
         ], array_merge(EmailRules::messages('email'), PhoneRules::messages('contact')));
+
+        $role = $this->findAssignableRole((int) $validated['role_id']);
+        $this->authorizeCategory($request, $this->roleCategory($role), 'add');
 
         $tenantId = (int) config('app.tenant_id');
 
@@ -153,7 +165,7 @@ class UserApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: (bool) $request->user()->role?->is_super),
             'message' => 'User created successfully.',
         ], 201);
     }
@@ -162,17 +174,18 @@ class UserApiController extends Controller
 
     public function update(Request $request, string $slug, string $id): JsonResponse
     {
-        if (! $request->user()->role?->is_super) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
-        }
-
-        $user = HospitalUser::findOrFail($id);
+        $user = HospitalUser::with('role')->findOrFail($id);
 
         $validated = $request->validate([
             'name'             => ['required', 'string', 'max:255'],
-            'email'            => [...EmailRules::required(), Rule::unique('hospital_users', 'email')->ignore($user->id)],
+            'email'            => [
+                ...EmailRules::required(),
+                Rule::unique('hospital_users', 'email')
+                    ->where(fn ($query) => $query->where('tenant_id', (int) app('tenant')->id))
+                    ->ignore($user->id),
+            ],
             'contact'          => PhoneRules::nullable(),
-            'role_id'          => ['required', 'integer', 'exists:roles,id'],
+            'role_id'          => ['required', 'integer'],
             'password'         => ['nullable', 'string', 'min:8', 'confirmed'],
             'status'           => ['required', 'in:active,inactive'],
             // Doctor fields
@@ -188,6 +201,10 @@ class UserApiController extends Controller
             'clear_profile_photo'=> ['nullable', 'boolean'],
             'expected_updated_at'=> ['nullable', 'date'],
         ], array_merge(EmailRules::messages('email'), PhoneRules::messages('contact')));
+
+        $destinationRole = $this->findAssignableRole((int) $validated['role_id']);
+        $this->authorizeTarget($request, $user, 'edit');
+        $this->authorizeCategory($request, $this->roleCategory($destinationRole), 'edit');
 
         // Optimistic concurrency check — reject a save if the record changed
         // elsewhere (web/another platform) since the client last fetched it.
@@ -240,6 +257,10 @@ class UserApiController extends Controller
             'profile_photo_path'=> $profilePhotoPath,
         ]);
 
+        if ($user->status === 'inactive') {
+            $user->tokens()->delete();
+        }
+
         if (! empty($validated['password'])) {
             $user->password = $validated['password'];
             $user->original_password = $validated['password'];
@@ -250,7 +271,7 @@ class UserApiController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: true),
+            'data'    => $this->formatUser($user, full: true, viewerIsAdmin: (bool) $request->user()->role?->is_super),
             'message' => 'User updated successfully.',
         ]);
     }
@@ -260,6 +281,7 @@ class UserApiController extends Controller
     public function destroy(Request $request, string $slug, string $id): JsonResponse
     {
         $user = HospitalUser::findOrFail($id);
+        $this->authorizeTarget($request, $user, 'delete');
 
         if ($user->id === $request->user()->id) {
             return response()->json([
@@ -268,6 +290,7 @@ class UserApiController extends Controller
             ], 403);
         }
 
+        $user->tokens()->delete();
         $user->delete();
 
         return response()->json(['success' => true, 'message' => 'User deleted successfully.']);
@@ -277,13 +300,14 @@ class UserApiController extends Controller
 
     public function toggleStatus(Request $request, string $slug, string $id): JsonResponse
     {
-        if (! $request->user()->role?->is_super) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
-        }
-
-        $user = HospitalUser::findOrFail($id);
+        $user = HospitalUser::with('role')->findOrFail($id);
+        $this->authorizeTarget($request, $user, 'edit');
         $user->status = $user->status === 'active' ? 'inactive' : 'active';
         $user->save();
+
+        if ($user->status === 'inactive') {
+            $user->tokens()->delete();
+        }
 
         return response()->json([
             'success' => true,
@@ -350,6 +374,87 @@ class UserApiController extends Controller
             || in_array('exam_secondary', $keys, true)
             || in_array('opd.exam.primary', $keys, true)
             || in_array('opd.exam.secondary', $keys, true);
+    }
+
+    /**
+     * User CRUD permissions are category-specific. Keep the category definition
+     * aligned with the web user's role filters; custom/operational roles fall
+     * under OT staff unless their name/slug clearly identifies another category.
+     */
+    private function roleCategory(Role $role): string
+    {
+        $slug = strtolower((string) $role->slug);
+        $name = strtolower((string) $role->name);
+
+        if (str_contains($slug, 'doctor') || str_contains($name, 'doctor')) {
+            return 'doctor';
+        }
+
+        if (str_contains($slug, 'reception') || str_contains($name, 'reception')) {
+            return 'reception';
+        }
+
+        return 'ot_staff';
+    }
+
+    private function categoryPermission(string $category, string $verb): string
+    {
+        return "user_{$category}_{$verb}";
+    }
+
+    private function canManageCategory(Request $request, string $category, string $verb): bool
+    {
+        return (bool) $request->user()->role?->is_super
+            || $this->permissionService->can($this->categoryPermission($category, $verb));
+    }
+
+    private function authorizeCategory(Request $request, string $category, string $verb): void
+    {
+        abort_unless($this->canManageCategory($request, $category, $verb), 403, 'Access denied.');
+    }
+
+    private function authorizeTarget(Request $request, HospitalUser $target, string $verb): void
+    {
+        abort_if($target->role?->is_super, 403, 'Hospital administrator accounts cannot be managed here.');
+
+        if (! $target->role) {
+            abort_unless($request->user()->role?->is_super, 403, 'Users without a role can only be managed by a hospital administrator.');
+
+            return;
+        }
+
+        $this->authorizeCategory($request, $this->roleCategory($target->role), $verb);
+    }
+
+    private function findAssignableRole(int $roleId): Role
+    {
+        return Role::query()
+            ->whereKey($roleId)
+            ->where('is_super', false)
+            ->where('slug', '!=', 'hospital_admin')
+            ->firstOrFail();
+    }
+
+    /**
+     * @param list<'view'|'add'|'edit'|'delete'> $verbs
+     */
+    private function rolesAllowedFor(Request $request, array $verbs)
+    {
+        return Role::query()
+            ->where('is_super', false)
+            ->where('slug', '!=', 'hospital_admin')
+            ->with('grantedPermissions')
+            ->orderBy('name')
+            ->get()
+            ->filter(function (Role $role) use ($request, $verbs): bool {
+                foreach ($verbs as $verb) {
+                    if ($this->canManageCategory($request, $this->roleCategory($role), $verb)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
     }
 
     private function storeFile(Request $request, string $field, int $tenantId): ?string

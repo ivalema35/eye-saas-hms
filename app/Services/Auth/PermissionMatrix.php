@@ -54,6 +54,23 @@ class PermissionMatrix
         return implode('|', self::crudKeys($feature));
     }
 
+    /** Pipe string containing one verb for every eye-exam detail master. */
+    public static function eyeExamDetailVerb(string $verb): string
+    {
+        $keys = [];
+
+        foreach (self::modules()['master']['features'] ?? [] as $featureKey => $feature) {
+            if (str_starts_with((string) $featureKey, 'eye_exam_')) {
+                $candidate = "{$featureKey}_{$verb}";
+                if (collect($feature['actions'] ?? [])->contains('key', $candidate)) {
+                    $keys[] = $candidate;
+                }
+            }
+        }
+
+        return implode('|', $keys);
+    }
+
     /**
      * Home dashboard widget permission keys (Roles → Dashboard → Home widgets).
      *

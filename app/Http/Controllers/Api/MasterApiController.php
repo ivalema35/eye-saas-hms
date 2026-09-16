@@ -37,12 +37,17 @@ use App\Models\Hospital\OT\OtSlot;
 use App\Support\PhoneRules;
 use App\Models\Hospital\OT\OtSurgeryType;
 use App\Models\Hospital\OT\OtType;
+use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class MasterApiController extends Controller
 {
+    public function __construct(private readonly RolePermissionService $permissionService)
+    {
+    }
+
     // ── Type → Model map ──────────────────────────────────────────────────────
 
     private function detailMap(): array
@@ -128,6 +133,50 @@ class MasterApiController extends Controller
         return $map[$type];
     }
 
+    private function detailFeature(string $type): string
+    {
+        return match ($type) {
+            'complaints', 'chief-complaints' => 'eye_exam_chief_complaints',
+            'kcos' => 'eye_exam_kco',
+            'hno' => 'eye_exam_hno',
+            'diagnoses', 'diagnosis' => 'eye_exam_diagnosis',
+            'advices', 'advice' => 'eye_exam_advice',
+            'vn' => 'eye_exam_vn',
+            'vngl' => 'eye_exam_vngl',
+            'vnst' => 'eye_exam_vnst',
+            'pnvn' => 'eye_exam_pnvn',
+            'nrvn' => 'eye_exam_nrvn',
+            'sph_cyl' => 'eye_exam_sph_cyl',
+            'axis' => 'eye_exam_axis',
+            'nct' => 'eye_exam_nct',
+            'disc' => 'eye_exam_disc',
+            'fr' => 'eye_exam_fr',
+            'sac' => 'eye_exam_sac',
+            'lid' => 'eye_exam_lid',
+            'conj' => 'eye_exam_conj',
+            'cornea' => 'eye_exam_cornea',
+            'ac' => 'eye_exam_ac',
+            'iris' => 'eye_exam_iris',
+            'pupil' => 'eye_exam_pupil',
+            'lens' => 'eye_exam_lens',
+            'em' => 'eye_exam_em',
+            'covertest' => 'eye_exam_covertest',
+            default => abort(404, "Master type '$type' not found."),
+        };
+    }
+
+    private function authorizeDetail(string $type, string $verb, bool $allowExamRead = false): void
+    {
+        $permissions = ["{$this->detailFeature($type)}_{$verb}"];
+
+        if ($allowExamRead && $verb === 'view') {
+            $permissions[] = 'exam_primary';
+            $permissions[] = 'exam_secondary';
+        }
+
+        abort_unless($this->permissionService->canAny($permissions), 403, 'Access denied.');
+    }
+
     private function ok(mixed $data, string $message = 'OK', int $code = 200): JsonResponse
     {
         return response()->json(['success' => true, 'data' => $data, 'message' => $message], $code);
@@ -151,6 +200,9 @@ class MasterApiController extends Controller
 
     public function detailIndex(string $slug, string $type): JsonResponse
     {
+        // Exam forms need these dropdowns even when the examiner cannot manage
+        // the corresponding master. All other callers need this type's view key.
+        $this->authorizeDetail($type, 'view', allowExamRead: true);
         $model = $this->resolveDetail($type);
         $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
@@ -172,6 +224,7 @@ class MasterApiController extends Controller
 
     public function detailStore(Request $request, string $slug, string $type): JsonResponse
     {
+        $this->authorizeDetail($type, 'add');
         $model = $this->resolveDetail($type);
         $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
@@ -195,6 +248,7 @@ class MasterApiController extends Controller
 
     public function detailUpdate(Request $request, string $slug, string $type, int $id): JsonResponse
     {
+        $this->authorizeDetail($type, 'edit');
         $model = $this->resolveDetail($type);
         $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
@@ -223,6 +277,7 @@ class MasterApiController extends Controller
 
     public function detailDestroy(string $slug, string $type, int $id): JsonResponse
     {
+        $this->authorizeDetail($type, 'delete');
         $model = $this->resolveDetail($type);
         $record = $model::findOrFail($id);
 
@@ -238,6 +293,7 @@ class MasterApiController extends Controller
     public function detailToggleFavourite(string $slug, string $type, int $id): JsonResponse
     {
         abort_unless($this->hasFavourite($type), 404);
+        $this->authorizeDetail($type, 'edit');
 
         $record = $this->resolveDetail($type)::findOrFail($id);
         $record->update(['is_favourite' => !$record->is_favourite]);

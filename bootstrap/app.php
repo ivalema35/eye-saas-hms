@@ -5,6 +5,7 @@ use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
 use App\Http\Middleware\CheckSubscriptionActive;
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\EnsureActiveHospitalApiUser;
 use App\Http\Middleware\HospitalAuth;
 use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\NormalizeEmailInput;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => CheckPermission::class,
             'role' => CheckRole::class,
             'platform.admin' => EnsurePlatformAdmin::class,
+            'hospital.user.active' => EnsureActiveHospitalApiUser::class,
         ]);
 
         // Lowercase email fields on every web/API request before validation

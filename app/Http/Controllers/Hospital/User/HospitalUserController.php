@@ -232,6 +232,10 @@ class HospitalUserController extends Controller
 
         $user->update($updateData);
 
+        if ($user->status === 'inactive') {
+            $user->tokens()->delete();
+        }
+
         return redirect()
             ->route('hospital.users.index', array_filter([
                 'slug' => $slug,
@@ -254,6 +258,7 @@ class HospitalUserController extends Controller
             'You cannot delete your own account.'
         );
 
+        $user->tokens()->delete();
         $user->delete();
 
         return redirect()
