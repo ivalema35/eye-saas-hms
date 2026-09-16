@@ -26,9 +26,9 @@
  * shares them itself. Flag to the user if a true single merged PDF is wanted later
  * — that would need a PDF-merge package added as a new dependency.
  *
- * PERMISSIONS: ot.billing.manage (single permission gates the whole group — verified
- *              against routes/hospital.php; the shipped PRD's per-endpoint
- *              ot.invoice.view split does not exist in the real route gating).
+ * PERMISSIONS: routes are split by endpoint semantics (invoice view, bill print,
+ *              discharge generation/finalization, certificate print). The legacy
+ *              ot_billing_manage grant remains an OR fallback for web compatibility.
  */
 
 namespace App\Http\Controllers\Api;

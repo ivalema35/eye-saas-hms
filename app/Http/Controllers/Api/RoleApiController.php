@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Role\Permission;
 use App\Models\Role\Role;
 use App\Services\Auth\RolePermissionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class RoleApiController extends Controller
 {
@@ -43,7 +44,7 @@ class RoleApiController extends Controller
     /**
      * Single role with its permission assignments grouped by module.
      */
-    public function show(string $slug, int $id): JsonResponse
+    public function show(Request $request, string $slug, int $id): JsonResponse
     {
         $role = Role::withCount('users')->find($id);
 
@@ -52,6 +53,9 @@ class RoleApiController extends Controller
         }
 
         $modules = $this->permService->getPermissionsForRoleUI($role->id);
+        if (! $request->user()->role?->is_super) {
+            $modules = $this->filterModulesByPermissionIds($modules, $this->assignablePermissionIds($request->user()));
+        }
 
         return response()->json([
             'success' => true,
@@ -75,32 +79,38 @@ class RoleApiController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $authUser = auth('sanctum')->user();
+        $authUser = $request->user();
+        $tenantId = (int) app('tenant')->id;
 
         $validated = $request->validate([
-            'name'           => ['required', 'string', 'max:100'],
-            'color'          => ['nullable', 'string', 'max:20'],
-            'description'    => ['nullable', 'string', 'max:500'],
+            'name'           => ['required', 'string', 'max:255'],
+            'color'          => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/', 'max:7'],
+            'description'    => ['nullable', 'string', 'max:255'],
             'permission_ids' => ['nullable', 'array'],
-            'permission_ids.*' => ['integer'],
+            'permission_ids.*' => ['integer', 'distinct', 'exists:permissions,id'],
         ]);
 
-        $role = Role::create([
-            'tenant_id'   => app('tenant')->id,
-            'name'        => $validated['name'],
-            'slug'        => Str::slug($validated['name'], '_'),
-            'description' => $validated['description'] ?? null,
-            'color'       => $validated['color'] ?? '#1B4F72',
-            'is_system'   => false,
-            'is_super'    => false,
-            'created_by'  => $authUser?->id,
-        ]);
+        $name = trim($validated['name']);
+        $roleSlug = Str::slug($name, '_');
+        $this->assertUniqueRole($tenantId, $name, $roleSlug);
+        $permissionIds = $this->validatedAssignablePermissionIds($authUser, $validated['permission_ids'] ?? []);
 
-        $this->permService->saveRolePermissions(
-            $role->id,
-            $validated['permission_ids'] ?? [],
-            $authUser?->id ?? 0
-        );
+        $role = DB::transaction(function () use ($authUser, $tenantId, $validated, $name, $roleSlug, $permissionIds): Role {
+            $role = Role::create([
+                'tenant_id'   => $tenantId,
+                'name'        => $name,
+                'slug'        => $roleSlug,
+                'description' => $validated['description'] ?? null,
+                'color'       => $validated['color'] ?? '#1B4F72',
+                'is_system'   => false,
+                'is_super'    => false,
+                'created_by'  => $authUser?->id,
+            ]);
+
+            $this->permService->saveRolePermissions($role->id, $permissionIds, $authUser?->id ?? 0);
+
+            return $role;
+        });
 
         return response()->json([
             'success' => true,
@@ -114,7 +124,8 @@ class RoleApiController extends Controller
      */
     public function update(Request $request, string $slug, int $id): JsonResponse
     {
-        $authUser = auth('sanctum')->user();
+        $authUser = $request->user();
+        $tenantId = (int) app('tenant')->id;
 
         $role = Role::withoutTenantScope()->find($id);
 
@@ -122,13 +133,35 @@ class RoleApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Role not found.'], 404);
         }
 
+        if (! $authUser->role?->is_super && ($role->is_system || $role->is_super)) {
+            return response()->json(['success' => false, 'message' => 'Only a hospital administrator may edit system roles.'], 403);
+        }
+
         $validated = $request->validate([
-            'name'           => ['sometimes', 'required', 'string', 'max:100'],
-            'color'          => ['nullable', 'string', 'max:20'],
-            'description'    => ['nullable', 'string', 'max:500'],
+            'name'           => ['sometimes', 'required', 'string', 'max:255'],
+            'color'          => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/', 'max:7'],
+            'description'    => ['nullable', 'string', 'max:255'],
             'permission_ids' => ['nullable', 'array'],
-            'permission_ids.*' => ['integer'],
+            'permission_ids.*' => ['integer', 'distinct', 'exists:permissions,id'],
         ]);
+
+        $requestedPermissionIds = array_key_exists('permission_ids', $validated)
+            ? $this->validatedAssignablePermissionIds($authUser, $validated['permission_ids'] ?? [])
+            : null;
+
+        if ((int) $authUser->role_id === $role->id && $requestedPermissionIds !== null) {
+            $currentIds = $role->grantedPermissions()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all();
+            if (array_diff($requestedPermissionIds, $currentIds) !== []) {
+                return response()->json(['success' => false, 'message' => 'You cannot elevate your own role.'], 403);
+            }
+        }
+
+        $permissionIds = $requestedPermissionIds;
+        if ($permissionIds !== null && ! $authUser->role?->is_super) {
+            $currentIds = $role->grantedPermissions()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all();
+            $hiddenExistingIds = array_diff($currentIds, $this->assignablePermissionIds($authUser));
+            $permissionIds = array_values(array_unique([...$permissionIds, ...$hiddenExistingIds]));
+        }
 
         $updateData = [
             'color'       => $validated['color']       ?? $role->color,
@@ -137,20 +170,21 @@ class RoleApiController extends Controller
 
         // System roles (Hospital Admin) name cannot be changed
         if (!$role->is_system && isset($validated['name'])) {
-            $updateData['name'] = $validated['name'];
-            $updateData['slug'] = Str::slug($validated['name'], '_');
+            $name = trim($validated['name']);
+            $roleSlug = Str::slug($name, '_');
+            $this->assertUniqueRole($tenantId, $name, $roleSlug, $role->id);
+            $updateData['name'] = $name;
+            $updateData['slug'] = $roleSlug;
         }
 
-        $role->update($updateData);
+        DB::transaction(function () use ($role, $updateData, $permissionIds, $authUser): void {
+            $role->update($updateData);
 
-        // Super roles bypass all permissions — don't overwrite their role_permissions
-        if (!$role->is_super && array_key_exists('permission_ids', $validated)) {
-            $this->permService->saveRolePermissions(
-                $role->id,
-                $validated['permission_ids'] ?? [],
-                $authUser?->id ?? 0
-            );
-        }
+            // Super roles bypass all permissions — don't overwrite their role_permissions.
+            if (! $role->is_super && $permissionIds !== null) {
+                $this->permService->saveRolePermissions($role->id, $permissionIds, $authUser?->id ?? 0);
+            }
+        });
 
         return response()->json([
             'success' => true,
@@ -193,10 +227,91 @@ class RoleApiController extends Controller
      * show()'s "permissions" key (roleId 0 = nothing granted yet), so
      * clients only need one parser for both endpoints.
      */
-    public function permissions(): JsonResponse
+    public function permissions(Request $request): JsonResponse
     {
         $modules = $this->permService->getPermissionsForRoleUI(0);
 
+        if (! $request->user()->role?->is_super) {
+            $modules = $this->filterModulesByPermissionIds(
+                $modules,
+                $this->assignablePermissionIds($request->user())
+            );
+        }
+
         return response()->json(['success' => true, 'data' => $modules]);
+    }
+
+    private function assertUniqueRole(int $tenantId, string $name, string $slug, ?int $ignoreId = null): void
+    {
+        if ($slug === '') {
+            throw ValidationException::withMessages(['name' => 'The role name must contain letters or numbers.']);
+        }
+
+        $query = Role::withoutTenantScope()
+            ->where('tenant_id', $tenantId)
+            ->where(function ($q) use ($name, $slug) {
+                $q->where('name', $name)->orWhere('slug', $slug);
+            });
+
+        if ($ignoreId !== null) {
+            $query->whereKeyNot($ignoreId);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages(['name' => 'A role with this name already exists for this hospital.']);
+        }
+    }
+
+    /** @return list<int> */
+    private function validatedAssignablePermissionIds($authUser, array $permissionIds): array
+    {
+        $permissionIds = array_values(array_unique(array_map('intval', $permissionIds)));
+
+        if ($authUser->role?->is_super) {
+            return $permissionIds;
+        }
+
+        $assignableIds = $this->assignablePermissionIds($authUser);
+
+        if (array_diff($permissionIds, $assignableIds) !== []) {
+            throw ValidationException::withMessages([
+                'permission_ids' => 'You may only assign permissions granted to your own role.',
+            ]);
+        }
+
+        return $permissionIds;
+    }
+
+    /** @return list<int> */
+    private function assignablePermissionIds($authUser): array
+    {
+        return $authUser->role?->grantedPermissions()
+            ->pluck('permissions.id')
+            ->map(fn ($id) => (int) $id)
+            ->all() ?? [];
+    }
+
+    private function filterModulesByPermissionIds(array $modules, array $allowedIds): array
+    {
+        foreach ($modules as $moduleKey => &$module) {
+            foreach ($module['features'] ?? [] as $featureKey => &$feature) {
+                $feature['permissions'] = array_values(array_filter(
+                    $feature['permissions'] ?? [],
+                    fn (array $permission) => in_array((int) $permission['id'], $allowedIds, true)
+                ));
+
+                if ($feature['permissions'] === []) {
+                    unset($module['features'][$featureKey]);
+                }
+            }
+            unset($feature);
+
+            if (($module['features'] ?? []) === []) {
+                unset($modules[$moduleKey]);
+            }
+        }
+        unset($module);
+
+        return $modules;
     }
 }

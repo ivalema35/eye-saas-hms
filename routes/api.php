@@ -227,7 +227,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 ->name('auth.logout');
 
             // Authenticated endpoints
-            Route::middleware(['auth:sanctum', 'subscription.active'])
+            Route::middleware(['auth:sanctum', 'hospital.user.active', 'subscription.active'])
                 ->group(function () {
 
                     // Dashboard
@@ -351,14 +351,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('masters/referrers', [MastersApiController::class, 'referrers'])->name('masters.referrers');
 
                     // Masters — detail CRUD (eye exam masters)
-                    Route::get('masters/detail/{type}',                        [MasterApiController::class, 'detailIndex']); // open — used by exam screens
+                    Route::get('masters/detail/{type}',                        [MasterApiController::class, 'detailIndex'])
+                        ->name('masters.detail.index')
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::eyeExamDetailVerb('view').'|exam_primary|exam_secondary');
                     Route::post('masters/detail/{type}',                       [MasterApiController::class, 'detailStore'])
-                        ->middleware('permission:eye_exam_master_add');
+                        ->name('masters.detail.store')
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::eyeExamDetailVerb('add'));
                     Route::put('masters/detail/{type}/{id}',                   [MasterApiController::class, 'detailUpdate'])
-                        ->middleware('permission:eye_exam_master_edit');
+                        ->name('masters.detail.update')
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::eyeExamDetailVerb('edit'));
                     Route::delete('masters/detail/{type}/{id}',                [MasterApiController::class, 'detailDestroy'])
-                        ->middleware('permission:eye_exam_master_delete');
-                    Route::post('masters/detail/{type}/{id}/toggle-favourite', [MasterApiController::class, 'detailToggleFavourite']); // open — doctor favourites
+                        ->name('masters.detail.destroy')
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::eyeExamDetailVerb('delete'));
+                    Route::post('masters/detail/{type}/{id}/toggle-favourite', [MasterApiController::class, 'detailToggleFavourite'])
+                        ->name('masters.detail.toggle-favourite')
+                        ->middleware('permission:'.\App\Services\Auth\PermissionMatrix::eyeExamDetailVerb('edit'));
 
                     // Masters — Case Types CRUD (list = any CRUD, same as web index)
                     Route::get('masters/case-types',         [MasterApiController::class, 'caseTypeIndex'])
@@ -637,26 +644,38 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     // OT Discharge Documents — Phase 6 of OT Workflow Upgrade
                     // (docs/ROUND3_OT_MOBILE_API_PRD_PLAN.md §11, FR-OT-33/35/36)
                     // ========================================================
-                    Route::prefix('ot/billing')->name('ot.billing.')->middleware('permission:ot_billing_manage')->group(function () {
-                        Route::get('bookings', [OtDischargeApiController::class, 'bookings'])->name('bookings');
+                    Route::prefix('ot/billing')->name('ot.billing.')->group(function () {
+                        Route::get('bookings', [OtDischargeApiController::class, 'bookings'])->name('bookings')
+                            ->middleware('permission:ot_invoice_view|ot_invoice_edit|ot_discharge_generate|ot_discharge_patient|ot_certificate_print|ot_bill_print|ot_billing_manage');
                     });
 
-                    Route::prefix('ot/bookings/{id}')->whereNumber('id')->middleware('permission:ot_billing_manage')->group(function () {
+                    Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::post('invoice/generate', [OtDischargeApiController::class, 'generateInvoice'])
-                            ->name('ot.invoice.generate');
+                            ->name('ot.invoice.generate')
+                            ->middleware('permission:ot_discharge_patient|ot_billing_manage');
                         Route::get('invoice', [OtDischargeApiController::class, 'invoiceDetail'])
-                            ->name('ot.invoice.detail');
+                            ->name('ot.invoice.detail')
+                            ->middleware('permission:ot_invoice_view|ot_invoice_edit|ot_billing_manage');
 
                         Route::prefix('print')->name('ot.print.')->group(function () {
-                            Route::get('invoice', [OtDischargeApiController::class, 'invoicePrint'])->name('invoice');
-                            Route::get('summary-bill', [OtDischargeApiController::class, 'summaryBillPrint'])->name('summary-bill');
-                            Route::get('discharge', [OtDischargeApiController::class, 'dischargePrint'])->name('discharge');
-                            Route::get('certificate', [OtDischargeApiController::class, 'certificatePrint'])->name('certificate');
-                            Route::get('medicine-slip', [OtDischargeApiController::class, 'medicineSlipPrint'])->name('medicine-slip');
-                            Route::get('prescription', [OtDischargeApiController::class, 'prescriptionPrint'])->name('prescription');
-                            Route::get('lens-slip', [OtDischargeApiController::class, 'lensSlipPrint'])->name('lens-slip');
-                            Route::get('followup-slip', [OtDischargeApiController::class, 'followupSlipPrint'])->name('followup-slip');
-                            Route::get('discharge-bundle', [OtDischargeApiController::class, 'printAllBundle'])->name('discharge-bundle');
+                            Route::get('invoice', [OtDischargeApiController::class, 'invoicePrint'])->name('invoice')
+                                ->middleware('permission:ot_bill_print|ot_billing_manage');
+                            Route::get('summary-bill', [OtDischargeApiController::class, 'summaryBillPrint'])->name('summary-bill')
+                                ->middleware('permission:ot_bill_print|ot_billing_manage');
+                            Route::get('discharge', [OtDischargeApiController::class, 'dischargePrint'])->name('discharge')
+                                ->middleware('permission:ot_discharge_generate|ot_billing_manage');
+                            Route::get('certificate', [OtDischargeApiController::class, 'certificatePrint'])->name('certificate')
+                                ->middleware('permission:ot_certificate_print|ot_billing_manage');
+                            Route::get('medicine-slip', [OtDischargeApiController::class, 'medicineSlipPrint'])->name('medicine-slip')
+                                ->middleware('permission:ot_discharge_generate|ot_billing_manage');
+                            Route::get('prescription', [OtDischargeApiController::class, 'prescriptionPrint'])->name('prescription')
+                                ->middleware('permission:ot_discharge_generate|ot_billing_manage');
+                            Route::get('lens-slip', [OtDischargeApiController::class, 'lensSlipPrint'])->name('lens-slip')
+                                ->middleware('permission:ot_discharge_generate|ot_billing_manage');
+                            Route::get('followup-slip', [OtDischargeApiController::class, 'followupSlipPrint'])->name('followup-slip')
+                                ->middleware('permission:ot_discharge_generate|ot_billing_manage');
+                            Route::get('discharge-bundle', [OtDischargeApiController::class, 'printAllBundle'])->name('discharge-bundle')
+                                ->middleware('permission:ot_discharge_generate|ot_billing_manage');
                         });
                     });
 
@@ -722,24 +741,24 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('reports/ot')->name('reports.ot.')->group(function () {
                         Route::get('/', [OtReportApiController::class, 'apiIndex'])
                             ->name('index')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|ot_reports_view');
                         Route::get('prescription/{patient}/pdf', [OtReportApiController::class, 'apiPrescriptionPdf'])
                             ->name('prescription-pdf')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|ot_reports_view');
                         Route::get('{type}', [OtReportApiController::class, 'apiShow'])
                             ->name('show')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|ot_reports_view');
                         Route::get('{type}/export', [OtReportApiController::class, 'export'])
                             ->name('export')
-                            ->middleware('permission:report_export');
+                            ->middleware('permission:report_export|ot_reports_export');
                         Route::get('{type}/export-pdf', [OtReportApiController::class, 'exportPdf'])
                             ->name('export-pdf')
-                            ->middleware('permission:report_export');
+                            ->middleware('permission:report_export|ot_reports_export');
                     });
 
                     Route::get('dashboard/ot-summary', [OtReportApiController::class, 'dashboardSummary'])
                         ->name('dashboard.ot-summary')
-                        ->middleware('permission:report_view');
+                        ->middleware('permission:report_view|ot_reports_view');
 
                     // Clinical Queue
                     Route::get('clinical-queue', [ClinicalQueueApiController::class, 'index'])
@@ -839,28 +858,29 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::prefix('reports')->name('reports.')->group(function () {
                         Route::get('/', [ReportsApiController::class, 'index'])
                             ->name('index')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|opd_reports_view');
                         Route::get('filter-data', [ReportsApiController::class, 'filterData'])
                             ->name('filter-data')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|opd_reports_view');
                         Route::get('channel-counts', [ReportsApiController::class, 'channelCounts'])
                             ->name('channel-counts')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|opd_reports_view');
                         Route::get('channel/{channel}', [ReportsApiController::class, 'showChannel'])
                             ->name('channel.show')
-                            ->middleware('permission:report_view');
+                            ->middleware('permission:report_view|opd_reports_view');
                         Route::get('export/excel', [ReportsApiController::class, 'exportExcel'])
                             ->name('export.excel')
-                            ->middleware('permission:report_export');
+                            ->middleware('permission:report_export|opd_reports_export');
                         Route::get('export/pdf', [ReportsApiController::class, 'exportPdf'])
                             ->name('export.pdf')
-                            ->middleware('permission:report_export');
+                            ->middleware('permission:report_export|opd_reports_export');
                     });
 
                     // Config — Users (CRUD) — granular keys (NOT *_manage expand).
                     // View-only must not pass mutate routes via manage→CRUD expand.
                     Route::get('config/users/form-data', [UserApiController::class, 'formData'])
-                        ->middleware('permission:user_doctor_view|user_reception_view|user_ot_staff_view');
+                        ->name('config.users.form-data')
+                        ->middleware('permission:user_doctor_add|user_doctor_edit|user_reception_add|user_reception_edit|user_ot_staff_add|user_ot_staff_edit');
                     Route::get('config/users', [UserApiController::class, 'index'])
                         ->middleware('permission:user_doctor_view|user_reception_view|user_ot_staff_view');
                     Route::post('config/users', [UserApiController::class, 'store'])
