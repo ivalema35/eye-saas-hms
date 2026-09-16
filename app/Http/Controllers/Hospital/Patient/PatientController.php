@@ -252,11 +252,11 @@ class PatientController extends Controller
         }
 
         if (! $this->permService->can('bill_print')) {
-            return redirect()->route('hospital.patients.show', ['slug' => $slug, 'patient' => $patient->id])
+            return redirect()->route('hospital.dashboard', ['slug' => $slug])
                 ->with('success', 'Patient registered successfully.');
         }
 
-        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create'])
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'dashboard'])
             ->with('success', 'Patient registered successfully.');
     }
 
@@ -311,11 +311,11 @@ class PatientController extends Controller
         $patient = $this->patientService->registerPhone($data, $tenant->id);
 
         if (! $this->permService->can('bill_print')) {
-            return redirect()->route('hospital.patients.show', ['slug' => $slug, 'patient' => $patient->id])
+            return redirect()->route('hospital.dashboard', ['slug' => $slug])
                 ->with('success', 'Phone appointment registered successfully.');
         }
 
-        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'create-phone'])
+        return redirect()->route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id, 'auto_print' => 1, 'return_to' => 'dashboard'])
             ->with('success', 'Phone appointment registered and ready for printing.');
     }
 
