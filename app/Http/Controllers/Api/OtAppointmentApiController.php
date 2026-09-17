@@ -36,7 +36,10 @@ class OtAppointmentApiController extends Controller
             $status = 'all';
         }
 
-        $query = OtAppointment::query()->with(['doctor:id,name', 'location:id,name']);
+        // convertedPatient.latestOtBooking is eager-loaded so the stage_label/
+        // stage_badge_class accessors below (same ones web's index.blade.php
+        // reads) stay N+1-safe across the whole page.
+        $query = OtAppointment::query()->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking']);
 
         if ($status !== 'all') {
             $query->where('status', $status);
@@ -60,7 +63,19 @@ class OtAppointmentApiController extends Controller
         $appointments = $query
             ->orderByDesc('appointment_date')
             ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', 25));
+            ->paginate((int) $request->integer('per_page', 25))
+            // Same granular stage web's index shows (Surgery Recommended, In
+            // Ward, Ready for OT, etc.) instead of the raw 4-value status —
+            // apps were previously blind to this and showed only the enum.
+            ->through(fn (OtAppointment $appt) => [
+                ...$appt->toArray(),
+                // appointment_number is a computed accessor (APT-000123),
+                // not a real column — never in toArray() on its own, so the
+                // apps' list/edit screens saw it as blank without this.
+                'appointment_number' => $appt->appointment_number,
+                'stage_label' => $appt->stage_label,
+                'stage_badge_class' => $appt->stage_badge_class,
+            ]);
 
         return response()->json(['success' => true, 'data' => $appointments]);
     }

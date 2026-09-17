@@ -137,11 +137,14 @@ class DoctorDashboardApiController extends Controller
         ];
 
         // ── DR Index helper ────────────────────────────────────────────────────
+        // Matches web's `$formatQueueNo` exactly (doctoredashboard.blade.php)
+        // — a plain '#' + the unpadded doctor_patient_no, no doctor prefix.
+        // Previously padded to 3 digits and prefixed with the doctor's own
+        // code (e.g. "DR-001"), which read as a patient-ID-like code instead
+        // of web's simple queue index (e.g. "#1"). See user report 2026-09-17.
         $buildIndex = function (Patient $p): string {
-            if (! $p->doctor_patient_no) return '-';
-            $prefix = $p->doctor?->doctor_prefix ?? '';
-            $padded = str_pad($p->doctor_patient_no, 3, '0', STR_PAD_LEFT);
-            return $prefix ? "{$prefix}-{$padded}" : "#{$padded}";
+            if (! $p->doctor_patient_no) return '—';
+            return '#' . (int) $p->doctor_patient_no;
         };
 
         // OT Doctors do not have OPD primary/secondary queues

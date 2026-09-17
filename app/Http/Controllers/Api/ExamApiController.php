@@ -44,6 +44,13 @@ class ExamApiController extends Controller
         $patient = Patient::findOrFail($patientId);
         $tenantId = app('tenant')->id;
         $validated = $request->validated();
+        // App-only: per-section progress autosaves pass is_final=false so an
+        // accidental back-navigation mid-exam doesn't stamp the patient as
+        // "Primary Done" everywhere. Web's own form only ever submits once
+        // and never sends this field, so it keeps stamping every time —
+        // untouched, since the shared service call below is unchanged.
+        $isFinal = $request->boolean('is_final', true);
+        $previousDoneAt = $patient->primary_done_at;
 
         $exam = $this->examinationService->savePrimary(
             $patient,
@@ -53,6 +60,10 @@ class ExamApiController extends Controller
             $tenantId,
             ! empty($validated['dilation_time']) ? (int) $validated['dilation_time'] : null
         );
+
+        if (! $isFinal) {
+            $patient->update(['primary_done_at' => $previousDoneAt]);
+        }
 
         return response()->json([
             'success' => true,
@@ -100,6 +111,14 @@ class ExamApiController extends Controller
         // Mobile sends advice inside exam_data; fall back to that if no top-level field
         $advice = $validated['advice'] ?? ($examData['advice'] ?? null);
 
+        // App-only: per-section progress autosaves pass is_final=false so an
+        // accidental back-navigation mid-exam doesn't stamp the patient as
+        // "Secondary Done" everywhere. Web's own form only ever submits once
+        // and never sends this field, so it keeps stamping every time —
+        // untouched, since the shared service call below is unchanged.
+        $isFinal = $request->boolean('is_final', true);
+        $previousDoneAt = $patient->secondary_done_at;
+
         $exam = $this->examinationService->saveSecondaryExam(
             $patient,
             (int) $validated['doctor_id'],
@@ -108,6 +127,10 @@ class ExamApiController extends Controller
             $tenantId,
             $advice
         );
+
+        if (! $isFinal) {
+            $patient->update(['secondary_done_at' => $previousDoneAt]);
+        }
 
         return response()->json([
             'success' => true,
