@@ -1544,7 +1544,7 @@ body.hms-body:has(.bento-page--receptionist) {
 
     {{-- Accountant: Pending Patients / Refunds / Completed (replaces OT Appointment card) --}}
     @if($isAccountantUser && $accountantPendingCount !== null)
-        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'today']) }}"
+        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'queue']) }}"
            class="bento-card span-4 text-decoration-none">
             <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
@@ -1574,7 +1574,7 @@ body.hms-body:has(.bento-page--receptionist) {
             </div>
         </a>
 
-        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'completed']) }}"
+        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'history']) }}"
            class="bento-card span-4 text-decoration-none">
             <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">

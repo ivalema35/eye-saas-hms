@@ -17,6 +17,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\OT\LensInventory;
@@ -34,6 +35,7 @@ use Illuminate\Validation\Rule;
 
 class OtAssistantApiController extends Controller
 {
+    use FiltersOtDeskLists;
     /** Fixed lens-type taxonomy — PDF §10, mirrors OtAssistantController::LENS_TYPES exactly. */
     public const LENS_TYPES = [
         'Accommodating', 'Aspheric', 'EDOF', 'Monofocal', 'Multifocal', 'Spherical', 'Toric', 'Trifocal',
@@ -58,31 +60,52 @@ class OtAssistantApiController extends Controller
         $assistantId = (int) $user->id;
         $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
 
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
             ->with([
-                'patient:id,first_name,middle_name,last_name,contact_no',
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
                 'otDoctor:id,name',
                 'otAssistant:id,name',
                 'payments',
-            ])
-            ->where('ot_status', OtBooking::STATUS_READY);
+            ]);
+
+        if ($isHistory) {
+            $query->whereIn('ot_status', [
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            $query->where('ot_status', OtBooking::STATUS_READY)
+                ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        }
 
         if (! $seeAll) {
             $query->where('ot_assistant_id', $assistantId);
         }
 
-        $bookings = $query
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', 25));
+        $bookings = $query->paginate((int) $request->integer('per_page', 25));
 
         // payment_status is a computed accessor, not a real column — see the
         // matching comment in OtAccountantApiController::bookings(). Safe
         // here since `payments` is already eager-loaded above.
         $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status']));
 
-        return response()->json(['success' => true, 'data' => $bookings]);
+        return response()->json([
+            'success' => true,
+            'data' => $bookings,
+            'meta' => [
+                'filter' => $activeFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+            ],
+        ]);
     }
 
     /**

@@ -6,6 +6,7 @@
      Appointments / Ward Management design. --}}
 
 @push('styles')
+    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         .ot-assistant-page {
             --ota2-primary: #1B4F72;
@@ -402,18 +403,30 @@
             </div>
 
             <div class="ota2-inner-panel">
-                <div class="ota2-card-header d-flex justify-content-between align-items-center flex-wrap">
+                <div class="ota2-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="ota2-title-wrap">
             <span class="ota2-title-icon">
                 <i class="bi bi-activity fs-4"></i>
             </span>
             <div>
+                            @php $isHistory = ($activeFilter ?? 'queue') === 'history'; @endphp
                             <h5 class="mb-0 fw-bold ota2-title">
-                    Surgery Queue
+                    {{ $isHistory ? 'Surgery History' : 'Surgery Queue' }}
                 </h5>
-                <div class="ota2-subtitle">Patients ready for OT — record the surgery.</div>
+                <div class="ota2-subtitle">
+                    {{ $isHistory
+                        ? 'Operated / discharged patients — view only.'
+                        : 'Patients ready for OT — record the surgery.' }}
+                </div>
             </div>
         </div>
+                    @include('hospital.ot.partials.desk-filters', [
+                        'slug' => $slug,
+                        'routeName' => 'hospital.ot.assistant.dashboard',
+                        'activeFilter' => $activeFilter ?? 'queue',
+                        'fromDate' => $fromDate ?? now()->toDateString(),
+                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                    ])
     </div>
 
     <div class="card-body p-0">
@@ -467,18 +480,21 @@
                                                     data-bs-toggle="modal" data-bs-target="#ota2ViewModal{{ $booking->id }}">
                                                     <i class="bi bi-eye-fill me-1"></i> View
                                                 </button>
-                                                @haspermission('ot_surgery_record')
-                                                <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                    class="btn btn-sm otd-operate-btn">
+                                                @if(!$isHistory)
+                                                    @haspermission('ot_surgery_record')
+                                                    <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                        class="btn btn-sm otd-operate-btn">
                                     <i class="bi bi-heart-pulse me-1"></i> Operate
                                 </a>
-                                                @endhaspermission
+                                                    @endhaspermission
+                                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
                                             <td colspan="{{ !empty($seeAll) ? 7 : 6 }}" class="text-center otd-empty-cell">
-                                                <i class="bi bi-inbox me-1"></i> No bookings ready for surgery.
+                                                <i class="bi bi-inbox me-1"></i>
+                                                {{ $isHistory ? 'No surgery history in this date range.' : 'No bookings ready for surgery.' }}
                                             </td>
                         </tr>
                     @endforelse
@@ -526,7 +542,7 @@
                     info: 'Showing _START_ to _END_ of _TOTAL_ entries',
                     infoEmpty: 'Showing 0 entries',
                     infoFiltered: '(filtered from _MAX_ total entries)',
-                    emptyTable: 'No bookings ready for surgery.',
+                    emptyTable: @json(($activeFilter ?? 'queue') === 'history' ? 'No surgery history in this date range.' : 'No bookings ready for surgery.'),
                     zeroRecords: 'No matching records found.',
                     paginate: { previous: 'Previous', next: 'Next' }
                 }

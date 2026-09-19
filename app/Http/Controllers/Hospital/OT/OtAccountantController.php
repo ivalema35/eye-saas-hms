@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtPayment;
 use App\Models\Hospital\OT\OtPreOp;
@@ -16,37 +17,57 @@ use Illuminate\View\View;
 
 class OtAccountantController extends Controller
 {
-    public function wardIndex(string $slug): View
+    use FiltersOtDeskLists;
+
+    public function wardIndex(Request $request, string $slug): View
     {
-        $bookings = OtBooking::query()
-            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments'])
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+
+        $bookingsQuery = OtBooking::query()
+            ->with([
+                'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no',
+                'patient.location:id,city,district,state',
+                'payments',
+                'otDoctor:id,name',
+            ]);
+
+        if ($isHistory) {
+            // Ward stage complete (ready for OT / operated / discharged).
+            $bookingsQuery->whereIn('ot_status', [
+                OtBooking::STATUS_READY,
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ]);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
             // Ward queue only while still on ward: paid / in ward / dilated.
-            // Once READY (OT Assistant assigned), patient leaves this list for assistant process.
-            ->whereIn('ot_status', [
-                OtBooking::STATUS_PAYMENT_VERIFIED,
-                OtBooking::STATUS_IN_WARD,
-                OtBooking::STATUS_DILATED,
-            ])
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->get();
+            $bookingsQuery
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                ])
+                ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        }
 
         return view('hospital.ot.accountant.ward', [
             'slug' => $slug,
-            'bookings' => $bookings,
+            'bookings' => $bookingsQuery->get(),
+            'activeFilter' => $activeFilter,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
         ]);
     }
 
     public function dashboard(Request $request, string $slug): View
     {
-        $filter = strtolower((string) $request->query('filter', 'today'));
-        // Legacy "all" → completed (accountant desk history).
-        if ($filter === 'all') {
-            $filter = 'completed';
-        }
-        if (! in_array($filter, ['today', 'completed', 'refunds'], true)) {
-            $filter = 'today';
-        }
+        $activeFilter = $this->resolveOtDeskFilter($request, ['queue', 'history', 'refunds'], 'queue');
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
         $bookingsQuery = OtBooking::query()
             ->with([
@@ -54,25 +75,23 @@ class OtAccountantController extends Controller
                 'patient.location:id,city,district,state',
                 'payments',
                 'refunds',
+                'otDoctor:id,name',
             ]);
 
-        if ($filter === 'today') {
-            // Pending payment queue — all counselled / partial-paid bookings awaiting
-            // collection. surgery_date is often null after Recommend Surgery (date set
-            // later), so do not require surgery_date = today or it never appears here.
+        if ($activeFilter === 'queue') {
+            // Pending payment queue — counselled / partial-paid awaiting collection.
             $bookingsQuery
                 ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
                 ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
                 ->orderBy('surgery_date')
                 ->orderByDesc('id');
-        } elseif ($filter === 'refunds') {
-            // Surgery refused — full refund pending or done.
+        } elseif ($activeFilter === 'refunds') {
             $bookingsQuery
                 ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
                 ->orderByDesc('updated_at')
                 ->orderByDesc('id');
         } else {
-            // Completed for accountant: payment done (payment_verified and onward), date-wise.
+            // Payment complete → All (history), date-wise.
             $bookingsQuery
                 ->whereIn('ot_status', [
                     OtBooking::STATUS_PAYMENT_VERIFIED,
@@ -81,10 +100,9 @@ class OtAccountantController extends Controller
                     OtBooking::STATUS_READY,
                     OtBooking::STATUS_OPERATED,
                     OtBooking::STATUS_DISCHARGED,
-                    OtBooking::STATUS_SURGERY_REFUSED,
-                ])
-                ->orderByDesc('surgery_date')
-                ->orderByDesc('id');
+                ]);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
         }
 
         $bookings = $bookingsQuery->get();
@@ -106,7 +124,9 @@ class OtAccountantController extends Controller
         return view('hospital.ot.accountant.dashboard', [
             'slug' => $slug,
             'bookings' => $bookings,
-            'activeFilter' => $filter,
+            'activeFilter' => $activeFilter,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
             'moneySummary' => $moneySummary,
         ]);
     }

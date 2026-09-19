@@ -16,6 +16,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtBooking;
@@ -27,6 +28,7 @@ use Illuminate\Validation\Rule;
 
 class OtWardApiController extends Controller
 {
+    use FiltersOtDeskLists;
     /** Statuses allowed to open / edit ward vitals (PDF Step 6-7) — same as web. */
     private const WARD_ALLOWED_STATUSES = [
         OtBooking::STATUS_PAYMENT_VERIFIED,
@@ -46,25 +48,48 @@ class OtWardApiController extends Controller
     public function bookings(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $bookings = OtBooking::query()
+        $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments'])
-            ->whereIn('ot_status', [
+            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments', 'otDoctor:id,name']);
+
+        if ($isHistory) {
+            $query->whereIn('ot_status', [
+                OtBooking::STATUS_READY,
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            $query->whereIn('ot_status', [
                 OtBooking::STATUS_PAYMENT_VERIFIED,
                 OtBooking::STATUS_IN_WARD,
                 OtBooking::STATUS_DILATED,
             ])
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', 25));
+                ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        }
+
+        $bookings = $query->paginate((int) $request->integer('per_page', 25));
 
         // payment_status is a computed accessor, not a real column — see the
         // matching comment in OtAccountantApiController::bookings(). Safe
         // here since `payments` is already eager-loaded above.
         $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status']));
 
-        return response()->json(['success' => true, 'data' => $bookings]);
+        return response()->json([
+            'success' => true,
+            'data' => $bookings,
+            'meta' => [
+                'filter' => $activeFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+            ],
+        ]);
     }
 
     /**

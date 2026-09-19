@@ -15,6 +15,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtConsent;
 use App\Models\Hospital\OT\OtCounselling;
@@ -27,20 +28,51 @@ use Illuminate\Validation\Rule;
 
 class OtCounsellorApiController extends Controller
 {
+    use FiltersOtDeskLists;
+
     public function bookings(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $bookings = OtBooking::query()
+        $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name'])
-            ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
-            ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', 25));
+            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name', 'payments']);
 
-        return response()->json(['success' => true, 'data' => $bookings]);
+        if ($isHistory) {
+            $query->whereIn('ot_status', [
+                OtBooking::STATUS_COUNSELLED,
+                OtBooking::STATUS_PAID,
+                OtBooking::STATUS_PAYMENT_VERIFIED,
+                OtBooking::STATUS_IN_WARD,
+                OtBooking::STATUS_DILATED,
+                OtBooking::STATUS_READY,
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+                OtBooking::STATUS_SURGERY_REFUSED,
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            $query->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
+                ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        }
+
+        $bookings = $query->paginate((int) $request->integer('per_page', 25));
+
+        return response()->json([
+            'success' => true,
+            'data' => $bookings,
+            'meta' => [
+                'filter' => $activeFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+            ],
+        ]);
     }
 
     /**

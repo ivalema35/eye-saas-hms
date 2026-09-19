@@ -24,6 +24,8 @@ design. --}}
                 </nav>
             </div>
 
+            @php $isHistory = ($activeFilter ?? 'queue') === 'history'; @endphp
+
             <div class="ot-inner-panel">
                 <div class="ot-card-header">
                     <div class="ot-title-wrap">
@@ -31,9 +33,16 @@ design. --}}
                             <i class="bi bi-chat-left-heart" style="font-size: 1.2rem;"></i>
                         </span>
                         <div class="flex-grow-1">
-                            <h5 class="ot-title">Awaiting Counselling</h5>
+                            <h5 class="ot-title">{{ $isHistory ? 'Counselled Patients' : 'Awaiting Counselling' }}</h5>
                         </div>
                     </div>
+                    @include('hospital.ot.partials.desk-filters', [
+                        'slug' => $slug,
+                        'routeName' => 'hospital.ot.counsellor.dashboard',
+                        'activeFilter' => $activeFilter ?? 'queue',
+                        'fromDate' => $fromDate ?? now()->toDateString(),
+                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                    ])
                 </div>
 
                 <div class="card-body p-0">
@@ -71,23 +80,33 @@ design. --}}
                                             <td><span class="ot-type-badge">{{ $booking->eye }}</span></td>
                                             <td>{{ $booking->ot_type }}</td>
                                             <td>
-                                                @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
+                                                @if($isHistory)
+                                                    <span class="ot-status-badge ot-status-booked">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span>
+                                                @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
                                                     <span class="ot-status-badge ot-status-recommended">Surgery Recommended</span>
                                                 @else
                                                     <span class="ot-status-badge ot-status-booked">Booked</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                <a href="{{ route('hospital.ot.counsellor.form', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                    class="btn btn-sm ot-view-btn">
-                                                    <i class="bi bi-chat-left-text me-1"></i> Counsel
-                                                </a>
+                                                @if($isHistory)
+                                                    <button type="button" class="btn btn-sm ot-view-btn"
+                                                        data-bs-toggle="modal" data-bs-target="#otDeskView{{ $booking->id }}">
+                                                        <i class="bi bi-eye-fill me-1"></i> View
+                                                    </button>
+                                                @else
+                                                    <a href="{{ route('hospital.ot.counsellor.form', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                        class="btn btn-sm ot-view-btn">
+                                                        <i class="bi bi-chat-left-text me-1"></i> Counsel
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="8" class="text-center ot-empty">
-                                                <i class="bi bi-inbox me-1"></i> No bookings awaiting counselling.
+                                                <i class="bi bi-inbox me-1"></i>
+                                                {{ $isHistory ? 'No counselled patients in this date range.' : 'No bookings awaiting counselling.' }}
                                             </td>
                                         </tr>
                                     @endforelse
@@ -98,7 +117,8 @@ design. --}}
                 </div>
             </div>
 
-            {{-- OT Workflow Upgrade — Phase 5: Payment Verification queue (PDF Step 6) --}}
+            @if(!$isHistory)
+            {{-- Payment Status panel — queue view only --}}
             <div class="ot-inner-panel">
                 <div class="ot-card-header">
                     <div class="ot-title-wrap">
@@ -154,11 +174,19 @@ design. --}}
                     </div>
                 </div>
             </div>
+            @endif
         </div>
     </div>
+
+    @if($isHistory)
+        @foreach($bookings as $booking)
+            @include('hospital.ot.partials.booking-view-modal', ['booking' => $booking, 'modalTitle' => 'Counselling Details'])
+        @endforeach
+    @endif
 @endsection
 
 @push('styles')
+    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                             OT Counsellor Dashboard — design refresh (hospital shell theme, #1B4F72).
@@ -556,8 +584,10 @@ design. --}}
                 });
             }
 
-            initOtTable('#otCounsellingTable', 'No bookings awaiting counselling.');
+            initOtTable('#otCounsellingTable', @json(($activeFilter ?? 'queue') === 'history' ? 'No counselled patients in this date range.' : 'No bookings awaiting counselling.'));
+            @if(($activeFilter ?? 'queue') !== 'history')
             initOtTable('#otPaymentStatusTable', 'No bookings paid yet.');
+            @endif
         });
     </script>
 @endpush
