@@ -272,7 +272,9 @@ class OtDischargeApiController extends Controller
 
         $lineItems = is_string($invoice->line_items) ? (json_decode($invoice->line_items, true) ?: []) : (array) $invoice->line_items;
 
-        return Pdf::loadView('hospital.ot.billing.summary_bill_print', compact('booking', 'invoice', 'lineItems'))
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.summary_bill_print', compact('booking', 'invoice', 'lineItems'));
+
+        return Pdf::loadHTML($html)
             ->setPaper('a5', 'portrait')
             ->download("SummaryBill_{$bookingId}.pdf");
     }
@@ -282,11 +284,14 @@ class OtDischargeApiController extends Controller
         $booking = $this->findWithDischargeRelations($bookingId);
         $surgery = $this->latestSurgery($bookingId);
 
-        return Pdf::loadView('hospital.ot.billing.discharge_print', [
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.discharge_print', [
             'booking' => $booking,
             'surgery' => $surgery,
             'wardMedicines' => $surgery?->medicinesForPrint() ?? [],
-        ])->setPaper('a5', 'portrait')
+        ]);
+
+        return Pdf::loadHTML($html)
+            ->setPaper('a5', 'portrait')
             ->download("Discharge_{$bookingId}.pdf");
     }
 
@@ -306,7 +311,9 @@ class OtDischargeApiController extends Controller
         $restDaysInput = (int) $request->integer('rest_days', 7);
         $restDays = $restDaysInput < 1 ? 7 : min(90, $restDaysInput);
 
-        return Pdf::loadView('hospital.ot.billing.certificate_print', compact('booking', 'surgery', 'restDays'))
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.certificate_print', compact('booking', 'surgery', 'restDays'));
+
+        return Pdf::loadHTML($html)
             ->setPaper('a5', 'portrait')
             ->download("Certificate_{$bookingId}.pdf");
     }
@@ -421,6 +428,34 @@ class OtDischargeApiController extends Controller
                 ])->values(),
             ],
         ]);
+    }
+
+    /**
+     * The `hospital.ot.billing.*_print` blades hide a floating "Print"
+     * button and a browser-preview-only backdrop (gray background, extra
+     * margin/padding/shadow around the page) behind `@media print` /
+     * `@media screen` respectively — correct for a real browser, which
+     * applies `@media print` when actually printing (hiding the button,
+     * resetting the preview chrome) and `@media screen` only for the
+     * on-screen preview. DomPDF, which renders this exact HTML for these
+     * three endpoints, does the opposite: it ignores `@media print`
+     * entirely (so the button never gets hidden) and DOES apply `@media
+     * screen` unconditionally (so the preview-only backdrop/margin/padding
+     * leaks into the "printed" PDF) — producing a baked-in Print button, a
+     * blank leading page, and content clipped past the page edge. Fixed
+     * here at the API layer only, by rendering the blade to an HTML string
+     * and stripping those two browser-only pieces before handing it to
+     * DomPDF — the blade file itself, and web's own browser-rendered
+     * print/preview (which never goes through this code path), are
+     * completely unaffected.
+     */
+    private function domPdfSafeHtml(string $view, array $data): string
+    {
+        $html = view($view, $data)->render();
+        $html = preg_replace('/<button[^>]*class="print-btn"[^>]*>.*?<\/button>/s', '', $html) ?? $html;
+        $html = preg_replace('/@media\s+screen\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
+
+        return $html;
     }
 
     private function findWithDischargeRelations(int $bookingId): OtBooking
