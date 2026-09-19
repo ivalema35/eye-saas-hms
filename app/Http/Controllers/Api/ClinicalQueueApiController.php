@@ -26,6 +26,11 @@ class ClinicalQueueApiController extends Controller
         }
 
         // ── Doctors ───────────────────────────────────────────────────────────
+        // Matches Hospital\Examination\ClinicalQueueController.php's own
+        // $doctorsQuery exactly — role slug/name is `doctor` only. This
+        // previously also matched `ot_assistant`, so the Queue Dashboard's
+        // doctor filter listed OT Assistants alongside real doctors; web
+        // never does this.
         $doctorModels = HospitalUser::query()
             ->where('tenant_id', $tenantId)
             ->active()
@@ -33,8 +38,8 @@ class ClinicalQueueApiController extends Controller
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($i) {
-                            $i->whereIn('slug', ['doctor', 'ot_assistant'])
-                                ->orWhereIn('name', ['doctor', 'ot_assistant']);
+                            $i->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })
