@@ -331,10 +331,17 @@ class DashboardController extends Controller
         }
 
         // ── Doctor cards (dashboard_clinical | dashboard_reception) ────
+        // Matches Hospital\Dashboard\DashboardController.php's own
+        // `$doctorCards` query exactly — `ot_doctor` (a legacy alias role
+        // slug for the doctor role, distinct from `ot_assistant`) alongside
+        // `doctor`. This previously said `ot_assistant`, which is a
+        // different role entirely — an actual OT Assistant staff member,
+        // not a doctor — so this "Doctor Overview" card row incorrectly
+        // included OT Assistants.
         $doctorCards = null;
         if (! $isDoctor && ($canSeeClinical || $canSeeReception)) {
             $allDoctors = HospitalUser::with('role:id,slug')
-                ->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_assistant']))
+                ->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                 ->where('status', 'active')
                 ->orderBy('name')
                 ->get(['id', 'role_id', 'name', 'doctor_type']);

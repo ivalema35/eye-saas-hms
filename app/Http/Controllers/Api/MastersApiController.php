@@ -32,14 +32,25 @@ class MastersApiController extends Controller
     {
         $tenantId = app('tenant')->id;
 
+        // Matches Hospital\Patient\PatientController.php's own $doctors query
+        // exactly (its create()/create-phone()/edit() all build it the same
+        // way) — role slug/name is `doctor` only. This previously also
+        // matched `ot_assistant`, so every "Doctor" dropdown fed by this one
+        // shared endpoint (Walk-in/Phone patient add, OT Appointment
+        // create/edit, etc.) incorrectly listed OT Assistants alongside real
+        // doctors; web never does this anywhere. `doctor_type` alone already
+        // only gets set for actual doctor-role users (see HospitalUser
+        // model), so the role-slug OR-clause is just a belt-and-suspenders
+        // catch for a doctor whose doctor_type happens to be null — not a
+        // door for other roles.
         $doctors = HospitalUser::where('tenant_id', $tenantId)
             ->where('status', 'active')
             ->where(function ($q) {
                 $q->whereNotNull('doctor_type')
                     ->orWhereHas('role', function ($r) {
                         $r->where(function ($inner) {
-                            $inner->whereIn('slug', ['doctor', 'ot_assistant'])
-                                ->orWhereIn('name', ['doctor', 'ot_assistant']);
+                            $inner->whereIn('slug', ['doctor'])
+                                ->orWhereIn('name', ['doctor']);
                         });
                     });
             })
