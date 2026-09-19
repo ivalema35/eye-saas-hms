@@ -22,18 +22,30 @@ Appointments / Ward Management / OT Assistant design. --}}
             </div>
 
             <div class="otb-inner-panel">
-                <div class="otb-card-header d-flex justify-content-between align-items-center flex-wrap">
+                <div class="otb-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                     <div class="otb-title-wrap">
                         <span class="otb-title-icon">
                             <i class="bi bi-receipt fs-4"></i>
                         </span>
                         <div>
+                            @php $isHistory = ($activeFilter ?? 'queue') === 'history'; @endphp
                             <h5 class="mb-0 fw-bold otb-title">
-                                Billing Desk
+                                {{ $isHistory ? 'Discharged Patients' : 'Billing Desk' }}
                             </h5>
-                            <div class="otb-subtitle">Generate invoices and print discharge documents.</div>
+                            <div class="otb-subtitle">
+                                {{ $isHistory
+                                    ? 'Completed discharges — view details and reprint documents.'
+                                    : 'Generate invoices and print discharge documents.' }}
+                            </div>
                         </div>
                     </div>
+                    @include('hospital.ot.partials.desk-filters', [
+                        'slug' => $slug,
+                        'routeName' => 'hospital.ot.billing.index',
+                        'activeFilter' => $activeFilter ?? 'queue',
+                        'fromDate' => $fromDate ?? now()->toDateString(),
+                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                    ])
                 </div>
 
                 <div class="card-body p-0">
@@ -72,50 +84,74 @@ Appointments / Ward Management / OT Assistant design. --}}
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                @haspermission('ot_billing_manage')
-                                                @if(!$hasInvoice)
-                                                    <form method="POST"
-                                                        action="{{ route('hospital.ot.invoice.generate', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                        class="d-inline-flex align-items-center gap-2">
-                                                        @csrf
-                                                        <input type="date" name="follow_up_date"
-                                                            class="form-control form-control-sm" style="width:auto;"
-                                                            value="{{ now()->addDays(7)->format('Y-m-d') }}" title="Follow-up date">
-                                                        <button type="submit" class="btn btn-sm otb-generate-btn">
-                                                            <i class="bi bi-file-earmark-plus me-1"></i> Generate
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                                @endhaspermission
+                                                @if($isHistory)
+                                                    <button type="button" class="btn btn-sm otb-print-btn me-1"
+                                                        data-bs-toggle="modal" data-bs-target="#otDeskView{{ $booking->id }}">
+                                                        <i class="bi bi-eye-fill me-1"></i> View
+                                                    </button>
+                                                    @if($hasInvoice)
+                                                        <div class="otb-action-group d-inline-flex flex-wrap justify-content-end gap-1">
+                                                            @haspermission('ot_bill_print')
+                                                            <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                                class="btn btn-sm otb-print-btn">
+                                                                <i class="bi bi-receipt-cutoff"></i> Bill Summary
+                                                            </a>
+                                                            @endhaspermission
+                                                            @haspermission('ot_discharge_generate')
+                                                            <a href="{{ route('hospital.ot.discharge.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                                class="btn btn-sm otb-print-btn otb-print-btn-discharge">
+                                                                <i class="bi bi-file-medical"></i> Discharge
+                                                            </a>
+                                                            @endhaspermission
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    @haspermission('ot_billing_manage')
+                                                    @if(!$hasInvoice)
+                                                        <form method="POST"
+                                                            action="{{ route('hospital.ot.invoice.generate', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                            class="d-inline-flex align-items-center gap-2">
+                                                            @csrf
+                                                            <input type="date" name="follow_up_date"
+                                                                class="form-control form-control-sm" style="width:auto;"
+                                                                value="{{ now()->addDays(7)->format('Y-m-d') }}" title="Follow-up date">
+                                                            <button type="submit" class="btn btn-sm otb-generate-btn">
+                                                                <i class="bi bi-file-earmark-plus me-1"></i> Generate
+                                                            </button>
+                                                        </form>
+                                                    @endif
+                                                    @endhaspermission
 
-                                                @if($hasInvoice)
-                                                    <div class="otb-action-group">
-                                                        @haspermission('ot_bill_print')
-                                                        <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                            class="btn btn-sm otb-print-btn">
-                                                            <i class="bi bi-receipt-cutoff"></i> Bill Summary
-                                                        </a>
-                                                        @endhaspermission
-                                                        @haspermission('ot_discharge_generate')
-                                                        <a href="{{ route('hospital.ot.discharge.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                            class="btn btn-sm otb-print-btn otb-print-btn-discharge">
-                                                            <i class="bi bi-file-medical"></i> Discharge
-                                                        </a>
-                                                        @endhaspermission
-                                                        @haspermission('ot_certificate_print')
-                                                        <a href="{{ route('hospital.ot.certificate.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                            class="btn btn-sm otb-print-btn">
-                                                            <i class="bi bi-patch-check"></i> Certificate
-                                                        </a>
-                                                        @endhaspermission
-                                                    </div>
+                                                    @if($hasInvoice)
+                                                        <div class="otb-action-group">
+                                                            @haspermission('ot_bill_print')
+                                                            <a href="{{ route('hospital.ot.summary-bill.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                                class="btn btn-sm otb-print-btn">
+                                                                <i class="bi bi-receipt-cutoff"></i> Bill Summary
+                                                            </a>
+                                                            @endhaspermission
+                                                            @haspermission('ot_discharge_generate')
+                                                            <a href="{{ route('hospital.ot.discharge.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                                class="btn btn-sm otb-print-btn otb-print-btn-discharge">
+                                                                <i class="bi bi-file-medical"></i> Discharge
+                                                            </a>
+                                                            @endhaspermission
+                                                            @haspermission('ot_certificate_print')
+                                                            <a href="{{ route('hospital.ot.certificate.print', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                                class="btn btn-sm otb-print-btn">
+                                                                <i class="bi bi-patch-check"></i> Certificate
+                                                            </a>
+                                                            @endhaspermission
+                                                        </div>
+                                                    @endif
                                                 @endif
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="5" class="text-center otb-empty-cell">
-                                                <i class="bi bi-inbox me-1"></i> No records available for billing.
+                                                <i class="bi bi-inbox me-1"></i>
+                                                {{ $isHistory ? 'No discharged patients in this date range.' : 'No records available for billing.' }}
                                             </td>
                                         </tr>
                                     @endforelse
@@ -127,9 +163,16 @@ Appointments / Ward Management / OT Assistant design. --}}
             </div>
         </div>
     </div>
+
+    @if(($activeFilter ?? 'queue') === 'history')
+        @foreach($bookings as $booking)
+            @include('hospital.ot.partials.booking-view-modal', ['booking' => $booking, 'modalTitle' => 'Discharge / Invoice Details'])
+        @endforeach
+    @endif
 @endsection
 
 @push('styles')
+    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                             Discharge & Invoices Index — design refresh (hospital shell theme, #1B4F72).
@@ -502,7 +545,7 @@ Appointments / Ward Management / OT Assistant design. --}}
                     info: 'Showing _START_ to _END_ of _TOTAL_ entries',
                     infoEmpty: 'Showing 0 entries',
                     infoFiltered: '(filtered from _MAX_ total entries)',
-                    emptyTable: 'No records available for billing.',
+                    emptyTable: @json(($activeFilter ?? 'queue') === 'history' ? 'No discharged patients in this date range.' : 'No records available for billing.'),
                     zeroRecords: 'No matching records found.',
                     paginate: { previous: 'Previous', next: 'Next' }
                 }

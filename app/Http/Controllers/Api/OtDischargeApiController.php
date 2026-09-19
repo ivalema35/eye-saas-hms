@@ -34,6 +34,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtDischargeSummary;
 use App\Models\Hospital\OT\OtSurgery;
@@ -45,18 +46,40 @@ use Symfony\Component\HttpFoundation\Response;
 
 class OtDischargeApiController extends Controller
 {
+    use FiltersOtDeskLists;
+
     public function bookings(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $bookings = OtBooking::query()
+        $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no'])
-            // Web tolerates legacy uppercase status values too (OtInvoiceController::index).
-            ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
-            ->orderByDesc('surgery_date')
-            ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', (int) config('app.pagination_limit', 25)));
+            ->with([
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
+                'otDoctor:id,name',
+                'payments',
+            ]);
+
+        if ($isHistory) {
+            $query->whereIn('ot_status', [
+                OtBooking::STATUS_DISCHARGED,
+                'DISCHARGED',
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            $query->whereIn('ot_status', [
+                OtBooking::STATUS_OPERATED,
+                'OPERATED',
+            ])
+                ->orderByDesc('surgery_date')
+                ->orderByDesc('id');
+        }
+
+        $bookings = $query->paginate((int) $request->integer('per_page', (int) config('app.pagination_limit', 25)));
 
         $invoiceBookingIds = DB::table('ot_invoices')
             ->where('tenant_id', $tenantId)
@@ -66,8 +89,8 @@ class OtDischargeApiController extends Controller
 
         // Append full_name (accessor, not auto-serialized) and the per-row
         // Generated/Pending invoice flag — mirrors web's $invoiceBookingIds
-        // membership check (OtInvoiceController.php:122) so the app can render
-        // the same badge without a second round trip per row.
+        // membership check so the app can render the same badge without a
+        // second round trip per row.
         $bookings->getCollection()->each(function (OtBooking $b) use ($invoiceBookingIds) {
             $b->patient?->append('full_name');
             $b->has_invoice = in_array($b->id, $invoiceBookingIds, true);
@@ -76,7 +99,12 @@ class OtDischargeApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => $bookings,
-            'meta' => ['invoice_booking_ids' => $invoiceBookingIds],
+            'meta' => [
+                'filter' => $activeFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+                'invoice_booking_ids' => $invoiceBookingIds,
+            ],
         ]);
     }
 

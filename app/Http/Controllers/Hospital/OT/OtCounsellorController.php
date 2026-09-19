@@ -15,6 +15,7 @@
 namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtConsent;
 use App\Models\Hospital\OT\OtCounselling;
@@ -29,39 +30,70 @@ use Illuminate\View\View;
 
 class OtCounsellorController extends Controller
 {
-    public function dashboard(string $slug): View
-    {
-        $bookings = OtBooking::query()
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name'])
-            ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
-            // Prefer doctor-recommended cases first (Phase A1), then receptionist bookings.
-            ->orderByRaw("CASE WHEN ot_status = ? THEN 0 ELSE 1 END", [OtBooking::STATUS_SURGERY_RECOMMENDED])
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->get();
+    use FiltersOtDeskLists;
 
-        // Payment status queue — shows bookings once billing has taken payment.
-        // Stays visible after payment is verified (docs/tulsi.md §2/§3) so Reception can
-        // see at a glance which of their counselled patients Accounts has finished with.
-        $paymentVerificationQueue = OtBooking::query()
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'payments'])
-            ->whereIn('ot_status', [
-                OtBooking::STATUS_PAID,
-                OtBooking::STATUS_PAYMENT_VERIFIED,
-                OtBooking::STATUS_IN_WARD,
-                OtBooking::STATUS_DILATED,
-                OtBooking::STATUS_READY,
-                OtBooking::STATUS_OPERATED,
-                OtBooking::STATUS_DISCHARGED,
-            ])
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->get();
+    public function dashboard(Request $request, string $slug): View
+    {
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+
+        $bookingsQuery = OtBooking::query()
+            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name', 'payments']);
+
+        if ($isHistory) {
+            // Counselling complete → visible in All (history), date-filtered.
+            $bookingsQuery
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_COUNSELLED,
+                    OtBooking::STATUS_PAID,
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                    OtBooking::STATUS_READY,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                    OtBooking::STATUS_SURGERY_REFUSED,
+                ]);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            $bookingsQuery
+                ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                // Prefer doctor-recommended cases first (Phase A1), then receptionist bookings.
+                ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
+                ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        }
+
+        $bookings = $bookingsQuery->get();
+
+        // Payment status panel — queue view only (Accounts progress for counselled cases).
+        $paymentVerificationQueue = collect();
+        if (! $isHistory) {
+            $paymentVerificationQueue = OtBooking::query()
+                ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'payments'])
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_PAID,
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                    OtBooking::STATUS_READY,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                ])
+                ->orderBy('surgery_date')
+                ->orderByDesc('id')
+                ->get();
+        }
 
         return view('hospital.ot.counsellor.dashboard', [
             'slug' => $slug,
             'bookings' => $bookings,
             'paymentVerificationQueue' => $paymentVerificationQueue,
+            'activeFilter' => $activeFilter,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
         ]);
     }
 

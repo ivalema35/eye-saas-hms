@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\OT\LensInventory;
@@ -21,6 +22,8 @@ use Illuminate\View\View;
 
 class OtAssistantController extends Controller
 {
+    use FiltersOtDeskLists;
+
     /**
      * Fixed lens-type taxonomy — PDF §10. Kept as a hardcoded list (not an
      * admin-configurable master) since it's a closed clinical vocabulary, not
@@ -34,38 +37,52 @@ class OtAssistantController extends Controller
     {
     }
 
-    public function dashboard(string $slug): View
+    public function dashboard(Request $request, string $slug): View
     {
         $user = auth('hospital_user')->user();
         $assistantId = (int) $user->id;
         $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
 
-        // Ready-for-surgery queue — absorbed from the old ot_doctor role (docs/tulsi.md §5).
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+
         $readyQuery = OtBooking::query()
             ->with([
-                'patient:id,first_name,middle_name,last_name,contact_no',
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
                 'otDoctor:id,name',
                 'otAssistant:id,name',
                 'payments',
-            ])
-            ->where('ot_status', OtBooking::STATUS_READY);
+            ]);
 
-        // Assigned OT Assistant sees only their queue; Hospital Admin sees all ready patients.
+        if ($isHistory) {
+            $readyQuery->whereIn('ot_status', [
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ]);
+            $this->applyOtDeskDateRange($readyQuery, $fromDate, $toDate);
+            $readyQuery->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            // Ready-for-surgery queue — absorbed from the old ot_doctor role (docs/tulsi.md §5).
+            $readyQuery->where('ot_status', OtBooking::STATUS_READY)
+                ->orderBy('surgery_date')
+                ->orderByDesc('id');
+        }
+
+        // Assigned OT Assistant sees only their queue; Hospital Admin sees all.
         if (! $seeAll) {
             $readyQuery->where('ot_assistant_id', $assistantId);
         }
 
-        $readyBookings = $readyQuery
-            ->orderBy('surgery_date')
-            ->orderByDesc('id')
-            ->get();
+        $readyBookings = $readyQuery->get();
 
-        // Lens workflow UI hidden — counselling already captures planned lens;
-        // routes/controllers kept for optional direct access / future use.
         return view('hospital.ot.assistant.dashboard', [
             'slug' => $slug,
             'readyBookings' => $readyBookings,
             'seeAll' => $seeAll,
+            'activeFilter' => $activeFilter,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
         ]);
     }
 

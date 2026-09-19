@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,16 +12,40 @@ use Illuminate\View\View;
 
 class OtInvoiceController extends Controller
 {
-    public function index(string $slug): View
+    use FiltersOtDeskLists;
+
+    public function index(Request $request, string $slug): View
     {
         $tenantId = (int) app('tenant')->id;
+        $activeFilter = $this->resolveOtDeskFilter($request);
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $bookings = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no'])
-            ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
-            ->orderByDesc('surgery_date')
-            ->orderByDesc('id')
-            ->get();
+        $bookingsQuery = OtBooking::query()
+            ->with([
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
+                'otDoctor:id,name',
+                'payments',
+            ]);
+
+        if ($isHistory) {
+            // Discharge complete → All (history), date-filtered.
+            $bookingsQuery->whereIn('ot_status', [
+                OtBooking::STATUS_DISCHARGED,
+                'DISCHARGED',
+            ]);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
+        } else {
+            // Queue: operated patients awaiting invoice / discharge docs.
+            $bookingsQuery
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_OPERATED,
+                    'OPERATED',
+                ])
+                ->orderByDesc('surgery_date')
+                ->orderByDesc('id');
+        }
 
         $invoiceBookingIds = DB::table('ot_invoices')
             ->where('tenant_id', $tenantId)
@@ -30,8 +55,11 @@ class OtInvoiceController extends Controller
 
         return view('hospital.ot.billing.index', [
             'slug' => $slug,
-            'bookings' => $bookings,
+            'bookings' => $bookingsQuery->get(),
             'invoiceBookingIds' => $invoiceBookingIds,
+            'activeFilter' => $activeFilter,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
         ]);
     }
 

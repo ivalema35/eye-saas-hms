@@ -28,11 +28,22 @@ Appointments page design. --}}
                             <i class="bi bi-hospital" style="font-size: 1.2rem;"></i>
                         </span>
                         <div class="flex-grow-1">
-                            <h5 class="ward-title">Ward Entry Queue</h5>
-                            <div class="ward-subtitle">Patients on the ward — paid, in ward, or dilated — before OT
-                                assignment.</div>
+                            @php $isHistory = ($activeFilter ?? 'queue') === 'history'; @endphp
+                            <h5 class="ward-title">{{ $isHistory ? 'Ward History' : 'Ward Entry Queue' }}</h5>
+                            <div class="ward-subtitle">
+                                {{ $isHistory
+                                    ? 'Patients who completed ward and moved to OT / discharge.'
+                                    : 'Patients on the ward — paid, in ward, or dilated — before OT assignment.' }}
+                            </div>
                         </div>
                     </div>
+                    @include('hospital.ot.partials.desk-filters', [
+                        'slug' => $slug,
+                        'routeName' => 'hospital.ot.ward.index',
+                        'activeFilter' => $activeFilter ?? 'queue',
+                        'fromDate' => $fromDate ?? now()->toDateString(),
+                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                    ])
                 </div>
 
                 <div class="card-body p-0">
@@ -74,16 +85,24 @@ Appointments page design. --}}
                                                 @endif
                                             </td>
                                             <td class="ward-actions-cell">
-                                                <a href="{{ route('hospital.ot.ward.show', ['slug' => $slug, 'booking' => $booking->id]) }}"
-                                                    class="ward-send-btn">
-                                                    <i class="bi bi-heart-pulse me-1"></i> Vitals &amp; Eye Drops
-                                                </a>
+                                                @if($isHistory)
+                                                    <button type="button" class="ward-send-btn"
+                                                        data-bs-toggle="modal" data-bs-target="#otDeskView{{ $booking->id }}">
+                                                        <i class="bi bi-eye-fill me-1"></i> View
+                                                    </button>
+                                                @else
+                                                    <a href="{{ route('hospital.ot.ward.show', ['slug' => $slug, 'booking' => $booking->id]) }}"
+                                                        class="ward-send-btn">
+                                                        <i class="bi bi-heart-pulse me-1"></i> Vitals &amp; Eye Drops
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
                                             <td colspan="6" class="text-center ward-empty">
-                                                <i class="bi bi-inbox me-1"></i> No records available for ward workflow.
+                                                <i class="bi bi-inbox me-1"></i>
+                                                {{ $isHistory ? 'No ward history in this date range.' : 'No records available for ward workflow.' }}
                                             </td>
                                         </tr>
                                     @endforelse
@@ -95,9 +114,16 @@ Appointments page design. --}}
             </div>
         </div>
     </div>
+
+    @if($isHistory)
+        @foreach($bookings as $booking)
+            @include('hospital.ot.partials.booking-view-modal', ['booking' => $booking, 'modalTitle' => 'Ward Patient Details'])
+        @endforeach
+    @endif
 @endsection
 
 @push('styles')
+    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                                     Ward Management Index — design refresh (hospital shell theme, #1B4F72).
@@ -212,6 +238,8 @@ Appointments page design. --}}
             padding: 1.15rem 1.5rem;
             display: flex;
             align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
             gap: 1rem;
         }
 
@@ -487,7 +515,7 @@ Appointments page design. --}}
                     info: 'Showing _START_ to _END_ of _TOTAL_ entries',
                     infoEmpty: 'Showing 0 entries',
                     infoFiltered: '(filtered from _MAX_ total entries)',
-                    emptyTable: 'No records available for ward workflow.',
+                    emptyTable: @json(($activeFilter ?? 'queue') === 'history' ? 'No ward history in this date range.' : 'No records available for ward workflow.'),
                     zeroRecords: 'No matching records found.',
                     paginate: { previous: 'Previous', next: 'Next' }
                 }

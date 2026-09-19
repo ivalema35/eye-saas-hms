@@ -30,6 +30,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtPayment;
 use App\Models\Hospital\OT\OtRefund;
@@ -41,6 +42,7 @@ use Illuminate\Validation\Rule;
 
 class OtAccountantApiController extends Controller
 {
+    use FiltersOtDeskLists;
     public function paymentStatus(string $slug, int $bookingId): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
@@ -71,30 +73,21 @@ class OtAccountantApiController extends Controller
     public function bookings(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
-        $filter = strtolower((string) $request->query('filter', 'today'));
-        if ($filter === 'all') {
-            $filter = 'completed';
-        }
-        if (! in_array($filter, ['today', 'completed', 'refunds'], true)) {
-            $filter = 'today';
-        }
+        $activeFilter = $this->resolveOtDeskFilter($request, ['queue', 'history', 'refunds'], 'queue');
+        $isHistory = $activeFilter === 'history';
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
             ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments', 'refunds']);
 
-        if ($filter === 'today') {
-            // Pending payment queue — all counselled / partial-paid bookings awaiting
-            // collection. surgery_date is often null after Recommend Surgery (date set
-            // later), so do not require surgery_date = today or it never appears here.
-            // Matches web exactly (web pull 2026-08-07). See
-            // WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §4/§9.
+        if ($activeFilter === 'queue') {
+            // Pending payment queue — matches web exactly.
             $query->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
                 ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
                 ->orderBy('surgery_date')
                 ->orderByDesc('id');
-        } elseif ($filter === 'refunds') {
-            // Surgery refused — full refund pending or done.
+        } elseif ($activeFilter === 'refunds') {
             $query->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
                 ->orderByDesc('updated_at')
                 ->orderByDesc('id');
@@ -106,8 +99,9 @@ class OtAccountantApiController extends Controller
                 OtBooking::STATUS_READY,
                 OtBooking::STATUS_OPERATED,
                 OtBooking::STATUS_DISCHARGED,
-                OtBooking::STATUS_SURGERY_REFUSED,
-            ])->orderByDesc('surgery_date')->orderByDesc('id');
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('surgery_date')->orderByDesc('id');
         }
 
         $bookings = $query->paginate((int) $request->integer('per_page', 20));
@@ -139,7 +133,16 @@ class OtAccountantApiController extends Controller
         ];
         $moneySummary['net'] = round($moneySummary['collected'] - $moneySummary['refunded'], 2);
 
-        return response()->json(['success' => true, 'data' => $bookings, 'meta' => ['filter' => $filter, 'money_summary' => $moneySummary]]);
+        return response()->json([
+            'success' => true,
+            'data' => $bookings,
+            'meta' => [
+                'filter' => $activeFilter,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
+                'money_summary' => $moneySummary,
+            ],
+        ]);
     }
 
     public function paymentFormData(string $slug, int $bookingId): JsonResponse
