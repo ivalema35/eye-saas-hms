@@ -197,9 +197,9 @@ class RolePermissionService
      * Save permissions for a role from the UI form submission.
      *
      * @param  array  $grantedPermissionIds  Array of permission IDs that were checked
-     * @param  int  $updatedBy  hospital_users.id who made the change
+     * @param  int|null  $updatedBy  hospital_users.id who made the change (null for system sync)
      */
-    public function saveRolePermissions(int $roleId, array $grantedPermissionIds, int $updatedBy): void
+    public function saveRolePermissions(int $roleId, array $grantedPermissionIds, ?int $updatedBy = null): void
     {
         $allPermissions = Permission::pluck('id')->toArray();
 

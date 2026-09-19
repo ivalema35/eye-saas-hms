@@ -458,8 +458,8 @@
         <div style="display:flex;align-items:center;gap:12px;">
             <div
                 style="width:72px;height:72px;border-radius:12px;background:#F8FAFC;border:1px solid #E5E7EB;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-                @if(hospital_logo_url())
-                    <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo"
+                @if(hospital_print_logo_url())
+                    <img src="{{ hospital_print_logo_url() }}" alt="{{ hospital_name() }} logo"
                         style="width:100%;height:100%;object-fit:contain;padding:8px;">
                 @else
                     <span style="font-size:28px;color:#1B4F72">👁</span>

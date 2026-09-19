@@ -763,8 +763,8 @@ $prescriptions = $exam?->prescriptions ?? collect();
         <div class="print-header d-none d-print-block mb-3 border-bottom border-dark pb-2">
             <div class="text-center mb-2">
                 <div class="print-logo" style="margin:0 auto 8px;">
-                    @if(hospital_logo_url())
-                        <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+                    @if(hospital_print_logo_url())
+                        <img src="{{ hospital_print_logo_url() }}" alt="{{ hospital_name() }} logo">
                     @else
                         <span>👁</span>
                     @endif

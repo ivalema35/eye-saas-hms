@@ -200,6 +200,16 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.rpc-grid--1 {
+    grid-template-columns: minmax(0, 220px);
+}
+
+.rpc-field--mrd .hms-input {
+    background: #eef2f6;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
 .rpc-field--span2 {
     grid-column: span 2;
 }
