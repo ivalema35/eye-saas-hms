@@ -234,9 +234,18 @@ class OtAppointmentApiController extends Controller
             return response()->json(['success' => true, 'data' => ['found' => false, 'appointments' => []]]);
         }
 
+        // Matches web's `Hospital\OT\OtAppointmentController::search()` exactly
+        // — this endpoint feeds the Add Patient form's "OT check-in search"
+        // (mirrored in the apps' walk-in patient form), which only makes
+        // sense for appointments that are (a) today's, since check-in is a
+        // same-day action, and (b) not already converted to a patient —
+        // without these two conditions, the picker previously surfaced
+        // stale/other-day appointments and ones already checked in.
         $query = OtAppointment::query()
             ->with(['doctor:id,name', 'location:id,name'])
-            ->whereIn('status', [OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED]);
+            ->whereIn('status', [OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED])
+            ->whereDate('appointment_date', now()->toDateString())
+            ->whereNull('converted_patient_id');
 
         if (preg_match('/^APT-?0*(\d+)$/i', $term, $matches)) {
             $query->where('appointment_seq', (int) $matches[1]);
@@ -253,6 +262,14 @@ class OtAppointmentApiController extends Controller
             'success' => true,
             'data' => [
                 'found' => $appointments->isNotEmpty(),
+                // `doctor`/`location` are nested {id, name} objects (not the
+                // flat `doctor_id`/`location_id` this endpoint sent before) so
+                // they parse the same way `OtAppointmentItem.fromJson` already
+                // reads them off the `/ot/appointments` list endpoint — the
+                // flat id/name fields were silently unusable by the apps'
+                // shared model (it only ever reads the nested shape), which
+                // meant a picked appointment's doctor/city could never
+                // auto-fill even though the data was in the payload.
                 'appointments' => $appointments->map(fn (OtAppointment $appointment) => [
                     'id' => $appointment->id,
                     'appointment_number' => $appointment->appointment_number,
@@ -266,8 +283,10 @@ class OtAppointmentApiController extends Controller
                     'occupation' => $appointment->occupation,
                     'referrer_id' => $appointment->referrer_id,
                     'location_id' => $appointment->location_id,
+                    'location' => $appointment->location ? ['id' => $appointment->location->id, 'name' => $appointment->location->name] : null,
                     'doctor_id' => $appointment->doctor_id,
                     'doctor_name' => $appointment->doctor?->name,
+                    'doctor' => $appointment->doctor ? ['id' => $appointment->doctor->id, 'name' => $appointment->doctor->name] : null,
                     'appointment_date' => optional($appointment->appointment_date)->format('d M Y'),
                 ])->values(),
             ],
