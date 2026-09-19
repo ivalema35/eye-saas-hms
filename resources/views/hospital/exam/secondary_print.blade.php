@@ -644,8 +644,8 @@
             <div class="doc-head">
                 <div class="doc-head__brand">
                     <div class="doc-head__mark">
-                        @if(hospital_logo_url())
-                            <img src="{{ hospital_logo_url() }}" alt="{{ hospital_name() }} logo">
+                        @if(hospital_print_logo_url())
+                            <img src="{{ hospital_print_logo_url() }}" alt="{{ hospital_name() }} logo">
                         @else
                             <span>👁</span>
                         @endif

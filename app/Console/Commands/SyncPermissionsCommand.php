@@ -350,7 +350,7 @@ class SyncPermissionsCommand extends Command
                     }
                 }
 
-                $permService->saveRolePermissions($role->id, $grantedIds, 0);
+                $permService->saveRolePermissions($role->id, $grantedIds, null);
             }
 
             $permService->flushTenantCache((int) $tenantId);

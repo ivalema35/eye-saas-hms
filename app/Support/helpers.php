@@ -258,6 +258,17 @@ if (! function_exists('hospital_logo_light_url')) {
     }
 }
 
+if (! function_exists('hospital_print_logo_url')) {
+    /**
+     * Logo for print / PDF on light paper — hospital logo if uploaded,
+     * otherwise the blue platform mark (not the white-on-dark sidebar asset).
+     */
+    function hospital_print_logo_url(): string
+    {
+        return hospital_logo_light_url();
+    }
+}
+
 if (! function_exists('hospital_sidebar_logo_url')) {
     function hospital_sidebar_logo_url(): string
     {

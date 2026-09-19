@@ -589,6 +589,8 @@ return [
                 'ot_consent_capture',
                 'ot_patient_list',
                 'ot_package_set',
+                'ot_invoice_view',
+                'ot_bill_print',
             ]
         ),
         'accountant' => [

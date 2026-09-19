@@ -47,6 +47,14 @@
                         </div>
                     </div>
 
+                    {{-- MRD — own line above appointment fields --}}
+                    <div class="rpc-grid rpc-grid--1">
+                        <div class="rpc-field rpc-field--mrd">
+                            <label class="form-label">MRD No.</label>
+                            <input type="text" value="{{ $nextMrd }}" class="form-control hms-input" readonly tabindex="-1">
+                        </div>
+                    </div>
+
                     {{-- Row 1 --}}
                     <div class="rpc-grid rpc-grid--6">
                         <div class="rpc-field">
@@ -68,10 +76,6 @@
                                 data-intl-phone placeholder="Same if blank">
                         </div>
                         <div class="rpc-field">
-                            <label class="form-label">MRD No.</label>
-                            <input type="text" value="{{ $nextMrd }}" class="form-control hms-input" readonly tabindex="-1">
-                        </div>
-                        <div class="rpc-field">
                             <label class="form-label">First Name <span class="req">*</span></label>
                             <input type="text" name="first_name" id="firstName" class="form-control hms-input" required
                                 placeholder="First name">
@@ -81,15 +85,15 @@
                             <input type="text" name="last_name" id="lastName" class="form-control hms-input" required
                                 placeholder="Surname">
                         </div>
-                    </div>
-
-                    {{-- Row 2 --}}
-                    <div class="rpc-grid rpc-grid--6">
                         <div class="rpc-field">
                             <label class="form-label">Middle Name</label>
                             <input type="text" name="middle_name" id="middleName" class="form-control hms-input"
                                 placeholder="Middle name">
                         </div>
+                    </div>
+
+                    {{-- Row 2 --}}
+                    <div class="rpc-grid rpc-grid--6">
                         <div class="rpc-field">
                             <label class="form-label">Case Type <span class="req">*</span></label>
                             <select name="case_id" id="caseSelect" class="form-control select2 hms-select rpc-auto-open"
@@ -130,10 +134,6 @@
                             <input type="text" id="state" class="form-control hms-input" readonly placeholder="Auto"
                                 tabindex="-1">
                         </div>
-                    </div>
-
-                    {{-- Row 3 --}}
-                    <div class="rpc-grid">
                         <div class="rpc-field">
                             <label class="form-label">Doctor <span class="req">*</span></label>
                             <select name="doctor_id" id="doctorSelect" class="form-control select2 hms-select rpc-auto-open"
@@ -144,6 +144,10 @@
                                 @endforeach
                             </select>
                         </div>
+                    </div>
+
+                    {{-- Row 3 --}}
+                    <div class="rpc-grid">
                         <div class="rpc-field">
                             <label class="form-label">Age <span class="req">*</span></label>
                             <input type="number" name="age" id="age" class="form-control hms-input" required

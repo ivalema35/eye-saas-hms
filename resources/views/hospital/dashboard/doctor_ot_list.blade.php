@@ -1,7 +1,7 @@
 @extends('hospital.layouts.app')
 @section('title', $consultOnly
     ? ($doctor ? 'OP Assigned — Dr. ' . $doctor->name : 'OP Assigned Patients')
-    : ($doctor ? 'OT — Dr. ' . $doctor->name : 'OT Patients'))
+: ($doctor ? 'OT — Dr. ' . $doctor->name : 'OT Patients'))
 {{-- Layout page-header intentionally unused — the heading, breadcrumb and
 list all sit inside one bordered card, matching the Medicine Master / Users /
 Roles / History panel design. --}}
@@ -59,46 +59,46 @@ Roles / History panel design. --}}
             @endif
 
             @unless($consultOnly)
-            <div class="card dot-premium-card border-0 mb-4">
-                <div class="card-body">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                        <span class="dot-filter-icon"><i class="bi bi-funnel-fill"></i></span>
-                        <strong class="dot-filter-title">Date Range Filter</strong>
-                    </div>
-                    <form method="GET" action="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}"
-                        class="dot-filter-form">
-                        <div class="dot-filter-fields">
-                            <div>
-                                <label class="form-label dot-form-label" for="date_range">Date range</label>
-                                <input type="text" id="date_range" class="form-control clinical-input" data-hms-date-range
-                                    data-start-name="start_date" data-end-name="end_date"
-                                    data-start-value="{{ $startDate }}" data-end-value="{{ $endDate }}"
-                                    placeholder="Select start → end date" autocomplete="off" readonly
-                                    style="min-width:220px;">
-                            </div>
-                            @if(($doctors ?? collect())->isNotEmpty())
-                                <div>
-                                    <label class="form-label dot-form-label" for="doctor_id">Doctor</label>
-                                    <select name="doctor_id" id="doctor_id" class="form-select clinical-input">
-                                        <option value="">All Doctors</option>
-                                        @foreach($doctors as $doc)
-                                            <option value="{{ $doc->id }}" @selected($doctorId === $doc->id)>Dr. {{ $doc->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            @elseif($doctorId)
-                                <input type="hidden" name="doctor_id" value="{{ $doctorId }}">
-                            @endif
-                            <div class="dot-filter-actions">
-                                <button type="submit" class="btn dot-btn-primary">Apply</button>
-                                <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}"
-                                    class="btn dot-btn-outline">Reset</a>
-                            </div>
+                <div class="card dot-premium-card border-0 mb-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="dot-filter-icon"><i class="bi bi-funnel-fill"></i></span>
+                            <strong class="dot-filter-title">Date Range Filter</strong>
                         </div>
-                    </form>
+                        <form method="GET" action="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}"
+                            class="dot-filter-form">
+                            <div class="dot-filter-fields">
+                                <div>
+                                    <label class="form-label dot-form-label" for="date_range">Date range</label>
+                                    <input type="text" id="date_range" class="form-control clinical-input" data-hms-date-range
+                                        data-start-name="start_date" data-end-name="end_date"
+                                        data-start-value="{{ $startDate }}" data-end-value="{{ $endDate }}"
+                                        placeholder="Select start → end date" autocomplete="off" readonly
+                                        style="min-width:220px;">
+                                </div>
+                                @if(($doctors ?? collect())->isNotEmpty())
+                                    <div>
+                                        <label class="form-label dot-form-label" for="doctor_id">Doctor</label>
+                                        <select name="doctor_id" id="doctor_id" class="form-select clinical-input">
+                                            <option value="">All Doctors</option>
+                                            @foreach($doctors as $doc)
+                                                <option value="{{ $doc->id }}" @selected($doctorId === $doc->id)>Dr. {{ $doc->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                @elseif($doctorId)
+                                    <input type="hidden" name="doctor_id" value="{{ $doctorId }}">
+                                @endif
+                                <div class="dot-filter-actions">
+                                    <button type="submit" class="btn dot-btn-primary">Apply</button>
+                                    <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug]) }}"
+                                        class="btn dot-btn-outline">Reset</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </div>
             @else
                 @if($doctorId)
                     <input type="hidden" value="{{ $doctorId }}">
@@ -236,10 +236,10 @@ Roles / History panel design. --}}
 @push('styles')
     <style>
         /*
-                              OT Patients (Doctor OT) — Design refresh
-                              Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                              Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-                            */
+                                      OT Patients (Doctor OT) — Design refresh
+                                      Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                                      Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+                                    */
 
         .dot-list-page {
             --dot-secondary: #1B4F72;
