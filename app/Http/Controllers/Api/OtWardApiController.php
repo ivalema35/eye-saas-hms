@@ -352,7 +352,7 @@ class OtWardApiController extends Controller
      */
     public function verificationHeader(string $slug, int $bookingId): JsonResponse
     {
-        $booking = $this->findBooking($bookingId, ['patient:id,patient_code,first_name,middle_name,last_name', 'otDoctor:id,name', 'otAssistant:id,name']);
+        $booking = $this->findBooking($bookingId, ['patient:id,doctor_id,patient_code,first_name,middle_name,last_name', 'patient.doctor:id,name', 'otDoctor:id,name', 'otAssistant:id,name']);
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
@@ -375,6 +375,12 @@ class OtWardApiController extends Controller
                 // on every reload — the app equivalent is showing/pre-filling
                 // whoever is currently assigned. See OT_WEB_PARITY_FIX_PRD.md §4.
                 'ot_doctor' => $booking->otDoctor,
+                // Web's Preparing/Hold/Complicated read-only field shows the
+                // PATIENT's OPD doctor ($booking->patient->doctor), not the
+                // booking's ot_doctor.
+                'opd_doctor' => $booking->patient?->doctor
+                    ? ['id' => $booking->patient->doctor->id, 'name' => $booking->patient->doctor->name]
+                    : null,
                 'ot_assistant' => $booking->otAssistant,
                 // Web embeds OT Assistant picker options on the ward show page
                 // under ot_ward_entry — do NOT force apps through /config/users.
