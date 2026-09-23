@@ -454,7 +454,20 @@ class UserApiController extends Controller
                 }
 
                 return false;
-            });
+            })
+            // Collection::filter() preserves original keys, so once any role
+            // in the middle of the alphabetically-ordered list is filtered
+            // out (which happens for any non-super user restricted to a
+            // subset of roles — e.g. a receptionist), the remaining keys are
+            // no longer sequential from 0. PHP's json_encode then emits a
+            // JSON *object* instead of an array for a non-sequential-keyed
+            // array, which broke both apps' `data['roles'] as List` cast
+            // (`type '_Map<String, dynamic>' is not a subtype of type
+            // 'List<dynamic>'`) for every non-admin caller. A Hospital Admin
+            // never filters anything out, so keys stayed sequential and this
+            // never showed up for that role. ->values() re-indexes to a
+            // guaranteed sequential array.
+            ->values();
     }
 
     private function storeFile(Request $request, string $field, int $tenantId): ?string

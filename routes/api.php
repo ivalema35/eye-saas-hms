@@ -477,6 +477,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->whereNumber('patientId')
                         ->middleware('permission:ot_surgery_recommend');
 
+                    // Surgery-type options for the Recommend Surgery sheet/dialog — gated
+                    // by the same permission as the recommend action itself, not the OT
+                    // Surgery Type masters-CRUD permission (see surgeryTypes() doc comment).
+                    Route::get('ot/recommend-surgery/surgery-types', [OtBookingApiController::class, 'surgeryTypes'])
+                        ->name('ot.recommend-surgery.surgery-types')
+                        ->middleware('permission:ot_surgery_recommend');
+
                     Route::get('dashboard/ot-receptionist', [OtBookingApiController::class, 'receptionistDashboard'])
                         ->name('dashboard.ot-receptionist')
                         ->middleware('permission:ot_patient_list');

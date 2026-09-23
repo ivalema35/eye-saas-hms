@@ -463,6 +463,8 @@ class DashboardController extends Controller
         $patients = Patient::with([
             'doctor:id,name,doctor_prefix',
             'location:id,city,district,state',
+            'masterCity.district',
+            'masterCity.state',
             'caseType:id,case_type',
             'referrer:id,name',
             'primaryExamination:id,patient_id,exam_data,dilation_time,updated_at',
@@ -480,6 +482,18 @@ class DashboardController extends Controller
             $arr = $p->toArray();
             $arr['full_name'] = $p->full_name;
             $arr['source'] = 'patient';
+            // Same city resolution as PatientApiController::locationArray() —
+            // the raw `location` relation is the old, deprecated Location
+            // table; every patient's real city lives on `masterCity` (falls
+            // back to `location` only if masterCity is unset). The plain
+            // eager-loaded `location` object above always showed "—" here
+            // because it was never populated via this accessor.
+            $arr['location'] = [
+                'id'       => $p->location_id,
+                'city'     => $p->cityName,
+                'district' => $p->districtName,
+                'state'    => $p->stateName,
+            ];
 
             // Same dilation-unlock computation as PatientApiController::index,
             // duplicated here since this query's filters (reception_id-scoped,
@@ -525,6 +539,11 @@ class DashboardController extends Controller
             ->map(function (OtAppointment $appt) {
                 $arr = $appt->toArray();
                 $arr['source'] = 'ot_appointment';
+                // Matches web's Hospital\Dashboard\DashboardController — an OT
+                // appointment isn't a patient yet, so its MRD column shows its
+                // own appointment number instead. Was missing entirely here,
+                // leaving the MRD column blank for every OT row.
+                $arr['patient_code'] = $appt->appointment_number;
 
                 return $arr;
             });
