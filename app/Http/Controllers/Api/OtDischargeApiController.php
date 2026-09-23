@@ -483,6 +483,31 @@ class OtDischargeApiController extends Controller
         $html = preg_replace('/<button[^>]*class="print-btn"[^>]*>.*?<\/button>/s', '', $html) ?? $html;
         $html = preg_replace('/@media\s+screen\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
 
+        // These print views rely entirely on a CSS `@page { margin: ... }`
+        // rule for their page margins (their own comment: "DomPDF ignores
+        // @media print — keep base layout margin-free"). A real browser
+        // (web's own print) honors that rule fine, but this server-side
+        // DomPDF render was not applying it, so mobile/tablet's downloaded
+        // PDF showed every document's text running edge-to-edge — no
+        // padding, nothing centered — while the same page printed fine from
+        // web. Rather than depend on `@page` margin support, wrap the
+        // rendered body in an explicit padded div, which DomPDF always
+        // honors regardless of `@page` behavior, and force the view's own
+        // `.page`/body margins to 0 so this wrapper is the only source of
+        // spacing (avoids doubling up if `@page` margin does also apply).
+        $html = preg_replace(
+            '/<body([^>]*)>(.*)<\/body>/is',
+            '<body$1><div style="padding:14mm;box-sizing:border-box;width:100%;">$2</div></body>',
+            $html,
+            1
+        ) ?? $html;
+        $html = preg_replace(
+            '/<\/head>/i',
+            '<style>body{margin:0 !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>',
+            $html,
+            1
+        ) ?? $html;
+
         return $html;
     }
 
