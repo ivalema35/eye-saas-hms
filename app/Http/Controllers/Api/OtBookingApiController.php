@@ -31,6 +31,36 @@ use Illuminate\Validation\Rule;
 
 class OtBookingApiController extends Controller
 {
+    /**
+     * Surgery-type options for the Recommend Surgery sheet/dialog.
+     *
+     * Web loads this list as part of the exam page itself
+     * (Examination\LoadsOtRecommendContext::otRecommendContext(), gated only
+     * by the exam page's own permission — exam_secondary/exam_primary/
+     * ot_surgery_recommend), never behind the separate OT Surgery Type
+     * *master-management* CRUD permission. The apps were instead calling
+     * the generic `GET /masters/ot-surgery-types` endpoint, which requires
+     * `PermissionMatrix::anyCrud('ot_surgery_type')` — a doctor role that
+     * can recommend surgery has no reason to also hold OT-masters CRUD
+     * permissions, so that call 403'd for such roles while it happened to
+     * succeed for roles that did (e.g. Hospital Admin), showing as an
+     * intermittent "Retry" in the sheet with no obvious cause. This mirrors
+     * web exactly: same query, gated by the same `ot_surgery_recommend`
+     * permission as the recommend action itself.
+     */
+    public function surgeryTypes(string $slug): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+
+        $otSurgeryTypes = DB::table('ot_surgery_types')
+            ->where('tenant_id', $tenantId)
+            ->whereNull('deleted_at')
+            ->orderBy('surgery_name')
+            ->get(['id', 'ot_type_id', 'surgery_name']);
+
+        return response()->json(['success' => true, 'data' => $otSurgeryTypes]);
+    }
+
     public function recommendSurgery(string $slug, Request $request, int $patientId): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;

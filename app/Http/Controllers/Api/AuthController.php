@@ -107,6 +107,36 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Same tenant-status gate as web's UnifiedLoginController/
+        // Hospital\Auth\LoginController — IdentifyTenant deliberately does
+        // NOT check status (it only checks existence), so a hospital still
+        // awaiting Eyenosis approval, or suspended/expired, must be blocked
+        // here instead. Previously missing entirely, which let the apps log
+        // straight in while web correctly refused the same account.
+        if ($tenant->status === 'pending') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your hospital registration is waiting for Eyenosis approval. You can login after it is accepted.',
+            ], 403);
+        }
+
+        if ($tenant->status === 'suspended') {
+            return response()->json([
+                'success' => false,
+                'message' => 'This hospital is suspended. Please contact support.',
+            ], 403);
+        }
+
+        $tenant->markExpiredIfNeeded();
+        $tenant->refresh();
+
+        if (! $tenant->hasAccess()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Your hospital plan has expired. Please contact the administrator.',
+            ], 403);
+        }
+
         // Stamp last login time
         $user->update(['last_login_at' => now()]);
 
