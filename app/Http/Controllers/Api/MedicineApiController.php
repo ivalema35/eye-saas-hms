@@ -21,7 +21,15 @@ class MedicineApiController extends Controller
                 $request->filled('search'),
                 fn ($q) => $q->where(function ($q2) use ($request) {
                     $s = $request->search;
+                    // Web's exam-page medicine search (secondary.blade.php's
+                    // client-side filter over `$medicinesForJs`) matches
+                    // name OR brand_name — this API-side search only matched
+                    // name/company, so a doctor searching by a medicine's
+                    // brand name (very common — that's what's on the box)
+                    // got zero results here despite web finding it fine
+                    // for the exact same medicine/search term.
                     $q2->where('name', 'like', "%{$s}%")
+                       ->orWhere('brand_name', 'like', "%{$s}%")
                        ->orWhere('company', 'like', "%{$s}%");
                 })
             )
