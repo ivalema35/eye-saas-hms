@@ -196,6 +196,24 @@ class MasterApiController extends Controller
         }
     }
 
+    /**
+     * Only the Advice master links to diagnoses on web — mirrors
+     * DetailMasterController::isAdviceType() (Hospital\Master, blade UI at
+     * masters/dynamic_index.blade.php's "Diagnosis" multi-select).
+     */
+    private function isAdviceType(string $type): bool
+    {
+        return in_array($type, ['advice', 'advices'], true);
+    }
+
+    /** @return array<int, array{id:int,value:string}> */
+    private function diagnosesPayload(object $record): array
+    {
+        return collect($record->diagnoses)
+            ->map(fn($d) => ['id' => $d->id, 'value' => $d->value])
+            ->all();
+    }
+
     // ── CRUD ──────────────────────────────────────────────────────────────────
 
     public function detailIndex(string $slug, string $type): JsonResponse
@@ -206,8 +224,12 @@ class MasterApiController extends Controller
         $model = $this->resolveDetail($type);
         $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
+        $isAdvice = $this->isAdviceType($type);
 
         $query = $model::query();
+        if ($isAdvice) {
+            $query->with('diagnoses');
+        }
         $hasFav
             ? $query->orderByDesc('is_favourite')->orderBy($valField)
             : $query->orderBy('id'); // preserve seeder insertion order (clinical/numeric order)
@@ -217,6 +239,7 @@ class MasterApiController extends Controller
             'value' => $r->{$valField},
             'is_favourite' => $hasFav ? (bool) $r->is_favourite : null,
             'is_seeded' => $this->isSeeded($r),
+            'diagnoses' => $isAdvice ? $this->diagnosesPayload($r) : [],
         ]);
 
         return $this->ok($data);
@@ -228,8 +251,15 @@ class MasterApiController extends Controller
         $model = $this->resolveDetail($type);
         $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
+        $isAdvice = $this->isAdviceType($type);
 
         $request->validate(['value' => ['required', 'string', 'max:255']]);
+        if ($isAdvice) {
+            $request->validate([
+                'diagnosis_ids' => ['nullable', 'array'],
+                'diagnosis_ids.*' => ['exists:tbl_master_diagnosis,id'],
+            ]);
+        }
 
         $payload = [$valField => trim($request->string('value'))];
         if ($hasFav) {
@@ -238,11 +268,17 @@ class MasterApiController extends Controller
 
         $record = $model::create($payload);
 
+        if ($isAdvice) {
+            $record->diagnoses()->sync($request->input('diagnosis_ids', []));
+            $record->load('diagnoses');
+        }
+
         return $this->ok([
             'id' => $record->id,
             'value' => $record->{$valField},
             'is_favourite' => $hasFav ? (bool) $record->is_favourite : null,
             'is_seeded' => false,
+            'diagnoses' => $isAdvice ? $this->diagnosesPayload($record) : [],
         ], 'Added successfully.', 201);
     }
 
@@ -252,6 +288,7 @@ class MasterApiController extends Controller
         $model = $this->resolveDetail($type);
         $hasFav = $this->hasFavourite($type);
         $valField = $this->valueField($type);
+        $isAdvice = $this->isAdviceType($type);
         $record = $model::findOrFail($id);
 
         if ($this->isSeeded($record)) {
@@ -259,6 +296,12 @@ class MasterApiController extends Controller
         }
 
         $request->validate(['value' => ['required', 'string', 'max:255']]);
+        if ($isAdvice) {
+            $request->validate([
+                'diagnosis_ids' => ['nullable', 'array'],
+                'diagnosis_ids.*' => ['exists:tbl_master_diagnosis,id'],
+            ]);
+        }
 
         $payload = [$valField => trim($request->string('value'))];
         if ($hasFav) {
@@ -267,11 +310,17 @@ class MasterApiController extends Controller
 
         $record->update($payload);
 
+        if ($isAdvice) {
+            $record->diagnoses()->sync($request->input('diagnosis_ids', []));
+            $record->load('diagnoses');
+        }
+
         return $this->ok([
             'id' => $record->id,
             'value' => $record->{$valField},
             'is_favourite' => $hasFav ? (bool) $record->is_favourite : null,
             'is_seeded' => false,
+            'diagnoses' => $isAdvice ? $this->diagnosesPayload($record) : [],
         ]);
     }
 

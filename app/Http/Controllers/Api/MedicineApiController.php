@@ -125,6 +125,7 @@ class MedicineApiController extends Controller
         return [
             'id'               => $m->id,
             'name'             => $m->name,
+            'brand_name'       => $m->brand_name,
             'usage_scope' => $m->usage_scope ?? 'opd',
             'medicine_type_id' => $m->medicine_type_id,
             'medicine_type'    => $m->medicineType ? ['id' => $m->medicineType->id, 'name' => $m->medicineType->name] : null,
