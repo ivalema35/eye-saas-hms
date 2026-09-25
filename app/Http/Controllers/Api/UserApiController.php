@@ -85,6 +85,7 @@ class UserApiController extends Controller
                     'color'          => $r->color ?? '#1B4F72',
                     'is_super'       => (bool) $r->is_super,
                     'is_doctor_role' => $this->isDoctorRole($r),
+                    'user_category'  => $this->roleCategory($r),
                     'can_add'        => $this->canManageCategory($request, $this->roleCategory($r), 'add'),
                     'can_edit'       => $this->canManageCategory($request, $this->roleCategory($r), 'edit'),
                 ]),
@@ -333,6 +334,7 @@ class UserApiController extends Controller
                 'color'          => $user->role->color ?? '#1B4F72',
                 'is_super'       => (bool) $user->role->is_super,
                 'is_doctor_role' => $this->isDoctorRole($user->role),
+                'user_category'  => $this->roleCategory($user->role),
             ] : null,
             'last_login_at'   => $user->last_login_at?->toISOString(),
             // Round-tripped by the app as `expected_updated_at` on the next
