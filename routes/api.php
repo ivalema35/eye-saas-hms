@@ -227,7 +227,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 ->name('auth.logout');
 
             // Authenticated endpoints
-            Route::middleware(['auth:sanctum', 'hospital.user.active', 'subscription.active'])
+            Route::middleware(['auth:sanctum', 'permissions.version', 'hospital.user.active', 'subscription.active'])
                 ->group(function () {
 
                     // Dashboard
@@ -279,6 +279,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
                     // Current user
                     Route::get('/auth/me', [AuthController::class, 'me'])->name('auth.me');
+                    Route::get('/modules', [AuthController::class, 'modules'])->name('modules');
 
                     // My Profile (self-edit)
                     Route::get('profile', [ProfileApiController::class, 'profileShow']);

@@ -3,14 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Middleware\AddPermissionsVersionHeader;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\PermissionMatrix;
+use App\Services\Auth\PermissionsVersion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * API Authentication Controller
@@ -23,6 +26,8 @@ use Illuminate\Support\Facades\Storage;
  */
 class AuthController extends Controller
 {
+    public function __construct(private readonly PermissionsVersion $versions) {}
+
     /**
      * Find Hospital — given an email or phone, returns the tenant slug.
      * Mobile app uses this to discover the slug before calling /auth/login.
@@ -140,17 +145,19 @@ class AuthController extends Controller
         // Stamp last login time
         $user->update(['last_login_at' => now()]);
 
-        $token = $user->createToken('mobile-token')->plainTextToken;
+        $newToken = $user->createToken('mobile-token');
 
         return response()->json([
             'success' => true,
             'data'    => [
-                'token'    => $token,
-                'user'     => $this->formatUser($user),
-                'hospital' => $this->formatHospital($tenant),
+                'token'      => $newToken->plainTextToken,
+                'expires_at' => $newToken->accessToken->expires_at?->toISOString(),
+                'user'       => $this->formatUser($user),
+                'hospital'   => $this->formatHospital($tenant),
+                ...$this->permissionContract($user),
             ],
             'message' => 'Login successful.',
-        ]);
+        ])->header(AddPermissionsVersionHeader::HEADER, $this->versions->for($user));
     }
 
     /**
@@ -172,17 +179,49 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->user()->loadMissing(['role.grantedPermissions']);
+        $token = $user->currentAccessToken();
 
         return response()->json([
             'success' => true,
             'data'    => [
-                'user'     => $this->formatUser($user),
-                'hospital' => $this->formatHospital(app('tenant')),
+                'user'       => $this->formatUser($user),
+                'hospital'   => $this->formatHospital(app('tenant')),
+                'expires_at' => $token instanceof PersonalAccessToken
+                    ? $token->expires_at?->toISOString()
+                    : null,
+                ...$this->permissionContract($user),
+            ],
+        ]);
+    }
+
+    /**
+     * Modules the authenticated user can reach — same list as /auth/me.
+     *
+     * GET /api/v1/{slug}/modules
+     */
+    public function modules(Request $request): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'modules' => $this->versions->modules($request->user()),
             ],
         ]);
     }
 
     // ── Private helpers ───────────────────────────────────────────────────
+
+    /**
+     * @return array{modules: list<array{key: string, label: string}>, scope: array<string, mixed>, permissions_version: string}
+     */
+    private function permissionContract(HospitalUser $user): array
+    {
+        return [
+            'modules'             => $this->versions->modules($user),
+            'scope'               => $this->versions->scope($user),
+            'permissions_version' => $this->versions->for($user),
+        ];
+    }
 
     private function formatUser(HospitalUser $user): array
     {

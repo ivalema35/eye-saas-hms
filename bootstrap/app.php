@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\AddPermissionsVersionHeader;
 use App\Http\Middleware\CheckGracePeriod;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckRole;
@@ -37,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => CheckRole::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'hospital.user.active' => EnsureActiveHospitalApiUser::class,
+            'permissions.version' => AddPermissionsVersionHeader::class,
         ]);
 
         // Lowercase email fields on every web/API request before validation
