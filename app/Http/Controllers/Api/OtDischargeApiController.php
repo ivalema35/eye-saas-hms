@@ -90,10 +90,20 @@ class OtDischargeApiController extends Controller
         // Append full_name (accessor, not auto-serialized) and the per-row
         // Generated/Pending invoice flag — mirrors web's $invoiceBookingIds
         // membership check so the app can render the same badge without a
-        // second round trip per row.
+        // second round trip per row. Also append discharge-print progress
+        // (web pull 2026-09-28) so the desk list can show "Prints 2/3" the
+        // same way `hospital/ot/billing/index.blade.php` now does, instead
+        // of the old (now-wrong) assumption that having an invoice means
+        // discharged.
         $bookings->getCollection()->each(function (OtBooking $b) use ($invoiceBookingIds) {
             $b->patient?->append('full_name');
             $b->has_invoice = in_array($b->id, $invoiceBookingIds, true);
+            $b->discharge_prints_done = $b->dischargePrintsDoneCount();
+            $b->discharge_prints_total = count(OtBooking::DISCHARGE_PRINTS);
+            // summary_bill_printed_at/discharge_printed_at/certificate_printed_at
+            // are real, uncast-hidden columns on OtBooking — already
+            // serialized automatically, no extra work needed here for the
+            // app to show a per-document checkmark.
         });
 
         return response()->json([
@@ -254,6 +264,21 @@ class OtDischargeApiController extends Controller
         return response()->json([
             'success' => true,
             'data' => $invoice,
+            // Web pull 2026-09-28: invoice generation no longer auto-discharges
+            // the booking — it only flips to `discharged` once all 3
+            // documents below are printed (OtBooking::markDischargePrinted()).
+            // The app re-fetches this endpoint after each print action to
+            // show live progress instead of assuming "discharged" the moment
+            // the invoice exists.
+            'booking' => [
+                'ot_status' => $booking->ot_status,
+                'discharged_at' => $booking->discharged_at,
+                'summary_bill_printed_at' => $booking->summary_bill_printed_at,
+                'discharge_printed_at' => $booking->discharge_printed_at,
+                'certificate_printed_at' => $booking->certificate_printed_at,
+                'discharge_prints_done' => $booking->dischargePrintsDoneCount(),
+                'discharge_prints_total' => count(OtBooking::DISCHARGE_PRINTS),
+            ],
         ]);
     }
 
