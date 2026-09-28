@@ -1,5 +1,6 @@
-{{-- Receptionist "Today Added Patients" — three separate tables (Walk-in / Phone / OT).
-     Tabs show/hide panes; mixed types cannot appear in one table. --}}
+{{-- Receptionist "Today Added Patients" — separate tables (Walk-in / Phone / OT / Patient Status).
+     Tabs show/hide panes. Primary-done patients stay in Walk-in until the secondary exam
+     (or an OT booking) moves them to Patient Status. --}}
 @php
     $wGreen = (int) hospital_setting('wait_green_max', 30);
     $wOrange = (int) hospital_setting('wait_orange_max', 60);
@@ -15,31 +16,43 @@
         'phone' => collect(),
         'walkin' => collect(),
         'ot' => collect(),
+        'status' => collect(),
     ];
     foreach ($receptionistTodayPatients as $p) {
         $src = (string) ($p->source ?? 'patient');
         $type = strtolower(trim((string) ($p->type ?? '')));
         if ($src === 'ot_appointment' || $type === 'ot') {
             $tapGroups['ot']->push($p);
-        } elseif ($type === 'phone' || $type === '1') {
+            continue;
+        }
+
+        $isPhoneType = $type === 'phone' || $type === '1';
+        if ($isPhoneType) {
             $tapGroups['phone']->push($p);
-        } else {
+        }
+        $pastPrimaryStage = $p->primary_done_at !== null
+            && ($p->secondary_done_at !== null || $p->workflowStage()['label'] !== 'Secondary Exam');
+        if ($pastPrimaryStage) {
+            $tapGroups['status']->push($p);
+        } elseif (! $isPhoneType) {
             $tapGroups['walkin']->push($p);
         }
     }
 
     $tapEmpty = [
         'phone' => 'No phone patients today',
-        'walkin' => 'No walk-in patients today',
+        'walkin' => 'No walk-in patients waiting',
         'ot' => 'No OT appointments today',
+        'status' => 'No patient has completed secondary exam yet',
     ];
 @endphp
 <div class="tap-panes"
     data-patient-count="{{ $receptionistTodayPatients->count() }}"
     data-tap-count-phone="{{ $tapGroups['phone']->count() }}"
     data-tap-count-walkin="{{ $tapGroups['walkin']->count() }}"
-    data-tap-count-ot="{{ $tapGroups['ot']->count() }}">
-    @foreach (['walkin', 'phone', 'ot'] as $tapKey)
+    data-tap-count-ot="{{ $tapGroups['ot']->count() }}"
+    data-tap-count-status="{{ $tapGroups['status']->count() }}">
+    @foreach (['walkin', 'phone', 'ot', 'status'] as $tapKey)
         <div class="tap-pane{{ $tapKey === 'walkin' ? ' is-active' : '' }}"
             data-tap-pane="{{ $tapKey }}"
             @if($tapKey !== 'walkin') hidden @endif>
@@ -55,7 +68,9 @@
                             <th>Doctor</th>
                             <th>DR Index</th>
                             <th>Status</th>
-                            <th style="text-align:center">Wait</th>
+                            @if($tapKey !== 'status')
+                                <th style="text-align:center">Wait</th>
+                            @endif
                             <th style="text-align:center">Action</th>
                         </tr>
                     </thead>
@@ -63,6 +78,7 @@
                         @include('hospital.dashboard.partials.receptionist-today-patients-rows', [
                             'receptionistTodayPatients' => $tapGroups[$tapKey],
                             'tapEmptyMessage' => $tapEmpty[$tapKey],
+                            'tapStatusMode' => $tapKey === 'status',
                             'slug' => $slug,
                             'wGreen' => $wGreen,
                             'wOrange' => $wOrange,

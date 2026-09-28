@@ -60,8 +60,6 @@ design. --}}
                                     <tr>
                                         <th>Patient</th>
                                         <th>Phone</th>
-                                        <th>OT Doctor</th>
-                                        <th>OT Date</th>
                                         <th>Eye</th>
                                         <th>Surgery Type</th>
                                         <th>Status</th>
@@ -75,8 +73,6 @@ design. --}}
                                                         class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
                                             </td>
                                             <td>{{ $booking->patient?->contact_no ?? '-' }}</td>
-                                            <td>{{ $booking->otDoctor?->name ? 'Dr. ' . $booking->otDoctor->name : '-' }}</td>
-                                            <td>{{ optional($booking->surgery_date)->format('d M Y') }}</td>
                                             <td><span class="ot-type-badge">{{ $booking->eye }}</span></td>
                                             <td>{{ $booking->ot_type }}</td>
                                             <td>
@@ -90,21 +86,29 @@ design. --}}
                                             </td>
                                             <td class="text-end">
                                                 @if($isHistory)
-                                                    <button type="button" class="btn btn-sm ot-view-btn"
-                                                        data-bs-toggle="modal" data-bs-target="#otDeskView{{ $booking->id }}">
+                                                    <button type="button" class="btn btn-sm ot-outline-btn"
+                                                        data-bs-toggle="modal" data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                        title="View patient details">
                                                         <i class="bi bi-eye-fill me-1"></i> View
                                                     </button>
                                                 @else
-                                                    <a href="{{ route('hospital.ot.counsellor.form', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                        class="btn btn-sm ot-view-btn">
-                                                        <i class="bi bi-chat-left-text me-1"></i> Counsel
-                                                    </a>
+                                                    <div class="d-inline-flex align-items-center gap-2">
+                                                        <button type="button" class="btn btn-sm ot-outline-btn"
+                                                            data-bs-toggle="modal" data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                            title="View patient details">
+                                                            <i class="bi bi-eye-fill me-1"></i> View
+                                                        </button>
+                                                        <a href="{{ route('hospital.ot.counsellor.form', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                            class="btn btn-sm ot-view-btn">
+                                                            <i class="bi bi-chat-left-text me-1"></i> Counsel
+                                                        </a>
+                                                    </div>
                                                 @endif
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center ot-empty">
+                                            <td colspan="6" class="text-center ot-empty">
                                                 <i class="bi bi-inbox me-1"></i>
                                                 {{ $isHistory ? 'No counselled patients in this date range.' : 'No bookings awaiting counselling.' }}
                                             </td>
@@ -139,7 +143,6 @@ design. --}}
                                     <tr>
                                         <th>Patient</th>
                                         <th>Phone</th>
-                                        <th>OT Date</th>
                                         <th>Package Amount</th>
                                         <th>Status</th>
                                     </tr>
@@ -151,7 +154,6 @@ design. --}}
                                                         class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
                                             </td>
                                             <td>{{ $booking->patient?->contact_no ?? '-' }}</td>
-                                            <td>{{ optional($booking->surgery_date)->format('d M Y') }}</td>
                                             <td>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</td>
                                             <td>
                                                 @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_PAID)
@@ -163,7 +165,7 @@ design. --}}
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center ot-empty">
+                                            <td colspan="4" class="text-center ot-empty">
                                                 <i class="bi bi-inbox me-1"></i> No bookings paid yet.
                                             </td>
                                         </tr>
@@ -178,11 +180,9 @@ design. --}}
         </div>
     </div>
 
-    @if($isHistory)
-        @foreach($bookings as $booking)
-            @include('hospital.ot.partials.booking-view-modal', ['booking' => $booking, 'modalTitle' => 'Counselling Details'])
-        @endforeach
-    @endif
+    @foreach($bookings as $booking)
+        @include('hospital.ot.counsellor._patient-view-modal', ['booking' => $booking])
+    @endforeach
 @endsection
 
 @push('styles')
@@ -522,6 +522,108 @@ design. --}}
             background: #15405d;
             border-color: #15405d;
             color: #fff;
+        }
+
+        .ot-outline-btn {
+            border-radius: 8px;
+            border: 1px solid var(--ot-s2-24);
+            background: #EBF5FB;
+            color: var(--ot-secondary);
+            font-weight: 700;
+            font-size: .82rem;
+            padding: .4rem .8rem;
+        }
+
+        .ot-outline-btn:hover {
+            background: var(--ot-secondary);
+            border-color: var(--ot-secondary);
+            color: #fff;
+        }
+
+        .ocp-section-title {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            margin: 1.1rem 0 .6rem;
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: rgba(27, 79, 114, .7);
+        }
+
+        .ocp-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .ocp-steps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .ocp-step {
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+            padding: .8rem .9rem;
+            border-radius: 10px;
+            border: 1px solid;
+        }
+
+        .ocp-step.is-done {
+            background: #E7F8EF;
+            border-color: #A9E4C4;
+        }
+
+        .ocp-step.is-pending {
+            background: #FFF6DF;
+            border-color: #F0D48A;
+        }
+
+        .ocp-step-icon {
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        .ocp-step.is-done .ocp-step-icon {
+            color: #1E8E5A;
+        }
+
+        .ocp-step.is-pending .ocp-step-icon {
+            color: #92660A;
+        }
+
+        .ocp-step-label {
+            font-weight: 800;
+            font-size: .9rem;
+            color: #1B4F72;
+        }
+
+        .ocp-step-state {
+            font-weight: 700;
+            font-size: .8rem;
+        }
+
+        .ocp-step.is-done .ocp-step-state {
+            color: #1E8E5A;
+        }
+
+        .ocp-step.is-pending .ocp-step-state {
+            color: #92660A;
+        }
+
+        .ocp-step-meta {
+            margin-top: 2px;
+            font-size: .76rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        @media (max-width: 575.98px) {
+            .ocp-steps {
+                grid-template-columns: 1fr;
+            }
         }
 
         .ot-empty {

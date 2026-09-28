@@ -66,6 +66,26 @@ class Patient extends Model
         'case_fee' => 'decimal:2',
     ];
 
+    protected static function booted(): void
+    {
+        // Moving a record to a new visit date (phone check-in, edit, API) must not carry
+        // the previous visit's exam stamps — otherwise the patient silently skips the queue.
+        static::saving(function (Patient $patient): void {
+            if (! $patient->isDirty('appointment_date') || ! $patient->appointment_date) {
+                return;
+            }
+
+            $visitStart = $patient->appointment_date->copy()->startOfDay();
+
+            if ($patient->primary_done_at && $patient->primary_done_at->lt($visitStart)) {
+                $patient->primary_done_at = null;
+                $patient->secondary_done_at = null;
+            } elseif ($patient->secondary_done_at && $patient->secondary_done_at->lt($visitStart)) {
+                $patient->secondary_done_at = null;
+            }
+        });
+    }
+
     public function doctor(): BelongsTo
     {
         return $this->belongsTo(HospitalUser::class, 'doctor_id');
@@ -175,5 +195,57 @@ class Patient extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class, 'tenant_id');
+    }
+
+    /**
+     * Where this visit currently is in the OPD → OT workflow.
+     * Eager-load `latestOtBooking` to stay N+1 safe.
+     *
+     * @return array{label:string, sub:?string, tone:string, icon:string}
+     */
+    public function workflowStage(): array
+    {
+        $booking = $this->latestOtBooking;
+
+        // A closed booking from an earlier visit must not label this visit.
+        if ($booking) {
+            $closed = in_array($booking->ot_status, [OtBooking::STATUS_DISCHARGED, OtBooking::STATUS_SURGERY_REFUSED], true);
+            $visitStart = $this->appointment_date?->copy()->startOfDay();
+            if ($booking->ot_status === OtBooking::STATUS_CANCELLED
+                || ($closed && $visitStart && $booking->created_at && $booking->created_at->lt($visitStart))) {
+                $booking = null;
+            }
+        }
+
+        if ($booking) {
+            return match ($booking->ot_status) {
+                OtBooking::STATUS_BOOKED,
+                OtBooking::STATUS_SURGERY_RECOMMENDED => ['label' => 'Counselling', 'sub' => 'Surgery recommended', 'tone' => 'warning', 'icon' => 'bi-chat-left-heart'],
+                OtBooking::STATUS_COUNSELLED => ['label' => 'Account', 'sub' => 'Payment pending', 'tone' => 'info', 'icon' => 'bi-cash-coin'],
+                OtBooking::STATUS_PAID => ['label' => 'Account', 'sub' => 'Partially paid', 'tone' => 'info', 'icon' => 'bi-cash-coin'],
+                OtBooking::STATUS_PAYMENT_VERIFIED => ['label' => 'Ward Management', 'sub' => 'Awaiting ward', 'tone' => 'purple', 'icon' => 'bi-heart-pulse'],
+                OtBooking::STATUS_IN_WARD => ['label' => 'Ward Management', 'sub' => 'In ward', 'tone' => 'purple', 'icon' => 'bi-heart-pulse'],
+                OtBooking::STATUS_DILATED => ['label' => 'Ward Management', 'sub' => 'Dilated', 'tone' => 'purple', 'icon' => 'bi-heart-pulse'],
+                OtBooking::STATUS_READY => ['label' => 'OT Assistant', 'sub' => 'Ready for OT', 'tone' => 'teal', 'icon' => 'bi-hospital'],
+                OtBooking::STATUS_OPERATED => ['label' => 'OT Done', 'sub' => 'Awaiting discharge', 'tone' => 'success', 'icon' => 'bi-check2-circle'],
+                OtBooking::STATUS_DISCHARGED => ['label' => 'OT Done', 'sub' => 'Discharged', 'tone' => 'success', 'icon' => 'bi-check2-all'],
+                OtBooking::STATUS_SURGERY_REFUSED => ['label' => 'Surgery Refused', 'sub' => null, 'tone' => 'danger', 'icon' => 'bi-x-circle'],
+                default => ['label' => 'OT', 'sub' => str_replace('_', ' ', (string) $booking->ot_status), 'tone' => 'muted', 'icon' => 'bi-hospital'],
+            };
+        }
+
+        if ($this->secondary_done_at) {
+            return ['label' => 'Examination Done', 'sub' => null, 'tone' => 'success', 'icon' => 'bi-check2-circle'];
+        }
+
+        if ($this->primary_done_at) {
+            return ['label' => 'Secondary Exam', 'sub' => 'Primary done · with doctor', 'tone' => 'primary', 'icon' => 'bi-eye'];
+        }
+
+        if (strtolower((string) $this->type) === 'phone' && ! $this->checked_in_at) {
+            return ['label' => 'Not Checked-In', 'sub' => 'Phone booking', 'tone' => 'muted', 'icon' => 'bi-telephone'];
+        }
+
+        return ['label' => 'Primary Exam', 'sub' => 'Waiting', 'tone' => 'warning', 'icon' => 'bi-hourglass-split'];
     }
 }

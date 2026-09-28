@@ -101,17 +101,30 @@ Roles / History / OT Patients panel design. --}}
                                                 <span
                                                     class="badge ota-status-badge {{ $appointment->stage_badge_class }}">{{ $appointment->stage_label }}</span>
                                             </td>
+                                            @php
+                                                $showWalkIn = $canWalkIn && hospital_can('patient_register');
+                                                $showEdit = in_array($appointment->status, [
+                                                    \App\Models\Hospital\OT\OtAppointment::STATUS_BOOKED,
+                                                    \App\Models\Hospital\OT\OtAppointment::STATUS_CONFIRMED,
+                                                ], true) && hospital_can('ot_appointment_edit');
+                                            @endphp
                                             <td class="text-center">
-                                                @if($canWalkIn)
-                                                    @haspermission('patient_register')
-                                                    <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
-                                                        class="ota-walkin-btn"
-                                                        title="Register as walk-in (prefill from OT appointment)">
-                                                        <i class="bi bi-person-walking"></i> Walk-In
-                                                    </a>
-                                                    @else
-                                                    <span class="text-muted small">—</span>
-                                                    @endhaspermission
+                                                @if($showWalkIn || $showEdit)
+                                                    <div class="ota-actions">
+                                                        @if($showWalkIn)
+                                                            <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
+                                                                class="ota-walkin-btn"
+                                                                title="Register as walk-in (prefill from OT appointment)">
+                                                                <i class="bi bi-person-walking"></i> Walk-In
+                                                            </a>
+                                                        @endif
+                                                        @if($showEdit)
+                                                            <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
+                                                                class="ota-edit-btn" title="Edit appointment">
+                                                                <i class="bi bi-pencil-square"></i> Edit
+                                                            </a>
+                                                        @endif
+                                                    </div>
                                                 @else
                                                     <span class="text-muted small">—</span>
                                                 @endif
@@ -520,6 +533,37 @@ Roles / History / OT Patients panel design. --}}
             background: #4c1d95;
             color: #fff !important;
             transform: translateY(-1px);
+        }
+
+        .ota-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .ota-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            background: #EBF5FB;
+            color: #1B4F72 !important;
+            border: 1px solid rgba(27, 79, 114, .22);
+            border-radius: 20px;
+            font-size: .72rem;
+            font-weight: 800;
+            text-decoration: none !important;
+            white-space: nowrap;
+            transition: transform 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .ota-edit-btn:hover,
+        .ota-edit-btn:focus-visible {
+            background: #1B4F72;
+            border-color: #1B4F72;
+            color: #fff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(27, 79, 114, .22);
         }
 
         .ota-empty {

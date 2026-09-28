@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hospital\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\Dosage;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
@@ -138,7 +139,6 @@ class DashboardController extends Controller
                     ($patient->type !== 'phone' || $patient->checked_in_at !== null)
                 )
                 ->map($buildIndex)
-                ->take(20)
                 ->values();
 
             // Attach all_patient_ids so the View button shows this patient's own visit
@@ -313,6 +313,7 @@ class DashboardController extends Controller
         $receptionistTodayCollection = null;
         $receptionistMyPatientsToday = null;
         $receptionistTodayPhone = null;
+        $receptionistCounsellingPending = null;
 
         if ($isReceptionistUser && $this->perm->can('dashboard_reception')) {
             $receptionistBasePatients = Patient::whereHas('reception.role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
@@ -340,6 +341,13 @@ class DashboardController extends Controller
                 ->whereNull('case_id')
                 ->whereDate('appointment_date', '>=', $today)
                 ->count();
+
+            if ($this->perm->can('ot_counselling_fill')) {
+                $receptionistCounsellingPending = OtBooking::whereIn('ot_status', [
+                    OtBooking::STATUS_BOOKED,
+                    OtBooking::STATUS_SURGERY_RECOMMENDED,
+                ])->assignedToCounsellor($user)->count();
+            }
         }
 
         // ── Financial Data (report.revenue) ──────────────────────────────────
@@ -387,30 +395,54 @@ class DashboardController extends Controller
         $accountantPendingCount = null;
         $accountantRefundsCount = null;
         $accountantCompletedCount = null;
+        $accountantLists = null;
 
         if ($isAccountantUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_payment_record'))) {
-            $accountantPendingCount = OtBooking::query()
-                ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
-                ->count();
+            // Same queries as OtAccountantController::dashboard() so the inline lists match that page.
+            $accountantBase = fn () => OtBooking::query()->with([
+                'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no,whatsapp_no,age,gender,type,appointment_date,doctor_id,reception_id',
+                'patient.location:id,city,district,state',
+                'patient.masterCity:id,name',
+                'patient.doctor:id,name',
+                'patient.reception:id,name',
+                'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category,payment_mode,counselled_by,counselled_at',
+                'counselling.counsellor:id,name',
+                'payments',
+                'refunds',
+                'otDoctor:id,name',
+            ]);
 
-            $accountantRefundsCount = OtBooking::query()
-                ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
-                ->with(['payments', 'refunds'])
-                ->get()
+            $accountantLists = [
+                'queue' => $accountantBase()
+                    ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
+                    ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
+                    ->orderBy('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+                'refunds' => $accountantBase()
+                    ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                    ->orderByDesc('updated_at')
+                    ->orderByDesc('id')
+                    ->get(),
+                'history' => $accountantBase()
+                    ->whereIn('ot_status', [
+                        OtBooking::STATUS_PAYMENT_VERIFIED,
+                        OtBooking::STATUS_IN_WARD,
+                        OtBooking::STATUS_DILATED,
+                        OtBooking::STATUS_READY,
+                        OtBooking::STATUS_OPERATED,
+                        OtBooking::STATUS_DISCHARGED,
+                    ])
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+            ];
+
+            $accountantPendingCount = $accountantLists['queue']->count();
+            $accountantRefundsCount = $accountantLists['refunds']
                 ->filter(fn (OtBooking $b) => ! $b->isFullyRefunded() && $b->refundable_balance > 0)
                 ->count();
-
-            $accountantCompletedCount = OtBooking::query()
-                ->whereIn('ot_status', [
-                    OtBooking::STATUS_PAYMENT_VERIFIED,
-                    OtBooking::STATUS_IN_WARD,
-                    OtBooking::STATUS_DILATED,
-                    OtBooking::STATUS_READY,
-                    OtBooking::STATUS_OPERATED,
-                    OtBooking::STATUS_DISCHARGED,
-                    OtBooking::STATUS_SURGERY_REFUSED,
-                ])
-                ->count();
+            $accountantCompletedCount = $accountantLists['history']->count();
         }
 
         // ── Ward Management summary card (ward_management role only) ────────
@@ -418,42 +450,105 @@ class DashboardController extends Controller
         // READY (OT Assistant assigned) is NOT counted — patient has left ward.
         $isWardManagementUser = $user?->role?->slug === 'ward_management';
         $wardPendingCount = null;
+        $wardCompletedCount = null;
+        $wardLists = null;
 
         if ($isWardManagementUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_ward_entry'))) {
-            $wardPendingCount = OtBooking::query()
-                ->whereIn('ot_status', [
-                    OtBooking::STATUS_PAYMENT_VERIFIED,
-                    OtBooking::STATUS_IN_WARD,
-                    OtBooking::STATUS_DILATED,
-                ])
-                ->count();
+            $wardBase = fn () => OtBooking::query()->with(OtBooking::WARD_VIEW_RELATIONS);
+
+            $wardLists = [
+                'queue' => $wardBase()
+                    ->whereIn('ot_status', [
+                        OtBooking::STATUS_PAYMENT_VERIFIED,
+                        OtBooking::STATUS_IN_WARD,
+                        OtBooking::STATUS_DILATED,
+                    ])
+                    ->orderBy('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+                'history' => $wardBase()
+                    ->whereIn('ot_status', [
+                        OtBooking::STATUS_READY,
+                        OtBooking::STATUS_OPERATED,
+                        OtBooking::STATUS_DISCHARGED,
+                    ])
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+            ];
+
+            $wardPendingCount = $wardLists['queue']->count();
+            $wardCompletedCount = $wardLists['history']->count();
         }
 
         // ── OT Assistant summary card (ot_assistant role only) ──────────────
         // Mirrors OtAssistantController::dashboard()'s ready-for-surgery queue.
         $isOtAssistantUser = $user?->role?->slug === 'ot_assistant';
         $otAssistantPendingCount = null;
+        $otAssistantCompletedCount = null;
+        $otAssistantLists = null;
+        $otAssistantSeeAll = false;
 
         if ($isOtAssistantUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_surgery_ready'))) {
-            $otAssistantReadyQuery = OtBooking::query()->where('ot_status', OtBooking::STATUS_READY);
+            $otAssistantSeeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
+            $otAssistantBase = function () use ($user, $otAssistantSeeAll) {
+                $query = OtBooking::query()->with(OtBooking::OT_ASSISTANT_VIEW_RELATIONS);
+                if (! $otAssistantSeeAll) {
+                    $query->where('ot_assistant_id', (int) $user->id);
+                }
 
-            $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
-            if (! $seeAll) {
-                $otAssistantReadyQuery->where('ot_assistant_id', (int) $user->id);
-            }
+                return $query;
+            };
 
-            $otAssistantPendingCount = $otAssistantReadyQuery->count();
+            $otAssistantLists = [
+                'queue' => $otAssistantBase()
+                    ->where('ot_status', OtBooking::STATUS_READY)
+                    ->orderBy('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+                'history' => $otAssistantBase()
+                    ->whereIn('ot_status', [OtBooking::STATUS_OPERATED, OtBooking::STATUS_DISCHARGED])
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+            ];
+
+            $otAssistantPendingCount = $otAssistantLists['queue']->count();
+            $otAssistantCompletedCount = $otAssistantLists['history']->count();
         }
 
         // ── Discharge Counter summary card (discharge_counter role only) ────
-        // Mirrors OtInvoiceController::index()'s Billing Desk queue.
+        // Mirrors OtInvoiceController::index()'s Billing Desk queue / history.
         $isDischargeCounterUser = $user?->role?->slug === 'discharge_counter';
         $dischargePendingCount = null;
+        $dischargeCompletedCount = null;
+        $dischargeLists = null;
+        $dischargeInvoiceBookingIds = [];
 
         if ($isDischargeCounterUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_billing_manage'))) {
-            $dischargePendingCount = OtBooking::query()
-                ->whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])
-                ->count();
+            $dischargeBase = fn () => OtBooking::query()->with(OtBooking::DISCHARGE_VIEW_RELATIONS);
+
+            $dischargeLists = [
+                'queue' => $dischargeBase()
+                    ->whereIn('ot_status', [OtBooking::STATUS_OPERATED, 'OPERATED'])
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+                'history' => $dischargeBase()
+                    ->whereIn('ot_status', [OtBooking::STATUS_DISCHARGED, 'DISCHARGED'])
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+            ];
+
+            $dischargeInvoiceBookingIds = DB::table('ot_invoices')
+                ->where('tenant_id', (int) app('tenant')->id)
+                ->pluck('ot_booking_id')
+                ->map(static fn ($id) => (int) $id)
+                ->all();
+
+            $dischargePendingCount = $dischargeLists['queue']->count();
+            $dischargeCompletedCount = $dischargeLists['history']->count();
         }
 
         // ── Incoming Share Requests (hospital admin only) ─────────────────────
@@ -492,6 +587,7 @@ class DashboardController extends Controller
 
         // Hospital admin home: metrics for the 8 slim cards only
         $otTotalToday = null;
+        $quickLinkCounts = null;
         if ($isHospitalAdmin) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
             $todayPrimary = Patient::whereDate('appointment_date', $today)
@@ -514,7 +610,11 @@ class DashboardController extends Controller
             ];
             $totalDoctors = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))->count();
             $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
-            $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
+            $quickLinkCounts = [
+                'users' => HospitalUser::count(),
+                'medicines' => Medicine::count(),
+                'ot_appointments_today' => OtAppointment::whereDate('appointment_date', $today)->count(),
+            ];
         }
 
         // Receptionist-only doctor strip (all doctors + per-doctor assigned today)
@@ -571,6 +671,7 @@ class DashboardController extends Controller
                 'location:id,city',
                 'masterCity:id,name',
                 'otBookings' => fn($query) => $query->latest('id')->select('id', 'patient_id', 'ot_status'),
+                'latestOtBooking' => fn($query) => $query->select('ot_bookings.id', 'ot_bookings.patient_id', 'ot_bookings.ot_status', 'ot_bookings.created_at'),
                 'primaryExamination' => fn($query) => $query->select('id', 'patient_id', 'examined_at', 'exam_data', 'dilation_time', 'updated_at'),
             ])
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
@@ -598,6 +699,7 @@ class DashboardController extends Controller
                     'patients.checked_in_at',
                     'patients.primary_done_at',
                     'patients.secondary_done_at',
+                    'patients.appointment_date',
                     'patients.created_at',
                     'tbl_slots.slot_name as slot_name',
                 ]);
@@ -739,12 +841,21 @@ class DashboardController extends Controller
             'accountantPendingCount',
             'accountantRefundsCount',
             'accountantCompletedCount',
+            'accountantLists',
             'isWardManagementUser',
             'wardPendingCount',
+            'wardCompletedCount',
+            'wardLists',
             'isOtAssistantUser',
             'otAssistantPendingCount',
+            'otAssistantCompletedCount',
+            'otAssistantLists',
+            'otAssistantSeeAll',
             'isDischargeCounterUser',
             'dischargePendingCount',
+            'dischargeCompletedCount',
+            'dischargeLists',
+            'dischargeInvoiceBookingIds',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',
@@ -770,6 +881,7 @@ class DashboardController extends Controller
             'receptionistTodayCollection',
             'receptionistMyPatientsToday',
             'receptionistTodayPhone',
+            'receptionistCounsellingPending',
             // Financial
             'revenueToday',
             'revenueMonth',
@@ -792,6 +904,7 @@ class DashboardController extends Controller
             'pendingShareRequestsCount',
             // OT Management Overview (admin only) — Phase 8
             'otOverview',
+            'quickLinkCounts',
         ));
     }
 

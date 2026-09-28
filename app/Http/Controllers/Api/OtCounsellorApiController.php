@@ -16,6 +16,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
+use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtConsent;
 use App\Models\Hospital\OT\OtCounselling;
@@ -39,6 +40,7 @@ class OtCounsellorApiController extends Controller
 
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
+            ->assignedToCounsellor($this->counsellor())
             ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name', 'payments']);
 
         if ($isHistory) {
@@ -139,6 +141,9 @@ class OtCounsellorApiController extends Controller
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
+        if (! $booking->isAssignedToCounsellor($this->counsellor())) {
+            return $this->notAssignedResponse();
+        }
 
         $counselling = OtCounselling::query()
             ->where('tenant_id', $tenantId)
@@ -193,6 +198,9 @@ class OtCounsellorApiController extends Controller
 
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
+        }
+        if (! $booking->isAssignedToCounsellor($this->counsellor())) {
+            return $this->notAssignedResponse();
         }
 
         // ot_type replaces surgery_type_confirmed as the real field — matches
@@ -316,6 +324,9 @@ class OtCounsellorApiController extends Controller
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
+        if (! $booking->isAssignedToCounsellor($this->counsellor())) {
+            return $this->notAssignedResponse();
+        }
 
         $validated = $request->validate([
             'consent_given' => ['required', 'boolean'],
@@ -373,6 +384,9 @@ class OtCounsellorApiController extends Controller
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
+        if (! $booking->isAssignedToCounsellor($this->counsellor())) {
+            return $this->notAssignedResponse();
+        }
 
         $hasCounselling = OtCounselling::query()
             ->where('tenant_id', $tenantId)
@@ -405,6 +419,21 @@ class OtCounsellorApiController extends Controller
             'message' => 'Patient sent to Billing.',
             'data' => ['ot_status' => $booking->ot_status],
         ]);
+    }
+
+    private function counsellor(): ?HospitalUser
+    {
+        $user = auth('sanctum')->user();
+
+        return $user instanceof HospitalUser ? $user : null;
+    }
+
+    private function notAssignedResponse(): JsonResponse
+    {
+        return response()->json([
+            'success' => false,
+            'message' => 'This patient is assigned to the receptionist who registered them.',
+        ], 403);
     }
 
     private function storeSignature(int $tenantId, int $bookingId, string $type, string $base64): string

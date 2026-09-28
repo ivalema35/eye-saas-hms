@@ -133,6 +133,10 @@ Route::prefix('{slug}')
                     ->whereNumber('reception')
                     ->name('dashboard.collection.show')
                     ->middleware('permission:patient_view|report_view|opd_reports_view');
+                Route::get('/dashboard/collection/{reception}/export', [AdminCollectionController::class, 'export'])
+                    ->whereNumber('reception')
+                    ->name('dashboard.collection.export')
+                    ->middleware('permission:patient_view|report_view|opd_reports_view');
                 Route::get('/dashboard/ot-appointments', [OtAppointmentListController::class, 'index'])
                     ->name('dashboard.ot-appointments')
                     ->middleware('permission:ot_appointment_view|ot_patient_list');
@@ -217,7 +221,7 @@ Route::prefix('{slug}')
                     ->middleware('permission:prescription_print');
                 Route::get('exam/primary/{id}/hud', [PrimaryExamController::class, 'compactView'])
                     ->name('exam.primary.hud')
-                    ->middleware('permission:prescription_print');
+                    ->middleware('permission:prescription_print|exam_primary|exam_secondary');
                 Route::get('exam/secondary/{id}', [SecondaryExamController::class, 'show'])
                     ->name('exam.secondary.show')
                     ->middleware('permission:exam_secondary');
@@ -695,6 +699,11 @@ Route::prefix('{slug}')
                         Route::get('/print-all/{bookingId}', [OtDischargeController::class, 'printAllBundle'])
                             ->name('print-all')
                             ->whereNumber('bookingId');
+
+                        Route::post('/print-done/{bookingId}/{document}', [OtDischargeController::class, 'markPrinted'])
+                            ->name('print-done')
+                            ->whereNumber('bookingId')
+                            ->whereIn('document', array_keys(\App\Models\Hospital\OT\OtBooking::DISCHARGE_PRINTS));
                     });
                 });
 

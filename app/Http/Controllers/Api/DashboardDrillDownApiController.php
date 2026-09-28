@@ -73,11 +73,13 @@ class DashboardDrillDownApiController extends Controller
         }
 
         $patients = Patient::query()
-            ->with(['caseType:id,case_type'])
+            ->with(['caseType:id,case_type', 'doctor:id,name', 'latestOtBooking'])
             ->where('reception_id', $receptionId)
             ->whereDate('appointment_date', '>=', $startDate)
             ->whereDate('appointment_date', '<=', $endDate)
-            ->get(['id', 'case_id', 'case_fee']);
+            ->orderBy('appointment_date')
+            ->orderBy('id')
+            ->get();
 
         $buckets = [
             'new' => ['label' => 'New Case', 'count' => 0, 'total' => 0.0],
@@ -100,6 +102,18 @@ class DashboardDrillDownApiController extends Controller
                 'buckets' => $buckets,
                 'total' => array_sum(array_column($buckets, 'total')),
                 'count' => array_sum(array_column($buckets, 'count')),
+                'patients' => $patients->map(fn (Patient $p) => [
+                    'id' => $p->id,
+                    'patient_code' => $p->patient_code,
+                    'name' => $p->full_name,
+                    'age' => $p->age,
+                    'gender' => $p->gender,
+                    'case_type' => $p->caseType?->case_type,
+                    'case_fee' => (float) $p->case_fee,
+                    'doctor' => $p->doctor?->name,
+                    'appointment_date' => $p->appointment_date?->toDateString(),
+                    'status' => $p->workflowStage(),
+                ])->values(),
             ],
         ]);
     }

@@ -37,8 +37,12 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                             class="ot-status-form">
                             <select name="status" class="form-select form-select-sm ot-status-select"
                                 onchange="this.form.submit()">
-                                @foreach(['all' => 'All Status', 'booked' => 'Booked', 'confirmed' => 'Confirmed', 'cancelled' => 'Cancelled', 'completed' => 'Completed'] as $value => $label)
-                                    <option value="{{ $value }}" {{ $activeStatus === $value ? 'selected' : '' }}>{{ $label }}
+                                <option value="all" {{ $activeStatus === 'all' ? 'selected' : '' }}>
+                                    All Status ({{ $stageCounts->sum() }})
+                                </option>
+                                @foreach($stages as $value => $label)
+                                    <option value="{{ $value }}" {{ $activeStatus === $value ? 'selected' : '' }}>
+                                        {{ $label }} ({{ $stageCounts[$value] ?? 0 }})
                                     </option>
                                 @endforeach
                             </select>
@@ -94,37 +98,24 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                             </td>
                                             <td class="ot-actions-cell">
                                                 @if(in_array($appointment->status, ['booked', 'confirmed']))
-                                                    @haspermission('ot_appointment_edit')
-                                                    <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
-                                                        class="btn btn-sm ot-icon-btn ot-icon-btn-edit me-1" title="Edit">
-                                                        <i class="bi bi-pencil"></i>
-                                                    </a>
-                                                    @endhaspermission
-                                                    @if($appointment->status === 'booked')
-                                                        @haspermission('ot_appointment_confirm')
-                                                        <form method="POST"
-                                                            action="{{ route('hospital.ot.appointments.confirm', ['slug' => $slug, 'id' => $appointment->id]) }}"
-                                                            class="d-inline">
-                                                            @csrf
-                                                            <button type="submit"
-                                                                class="btn btn-sm ot-icon-btn ot-icon-btn-confirm me-1"
-                                                                title="Confirm"><i class="bi bi-check2"></i></button>
-                                                        </form>
+                                                    @if($appointment->canWalkIn())
+                                                        @haspermission('patient_register')
+                                                        <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
+                                                            class="ot-walkin-btn me-1"
+                                                            title="Register as walk-in (prefill from this appointment)">
+                                                            <i class="bi bi-person-walking"></i> Walk-In
+                                                        </a>
                                                         @endhaspermission
                                                     @endif
-                                                    @haspermission('ot_appointment_cancel')
-                                                    <form method="POST"
-                                                        action="{{ route('hospital.ot.appointments.cancel', ['slug' => $slug, 'id' => $appointment->id]) }}"
-                                                        class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-sm ot-icon-btn ot-icon-btn-cancel"
-                                                            title="Cancel"><i class="bi bi-x-lg"></i></button>
-                                                    </form>
+                                                    @haspermission('ot_appointment_edit')
+                                                    <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
+                                                        class="ot-edit-btn" title="Edit appointment">
+                                                        <i class="bi bi-pencil-square"></i> Edit
+                                                    </a>
                                                     @endhaspermission
                                                     @unless(
-                                                        hospital_can('ot_appointment_edit')
-                                                        || ($appointment->status === 'booked' && hospital_can('ot_appointment_confirm'))
-                                                        || hospital_can('ot_appointment_cancel')
+                                                        ($appointment->canWalkIn() && hospital_can('patient_register'))
+                                                        || hospital_can('ot_appointment_edit')
                                                     )
                                                         <span class="text-muted small">-</span>
                                                     @endunless
@@ -608,6 +599,61 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
         .ot-icon-btn-cancel:hover {
             background: rgba(192, 57, 43, 0.12);
             color: #C0392B;
+        }
+
+        .ot-walkin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            height: 30px;
+            padding: 0 12px;
+            vertical-align: middle;
+            background: #1B4F72;
+            color: #fff !important;
+            border-radius: 999px;
+            font-size: .74rem;
+            font-weight: 800;
+            text-decoration: none !important;
+            white-space: nowrap;
+            box-shadow: 0 0 0 2px rgba(27, 79, 114, .18);
+            transition: transform 160ms ease, background 160ms ease;
+        }
+
+        .ot-walkin-btn:hover {
+            background: #154160;
+            color: #fff !important;
+            transform: translateY(-1px);
+        }
+
+        .ot-edit-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            height: 30px;
+            padding: 0 12px;
+            vertical-align: middle;
+            background: #EBF5FB;
+            color: #1B4F72 !important;
+            border: 1px solid rgba(27, 79, 114, .22);
+            border-radius: 999px;
+            font-size: .74rem;
+            font-weight: 800;
+            text-decoration: none !important;
+            white-space: nowrap;
+            transition: transform 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .ot-edit-btn i {
+            font-size: .8rem;
+        }
+
+        .ot-edit-btn:hover,
+        .ot-edit-btn:focus-visible {
+            background: #1B4F72;
+            border-color: #1B4F72;
+            color: #fff !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(27, 79, 114, .22);
         }
 
         .ot-empty {

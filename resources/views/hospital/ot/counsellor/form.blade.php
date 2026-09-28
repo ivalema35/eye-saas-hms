@@ -30,19 +30,35 @@ used across the rest of the app. --}}
                                     <span class="ot-title-icon" aria-hidden="true">
                                         <i class="bi bi-chat-left-heart" style="font-size: 1.2rem;"></i>
                                     </span>
-                                    <div>
+                                    @php
+                                        $bannerChips = array_filter([
+                                            ['bi-upc-scan', 'UHID ' . ($booking->patient?->patient_code ?? '-')],
+                                            $booking->patient?->contact_no ? ['bi-telephone', $booking->patient->contact_no] : null,
+                                            $booking->eye ? ['bi-eye', 'Eye ' . $booking->eye] : null,
+                                            $booking->ot_type ? ['bi-bandaid', $booking->ot_type] : null,
+                                            $booking->otDoctor?->name ? ['bi-person-badge', 'Dr. ' . $booking->otDoctor->name] : null,
+                                        ]);
+                                        $isRecommended = $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED;
+                                    @endphp
+                                    <div class="min-w-0">
                                         <h4 class="mb-1 ot-title">{{ $booking->patient?->full_name ?? 'Patient' }}</h4>
-                                        <div class="ot-subtitle">
-                                            UHID {{ $booking->patient?->patient_code ?? '-' }} &middot;
-                                            Eye {{ $booking->eye }} &middot;
-                                            {{ $booking->ot_type }} &middot;
-                                            Dr. {{ $booking->otDoctor?->name ?? '-' }}
+                                        <div class="ot-banner-chips">
+                                            @foreach($bannerChips as [$chipIcon, $chipText])
+                                                <span class="ot-banner-chip"><i class="bi {{ $chipIcon }}"></i> {{ $chipText }}</span>
+                                            @endforeach
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-md-end ot-booking-meta">
-                                    Booking #{{ $booking->id }}<br>
-                                    {{ optional($booking->surgery_date)->format('d M Y') }}
+                                <div class="ot-booking-meta">
+                                    <span class="ot-banner-status {{ $isRecommended ? 'is-recommended' : '' }}">
+                                        {{ $isRecommended ? 'Surgery Recommended' : str((string) $booking->ot_status)->replace('_', ' ')->title() }}
+                                    </span>
+                                    <div class="ot-booking-meta-line">
+                                        Booking #{{ $booking->id }}
+                                        @if($booking->surgery_date)
+                                            &middot; {{ $booking->surgery_date->format('d M Y') }}
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -582,10 +598,84 @@ used across the rest of the app. --}}
             font-size: .85rem;
         }
 
+        .ot-patient-banner {
+            background: linear-gradient(135deg, #EBF5FB 0%, #ffffff 70%);
+            border: 1px solid rgba(27, 79, 114, 0.14) !important;
+        }
+
+        .ot-patient-banner .card-body {
+            padding: 1.1rem 1.35rem;
+        }
+
+        .ot-patient-banner .ot-title {
+            color: #1B4F72;
+            font-size: 1.25rem;
+            line-height: 1.25;
+        }
+
+        .ot-patient-banner .ot-title-icon {
+            width: 48px;
+            height: 48px;
+            background: #1B4F72;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(27, 79, 114, 0.22);
+        }
+
+        .ot-banner-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .4rem;
+            margin-top: .35rem;
+        }
+
+        .ot-banner-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            padding: .28rem .65rem;
+            border-radius: 999px;
+            background: #ffffff;
+            border: 1px solid rgba(27, 79, 114, 0.16);
+            color: #1B4F72;
+            font-size: .78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .ot-banner-chip i {
+            font-size: .8rem;
+            opacity: .75;
+        }
+
         .ot-patient-banner .ot-booking-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: .4rem;
             color: rgba(27, 79, 114, 0.72);
             font-weight: 700;
-            font-size: .88rem;
+            font-size: .82rem;
+            flex: 0 0 auto;
+        }
+
+        .ot-banner-status {
+            display: inline-block;
+            padding: .35rem .8rem;
+            border-radius: 999px;
+            background: #1B4F72;
+            color: #ffffff;
+            font-size: .78rem;
+            font-weight: 800;
+        }
+
+        .ot-banner-status.is-recommended {
+            background: #E0A800;
+        }
+
+        @media (min-width: 768px) {
+            .ot-patient-banner .ot-booking-meta {
+                align-items: flex-end;
+            }
         }
 
         .ot-alert {
