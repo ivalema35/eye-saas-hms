@@ -222,5 +222,6 @@
         @endif
     </div>
 </div>
+@include('hospital.ot.billing._print-tracker', ['document' => 'certificate'])
 </body>
 </html>

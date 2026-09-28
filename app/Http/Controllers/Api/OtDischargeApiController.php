@@ -219,13 +219,11 @@ class OtDischargeApiController extends Controller
             } else {
                 DB::table('ot_invoices')->insert([...$payload, 'tenant_id' => $tenantId, 'ot_booking_id' => $booking->id, 'created_at' => now()]);
             }
-
-            $booking->update(['ot_status' => 'discharged', 'discharged_at' => now()]);
         });
 
         return response()->json([
             'success' => true,
-            'message' => 'Invoice generated successfully and patient marked as discharged.',
+            'message' => 'Invoice generated. Print Bill Summary, Discharge and Certificate to complete the discharge.',
             'data' => ['invoice_number' => $invoiceNumber, 'total_amount' => $totalAmount, 'net_amount' => $netAmount],
         ], 201);
     }
@@ -301,6 +299,7 @@ class OtDischargeApiController extends Controller
         $lineItems = is_string($invoice->line_items) ? (json_decode($invoice->line_items, true) ?: []) : (array) $invoice->line_items;
 
         $html = $this->domPdfSafeHtml('hospital.ot.billing.summary_bill_print', compact('booking', 'invoice', 'lineItems'));
+        $booking->markDischargePrinted('summary_bill');
 
         return Pdf::loadHTML($html)
             ->setPaper('a5', 'portrait')
@@ -317,6 +316,7 @@ class OtDischargeApiController extends Controller
             'surgery' => $surgery,
             'wardMedicines' => $surgery?->medicinesForPrint() ?? [],
         ]);
+        $booking->markDischargePrinted('discharge');
 
         return Pdf::loadHTML($html)
             ->setPaper('a5', 'portrait')
@@ -340,6 +340,7 @@ class OtDischargeApiController extends Controller
         $restDays = $restDaysInput < 1 ? 7 : min(90, $restDaysInput);
 
         $html = $this->domPdfSafeHtml('hospital.ot.billing.certificate_print', compact('booking', 'surgery', 'restDays'));
+        $booking->markDischargePrinted('certificate');
 
         return Pdf::loadHTML($html)
             ->setPaper('a5', 'portrait')

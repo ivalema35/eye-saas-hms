@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                                                           now runs full height and the search/profile bar lives
-                                                                           inside the scrollable content column (design refresh). */
+                                                                               now runs full height and the search/profile bar lives
+                                                                               inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -926,7 +926,7 @@
 
         .sidebar-brand-mark .sidebar-logo.platform-logo-on-dark,
         .sidebar-brand-mark .sidebar-logo.hospital-brand-logo {
-            max-height: 106px;
+            max-height: 120px;
             max-width: min(100%, 210px);
             transform: none;
         }
@@ -1419,129 +1419,129 @@
     Top Navigation Bar
     ================================================ --}}
     @if(auth('hospital_user')->user()?->role?->slug === 'doctor')
-        <nav class="hms-navbar">
-            <div class="top-header">
-                <div class="d-flex align-items-center">
-                    <img src="{{ hospital_logo_light_url() }}" alt="{{ $hospitalName }} Logo"
-                        style="height: 40px; margin-right: 15px; object-fit: contain;">
-                    <div class="fw-bold fs-4">{{ $hospitalName }}</div>
-                </div>
-                <div class="dropdown user-dropdown">
-                    <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown"
-                        style="text-decoration: none;">
-                        <span class="avatar-circle">
-                            <i class="bi bi-person-fill"></i>
-                        </span>
-                        <div class="user-info d-flex flex-column text-start">
-                            <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
-                            <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
-                        </div>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end"
-                        style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-                        <li>
-                            <a class="dropdown-item"
-                                href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}">
-                                <i class="bi bi-person-circle me-2"></i> My Profile
-                            </a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider my-1">
-                        </li>
-                        <li>
-                            <form method="POST"
-                                action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger fw-bold">
-                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
+    <nav class="hms-navbar">
+        <div class="top-header">
+            <div class="d-flex align-items-center">
+                <img src="{{ hospital_logo_light_url() }}" alt="{{ $hospitalName }} Logo"
+                    style="height: 40px; margin-right: 15px; object-fit: contain;">
+                <div class="fw-bold fs-4">{{ $hospitalName }}</div>
             </div>
-            <div class="black-menu-bar d-flex align-items-center doctor-black-menu">
-
-                {{-- Dashboard --}}
-                <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
-                    class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i>
-                    <span>Dashboards</span></a>
-
-                {{-- Diagnosis Master — eye exam masters only --}}
-                @hasanypermission('eye_exam_master_view|eye_exam_master_add|eye_exam_master_edit|eye_exam_master_manage')
-                <div class="dropdown">
-                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
-                        data-bs-auto-close="outside" aria-expanded="false" role="button">
-                        <i class="bi bi-info-circle-fill"></i> <span>Diagnosis Master</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a>
-                        </li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/kcos') }}">KCO</a></li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/hno') }}">H/O</a></li>
-                        <li class="dropend">
-                            <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/sac') }}">SAC</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lid') }}">LID</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/conj') }}">CONJ</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/cornea') }}">CORNEA</a>
-                                </li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/ac') }}">AC</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/iris') }}">IRIS</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/pupil') }}">PUPIL</a>
-                                </li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lens') }}">LENS</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/em') }}">EM</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/covertest') }}">COVER
-                                        TEST</a></li>
-                            </ul>
-                        </li>
-
-                        <li class="dropend">
-                            <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/disc') }}">DISC</a></li>
-                                <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/fr') }}">FR</a></li>
-                            </ul>
-                        </li>
-
-                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/diagnosis') }}">DIAGNOSIS</a>
-                        </li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/advice') }}">ADVICE</a></li>
-                    </ul>
-                </div>
-                @endhasanypermission
-
-                @hasanypermission('medicine_view|medicine_add|medicine_edit|medicine_delete|medicine_manage')
-                <div class="dropdown">
-                    <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
-                        data-bs-auto-close="outside" aria-expanded="false" role="button">
-                        <i class="bi bi-capsule"></i> <span>Medicine Master</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-dosages') }}">Dosage</a></li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-types') }}">Medicine Type</a></li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-categories') }}">Medicine Category</a>
-                        </li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Mode</a>
-                        </li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Medicines</a></li>
-                        <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Medicine Groups</a></li>
-                    </ul>
-                </div>
-                @endhasanypermission
-
-                {{-- History — exam_history only --}}
-                @haspermission('exam_history')
-                <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}"
-                    class="text-white text-decoration-none">
-                    <i class="bi bi-clock-history"></i> <span>History</span>
+            <div class="dropdown user-dropdown">
+                <a href="#" class="nav-link dropdown-toggle d-flex align-items-center gap-2" data-bs-toggle="dropdown"
+                    style="text-decoration: none;">
+                    <span class="avatar-circle">
+                        <i class="bi bi-person-fill"></i>
+                    </span>
+                    <div class="user-info d-flex flex-column text-start">
+                        <span class="user-name">{{ auth('hospital_user')->user()->name }}</span>
+                        <small class="user-role">{{ auth('hospital_user')->user()->role?->name ?? 'Admin' }}</small>
+                    </div>
                 </a>
-                @endhaspermission
+                <ul class="dropdown-menu dropdown-menu-end"
+                    style="border-radius: 12px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <li>
+                        <a class="dropdown-item"
+                            href="{{ route('hospital.profile.show', ['slug' => request()->route('slug')]) }}">
+                            <i class="bi bi-person-circle me-2"></i> My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider my-1">
+                    </li>
+                    <li>
+                        <form method="POST"
+                            action="{{ route('hospital.logout', ['slug' => request()->route('slug')]) }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger fw-bold">
+                                <i class="bi bi-box-arrow-right me-2"></i> Logout
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
+        </div>
+        <div class="black-menu-bar d-flex align-items-center doctor-black-menu">
 
-        </nav>
+            {{-- Dashboard --}}
+            <a href="{{ route('hospital.dashboard', ['slug' => request()->route('slug')]) }}"
+                class="text-white text-decoration-none"><i class="bi bi-house-door-fill"></i>
+                <span>Dashboards</span></a>
+
+            {{-- Diagnosis Master — eye exam masters only --}}
+            @hasanypermission('eye_exam_master_view|eye_exam_master_add|eye_exam_master_edit|eye_exam_master_manage')
+            <div class="dropdown">
+                <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside" aria-expanded="false" role="button">
+                    <i class="bi bi-info-circle-fill"></i> <span>Diagnosis Master</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/chief-complaints') }}">C/O</a>
+                    </li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/kcos') }}">KCO</a></li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/hno') }}">H/O</a></li>
+                    <li class="dropend">
+                        <a class="dropdown-item dropdown-toggle" href="#">O/E</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/sac') }}">SAC</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lid') }}">LID</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/conj') }}">CONJ</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/cornea') }}">CORNEA</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/ac') }}">AC</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/iris') }}">IRIS</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/pupil') }}">PUPIL</a>
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/lens') }}">LENS</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/em') }}">EM</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/covertest') }}">COVER
+                                    TEST</a></li>
+                        </ul>
+                    </li>
+
+                    <li class="dropend">
+                        <a class="dropdown-item dropdown-toggle" href="#">FUNDUS</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/disc') }}">DISC</a></li>
+                            <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/fr') }}">FR</a></li>
+                        </ul>
+                    </li>
+
+                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/diagnosis') }}">DIAGNOSIS</a>
+                    </li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/masters/detail/advice') }}">ADVICE</a></li>
+                </ul>
+            </div>
+            @endhasanypermission
+
+            @hasanypermission('medicine_view|medicine_add|medicine_edit|medicine_delete|medicine_manage')
+            <div class="dropdown">
+                <a href="#" class="text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown"
+                    data-bs-auto-close="outside" aria-expanded="false" role="button">
+                    <i class="bi bi-capsule"></i> <span>Medicine Master</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{{ url($slug . '/medicine-dosages') }}">Dosage</a></li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/medicine-types') }}">Medicine Type</a></li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/medicine-categories') }}">Medicine Category</a>
+                    </li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/medicine-routes') }}">Mode</a>
+                    </li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Medicines</a></li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Medicine Groups</a></li>
+                </ul>
+            </div>
+            @endhasanypermission
+
+            {{-- History — exam_history only --}}
+            @haspermission('exam_history')
+            <a href="{{ route('hospital.doctor.history', ['slug' => $slug ?? request()->route('slug')]) }}"
+                class="text-white text-decoration-none">
+                <i class="bi bi-clock-history"></i> <span>History</span>
+            </a>
+            @endhaspermission
+        </div>
+
+    </nav>
     @endif
 
     <div class="hms-layout">
@@ -1627,21 +1627,21 @@
 
                     {{-- ── CLINICAL ──────────────────────────────────── --}}
                     @hasanypermission('exam_primary|exam_secondary')
-                        <div class="hms-nav-divider"></div>
-                        <div class="hms-nav-group-toggle" data-target="nav-clinical">
-                            <span class="hms-nav-group-label-wrap">
-                                <i class="bi bi-heart-pulse-fill hms-nav-group-icon"></i>
-                                <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
-                            </span>
-                            <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                        </div>
-                        <div class="hms-nav-group-items" id="nav-clinical">
-                            <a href="{{ route('hospital.clinical.queue', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.clinical.queue') ? 'active' : '' }}">
-                                <i class="bi bi-list-check"></i>
-                                <span>Queue Dashboard</span>
-                            </a>
-                        </div>
+                    <div class="hms-nav-divider"></div>
+                    <div class="hms-nav-group-toggle" data-target="nav-clinical">
+                        <span class="hms-nav-group-label-wrap">
+                            <i class="bi bi-heart-pulse-fill hms-nav-group-icon"></i>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Clinical</span>
+                        </span>
+                        <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                    </div>
+                    <div class="hms-nav-group-items" id="nav-clinical">
+                        <a href="{{ route('hospital.clinical.queue', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.clinical.queue') ? 'active' : '' }}">
+                            <i class="bi bi-list-check"></i>
+                            <span>Queue Dashboard</span>
+                        </a>
+                    </div>
                     @endhasanypermission
 
                     {{-- ── OT / SURGERY ──────────────────────────────── --}}
@@ -1688,11 +1688,11 @@
                         @endhaspermission
 
                         @hasanypermission('ot_lens_record|ot_lens_implant|ot_surgery_ready|ot_surgery_record')
-                            <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
-                                <i class="bi bi-eyeglasses"></i>
-                                <span>OT Assistant Dashboard</span>
-                            </a>
+                        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.ot.assistant.*') || request()->routeIs('hospital.ot.surgery.*') ? 'active' : '' }}">
+                            <i class="bi bi-eyeglasses"></i>
+                            <span>OT Assistant Dashboard</span>
+                        </a>
                         @endhasanypermission
 
                         @hasanypermission('ot_discharge_generate|ot_billing_manage|ot_bill_print|ot_certificate_print')
@@ -1707,30 +1707,30 @@
 
                     {{-- ── REPORTS ───────────────────────────────────── --}}
                     @hasanypermission('report_view|report_export|opd_reports_view|opd_reports_export|ot_reports_view|ot_reports_export')
-                        <div class="hms-nav-divider"></div>
-                        <div class="hms-nav-group-toggle" data-target="nav-reports">
-                            <span class="hms-nav-group-label-wrap">
-                                <i class="bi bi-bar-chart-line-fill hms-nav-group-icon"></i>
-                                <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
-                            </span>
-                            <i class="bi bi-chevron-down hms-nav-chevron"></i>
-                        </div>
-                        <div class="hms-nav-group-items" id="nav-reports">
-                            @hasanypermission('report_view|opd_reports_view')
-                            <a href="{{ route('hospital.reports.index', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.reports.index') || request()->routeIs('hospital.reports.channel.*') ? 'active' : '' }}">
-                                <i class="bi bi-bar-chart-line-fill"></i>
-                                <span>OPD Reports</span>
-                            </a>
-                            @endhasanypermission
-                            @hasanypermission('report_view|ot_reports_view')
-                            <a href="{{ route('hospital.reports.ot.index', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.reports.ot.*') ? 'active' : '' }}">
-                                <i class="bi bi-file-earmark-bar-graph"></i>
-                                <span>OT Reports</span>
-                            </a>
-                            @endhasanypermission
-                        </div>
+                    <div class="hms-nav-divider"></div>
+                    <div class="hms-nav-group-toggle" data-target="nav-reports">
+                        <span class="hms-nav-group-label-wrap">
+                            <i class="bi bi-bar-chart-line-fill hms-nav-group-icon"></i>
+                            <span class="hms-nav-section-label" style="padding:0;margin:0">Reports</span>
+                        </span>
+                        <i class="bi bi-chevron-down hms-nav-chevron"></i>
+                    </div>
+                    <div class="hms-nav-group-items" id="nav-reports">
+                        @hasanypermission('report_view|opd_reports_view')
+                        <a href="{{ route('hospital.reports.index', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.reports.index') || request()->routeIs('hospital.reports.channel.*') ? 'active' : '' }}">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>OPD Reports</span>
+                        </a>
+                        @endhasanypermission
+                        @hasanypermission('report_view|ot_reports_view')
+                        <a href="{{ route('hospital.reports.ot.index', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.reports.ot.*') ? 'active' : '' }}">
+                            <i class="bi bi-file-earmark-bar-graph"></i>
+                            <span>OT Reports</span>
+                        </a>
+                        @endhasanypermission
+                    </div>
                     @endhasanypermission
 
                     {{-- ── MEDICINES ──────────────────────────────────── --}}
@@ -1810,11 +1810,11 @@
                         </a>
                         @endhasanypermission
                         @hasanypermission('user_doctor_view|user_reception_view|user_ot_staff_view|user_doctor_manage|user_reception_manage')
-                            <a href="{{ route('hospital.users.index', ['slug' => request()->route('slug')]) }}"
-                                class="hms-nav-item {{ request()->routeIs('hospital.users.*') ? 'active' : '' }}">
-                                <i class="bi bi-person-gear"></i>
-                                <span>Users</span>
-                            </a>
+                        <a href="{{ route('hospital.users.index', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.users.*') ? 'active' : '' }}">
+                            <i class="bi bi-person-gear"></i>
+                            <span>Users</span>
+                        </a>
                         @endhasanypermission
                     </div>
                     @endhasanypermission
@@ -1839,109 +1839,109 @@
         <main class="hms-main" id="hmsMain">
 
             @if(auth('hospital_user')->user()?->role?->slug !== 'doctor')
-                @php
-                    $contentTopbarUser = auth('hospital_user')->user();
-                    $contentTopbarSlug = request()->route('slug');
-                    $isReceptionistUser = in_array($contentTopbarUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
-                    $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
-                @endphp
+            @php
+                $contentTopbarUser = auth('hospital_user')->user();
+                $contentTopbarSlug = request()->route('slug');
+                $isReceptionistUser = in_array($contentTopbarUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
+                $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
+            @endphp
 
-                {{-- In-content top bar: search + profile menu (design refresh) --}}
-                <div class="hms-content-topbar">
-                    <button class="hms-sidebar-toggle" id="hmsSidebarToggle" aria-label="Toggle sidebar">
-                        <i class="bi bi-list"></i>
-                    </button>
+            {{-- In-content top bar: search + profile menu (design refresh) --}}
+            <div class="hms-content-topbar">
+                <button class="hms-sidebar-toggle" id="hmsSidebarToggle" aria-label="Toggle sidebar">
+                    <i class="bi bi-list"></i>
+                </button>
 
-                    @haspermission('patient_view')
-                        <form class="hms-search-form"
-                            action="{{ route('hospital.patients.index', ['slug' => $contentTopbarSlug]) }}" method="GET"
-                            role="search">
-                            <i class="bi bi-search"></i>
-                            <input type="text" name="q" id="hmsGlobalSearch" class="hms-search-input"
-                                placeholder="Search patients (Ctrl+/)" autocomplete="off">
-                        </form>
-                    @else
-                        <div class="hms-search-form-spacer"></div>
-                    @endhaspermission
+                @haspermission('patient_view')
+                    <form class="hms-search-form"
+                        action="{{ route('hospital.patients.index', ['slug' => $contentTopbarSlug]) }}" method="GET"
+                        role="search">
+                        <i class="bi bi-search"></i>
+                        <input type="text" name="q" id="hmsGlobalSearch" class="hms-search-input"
+                            placeholder="Search patients (Ctrl+/)" autocomplete="off">
+                    </form>
+                @else
+                <div class="hms-search-form-spacer"></div>
+                @endhaspermission
 
-                    <div class="hms-content-topbar-right">
-                        @if($showReceptionRegisterActions)
-                            <div class="reception-register-actions">
-                                @haspermission('patient_register')
-                                    <a href="{{ route('hospital.patients.create', ['slug' => $contentTopbarSlug]) }}"
-                                        class="reception-register-btn">
-                                        <i class="bi bi-person-plus"></i>
-                                        <span>WALK IN</span>
-                                    </a>
-                                @endhaspermission
-                                @haspermission('patient_register_phone')
-                                    <a href="{{ route('hospital.patients.create-phone', ['slug' => $contentTopbarSlug]) }}"
-                                        class="reception-register-btn">
-                                        <i class="bi bi-telephone"></i>
-                                        <span>PHONE</span>
-                                    </a>
-                                @endhaspermission
-                                @haspermission('ot_appointment_create')
-                                    <a href="{{ route('hospital.ot.appointments.create', ['slug' => $contentTopbarSlug]) }}"
-                                        class="reception-register-btn">
-                                        <i class="bi bi-calendar2-plus"></i>
-                                        <span>OT APPOINTMENT</span>
-                                    </a>
-                                @endhaspermission
-                            </div>
-                        @endif
+                <div class="hms-content-topbar-right">
+                    @if($showReceptionRegisterActions)
+                    <div class="reception-register-actions">
+                        @haspermission('patient_register')
+                        <a href="{{ route('hospital.patients.create', ['slug' => $contentTopbarSlug]) }}"
+                            class="reception-register-btn">
+                            <i class="bi bi-person-plus"></i>
+                            <span>WALK IN</span>
+                        </a>
+                        @endhaspermission
+                        @haspermission('patient_register_phone')
+                        <a href="{{ route('hospital.patients.create-phone', ['slug' => $contentTopbarSlug]) }}"
+                            class="reception-register-btn">
+                            <i class="bi bi-telephone"></i>
+                            <span>PHONE</span>
+                        </a>
+                        @endhaspermission
+                        @haspermission('ot_appointment_create')
+                        <a href="{{ route('hospital.ot.appointments.create', ['slug' => $contentTopbarSlug]) }}"
+                            class="reception-register-btn">
+                            <i class="bi bi-calendar2-plus"></i>
+                            <span>OT APPOINTMENT</span>
+                        </a>
+                        @endhaspermission
+                    </div>
+                    @endif
 
-                        <div class="dropdown hms-content-profile">
-                            <button type="button" class="hms-content-user-info dropdown-toggle" data-bs-toggle="dropdown"
-                                aria-expanded="false" title="Account menu" aria-label="Account menu">
-                                <strong>{{ $hospitalName }}</strong>
-                                <small>{{ $contentTopbarUser?->role?->name ?? 'Hospital Staff' }}</small>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end hms-content-profile-menu">
-                                <div class="hms-content-profile-header">
-                                    <span class="hms-content-profile-header-logo">
-                                        <img src="{{ $hospitalLogoUrl }}" alt="{{ $hospitalName }}" loading="lazy"
-                                            decoding="async">
-                                    </span>
-                                    <div>
-                                        <div class="hms-content-profile-name">{{ $contentTopbarUser?->name }}</div>
-                                        <div class="hms-content-profile-role">
-                                            {{ $contentTopbarUser?->role?->name ?? 'Hospital Staff' }}
-                                        </div>
+                    <div class="dropdown hms-content-profile">
+                        <button type="button" class="hms-content-user-info dropdown-toggle" data-bs-toggle="dropdown"
+                            aria-expanded="false" title="Account menu" aria-label="Account menu">
+                            <strong>{{ $hospitalName }}</strong>
+                            <small>{{ $contentTopbarUser?->role?->name ?? 'Hospital Staff' }}</small>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end hms-content-profile-menu">
+                            <div class="hms-content-profile-header">
+                                <span class="hms-content-profile-header-logo">
+                                    <img src="{{ $hospitalLogoUrl }}" alt="{{ $hospitalName }}" loading="lazy"
+                                        decoding="async">
+                                </span>
+                                <div>
+                                    <div class="hms-content-profile-name">{{ $contentTopbarUser?->name }}</div>
+                                    <div class="hms-content-profile-role">
+                                        {{ $contentTopbarUser?->role?->name ?? 'Hospital Staff' }}
                                     </div>
                                 </div>
-                                <div class="dropdown-divider"></div>
-                                @if($contentTopbarUser?->role?->is_super)
-                                    <a class="dropdown-item"
-                                        href="{{ route('hospital.patients.index', ['slug' => $contentTopbarSlug]) }}">
-                                        <i class="bi bi-person-badge me-2"></i> Doctor Workspace
-                                    </a>
-                                    <a class="dropdown-item"
-                                        href="{{ route('hospital.dashboard', ['slug' => $contentTopbarSlug]) }}">
-                                        <i class="bi bi-clipboard2-pulse me-2"></i> Reception Workspace
-                                    </a>
-                                    <div class="dropdown-divider"></div>
-                                    <a class="dropdown-item"
-                                        href="{{ route('hospital.settings.index', ['slug' => $contentTopbarSlug]) }}">
-                                        <i class="bi bi-gear me-2"></i> Settings
-                                    </a>
-                                @else
-                                    <a class="dropdown-item"
-                                        href="{{ route('hospital.profile.show', ['slug' => $contentTopbarSlug]) }}">
-                                        <i class="bi bi-person-circle me-2"></i> My Profile
-                                    </a>
-                                @endif
                             </div>
+                            <div class="dropdown-divider"></div>
+                            @if($contentTopbarUser?->role?->is_super)
+                                <a class="dropdown-item"
+                                    href="{{ route('hospital.patients.index', ['slug' => $contentTopbarSlug]) }}">
+                                    <i class="bi bi-person-badge me-2"></i> Doctor Workspace
+                                </a>
+                                <a class="dropdown-item"
+                                    href="{{ route('hospital.dashboard', ['slug' => $contentTopbarSlug]) }}">
+                                    <i class="bi bi-clipboard2-pulse me-2"></i> Reception Workspace
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item"
+                                    href="{{ route('hospital.settings.index', ['slug' => $contentTopbarSlug]) }}">
+                                    <i class="bi bi-gear me-2"></i> Settings
+                                </a>
+                            @else
+                                <a class="dropdown-item"
+                                    href="{{ route('hospital.profile.show', ['slug' => $contentTopbarSlug]) }}">
+                                    <i class="bi bi-person-circle me-2"></i> My Profile
+                                </a>
+                            @endif
                         </div>
-
-                        <form method="POST" action="{{ route('hospital.logout', ['slug' => $contentTopbarSlug]) }}">
-                            @csrf
-                            <button type="submit" class="hms-content-logout-btn" title="Log out" aria-label="Log out">
-                                <i class="bi bi-box-arrow-right"></i>
-                            </button>
-                        </form>
                     </div>
+
+                    <form method="POST" action="{{ route('hospital.logout', ['slug' => $contentTopbarSlug]) }}">
+                        @csrf
+                        <button type="submit" class="hms-content-logout-btn" title="Log out" aria-label="Log out">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                    </form>
                 </div>
+            </div>
             @endif
 
             {{-- Flash Messages --}}

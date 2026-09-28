@@ -38,8 +38,30 @@ class OtCounsellorController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
+        $counsellor = auth('hospital_user')->user();
+
         $bookingsQuery = OtBooking::query()
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name', 'payments']);
+            ->assignedToCounsellor($counsellor)
+            ->with([
+                'patient' => fn ($q) => $q->select(
+                    'id', 'patient_code', 'first_name', 'middle_name', 'last_name', 'age', 'gender', 'occupation',
+                    'contact_no', 'whatsapp_no', 'location_id', 'appointment_date', 'doctor_id', 'case_id', 'case_fee',
+                    'reception_id', 'referrer_id', 'type', 'checked_in_at', 'is_old_patient', 'primary_done_at',
+                    'secondary_done_at', 'created_at'
+                ),
+                'patient.doctor:id,name',
+                'patient.reception:id,name',
+                'patient.masterCity:id,name',
+                'patient.location:id,city',
+                'patient.caseType:id,case_type',
+                'patient.referrer:id,name',
+                'patient.primaryExamination:id,patient_id,doctor_id,examined_at',
+                'patient.primaryExamination.doctor:id,name',
+                'patient.secondaryExamination:id,patient_id,doctor_id,examined_at',
+                'patient.secondaryExamination.doctor:id,name',
+                'otDoctor:id,name',
+                'payments',
+            ]);
 
         if ($isHistory) {
             // Counselling complete → visible in All (history), date-filtered.
@@ -72,6 +94,7 @@ class OtCounsellorController extends Controller
         $paymentVerificationQueue = collect();
         if (! $isHistory) {
             $paymentVerificationQueue = OtBooking::query()
+                ->assignedToCounsellor($counsellor)
                 ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'payments'])
                 ->whereIn('ot_status', [
                     OtBooking::STATUS_PAID,
@@ -104,6 +127,7 @@ class OtCounsellorController extends Controller
         $booking = OtBooking::query()
             ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name'])
             ->findOrFail($bookingId);
+        $this->ensureAssignedCounsellor($booking);
 
         $counselling = OtCounselling::query()
             ->where('tenant_id', $tenantId)
@@ -197,6 +221,7 @@ class OtCounsellorController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $booking = OtBooking::query()->findOrFail($bookingId);
+        $this->ensureAssignedCounsellor($booking);
 
         $surgeryTypeNames = DB::table('ot_surgery_types')
             ->where('tenant_id', $tenantId)
@@ -305,6 +330,7 @@ class OtCounsellorController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $booking = OtBooking::query()->findOrFail($bookingId);
+        $this->ensureAssignedCounsellor($booking);
 
         $validated = $request->validate([
             'consent_given' => ['required', 'boolean'],
@@ -350,6 +376,7 @@ class OtCounsellorController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $booking = OtBooking::query()->findOrFail($bookingId);
+        $this->ensureAssignedCounsellor($booking);
 
         $hasCounselling = OtCounselling::query()
             ->where('tenant_id', $tenantId)
@@ -380,6 +407,15 @@ class OtCounsellorController extends Controller
         return redirect()
             ->route('hospital.ot.counsellor.dashboard', ['slug' => $slug])
             ->with('success', 'Patient sent to Billing.');
+    }
+
+    private function ensureAssignedCounsellor(OtBooking $booking): void
+    {
+        abort_unless(
+            $booking->isAssignedToCounsellor(auth('hospital_user')->user()),
+            403,
+            'This patient is assigned to the receptionist who registered them.'
+        );
     }
 
     private function storeSignature(int $tenantId, int $bookingId, string $type, string $base64): string

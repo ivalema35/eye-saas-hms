@@ -711,7 +711,6 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                                     <tr>
                                         <th>Patient Name</th>
                                         <th>Phone</th>
-                                        <th>OT Date</th>
                                         <th>Package Amount</th>
                                         <th>Status</th>
                                         <th class="text-end">Action</th>
@@ -753,9 +752,6 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                                             </td>
                                             <td><span class="ota-phone-cell"><i
                                                         class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span>
-                                            </td>
-                                            <td><span class="ota-date-cell"><i
-                                                        class="bi bi-calendar2-event"></i>{{ optional($booking->surgery_date)->format('d M Y') }}</span>
                                             </td>
                                             <td>
                                                 <span class="ota-amount-pill"><i
@@ -835,7 +831,7 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted py-4 ota-empty-cell">
+                                            <td colspan="5" class="text-center text-muted py-4 ota-empty-cell">
                                                 @if(($activeFilter ?? '') === 'refunds')
                                                     No surgery-refused patients awaiting refund.
                                                 @elseif(($activeFilter ?? '') === 'history')
@@ -856,102 +852,7 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
     </div>
 
     @foreach($bookings as $booking)
-        @php
-            $paymentStatus = $booking->payment_status;
-            $statusLabel = match ($paymentStatus) {
-                'paid' => 'Payment Completed',
-                'partially_paid' => 'Partially Paid',
-                'unpriced' => 'Package Not Set',
-                default => 'Payment Pending',
-            };
-        @endphp
-        <div class="modal fade ota-detail-modal" id="otaDetailModal{{ $booking->id }}" tabindex="-1" aria-hidden="true"
-            data-bs-backdrop="true" data-bs-keyboard="true">
-            <div class="modal-dialog modal-dialog-centered modal-xl">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title mb-0">
-                            <span class="ota-modal-icon" aria-hidden="true">
-                                <i class="bi bi-receipt"></i>
-                            </span>
-                            Record OT Payment
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="ota-detail-grid">
-                            <div class="ota-detail-panel">
-                                <div class="ota-detail-panel-header">
-                                    <p class="ota-detail-panel-title"><i class="bi bi-person-lines-fill me-1"></i> Patient
-                                        Details</p>
-                                </div>
-                                <div class="ota-detail-panel-body">
-                                    <div class="ota-summary-box">
-                                        <div class="ota-summary-label">Patient Name</div>
-                                        <div class="ota-summary-value">{{ $booking->patient?->full_name ?? '-' }}</div>
-                                    </div>
-                                    <div class="ota-summary-box">
-                                        <div class="ota-summary-label">Contact</div>
-                                        <div class="ota-summary-value">{{ $booking->patient?->contact_no ?? '-' }}</div>
-                                    </div>
-                                    <div class="ota-summary-box">
-                                        <div class="ota-summary-label">Patient Code</div>
-                                        <div class="ota-summary-value">{{ $booking->patient?->patient_code ?? '-' }}</div>
-                                    </div>
-                                    <div class="ota-summary-box mb-0">
-                                        <div class="ota-summary-label">Location</div>
-                                        <div class="ota-summary-value">{{ $booking->patient?->location?->name ?: '-' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ota-detail-panel">
-                                <div class="ota-detail-panel-header">
-                                    <p class="ota-detail-panel-title"><i class="bi bi-receipt me-1"></i> OT Payment Details</p>
-                                </div>
-                                <div class="ota-detail-panel-body">
-                                    <div class="ota-summary-box">
-                                        <div class="ota-summary-label">OT Date</div>
-                                        <div class="ota-summary-value">
-                                            {{ optional($booking->surgery_date)->format('d M Y') ?? '-' }}
-                                        </div>
-                                    </div>
-                                    <div class="ota-summary-box">
-                                        <div class="ota-summary-label">Package Amount</div>
-                                        <div class="ota-summary-value">
-                                            {{ money_code((float) ($booking->package_amount ?? 0), 2) }}
-                                        </div>
-                                    </div>
-                                    <div class="ota-summary-box">
-                                        <div class="ota-summary-label">Payment Status</div>
-                                        <div class="ota-summary-value">{{ $statusLabel }}</div>
-                                    </div>
-                                    @if($paymentStatus === 'partially_paid')
-                                        <div class="ota-summary-box">
-                                            <div class="ota-summary-label">Remaining Balance</div>
-                                            <div class="ota-summary-value">{{ money_code($booking->remaining_balance, 2) }}</div>
-                                        </div>
-                                    @endif
-                                    <div class="ota-summary-box mb-0">
-                                        <div class="ota-summary-label">Booking ID</div>
-                                        <div class="ota-summary-value">#{{ $booking->id }}</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="ota-modal-field ota-modal-wide">
-                                <div class="ota-modal-field-label"><i class="bi bi-info-circle me-1"></i> Summary</div>
-                                <div class="ota-modal-field-value">
-                                    {{ $booking->patient?->full_name ?? 'This patient' }} is scheduled for OT on
-                                    {{ optional($booking->surgery_date)->format('d M Y') ?? '-' }}.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        @include('hospital.ot.accountant._payment-view-modal', ['booking' => $booking, 'modalId' => 'otaDetailModal' . $booking->id])
     @endforeach
 
 @endsection

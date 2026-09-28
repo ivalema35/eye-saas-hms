@@ -1,4 +1,5 @@
 @php
+    $embed = request()->boolean('embed');
     $ed = $exam->exam_data ?? [];
     $vision = $ed['vision'] ?? [];
     $pg = $ed['pg'] ?? [];
@@ -41,6 +42,62 @@
 
         return $extras ? $base . ' (' . implode(', ', $extras) . ')' : $base;
     };
+
+    // In embed (dashboard modal) mode only the filled parts of the exam are rendered.
+    $filled = fn($v) => $v !== null && trim((string) $v) !== '';
+    $onlyFilled = fn(array $rows, callable $has) => $embed ? array_filter($rows, $has, ARRAY_FILTER_USE_BOTH) : $rows;
+
+    $vnPairs = [
+        'Vn' => [$vision['vn_re'] ?? '', $vision['vn_le'] ?? ''],
+        'Pn/Vn' => [$vision['pnvn_re'] ?? '', $vision['pnvn_le'] ?? ''],
+        'Nr.Vn' => [$vision['nrvn_re'] ?? '', $vision['nrvn_le'] ?? ''],
+    ];
+    $vnShow = $onlyFilled($vnPairs, fn($p) => $filled($p[0]) || $filled($p[1]));
+    $nctFilled = $filled($nct['iop_re'] ?? null) || $filled($nct['iop_le'] ?? null);
+
+    $historyLine = function (array $row, string $mainKey) use ($filled): string {
+        $text = trim((string) ($row[$mainKey] ?? ''));
+        if ($filled($row['since'] ?? null)) {
+            $text .= ' — ' . $row['since'] . ' ' . ($row['unit'] ?? '');
+        }
+        if ($filled($row['eye'] ?? null)) {
+            $text .= ' (' . $row['eye'] . ')';
+        }
+        if ($filled($row['comment'] ?? null)) {
+            $text .= ' · ' . $row['comment'];
+        }
+
+        return trim($text);
+    };
+    $coLines = collect($ed['co_rows'] ?? [])->filter(fn($r) => $filled($r['complaint'] ?? null))
+        ->map(fn($r) => $historyLine($r, 'complaint'))->values();
+    $kcoLines = collect($ed['kco_rows'] ?? [])->filter(fn($r) => $filled($r['condition'] ?? null))
+        ->map(fn($r) => $historyLine($r, 'condition'))->values();
+    $historyFilled = $coLines->isNotEmpty() || $kcoLines->isNotEmpty() || $ccNames || $kcoNames || $filled($ed['allergy'] ?? null);
+
+    $pgRowDefs = ['Dst' => ['ds', 'dc', 'ax', 'vn'], 'Nr' => ['ns', 'nc', 'na', 'near_vn']];
+    $pgShowRows = $onlyFilled($pgRowDefs, fn($keys) => collect($keys)
+        ->contains(fn($k) => $filled($pg['re'][$k] ?? null) || $filled($pg['le'][$k] ?? null)));
+    $hasPg = $embed ? !empty($pgShowRows) : (!empty($pg['re']) || !empty($pg['le']));
+    $showVisionBox = !$embed || $historyFilled || $vnShow || $nctFilled || $hasPg;
+
+    $stShowRows = $onlyFilled(['Dst' => ['ds', 'dc', 'ax'], 'Nr' => ['ns', 'nc', 'na']], fn($keys) => collect($keys)
+        ->contains(fn($k) => $filled($st['re'][$k] ?? null) || $filled($st['le'][$k] ?? null)));
+    $stExtras = $filled($st['add'] ?? null) || $filled($st['lens_type'] ?? null);
+    $showStBox = !$embed || $stShowRows || $stExtras;
+
+    $oeVal = fn($key, $eye) => $key === 'lens' ? $lensOeVal($oe, $eye) : ($oe[$key . '_' . $eye] ?? '');
+    $oeShow = $onlyFilled($oeFields, fn($label, $key) => $filled($oeVal($key, 're')) || $filled($oeVal($key, 'le')));
+    $oeOther = $filled($oe['other_re'] ?? null) || $filled($oe['other_le'] ?? null);
+    $showOeBox = !$embed || $oeShow || $oeOther;
+
+    $fundusFields = ['disc' => 'DISC', 'fr' => 'FR', 'macula' => 'MACULA', 'vessels' => 'VESSELS', 'periphery' => 'PERIPHERY'];
+    $fundusShow = $onlyFilled($fundusFields, fn($label, $key) => $filled($fundus[$key . '_re'] ?? null) || $filled($fundus[$key . '_le'] ?? null));
+    $fundusComment = $filled($fundus['comment'] ?? null);
+    $showFundusBox = !$embed || $fundusShow || $fundusComment;
+
+    $nothingFilled = $embed && !$showVisionBox && !$showStBox && !$showOeBox && !$showFundusBox;
+    $visibleBoxes = (int) $showVisionBox + (int) $showStBox + (int) $showOeBox + (int) $showFundusBox;
 @endphp
 <!DOCTYPE html>
 <html lang="en">
@@ -162,6 +219,24 @@
             display: flex;
             height: calc(100vh - 80px);
             overflow: hidden;
+        }
+
+        html:has(body.is-embed),
+        body.is-embed {
+            height: auto;
+        }
+
+        body.is-embed .hud-wrapper {
+            height: auto;
+            overflow: visible;
+        }
+
+        body.is-embed .hud-main {
+            overflow: visible;
+        }
+
+        body.is-embed.is-single .hud-main {
+            grid-template-columns: 1fr;
         }
 
         /* ─── Left Sidebar ──────────────────────────────────────── */
@@ -438,8 +513,9 @@
     <link href="https://fonts.bunny.net/css?family=inter:400,600,700&display=swap" rel="stylesheet">
 </head>
 
-<body>
+<body @class(['is-embed' => $embed, 'is-single' => $embed && $visibleBoxes <= 1]) data-boxes="{{ $visibleBoxes }}">
 
+    @unless($embed)
     {{-- ── No-print Toolbar ── --}}
     <div class="toolbar no-print">
         <button class="print-btn" onclick="window.print()">&#128438; Print</button>
@@ -489,10 +565,12 @@
             {{ $exam->examined_at?->format('d M Y') ?? now()->format('d M Y') }}
         </div>
     </div>
+    @endunless
 
     {{-- ── HUD wrapper ── --}}
     <div class="hud-wrapper">
 
+        @unless($embed)
         {{-- ─── Left Sidebar ─────────────────────────────────────── --}}
         <nav class="hud-sidebar no-print">
             <a href="#sec-history" class="nav-pill">C/O</a>
@@ -505,6 +583,7 @@
             <a href="#sec-dx" class="nav-pill">Dx</a>
             <a href="#sec-rx" class="nav-pill">Rx</a>
         </nav>
+        @endunless
 
         {{-- ─── Main Grid ─────────────────────────────────────────── --}}
         <div class="hud-main">
@@ -512,13 +591,28 @@
             {{-- ════════════════════════════════════
             BOX 1 — History, Vision & PG
             ════════════════════════════════════ --}}
+            @if($nothingFilled)
+                <div class="hud-card" style="grid-column:1 / -1">
+                    <div class="hud-card-body" style="padding:24px;text-align:center;color:var(--muted);font-size:13px">
+                        No primary examination details recorded yet.
+                    </div>
+                </div>
+            @endif
+
+            @if($showVisionBox)
             <div class="hud-card" id="sec-history">
                 <div class="hud-card-title">&#9673; History &amp; Vision</div>
                 <div class="hud-card-body">
 
                     {{-- Chief Complaint + KCO --}}
+                    @if($historyFilled)
                     <div class="info-row">
-                        @if($ccNames)
+                        @if($coLines->isNotEmpty())
+                            <span class="field">
+                                <span class="lbl">C/O:</span>
+                                <span>{{ $coLines->implode(', ') }}</span>
+                            </span>
+                        @elseif($ccNames)
                             <span class="field">
                                 <span class="lbl">C/O:</span>
                                 <span>{{ $ccNames }}
@@ -528,7 +622,12 @@
                                 </span>
                             </span>
                         @endif
-                        @if($kcoNames)
+                        @if($kcoLines->isNotEmpty())
+                            <span class="field">
+                                <span class="lbl">K/C/O:</span>
+                                <span>{{ $kcoLines->implode(', ') }}</span>
+                            </span>
+                        @elseif($kcoNames)
                             <span class="field">
                                 <span class="lbl">K/C/O:</span>
                                 <span>{{ $kcoNames }}</span>
@@ -541,20 +640,14 @@
                             </span>
                         @endif
                     </div>
+                    @endif
 
+                    @if(!$embed || $vnShow || $nctFilled)
                     <div class="section-sep" id="sec-vision">Vision (VN)</div>
                     {{-- V-Notation row: Vn, Pn/Vn, NrVn --}}
                     <div style="display:flex;flex-wrap:wrap;gap:4px 0;align-items:flex-end;margin-bottom:4px">
 
-                        @php
-                            $vnPairs = [
-                                'Vn' => [$vision['vn_re'] ?? '', $vision['vn_le'] ?? ''],
-                                'Pn/Vn' => [$vision['pnvn_re'] ?? '', $vision['pnvn_le'] ?? ''],
-                                'Nr.Vn' => [$vision['nrvn_re'] ?? '', $vision['nrvn_le'] ?? ''],
-                            ];
-                        @endphp
-
-                        @foreach($vnPairs as $lbl => [$re, $le])
+                        @foreach($vnShow as $lbl => [$re, $le])
                             <div class="vn-block">
                                 <span class="vn-label">{{ $lbl }}</span>
                                 <span class="vn-sep">&lt;</span>
@@ -576,27 +669,36 @@
                             </div>
                         @endif
                     </div>
+                    @endif
 
                     {{-- PG (Plus Glass) --}}
-                    @php
-                        $hasPg = !empty($pg['re']) || !empty($pg['le']);
-                        $pgKeys = ['vn' => 'VN', 'add' => 'ADD', 'near_vn' => 'NrVn'];
-                    @endphp
                     @if($hasPg)
                         <div class="section-sep" id="sec-pg">Plus Glass (PG)</div>
                         <table class="hud-table" style="margin-bottom:4px">
                             <thead>
                                 <tr>
-                                    <th style="width:55px"></th>
-                                    @foreach($pgKeys as $k => $lbl)<th>{{ $lbl }}</th>@endforeach
+                                    <th rowspan="2" style="width:28px">D</th>
+                                    <th colspan="4" style="text-align:center">RIGHT EYE (OD)</th>
+                                    <th colspan="4" style="text-align:center">LEFT EYE (OS)</th>
+                                </tr>
+                                <tr>
+                                    @foreach(['re', 'le'] as $eye)
+                                        <th>SPH</th>
+                                        <th>CYL</th>
+                                        <th>AXIS</th>
+                                        <th>VN</th>
+                                    @endforeach
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach(['re' => 'RE', 'le' => 'LE'] as $eye => $elbl)
+                                @foreach($pgShowRows as $rowLbl => [$sphKey, $cylKey, $axKey, $vnKey])
                                     <tr>
-                                        <td class="row-lbl">{{ $elbl }}</td>
-                                        @foreach(array_keys($pgKeys) as $k)
-                                            <td>{{ $pg[$eye][$k] ?? '<span class="dash">—</span>' }}</td>
+                                        <td class="row-lbl">{{ $rowLbl }}</td>
+                                        @foreach(['re', 'le'] as $eye)
+                                            <td>{!! $filled($pg[$eye][$sphKey] ?? null) ? e($pg[$eye][$sphKey]) : '<span class="dash">—</span>' !!}</td>
+                                            <td>{!! $filled($pg[$eye][$cylKey] ?? null) ? e($pg[$eye][$cylKey]) : '<span class="dash">—</span>' !!}</td>
+                                            <td>{!! axis_chip($pg[$eye][$axKey] ?? '', '<span class="dash">—</span>') !!}</td>
+                                            <td>{!! $filled($pg[$eye][$vnKey] ?? null) ? e($pg[$eye][$vnKey]) : '<span class="dash">—</span>' !!}</td>
                                         @endforeach
                                     </tr>
                                 @endforeach
@@ -604,6 +706,7 @@
                         </table>
                     @endif
 
+                    @unless($embed)
                     {{-- Diagnosis --}}
                     @if(!empty($diagnoses) && $diagnosisMasters->isNotEmpty())
                         <div class="section-sep" id="sec-dx">Diagnosis</div>
@@ -646,17 +749,21 @@
                             @endif
                         </div>
                     @endif
+                    @endunless
 
                 </div>
             </div>
+            @endif
 
             {{-- ════════════════════════════════════
             BOX 2 — ST (Subjective Trial)
             ════════════════════════════════════ --}}
+            @if($showStBox)
             <div class="hud-card" id="sec-st">
                 <div class="hud-card-title">&#9675; ST — Final Glass Prescription</div>
                 <div class="hud-card-body">
 
+                    @if($stShowRows)
                     <table class="hud-table">
                         <thead>
                             <tr>
@@ -674,26 +781,19 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td class="row-lbl">Dst</td>
-                                <td>{!! !empty($st['re']['ds']) ? e($st['re']['ds']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! !empty($st['re']['dc']) ? e($st['re']['dc']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! axis_chip($st['re']['ax'] ?? '', '<span class="dash">—</span>') !!}</td>
-                                <td>{!! !empty($st['le']['ds']) ? e($st['le']['ds']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! !empty($st['le']['dc']) ? e($st['le']['dc']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! axis_chip($st['le']['ax'] ?? '', '<span class="dash">—</span>') !!}</td>
-                            </tr>
-                            <tr>
-                                <td class="row-lbl">Nr</td>
-                                <td>{!! !empty($st['re']['ns']) ? e($st['re']['ns']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! !empty($st['re']['nc']) ? e($st['re']['nc']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! axis_chip($st['re']['na'] ?? '', '<span class="dash">—</span>') !!}</td>
-                                <td>{!! !empty($st['le']['ns']) ? e($st['le']['ns']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! !empty($st['le']['nc']) ? e($st['le']['nc']) : '<span class="dash">—</span>' !!}</td>
-                                <td>{!! axis_chip($st['le']['na'] ?? '', '<span class="dash">—</span>') !!}</td>
-                            </tr>
+                            @foreach($stShowRows as $rowLbl => [$sphKey, $cylKey, $axKey])
+                                <tr>
+                                    <td class="row-lbl">{{ $rowLbl }}</td>
+                                    @foreach(['re', 'le'] as $eye)
+                                        <td>{!! !empty($st[$eye][$sphKey]) ? e($st[$eye][$sphKey]) : '<span class="dash">—</span>' !!}</td>
+                                        <td>{!! !empty($st[$eye][$cylKey]) ? e($st[$eye][$cylKey]) : '<span class="dash">—</span>' !!}</td>
+                                        <td>{!! axis_chip($st[$eye][$axKey] ?? '', '<span class="dash">—</span>') !!}</td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
                         </tbody>
                     </table>
+                    @endif
 
                     @if(!empty($st['add']) || !empty($st['lens_type']))
                         <div class="info-row" style="margin-top:4px">
@@ -707,7 +807,7 @@
                     @endif
 
                     {{-- Rx (Medicines) --}}
-                    @if($exam->prescriptions->isNotEmpty())
+                    @if(!$embed && $exam->prescriptions->isNotEmpty())
                         <div class="section-sep" id="sec-rx">Rx — Medicines</div>
                         <table class="hud-table rx-table">
                             <thead>
@@ -743,10 +843,12 @@
 
                 </div>
             </div>
+            @endif
 
             {{-- ════════════════════════════════════
             BOX 3 — O/E (On Examination)
             ════════════════════════════════════ --}}
+            @if($showOeBox)
             <div class="hud-card" id="sec-oe">
                 <div class="hud-card-title">&#9679; O/E </div>
                 <div class="hud-card-body" style="padding:0">
@@ -759,15 +861,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($oeFields as $key => $label)
+                            @foreach($oeShow as $key => $label)
                                 <tr>
                                     <td class="row-lbl">{{ $label }}</td>
                                     <td>
-                                        @php $val = $key === 'lens' ? $lensOeVal($oe, 're') : ($oe[$key . '_re'] ?? ''); @endphp
+                                        @php $val = $oeVal($key, 're'); @endphp
                                         @if($val) {{ $val }} @else <span class="dash">—</span> @endif
                                     </td>
                                     <td>
-                                        @php $val = $key === 'lens' ? $lensOeVal($oe, 'le') : ($oe[$key . '_le'] ?? ''); @endphp
+                                        @php $val = $oeVal($key, 'le'); @endphp
                                         @if($val) {{ $val }} @else <span class="dash">—</span> @endif
                                     </td>
                                 </tr>
@@ -775,18 +877,20 @@
                             @if(!empty($oe['other_re']) || !empty($oe['other_le']))
                                 <tr>
                                     <td class="row-lbl">OTHER</td>
-                                    <td>{{ $oe['other_re'] ?? '<span class="dash">—</span>' }}</td>
-                                    <td>{{ $oe['other_le'] ?? '<span class="dash">—</span>' }}</td>
+                                    <td>{!! filled($oe['other_re'] ?? null) ? e($oe['other_re']) : '<span class="dash">—</span>' !!}</td>
+                                    <td>{!! filled($oe['other_le'] ?? null) ? e($oe['other_le']) : '<span class="dash">—</span>' !!}</td>
                                 </tr>
                             @endif
                         </tbody>
                     </table>
                 </div>
             </div>
+            @endif
 
             {{-- ════════════════════════════════════
             BOX 4 — Fundus
             ════════════════════════════════════ --}}
+            @if($showFundusBox)
             <div class="hud-card" id="sec-fundus">
                 <div class="hud-card-title">&#9632; Fundus Examination</div>
                 <div class="hud-card-body" style="padding:0">
@@ -799,7 +903,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach(['disc' => 'DISC', 'fr' => 'FR', 'macula' => 'MACULA', 'vessels' => 'VESSELS', 'periphery' => 'PERIPHERY'] as $key => $label)
+                            @foreach($fundusShow as $key => $label)
                                 <tr>
                                     <td class="row-lbl">{{ $label }}</td>
                                     <td>
@@ -822,7 +926,7 @@
                     </table>
 
                     {{-- NCT IOP spillover (if not shown in vision row) --}}
-                    @if(!empty($nct['iop_re']) || !empty($nct['iop_le']))
+                    @if(!$embed && (!empty($nct['iop_re']) || !empty($nct['iop_le'])))
                         <div style="padding:5px 8px;border-top:1px solid #c3d9ee;font-size:11px">
                             <span class="lbl" style="font-weight:700;color:var(--brand)">IOP / NCT: </span>
                             &nbsp;OD: <strong>{{ $nct['iop_re'] ?? '—' }}</strong> mmHg
@@ -832,6 +936,7 @@
 
                 </div>
             </div>
+            @endif
 
         </div>{{-- /.hud-main --}}
     </div>{{-- /.hud-wrapper --}}

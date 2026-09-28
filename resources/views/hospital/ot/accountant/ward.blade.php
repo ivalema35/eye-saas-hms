@@ -54,7 +54,6 @@ Appointments page design. --}}
                                     <tr>
                                         <th>Patient Name</th>
                                         <th>Phone</th>
-                                        <th>OT Date</th>
                                         <th>Status</th>
                                         <th>Payment</th>
                                         <th class="ward-actions-col">Actions</th>
@@ -69,9 +68,6 @@ Appointments page design. --}}
                                             <td><span class="ward-phone-cell"><i
                                                         class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span>
                                             </td>
-                                            <td><span class="ward-date-cell"><i
-                                                        class="bi bi-calendar2-event"></i>{{ optional($booking->surgery_date)->format('d M Y') }}</span>
-                                            </td>
                                             <td><span
                                                     class="ward-status-badge">{{ strtoupper((string) $booking->ot_status) }}</span>
                                             </td>
@@ -85,22 +81,23 @@ Appointments page design. --}}
                                                 @endif
                                             </td>
                                             <td class="ward-actions-cell">
-                                                @if($isHistory)
-                                                    <button type="button" class="ward-send-btn"
-                                                        data-bs-toggle="modal" data-bs-target="#otDeskView{{ $booking->id }}">
+                                                <div class="d-inline-flex align-items-center gap-2">
+                                                    <button type="button" class="ward-view-btn"
+                                                        data-bs-toggle="modal" data-bs-target="#wardView{{ $booking->id }}">
                                                         <i class="bi bi-eye-fill me-1"></i> View
                                                     </button>
-                                                @else
-                                                    <a href="{{ route('hospital.ot.ward.show', ['slug' => $slug, 'booking' => $booking->id]) }}"
-                                                        class="ward-send-btn">
-                                                        <i class="bi bi-heart-pulse me-1"></i> Vitals &amp; Eye Drops
-                                                    </a>
-                                                @endif
+                                                    @unless($isHistory)
+                                                        <a href="{{ route('hospital.ot.ward.show', ['slug' => $slug, 'booking' => $booking->id]) }}"
+                                                            class="ward-send-btn">
+                                                            <i class="bi bi-heart-pulse me-1"></i> Vitals &amp; Eye Drops
+                                                        </a>
+                                                    @endunless
+                                                </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center ward-empty">
+                                            <td colspan="5" class="text-center ward-empty">
                                                 <i class="bi bi-inbox me-1"></i>
                                                 {{ $isHistory ? 'No ward history in this date range.' : 'No records available for ward workflow.' }}
                                             </td>
@@ -115,11 +112,9 @@ Appointments page design. --}}
         </div>
     </div>
 
-    @if($isHistory)
-        @foreach($bookings as $booking)
-            @include('hospital.ot.partials.booking-view-modal', ['booking' => $booking, 'modalTitle' => 'Ward Patient Details'])
-        @endforeach
-    @endif
+    @foreach($bookings as $booking)
+        @include('hospital.ot.ward._view-modal', ['booking' => $booking])
+    @endforeach
 @endsection
 
 @push('styles')
@@ -463,6 +458,27 @@ Appointments page design. --}}
             background: var(--ward-s2-12);
             border-color: var(--ward-s2-24);
             color: var(--ward-primary);
+            transform: translateY(-1px);
+        }
+
+        .ward-view-btn {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 8px;
+            border: 1px solid var(--ward-primary);
+            background: var(--ward-primary);
+            color: #fff;
+            font-weight: 700;
+            font-size: .82rem;
+            padding: .4rem .75rem;
+            white-space: nowrap;
+            transition: background 170ms ease, transform 170ms ease;
+        }
+
+        .ward-view-btn:hover {
+            background: var(--ward-primary-dark);
+            border-color: var(--ward-primary-dark);
+            color: #fff;
             transform: translateY(-1px);
         }
 

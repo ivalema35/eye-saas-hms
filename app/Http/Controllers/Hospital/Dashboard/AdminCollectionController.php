@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Hospital\Dashboard;
 
+use App\Exports\GenericArrayExport;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Patient;
@@ -9,7 +10,10 @@ use App\Services\Hospital\HospitalCollectionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Hospital admin dashboard "Total Collection" drill-down.
@@ -41,41 +45,84 @@ class AdminCollectionController extends Controller
     {
         [$startDate, $endDate] = $this->resolvedDates($request);
 
-        $reception = HospitalUser::query()
-            ->whereHas('role', fn (Builder $q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
-            ->findOrFail($receptionId);
-
-        $patients = Patient::query()
-            ->with(['caseType:id,case_type'])
-            ->where('reception_id', $receptionId)
-            ->whereDate('appointment_date', '>=', $startDate)
-            ->whereDate('appointment_date', '<=', $endDate)
-            ->get(['id', 'case_id', 'case_fee']);
-
-        $buckets = [
-            'new' => ['label' => 'New Case', 'count' => 0, 'total' => 0.0],
-            'old' => ['label' => 'Old Case', 'count' => 0, 'total' => 0.0],
-            'other' => ['label' => 'Other', 'count' => 0, 'total' => 0.0],
-        ];
-
-        foreach ($patients as $patient) {
-            $key = $this->caseBucketKey($patient->caseType?->case_type);
-            $buckets[$key]['count']++;
-            $buckets[$key]['total'] += (float) $patient->case_fee;
-        }
-
-        $total = array_sum(array_column($buckets, 'total'));
-        $count = array_sum(array_column($buckets, 'count'));
+        $reception = $this->findReception($receptionId);
+        $patients = $this->receptionPatients($receptionId, $startDate, $endDate);
 
         return view('hospital.dashboard.admin_collection_show', [
             'slug' => $slug,
             'reception' => $reception,
             'startDate' => $startDate,
             'endDate' => $endDate,
-            'buckets' => $buckets,
-            'total' => $total,
-            'count' => $count,
+            'patients' => $patients,
+            'total' => (float) $patients->sum(fn (Patient $p) => (float) $p->case_fee),
+            'count' => $patients->count(),
         ]);
+    }
+
+    public function export(Request $request, string $slug, int $receptionId): BinaryFileResponse
+    {
+        [$startDate, $endDate] = $this->resolvedDates($request);
+
+        $reception = $this->findReception($receptionId);
+        $patients = $this->receptionPatients($receptionId, $startDate, $endDate);
+
+        $rows = $patients->values()->map(function (Patient $patient, int $i): array {
+            $stage = $patient->workflowStage();
+
+            return [
+                $i + 1,
+                $patient->patient_code ?: '-',
+                $patient->full_name,
+                $patient->age !== null && $patient->age !== '' ? $patient->age : '-',
+                $patient->caseType?->case_type ?: '-',
+                (float) $patient->case_fee,
+                $patient->doctor?->name ? 'Dr. '.$patient->doctor->name : '-',
+                $stage['label'].($stage['sub'] ? ' ('.$stage['sub'].')' : ''),
+                $patient->appointment_date?->format('d M Y') ?? '-',
+            ];
+        })->all();
+
+        $rows[] = ['', '', 'Total', '', '', (float) $patients->sum(fn (Patient $p) => (float) $p->case_fee), '', '', ''];
+
+        $filename = 'Collection_'.Str::slug($reception->name).'_'.$startDate.'_to_'.$endDate.'.xlsx';
+
+        return Excel::download(new GenericArrayExport($rows, [
+            '#',
+            'Patient Code',
+            'Patient Name',
+            'Age',
+            'Case Type',
+            'Case Fee',
+            'Doctor',
+            'Status',
+            'Date',
+        ]), $filename);
+    }
+
+    private function findReception(int $receptionId): HospitalUser
+    {
+        return HospitalUser::query()
+            ->whereHas('role', fn (Builder $q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
+            ->findOrFail($receptionId);
+    }
+
+    /**
+     * @return Collection<int, Patient>
+     */
+    private function receptionPatients(int $receptionId, string $startDate, string $endDate): Collection
+    {
+        return Patient::query()
+            ->with([
+                'caseType:id,case_type',
+                'doctor:id,name',
+                'latestOtBooking',
+            ])
+            ->where('reception_id', $receptionId)
+            ->whereDate('appointment_date', '>=', $startDate)
+            ->whereDate('appointment_date', '<=', $endDate)
+            ->orderBy('appointment_date')
+            ->orderBy('id')
+            ->get();
     }
 
     /**
@@ -107,20 +154,6 @@ class AdminCollectionController extends Controller
                 'total' => (float) ($row->fee_total ?? 0),
             ];
         })->filter(fn ($row) => $row->count > 0 || $row->total > 0)->values();
-    }
-
-    private function caseBucketKey(?string $caseType): string
-    {
-        $value = strtolower(trim((string) $caseType));
-
-        if (str_contains($value, 'old')) {
-            return 'old';
-        }
-        if (str_contains($value, 'new')) {
-            return 'new';
-        }
-
-        return 'other';
     }
 
     /**

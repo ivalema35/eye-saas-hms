@@ -127,7 +127,26 @@
                 @endif
             </td>
             <td>
-                @if($hasSecondaryDone)
+                @if($tapStatusMode ?? false)
+                    @php
+                        $stage = $patient->workflowStage();
+                        [$stageLabel, $stageClass, $stageIcon] = match ($stage['label']) {
+                            'Examination Done' => ['Secondary Done', 'tap-status-done', 'bi-check2-circle'],
+                            'Counselling' => ['In Counselling', 'tap-status-counsel', 'bi-chat-heart'],
+                            'Account' => ['In Account', 'tap-status-account', 'bi-cash-coin'],
+                            'Ward Management' => ['In Ward', 'tap-status-ward', 'bi-heart-pulse'],
+                            'OT Assistant' => ['Ready for OT', 'tap-status-ward', 'bi-hospital'],
+                            'OT Done' => [($stage['sub'] ?? '') === 'Discharged' ? 'Discharged' : 'Operated', 'tap-status-done', 'bi-check2-all'],
+                            'Surgery Refused' => ['Surgery Refused', 'tap-status-refused', 'bi-x-circle'],
+                            default => [$stage['label'], 'tap-status-waiting', $stage['icon']],
+                        };
+                        $stageSub = in_array($stage['label'], ['Account', 'Ward Management'], true) ? $stage['sub'] : null;
+                    @endphp
+                    <span class="{{ $stageClass }}"><i class="bi {{ $stageIcon }}"></i> {{ $stageLabel }}</span>
+                    @if($stageSub)
+                        <div class="tap-status-sub">{{ $stageSub }}</div>
+                    @endif
+                @elseif($hasSecondaryDone)
                     <span class="tap-status-done"><i class="bi bi-check2-circle"></i> Done</span>
                 @elseif($hasPrimaryDone)
                     <span class="tap-status-primary"><i class="bi bi-arrow-repeat"></i> Primary Done</span>
@@ -135,6 +154,7 @@
                     <span class="tap-status-waiting"><i class="bi bi-clock-history"></i> Waiting</span>
                 @endif
             </td>
+            @unless($tapStatusMode ?? false)
             <td style="text-align:center">
                 @if($hasSecondaryDone)
                     <span style="color:#16a34a; font-size:11px; font-weight:700;"><i class="bi bi-check2-circle"></i>
@@ -172,6 +192,7 @@
                     </div>
                 @endif
             </td>
+            @endunless
             <td style="text-align:center">
                 @haspermission('bill_print')
                 <a href="{{ route('hospital.patients.print', ['slug' => $slug, 'patient' => $patient->id]) }}"
@@ -184,7 +205,7 @@
     @endif
 @empty
     <tr>
-        <td colspan="10" class="tap-empty">
+        <td colspan="{{ ($tapStatusMode ?? false) ? 9 : 10 }}" class="tap-empty">
             <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:8px; opacity:.4;"></i>
             {{ $tapEmptyMessage ?? 'No patients added today' }}
         </td>

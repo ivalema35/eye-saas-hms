@@ -439,6 +439,9 @@
                         @if(!empty($seeAll))
                             <th>Surgeon</th>
                         @endif
+                        @if($isHistory)
+                            <th>OT Date</th>
+                        @endif
                         <th>Surgery Type</th>
                         <th>Package</th>
                         <th>Payment</th>
@@ -457,6 +460,9 @@
                                             </td>
                             @if(!empty($seeAll))
                                                 <td>{{ $booking->otDoctor?->name ? 'Dr. ' . $booking->otDoctor->name : '-' }}</td>
+                            @endif
+                            @if($isHistory)
+                                                <td>{{ optional($booking->surgery_date)->format('d M Y') ?? '-' }}</td>
                             @endif
                                             <td><span class="otd-surgery-cell"><i
                                                         class="bi bi-heart-pulse"></i>{{ $booking->ot_type ?? '-' }}</span></td>
@@ -492,7 +498,7 @@
                         </tr>
                     @empty
                         <tr>
-                                            <td colspan="{{ !empty($seeAll) ? 7 : 6 }}" class="text-center otd-empty-cell">
+                                            <td colspan="{{ 6 + (!empty($seeAll) ? 1 : 0) + ($isHistory ? 1 : 0) }}" class="text-center otd-empty-cell">
                                                 <i class="bi bi-inbox me-1"></i>
                                                 {{ $isHistory ? 'No surgery history in this date range.' : 'No bookings ready for surgery.' }}
                                             </td>
@@ -554,134 +560,10 @@
 {{-- Outside .hms-main overflow/transform so Bootstrap modal centers and paints fully --}}
 @push('modals')
     @foreach($readyBookings as $booking)
-        @php
-    $apptNo = 'OT-' . str_pad((string) $booking->id, 6, '0', STR_PAD_LEFT);
-    $latestPayment = $booking->payments->sortByDesc('id')->first();
-    $paymentMode = $latestPayment?->payment_mode
-        ?? $booking->payment_mode
-        ?? null;
-    $paymentModeLabel = $paymentMode
-        ? ucfirst(str_replace('_', ' ', (string) $paymentMode))
-        : '—';
-    $payStatus = $booking->payment_status;
-    $payStatusLabel = match ($payStatus) {
-        'paid' => 'Paid',
-        'partially_paid' => 'Partially Paid',
-        'unpriced' => 'Package Not Set',
-        default => 'Pending',
-    };
-                        @endphp
-        <div class="modal fade ota2-view-modal" id="ota2ViewModal{{ $booking->id }}" tabindex="-1"
-            aria-labelledby="ota2ViewModalLabel{{ $booking->id }}" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title mb-0" id="ota2ViewModalLabel{{ $booking->id }}">
-                            <i class="bi bi-clipboard2-pulse me-2"></i>
-                            OT Booking Details — {{ $apptNo }}
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">APPT</div>
-                                    <div class="ota2-detail-value">{{ $apptNo }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Name</div>
-                                    <div class="ota2-detail-value">{{ $booking->patient?->full_name ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Mobile Number</div>
-                                    <div class="ota2-detail-value">{{ $booking->patient?->contact_no ?: '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Date</div>
-                                    <div class="ota2-detail-value">
-                                        {{ optional($booking->surgery_date)->format('d M Y') ?? '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Doctor</div>
-                                    <div class="ota2-detail-value">
-                                        {{ $booking->otDoctor?->name ? 'Dr. ' . $booking->otDoctor->name : '—' }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Surgery Name</div>
-                                    <div class="ota2-detail-value">{{ $booking->ot_type ?: '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Package</div>
-                                    <div class="ota2-detail-value">{{ money_code((float) ($booking->package_amount ?? 0), 2) }}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Payment Mode</div>
-                                    <div class="ota2-detail-value">{{ $paymentModeLabel }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Payment Status</div>
-                                    <div class="ota2-detail-value">
-                                        <span
-                                            class="badge {{ $payStatus === 'paid' ? 'bg-success-subtle text-success-emphasis' : 'bg-warning-subtle text-warning-emphasis' }}">
-                                            {{ $payStatusLabel }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">OT Status</div>
-                                    <div class="ota2-detail-value">
-                                        <span
-                                            class="badge text-bg-warning text-uppercase">{{ strtoupper((string) $booking->ot_status) }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">Eye</div>
-                                    <div class="ota2-detail-value">{{ $booking->eye ?: '—' }}</div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="ota2-detail-box">
-                                    <div class="ota2-detail-label">OT Assistant</div>
-                                    <div class="ota2-detail-value">{{ $booking->otAssistant?->name ?: '—' }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        @haspermission('ot_surgery_record')
-                        <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                            class="btn btn-primary">
-                            <i class="bi bi-heart-pulse me-1"></i> Operate
-                        </a>
-                        @endhaspermission
-        </div>
-    </div>
-</div>
-    </div>
+        @include('hospital.ot.assistant._view-modal', [
+            'booking' => $booking,
+            'modalId' => 'ota2ViewModal' . $booking->id,
+            'showOperate' => true,
+        ])
     @endforeach
 @endpush

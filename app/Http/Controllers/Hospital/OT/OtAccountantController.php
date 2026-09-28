@@ -25,13 +25,7 @@ class OtAccountantController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $bookingsQuery = OtBooking::query()
-            ->with([
-                'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no',
-                'patient.location:id,city,district,state',
-                'payments',
-                'otDoctor:id,name',
-            ]);
+        $bookingsQuery = OtBooking::query()->with(OtBooking::WARD_VIEW_RELATIONS);
 
         if ($isHistory) {
             // Ward stage complete (ready for OT / operated / discharged).
@@ -71,8 +65,13 @@ class OtAccountantController extends Controller
 
         $bookingsQuery = OtBooking::query()
             ->with([
-                'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no',
+                'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no,whatsapp_no,age,gender,type,appointment_date,doctor_id,reception_id',
                 'patient.location:id,city,district,state',
+                'patient.masterCity:id,name',
+                'patient.doctor:id,name',
+                'patient.reception:id,name',
+                'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category,payment_mode,counselled_by,counselled_at',
+                'counselling.counsellor:id,name',
                 'payments',
                 'refunds',
                 'otDoctor:id,name',

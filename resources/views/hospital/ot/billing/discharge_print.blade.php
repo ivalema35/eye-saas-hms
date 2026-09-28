@@ -305,5 +305,6 @@
         @endif
     </div>
 </div>
+@include('hospital.ot.billing._print-tracker', ['document' => 'discharge'])
 </body>
 </html>

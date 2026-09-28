@@ -225,5 +225,6 @@
         <p class="role">Accountant</p>
     </div>
 </div>
+@include('hospital.ot.billing._print-tracker', ['document' => 'summary_bill'])
 </body>
 </html>

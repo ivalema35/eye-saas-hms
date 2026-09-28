@@ -49,6 +49,70 @@ class OtBooking extends Model
 
     public const STATUS_CANCELLED = 'cancelled';
 
+    /** Eager loads needed by the ward list + ward view modal (hospital/ot/ward/_view-modal). */
+    public const WARD_VIEW_RELATIONS = [
+        'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no,whatsapp_no,age,gender,type,doctor_id,reception_id',
+        'patient.location:id,city,district,state',
+        'patient.masterCity:id,name',
+        'patient.doctor:id,name',
+        'patient.reception:id,name',
+        'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category',
+        'preOp:id,ot_booking_id,bp,pulse,rbs,temperature,spo2,hba1c,pre_op_status',
+        'dilationEntries:id,ot_booking_id,administered_at,medicine_name,eye,dose_number,drops_count,administered_by',
+        'dilationEntries.administeredBy:id,name',
+        'payments',
+        'otDoctor:id,name',
+        'otAssistant:id,name',
+    ];
+
+    /** Eager loads needed by the OT assistant list + view modal (hospital/ot/assistant/_view-modal). */
+    public const OT_ASSISTANT_VIEW_RELATIONS = [
+        'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no,whatsapp_no,age,gender,type,doctor_id,reception_id',
+        'patient.location:id,city,district,state',
+        'patient.masterCity:id,name',
+        'patient.doctor:id,name',
+        'patient.reception:id,name',
+        'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category',
+        'preOp:id,ot_booking_id,bp,pulse,rbs,temperature,spo2,hba1c,pre_op_status',
+        'surgery',
+        'surgery.operatedBy:id,name',
+        'lensDetail',
+        'payments',
+        'otDoctor:id,name',
+        'otAssistant:id,name',
+    ];
+
+    /** Roles that own counselling for the patients they register. */
+    public const COUNSELLOR_ROLE_SLUGS = ['receptionist', 'receptionist_opd'];
+
+    /**
+     * Documents handed to the patient at discharge. The booking moves to Discharged
+     * only once every one of them has been printed (after the invoice exists).
+     */
+    public const DISCHARGE_PRINTS = [
+        'summary_bill' => ['column' => 'summary_bill_printed_at', 'label' => 'Bill Summary', 'short' => 'Bill Summary', 'icon' => 'bi-receipt-cutoff', 'route' => 'hospital.ot.summary-bill.print', 'permission' => 'ot_bill_print'],
+        'discharge' => ['column' => 'discharge_printed_at', 'label' => 'Discharge Summary', 'short' => 'Discharge', 'icon' => 'bi-file-medical', 'route' => 'hospital.ot.discharge.print', 'permission' => 'ot_discharge_generate'],
+        'certificate' => ['column' => 'certificate_printed_at', 'label' => 'Surgery Certificate', 'short' => 'Certificate', 'icon' => 'bi-patch-check', 'route' => 'hospital.ot.certificate.print', 'permission' => 'ot_certificate_print'],
+    ];
+
+    /** Eager loads needed by the discharge desk list + view modal (hospital/ot/discharge/_view-modal). */
+    public const DISCHARGE_VIEW_RELATIONS = [
+        'patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no,whatsapp_no,age,gender,type,doctor_id,reception_id',
+        'patient.location:id,city,district,state',
+        'patient.masterCity:id,name',
+        'patient.doctor:id,name',
+        'patient.reception:id,name',
+        'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category',
+        'surgery',
+        'surgery.operatedBy:id,name',
+        'lensDetail',
+        'invoice',
+        'invoice.generatedBy:id,name',
+        'payments',
+        'otDoctor:id,name',
+        'otAssistant:id,name',
+    ];
+
     protected $table = 'ot_bookings';
 
     protected $fillable = [
@@ -70,6 +134,9 @@ class OtBooking extends Model
         'attended_at',
         'operated_at',
         'discharged_at',
+        'summary_bill_printed_at',
+        'discharge_printed_at',
+        'certificate_printed_at',
     ];
 
     protected $casts = [
@@ -80,6 +147,9 @@ class OtBooking extends Model
         'attended_at' => 'datetime',
         'operated_at' => 'datetime',
         'discharged_at' => 'datetime',
+        'summary_bill_printed_at' => 'datetime',
+        'discharge_printed_at' => 'datetime',
+        'certificate_printed_at' => 'datetime',
     ];
 
     public function patient()
@@ -127,6 +197,66 @@ class OtBooking extends Model
         return $this->hasOne(OtPreOp::class, 'ot_booking_id');
     }
 
+    public function dilationEntries()
+    {
+        return $this->hasMany(OtDilationEntry::class, 'ot_booking_id');
+    }
+
+    public function surgery()
+    {
+        return $this->hasOne(OtSurgery::class, 'ot_booking_id')->latestOfMany();
+    }
+
+    public function lensDetail()
+    {
+        return $this->hasOne(OtLensDetail::class, 'ot_booking_id')->latestOfMany();
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(OtDischargeSummary::class, 'ot_booking_id');
+    }
+
+    public function dischargePrintsDoneCount(): int
+    {
+        return collect(self::DISCHARGE_PRINTS)->filter(fn (array $doc) => $this->{$doc['column']} !== null)->count();
+    }
+
+    public function allDischargePrintsDone(): bool
+    {
+        return $this->dischargePrintsDoneCount() === count(self::DISCHARGE_PRINTS);
+    }
+
+    /**
+     * Record that a discharge document was printed (first print time is kept) and
+     * discharge the patient once all documents are printed and the invoice exists.
+     * Returns true when this call moved the booking to Discharged.
+     */
+    public function markDischargePrinted(string $document): bool
+    {
+        $column = self::DISCHARGE_PRINTS[$document]['column'] ?? null;
+        if (! $column) {
+            return false;
+        }
+
+        if ($this->{$column} === null) {
+            $this->{$column} = now();
+        }
+
+        $discharged = false;
+        if (strtolower((string) $this->ot_status) === self::STATUS_OPERATED
+            && $this->allDischargePrintsDone()
+            && $this->invoice()->exists()) {
+            $this->ot_status = self::STATUS_DISCHARGED;
+            $this->discharged_at = now();
+            $discharged = true;
+        }
+
+        $this->save();
+
+        return $discharged;
+    }
+
     /**
      * Ward sent patient to OPD/OT doctor for consult (not Ready for OT yet).
      */
@@ -152,6 +282,36 @@ class OtBooking extends Model
             OtPreOp::STATUS_COMPLICATED,
             OtPreOp::STATUS_NOT_FIT,
         ], true);
+    }
+
+    /**
+     * Counselling is owned by the receptionist who registered the patient (patients.reception_id).
+     * Hospital admins see everything. Patients whose registering user is missing, inactive or
+     * not a receptionist stay visible to every counsellor so no case is left unowned.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeAssignedToCounsellor($query, ?HospitalUser $user)
+    {
+        if (! $user || $user->role?->is_super || $user->role?->slug === 'hospital_admin') {
+            return $query;
+        }
+
+        return $query->whereHas('patient', function ($q) use ($user) {
+            $q->where(function ($w) use ($user) {
+                $w->where('patients.reception_id', $user->id)
+                    ->orWhereNull('patients.reception_id')
+                    ->orWhereDoesntHave('reception', function ($r) {
+                        $r->active()->whereHas('role', fn ($role) => $role->whereIn('slug', self::COUNSELLOR_ROLE_SLUGS));
+                    });
+            });
+        });
+    }
+
+    public function isAssignedToCounsellor(?HospitalUser $user): bool
+    {
+        return static::query()->whereKey($this->getKey())->assignedToCounsellor($user)->exists();
     }
 
     /**

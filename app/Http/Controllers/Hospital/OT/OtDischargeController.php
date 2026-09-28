@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Hospital\OT;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtSurgery;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -185,6 +186,22 @@ class OtDischargeController extends Controller
             'slug' => $slug,
             'booking' => $booking,
             'documents' => $documents,
+        ]);
+    }
+
+    public function markPrinted(string $slug, int $bookingId, string $document): JsonResponse
+    {
+        $booking = OtBooking::query()->findOrFail($bookingId);
+
+        $discharged = $booking->markDischargePrinted($document);
+
+        return response()->json([
+            'success' => true,
+            'label' => OtBooking::DISCHARGE_PRINTS[$document]['label'],
+            'done' => $booking->dischargePrintsDoneCount(),
+            'total' => count(OtBooking::DISCHARGE_PRINTS),
+            'discharged' => $discharged,
+            'status' => strtolower((string) $booking->ot_status),
         ]);
     }
 

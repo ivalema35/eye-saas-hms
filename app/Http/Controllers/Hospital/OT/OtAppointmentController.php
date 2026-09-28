@@ -36,16 +36,12 @@ class OtAppointmentController extends Controller
     public function index(Request $request, string $slug): View
     {
         $status = strtolower((string) $request->query('status', 'all'));
-        if (!in_array($status, ['all', OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED, OtAppointment::STATUS_CANCELLED, OtAppointment::STATUS_COMPLETED], true)) {
+        if ($status !== 'all' && !array_key_exists($status, OtAppointment::STAGES)) {
             $status = 'all';
         }
 
         $query = OtAppointment::query()
             ->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking']);
-
-        if ($status !== 'all') {
-            $query->where('status', $status);
-        }
 
         if ($date = $request->query('date')) {
             $query->whereDate('appointment_date', $date);
@@ -67,10 +63,21 @@ class OtAppointmentController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        // Stage depends on the linked patient's latest OT booking, so filter in memory.
+        $stageCounts = $appointments->countBy(fn(OtAppointment $appointment) => $appointment->stage_key);
+
+        if ($status !== 'all') {
+            $appointments = $appointments
+                ->filter(fn(OtAppointment $appointment) => $appointment->stage_key === $status)
+                ->values();
+        }
+
         return view('hospital.ot.appointments.index', [
             'slug' => $slug,
             'appointments' => $appointments,
             'activeStatus' => $status,
+            'stages' => OtAppointment::STAGES,
+            'stageCounts' => $stageCounts,
         ]);
     }
 

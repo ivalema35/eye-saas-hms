@@ -44,6 +44,26 @@ class OtAppointment extends Model
 
     public const STATUS_COMPLETED = 'completed';
 
+    /** Every stage `resolveStage()` can return, in workflow order (key => label). */
+    public const STAGES = [
+        'booked' => 'Booked',
+        'confirmed' => 'Confirmed',
+        'checked_in' => 'Checked-In (OPD)',
+        'booking_created' => 'Booking Created',
+        'surgery_recommended' => 'Surgery Recommended',
+        'counselled' => 'In Counselling',
+        'billing' => 'In Accountant / Billing',
+        'payment_verified' => 'Payment Verified',
+        'in_ward' => 'In Ward',
+        'dilated' => 'In Ward (Dilated)',
+        'ready' => 'Ready for OT',
+        'operated' => 'In Surgery / Operated',
+        'discharged' => 'Discharged',
+        'surgery_refused' => 'Surgery Refused',
+        'ot_cancelled' => 'OT Booking Cancelled',
+        'cancelled' => 'Cancelled',
+    ];
+
     protected $table = 'ot_appointments';
 
     protected $fillable = [
@@ -154,35 +174,51 @@ class OtAppointment extends Model
         return $this->resolveStage()['class'];
     }
 
+    public function getStageKeyAttribute(): string
+    {
+        return $this->resolveStage()['key'];
+    }
+
+    public function canWalkIn(): bool
+    {
+        return in_array($this->status, [self::STATUS_BOOKED, self::STATUS_CONFIRMED], true)
+            && !$this->converted_patient_id;
+    }
+
+    /** @return array{key:string,label:string,class:string} */
     private function resolveStage(): array
     {
+        $stage = fn(string $key, string $class): array => ['key' => $key, 'label' => self::STAGES[$key], 'class' => $class];
+
         if ($this->status === self::STATUS_CANCELLED) {
-            return ['label' => 'Cancelled', 'class' => 'ot-stage-cancelled'];
+            return $stage('cancelled', 'ot-stage-cancelled');
         }
 
         if (!$this->converted_patient_id) {
             return $this->status === self::STATUS_CONFIRMED
-                ? ['label' => 'Confirmed', 'class' => 'ot-stage-confirmed']
-                : ['label' => 'Booked', 'class' => 'ot-stage-booked'];
+                ? $stage('confirmed', 'ot-stage-confirmed')
+                : $stage('booked', 'ot-stage-booked');
         }
 
         $booking = $this->convertedPatient?->latestOtBooking;
 
         if (!$booking) {
-            return ['label' => 'Checked-In (OPD)', 'class' => 'ot-stage-checkedin'];
+            return $stage('checked_in', 'ot-stage-checkedin');
         }
 
         return match ($booking->ot_status) {
-            OtBooking::STATUS_SURGERY_RECOMMENDED => ['label' => 'Surgery Recommended', 'class' => 'ot-stage-recommended'],
-            OtBooking::STATUS_COUNSELLED => ['label' => 'In Counselling', 'class' => 'ot-stage-counselled'],
-            OtBooking::STATUS_PAID => ['label' => 'In Accountant / Billing', 'class' => 'ot-stage-billing'],
-            OtBooking::STATUS_PAYMENT_VERIFIED => ['label' => 'Payment Verified', 'class' => 'ot-stage-billing'],
-            OtBooking::STATUS_IN_WARD => ['label' => 'In Ward', 'class' => 'ot-stage-ward'],
-            OtBooking::STATUS_DILATED => ['label' => 'In Ward (Dilated)', 'class' => 'ot-stage-ward'],
-            OtBooking::STATUS_READY => ['label' => 'Ready for OT', 'class' => 'ot-stage-ready'],
-            OtBooking::STATUS_OPERATED => ['label' => 'In Surgery / Operated', 'class' => 'ot-stage-operated'],
-            OtBooking::STATUS_DISCHARGED => ['label' => 'Discharged', 'class' => 'ot-stage-discharged'],
-            default => ['label' => 'Booking Created', 'class' => 'ot-stage-booked'],
+            OtBooking::STATUS_SURGERY_RECOMMENDED => $stage('surgery_recommended', 'ot-stage-recommended'),
+            OtBooking::STATUS_COUNSELLED => $stage('counselled', 'ot-stage-counselled'),
+            OtBooking::STATUS_PAID => $stage('billing', 'ot-stage-billing'),
+            OtBooking::STATUS_PAYMENT_VERIFIED => $stage('payment_verified', 'ot-stage-billing'),
+            OtBooking::STATUS_IN_WARD => $stage('in_ward', 'ot-stage-ward'),
+            OtBooking::STATUS_DILATED => $stage('dilated', 'ot-stage-ward'),
+            OtBooking::STATUS_READY => $stage('ready', 'ot-stage-ready'),
+            OtBooking::STATUS_OPERATED => $stage('operated', 'ot-stage-operated'),
+            OtBooking::STATUS_DISCHARGED => $stage('discharged', 'ot-stage-discharged'),
+            OtBooking::STATUS_SURGERY_REFUSED => $stage('surgery_refused', 'ot-stage-cancelled'),
+            OtBooking::STATUS_CANCELLED => $stage('ot_cancelled', 'ot-stage-cancelled'),
+            default => $stage('booking_created', 'ot-stage-booked'),
         };
     }
 }

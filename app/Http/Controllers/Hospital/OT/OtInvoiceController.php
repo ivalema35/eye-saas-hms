@@ -21,12 +21,7 @@ class OtInvoiceController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $bookingsQuery = OtBooking::query()
-            ->with([
-                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
-                'otDoctor:id,name',
-                'payments',
-            ]);
+        $bookingsQuery = OtBooking::query()->with(OtBooking::DISCHARGE_VIEW_RELATIONS);
 
         if ($isHistory) {
             // Discharge complete → All (history), date-filtered.
@@ -221,16 +216,11 @@ class OtInvoiceController extends Controller
                     'created_at' => now(),
                 ]);
             }
-
-            $booking->update([
-                'ot_status' => 'discharged',
-                'discharged_at' => now(),
-            ]);
         });
 
         return redirect()
             ->route('hospital.ot.invoice.print', ['slug' => $slug, 'bookingId' => $bookingId])
-            ->with('success', 'Invoice generated successfully and patient marked as discharged.');
+            ->with('success', 'Invoice generated. Print Bill Summary, Discharge and Certificate to complete the discharge.');
     }
 
     public function print(string $slug, int $bookingId): View

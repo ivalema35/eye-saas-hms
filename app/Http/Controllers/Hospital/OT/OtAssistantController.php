@@ -47,13 +47,7 @@ class OtAssistantController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
-        $readyQuery = OtBooking::query()
-            ->with([
-                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
-                'otDoctor:id,name',
-                'otAssistant:id,name',
-                'payments',
-            ]);
+        $readyQuery = OtBooking::query()->with(OtBooking::OT_ASSISTANT_VIEW_RELATIONS);
 
         if ($isHistory) {
             $readyQuery->whereIn('ot_status', [
