@@ -24,6 +24,7 @@ use App\Models\Platform\MasterCity;
 use App\Support\PhoneRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -31,19 +32,21 @@ class OtAppointmentApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        // Web pull 2026-09-28 — 16-stage filter (`OtAppointment::STAGES`),
+        // replacing the old 4-value raw-`status` whitelist. `stage_key`
+        // depends on the converted patient's latest OT booking, not just this
+        // row's own `status` column, so it can no longer be a plain SQL
+        // WHERE — mirrors Hospital\OT\OtAppointmentController::index()'s own
+        // move off SQL filtering for the exact same reason.
         $status = strtolower((string) $request->query('status', 'all'));
-        if (! in_array($status, ['all', OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED, OtAppointment::STATUS_CANCELLED, OtAppointment::STATUS_COMPLETED], true)) {
+        if ($status !== 'all' && ! array_key_exists($status, OtAppointment::STAGES)) {
             $status = 'all';
         }
 
         // convertedPatient.latestOtBooking is eager-loaded so the stage_label/
-        // stage_badge_class accessors below (same ones web's index.blade.php
-        // reads) stay N+1-safe across the whole page.
+        // stage_badge_class/stage_key accessors below (same ones web's
+        // index.blade.php reads) stay N+1-safe across the whole set.
         $query = OtAppointment::query()->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking']);
-
-        if ($status !== 'all') {
-            $query->where('status', $status);
-        }
 
         if ($date = $request->query('date')) {
             $query->whereDate('appointment_date', $date);
@@ -60,14 +63,31 @@ class OtAppointmentApiController extends Controller
             });
         }
 
-        $appointments = $query
-            ->orderByDesc('appointment_date')
-            ->orderByDesc('id')
-            ->paginate((int) $request->integer('per_page', 25))
+        // NOTE: same trade-off web accepted — without a `date` filter this
+        // loads every appointment matching `search` into memory (stage can't
+        // be computed in SQL), instead of the old query's cheap LIMIT/OFFSET.
+        // Callers that page through a large, all-time, no-date list should
+        // pass `date` to keep this bounded; neither app currently does by
+        // default (matches web, which never paginated this list at all).
+        $all = $query->orderByDesc('appointment_date')->orderByDesc('id')->get();
+
+        // Web's $stageCounts is computed over the full date/search-filtered
+        // set, BEFORE the status/stage filter narrows it — so the filter
+        // dropdown's counts always reflect every stage, not just the active
+        // one.
+        $stageCounts = $all->countBy(fn (OtAppointment $appt) => $appt->stage_key);
+
+        $filtered = $status !== 'all'
+            ? $all->filter(fn (OtAppointment $appt) => $appt->stage_key === $status)->values()
+            : $all;
+
+        $perPage = (int) $request->integer('per_page', 25);
+        $page = (int) $request->integer('page', 1);
+        $pageItems = $filtered->forPage($page, $perPage)->values()
             // Same granular stage web's index shows (Surgery Recommended, In
             // Ward, Ready for OT, etc.) instead of the raw 4-value status —
             // apps were previously blind to this and showed only the enum.
-            ->through(fn (OtAppointment $appt) => [
+            ->map(fn (OtAppointment $appt) => [
                 ...$appt->toArray(),
                 // appointment_number is a computed accessor (APT-000123),
                 // not a real column — never in toArray() on its own, so the
@@ -75,9 +95,28 @@ class OtAppointmentApiController extends Controller
                 'appointment_number' => $appt->appointment_number,
                 'stage_label' => $appt->stage_label,
                 'stage_badge_class' => $appt->stage_badge_class,
+                'stage_key' => $appt->stage_key,
             ]);
 
-        return response()->json(['success' => true, 'data' => $appointments]);
+        $paginator = new LengthAwarePaginator(
+            $pageItems,
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()],
+        );
+
+        return response()->json([
+            'success' => true,
+            'data' => $paginator,
+            'meta' => [
+                // key => label, in workflow order — same 16 entries as
+                // web's filter <select>, so the app doesn't hardcode a
+                // shorter/stale copy of this list.
+                'stages' => OtAppointment::STAGES,
+                'stage_counts' => $stageCounts,
+            ],
+        ]);
     }
 
     /**

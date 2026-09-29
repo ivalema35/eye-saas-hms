@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bill Summery</title>
+    <style>
+        @page {
+            size: A5 portrait;
+            margin: 12mm 13mm;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #fff;
+            color: #111;
+            font-size: 12.5px;
+            line-height: 1.45;
+        }
+        /* DomPDF ignores @media print — keep base layout margin-free so PDF
+           fits the A5 canvas. Screen preview is sized to A5 below. */
+        .page {
+            width: 100%;
+            min-height: auto;
+            margin: 0;
+            background: #fff;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            text-transform: uppercase;
+            margin: 0 0 16px;
+        }
+        .meta {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+            font-size: 12.5px;
+        }
+        .for-block {
+            margin-bottom: 16px;
+        }
+        .for-block .for-label {
+            margin-bottom: 4px;
+        }
+        .for-block .patient-name {
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            margin: 0 0 4px;
+        }
+        .for-block .place {
+            margin: 0;
+        }
+        table.charges {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        table.charges th {
+            text-align: left;
+            padding: 6px 4px 10px;
+            border-bottom: 1px solid #111;
+            font-size: 14px;
+        }
+        table.charges th.amt {
+            text-align: right;
+        }
+        table.charges td {
+            padding: 7px 4px;
+            vertical-align: top;
+        }
+        table.charges td.amt {
+            text-align: right;
+            white-space: nowrap;
+        }
+        table.charges tr.total-row td {
+            border-top: 1px solid #111;
+            padding-top: 10px;
+            font-weight: 700;
+        }
+        .sign-block {
+            margin-top: 36px;
+            width: 52%;
+            margin-left: auto;
+            text-align: center;
+            border: 1.5px solid #5b2c8a;
+            padding: 10px 8px;
+            color: #5b2c8a;
+        }
+        .sign-block .for-hosp {
+            margin: 0 0 28px;
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .sign-block .role {
+            margin: 0;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .print-btn {
+            position: fixed;
+            right: 12px;
+            top: 12px;
+            border: 0;
+            background: #0f4c81;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            z-index: 10;
+        }
+        
+    </style>
+<style>html,body{margin:0 !important;width:auto !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>
+<body><div style="padding:14mm;box-sizing:border-box;width:100%;">
+
+
+
+<div class="page">
+    <h1 class="title">Bill Summery</h1>
+
+    <div class="meta">
+        <div><strong>Bill no:</strong> INV-000123</div>
+        <div><strong>DATE :</strong>29/09/2026</div>
+    </div>
+
+    <div class="for-block">
+        <div class="for-label">For,</div>
+        <p class="patient-name">RAMANBHAI MANUBHAI PATEL</p>
+        <p class="place"><strong>Place:</strong> AHMEDABAD</p>
+    </div>
+
+    <table class="charges">
+        <thead>
+            <tr>
+                <th>Charge for</th>
+                <th class="amt">Amount (₹)</th>
+            </tr>
+        </thead>
+        <tbody>
+                            <tr>
+                    <td>1 Surgery Charges</td>
+                    <td class="amt">25,000</td>
+                </tr>
+                            <tr>
+                    <td>2 Room Rent</td>
+                    <td class="amt">3,200</td>
+                </tr>
+                            <tr>
+                    <td>3 Medicine</td>
+                    <td class="amt">1,500</td>
+                </tr>
+                            <tr>
+                    <td>4 Consultation</td>
+                    <td class="amt">800</td>
+                </tr>
+                        <tr class="total-row">
+                <td>TOTAL</td>
+                <td class="amt">30,500</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="sign-block">
+        <p class="for-hosp">For, EYE-CARE-AEH</p>
+        <p class="role">Accountant</p>
+    </div>
+</div>
+</div></body>
+</html>
