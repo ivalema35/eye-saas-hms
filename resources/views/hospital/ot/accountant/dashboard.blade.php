@@ -625,15 +625,15 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
 @endpush
 
 @section('content')
-    <div class="ot-accountant-page">
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger">{{ session('error') }}</div>
-        @endif
-        @php $refundsPendingCount = (int) ($moneySummary['refunds_pending'] ?? 0); @endphp
-        @if($refundsPendingCount > 0 && ($activeFilter ?? 'queue') !== 'refunds')
+<div class="ot-accountant-page">
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
+    @php $refundsPendingCount = (int) ($moneySummary['refunds_pending'] ?? 0); @endphp
+    <!-- @if($refundsPendingCount > 0 && ($activeFilter ?? 'queue') !== 'refunds')
             <div
                 class="alert alert-warning d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
                 <div>
@@ -646,214 +646,214 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                     Open Refunds <i class="bi bi-arrow-right ms-1"></i>
                 </a>
             </div>
-        @endif
-        <div class="card ota-outer-card border-0">
-            <div class="ota-header-block">
-                <div class="ota-header-title">
-                    <i class="bi bi-cash-coin"></i> OT Accountant Dashboard
+        @endif -->
+    <div class="card ota-outer-card border-0">
+        <div class="ota-header-block">
+            <div class="ota-header-title">
+                <i class="bi bi-cash-coin"></i> OT Accountant Dashboard
+            </div>
+            <nav class="ota-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="ota-breadcrumb-sep">/</span>
+                <span>OT</span>
+                <span class="ota-breadcrumb-sep">/</span>
+                <span>Accountant</span>
+                <span class="ota-breadcrumb-sep">/</span>
+                <span class="ota-breadcrumb-current">Dashboard</span>
+            </nav>
+        </div>
+
+        <div class="ota-inner-panel">
+            <div class="ota-card-header d-flex justify-content-between align-items-center flex-wrap">
+                <div class="ota-title-wrap">
+                    <span class="ota-title-icon">
+                        <i class="bi bi-cash-coin fs-4"></i>
+                    </span>
+                    <div>
+                        <h5 class="mb-0 fw-bold ota-title">
+                            @if(($activeFilter ?? '') === 'refunds')
+                                Refund Queue
+                            @elseif(($activeFilter ?? '') === 'history')
+                                Completed Payments
+                            @else
+                                Payment Queue
+                            @endif
+                        </h5>
+                    </div>
                 </div>
-                <nav class="ota-breadcrumb" aria-label="breadcrumb">
-                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
-                    <span class="ota-breadcrumb-sep">/</span>
-                    <span>OT</span>
-                    <span class="ota-breadcrumb-sep">/</span>
-                    <span>Accountant</span>
-                    <span class="ota-breadcrumb-sep">/</span>
-                    <span class="ota-breadcrumb-current">Dashboard</span>
-                </nav>
+                <div class="ota-head-actions">
+                    @include('hospital.ot.partials.desk-filters', [
+                        'slug' => $slug,
+                        'routeName' => 'hospital.ot.accountant.dashboard',
+                        'activeFilter' => $activeFilter ?? 'queue',
+                        'fromDate' => $fromDate ?? now()->toDateString(),
+                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                        'showRefunds' => true,
+                        'refundsPendingCount' => $refundsPendingCount,
+                    ])
+                    <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
+                        class="ota-total-pill text-decoration-none" title="Collected vs Refunded">
+                        Collected {{ money_code((float) ($moneySummary['collected'] ?? 0), 0) }}
+                        · Returned {{ money_code((float) ($moneySummary['refunded'] ?? 0), 0) }}
+                        @if(!empty($moneySummary['refunds_pending']))
+                            · Pending refunds {{ $moneySummary['refunds_pending'] }}
+                        @endif
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
             </div>
 
-            <div class="ota-inner-panel">
-                <div class="ota-card-header d-flex justify-content-between align-items-center flex-wrap">
-                    <div class="ota-title-wrap">
-                        <span class="ota-title-icon">
-                            <i class="bi bi-cash-coin fs-4"></i>
-                        </span>
-                        <div>
-                            <h5 class="mb-0 fw-bold ota-title">
-                                @if(($activeFilter ?? '') === 'refunds')
-                                    Refund Queue
-                                @elseif(($activeFilter ?? '') === 'history')
-                                    Completed Payments
-                                @else
-                                    Payment Queue
-                                @endif
-                            </h5>
-                        </div>
-                    </div>
-                    <div class="ota-head-actions">
-                        @include('hospital.ot.partials.desk-filters', [
-                            'slug' => $slug,
-                            'routeName' => 'hospital.ot.accountant.dashboard',
-                            'activeFilter' => $activeFilter ?? 'queue',
-                            'fromDate' => $fromDate ?? now()->toDateString(),
-                            'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
-                            'showRefunds' => true,
-                            'refundsPendingCount' => $refundsPendingCount,
-                        ])
-                        <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
-                            class="ota-total-pill text-decoration-none" title="Collected vs Refunded">
-                            Collected {{ money_code((float) ($moneySummary['collected'] ?? 0), 0) }}
-                            · Returned {{ money_code((float) ($moneySummary['refunded'] ?? 0), 0) }}
-                            @if(!empty($moneySummary['refunds_pending']))
-                                · Pending refunds {{ $moneySummary['refunds_pending'] }}
-                            @endif
-                            <i class="bi bi-arrow-right-short"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="card-body p-0">
-                    <div class="table-responsive ota-table-wrap">
-                        <div id="otaAccountantTableContainer">
-                            <table class="otaAccountant-table" id="otaAccountantTable" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>Patient Name</th>
-                                        <th>Phone</th>
-                                        <th>Package Amount</th>
-                                        <th>Status</th>
-                                        <th class="text-end">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($bookings as $booking)
-                                        @php
-                                            $isRefundsTab = ($activeFilter ?? '') === 'refunds';
-                                            $paymentStatus = $booking->payment_status;
-                                            $statusBadgeClass = match ($paymentStatus) {
-                                                'paid' => 'text-bg-success',
-                                                'partially_paid' => 'text-bg-info',
-                                                'unpriced' => 'text-bg-secondary',
-                                                default => 'text-bg-warning',
-                                            };
-                                            $statusLabel = match ($paymentStatus) {
-                                                'paid' => 'Payment Completed',
-                                                'partially_paid' => 'Partially Paid',
-                                                'unpriced' => 'Package Not Set',
-                                                default => 'Payment Pending',
-                                            };
-                                            if ($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED) {
-                                                if ($booking->isFullyRefunded()) {
-                                                    $statusLabel = 'Fully Refunded';
-                                                    $statusBadgeClass = 'text-bg-success';
-                                                } elseif ($booking->refundable_balance > 0) {
-                                                    $statusLabel = 'Refund Pending';
-                                                    $statusBadgeClass = 'text-bg-danger';
-                                                } else {
-                                                    $statusLabel = 'Surgery Refused';
-                                                    $statusBadgeClass = 'text-bg-secondary';
-                                                }
-                                            }
-                                        @endphp
-                                        <tr>
-                                            <td><span class="ota-patient-cell"><i
-                                                        class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
-                                            </td>
-                                            <td><span class="ota-phone-cell"><i
-                                                        class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span>
-                                            </td>
-                                            <td>
-                                                <span class="ota-amount-pill"><i
-                                                        class="bi bi-cash-coin"></i>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</span>
-                                                @if($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
-                                                    <div class="small text-muted mt-1">
-                                                        Paid {{ money_code($booking->total_paid, 2) }}
-                                                        · Refunded {{ money_code($booking->total_refunded, 2) }}
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td>
-                                                <span class="badge ota-status-badge {{ $statusBadgeClass }}">
-                                                    {{ $statusLabel }}
-                                                </span>
-                                                @if($paymentStatus === 'partially_paid' && !$isRefundsTab)
-                                                    <div class="small text-muted mt-1">Balance:
-                                                        {{ money_code($booking->remaining_balance, 2) }}
-                                                    </div>
-                                                @endif
-                                                @if($isRefundsTab && $booking->refundable_balance > 0)
-                                                    <div class="small text-muted mt-1">To return:
-                                                        {{ money_code($booking->refundable_balance, 2) }}
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td class="text-end">
-                                                <button type="button" class="btn btn-sm btn-outline-secondary ota-view-btn me-2"
-                                                    data-bs-toggle="modal" data-bs-target="#otaDetailModal{{ $booking->id }}">
-                                                    <i class="bi bi-eye-fill me-1"></i> View
-                                                </button>
-                                                @if(($activeFilter ?? '') === 'history')
-                                                    @if($booking->payments->isNotEmpty())
-                                                        @haspermission('ot_bill_print')
-                                                        <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
-                                                            class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
-                                                            <i class="bi bi-printer me-1"></i> Receipt
-                                                        </a>
-                                                        @endhaspermission
-                                                    @endif
-                                                @elseif($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
-                                                    @if($booking->refundable_balance > 0)
-                                                        <a href="{{ route('hospital.ot.refunds.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                            class="btn btn-sm btn-danger ota-add-payment-btn">
-                                                            <i class="bi bi-arrow-counterclockwise me-1"></i> Full Refund
-                                                        </a>
-                                                    @else
-                                                        <span class="text-muted small ota-paid-note me-2"><i
-                                                                class="bi bi-check2-circle"></i>
-                                                            Refund Done</span>
-                                                    @endif
-                                                @elseif($paymentStatus === 'paid')
-                                                    <span class="text-muted small ota-paid-note me-2"><i
-                                                            class="bi bi-check2-circle"></i>
-                                                        Payment Completed</span>
-                                                @elseif($paymentStatus === 'unpriced')
-                                                    <span class="text-muted small ota-paid-note me-2"><i
-                                                            class="bi bi-exclamation-circle"></i> Package Not Set</span>
-                                                @else
-                                                    @haspermission('ot_payment_record')
-                                                    <a href="{{ route('hospital.ot.payments.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                        class="btn btn-sm btn-primary ota-add-payment-btn">
-                                                        <i class="bi bi-plus-circle me-1"></i>
-                                                        {{ $paymentStatus === 'partially_paid' ? 'Add Balance Payment' : 'Add Payment' }}
-                                                    </a>
-                                                    @endhaspermission
-                                                @endif
-                                                @if(($activeFilter ?? '') !== 'history' && $booking->payments->isNotEmpty() && !$isRefundsTab)
-                                                    @haspermission('ot_bill_print')
-                                                    <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
-                                                        class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
-                                                        <i class="bi bi-printer me-1"></i> Receipt
-                                                    </a>
-                                                    @endhaspermission
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted py-4 ota-empty-cell">
-                                                @if(($activeFilter ?? '') === 'refunds')
-                                                    No surgery-refused patients awaiting refund.
-                                                @elseif(($activeFilter ?? '') === 'history')
-                                                    No completed payments in this date range.
-                                                @else
-                                                    No bookings in payment queue.
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+            <div class="card-body p-0">
+                <div class="table-responsive ota-table-wrap">
+                    <div id="otaAccountantTableContainer">
+                        <table class="otaAccountant-table" id="otaAccountantTable" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Patient Name</th>
+                                    <th>Phone</th>
+                                    <th>Package Amount</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($bookings as $booking)
+                                @php
+                                    $isRefundsTab = ($activeFilter ?? '') === 'refunds';
+                                    $paymentStatus = $booking->payment_status;
+                                    $statusBadgeClass = match ($paymentStatus) {
+                                        'paid' => 'text-bg-success',
+                                        'partially_paid' => 'text-bg-info',
+                                        'unpriced' => 'text-bg-secondary',
+                                        default => 'text-bg-warning',
+                                    };
+                                    $statusLabel = match ($paymentStatus) {
+                                        'paid' => 'Payment Completed',
+                                        'partially_paid' => 'Partially Paid',
+                                        'unpriced' => 'Package Not Set',
+                                        default => 'Payment Pending',
+                                    };
+                                    if ($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED) {
+                                        if ($booking->isFullyRefunded()) {
+                                            $statusLabel = 'Fully Refunded';
+                                            $statusBadgeClass = 'text-bg-success';
+                                        } elseif ($booking->refundable_balance > 0) {
+                                            $statusLabel = 'Refund Pending';
+                                            $statusBadgeClass = 'text-bg-danger';
+                                        } else {
+                                            $statusLabel = 'Surgery Refused';
+                                            $statusBadgeClass = 'text-bg-secondary';
+                                        }
+                                    }
+                                @endphp
+                                <tr>
+                                    <td><span class="ota-patient-cell"><i
+                                                class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
+                                    </td>
+                                    <td><span class="ota-phone-cell"><i
+                                                class="bi bi-telephone-fill"></i>{{ $booking->patient?->contact_no ?? '-' }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="ota-amount-pill"><i
+                                                class="bi bi-cash-coin"></i>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</span>
+                                        @if($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
+                                            <div class="small text-muted mt-1">
+                                                Paid {{ money_code($booking->total_paid, 2) }}
+                                                · Refunded {{ money_code($booking->total_refunded, 2) }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <span class="badge ota-status-badge {{ $statusBadgeClass }}">
+                                            {{ $statusLabel }}
+                                        </span>
+                                        @if($paymentStatus === 'partially_paid' && !$isRefundsTab)
+                                            <div class="small text-muted mt-1">Balance:
+                                                {{ money_code($booking->remaining_balance, 2) }}
+                                            </div>
+                                        @endif
+                                        @if($isRefundsTab && $booking->refundable_balance > 0)
+                                            <div class="small text-muted mt-1">To return:
+                                                {{ money_code($booking->refundable_balance, 2) }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary ota-view-btn me-2"
+                                            data-bs-toggle="modal" data-bs-target="#otaDetailModal{{ $booking->id }}">
+                                            <i class="bi bi-eye-fill me-1"></i> View
+                                        </button>
+                                        @if(($activeFilter ?? '') === 'history')
+                                        @if($booking->payments->isNotEmpty())
+                                        @haspermission('ot_bill_print')
+                                            <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
+                                                class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
+                                                <i class="bi bi-printer me-1"></i> Receipt
+                                            </a>
+                                            @endhaspermission
+                                            @endif
+                                        @elseif($isRefundsTab || $booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_REFUSED)
+                                            @if($booking->refundable_balance > 0)
+                                                <a href="{{ route('hospital.ot.refunds.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                    class="btn btn-sm btn-danger ota-add-payment-btn">
+                                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Full Refund
+                                                </a>
+                                            @else
+                                                <span class="text-muted small ota-paid-note me-2"><i
+                                                        class="bi bi-check2-circle"></i>
+                                                    Refund Done</span>
+                                            @endif
+                                        @elseif($paymentStatus === 'paid')
+                                            <span class="text-muted small ota-paid-note me-2"><i
+                                                    class="bi bi-check2-circle"></i>
+                                                Payment Completed</span>
+                                        @elseif($paymentStatus === 'unpriced')
+                                            <span class="text-muted small ota-paid-note me-2"><i
+                                                    class="bi bi-exclamation-circle"></i> Package Not Set</span>
+                                        @else
+                                        @haspermission('ot_payment_record')
+                                        <a href="{{ route('hospital.ot.payments.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                            class="btn btn-sm btn-primary ota-add-payment-btn">
+                                            <i class="bi bi-plus-circle me-1"></i>
+                                            {{ $paymentStatus === 'partially_paid' ? 'Add Balance Payment' : 'Add Payment' }}
+                                        </a>
+                                        @endhaspermission
+                                        @endif
+                                        @if(($activeFilter ?? '') !== 'history' && $booking->payments->isNotEmpty() && !$isRefundsTab)
+                                        @haspermission('ot_bill_print')
+                                        <a href="{{ route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $booking->payments->sortByDesc('id')->first()->id]) }}"
+                                            class="btn btn-sm btn-outline-secondary ota-view-btn" target="_blank">
+                                            <i class="bi bi-printer me-1"></i> Receipt
+                                        </a>
+                                        @endhaspermission
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="text-center text-muted py-4 ota-empty-cell">
+                                        @if(($activeFilter ?? '') === 'refunds')
+                                            No surgery-refused patients awaiting refund.
+                                        @elseif(($activeFilter ?? '') === 'history')
+                                            No completed payments in this date range.
+                                        @else
+                                            No bookings in payment queue.
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    @foreach($bookings as $booking)
-        @include('hospital.ot.accountant._payment-view-modal', ['booking' => $booking, 'modalId' => 'otaDetailModal' . $booking->id])
-    @endforeach
+@foreach($bookings as $booking)
+    @include('hospital.ot.accountant._payment-view-modal', ['booking' => $booking, 'modalId' => 'otaDetailModal' . $booking->id])
+@endforeach
 
 @endsection
 

@@ -78,7 +78,7 @@ Route::prefix('{slug}')
         // ================================================================
         // Login / Logout — no hospital auth required
         // ================================================================
-
+    
         // Hospital login page: hmssaas.com/{slug}/login
         Route::get('/login', [LoginController::class, 'show'])
             ->middleware('redirect.inactive')
@@ -111,7 +111,7 @@ Route::prefix('{slug}')
         // ================================================================
         // Authenticated Hospital Routes
         // ================================================================
-
+    
         Route::middleware(['auth.hospital', 'subscription.active', 'grace.check'])
             ->group(function () {
 
@@ -336,67 +336,67 @@ Route::prefix('{slug}')
                     Route::prefix('basic')->name('basic.')
                         ->middleware('permission:casetype_manage|location_manage')
                         ->group(function () {
-                            Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
-                            Route::post('{type}', [BasicMasterController::class, 'store'])->name('store');
-                            // AJAX create for masters from forms (e.g. add city inline)
-                            Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
-                                ->withoutMiddleware('permission:casetype_manage|location_manage')
-                                ->name('ajax.store');
-                            Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->name('update')->whereNumber('id');
-                            Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->name('destroy')->whereNumber('id');
-                        });
+                        Route::get('{type}', [BasicMasterController::class, 'index'])->name('index');
+                        Route::post('{type}', [BasicMasterController::class, 'store'])->name('store');
+                        // AJAX create for masters from forms (e.g. add city inline)
+                        Route::post('{type}/ajax', [BasicMasterController::class, 'ajaxStore'])
+                            ->withoutMiddleware('permission:casetype_manage|location_manage')
+                            ->name('ajax.store');
+                        Route::put('{type}/{id}', [BasicMasterController::class, 'update'])->name('update')->whereNumber('id');
+                        Route::delete('{type}/{id}', [BasicMasterController::class, 'destroy'])->name('destroy')->whereNumber('id');
+                    });
 
                     // Detail (Eye-Exam) Masters: vn, pnvn, sph_cyl, axis, complaints, etc.
                     Route::prefix('detail')->name('detail.')
                         ->middleware('permission:eye_exam_master_manage')
                         ->group(function () {
-                            Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
-                            Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:eye_exam_master_manage')->name('store');
-                            Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:eye_exam_master_manage')->name('sync-by-diagnosis');
-                            Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:eye_exam_master_manage')->name('update')->whereNumber('id');
-                            Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:eye_exam_master_manage')->name('toggle-favourite')->whereNumber('id');
-                            Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:eye_exam_master_manage')->name('destroy')->whereNumber('id');
-                        });
+                        Route::get('{type}', [DetailMasterController::class, 'index'])->name('index');
+                        Route::post('{type}', [DetailMasterController::class, 'store'])->middleware('permission:eye_exam_master_manage')->name('store');
+                        Route::post('{type}/sync-by-diagnosis', [DetailMasterController::class, 'syncByDiagnosis'])->middleware('permission:eye_exam_master_manage')->name('sync-by-diagnosis');
+                        Route::put('{type}/{id}', [DetailMasterController::class, 'update'])->middleware('permission:eye_exam_master_manage')->name('update')->whereNumber('id');
+                        Route::post('{type}/{id}/toggle-favourite', [DetailMasterController::class, 'toggleFavourite'])->middleware('permission:eye_exam_master_manage')->name('toggle-favourite')->whereNumber('id');
+                        Route::delete('{type}/{id}', [DetailMasterController::class, 'destroy'])->middleware('permission:eye_exam_master_manage')->name('destroy')->whereNumber('id');
+                    });
 
                     Route::prefix('ot')->name('ot.')->group(function () {
-                        Route::get('lens-options', [OtLensOptionController::class, 'index'])->name('lens-options.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_lens_option'));
+                        Route::get('lens-options', [OtLensOptionController::class, 'index'])->name('lens-options.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_lens_option'));
                         Route::post('lens-options', [OtLensOptionController::class, 'store'])->name('lens-options.store')->middleware('permission:ot_lens_option_add');
                         Route::put('lens-options/{id}', [OtLensOptionController::class, 'update'])->name('lens-options.update')->whereNumber('id')->middleware('permission:ot_lens_option_edit');
                         Route::delete('lens-options/{id}', [OtLensOptionController::class, 'destroy'])->name('lens-options.destroy')->whereNumber('id')->middleware('permission:ot_lens_option_delete');
 
-                        Route::get('slots', [OtSlotController::class, 'index'])->name('slots.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_slot'));
+                        Route::get('slots', [OtSlotController::class, 'index'])->name('slots.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_slot'));
                         Route::post('slots', [OtSlotController::class, 'store'])->name('slots.store')->middleware('permission:ot_slot_add');
                         Route::put('slots/{id}', [OtSlotController::class, 'update'])->name('slots.update')->whereNumber('id')->middleware('permission:ot_slot_edit');
                         Route::delete('slots/{id}', [OtSlotController::class, 'destroy'])->name('slots.destroy')->whereNumber('id')->middleware('permission:ot_slot_delete');
 
-                        Route::get('types', [OtTypeController::class, 'index'])->name('types.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
+                        Route::get('types', [OtTypeController::class, 'index'])->name('types.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_type'));
                         Route::post('types', [OtTypeController::class, 'store'])->name('types.store')->middleware('permission:ot_type_add');
                         Route::put('types/{id}', [OtTypeController::class, 'update'])->name('types.update')->whereNumber('id')->middleware('permission:ot_type_edit');
                         Route::delete('types/{id}', [OtTypeController::class, 'destroy'])->name('types.destroy')->whereNumber('id')->middleware('permission:ot_type_delete');
 
-                        Route::get('surgery-types', [OtSurgeryTypeController::class, 'index'])->name('surgery-types.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_surgery_type'));
+                        Route::get('surgery-types', [OtSurgeryTypeController::class, 'index'])->name('surgery-types.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_surgery_type'));
                         Route::post('surgery-types', [OtSurgeryTypeController::class, 'store'])->name('surgery-types.store')->middleware('permission:ot_surgery_type_add');
                         Route::put('surgery-types/{id}', [OtSurgeryTypeController::class, 'update'])->name('surgery-types.update')->whereNumber('id')->middleware('permission:ot_surgery_type_edit');
                         Route::delete('surgery-types/{id}', [OtSurgeryTypeController::class, 'destroy'])->name('surgery-types.destroy')->whereNumber('id')->middleware('permission:ot_surgery_type_delete');
 
-                        Route::get('charge-heads', [OtChargeHeadController::class, 'index'])->name('charge-heads.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_charge'));
+                        Route::get('charge-heads', [OtChargeHeadController::class, 'index'])->name('charge-heads.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_charge'));
                         Route::post('charge-heads', [OtChargeHeadController::class, 'store'])->name('charge-heads.store')->middleware('permission:ot_charge_add');
                         Route::put('charge-heads/{id}', [OtChargeHeadController::class, 'update'])->name('charge-heads.update')->whereNumber('id')->middleware('permission:ot_charge_edit');
                         Route::delete('charge-heads/{id}', [OtChargeHeadController::class, 'destroy'])->name('charge-heads.destroy')->whereNumber('id')->middleware('permission:ot_charge_delete');
 
-                        Route::get('packages', [OtPackageMasterController::class, 'index'])->name('packages.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_package_master'));
+                        Route::get('packages', [OtPackageMasterController::class, 'index'])->name('packages.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_package_master'));
                         Route::post('packages', [OtPackageMasterController::class, 'store'])->name('packages.store')->middleware('permission:ot_package_master_add');
                         Route::put('packages/{id}', [OtPackageMasterController::class, 'update'])->name('packages.update')->whereNumber('id')->middleware('permission:ot_package_master_edit');
                         Route::delete('packages/{id}', [OtPackageMasterController::class, 'destroy'])->name('packages.destroy')->whereNumber('id')->middleware('permission:ot_package_master_delete');
 
                         // Lens Power master — Phase 4 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §4)
-                        Route::get('lens-powers', [OtLensPowerController::class, 'index'])->name('lens-powers.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_lens_power'));
+                        Route::get('lens-powers', [OtLensPowerController::class, 'index'])->name('lens-powers.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_lens_power'));
                         Route::post('lens-powers', [OtLensPowerController::class, 'store'])->name('lens-powers.store')->middleware('permission:ot_lens_power_add');
                         Route::put('lens-powers/{id}', [OtLensPowerController::class, 'update'])->name('lens-powers.update')->whereNumber('id')->middleware('permission:ot_lens_power_edit');
                         Route::delete('lens-powers/{id}', [OtLensPowerController::class, 'destroy'])->name('lens-powers.destroy')->whereNumber('id')->middleware('permission:ot_lens_power_delete');
 
                         // Lens Inventory (stock) master — Phase 7 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §7)
-                        Route::get('lens-inventory', [LensInventoryController::class, 'index'])->name('lens-inventory.index')->middleware('permission:'.\App\Services\Auth\PermissionMatrix::anyCrud('ot_inventory'));
+                        Route::get('lens-inventory', [LensInventoryController::class, 'index'])->name('lens-inventory.index')->middleware('permission:' . \App\Services\Auth\PermissionMatrix::anyCrud('ot_inventory'));
                         Route::post('lens-inventory', [LensInventoryController::class, 'store'])->name('lens-inventory.store')->middleware('permission:ot_inventory_add');
                         Route::put('lens-inventory/{id}', [LensInventoryController::class, 'update'])->name('lens-inventory.update')->whereNumber('id')->middleware('permission:ot_inventory_edit');
                         Route::delete('lens-inventory/{id}', [LensInventoryController::class, 'destroy'])->name('lens-inventory.destroy')->whereNumber('id')->middleware('permission:ot_inventory_delete');
@@ -580,6 +580,9 @@ Route::prefix('{slug}')
                         Route::get('/money', [OtAccountantController::class, 'moneyReport'])
                             ->name('accountant.money');
 
+                        Route::get('/money/export', [OtAccountantController::class, 'moneyExport'])
+                            ->name('accountant.money.export');
+
                         Route::get('/payments/{bookingId}/create', [OtAccountantController::class, 'createPayment'])
                             ->name('payments.create')
                             ->whereNumber('bookingId');
@@ -718,5 +721,5 @@ Route::prefix('{slug}')
                     ->where('step', '[1-4]');
 
             }); // end authenticated group
-
+    
     }); // end {slug} prefix
