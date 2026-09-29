@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\MasterApiController;
 use App\Http\Controllers\Api\MastersApiController;
 use App\Http\Controllers\Api\ProfileApiController;
 use App\Http\Controllers\Api\SettingsApiController;
+use App\Http\Controllers\Api\SubscriptionApiController;
 use App\Http\Controllers\Api\OtApiController;
 use App\Http\Controllers\Api\OtCounsellorApiController;
 use App\Http\Controllers\Api\OtAppointmentApiController;
@@ -226,6 +227,21 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 ->middleware('auth:sanctum')
                 ->name('auth.logout');
 
+            // Subscription / Billing — accessible during grace, same as web's
+            // routes/hospital.php ("accessible during grace — no
+            // subscription.active"): a tenant whose plan just expired is
+            // exactly who needs to reach this (to see why / download past
+            // invoices), so it must NOT sit behind the subscription.active
+            // gate below. See SubscriptionApiController's own docblock.
+            Route::middleware(['auth:sanctum', 'permissions.version', 'hospital.user.active'])
+                ->group(function () {
+                    Route::get('/subscription', [SubscriptionApiController::class, 'index'])
+                        ->name('subscription.index');
+                    Route::get('/subscription/invoice/{paymentId}', [SubscriptionApiController::class, 'downloadInvoice'])
+                        ->name('subscription.invoice')
+                        ->whereNumber('paymentId');
+                });
+
             // Authenticated endpoints
             Route::middleware(['auth:sanctum', 'permissions.version', 'hospital.user.active', 'subscription.active'])
                 ->group(function () {
@@ -316,6 +332,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->middleware('permission:patient_register_phone');
                     Route::put('patients/{patient}', [PatientApiController::class, 'update'])
                         ->name('patients.update')
+                        ->middleware('permission:patient_edit');
+                    // Exam screens' "Patient Details" modal (2026-09-29 —
+                    // WEB_VIEW_BUTTONS_PARITY_AUDIT.md finding #2) — mirrors
+                    // web's quick-personal, doctor-only inline edit.
+                    Route::patch('patients/{patient}/quick-personal', [PatientApiController::class, 'quickUpdatePersonal'])
+                        ->name('patients.quick-personal')
                         ->middleware('permission:patient_edit');
                     Route::delete('patients/{patient}', [PatientApiController::class, 'destroy'])
                         ->name('patients.destroy')
