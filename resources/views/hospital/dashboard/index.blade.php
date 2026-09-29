@@ -2050,6 +2050,20 @@
                     </div>
                 </div>
             </a>
+
+            <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}" class="bento-card span-2 text-decoration-none">
+                <span class="bento-gloss" aria-hidden="true"></span>
+                <div class="bento-stat">
+                    <div class="bento-icon ig-indigo">
+                        <i class="bi bi-file-earmark-bar-graph" style="font-size:22px;color:#34495E"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">OT Report</p>
+                        <div class="metric-value" style="font-size:1.15rem">View &rarr;</div>
+                        <p class="metric-meta">Collected &amp; refunded money report</p>
+                    </div>
+                </div>
+            </a>
             {{-- Ward Management: Pending Patient (replaces OT Appointment card) --}}
         @elseif($isWardManagementUser && $wardPendingCount !== null)
             <a href="#wardPanel" data-acc-tab="queue" class="bento-card span-2 text-decoration-none acc-tab-card is-active">

@@ -46,17 +46,17 @@ Roles / History panel design. --}}
                     </ul>
                 </div>
             @endif
-
-            @if($consultOnly)
-                <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
-                    <i class="bi bi-info-circle mt-1"></i>
-                    <div>
-                        <strong>Ward-assigned patients.</strong>
-                        Ready for surgery → assign <em>OT Assistant</em> (next OT process).
-                        Not ready / refuse → send to <em>Accounts</em> for refund.
+            <!-- 
+                @if($consultOnly)
+                    <div class="alert alert-info d-flex align-items-start gap-2 mb-4">
+                        <i class="bi bi-info-circle mt-1"></i>
+                        <div>
+                            <strong>Ward-assigned patients.</strong>
+                            Ready for surgery → assign <em>OT Assistant</em> (next OT process).
+                            Not ready / refuse → send to <em>Accounts</em> for refund.
+                        </div>
                     </div>
-                </div>
-            @endif
+                @endif -->
 
             @unless($consultOnly)
                 <div class="card dot-premium-card border-0 mb-4">
@@ -236,10 +236,10 @@ Roles / History panel design. --}}
 @push('styles')
     <style>
         /*
-                                      OT Patients (Doctor OT) — Design refresh
-                                      Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                                      Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-                                    */
+                                              OT Patients (Doctor OT) — Design refresh
+                                              Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                                              Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+                                            */
 
         .dot-list-page {
             --dot-secondary: #1B4F72;
