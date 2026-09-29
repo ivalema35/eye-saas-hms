@@ -469,6 +469,9 @@ class DashboardController extends Controller
             'referrer:id,name',
             'primaryExamination:id,patient_id,exam_data,dilation_time,updated_at',
             'secondaryExamination:id,patient_id',
+            // Web pull 2026-09-28 — Patient::workflowStage() reads this to
+            // derive the "Patient Status" tab's OPD→OT lifecycle badge.
+            'latestOtBooking',
         ])
             ->where('reception_id', $authUser->id)
             ->whereDate('appointment_date', $today)
@@ -482,6 +485,39 @@ class DashboardController extends Controller
             $arr = $p->toArray();
             $arr['full_name'] = $p->full_name;
             $arr['source'] = 'patient';
+
+            // Web pull 2026-09-28 — "Patient Status" 4th tab. Mirrors
+            // receptionist-today-patients-table.blade.php's exact grouping
+            // rule and receptionist-today-patients-rows.blade.php's label
+            // remap, so both apps render identically to web without having
+            // to re-derive this from workflowStage() themselves.
+            $stage = $p->workflowStage();
+            $arr['workflow_stage'] = $stage;
+            $arr['status_label'] = match ($stage['label']) {
+                'Examination Done' => 'Secondary Done',
+                'Counselling' => 'In Counselling',
+                'Account' => 'In Account',
+                'Ward Management' => 'In Ward',
+                'OT Assistant' => 'Ready for OT',
+                'OT Done' => $stage['sub'] === 'Discharged' ? 'Discharged' : 'Operated',
+                default => $stage['label'],
+            };
+
+            $isPhoneType = strtolower(trim((string) $p->type)) === 'phone';
+            $pastPrimaryStage = $p->primary_done_at !== null
+                && ($p->secondary_done_at !== null || $stage['label'] !== 'Secondary Exam');
+            if ($isPhoneType) {
+                $groups = $pastPrimaryStage ? ['phone', 'status'] : ['phone'];
+            } elseif ($pastPrimaryStage) {
+                $groups = ['status'];
+            } else {
+                $groups = ['walkin'];
+            }
+            $arr['tap_groups'] = $groups;
+            // Drop the raw relation — apps only need the derived
+            // workflow_stage/status_label/tap_groups above, not the full
+            // nested OtBooking payload for every row.
+            unset($arr['latest_ot_booking']);
             // Same city resolution as PatientApiController::locationArray() —
             // the raw `location` relation is the old, deprecated Location
             // table; every patient's real city lives on `masterCity` (falls
@@ -544,6 +580,9 @@ class DashboardController extends Controller
                 // own appointment number instead. Was missing entirely here,
                 // leaving the MRD column blank for every OT row.
                 $arr['patient_code'] = $appt->appointment_number;
+                // Web pull 2026-09-28 — OT-sourced rows always belong to the
+                // "OT" tab only, never "Patient Status".
+                $arr['tap_groups'] = ['ot'];
 
                 return $arr;
             });
