@@ -158,6 +158,10 @@ class PatientApiController extends Controller
             'masterCity.state',
             'caseType:id,case_type',
             'referrer:id,name',
+            // Web pull 2026-09-29 (WEB_VIEW_BUTTONS_PARITY_AUDIT.md finding
+            // #2) — exam screens' "Patient Details" modal needs the
+            // Receptionist name, which nothing previously eager-loaded here.
+            'reception:id,name',
             'primaryExamination',
             'secondaryExamination',
         ]);
@@ -167,6 +171,56 @@ class PatientApiController extends Controller
         $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr]);
+    }
+
+    /**
+     * Exam screens' "Patient Details" modal — inline personal-info edit,
+     * mirrors web's Hospital\Patient\PatientController::quickUpdatePersonal
+     * exactly (same doctor-only gate, same validation, same response shape).
+     * See WEB_VIEW_BUTTONS_PARITY_AUDIT.md finding #2.
+     */
+    public function quickUpdatePersonal(string $slug, Request $request, Patient $patient): JsonResponse
+    {
+        abort_unless($request->user()?->role?->slug === 'doctor', 403);
+
+        $data = $request->validate([
+            'full_name' => ['required', 'string', 'max:150'],
+            'age' => ['required', 'integer', 'min:0', 'max:150'],
+            'gender' => ['required', 'in:male,female,other'],
+            'contact_no' => PhoneRules::required(),
+            'location_id' => ['required', 'integer', 'exists:tbl_master_cities,id'],
+        ]);
+
+        $parts = preg_split('/\s+/', trim($data['full_name']));
+        $firstName = array_shift($parts);
+        $lastName = count($parts) ? array_pop($parts) : '';
+        $middleName = count($parts) ? implode(' ', $parts) : '';
+
+        $patient->update([
+            'first_name' => $firstName,
+            'middle_name' => $middleName,
+            'last_name' => $lastName,
+            'age' => $data['age'],
+            'gender' => $data['gender'],
+            'contact_no' => $data['contact_no'],
+            'location_id' => $data['location_id'],
+        ]);
+
+        $patient = $patient->fresh(['masterCity.district', 'masterCity.state']);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'full_name' => $patient->full_name,
+                'age' => $patient->age,
+                'gender' => $patient->gender,
+                'contact_no' => $patient->contact_no,
+                'location_id' => $patient->location_id,
+                'city_name' => $patient->cityName ?: '—',
+                'district_name' => $patient->districtName ?: '—',
+                'state_name' => $patient->stateName ?: '—',
+            ],
+        ]);
     }
 
     public function store(Request $request): JsonResponse
