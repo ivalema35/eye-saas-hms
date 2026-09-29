@@ -488,39 +488,49 @@ class OtDischargeApiController extends Controller
      * The `hospital.ot.billing.*_print` blades hide a floating "Print"
      * button and a browser-preview-only backdrop (gray background, extra
      * margin/padding/shadow around the page) behind `@media print` /
-     * `@media screen` respectively — correct for a real browser, which
-     * applies `@media print` when actually printing (hiding the button,
-     * resetting the preview chrome) and `@media screen` only for the
-     * on-screen preview. DomPDF, which renders this exact HTML for these
-     * three endpoints, does the opposite: it ignores `@media print`
-     * entirely (so the button never gets hidden) and DOES apply `@media
-     * screen` unconditionally (so the preview-only backdrop/margin/padding
-     * leaks into the "printed" PDF) — producing a baked-in Print button, a
-     * blank leading page, and content clipped past the page edge. Fixed
-     * here at the API layer only, by rendering the blade to an HTML string
-     * and stripping those two browser-only pieces before handing it to
-     * DomPDF — the blade file itself, and web's own browser-rendered
-     * print/preview (which never goes through this code path), are
-     * completely unaffected.
+     * `@media screen` respectively — correct for a real browser. DomPDF's
+     * media-query handling for THESE three blades turned out not to be the
+     * simple "ignores @media print entirely" a previous pass here assumed
+     * (that assumption is why the bug below kept coming back after each
+     * fix) — empirically, this DomPDF install partially applies `@media
+     * print` too, specifically `html, body { width: 148mm; }`. That rule
+     * sets the body to the FULL A5 page width while the SAME blade's
+     * `@page { size: A5 portrait; margin: 12-14mm; }` also reserves that
+     * margin on each side — i.e. body demands 148mm inside a printable area
+     * that's already only ~120-122mm wide once the page margin is
+     * subtracted, so the right-hand ~26mm of every document runs off the
+     * page edge. `@media screen`'s preview-only backdrop/margin/shadow
+     * leaking in unconditionally was the other half of the original bug.
+     * Fixed here at the API layer only, by rendering the blade to an HTML
+     * string and stripping BOTH media-query blocks entirely before handing
+     * it to DomPDF, so nothing conditional survives to be inconsistently
+     * (mis)applied — replaced with an explicit, always-applied wrapper div
+     * for page padding instead of relying on `@page` margin support at all.
+     * The blade file itself, and web's own browser-rendered print/preview
+     * (which never goes through this code path), are completely unaffected.
      */
     private function domPdfSafeHtml(string $view, array $data): string
     {
         $html = view($view, $data)->render();
         $html = preg_replace('/<button[^>]*class="print-btn"[^>]*>.*?<\/button>/s', '', $html) ?? $html;
         $html = preg_replace('/@media\s+screen\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
+        // See docblock above — this is the fix for the recurring
+        // content-runs-off-the-right-edge bug. Previously left in place
+        // under the (wrong, for this DomPDF install) assumption that
+        // DomPDF ignores it entirely.
+        $html = preg_replace('/@media\s+print\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
 
         // These print views rely entirely on a CSS `@page { margin: ... }`
-        // rule for their page margins (their own comment: "DomPDF ignores
-        // @media print — keep base layout margin-free"). A real browser
-        // (web's own print) honors that rule fine, but this server-side
-        // DomPDF render was not applying it, so mobile/tablet's downloaded
-        // PDF showed every document's text running edge-to-edge — no
-        // padding, nothing centered — while the same page printed fine from
-        // web. Rather than depend on `@page` margin support, wrap the
-        // rendered body in an explicit padded div, which DomPDF always
-        // honors regardless of `@page` behavior, and force the view's own
-        // `.page`/body margins to 0 so this wrapper is the only source of
-        // spacing (avoids doubling up if `@page` margin does also apply).
+        // rule for their page margins. A real browser (web's own print)
+        // honors that rule fine, but this server-side DomPDF render was not
+        // applying it, so mobile/tablet's downloaded PDF showed every
+        // document's text running edge-to-edge — no padding, nothing
+        // centered — while the same page printed fine from web. Rather than
+        // depend on `@page` margin support, wrap the rendered body in an
+        // explicit padded div, which DomPDF always honors regardless of
+        // `@page` behavior, and force the view's own `.page`/body margins
+        // to 0 so this wrapper is the only source of spacing (avoids
+        // doubling up if `@page` margin does also apply).
         $html = preg_replace(
             '/<body([^>]*)>(.*)<\/body>/is',
             '<body$1><div style="padding:14mm;box-sizing:border-box;width:100%;">$2</div></body>',
@@ -529,7 +539,7 @@ class OtDischargeApiController extends Controller
         ) ?? $html;
         $html = preg_replace(
             '/<\/head>/i',
-            '<style>body{margin:0 !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>',
+            '<style>html,body{margin:0 !important;width:auto !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>',
             $html,
             1
         ) ?? $html;
