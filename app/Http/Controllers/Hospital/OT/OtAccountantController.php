@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Hospital\OT;
 
+use App\Exports\GenericArrayExport;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OtAccountantController extends Controller
 {
@@ -115,7 +118,7 @@ class OtAccountantController extends Controller
                 ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
                 ->with(['payments', 'refunds'])
                 ->get()
-                ->filter(fn (OtBooking $b) => ! $b->isFullyRefunded() && $b->refundable_balance > 0)
+                ->filter(fn(OtBooking $b) => !$b->isFullyRefunded() && $b->refundable_balance > 0)
                 ->count(),
         ];
         $moneySummary['net'] = round($moneySummary['collected'] - $moneySummary['refunded'], 2);
@@ -158,7 +161,7 @@ class OtAccountantController extends Controller
                 ->with('error', 'This booking is already fully refunded (or has no payments).');
         }
 
-        $autoReceipt = 'REF-'.now()->format('Ym').'-'.str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+        $autoReceipt = 'REF-' . now()->format('Ym') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
 
         return view('hospital.ot.accountant.refund', [
             'slug' => $slug,
@@ -199,7 +202,7 @@ class OtAccountantController extends Controller
 
         $receipt = trim((string) ($validated['receipt_number'] ?? ''));
         if ($receipt === '') {
-            $receipt = 'REF-'.now()->format('Ym').'-'.str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+            $receipt = 'REF-' . now()->format('Ym') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
         }
 
         OtRefund::query()->create([
@@ -215,7 +218,7 @@ class OtAccountantController extends Controller
 
         return redirect()
             ->route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds'])
-            ->with('success', 'Full refund of '.number_format($refundable, 2).' recorded (receipt '.$receipt.').');
+            ->with('success', 'Full refund of ' . number_format($refundable, 2) . ' recorded (receipt ' . $receipt . ').');
     }
 
     /**
@@ -273,6 +276,64 @@ class OtAccountantController extends Controller
         ]);
     }
 
+    public function moneyExport(Request $request, string $slug): BinaryFileResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $today = now()->toDateString();
+        $start = (string) ($request->input('start_date') ?: $today);
+        $end = (string) ($request->input('end_date') ?: $start);
+        $section = $request->input('section', 'payments');
+
+        if ($end < $start) {
+            [$start, $end] = [$end, $start];
+        }
+
+        abort_unless(in_array($section, ['payments', 'refunds'], true), 404);
+
+        if ($section === 'payments') {
+            $rows = OtPayment::query()
+                ->with('booking.patient')
+                ->where('tenant_id', $tenantId)
+                ->whereDate('paid_at', '>=', $start)
+                ->whereDate('paid_at', '<=', $end)
+                ->orderByDesc('paid_at')
+                ->limit(200)
+                ->get()
+                ->map(fn(OtPayment $payment): array => [
+                    optional($payment->paid_at)->format('d M Y H:i') ?? '-',
+                    $payment->booking?->patient?->full_name ?? '-',
+                    (float) $payment->package_amount,
+                    strtoupper((string) $payment->payment_mode),
+                ])
+                ->all();
+
+            $headings = ['Date', 'Patient', 'Amount', 'Mode'];
+        } else {
+            $rows = OtRefund::query()
+                ->with('booking.patient')
+                ->where('tenant_id', $tenantId)
+                ->whereDate('refunded_at', '>=', $start)
+                ->whereDate('refunded_at', '<=', $end)
+                ->orderByDesc('refunded_at')
+                ->limit(200)
+                ->get()
+                ->map(fn(OtRefund $refund): array => [
+                    optional($refund->refunded_at)->format('d M Y H:i') ?? '-',
+                    $refund->booking?->patient?->full_name ?? '-',
+                    (float) $refund->amount,
+                    strtoupper((string) $refund->payment_mode),
+                ])
+                ->all();
+
+            $headings = ['Date', 'Patient', 'Amount', 'Mode'];
+        }
+
+        return Excel::download(
+            new GenericArrayExport($rows, $headings),
+            'ot_' . $section . '_' . now()->format('Y-m-d') . '.xlsx'
+        );
+    }
+
     public function createPayment(string $slug, int $bookingId): View
     {
         $tenantId = (int) app('tenant')->id;
@@ -299,7 +360,7 @@ class OtAccountantController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        if (! $invoice) {
+        if (!$invoice) {
             $invoiceNumber = $this->generateUniqueInvoiceNumber($tenantId);
             $now = now();
             $payload = [
@@ -336,7 +397,7 @@ class OtAccountantController extends Controller
         }
 
         $hasMediclaim = (bool) ($counselling?->mediclaim ?? $booking->has_mediclaim);
-        $autoReceiptNumber = 'RCP-'.now()->format('Ym').'-'.str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+        $autoReceiptNumber = 'RCP-' . now()->format('Ym') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
         $defaultPaymentMode = $hasMediclaim ? 'mediclaim' : 'cash';
 
         return view('hospital.ot.accountant.payment', [
@@ -359,7 +420,7 @@ class OtAccountantController extends Controller
             ->with('payments')
             ->findOrFail($bookingId);
 
-        if (! in_array($booking->ot_status, [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID], true)) {
+        if (!in_array($booking->ot_status, [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID], true)) {
             return redirect()
                 ->route('hospital.ot.accountant.dashboard', ['slug' => $slug])
                 ->with('error', 'Payment is only allowed after counselling (or for remaining balance on a paid booking).');
@@ -396,7 +457,7 @@ class OtAccountantController extends Controller
 
         $receiptNumber = trim((string) ($validated['receipt_number'] ?? ''));
         if ($receiptNumber === '') {
-            $receiptNumber = 'RCP-'.now()->format('Ym').'-'.str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
+            $receiptNumber = 'RCP-' . now()->format('Ym') . '-' . str_pad((string) random_int(1, 9999), 4, '0', STR_PAD_LEFT);
         }
 
         $isFullyPaid = false;
@@ -447,11 +508,20 @@ class OtAccountantController extends Controller
         });
 
         $message = $isFullyPaid
-            ? 'Payment completed in full. Patient sent to Ward. Export amount: '.number_format($exportAmount, 2)
-            : 'Partial payment recorded. Remaining balance: '.number_format($booking->refresh()->remaining_balance, 2);
+            ? 'Payment completed in full. Patient sent to Ward. Export amount: ' . number_format($exportAmount, 2)
+            : 'Partial payment recorded. Remaining balance: ' . number_format($booking->refresh()->remaining_balance, 2);
+
+        $user = auth('hospital_user')->user();
+        $isHospitalAdmin = $user && (
+            $user->role?->slug === 'hospital_admin'
+            || (method_exists($user, 'isSuperUser') && $user->isSuperUser())
+        );
 
         return redirect()
-            ->route('hospital.ot.payments.receipt', ['slug' => $slug, 'paymentId' => $paymentId])
+            ->route(
+                $isHospitalAdmin ? 'hospital.dashboard' : 'hospital.ot.accountant.dashboard',
+                ['slug' => $slug]
+            )
             ->with('success', $message);
     }
 
@@ -491,7 +561,7 @@ class OtAccountantController extends Controller
 
         abort_unless((int) $booking->tenant_id === $tenantId, 403, 'Unauthorized booking access.');
 
-        if (! in_array($booking->ot_status, [OtBooking::STATUS_PAYMENT_VERIFIED, OtBooking::STATUS_IN_WARD], true)) {
+        if (!in_array($booking->ot_status, [OtBooking::STATUS_PAYMENT_VERIFIED, OtBooking::STATUS_IN_WARD], true)) {
             return redirect()->back()->with('error', 'Only payment-verified or in-ward patients can be handed off to OT Assistant.');
         }
 
@@ -500,7 +570,7 @@ class OtAccountantController extends Controller
             ->where('ot_booking_id', $booking->id)
             ->first();
 
-        if (! $preOp || $preOp->pre_op_status !== OtPreOp::STATUS_READY_FOR_SURGERY) {
+        if (!$preOp || $preOp->pre_op_status !== OtPreOp::STATUS_READY_FOR_SURGERY) {
             return redirect()->back()->with('error', 'Set Patient Status to Ready for OT and save before sending.');
         }
 
