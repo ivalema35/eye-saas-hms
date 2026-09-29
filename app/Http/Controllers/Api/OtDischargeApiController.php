@@ -485,61 +485,60 @@ class OtDischargeApiController extends Controller
     }
 
     /**
-     * The `hospital.ot.billing.*_print` blades hide a floating "Print"
-     * button and a browser-preview-only backdrop (gray background, extra
-     * margin/padding/shadow around the page) behind `@media print` /
-     * `@media screen` respectively — correct for a real browser. DomPDF's
-     * media-query handling for THESE three blades turned out not to be the
-     * simple "ignores @media print entirely" a previous pass here assumed
-     * (that assumption is why the bug below kept coming back after each
-     * fix) — empirically, this DomPDF install partially applies `@media
-     * print` too, specifically `html, body { width: 148mm; }`. That rule
-     * sets the body to the FULL A5 page width while the SAME blade's
-     * `@page { size: A5 portrait; margin: 12-14mm; }` also reserves that
-     * margin on each side — i.e. body demands 148mm inside a printable area
-     * that's already only ~120-122mm wide once the page margin is
-     * subtracted, so the right-hand ~26mm of every document runs off the
-     * page edge. `@media screen`'s preview-only backdrop/margin/shadow
-     * leaking in unconditionally was the other half of the original bug.
-     * Fixed here at the API layer only, by rendering the blade to an HTML
-     * string and stripping BOTH media-query blocks entirely before handing
-     * it to DomPDF, so nothing conditional survives to be inconsistently
-     * (mis)applied — replaced with an explicit, always-applied wrapper div
-     * for page padding instead of relying on `@page` margin support at all.
-     * The blade file itself, and web's own browser-rendered print/preview
-     * (which never goes through this code path), are completely unaffected.
+     * ROOT CAUSE, confirmed 2026-09-29 by generating real PDFs through this
+     * exact method (not just reading the transformed HTML) and bisecting the
+     * blade element-by-element until isolated: this DomPDF install overflows
+     * the page whenever a block element that sits DIRECTLY under `<body>` is
+     * given an explicit `width: 100%` — regardless of `box-sizing`, and
+     * regardless of `@page`/`@media` rules (both already ruled out in
+     * earlier passes; do not re-test them). It behaves as if that 100% is
+     * resolved against the full physical page box rather than the printable
+     * area, so any padding on that same element pushes its right edge past
+     * the page — exactly the "Amount column / sign-block cut off on the
+     * right" bug reported repeatedly. The three previous "fixes" here
+     * (`@media` stripping, forcing `box-sizing: border-box`) were each
+     * real/harmless but never addressed this, which is why the bug kept
+     * coming back. The actual fix: give that top-level wrapper NO explicit
+     * width at all — a block's default `width: auto` already fills its
+     * container minus its own padding, correctly, in this DomPDF install (a
+     * `.page` div declared with `width: 100%` ONE LEVEL DEEPER, i.e. not a
+     * direct child of `<body>`, was confirmed fine in the same bisection —
+     * this bug is specific to the outermost wrapper).
+     * If this ever regresses again: reproduce via a real generated PDF
+     * (Read tool renders PDFs visually) before touching CSS again, and
+     * suspect any `width: 100%` added back onto this specific wrapper first.
+     *
+     * Separately (unrelated to the above, real, harmless): the
+     * `hospital.ot.billing.*_print` blades hide a floating "Print" button and
+     * a browser-preview-only backdrop behind `@media print` / `@media
+     * screen` — correct for a real browser but meaningless for a
+     * server-rendered PDF, so both are stripped here too, and the blade's own
+     * `@page` margin is replaced by an explicit wrapper (below) since DomPDF
+     * did not reliably honor `@page { margin }` in this install either. The
+     * blade file itself, and web's own browser-rendered print/preview (which
+     * never goes through this code path), are completely unaffected by any
+     * of this.
      */
     private function domPdfSafeHtml(string $view, array $data): string
     {
         $html = view($view, $data)->render();
         $html = preg_replace('/<button[^>]*class="print-btn"[^>]*>.*?<\/button>/s', '', $html) ?? $html;
         $html = preg_replace('/@media\s+screen\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
-        // See docblock above — this is the fix for the recurring
-        // content-runs-off-the-right-edge bug. Previously left in place
-        // under the (wrong, for this DomPDF install) assumption that
-        // DomPDF ignores it entirely.
         $html = preg_replace('/@media\s+print\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
 
-        // These print views rely entirely on a CSS `@page { margin: ... }`
-        // rule for their page margins. A real browser (web's own print)
-        // honors that rule fine, but this server-side DomPDF render was not
-        // applying it, so mobile/tablet's downloaded PDF showed every
-        // document's text running edge-to-edge — no padding, nothing
-        // centered — while the same page printed fine from web. Rather than
-        // depend on `@page` margin support, wrap the rendered body in an
-        // explicit padded div, which DomPDF always honors regardless of
-        // `@page` behavior, and force the view's own `.page`/body margins
-        // to 0 so this wrapper is the only source of spacing (avoids
-        // doubling up if `@page` margin does also apply).
+        // The wrapper's padding gives the page its margin (replacing the
+        // blade's own unreliable `@page { margin }`). Deliberately NO
+        // `width`/`box-sizing` here — see docblock above; adding either back
+        // reproduces the right-edge cut-off bug.
         $html = preg_replace(
             '/<body([^>]*)>(.*)<\/body>/is',
-            '<body$1><div style="padding:14mm;box-sizing:border-box;width:100%;">$2</div></body>',
+            '<body$1><div style="padding:14mm;">$2</div></body>',
             $html,
             1
         ) ?? $html;
         $html = preg_replace(
             '/<\/head>/i',
-            '<style>html,body{margin:0 !important;width:auto !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>',
+            '<style>html,body{margin:0 !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>',
             $html,
             1
         ) ?? $html;
