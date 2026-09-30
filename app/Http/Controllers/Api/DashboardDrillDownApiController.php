@@ -31,6 +31,7 @@ use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtPreOp;
 use App\Models\Hospital\Patient;
+use App\Services\Hospital\HospitalCollectionService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -42,6 +43,10 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class DashboardDrillDownApiController extends Controller
 {
+    public function __construct(private readonly HospitalCollectionService $collectionService)
+    {
+    }
+
     // ── Admin Collection (reception-wise) ───────────────────────────────────
 
     public function adminCollectionIndex(Request $request): JsonResponse
@@ -49,13 +54,24 @@ class DashboardDrillDownApiController extends Controller
         [$startDate, $endDate] = $this->resolvedDates($request);
         $rows = $this->receptionCollectionRows($startDate, $endDate);
 
+        // Bug fix (2026-09-30): grand_total was `$rows->sum('total')` — the
+        // reception-wise table's OPD-only figure — so it silently excluded
+        // all OT revenue from the one number labelled "Grand Total". Web's
+        // AdminCollectionController::index() computes this via
+        // HospitalCollectionService::summaryForDateRange() instead (OPD +
+        // OT payments − OT refunds), and also surfaces the OPD/OT breakdown
+        // itself for its 3 summary cards (Grand Total / OPD / OT Net) — none
+        // of which existed in this API response before.
+        $breakdown = $this->collectionService->summaryForDateRange($startDate, $endDate);
+
         return response()->json([
             'success' => true,
             'data' => [
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'rows' => $rows->values(),
-                'grand_total' => $rows->sum('total'),
+                'grand_total' => (float) $breakdown['total'],
+                'breakdown' => $breakdown,
             ],
         ]);
     }
