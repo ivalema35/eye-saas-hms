@@ -275,6 +275,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->whereNumber('reception')
                         ->name('dashboard.collection.show')
                         ->middleware('permission:patient_view|report_view|opd_reports_view');
+                    Route::get('/dashboard/collection/{reception}/export', [DashboardDrillDownApiController::class, 'adminCollectionExport'])
+                        ->whereNumber('reception')
+                        ->name('dashboard.collection.export')
+                        ->middleware('permission:patient_view|report_view|opd_reports_view');
                     Route::get('/dashboard/ot-appointments', [DashboardDrillDownApiController::class, 'otAppointmentsIndex'])
                         ->name('dashboard.ot-appointments')
                         ->middleware('permission:ot_appointment_view|ot_patient_list');
