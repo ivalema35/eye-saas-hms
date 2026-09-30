@@ -38,10 +38,26 @@ class OtCounsellorApiController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
+        // Web pull 2026-09-30 — the "View" button's read-only patient detail
+        // (matches `_patient-view-modal.blade.php` exactly: Examination
+        // status, full Registration Details, Surgery) needs far more than
+        // the 5 patient columns this previously selected. Mirrors
+        // PatientApiController::show()'s own eager-load list.
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
             ->assignedToCounsellor($this->counsellor())
-            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'otDoctor:id,name', 'payments']);
+            ->with([
+                'patient.doctor:id,name',
+                'patient.masterCity.district',
+                'patient.masterCity.state',
+                'patient.caseType:id,case_type',
+                'patient.referrer:id,name',
+                'patient.reception:id,name',
+                'patient.primaryExamination.doctor:id,name',
+                'patient.secondaryExamination.doctor:id,name',
+                'otDoctor:id,name',
+                'payments',
+            ]);
 
         if ($isHistory) {
             $query->whereIn('ot_status', [
@@ -65,6 +81,26 @@ class OtCounsellorApiController extends Controller
         }
 
         $bookings = $query->paginate((int) $request->integer('per_page', 25));
+
+        // Same shape PatientApiController builds for every patient response
+        // (`locationArray()`) — `Patient::location()` points at the legacy
+        // `locations` table while `location_id` is really a `tbl_master_cities`
+        // id, so the correct city/district/state has to come from the
+        // `masterCity` accessor chain, not a plain eager-loaded relation.
+        $bookings->getCollection()->transform(function (OtBooking $booking): array {
+            $arr = $booking->toArray();
+            if ($booking->patient) {
+                $arr['patient']['full_name'] = $booking->patient->full_name;
+                $arr['patient']['location'] = [
+                    'id' => $booking->patient->location_id,
+                    'city' => $booking->patient->cityName,
+                    'district' => $booking->patient->districtName,
+                    'state' => $booking->patient->stateName,
+                ];
+            }
+
+            return $arr;
+        });
 
         return response()->json([
             'success' => true,
