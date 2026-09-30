@@ -52,9 +52,25 @@ class OtWardApiController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
+        // Web pull 2026-09-30 — the "View" button's read-only detail
+        // (`_view-modal.blade.php`: Pre-Op Vitals, full Patient Details,
+        // Surgery & OT, Eye Drop Register) needs far more than the 5 patient
+        // columns + broken `location` relation this previously selected.
+        // Mirrors OtAccountantApiController::bookings()'s own eager-load.
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments', 'otDoctor:id,name']);
+            ->with([
+                'patient.doctor:id,name',
+                'patient.masterCity.district',
+                'patient.masterCity.state',
+                'patient.reception:id,name',
+                'counselling.counsellor:id,name',
+                'preOp.enteredBy:id,name',
+                'dilationEntries' => fn ($q) => $q->orderBy('administered_at')->orderBy('dose_number')->with('administeredBy:id,name'),
+                'otDoctor:id,name',
+                'otAssistant:id,name',
+                'payments',
+            ]);
 
         if ($isHistory) {
             $query->whereIn('ot_status', [
@@ -76,10 +92,25 @@ class OtWardApiController extends Controller
 
         $bookings = $query->paginate((int) $request->integer('per_page', 25));
 
-        // payment_status is a computed accessor, not a real column — see the
-        // matching comment in OtAccountantApiController::bookings(). Safe
-        // here since `payments` is already eager-loaded above.
-        $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status']));
+        // payment_status/total_paid/remaining_balance are computed accessors,
+        // not real columns — see the matching comment in
+        // OtAccountantApiController::bookings(). Safe here since `payments`
+        // is already eager-loaded above.
+        $bookings->getCollection()->transform(function (OtBooking $b): array {
+            $b->append(['payment_status', 'total_paid', 'remaining_balance']);
+            $arr = $b->toArray();
+            if ($b->patient) {
+                $arr['patient']['full_name'] = $b->patient->full_name;
+                $arr['patient']['location'] = [
+                    'id' => $b->patient->location_id,
+                    'city' => $b->patient->cityName,
+                    'district' => $b->patient->districtName,
+                    'state' => $b->patient->stateName,
+                ];
+            }
+
+            return $arr;
+        });
 
         return response()->json([
             'success' => true,
