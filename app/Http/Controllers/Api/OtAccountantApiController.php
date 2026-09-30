@@ -77,9 +77,23 @@ class OtAccountantApiController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
+        // Web pull 2026-09-30 — the "View" button's read-only detail
+        // (`_payment-view-modal.blade.php`) needs far more than the 5 patient
+        // columns + broken `location` relation this previously selected.
+        // Mirrors PatientApiController::show() / OtCounsellorApiController's
+        // own eager-load list.
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
-            ->with(['patient:id,patient_code,location_id,first_name,middle_name,last_name,contact_no', 'patient.location:id,city,district,state', 'payments', 'refunds']);
+            ->with([
+                'patient.doctor:id,name',
+                'patient.masterCity.district',
+                'patient.masterCity.state',
+                'patient.reception:id,name',
+                'counselling.counsellor:id,name',
+                'otDoctor:id,name',
+                'payments',
+                'refunds',
+            ]);
 
         if ($activeFilter === 'queue') {
             // Pending payment queue — matches web exactly.
@@ -117,7 +131,26 @@ class OtAccountantApiController extends Controller
         // web), so appending the refund accessors here is free too — the
         // `refunds` filter/UI needs `refundable_balance` to know whether a
         // row is still refundable.
-        $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status', 'remaining_balance', 'total_paid', 'total_refunded', 'refundable_balance']));
+        // `isFullyRefunded()` is a plain method (not a `get*Attribute`
+        // accessor), so `append()` can't expose it — added as a real array
+        // key instead, same shape `_payment-view-modal.blade.php` computes
+        // it in for the status badge.
+        $bookings->getCollection()->transform(function (OtBooking $b): array {
+            $b->append(['payment_status', 'remaining_balance', 'total_paid', 'total_refunded', 'refundable_balance']);
+            $arr = $b->toArray();
+            $arr['is_fully_refunded'] = $b->isFullyRefunded();
+            if ($b->patient) {
+                $arr['patient']['full_name'] = $b->patient->full_name;
+                $arr['patient']['location'] = [
+                    'id' => $b->patient->location_id,
+                    'city' => $b->patient->cityName,
+                    'district' => $b->patient->districtName,
+                    'state' => $b->patient->stateName,
+                ];
+            }
+
+            return $arr;
+        });
 
         // Matches web's Accountant dashboard money summary card exactly.
         $moneySummary = [
