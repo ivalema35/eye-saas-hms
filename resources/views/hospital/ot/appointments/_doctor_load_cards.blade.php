@@ -210,10 +210,109 @@ One card per doctor; each line: "1 to 2 : 10"
         color: #0D2137;
         letter-spacing: -.015em;
     }
+
+    .ot-doc-load-slot-count {
+        cursor: pointer;
+        border-radius: 6px;
+        padding: 0 .15rem;
+        transition: background 140ms ease, color 140ms ease;
+    }
+
+    .ot-doc-load-slot-count:hover {
+        background: #1B4F72;
+        color: #fff;
+    }
+
+    .ot-slotp-list {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .ot-slotp-row {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+        padding: .7rem 1.1rem;
+        border-bottom: 1px solid rgba(27, 79, 114, 0.08);
+    }
+
+    .ot-slotp-row:last-child {
+        border-bottom: 0;
+    }
+
+    .ot-slotp-avatar {
+        width: 36px;
+        height: 36px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        background: rgba(27, 79, 114, 0.1);
+        color: #1B4F72;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+    }
+
+    .ot-slotp-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ot-slotp-name {
+        font-weight: 700;
+        color: #1B4F72;
+        font-size: .92rem;
+        text-transform: capitalize;
+    }
+
+    .ot-slotp-meta {
+        font-size: .78rem;
+        color: rgba(27, 79, 114, 0.6);
+        font-weight: 600;
+    }
+
+    .ot-slotp-badge {
+        flex-shrink: 0;
+        font-size: .72rem;
+        font-weight: 800;
+        border-radius: 999px;
+        padding: .25rem .6rem;
+        text-transform: capitalize;
+    }
+
+    .ot-slotp-badge-booked {
+        background: #FFF3CD;
+        color: #856404;
+    }
+
+    .ot-slotp-badge-confirmed {
+        background: #D1F2EB;
+        color: #0E6655;
+    }
+
+    .ot-slotp-badge-cancelled {
+        background: #FADBD8;
+        color: #922B21;
+    }
+
+    .ot-slotp-badge-completed {
+        background: #D6EAF8;
+        color: #1B4F72;
+    }
+
+    .ot-slotp-empty,
+    .ot-slotp-loading {
+        padding: 1.5rem 1.1rem;
+        text-align: center;
+        color: rgba(27, 79, 114, 0.6);
+        font-size: .88rem;
+        font-weight: 600;
+    }
 </style>
 
 <div class="ot-doc-load" id="otDocLoadPanel"
     data-load-url="{{ route('hospital.ot.appointments.doctor-slot-load', ['slug' => $slug]) }}"
+    data-slot-url="{{ route('hospital.ot.appointments.slot-appointments', ['slug' => $slug]) }}"
     data-exclude-id="{{ $appointment->id ?? '' }}" data-date="{{ $doctorLoadDate }}">
     <div class="ot-doc-load-head">
         <div class="ot-doc-load-kicker"><i class="bi bi-people-fill me-1"></i> Doctors — slot load</div>
@@ -261,6 +360,20 @@ One card per doctor; each line: "1 to 2 : 10"
     </a>
 </div>
 
+<div class="modal fade" id="otSlotPatientsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;overflow:hidden;border:0">
+            <div class="modal-header" style="background:#1B4F72;color:#fff;border:0">
+                <h6 class="modal-title mb-0" id="otSlotPatientsModalTitle" style="font-weight:800"></h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="otSlotPatientsList" class="ot-slotp-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 @once
     @push('scripts')
         <script>
@@ -274,7 +387,15 @@ One card per doctor; each line: "1 to 2 : 10"
                 if (!panel || !grid) return;
 
                 var loadUrl = panel.getAttribute('data-load-url');
+                var slotUrl = panel.getAttribute('data-slot-url');
                 var excludeId = panel.getAttribute('data-exclude-id') || '';
+
+                var patientsModalEl = document.getElementById('otSlotPatientsModal');
+                var patientsModal = (patientsModalEl && window.bootstrap)
+                    ? new bootstrap.Modal(patientsModalEl)
+                    : null;
+                var patientsTitleEl = document.getElementById('otSlotPatientsModalTitle');
+                var patientsListEl = document.getElementById('otSlotPatientsList');
 
                 function escapeHtml(str) {
                     return String(str == null ? '' : str)
@@ -334,6 +455,66 @@ One card per doctor; each line: "1 to 2 : 10"
                     highlightSelection();
                 }
 
+                function statusLabel(status) {
+                    var map = { booked: 'Booked', confirmed: 'Confirmed', cancelled: 'Cancelled', completed: 'Completed' };
+                    return map[status] || (status || '-');
+                }
+
+                function statusBadgeClass(status) {
+                    return 'ot-slotp-badge-' + (['confirmed', 'cancelled', 'completed'].indexOf(status) !== -1 ? status : 'booked');
+                }
+
+                function renderSlotPatients(list) {
+                    list = Array.isArray(list) ? list : [];
+                    if (!patientsListEl) return;
+                    if (!list.length) {
+                        patientsListEl.innerHTML = '<div class="ot-slotp-empty">No patients booked in this slot.</div>';
+                        return;
+                    }
+
+                    patientsListEl.innerHTML = list.map(function (p) {
+                        var ageGender = [p.age ? (p.age + 'y') : '', p.gender ? (String(p.gender).charAt(0).toUpperCase() + String(p.gender).slice(1)) : '']
+                            .filter(Boolean).join(' / ');
+                        var meta = [ageGender, p.mobile_no].filter(Boolean).join(' · ');
+
+                        return '<div class="ot-slotp-row">'
+                            + '<div class="ot-slotp-avatar">' + escapeHtml((p.name || 'P').charAt(0).toUpperCase()) + '</div>'
+                            + '<div class="ot-slotp-info">'
+                            + '<div class="ot-slotp-name">' + escapeHtml(p.name || 'Unnamed') + '</div>'
+                            + (meta ? '<div class="ot-slotp-meta">' + escapeHtml(meta) + '</div>' : '')
+                            + '</div>'
+                            + '<span class="ot-slotp-badge ' + statusBadgeClass(p.status) + '">' + escapeHtml(statusLabel(p.status)) + '</span>'
+                            + '</div>';
+                    }).join('');
+                }
+
+                function openSlotPatientsModal(docId, docName, time, slotLabel) {
+                    if (!patientsListEl) return;
+
+                    if (patientsTitleEl) {
+                        patientsTitleEl.textContent = (docName || 'Doctor') + ' — ' + (slotLabel || time || '');
+                    }
+                    patientsListEl.innerHTML = '<div class="ot-slotp-loading">Loading...</div>';
+                    if (patientsModal) patientsModal.show();
+
+                    if (!slotUrl || !time) {
+                        patientsListEl.innerHTML = '<div class="ot-slotp-empty">No time slot to look up.</div>';
+                        return;
+                    }
+
+                    var currentDate = (dateEl && dateEl.value) || panel.getAttribute('data-date');
+                    var url = slotUrl + '?date=' + encodeURIComponent(currentDate) + '&time=' + encodeURIComponent(time);
+                    if (docId) url += '&doctor_id=' + encodeURIComponent(docId);
+                    if (excludeId) url += '&exclude_id=' + encodeURIComponent(excludeId);
+
+                    fetch(url, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) { renderSlotPatients(data && data.appointments); })
+                        .catch(function () {
+                            patientsListEl.innerHTML = '<div class="ot-slotp-empty">Could not load patients. Please try again.</div>';
+                        });
+                }
+
                 function highlightSelection() {
                     var docId = doctorEl ? String(doctorEl.value || '') : '';
                     var time = timeEl ? String(timeEl.value || '') : '';
@@ -363,6 +544,23 @@ One card per doctor; each line: "1 to 2 : 10"
                 grid.addEventListener('click', function (e) {
                     var btn = e.target.closest('.ot-doc-load-slot-btn');
                     if (!btn) return;
+
+                    var countEl = e.target.closest('.ot-doc-load-slot-count');
+                    if (countEl) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var card = btn.closest('.ot-doc-load-card');
+                        var docName = card ? (card.querySelector('.ot-doc-load-name') || {}).textContent : '';
+                        var slotLabel = (btn.querySelector('.ot-doc-load-slot-label') || {}).textContent;
+                        openSlotPatientsModal(
+                            btn.getAttribute('data-doctor-id') || '',
+                            docName,
+                            btn.getAttribute('data-time') || '',
+                            slotLabel
+                        );
+                        return;
+                    }
+
                     setSelectValue(doctorEl, btn.getAttribute('data-doctor-id') || '');
                     var t = btn.getAttribute('data-time') || '';
                     if (t) setSelectValue(timeEl, t);

@@ -961,7 +961,7 @@
                     <span class="doc-ref-div"></span>
                     <span title="Secondary completed today">SC: {{ $todaySecondary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Counselling through OT Assistant">OT: {{ $otPipelineCount ?? 0 }}</span>
+                    <span title="Today — counselling through OT Assistant">OT: {{ $otPipelineCount ?? 0 }}</span>
                 </div>
                 <div class="doc-ref-mid">
                     <div class="doc-avatar">

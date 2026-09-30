@@ -47,6 +47,25 @@ class OtBooking extends Model
     /** Patient refused OT after ward consult — goes to Accounts for refund. */
     public const STATUS_SURGERY_REFUSED = 'surgery_refused';
 
+    /**
+     * Patients still between counselling and the OT assistant desk.
+     *
+     * @return list<string>
+     */
+    public static function counsellingToAssistantStatuses(): array
+    {
+        return [
+            self::STATUS_BOOKED,
+            self::STATUS_SURGERY_RECOMMENDED,
+            self::STATUS_COUNSELLED,
+            self::STATUS_PAID,
+            self::STATUS_PAYMENT_VERIFIED,
+            self::STATUS_IN_WARD,
+            self::STATUS_DILATED,
+            self::STATUS_READY,
+        ];
+    }
+
     public const STATUS_CANCELLED = 'cancelled';
 
     /** Eager loads needed by the ward list + ward view modal (hospital/ot/ward/_view-modal). */
@@ -260,6 +279,27 @@ class OtBooking extends Model
         $this->save();
 
         return $discharged;
+    }
+
+    /**
+     * Counselling through OT Assistant, dated by surgery day when set,
+     * otherwise by the day the booking was created.
+     */
+    public function scopeBetweenCounsellingAndAssistant($query, string $startDate, string $endDate)
+    {
+        return $query
+            ->whereIn('ot_status', self::counsellingToAssistantStatuses())
+            ->where(function ($outer) use ($startDate, $endDate) {
+                $outer->where(function ($dated) use ($startDate, $endDate) {
+                    $dated->whereNotNull('surgery_date')
+                        ->whereDate('surgery_date', '>=', $startDate)
+                        ->whereDate('surgery_date', '<=', $endDate);
+                })->orWhere(function ($undated) use ($startDate, $endDate) {
+                    $undated->whereNull('surgery_date')
+                        ->whereDate('created_at', '>=', $startDate)
+                        ->whereDate('created_at', '<=', $endDate);
+                });
+            });
     }
 
     /**

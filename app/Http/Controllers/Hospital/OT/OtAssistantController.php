@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
+use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\MedicineGroup;
 use App\Models\Hospital\OT\LensInventory;
@@ -42,6 +43,9 @@ class OtAssistantController extends Controller
         $user = auth('hospital_user')->user();
         $assistantId = (int) $user->id;
         $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
+        $otAssistantCards = $this->otAssistantCards();
+        $viewingAssistant = $this->viewingAssistant($request, $assistantId, $otAssistantCards);
+        $scopeAssistantId = $viewingAssistant ? (int) $viewingAssistant->id : $assistantId;
 
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
@@ -63,9 +67,10 @@ class OtAssistantController extends Controller
                 ->orderByDesc('id');
         }
 
-        // Assigned OT Assistant sees only their queue; Hospital Admin sees all.
-        if (! $seeAll) {
-            $readyQuery->where('ot_assistant_id', $assistantId);
+        // Default queue is the logged-in assistant. Another assistant's card
+        // switches the list; any OT assistant can still open Operate on it.
+        if (! $seeAll || $viewingAssistant) {
+            $readyQuery->where('ot_assistant_id', $scopeAssistantId);
         }
 
         $readyBookings = $readyQuery->get();
@@ -77,6 +82,9 @@ class OtAssistantController extends Controller
             'activeFilter' => $activeFilter,
             'fromDate' => $fromDate,
             'toDate' => $toDate,
+            'otAssistantCards' => $otAssistantCards,
+            'viewingAssistant' => $viewingAssistant,
+            'activeAssistantId' => $scopeAssistantId,
         ]);
     }
 
@@ -85,12 +93,11 @@ class OtAssistantController extends Controller
         $tenantId = (int) app('tenant')->id;
         $user = auth('hospital_user')->user();
         $assistantId = (int) $user->id;
-        $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
 
         $bookingQuery = OtBooking::query()
             ->with(['patient:id,first_name,middle_name,last_name,contact_no']);
 
-        if (! $seeAll) {
+        if (! $this->canOperateAnyAssistant($user)) {
             $bookingQuery->where('ot_assistant_id', $assistantId);
         }
 
@@ -139,10 +146,9 @@ class OtAssistantController extends Controller
         $tenantId = (int) app('tenant')->id;
         $user = auth('hospital_user')->user();
         $assistantId = (int) $user->id;
-        $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
 
         $bookingQuery = OtBooking::query();
-        if (! $seeAll) {
+        if (! $this->canOperateAnyAssistant($user)) {
             $bookingQuery->where('ot_assistant_id', $assistantId);
         }
         $booking = $bookingQuery->findOrFail($bookingId);
@@ -199,13 +205,15 @@ class OtAssistantController extends Controller
             'lens_type' => ['nullable', Rule::in(self::LENS_TYPES)],
             'estimated_power' => ['nullable', 'numeric', 'between:-99.99,999.99'],
             'lens_cost' => ['nullable', 'numeric', 'min:0'],
+            'lens_implantation' => ['nullable', Rule::in(['yes', 'no'])],
         ], [
             'eye_operated.in' => 'Eye operated must match the eye selected at Recommend Surgery'
                 .($lockedEye ? " ({$lockedEye})." : '.'),
         ]);
 
-        // Assistant already assigned at Recommend Surgery (or current user for admin fill).
-        $surgeryAssistantId = (int) ($booking->ot_assistant_id ?: $assistantId);
+        // The assistant who records the surgery is the one who operated,
+        // even when the booking was assigned to a colleague.
+        $surgeryAssistantId = $assistantId;
 
         $otMedicines = collect($validated['ot_medicines'] ?? [])
             ->filter(fn (array $item): bool => ! empty($item['medicine']) || ! empty($item['dose']))
@@ -240,6 +248,9 @@ class OtAssistantController extends Controller
                 'lens_type' => $validated['lens_type'] ?? null,
                 'estimated_power' => $validated['estimated_power'] ?? null,
                 'lens_cost' => $validated['lens_cost'] ?? null,
+                'lens_implantation' => isset($validated['lens_implantation'])
+                    ? $validated['lens_implantation'] === 'yes'
+                    : null,
                 'updated_at' => now(),
             ];
 
@@ -471,5 +482,55 @@ class OtAssistantController extends Controller
         return redirect()
             ->route('hospital.ot.assistant.dashboard', ['slug' => $slug])
             ->with('success', 'Lens details saved successfully.');
+    }
+
+    /**
+     * Active OT assistants with how many Ready-for-OT patients are assigned to each.
+     */
+    private function otAssistantCards()
+    {
+        $assistants = HospitalUser::query()
+            ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $counts = OtBooking::query()
+            ->where('ot_status', OtBooking::STATUS_READY)
+            ->whereIn('ot_assistant_id', $assistants->pluck('id'))
+            ->selectRaw('ot_assistant_id, COUNT(*) as assigned_count')
+            ->groupBy('ot_assistant_id')
+            ->pluck('assigned_count', 'ot_assistant_id');
+
+        return $assistants->each(function (HospitalUser $assistant) use ($counts) {
+            $assistant->assigned_count = (int) ($counts[$assistant->id] ?? 0);
+        });
+    }
+
+    private function viewingAssistant(Request $request, int $selfId, $cards): ?HospitalUser
+    {
+        $id = (int) $request->query('view_assistant', 0);
+        if ($id <= 0 || $id === $selfId) {
+            return null;
+        }
+
+        return $cards->firstWhere('id', $id);
+    }
+
+    /**
+     * Doctors can act across each other's lists. OT assistants can operate
+     * a colleague's ready patient the same way. Admin already sees every queue.
+     */
+    private function canOperateAnyAssistant($user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        if (method_exists($user, 'isSuperUser') && $user->isSuperUser()) {
+            return true;
+        }
+
+        return in_array($user->role?->slug, ['hospital_admin', 'ot_assistant'], true);
     }
 }

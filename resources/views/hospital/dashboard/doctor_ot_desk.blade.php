@@ -6,8 +6,12 @@
     $statusMeta = [
         'surgery_recommended' => ['In Counselling', 'otd-pill-counsel'],
         'booked' => ['In Counselling', 'otd-pill-counsel'],
-        'operated' => ['At Discharge', 'otd-pill-discharge'],
-        'discharged' => ['Discharged', 'otd-pill-done'],
+        'counselled' => ['Counselled', 'otd-pill-counsel'],
+        'paid' => ['Paid', 'otd-pill-discharge'],
+        'payment_verified' => ['Payment Verified', 'otd-pill-discharge'],
+        'in_ward' => ['In Ward', 'otd-pill-discharge'],
+        'dilated' => ['Dilated', 'otd-pill-discharge'],
+        'ready' => ['OT Assistant', 'otd-pill-done'],
     ];
     $rangeLabel = \Carbon\Carbon::parse($startDate)->format('d M Y');
     if ($endDate !== $startDate) {
@@ -67,7 +71,7 @@
                     </span>
                     <div>
                         <h5 class="dot-title mb-0">OT Patients</h5>
-                        <div class="dot-card-sub">Counselling and Discharge Counter · {{ $rangeLabel }}</div>
+                        <div class="dot-card-sub">Counselling through OT Assistant · {{ $rangeLabel }}</div>
                     </div>
                 </div>
                 <span class="badge dot-count-badge">{{ $bookings->count() }} total</span>
@@ -112,7 +116,7 @@
                                     <tr>
                                         <td colspan="7" class="text-center dot-empty">
                                             <i class="bi bi-inbox me-1"></i>
-                                            No counselling or discharge patients for {{ $rangeLabel }}.
+                                            No counselling-to-OT-assistant patients for {{ $rangeLabel }}.
                                         </td>
                                     </tr>
                                 @endforelse

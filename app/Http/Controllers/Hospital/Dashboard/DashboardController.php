@@ -99,16 +99,7 @@ class DashboardController extends Controller
                 ->whereNotNull('secondary_done_at')
                 ->count();
             $otPipelineCount = OtBooking::query()
-                ->whereIn('ot_status', [
-                    OtBooking::STATUS_BOOKED,
-                    OtBooking::STATUS_SURGERY_RECOMMENDED,
-                    OtBooking::STATUS_COUNSELLED,
-                    OtBooking::STATUS_PAID,
-                    OtBooking::STATUS_PAYMENT_VERIFIED,
-                    OtBooking::STATUS_IN_WARD,
-                    OtBooking::STATUS_DILATED,
-                    OtBooking::STATUS_READY,
-                ])
+                ->betweenCounsellingAndAssistant($today, $today)
                 ->count();
 
             $selectedDoctorId = null;
@@ -493,13 +484,37 @@ class DashboardController extends Controller
         $otAssistantCompletedCount = null;
         $otAssistantLists = null;
         $otAssistantSeeAll = false;
+        $otAssistantCards = collect();
+        $viewingAssistant = null;
+        $activeAssistantId = $user ? (int) $user->id : 0;
 
         if ($isOtAssistantUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_surgery_ready'))) {
             $otAssistantSeeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
-            $otAssistantBase = function () use ($user, $otAssistantSeeAll) {
+            $otAssistantCards = HospitalUser::query()
+                ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+                ->active()
+                ->orderBy('name')
+                ->get(['id', 'name']);
+            $assistantCounts = OtBooking::query()
+                ->where('ot_status', OtBooking::STATUS_READY)
+                ->whereIn('ot_assistant_id', $otAssistantCards->pluck('id'))
+                ->selectRaw('ot_assistant_id, COUNT(*) as assigned_count')
+                ->groupBy('ot_assistant_id')
+                ->pluck('assigned_count', 'ot_assistant_id');
+            $otAssistantCards->each(function (HospitalUser $assistant) use ($assistantCounts) {
+                $assistant->assigned_count = (int) ($assistantCounts[$assistant->id] ?? 0);
+            });
+
+            $requestedAssistantId = (int) request('view_assistant', 0);
+            if ($requestedAssistantId > 0 && $requestedAssistantId !== (int) $user->id) {
+                $viewingAssistant = $otAssistantCards->firstWhere('id', $requestedAssistantId);
+            }
+            $activeAssistantId = $viewingAssistant ? (int) $viewingAssistant->id : (int) $user->id;
+
+            $otAssistantBase = function () use ($otAssistantSeeAll, $viewingAssistant, $activeAssistantId) {
                 $query = OtBooking::query()->with(OtBooking::OT_ASSISTANT_VIEW_RELATIONS);
-                if (! $otAssistantSeeAll) {
-                    $query->where('ot_assistant_id', (int) $user->id);
+                if (! $otAssistantSeeAll || $viewingAssistant) {
+                    $query->where('ot_assistant_id', $activeAssistantId);
                 }
 
                 return $query;
@@ -758,8 +773,14 @@ class DashboardController extends Controller
                 ->leftJoin('tbl_slots', 'patients.slot_id', '=', 'tbl_slots.id')
                 ->where('reception_id', $user->id)
                 ->whereDate('appointment_date', $today)
-                ->when(request('search_contact'), function ($query, $contact) {
-                    $query->where('patients.contact_no', 'like', "%{$contact}%");
+                ->when(request('search_contact'), function ($query, $term) {
+                    $query->where(function ($q) use ($term) {
+                        $q->where('patients.contact_no', 'like', "%{$term}%")
+                            ->orWhere('patients.first_name', 'like', "%{$term}%")
+                            ->orWhere('patients.middle_name', 'like', "%{$term}%")
+                            ->orWhere('patients.last_name', 'like', "%{$term}%")
+                            ->orWhereRaw("TRIM(CONCAT(patients.first_name, ' ', COALESCE(patients.middle_name, ''), ' ', patients.last_name)) like ?", ["%{$term}%"]);
+                    });
                 })
                 ->latest('patients.created_at')
                 ->get([
@@ -933,6 +954,9 @@ class DashboardController extends Controller
             'otAssistantCompletedCount',
             'otAssistantLists',
             'otAssistantSeeAll',
+            'otAssistantCards',
+            'viewingAssistant',
+            'activeAssistantId',
             'isDischargeCounterUser',
             'dischargePendingCount',
             'dischargeCompletedCount',
@@ -1491,7 +1515,11 @@ class DashboardController extends Controller
             ->when($searchContact !== '', function ($query) use ($searchContact) {
                 $query->where(function ($q) use ($searchContact) {
                     $q->where('mobile_no', 'like', "%{$searchContact}%")
-                        ->orWhere('whatsapp_no', 'like', "%{$searchContact}%");
+                        ->orWhere('whatsapp_no', 'like', "%{$searchContact}%")
+                        ->orWhere('patient_name', 'like', "%{$searchContact}%")
+                        ->orWhere('middle_name', 'like', "%{$searchContact}%")
+                        ->orWhere('surname', 'like', "%{$searchContact}%")
+                        ->orWhereRaw("TRIM(CONCAT(patient_name, ' ', COALESCE(middle_name, ''), ' ', surname)) like ?", ["%{$searchContact}%"]);
                 });
             })
             ->orderByDesc('created_at')

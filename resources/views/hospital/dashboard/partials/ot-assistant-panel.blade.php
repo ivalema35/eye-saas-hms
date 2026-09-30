@@ -17,6 +17,20 @@
     ];
 @endphp
 
+@if(!empty($viewingAssistant))
+    <div class="d-flex align-items-center gap-3 mb-3 px-3 py-2 rounded-3"
+        style="background:#EBF5FB;border:1px solid rgba(27,79,114,.2);">
+        <i class="bi bi-eye-fill" style="color:#1B4F72;"></i>
+        <span style="font-size:14px;font-weight:600;color:#1B4F72;">
+            Viewing <strong>{{ $viewingAssistant->name }}</strong>'s patients — you can operate them
+        </span>
+        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="btn btn-sm ms-auto"
+            style="background:#1B4F72;color:#fff;border-radius:6px;font-size:12px;padding:4px 12px;">
+            Back to My Patients
+        </a>
+    </div>
+@endif
+
 <div class="acc-panel" id="otAssistantPanel" data-default-tab="queue">
     <div class="acc-panel-head">
         <div class="acc-panel-title">
@@ -26,7 +40,7 @@
                 <span class="acc-panel-sub"><span data-acc-count>{{ $otAssistantLists['queue']->count() }}</span> patient(s)</span>
             </div>
         </div>
-        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug, 'filter' => 'queue']) }}"
+        <a href="{{ route('hospital.ot.assistant.dashboard', array_filter(['slug' => $slug, 'filter' => 'queue', 'view_assistant' => $viewingAssistant->id ?? null])) }}"
             class="acc-open-page" data-acc-page-link>
             Open full page <i class="bi bi-box-arrow-up-right"></i>
         </a>
@@ -36,7 +50,7 @@
         @php $rows = $otAssistantLists[$tab]; @endphp
         <div class="acc-pane" data-acc-pane="{{ $tab }}"
             data-title="{{ $meta['title'] }}" data-icon="{{ $meta['icon'] }}" data-count="{{ $rows->count() }}"
-            data-page-url="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug, 'filter' => $tab]) }}"
+            data-page-url="{{ route('hospital.ot.assistant.dashboard', array_filter(['slug' => $slug, 'filter' => $tab, 'view_assistant' => $viewingAssistant->id ?? null])) }}"
             @if($tab !== 'queue') hidden @endif>
             <div class="table-responsive">
                 <table class="acc-table" data-acc-table data-empty="{{ $meta['empty'] }}" style="width:100%">

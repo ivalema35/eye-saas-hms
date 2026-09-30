@@ -402,6 +402,25 @@
                 </nav>
             </div>
 
+            <div class="px-4 pt-3">
+                @include('hospital.dashboard.partials.ot-assistant-cards', [
+                    'cardRoute' => 'hospital.ot.assistant.dashboard',
+                ])
+                @if(!empty($viewingAssistant))
+                    <div class="d-flex align-items-center gap-3 mb-3 px-3 py-2 rounded-3"
+                        style="background:#EBF5FB;border:1px solid rgba(27,79,114,.2);">
+                        <i class="bi bi-eye-fill" style="color:#1B4F72;"></i>
+                        <span style="font-size:14px;font-weight:600;color:#1B4F72;">
+                            Viewing <strong>{{ $viewingAssistant->name }}</strong>'s patients — you can operate them
+                        </span>
+                        <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug]) }}" class="btn btn-sm ms-auto"
+                            style="background:#1B4F72;color:#fff;border-radius:6px;font-size:12px;padding:4px 12px;">
+                            Back to My Patients
+                        </a>
+                    </div>
+                @endif
+            </div>
+
             <div class="ota2-inner-panel">
                 <div class="ota2-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div class="ota2-title-wrap">
@@ -426,6 +445,7 @@
                         'activeFilter' => $activeFilter ?? 'queue',
                         'fromDate' => $fromDate ?? now()->toDateString(),
                         'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                        'extraQuery' => !empty($viewingAssistant) ? ['view_assistant' => $viewingAssistant->id] : [],
                     ])
     </div>
 

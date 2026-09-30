@@ -37,6 +37,7 @@ class OtCounselling extends Model
         'lens_type',
         'estimated_power',
         'lens_cost',
+        'lens_implantation',
         'package_amount',
         'package_name',
         'room_category',
@@ -58,6 +59,7 @@ class OtCounselling extends Model
     protected $casts = [
         'surgery_type_confirmed' => 'boolean',
         'mediclaim' => 'boolean',
+        'lens_implantation' => 'boolean',
         'report_ok' => 'boolean',
         'blood_reports_verified' => 'boolean',
         'blood_reports_normal' => 'boolean',

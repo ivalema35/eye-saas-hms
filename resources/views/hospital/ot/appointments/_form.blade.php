@@ -142,7 +142,7 @@
     </div>
     <div class="rpc-field">
         <label class="form-label">Gender <span class="req">*</span></label>
-        <select name="gender" class="form-select hms-select rpc-auto-open" required>
+        <select name="gender" class="form-control select2 hms-select rpc-auto-open" required>
             <option value="">Select...</option>
             @foreach(['male' => 'Male', 'female' => 'Female', 'other' => 'Other'] as $value => $label)
                 <option value="{{ $value }}" {{ old('gender', $appointment->gender ?? '') === $value ? 'selected' : '' }}>
