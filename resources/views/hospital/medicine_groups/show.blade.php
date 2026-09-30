@@ -280,6 +280,7 @@
                         @if($group->group_code)
                             <div class="group-show-subtitle">{{ $group->group_code }}</div>
                         @endif
+                        @include('hospital.medicine_groups._scope_badge', ['group' => $group])
                         @if($group->diagnosis)
                             <div class="mt-1">
                                 <span

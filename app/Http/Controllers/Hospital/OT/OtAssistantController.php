@@ -118,6 +118,7 @@ class OtAssistantController extends Controller
 
         $medicineGroups = MedicineGroup::with('items.medicine')
             ->where('tenant_id', $tenantId)
+            ->whereIn('usage_scope', ['ot', 'both'])
             ->orderBy('name')
             ->get();
 
@@ -214,7 +215,9 @@ class OtAssistantController extends Controller
         // Fallback: if the surgeon picked a medicine group but didn't fill any rows
         // manually (e.g. JS quick-fill didn't run), populate from the group directly.
         if ($otMedicines === [] && ! empty($validated['medicine_group_id'])) {
-            $group = MedicineGroup::with('items.medicine')->find($validated['medicine_group_id']);
+            $group = MedicineGroup::with('items.medicine')
+                ->whereIn('usage_scope', ['ot', 'both'])
+                ->find($validated['medicine_group_id']);
             $otMedicines = $group
                 ? $group->items->map(fn ($item) => [
                     'medicine' => $item->medicine?->name,

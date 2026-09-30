@@ -20,9 +20,13 @@ class MasterMedicine extends Model
         'company',
         'price',
         'is_active',
+        'is_ward',
     ];
 
-    protected $casts = ['is_active' => 'boolean'];
+    protected $casts = [
+        'is_active' => 'boolean',
+        'is_ward' => 'boolean',
+    ];
 
     public function medicineType(): BelongsTo
     {

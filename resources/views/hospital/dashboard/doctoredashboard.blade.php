@@ -671,8 +671,8 @@
             border: 1px solid rgba(15, 79, 134, 0.22);
             border-radius: 8px;
             padding: 6px;
-            width: 196px;
-            max-width: 196px;
+            width: 228px;
+            max-width: 228px;
             overflow: visible;
             box-shadow: 0 1px 4px rgba(15, 79, 134, 0.06);
         }
@@ -785,20 +785,38 @@
 
         .doctor-list-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(196px, 1fr));
+            grid-template-columns: repeat(auto-fill, 196px);
+            justify-content: start;
             gap: 14px;
         }
 
         .doc-list-card {
-            display: block;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            box-sizing: border-box;
+            width: 196px;
+            min-width: 196px;
+            height: 125px;
+
             background: #fff;
             border: 1px solid rgba(15, 79, 134, 0.2);
             border-radius: 8px;
-            padding: 8px 10px 7px;
+            padding: 12px 10px 7px;
+
             text-decoration: none;
             color: inherit;
             box-shadow: 0 1px 3px rgba(15, 79, 134, 0.05);
             transition: transform .18s ease, border-color .18s ease;
+
+        }
+
+        .doc-list-name {
+            height: 34px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
         }
 
         .doc-list-card:hover {
@@ -822,8 +840,19 @@
         }
 
         .doc-list-name i {
-            color: #0d9488;
-            font-size: 15px;
+            width: 34px;
+            height: 34px;
+            min-width: 34px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 16px;
+            line-height: 1;
+            background: #0d9488;
+            color: #fff;
+            border-radius: 50%;
+            flex-shrink: 0;
         }
 
         .doc-ref-btns {
@@ -843,10 +872,11 @@
             gap: 4px;
             background: #0a2f52;
             color: #fff;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 800;
-            padding: 5px 4px;
+            padding: 5px 2px;
             border-radius: 5px;
+            white-space: nowrap;
         }
 
         .doc-ref-btn i {
@@ -877,7 +907,7 @@
 
         @media(max-width:768px) {
             .doctor-list-grid {
-                grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+                grid-template-columns: repeat(auto-fill, 196px);
             }
         }
     </style>
@@ -925,11 +955,13 @@
         <div class="doc-overview-featured">
             <div class="doc-main-card">
                 <div class="doc-ref-bar doc-ref-bar--top" title="Hospital today">
-                    <span>C: {{ $todayPatients ?? 0 }}</span>
+                    <span title="Patients today">C: {{ $todayPatients ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span>PC: {{ $todayPrimary ?? 0 }}</span>
+                    <span title="Primary completed today">PC: {{ $todayPrimary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span>SC: {{ $todaySecondary ?? 0 }}</span>
+                    <span title="Secondary completed today">SC: {{ $todaySecondary ?? 0 }}</span>
+                    <span class="doc-ref-div"></span>
+                    <span title="Counselling through OT Assistant">OT: {{ $otPipelineCount ?? 0 }}</span>
                 </div>
                 <div class="doc-ref-mid">
                     <div class="doc-avatar">
@@ -969,12 +1001,6 @@
 
         {{-- All Doctor List: each card = OPD + OT combined --}}
         <div class="doc-overview-list">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <span class="ot-dash-icon" style="width:26px;height:26px;font-size:12px;"><i
-                        class="bi bi-people-fill"></i></span>
-                <h6 class="fw-bold mb-0" style="color: #1B4F72;">All Doctor List</h6>
-            </div>
-
             <div class="doctor-list-grid">
                 @forelse($otherDoctorCards as $doc)
                     @php
@@ -990,21 +1016,15 @@
                             {{ $doc->name }}
                         </div>
                         <div class="doc-ref-btns">
-                            <span class="doc-ref-btn" title="Patients"><i
-                                    class="bi bi-people-fill"></i>{{ $doc->assigned_today ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Primary"><i
-                                    class="bi bi-clipboard2-pulse"></i>{{ $doc->primary_count ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Secondary"><i
-                                    class="bi bi-display"></i>{{ $doc->secondary_count ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Examination assigned today">Patient: {{ $doc->assigned_today ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Primary exam completed">P: {{ $doc->primary_count ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Secondary exam completed">S: {{ $doc->secondary_count ?? 0 }}</span>
                         </div>
                         <div class="doc-ref-btns doc-ref-btns--ot">
-                            <span class="doc-ref-btn" title="OT Total"><i
-                                    class="bi bi-scissors"></i>{{ $docOt->ot_total ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Total OT (complete + remaining)">OT: {{ $docOt->ot_total ?? 0 }}</span>
                             <span class="doc-ref-btn" title="Ward assigned (OP)"
-                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $doc->id, 'queue' => 'consult']) }}';"><i
-                                    class="bi bi-hourglass-split"></i>{{ $docOt->ot_pending ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Complete"><i
-                                    class="bi bi-check2-circle"></i>{{ $docOt->ot_complete ?? 0 }}</span>
+                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $doc->id, 'queue' => 'consult']) }}';">OP: {{ $docOt->ot_pending ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="OT completed">OC: {{ $docOt->ot_complete ?? 0 }}</span>
                         </div>
                     </a>
                 @empty
@@ -1031,6 +1051,14 @@
             </a>
         </div>
     @endif
+
+    <div class="mb-4">
+        <a href="{{ route('hospital.dashboard.ot-patients', ['slug' => $slug]) }}"
+            class="btn fw-bold text-white"
+            style="background:#1B4F72;border-radius:10px;padding:10px 18px;">
+            <i class="bi bi-hospital me-1"></i> OT Patients
+        </a>
+    </div>
 
     <div class="row g-4">
         <div class="col-lg-6">

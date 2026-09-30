@@ -142,6 +142,8 @@ class DashboardController extends Controller
         $wardPendingCount = null;
         $otAssistantPendingCount = null;
         $dischargePendingCount = null;
+        $counsellingPendingCount = null;
+        $counsellingPaymentCount = null;
         $canSeeOtWidget = $this->perm->can('dashboard_ot');
 
         try {
@@ -178,6 +180,23 @@ class DashboardController extends Controller
                 $otAssistantPendingCount = $otAssistantReadyQuery->count();
             } elseif ($roleSlug === 'discharge_counter' && ($canSeeOtWidget || $this->perm->can('ot_billing_manage'))) {
                 $dischargePendingCount = OtBooking::whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])->count();
+            } elseif ($roleSlug === OtBooking::COUNSELLING_ROLE_SLUG && ($canSeeOtWidget || $this->perm->can('ot_counselling_fill'))) {
+                $counsellingPendingCount = OtBooking::query()
+                    ->assignedToCounsellor($authUser)
+                    ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                    ->count();
+                $counsellingPaymentCount = OtBooking::query()
+                    ->assignedToCounsellor($authUser)
+                    ->whereIn('ot_status', [
+                        OtBooking::STATUS_PAID,
+                        OtBooking::STATUS_PAYMENT_VERIFIED,
+                        OtBooking::STATUS_IN_WARD,
+                        OtBooking::STATUS_DILATED,
+                        OtBooking::STATUS_READY,
+                        OtBooking::STATUS_OPERATED,
+                        OtBooking::STATUS_DISCHARGED,
+                    ])
+                    ->count();
             }
         } catch (\Throwable) {}
 
@@ -435,6 +454,8 @@ class DashboardController extends Controller
                 'ward_pending_count'          => $wardPendingCount,
                 'ot_assistant_pending_count'  => $otAssistantPendingCount,
                 'discharge_pending_count'     => $dischargePendingCount,
+                'counselling_pending_count'   => $counsellingPendingCount,
+                'counselling_payment_count'   => $counsellingPaymentCount,
             ],
         ]);
     }

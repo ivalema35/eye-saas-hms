@@ -190,6 +190,87 @@ class DoctorOtListController extends Controller
     }
 
     /**
+     * Doctor dashboard — counselling and discharge-counter patients for a date range.
+     * Defaults to today. Counselling uses the day the booking was created; discharge
+     * uses operated / discharged time.
+     */
+    public function deskPatients(Request $request, string $slug): View
+    {
+        [$startDate, $endDate] = $this->resolvedDates($request);
+
+        $counselling = [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED];
+
+        $bookings = OtBooking::query()
+            ->with([
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender',
+                'otDoctor:id,name',
+            ])
+            ->whereIn('ot_status', [
+                OtBooking::STATUS_BOOKED,
+                OtBooking::STATUS_SURGERY_RECOMMENDED,
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ])
+            ->where(function ($outer) use ($startDate, $endDate, $counselling) {
+                $outer->where(function ($q) use ($startDate, $endDate, $counselling) {
+                    $q->whereIn('ot_status', $counselling)
+                        ->whereDate('created_at', '>=', $startDate)
+                        ->whereDate('created_at', '<=', $endDate);
+                })->orWhere(function ($q) use ($startDate, $endDate) {
+                    $q->where('ot_status', OtBooking::STATUS_OPERATED)
+                        ->where(function ($inner) use ($startDate, $endDate) {
+                            $inner->where(function ($a) use ($startDate, $endDate) {
+                                $a->whereNotNull('operated_at')
+                                    ->whereDate('operated_at', '>=', $startDate)
+                                    ->whereDate('operated_at', '<=', $endDate);
+                            })->orWhere(function ($a) use ($startDate, $endDate) {
+                                $a->whereNull('operated_at')
+                                    ->whereDate('updated_at', '>=', $startDate)
+                                    ->whereDate('updated_at', '<=', $endDate);
+                            });
+                        });
+                })->orWhere(function ($q) use ($startDate, $endDate) {
+                    $q->where('ot_status', OtBooking::STATUS_DISCHARGED)
+                        ->where(function ($inner) use ($startDate, $endDate) {
+                            $inner->where(function ($a) use ($startDate, $endDate) {
+                                $a->whereNotNull('discharged_at')
+                                    ->whereDate('discharged_at', '>=', $startDate)
+                                    ->whereDate('discharged_at', '<=', $endDate);
+                            })->orWhere(function ($a) use ($startDate, $endDate) {
+                                $a->whereNull('discharged_at')
+                                    ->whereNotNull('operated_at')
+                                    ->whereDate('operated_at', '>=', $startDate)
+                                    ->whereDate('operated_at', '<=', $endDate);
+                            })->orWhere(function ($a) use ($startDate, $endDate) {
+                                $a->whereNull('discharged_at')
+                                    ->whereNull('operated_at')
+                                    ->whereDate('updated_at', '>=', $startDate)
+                                    ->whereDate('updated_at', '<=', $endDate);
+                            });
+                        });
+                });
+            })
+            ->orderByRaw(
+                'CASE ot_status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
+                [
+                    OtBooking::STATUS_SURGERY_RECOMMENDED,
+                    OtBooking::STATUS_BOOKED,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                ]
+            )
+            ->orderByDesc('id')
+            ->get();
+
+        return view('hospital.dashboard.doctor_ot_desk', [
+            'slug' => $slug,
+            'bookings' => $bookings,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+        ]);
+    }
+
+    /**
      * Like OPD examinations: any doctor (or ot_doctor) with access can act on
      * consultation queue, not only the assigned ot_doctor_id patient owner.
      * Admin / super always allowed.

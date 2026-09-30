@@ -43,7 +43,7 @@
 
     .group-form-modal .group-modal-meta {
         display: grid;
-        grid-template-columns: minmax(170px, 1.45fr) minmax(110px, .8fr) minmax(96px, .65fr) minmax(190px, 1.55fr);
+        grid-template-columns: minmax(180px, 1.4fr) minmax(110px, .75fr) minmax(120px, .7fr) minmax(180px, 1.4fr);
         gap: 8px 12px;
         align-items: end;
         margin-bottom: .95rem;
@@ -336,11 +336,11 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
         <div class="modal-content border-0">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title" id="groupFormModalTitle">New Prescription Group</h5>
+                <h5 class="modal-title" id="groupFormModalTitle">{{ ($isWard ?? false) ? 'New Ward Medicine' : 'New Prescription Group' }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="groupForm" action="{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}" method="POST">
+            <form id="groupForm" action="{{ route(($isWard ?? false) ? 'hospital.ward-medicines.store' : 'hospital.medicine-groups.store', ['slug' => $slug]) }}" method="POST">
                 @csrf
                 <input type="hidden" name="_method" id="groupFormMethod" value="POST">
                 <input type="hidden" name="group_id" id="group-id" value="{{ old('group_id') }}">
@@ -363,6 +363,19 @@
                                    placeholder="e.g. CAT-001">
                             @error('group_code')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+                        @if(!($isWard ?? false))
+                        <div>
+                            <label class="form-label" for="group-scope">Type <span class="text-danger">*</span></label>
+                            <select name="usage_scope" id="group-scope"
+                                    class="form-select clinical-input @error('usage_scope') is-invalid @enderror"
+                                    required>
+                                <option value="">Select type</option>
+                                <option value="opd" @selected(old('usage_scope') === 'opd')>OPD</option>
+                                <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>
+                            </select>
+                            @error('usage_scope')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                        @endif
                         <div>
                             <label class="form-label" for="group-diagnosis">
                                 <i class="bi bi-clipboard2-pulse me-1"></i>Diagnosis
@@ -458,7 +471,7 @@
 
 @push('scripts')
 <script>
-const groupStoreUrl = "{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}";
+const groupStoreUrl = "{{ route(($isWard ?? false) ? 'hospital.ward-medicines.store' : 'hospital.medicine-groups.store', ['slug' => $slug]) }}";
 
 // Medicine data map for auto-fill
 @php
@@ -467,7 +480,7 @@ $medicineMap = $medicines->keyBy('id')->map(function ($m) {
 });
 @endphp
 const medicineDataMap = @json($medicineMap);
-const groupUpdateBase = "{{ route('hospital.medicine-groups.update', ['slug' => $slug, 'medicine_group' => '__ID__']) }}";
+const groupUpdateBase = "{{ route(($isWard ?? false) ? 'hospital.ward-medicines.update' : 'hospital.medicine-groups.update', ['slug' => $slug, 'medicine_group' => '__ID__']) }}";
 
 let groupRowIndex = 0;
 
@@ -552,13 +565,15 @@ function addGroupRow(item = {}, canRemove = true) {
 
 function resetGroupForm() {
     groupRowIndex = 0;
-    document.getElementById('groupFormModalTitle').innerText = 'New Prescription Group';
-    document.getElementById('groupFormSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i> Save Medicine Group';
+    document.getElementById('groupFormModalTitle').innerText = @json(($isWard ?? false) ? 'New Ward Medicine' : 'New Prescription Group');
+    document.getElementById('groupFormSubmitBtn').innerHTML = @json(($isWard ?? false) ? '<i class="bi bi-check-lg me-1"></i> Save Ward Medicine' : '<i class="bi bi-check-lg me-1"></i> Save Medicine Group');
     document.getElementById('groupForm').action = groupStoreUrl;
     document.getElementById('groupFormMethod').value = 'POST';
     document.getElementById('group-id').value = '';
     document.getElementById('group-name').value = '';
     document.getElementById('group-code').value = '';
+    const groupScope = document.getElementById('group-scope');
+    if (groupScope) groupScope.value = '';
     $('#group-diagnosis').val('').trigger('change.select2');
     $('#groupRepeaterBody .medicine-select, #groupRepeaterBody [data-field="dosage_id"], #groupRepeaterBody [data-field="route_id"]').select2('destroy');
     document.getElementById('groupRepeaterBody').innerHTML = '';
@@ -568,13 +583,15 @@ window.resetGroupForm = resetGroupForm;
 
 function openGroupEditModal(record) {
     groupRowIndex = 0;
-    document.getElementById('groupFormModalTitle').innerText = 'Edit: ' + (record.name ?? 'Medicine Group');
-    document.getElementById('groupFormSubmitBtn').innerHTML = '<i class="bi bi-check-lg me-1"></i> Update Group';
+    document.getElementById('groupFormModalTitle').innerText = 'Edit: ' + (record.name ?? @json(($isWard ?? false) ? 'Ward Medicine' : 'Medicine Group'));
+    document.getElementById('groupFormSubmitBtn').innerHTML = @json(($isWard ?? false) ? '<i class="bi bi-check-lg me-1"></i> Update Ward Medicine' : '<i class="bi bi-check-lg me-1"></i> Update Group');
     document.getElementById('groupForm').action = groupUpdateBase.replace('__ID__', record.id);
     document.getElementById('groupFormMethod').value = 'PUT';
     document.getElementById('group-id').value   = record.id ?? '';
     document.getElementById('group-name').value  = record.name ?? '';
     document.getElementById('group-code').value  = record.group_code ?? '';
+    const groupScope = document.getElementById('group-scope');
+    if (groupScope) groupScope.value = (record.usage_scope === 'opd' || record.usage_scope === 'ot') ? record.usage_scope : '';
     $('#group-diagnosis').val(record.diagnosis_id ?? '').trigger('change.select2');
     document.getElementById('groupRepeaterBody').innerHTML = '';
 
@@ -648,6 +665,8 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('group-id').value = @json(old('group_id', ''));
         document.getElementById('group-name').value = @json(old('name', ''));
         document.getElementById('group-code').value = @json(old('group_code', ''));
+        const oldScope = document.getElementById('group-scope');
+        if (oldScope) oldScope.value = @json(old('usage_scope', ''));
         $('#group-diagnosis').val(@json(old('diagnosis_id', ''))).trigger('change.select2');
         document.getElementById('groupRepeaterBody').innerHTML = '';
 

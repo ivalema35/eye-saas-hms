@@ -17,13 +17,16 @@ class MedicineController extends Controller
 {
     public function index(string $slug): View
     {
+        $isWard = $this->isWard();
         $medicineTypes = MedicineType::orderBy('name')->get();
         $dosages = Dosage::orderBy('dosage')->get();
         $medicines = Medicine::with('medicineType', 'dosage')
+            ->when($isWard, fn ($q) => $q->where('usage_scope', 'ward'))
+            ->when(! $isWard, fn ($q) => $q->where('usage_scope', '!=', 'ward'))
             ->latest()
             ->get();
 
-        return view('hospital.medicines.index', compact('slug', 'medicines', 'medicineTypes', 'dosages'));
+        return view('hospital.medicines.index', compact('slug', 'medicines', 'medicineTypes', 'dosages', 'isWard'));
     }
 
     public function create(string $slug): View
@@ -47,10 +50,13 @@ class MedicineController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        Medicine::create($validated);
+        Medicine::create($validated + [
+            'usage_scope' => $this->isWard() ? 'ward' : 'opd',
+        ]);
 
-        return redirect()->route('hospital.medicines.index', compact('slug'))
-            ->with('success', 'Medicine added successfully.');
+        return $this->indexRedirect($slug, $this->isWard(), $this->isWard()
+            ? 'Ward medicine added successfully.'
+            : 'Medicine added successfully.');
     }
 
     public function edit(string $slug, int $id): View
@@ -76,18 +82,25 @@ class MedicineController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $medicine->update($validated);
+        $ward = $this->isWard() || $medicine->usage_scope === 'ward';
+        $medicine->update($validated + [
+            'usage_scope' => $ward ? 'ward' : ($medicine->usage_scope ?: 'opd'),
+        ]);
 
-        return redirect()->route('hospital.medicines.index', compact('slug'))
-            ->with('success', 'Medicine updated successfully.');
+        return $this->indexRedirect($slug, $ward, $ward
+            ? 'Ward medicine updated successfully.'
+            : 'Medicine updated successfully.');
     }
 
     public function destroy(string $slug, int $id): RedirectResponse
     {
-        Medicine::findOrFail($id)->delete();
+        $medicine = Medicine::findOrFail($id);
+        $ward = $medicine->usage_scope === 'ward';
+        $medicine->delete();
 
-        return redirect()->route('hospital.medicines.index', compact('slug'))
-            ->with('success', 'Medicine deleted successfully.');
+        return $this->indexRedirect($slug, $ward, $ward
+            ? 'Ward medicine deleted successfully.'
+            : 'Medicine deleted successfully.');
     }
 
     public function import(Request $request, string $slug): RedirectResponse
@@ -118,5 +131,17 @@ class MedicineController extends Controller
     public function downloadSample()
     {
         return Excel::download(new HospitalMedicineSampleExport(), 'medicine-sample.xlsx');
+    }
+
+    private function isWard(): bool
+    {
+        return request()->routeIs('hospital.ward-medicines.*');
+    }
+
+    private function indexRedirect(string $slug, bool $ward, string $message): RedirectResponse
+    {
+        return redirect()
+            ->route($ward ? 'hospital.ward-medicines.index' : 'hospital.medicines.index', ['slug' => $slug])
+            ->with('success', $message);
     }
 }

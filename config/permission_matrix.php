@@ -585,10 +585,7 @@ return [
                 'ot_booking_create',
                 'ot_booking_modify',
                 'ot_booking_cancel',
-                'ot_counselling_fill',
-                'ot_consent_capture',
                 'ot_patient_list',
-                'ot_package_set',
                 'ot_invoice_view',
                 'ot_bill_print',
             ]
@@ -625,6 +622,14 @@ return [
             'ot_discharge_patient',
             'ot_certificate_print',
             'ot_bill_print',
+        ],
+        // Dedicated counselling desk. Receptionist no longer fills OT counselling.
+        'counselling' => [
+            'dashboard_ot',
+            'ot_patient_list',
+            'ot_counselling_fill',
+            'ot_consent_capture',
+            'ot_package_set',
         ],
     ],
 ];

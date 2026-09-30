@@ -191,7 +191,7 @@ used across the rest of the app. --}}
                                                     {{ $med->name }}
                                                 </option>
                                             @empty
-                                                <option value="" disabled>No medicines in master — add from Medicine Master</option>
+                                                <option value="" disabled>No ward medicines — add from Ward Medicine</option>
                                             @endforelse
                                         </select>
                                     </div>

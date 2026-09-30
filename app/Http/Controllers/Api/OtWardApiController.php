@@ -301,7 +301,7 @@ class OtWardApiController extends Controller
         $tenantId = (int) app('tenant')->id;
 
         // Locked to the booking's own eye (RE/LE/Both → allowed set) and
-        // sourced from Medicine Master (all medicines), not free text.
+        // sourced from Ward Medicine, not free text.
         $allowedEyes = match ((string) $booking->eye) {
             'RE' => ['RE'],
             'LE' => ['LE'],
@@ -314,6 +314,7 @@ class OtWardApiController extends Controller
                 'required', 'string', 'max:150',
                 Rule::exists('medicines', 'name')->where(function ($q) use ($tenantId) {
                     $q->where('tenant_id', $tenantId)
+                        ->where('usage_scope', 'ward')
                         ->whereNull('deleted_at');
                 }),
             ],
@@ -322,7 +323,7 @@ class OtWardApiController extends Controller
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
         ], [
-            'medicine_name.exists' => 'Select a valid medicine from the master list.',
+            'medicine_name.exists' => 'Select a ward medicine.',
             'eye.in' => 'Eye must match Recommend Surgery selection'
                 . (in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' (' . $booking->eye . ').' : '.'),
         ]);
@@ -390,9 +391,10 @@ class OtWardApiController extends Controller
                     ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
                     ->orderBy('name')
                     ->get(['id', 'name']),
-                // Eye Drop Register medicine picker — full Medicine Master list
+                // Eye Drop Register medicine picker — Ward Medicine list
                 'ot_medicines' => Medicine::query()
                     ->where('tenant_id', $tenantId)
+                    ->where('usage_scope', 'ward')
                     ->orderBy('name')
                     ->get(['id', 'name']),
             ],

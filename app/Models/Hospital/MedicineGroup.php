@@ -21,6 +21,7 @@ class MedicineGroup extends Model
         'group_code',
         'diagnosis_id',
         'usage_scope',
+        'platform_ward_group_id',
     ];
 
     public function diagnosis(): BelongsTo

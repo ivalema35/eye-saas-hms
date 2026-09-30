@@ -36,6 +36,7 @@ class SyncTenantOTData extends Command
             ['name' => 'Ward Management', 'slug' => 'ward_management', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
             ['name' => 'OT Assistant', 'slug' => 'ot_assistant', 'color' => '#CA6F1E', 'is_super' => false],
             ['name' => 'Discharge Counter', 'slug' => 'discharge_counter', 'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
+            ['name' => 'Counselling', 'slug' => 'counselling', 'color' => '#D68910', 'is_super' => false, 'is_system' => true],
         ];
 
         $defaultRoles = array_map(static function (array $role): array {
@@ -186,14 +187,11 @@ class SyncTenantOTData extends Command
     private function syncSection24PermissionMatrix(array $roleIdsBySlug): void
     {
         $matrix = [
-            // Reception absorbs the old ot_receptionist + ot_counsellor roles (docs/tulsi.md §2).
+            // Reception books OT. Counselling lives on the dedicated counselling role.
             'receptionist' => [
                 'ot.appointment.*',
                 'ot.booking.*',
-                'ot.counselling.fill',
-                'ot.consent.capture',
                 'ot.patient.list',
-                'ot.package.set',
                 'ot.payment.record',
                 'ot.payment.export',
                 'ot.invoice.view',
@@ -228,6 +226,18 @@ class SyncTenantOTData extends Command
                 'ot.surgery.record',
                 'ot.lens.*',
                 'ot.meds.takehome',
+            ],
+            // Dedicated counselling desk.
+            'counselling' => [
+                'ot.patient.list',
+                'ot.counselling.fill',
+                'ot.consent.capture',
+                'ot.package.set',
+                'ot_patient_list',
+                'ot_counselling_fill',
+                'ot_consent_capture',
+                'ot_package_set',
+                'dashboard_ot',
             ],
             // Discharge Counter — new role, owns Discharge & Invoices (docs/tulsi.md §6).
             'discharge_counter' => [

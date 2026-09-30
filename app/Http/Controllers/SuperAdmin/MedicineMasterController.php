@@ -38,6 +38,7 @@ class MedicineMasterController extends Controller
         $categories = collect();
         $routes = collect();
         $medicines = collect();
+        $wardMedicines = collect();
 
         if ($tab === 'dosages') {
             $dosages = MasterDosage::orderBy('dosage')->get();
@@ -56,7 +57,11 @@ class MedicineMasterController extends Controller
         }
 
         if ($tab === 'medicines') {
-            $medicines = MasterMedicine::with('medicineType', 'dosage')->latest()->get();
+            $medicines = MasterMedicine::with('medicineType', 'dosage')->where('is_ward', false)->latest()->get();
+        }
+
+        if ($tab === 'ward') {
+            $wardMedicines = MasterMedicine::with('medicineType', 'dosage')->where('is_ward', true)->latest()->get();
         }
 
         $allTypes = MasterMedicineType::orderBy('name')->get();
@@ -70,6 +75,7 @@ class MedicineMasterController extends Controller
             'categories',
             'routes',
             'medicines',
+            'wardMedicines',
             'allTypes',
             'allDosages',
             'tenants',
@@ -293,7 +299,7 @@ class MedicineMasterController extends Controller
             'price' => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $medicine = MasterMedicine::create($validated + ['is_active' => true]);
+        $medicine = MasterMedicine::create($validated + ['is_active' => true, 'is_ward' => false]);
         MedicineTenantSync::pushCreate($medicine);
 
         return back()->with('success', "Medicine \"{$validated['name']}\" added.")->with('open_tab', 'medicines');
@@ -369,6 +375,59 @@ class MedicineMasterController extends Controller
     public function downloadSampleMedicine()
     {
         return Excel::download(new MedicineMasterSampleExport(), 'medicine-master-sample.xlsx');
+    }
+
+    public function storeWardMedicine(Request $request): RedirectResponse
+    {
+        $validated = $this->validateWardMedicine($request);
+
+        $medicine = MasterMedicine::create($validated + ['is_active' => true, 'is_ward' => true]);
+        MedicineTenantSync::pushCreate($medicine->fresh(['medicineType', 'dosage']));
+
+        return redirect()
+            ->route('superadmin.medicine-master.index', ['tab' => 'ward'])
+            ->with('success', "Ward medicine \"{$validated['name']}\" added and sent to every hospital.");
+    }
+
+    public function updateWardMedicine(Request $request, MasterMedicine $medicine): RedirectResponse
+    {
+        abort_unless($medicine->is_ward, 404);
+
+        $validated = $this->validateWardMedicine($request);
+        $oldName = $medicine->name;
+        $medicine->update($validated);
+        MedicineTenantSync::pushUpdate($medicine->fresh(['medicineType', 'dosage']), $oldName);
+
+        return redirect()
+            ->route('superadmin.medicine-master.index', ['tab' => 'ward'])
+            ->with('success', 'Ward medicine updated in every hospital.');
+    }
+
+    public function destroyWardMedicine(MasterMedicine $medicine): RedirectResponse
+    {
+        abort_unless($medicine->is_ward, 404);
+        $medicine->delete();
+
+        return redirect()
+            ->route('superadmin.medicine-master.index', ['tab' => 'ward'])
+            ->with('success', 'Ward medicine removed.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateWardMedicine(Request $request): array
+    {
+        return $request->validate([
+            'master_medicine_type_id' => ['required', 'exists:tbl_master_medicine_types,id'],
+            'master_dosage_id' => ['required', 'exists:tbl_master_dosages,id'],
+            'name' => ['required', 'string', 'max:255'],
+            'duration' => ['nullable', 'string', 'max:100'],
+            'qty' => ['nullable', 'string', 'max:50'],
+            'composition' => ['nullable', 'string'],
+            'company' => ['nullable', 'string', 'max:255'],
+            'price' => ['nullable', 'numeric', 'min:0'],
+        ]);
     }
 
     // ═══════════════════════════════════════════════════

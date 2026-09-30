@@ -13,14 +13,18 @@ use App\Models\Hospital\MedicineRoute;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class MedicineGroupController extends Controller
 {
     public function index(string $slug): View
     {
+        $isWard = $this->isWard();
         $groups = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route', 'diagnosis'])
             ->withCount('items')
+            ->when($isWard, fn ($q) => $q->where('usage_scope', 'ward'))
+            ->when(! $isWard, fn ($q) => $q->where('usage_scope', '!=', 'ward'))
             ->latest()
             ->paginate((int) config('app.pagination_limit', 25));
         $medicines = Medicine::orderBy('name')->get();
@@ -29,7 +33,7 @@ class MedicineGroupController extends Controller
         $diagnoses = MasterDiagnosis::orderBy('value')->get();
         $instructions = MasterMedicineInstruction::where('tenant_id', app('tenant')->id)->get();
 
-        return view('hospital.medicine_groups.index', compact('slug', 'groups', 'medicines', 'dosages', 'routes', 'diagnoses', 'instructions'));
+        return view('hospital.medicine_groups.index', compact('slug', 'groups', 'medicines', 'dosages', 'routes', 'diagnoses', 'instructions', 'isWard'));
     }
 
     public function create(string $slug): View
@@ -45,19 +49,7 @@ class MedicineGroupController extends Controller
 
     public function store(Request $request, string $slug): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'group_code' => ['nullable', 'string', 'max:50'],
-            'diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.medicine_id' => ['required', 'exists:medicines,id'],
-            'items.*.dosage_id' => ['nullable', 'exists:dosages,id'],
-            'items.*.route_id' => ['nullable', 'exists:medicine_routes,id'],
-            'items.*.frequency' => ['nullable', 'string', 'max:50'],
-            'items.*.duration' => ['nullable', 'string', 'max:100'],
-            'items.*.instructions' => ['nullable', 'string', 'max:255'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        $request->validate($this->groupRules());
 
 
         DB::transaction(function () use ($request) {
@@ -65,7 +57,7 @@ class MedicineGroupController extends Controller
                 'name' => $request->name,
                 'group_code' => $request->group_code ?? null,
                 'diagnosis_id' => $request->diagnosis_id ?: null,
-                'usage_scope' => 'both',
+                'usage_scope' => $this->isWard() ? 'ward' : $request->usage_scope,
             ]);
 
             $tenantId = config('app.tenant_id');
@@ -88,8 +80,9 @@ class MedicineGroupController extends Controller
             MedicineGroupItem::insert($items);
         });
 
-        return redirect()->route('hospital.medicine-groups.index', compact('slug'))
-            ->with('success', 'Medicine Group created successfully.');
+        return $this->indexRedirect($slug, $this->isWard(), $this->isWard()
+            ? 'Ward medicine created successfully.'
+            : 'Medicine Group created successfully.');
     }
 
 
@@ -121,26 +114,16 @@ class MedicineGroupController extends Controller
     {
         $group = MedicineGroup::findOrFail($id);
 
-        $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'group_code' => ['nullable', 'string', 'max:50'],
-            'diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.medicine_id' => ['required', 'exists:medicines,id'],
-            'items.*.dosage_id' => ['nullable', 'exists:dosages,id'],
-            'items.*.route_id' => ['nullable', 'exists:medicine_routes,id'],
-            'items.*.frequency' => ['nullable', 'string', 'max:50'],
-            'items.*.duration' => ['nullable', 'string', 'max:100'],
-            'items.*.instructions' => ['nullable', 'string', 'max:255'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
-        ]);
+        $request->validate($this->groupRules());
 
-        DB::transaction(function () use ($request, $group) {
+        $keepWard = $this->isWard() || $group->usage_scope === 'ward';
+
+        DB::transaction(function () use ($request, $group, $keepWard) {
             $group->update([
                 'name' => $request->name,
                 'group_code' => $request->group_code ?? null,
                 'diagnosis_id' => $request->diagnosis_id ?: null,
-                'usage_scope' => 'both',
+                'usage_scope' => $keepWard ? 'ward' : $request->usage_scope,
             ]);
 
             $group->items()->delete();
@@ -165,15 +148,49 @@ class MedicineGroupController extends Controller
             MedicineGroupItem::insert($items);
         });
 
-        return redirect()->route('hospital.medicine-groups.index', compact('slug'))
-            ->with('success', 'Medicine Group updated successfully.');
+        return $this->indexRedirect($slug, $keepWard, $keepWard
+            ? 'Ward medicine updated successfully.'
+            : 'Medicine Group updated successfully.');
     }
 
     public function destroy(string $slug, int $id): RedirectResponse
     {
-        MedicineGroup::findOrFail($id)->delete();
+        $group = MedicineGroup::findOrFail($id);
+        $ward = $group->usage_scope === 'ward';
+        $group->delete();
 
-        return redirect()->route('hospital.medicine-groups.index', compact('slug'))
-            ->with('success', 'Medicine Group deleted successfully.');
+        return $this->indexRedirect($slug, $ward, $ward
+            ? 'Ward medicine deleted successfully.'
+            : 'Medicine Group deleted successfully.');
+    }
+
+    private function groupRules(): array
+    {
+        return [
+            'name' => ['required', 'string', 'max:255'],
+            'group_code' => ['nullable', 'string', 'max:50'],
+            'diagnosis_id' => ['nullable', 'exists:tbl_master_diagnosis,id'],
+            'usage_scope' => [$this->isWard() ? 'nullable' : 'required', Rule::in(['opd', 'ot'])],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.medicine_id' => ['required', 'exists:medicines,id'],
+            'items.*.dosage_id' => ['nullable', 'exists:dosages,id'],
+            'items.*.route_id' => ['nullable', 'exists:medicine_routes,id'],
+            'items.*.frequency' => ['nullable', 'string', 'max:50'],
+            'items.*.duration' => ['nullable', 'string', 'max:100'],
+            'items.*.instructions' => ['nullable', 'string', 'max:255'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+        ];
+    }
+
+    private function isWard(): bool
+    {
+        return request()->routeIs('hospital.ward-medicines.*');
+    }
+
+    private function indexRedirect(string $slug, bool $ward, string $message): RedirectResponse
+    {
+        return redirect()
+            ->route($ward ? 'hospital.ward-medicines.index' : 'hospital.medicine-groups.index', ['slug' => $slug])
+            ->with('success', $message);
     }
 }

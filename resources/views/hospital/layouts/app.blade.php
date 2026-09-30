@@ -1528,6 +1528,7 @@
                     </li>
                     <li><a class="dropdown-item" href="{{ url($slug . '/medicines') }}">Medicines</a></li>
                     <li><a class="dropdown-item" href="{{ url($slug . '/medicine-groups') }}">Medicine Groups</a></li>
+                    <li><a class="dropdown-item" href="{{ url($slug . '/ward-medicines') }}">Ward Medicine</a></li>
                 </ul>
             </div>
             @endhasanypermission
@@ -1753,6 +1754,11 @@
                             class="hms-nav-item {{ request()->routeIs('hospital.medicine-groups.*') ? 'active' : '' }}">
                             <i class="bi bi-collection"></i>
                             <span>Medicine Groups</span>
+                        </a>
+                        <a href="{{ route('hospital.ward-medicines.index', ['slug' => request()->route('slug')]) }}"
+                            class="hms-nav-item {{ request()->routeIs('hospital.ward-medicines.*') ? 'active' : '' }}">
+                            <i class="bi bi-hospital"></i>
+                            <span>Ward Medicine</span>
                         </a>
                         <a href="{{ route('hospital.medicine-types.index', ['slug' => request()->route('slug')]) }}"
                             class="hms-nav-item {{ request()->routeIs('hospital.medicine-types.*') ? 'active' : '' }}">

@@ -74,6 +74,8 @@ class OtBooking extends Model
         'patient.reception:id,name',
         'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category',
         'preOp:id,ot_booking_id,bp,pulse,rbs,temperature,spo2,hba1c,pre_op_status',
+        'dilationEntries:id,ot_booking_id,administered_at,medicine_name,eye,dose_number,drops_count,administered_by,remarks',
+        'dilationEntries.administeredBy:id,name',
         'surgery',
         'surgery.operatedBy:id,name',
         'lensDetail',
@@ -84,6 +86,9 @@ class OtBooking extends Model
 
     /** Roles that own counselling for the patients they register. */
     public const COUNSELLOR_ROLE_SLUGS = ['receptionist', 'receptionist_opd'];
+
+    /** Dedicated counselling desk — sees every counselling case, not only patients they registered. */
+    public const COUNSELLING_ROLE_SLUG = 'counselling';
 
     /**
      * Documents handed to the patient at discharge. The booking moves to Discharged
@@ -285,16 +290,17 @@ class OtBooking extends Model
     }
 
     /**
-     * Counselling is owned by the receptionist who registered the patient (patients.reception_id).
-     * Hospital admins see everything. Patients whose registering user is missing, inactive or
-     * not a receptionist stay visible to every counsellor so no case is left unowned.
+     * Receptionist counselling is owned by the receptionist who registered the patient
+     * (patients.reception_id). The dedicated Counselling role, hospital admins and super users
+     * see every case. Patients whose registering user is missing, inactive or not a receptionist
+     * stay visible to every counsellor so no case is left unowned.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
      */
     public function scopeAssignedToCounsellor($query, ?HospitalUser $user)
     {
-        if (! $user || $user->role?->is_super || $user->role?->slug === 'hospital_admin') {
+        if (! $user || $user->role?->is_super || in_array($user->role?->slug, ['hospital_admin', self::COUNSELLING_ROLE_SLUG], true)) {
             return $query;
         }
 

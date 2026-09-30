@@ -271,6 +271,11 @@ Master design. --}}
                         <i class="bi bi-collection me-1"></i> Medicine Groups
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ route('hospital.ward-medicines.index', ['slug' => $slug]) }}">
+                        <i class="bi bi-hospital me-1"></i> Ward Medicine
+                    </a>
+                </li>
                 {{-- <li class="nav-item">
                     <a class="nav-link" href="{{ route('hospital.medicine_instructions.index', ['slug' => $slug]) }}">
                         <i class="bi bi-list-ul me-1"></i> Instructions

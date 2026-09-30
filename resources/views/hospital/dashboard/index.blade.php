@@ -209,10 +209,10 @@
         }
 
         /*
-                  Hospital Admin Dashboard Theme
-                  Primary soft: #EBF5FB · Secondary: #1B4F72
-                  Hover: soft neutral shadow (no blue glow)
-                */
+                      Hospital Admin Dashboard Theme
+                      Primary soft: #EBF5FB · Secondary: #1B4F72
+                      Hover: soft neutral shadow (no blue glow)
+                    */
 
         /* ── Theme tokens (scoped to this page) ────────────────────────────────── */
         .bento-page {
@@ -534,8 +534,8 @@
         }
 
         /* Type-colored icon badges — same idea as the receptionist 5-card row:
-                   each stat gets a pastel background tinted to match its own icon color
-                   (set inline per-icon), instead of one flat neutral tone. */
+                       each stat gets a pastel background tinted to match its own icon color
+                       (set inline per-icon), instead of one flat neutral tone. */
         .ig-blue {
             background: #EBF5FB !important;
             border: 1px solid rgba(27, 79, 114, .18) !important;
@@ -883,22 +883,22 @@
         }
 
         /* .dashboard-table-scroll .bento-table {
-                    min-width: 980px;
-                    width: max-content;
-                    width: -moz-max-content;
-                } */
+                        min-width: 980px;
+                        width: max-content;
+                        width: -moz-max-content;
+                    } */
 
         /* .dashboard-table-scroll .bento-table thead th {
-                    position: sticky;
-                    top: 0;
-                    z-index: 2;
-                    background: var(--dash-secondary);
-                } */
+                        position: sticky;
+                        top: 0;
+                        z-index: 2;
+                        background: var(--dash-secondary);
+                    } */
 
         /* .dashboard-table-scroll .bento-table thead th:first-child {
-                    left: 0;
-                    z-index: 3;
-                } */
+                        left: 0;
+                        z-index: 3;
+                    } */
 
         .rec-detail-btn {
             display: inline-flex;
@@ -1519,7 +1519,8 @@
             || $dischargePendingCount !== null
             || ($accountantPendingCount ?? null) !== null
             || ($wardPendingCount ?? null) !== null
-            || ($otAssistantPendingCount ?? null) !== null;
+            || ($otAssistantPendingCount ?? null) !== null
+            || ($counsellingPendingCount ?? null) !== null;
         $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
     @endphp
 
@@ -1625,19 +1626,6 @@
                 <p class="rec-5meta">Confirmed: {{ $otOperated }} • Booked: {{ $otPending }}</p>
             </a>
         @endif
-
-        {{-- OT Counselling --}}
-        @haspermission('ot_counselling_fill')
-        <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}" class="rec-5card rec-5link">
-            <span class="bento-gloss" aria-hidden="true"></span>
-            <div class="rec-5icon" style="background:#FEF5E7;color:#D68910">
-                <i class="bi bi-chat-heart-fill"></i>
-            </div>
-            <p class="rec-5label">OT Counselling</p>
-            <div class="rec-5value">{{ $receptionistCounsellingPending ?? 0 }}</div>
-            <p class="rec-5meta">Pending counselling</p>
-        </a>
-        @endhaspermission
 
     </div>
     @endif
@@ -2051,7 +2039,8 @@
                 </div>
             </a>
 
-            <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}" class="bento-card span-2 text-decoration-none">
+            <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
+                class="bento-card span-2 text-decoration-none">
                 <span class="bento-gloss" aria-hidden="true"></span>
                 <div class="bento-stat">
                     <div class="bento-icon ig-indigo">
@@ -2150,6 +2139,48 @@
                     </div>
                 </div>
             </a>
+            {{-- Counselling: Awaiting / Counselled (replaces OT Appointment card) --}}
+        @elseif($isCounsellingUser && $counsellingPendingCount !== null)
+            <a href="#counsellingPanel" data-acc-tab="queue"
+                class="bento-card span-2 text-decoration-none acc-tab-card is-active">
+                <span class="bento-gloss" aria-hidden="true"></span>
+                <div class="bento-stat">
+                    <div class="bento-icon ig-orange">
+                        <i class="bi bi-hourglass-split" style="font-size:22px;color:#E67E22"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">Pending Patient</p>
+                        <div class="metric-value">{{ $counsellingPendingCount }}</div>
+                        <p class="metric-meta">Awaiting counselling</p>
+                    </div>
+                </div>
+            </a>
+            <!-- <a href="#counsellingPanel" data-acc-tab="history" class="bento-card span-2 text-decoration-none acc-tab-card">
+                    <span class="bento-gloss" aria-hidden="true"></span>
+                    <div class="bento-stat">
+                        <div class="bento-icon ig-green">
+                            <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                        </div>
+                        <div>
+                            <p class="metric-label">Completed</p>
+                            <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
+                            <p class="metric-meta">Counselled &amp; onward</p>
+                        </div>
+                    </div>
+                </a> -->
+            <a href="#counsellingPanel" data-acc-tab="payments" class="bento-card span-2 text-decoration-none acc-tab-card">
+                <span class="bento-gloss" aria-hidden="true"></span>
+                <div class="bento-stat">
+                    <div class="bento-icon ig-indigo">
+                        <i class="bi bi-shield-check" style="font-size:22px;color:#34495E"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">Payment Status</p>
+                        <div class="metric-value">{{ $counsellingPaymentCount ?? 0 }}</div>
+                        <p class="metric-meta">Package paid &amp; onward</p>
+                    </div>
+                </div>
+            </a>
             {{-- OT Appointment (ot_patient_list / ot_appointment_view) --}}
             {{-- Receptionist: shown in the top 6-card row instead --}}
         @elseif($hasOt && !$isReceptionistUser)
@@ -2202,6 +2233,10 @@
 
     @if($isDischargeCounterUser && !empty($dischargeLists))
         @include('hospital.dashboard.partials.discharge-panel')
+    @endif
+
+    @if($isCounsellingUser && !empty($counsellingLists))
+        @include('hospital.dashboard.partials.counselling-panel')
     @endif
 
     @if($isDoctorUser && $doctorStripCards->isNotEmpty())
@@ -2840,9 +2875,9 @@
             <div class="col-12">
                 <div class="tap-table-wrap">
                     <!-- <div class="tap-header">
-                                <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
-                                <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
-                            </div> -->
+                                    <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                                    <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+                                </div> -->
                     <div class="tap-header">
                         <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
 
@@ -2875,7 +2910,8 @@
                             <i class="bi bi-hospital"></i> OT <span class="tap-tab-n" data-tap-n="ot">0</span>
                         </button>
                         <button type="button" class="tap-tab-btn" data-tap-tab="status">
-                            <i class="bi bi-clipboard2-pulse"></i> Patient Status <span class="tap-tab-n" data-tap-n="status">0</span>
+                            <i class="bi bi-clipboard2-pulse"></i> Patient Status <span class="tap-tab-n"
+                                data-tap-n="status">0</span>
                         </button>
                     </div>
 

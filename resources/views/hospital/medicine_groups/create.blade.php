@@ -35,8 +35,6 @@
             <form action="{{ route('hospital.medicine-groups.store', ['slug' => $slug]) }}" method="POST">
                 @csrf
 
-                <!-- usage_scope removed — one shared medicine list -->
-                {{-- Group Name + Group Code + Usage Scope --}}
                 <div class="row mb-4 g-3">
                     <div class="col-md-5">
                         <label class="form-label fw-medium">Group Name <span class="text-danger">*</span></label>
@@ -46,12 +44,22 @@
                         @error('name')
                         <div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-medium">Group Code</label>
                         <input type="text" name="group_code" value="{{ old('group_code') }}"
                             class="form-control clinical-input @error('group_code') is-invalid @enderror"
                             placeholder="e.g. CAT-001">
                         @error('group_code')
+                        <div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-medium">Type <span class="text-danger">*</span></label>
+                        <select name="usage_scope" class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
+                            <option value="">Select type</option>
+                            <option value="opd" @selected(old('usage_scope') === 'opd')>OPD</option>
+                            <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>
+                        </select>
+                        @error('usage_scope')
                         <div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
