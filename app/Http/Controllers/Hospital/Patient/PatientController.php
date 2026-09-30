@@ -324,6 +324,7 @@ class PatientController extends Controller
         $slug = $request->route('slug');
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
+        $search = trim((string) $request->input('search', ''));
 
         $query = Patient::with(['doctor:id,name', 'reception:id,name', 'caseType:id,case_type'])
             ->where('type', 'phone');
@@ -334,6 +335,17 @@ class PatientController extends Controller
 
         if ($toDate) {
             $query->whereDate('appointment_date', '<=', $toDate);
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where(DB::raw("TRIM(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name))"), 'like', "%{$search}%")
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('contact_no', 'like', "%{$search}%")
+                    ->orWhere('whatsapp_no', 'like', "%{$search}%")
+                    ->orWhere('patient_code', 'like', "%{$search}%");
+            });
         }
 
         $patients = $query
@@ -348,7 +360,7 @@ class PatientController extends Controller
             : $patient->created_at->format('Y-m-d')
         );
 
-        return view('hospital.patients.phone-history', compact('slug', 'patients', 'groupedPatients', 'fromDate', 'toDate'));
+        return view('hospital.patients.phone-history', compact('slug', 'patients', 'groupedPatients', 'fromDate', 'toDate', 'search'));
     }
 
     public function show(string $slug, Patient $patient): View

@@ -86,7 +86,10 @@ class OtAssistantApiController extends Controller
                 ->orderByDesc('id');
         }
 
-        if (! $seeAll) {
+        $requestedAssistantId = (int) $request->query('assistant_id', 0);
+        if ($user->role?->slug === 'ot_assistant' && $requestedAssistantId > 0) {
+            $query->where('ot_assistant_id', $requestedAssistantId);
+        } elseif (! $seeAll) {
             $query->where('ot_assistant_id', $assistantId);
         }
 
@@ -227,7 +230,7 @@ class OtAssistantApiController extends Controller
                 .($lockedEye ? " ({$lockedEye})." : '.'),
         ]);
 
-        $surgeryAssistantId = (int) ($booking->ot_assistant_id ?: $assistantId);
+        $surgeryAssistantId = $assistantId;
 
         $otMedicines = collect($validated['ot_medicines'] ?? [])
             ->filter(fn (array $item): bool => ! empty($item['medicine']) || ! empty($item['dose']))
@@ -497,7 +500,8 @@ class OtAssistantApiController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $user = auth('sanctum')->user();
-        $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
+        $seeAll = $user->isSuperUser()
+            || in_array($user->role?->slug, ['hospital_admin', 'ot_assistant'], true);
 
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)

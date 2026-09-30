@@ -190,74 +190,22 @@ class DoctorOtListController extends Controller
     }
 
     /**
-     * Doctor dashboard — counselling and discharge-counter patients for a date range.
-     * Defaults to today. Counselling uses the day the booking was created; discharge
-     * uses operated / discharged time.
+     * Doctor dashboard — today's patients from counselling through OT Assistant.
+     * Same set as the doctor-card OT count. Date range can widen the list.
      */
     public function deskPatients(Request $request, string $slug): View
     {
         [$startDate, $endDate] = $this->resolvedDates($request);
-
-        $counselling = [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED];
 
         $bookings = OtBooking::query()
             ->with([
                 'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender',
                 'otDoctor:id,name',
             ])
-            ->whereIn('ot_status', [
-                OtBooking::STATUS_BOOKED,
-                OtBooking::STATUS_SURGERY_RECOMMENDED,
-                OtBooking::STATUS_OPERATED,
-                OtBooking::STATUS_DISCHARGED,
-            ])
-            ->where(function ($outer) use ($startDate, $endDate, $counselling) {
-                $outer->where(function ($q) use ($startDate, $endDate, $counselling) {
-                    $q->whereIn('ot_status', $counselling)
-                        ->whereDate('created_at', '>=', $startDate)
-                        ->whereDate('created_at', '<=', $endDate);
-                })->orWhere(function ($q) use ($startDate, $endDate) {
-                    $q->where('ot_status', OtBooking::STATUS_OPERATED)
-                        ->where(function ($inner) use ($startDate, $endDate) {
-                            $inner->where(function ($a) use ($startDate, $endDate) {
-                                $a->whereNotNull('operated_at')
-                                    ->whereDate('operated_at', '>=', $startDate)
-                                    ->whereDate('operated_at', '<=', $endDate);
-                            })->orWhere(function ($a) use ($startDate, $endDate) {
-                                $a->whereNull('operated_at')
-                                    ->whereDate('updated_at', '>=', $startDate)
-                                    ->whereDate('updated_at', '<=', $endDate);
-                            });
-                        });
-                })->orWhere(function ($q) use ($startDate, $endDate) {
-                    $q->where('ot_status', OtBooking::STATUS_DISCHARGED)
-                        ->where(function ($inner) use ($startDate, $endDate) {
-                            $inner->where(function ($a) use ($startDate, $endDate) {
-                                $a->whereNotNull('discharged_at')
-                                    ->whereDate('discharged_at', '>=', $startDate)
-                                    ->whereDate('discharged_at', '<=', $endDate);
-                            })->orWhere(function ($a) use ($startDate, $endDate) {
-                                $a->whereNull('discharged_at')
-                                    ->whereNotNull('operated_at')
-                                    ->whereDate('operated_at', '>=', $startDate)
-                                    ->whereDate('operated_at', '<=', $endDate);
-                            })->orWhere(function ($a) use ($startDate, $endDate) {
-                                $a->whereNull('discharged_at')
-                                    ->whereNull('operated_at')
-                                    ->whereDate('updated_at', '>=', $startDate)
-                                    ->whereDate('updated_at', '<=', $endDate);
-                            });
-                        });
-                });
-            })
+            ->betweenCounsellingAndAssistant($startDate, $endDate)
             ->orderByRaw(
-                'CASE ot_status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 ELSE 5 END',
-                [
-                    OtBooking::STATUS_SURGERY_RECOMMENDED,
-                    OtBooking::STATUS_BOOKED,
-                    OtBooking::STATUS_OPERATED,
-                    OtBooking::STATUS_DISCHARGED,
-                ]
+                'CASE ot_status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 WHEN ? THEN 6 WHEN ? THEN 7 WHEN ? THEN 8 ELSE 9 END',
+                OtBooking::counsellingToAssistantStatuses()
             )
             ->orderByDesc('id')
             ->get();

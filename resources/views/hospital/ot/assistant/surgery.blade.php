@@ -184,6 +184,9 @@ used across the rest of the app. --}}
     $selectedLensCost = $selectedLensCost !== '' && $selectedLensCost !== null
         ? number_format((float) $selectedLensCost, 2, '.', '')
         : '';
+    $selectedLensImplantation = old('lens_implantation', $c && $c->lens_implantation !== null
+        ? ($c->lens_implantation ? 'yes' : 'no')
+        : '');
                                 @endphp
                                 <div class="ot-section mb-4">
                                     <div class="ot-section-header">
@@ -233,6 +236,19 @@ used across the rest of the app. --}}
                                                     <input type="number" step="0.01" min="0" name="lens_cost" class="form-control"
                                                         value="{{ $selectedLensCost }}"
                                                         placeholder="Enter lens cost">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label d-block">Lens Implantation</label>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="lens_implantation"
+                                                        id="lens_implantation_yes" value="yes" {{ $selectedLensImplantation === 'yes' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="lens_implantation_yes">Yes</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="radio" name="lens_implantation"
+                                                        id="lens_implantation_no" value="no" {{ $selectedLensImplantation === 'no' ? 'checked' : '' }}>
+                                                    <label class="form-check-label" for="lens_implantation_no">No</label>
                                                 </div>
                                             </div>
                                         </div>

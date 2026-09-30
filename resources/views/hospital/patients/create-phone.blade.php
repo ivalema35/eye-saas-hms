@@ -126,7 +126,7 @@
                         </div>
                         <div class="rpc-field">
                             <label class="form-label">Gender <span class="req">*</span></label>
-                            <select name="gender" id="gender" class="form-control hms-select rpc-auto-open" required>
+                            <select name="gender" id="gender" class="form-control select2 hms-select rpc-auto-open" required>
                                 <option value="">SELECT</option>
                                 <option value="male" @selected(old('gender') === 'male')>Male</option>
                                 <option value="female" @selected(old('gender') === 'female')>Female</option>

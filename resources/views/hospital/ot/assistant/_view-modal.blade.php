@@ -76,6 +76,7 @@
         ['Surgery Type', $booking->ot_type],
         ['Diagnosis', $counselling?->diagnosis],
         ['Planned Lens', $plannedLens],
+        ['Lens Implantation', $counselling?->lens_implantation === null ? null : ($counselling->lens_implantation ? 'Yes' : 'No')],
         ['Package', collect([$counselling?->package_name, $counselling?->room_category ? ucfirst($counselling->room_category) . ' room' : null])->filter()->implode(' · ')],
         ['Mediclaim', $mediclaim === null ? null : ($mediclaim ? 'Yes' : 'No')],
         ['Payment', $payLabel . ' · ' . money_code($booking->total_paid, 2) . ' / ' . money_code((float) ($booking->package_amount ?? 0), 2)],

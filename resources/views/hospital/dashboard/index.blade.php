@@ -2110,6 +2110,7 @@
                     </div>
                 </div>
             </a>
+            @include('hospital.dashboard.partials.ot-assistant-cards', ['besideCompleted' => true])
             {{-- Discharge Counter: Pending Patient (Billing Desk queue) --}}
         @elseif($isDischargeCounterUser && $dischargePendingCount !== null)
             <a href="#dischargePanel" data-acc-tab="queue"
@@ -2885,7 +2886,7 @@
                             id="today-patients-form" class="d-flex gap-2">
                             <div class="input-group">
                                 <input type="text" name="search_contact" value="{{ request('search_contact') }}"
-                                    class="form-control form-control-sm" placeholder="Search by mobile..." data-intl-phone>
+                                    class="form-control form-control-sm" placeholder="Search by name or mobile..." autocomplete="off">
                                 <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
                                 @if(request('search_contact'))
                                     <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"

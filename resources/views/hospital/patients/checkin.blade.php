@@ -174,7 +174,7 @@
                         <div class="rpc-field">
                             <label class="form-label">Gender <span class="req">*</span></label>
                             <select name="gender" id="gender"
-                                class="form-control hms-select rpc-auto-open @error('gender') is-invalid @enderror" required>
+                                class="form-control select2 hms-select rpc-auto-open @error('gender') is-invalid @enderror" required>
                                 <option value="">SELECT</option>
                                 <option value="male" @selected(old('gender', $patient->gender) === 'male')>Male</option>
                                 <option value="female" @selected(old('gender', $patient->gender) === 'female')>Female</option>

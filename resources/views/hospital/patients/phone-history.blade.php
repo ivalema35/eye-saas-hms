@@ -35,12 +35,20 @@ Roles / History / OT Patients panel design. --}}
     letter-spacing: -.015em;
     display: flex;
     align-items: center;
-    gap: .55rem;
+    gap: .65rem;
 }
 
-.phone-history-page-title i {
-    color: #1B4F72;
-    font-size: 1.2rem;
+.phone-history-page-title .ph-title-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1B4F72, #2980B9);
+    color: #fff;
+    font-size: 1.05rem;
+    box-shadow: 0 6px 14px rgba(27, 79, 114, 0.28);
 }
 
 .phone-history-breadcrumb {
@@ -152,12 +160,80 @@ Roles / History / OT Patients panel design. --}}
     min-width: 170px;
     border-radius: 10px;
     border: 1px solid rgba(27, 79, 114, 0.16);
+    transition: border-color 170ms ease, box-shadow 170ms ease;
+}
+
+.phone-history-filter .form-control:focus {
+    border-color: #1B4F72;
+    box-shadow: 0 0 0 .18rem rgba(27, 79, 114, 0.12);
 }
 
 .phone-history-filter .btn {
     border-radius: 10px;
     font-weight: 600;
     padding: .45rem .9rem;
+}
+
+.ph-filter-divider {
+    width: 1px;
+    align-self: stretch;
+    min-height: 42px;
+    background: rgba(27, 79, 114, 0.12);
+    margin: 0 .15rem;
+}
+
+.ph-search-wrap {
+    position: relative;
+}
+
+.ph-search-wrap i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(27, 79, 114, 0.5);
+    font-size: .9rem;
+    pointer-events: none;
+}
+
+.ph-search-wrap .form-control {
+    min-width: 260px;
+    padding-left: 34px;
+}
+
+.ph-btn-search {
+    border-radius: 10px;
+    font-weight: 700;
+    padding: .45rem 1.1rem;
+    background: #1B4F72;
+    border: 1.5px solid #1B4F72;
+    color: #fff;
+    transition: background 170ms ease, box-shadow 170ms ease;
+}
+
+.ph-btn-search:hover {
+    background: #154360;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(27, 79, 114, 0.28);
+}
+
+.ph-active-search {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    background: rgba(27, 79, 114, 0.08);
+    color: #1B4F72;
+    border: 1px solid rgba(27, 79, 114, 0.18);
+    border-radius: 20px;
+    padding: .3rem .85rem;
+    font-size: .8rem;
+    font-weight: 600;
+    margin-bottom: .9rem;
+}
+
+.ph-active-search a {
+    color: #1B4F72;
+    margin-left: .3rem;
 }
 
 .phone-history-body {
@@ -277,6 +353,23 @@ Roles / History / OT Patients panel design. --}}
     .phone-history-filter .form-control {
         min-width: 140px;
     }
+
+    .ph-search-wrap .form-control {
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .phone-history-filter {
+        width: 100%;
+    }
+
+    .phone-history-filter > div {
+        width: 100%;
+    }
+
+    .ph-filter-divider {
+        display: none;
+    }
 }
 </style>
 @endpush
@@ -286,7 +379,7 @@ Roles / History / OT Patients panel design. --}}
     <div class="phone-history-outer-card">
         <div class="phone-history-header-block">
             <div>
-                <div class="phone-history-page-title"><i class="bi bi-telephone-fill"></i> Phone Appointment History</div>
+                <div class="phone-history-page-title"><span class="ph-title-icon"><i class="bi bi-telephone-fill"></i></span> Phone Appointment History</div>
                 <nav class="phone-history-breadcrumb" aria-label="breadcrumb">
                     <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
                     <span class="phone-history-breadcrumb-sep">/</span>
@@ -299,10 +392,21 @@ Roles / History / OT Patients panel design. --}}
         <div class="phone-history-card-body">
             <div class="d-flex align-items-center gap-2 mb-3">
                 <span class="ph-filter-icon"><i class="bi bi-funnel-fill"></i></span>
-                <strong class="ph-filter-title">Date Range Filter</strong>
+                <strong class="ph-filter-title">Search &amp; Date Range Filter</strong>
             </div>
 
             <form method="GET" class="phone-history-filter">
+                <div>
+                    <label class="form-label" for="ph_search">Name / Mobile number</label>
+                    <div class="ph-search-wrap">
+                        <i class="bi bi-search"></i>
+                        <input type="text" id="ph_search" name="search" class="form-control"
+                            value="{{ $search }}"
+                            placeholder="Search by patient name or mobile number"
+                            autocomplete="off">
+                    </div>
+                </div>
+                <div class="ph-filter-divider d-none d-md-block"></div>
                 <div>
                     <label class="form-label" for="date_range">Date range</label>
                     <input type="text" id="date_range" class="form-control"
@@ -317,7 +421,8 @@ Roles / History / OT Patients panel design. --}}
                         readonly
                         style="min-width:220px;">
                 </div>
-                <div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn ph-btn-search"><i class="bi bi-search"></i> Search</button>
                     <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="btn ph-btn-outline">Reset</a>
                 </div>
             </form>
@@ -327,9 +432,16 @@ Roles / History / OT Patients panel design. --}}
     <div class="phone-history-card">
         <div class="phone-history-header">
             <h3 class="phone-history-title"><i class="bi bi-calendar2-week"></i> Phone Appointment Patients</h3>
+            <span style="color:rgba(255,255,255,.85);font-size:.8rem;font-weight:600">{{ $patients->total() }} {{ Str::plural('record', $patients->total()) }}</span>
         </div>
 
         <div class="phone-history-body">
+            @if($search !== '')
+                <div class="ph-active-search">
+                    <i class="bi bi-search"></i> Showing results for "<strong>{{ $search }}</strong>"
+                    <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug, 'from_date' => $fromDate, 'to_date' => $toDate]) }}"><i class="bi bi-x-circle-fill"></i></a>
+                </div>
+            @endif
             @forelse($groupedPatients as $date => $rows)
                 <h4 class="phone-history-date">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</h4>
                 <div class="table-responsive">
@@ -414,7 +526,14 @@ Roles / History / OT Patients panel design. --}}
                     </table>
                 </div>
             @empty
-                <div class="phone-history-empty">No phone appointment history found for selected dates.</div>
+                <div class="phone-history-empty">
+                    <i class="bi bi-inbox" style="font-size:1.8rem;display:block;margin-bottom:.5rem;color:rgba(27,79,114,.35)"></i>
+                    @if($search !== '')
+                        No phone appointment history found for "{{ $search }}".
+                    @else
+                        No phone appointment history found for selected dates.
+                    @endif
+                </div>
             @endforelse
 
             <div class="phone-history-footer">

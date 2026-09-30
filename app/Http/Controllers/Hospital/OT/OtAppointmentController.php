@@ -310,12 +310,18 @@ class OtAppointmentController extends Controller
             $query->where('id', '!=', (int) $excludeId);
         }
 
-        $appointments = $query->orderBy('id')->get(['id', 'patient_name', 'surname', 'status']);
+        $appointments = $query->orderBy('id')->get([
+            'id', 'patient_name', 'middle_name', 'surname', 'mobile_no', 'whatsapp_no',
+            'age', 'gender', 'appointment_time', 'status',
+        ]);
 
         return response()->json([
             'appointments' => $appointments->map(fn(OtAppointment $appointment) => [
                 'id' => $appointment->id,
-                'name' => trim(collect([$appointment->patient_name, $appointment->surname])->filter()->implode(' ')),
+                'name' => trim(collect([$appointment->patient_name, $appointment->middle_name, $appointment->surname])->filter()->implode(' ')),
+                'mobile_no' => $appointment->mobile_no ?: $appointment->whatsapp_no,
+                'age' => $appointment->age,
+                'gender' => $appointment->gender,
                 'status' => $appointment->status,
             ])->values(),
         ]);
