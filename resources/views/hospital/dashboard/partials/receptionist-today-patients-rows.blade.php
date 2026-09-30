@@ -131,7 +131,7 @@
                     @php
                         $stage = $patient->workflowStage();
                         [$stageLabel, $stageClass, $stageIcon] = match ($stage['label']) {
-                            'Examination Done' => ['Secondary Done', 'tap-status-done', 'bi-check2-circle'],
+                            'Secondary Completed' => ['Secondary Completed', 'tap-status-done', 'bi-check2-circle'],
                             'Counselling' => ['In Counselling', 'tap-status-counsel', 'bi-chat-heart'],
                             'Account' => ['In Account', 'tap-status-account', 'bi-cash-coin'],
                             'Ward Management' => ['In Ward', 'tap-status-ward', 'bi-heart-pulse'],

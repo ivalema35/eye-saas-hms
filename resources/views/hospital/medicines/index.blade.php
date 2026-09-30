@@ -1,5 +1,5 @@
 @extends('hospital.layouts.app')
-@section('title', 'Medicines')
+@section('title', ($isWard ?? false) ? 'Ward Medicine' : 'Medicines')
 {{-- Layout page-header intentionally unused — the heading, breadcrumb, tabs
 and list all sit inside one bordered card, matching the superadmin Medicine
 Master design. --}}
@@ -53,13 +53,18 @@ Master design. --}}
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
+                        <a class="nav-link {{ ($isWard ?? false) ? '' : 'active' }}" href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}">
                             <i class="bi bi-capsule me-1"></i> Medicines
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
                             <i class="bi bi-collection me-1"></i> Medicine Groups
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ ($isWard ?? false) ? 'active' : '' }}" href="{{ route('hospital.ward-medicines.index', ['slug' => $slug]) }}">
+                            <i class="bi bi-hospital me-1"></i> Ward Medicine
                         </a>
                     </li>
 
@@ -72,13 +77,15 @@ Master design. --}}
                 </ul>
                 <div class="medmaster-tab-actions">
                     @haspermission('medicine_add')
+                    @if(!($isWard ?? false))
                     <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
                         data-bs-target="#importMedicineModal">
                         <i class="bi bi-file-earmark-arrow-up me-1"></i> Excel Upload
                     </button>
+                    @endif
                     <button type="button" class="btn btn-primary btn-sm med-add-btn" data-bs-toggle="modal"
                         data-bs-target="#medicineModal" onclick="resetMedicineForm()">
-                        <i class="bi bi-plus-lg me-1"></i> Add Medicine
+                        <i class="bi bi-plus-lg me-1"></i> {{ ($isWard ?? false) ? 'Add Ward Medicine' : 'Add Medicine' }}
                     </button>
                     @endhaspermission
                 </div>
@@ -86,7 +93,7 @@ Master design. --}}
 
             <div class="card premium-card border-0 shadow-sm med-card">
                 <div class="medmaster-list-header">
-                    <h3 class="medmaster-list-title"><i class="bi bi-capsule"></i> Medicine List</h3>
+                    <h3 class="medmaster-list-title"><i class="bi {{ ($isWard ?? false) ? 'bi-hospital' : 'bi-capsule' }}"></i> {{ ($isWard ?? false) ? 'Ward Medicine List' : 'Medicine List' }}</h3>
                     <span class="medmaster-list-badge">{{ $medicines->count() }} total</span>
                 </div>
 
@@ -125,7 +132,7 @@ Master design. --}}
                                                 @endhaspermission
                                                 @haspermission('medicine_delete')
                                                 <form
-                                                    action="{{ route('hospital.medicines.destroy', ['slug' => $slug, 'medicine' => $med->id]) }}"
+                                                    action="{{ route(($isWard ?? false) ? 'hospital.ward-medicines.destroy' : 'hospital.medicines.destroy', ['slug' => $slug, 'medicine' => $med->id]) }}"
                                                     method="POST" onsubmit="return confirm('Delete this medicine?')">
                                                     @csrf @method('DELETE')
                                                     <button type="submit"
@@ -141,7 +148,7 @@ Master design. --}}
                                 @empty
                                     <tr>
                                         <td colspan="6" class="text-center py-5 text-muted med-empty-cell">
-                                            No medicines found.
+                                            {{ ($isWard ?? false) ? 'No ward medicines found.' : 'No medicines found.' }}
                                         </td>
                                     </tr>
                                 @endforelse
@@ -162,14 +169,14 @@ Master design. --}}
                     <div class="med-modal-header-text">
                         <div class="med-modal-icon"><i class="bi bi-capsule"></i></div>
                         <div>
-                            <h5 class="modal-title mb-0" id="medicineModalTitle">Add Medicine</h5>
+                            <h5 class="modal-title mb-0" id="medicineModalTitle">{{ ($isWard ?? false) ? 'Add Ward Medicine' : 'Add Medicine' }}</h5>
                             <p class="med-modal-subtitle mb-0">Fill in medicine details below</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <form id="medicineForm" action="{{ route('hospital.medicines.store', ['slug' => $slug]) }}" method="POST">
+                <form id="medicineForm" action="{{ route(($isWard ?? false) ? 'hospital.ward-medicines.store' : 'hospital.medicines.store', ['slug' => $slug]) }}" method="POST">
                     @csrf
                     <input type="hidden" name="_method" id="medicineFormMethod" value="POST">
                     <input type="hidden" name="medicine_id" id="input-medicine-id" value="{{ old('medicine_id') }}">
@@ -264,7 +271,7 @@ Master design. --}}
                             Cancel
                         </button>
                         <button type="submit" class="btn btn-primary med-modal-btn-save">
-                            <i class="bi bi-check-lg me-1"></i> Save Medicine
+                            <i class="bi bi-check-lg me-1"></i> {{ ($isWard ?? false) ? 'Save Ward Medicine' : 'Save Medicine' }}
                         </button>
                     </div>
                 </form>
@@ -339,11 +346,13 @@ Master design. --}}
 
 @push('scripts')
     <script>
-        const medicineStoreUrl = "{{ route('hospital.medicines.store', ['slug' => $slug]) }}";
-        const medicineUpdateBase = "{{ route('hospital.medicines.update', ['slug' => $slug, 'medicine' => '__ID__']) }}";
+        const medicineStoreUrl = "{{ route(($isWard ?? false) ? 'hospital.ward-medicines.store' : 'hospital.medicines.store', ['slug' => $slug]) }}";
+        const medicineUpdateBase = "{{ route(($isWard ?? false) ? 'hospital.ward-medicines.update' : 'hospital.medicines.update', ['slug' => $slug, 'medicine' => '__ID__']) }}";
+        const medicineAddTitle = @json(($isWard ?? false) ? 'Add Ward Medicine' : 'Add Medicine');
+        const medicineEditTitle = @json(($isWard ?? false) ? 'Edit Ward Medicine' : 'Edit Medicine');
 
         function resetMedicineForm() {
-            document.getElementById('medicineModalTitle').innerText = 'Add Medicine';
+            document.getElementById('medicineModalTitle').innerText = medicineAddTitle;
             document.getElementById('medicineForm').reset();
             document.getElementById('medicineFormMethod').value = 'POST';
             document.getElementById('medicineForm').action = medicineStoreUrl;
@@ -360,7 +369,7 @@ Master design. --}}
                     e.preventDefault();
                     var record = JSON.parse(this.dataset.record);
 
-                    document.getElementById('medicineModalTitle').innerText = 'Edit Medicine';
+                    document.getElementById('medicineModalTitle').innerText = medicineEditTitle;
                     document.getElementById('medicineFormMethod').value = 'PUT';
                     document.getElementById('medicineForm').action = medicineUpdateBase.replace('__ID__', record.id);
                     document.getElementById('input-medicine-id').value = record.id ?? '';
@@ -389,7 +398,7 @@ Master design. --}}
 
                     document.getElementById('medicineFormMethod').value = oldMethod;
                     document.getElementById('medicineModalTitle').innerText =
-                        oldMethod === 'PUT' ? 'Edit Medicine' : 'Add Medicine';
+                        oldMethod === 'PUT' ? medicineEditTitle : medicineAddTitle;
                     document.getElementById('medicineForm').action =
                         oldMethod === 'PUT' && oldMedicineId
                             ? medicineUpdateBase.replace('__ID__', oldMedicineId)

@@ -235,7 +235,7 @@ class Patient extends Model
         }
 
         if ($this->secondary_done_at) {
-            return ['label' => 'Examination Done', 'sub' => null, 'tone' => 'success', 'icon' => 'bi-check2-circle'];
+            return ['label' => 'Secondary Completed', 'sub' => null, 'tone' => 'success', 'icon' => 'bi-check2-circle'];
         }
 
         if ($this->primary_done_at) {

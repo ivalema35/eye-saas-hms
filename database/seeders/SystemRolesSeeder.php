@@ -19,6 +19,7 @@ class SystemRolesSeeder extends Seeder
         ['name' => 'Ward Management', 'slug' => 'ward_management', 'color' => '#7D3C98', 'is_super' => false, 'is_system' => true],
         ['name' => 'OT Assistant', 'slug' => 'ot_assistant', 'color' => '#CA6F1E', 'is_super' => false, 'is_system' => true],
         ['name' => 'Discharge Counter', 'slug' => 'discharge_counter', 'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
+        ['name' => 'Counselling', 'slug' => 'counselling', 'color' => '#D68910', 'is_super' => false, 'is_system' => true],
     ];
 
     public static function seedForTenant(int $tenantId, ?int $adminId = null): void

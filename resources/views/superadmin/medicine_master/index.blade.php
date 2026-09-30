@@ -184,6 +184,10 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                         class="mm-tab-btn {{ $tab === 'medicines' ? 'active' : '' }}">
                         <i class="bi bi-clipboard2-pulse"></i> Medicine List
                     </a>
+                    <a href="{{ route('superadmin.medicine-master.index', ['tab' => 'ward']) }}"
+                        class="mm-tab-btn {{ $tab === 'ward' ? 'active' : '' }}">
+                        <i class="bi bi-hospital"></i> Ward Medicine
+                    </a>
                 </div>
                 <div class="mm-tab-actions">
                     @if($tab === 'dosages')
@@ -205,6 +209,11 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                         <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
                             data-bs-target="#addRouteModal" style="color: #1b4f72;">
                             <i class="bi bi-plus-lg"></i> Add Route
+                        </button>
+                    @elseif($tab === 'ward')
+                        <button type="button" class="hms-btn hms-btn-primary hms-btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#addWardMedicineModal" style="color: #1b4f72;">
+                            <i class="bi bi-plus-lg"></i> Add Ward Medicine
                         </button>
                     @elseif($tab === 'medicines')
                         <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-toggle="modal"
@@ -542,6 +551,76 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
                                                             <button class="hms-btn hms-btn-xs"
                                                                 style="background:#FEE2E2;color:#B91C1C;border:none"><i
                                                                     class="bi bi-trash-fill"></i></button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                @if($tab === 'ward')
+                    <div class="hms-card" style="padding:0">
+                        <div class="hms-card-header">
+                            <h3 class="hms-card-title"><i class="bi bi-hospital" style="color:#ffffff"></i> Ward Medicine List</h3>
+                            <span class="hms-badge hms-badge-info">{{ $wardMedicines->count() }} total</span>
+                        </div>
+                        @if($wardMedicines->isEmpty())
+                            <div class="mm-empty"><i class="bi bi-hospital"></i>
+                                <p>No ward medicines yet</p>
+                                <p class="mm-hint">Add one with the same fields as a medicine. It is copied into every hospital.</p>
+                            </div>
+                        @else
+                            <div class="hms-table-wrap" style="border:none">
+                                <table class="hms-table js-datatable">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Name</th>
+                                            <th>Type</th>
+                                            <th>Dosage</th>
+                                            <th>Company</th>
+                                            <th>Price</th>
+                                            <th>Status</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($wardMedicines as $i => $m)
+                                            <tr>
+                                                <td style="color:#94A3B8;font-size:.8rem">{{ $i + 1 }}</td>
+                                                <td style="font-weight:600;color:#1B4F72">{{ $m->name }}</td>
+                                                <td style="color:#64748B;font-size:.875rem">{{ $m->medicineType->name ?? '—' }}</td>
+                                                <td style="color:#64748B;font-size:.875rem">{{ $m->dosage->dosage ?? '—' }}</td>
+                                                <td style="color:#64748B;font-size:.875rem">{{ $m->company ?? '—' }}</td>
+                                                <td style="color:#64748B;font-size:.875rem">{{ $m->price !== null ? number_format((float) $m->price, 2) : '—' }}</td>
+                                                <td>
+                                                    <button class="hms-badge toggle-btn {{ $m->is_active ? 'hms-badge-success' : 'hms-badge-secondary' }}"
+                                                        data-url="{{ route('superadmin.medicine-master.medicines.toggle', $m->id) }}"
+                                                        style="border:none;cursor:pointer;padding:.25rem .6rem;font-size:.75rem">
+                                                        {{ $m->is_active ? 'Active' : 'Inactive' }}
+                                                    </button>
+                                                </td>
+                                                <td class="text-end">
+                                                    <div style="display:flex;gap:.4rem;justify-content:flex-end">
+                                                        <button type="button" class="hms-btn hms-btn-outline hms-btn-xs edit-ward-medicine-btn"
+                                                            data-id="{{ $m->id }}" data-name="{{ $m->name }}"
+                                                            data-type-id="{{ $m->master_medicine_type_id }}"
+                                                            data-dosage-id="{{ $m->master_dosage_id }}"
+                                                            data-duration="{{ $m->duration }}" data-qty="{{ $m->qty }}"
+                                                            data-composition="{{ $m->composition }}" data-company="{{ $m->company }}"
+                                                            data-price="{{ $m->price }}">
+                                                            <i class="bi bi-pencil-fill"></i>
+                                                        </button>
+                                                        <form method="POST" action="{{ route('superadmin.medicine-master.ward-medicines.destroy', $m->id) }}" class="del-form">
+                                                            @csrf @method('DELETE')
+                                                            <button class="hms-btn hms-btn-xs" style="background:#FEE2E2;color:#B91C1C;border:none">
+                                                                <i class="bi bi-trash-fill"></i>
+                                                            </button>
                                                         </form>
                                                     </div>
                                                 </td>
@@ -989,9 +1068,71 @@ and list all sit inside one bordered card, matching the OT panel design. --}}
         </div>
     </div>
 
+    @if($tab === 'ward')
+        <div class="modal fade" id="addWardMedicineModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+                    <div class="modal-header" style="background:#1B4F72;border-radius:12px 12px 0 0;padding:.875rem 1.25rem">
+                        <h5 class="modal-title" style="color:#fff;font-weight:700;font-size:.95rem"><i class="bi bi-hospital me-2"></i>Add Ward Medicine</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ route('superadmin.medicine-master.ward-medicines.store') }}">
+                        @csrf
+                        <div class="modal-body" style="padding:1.25rem">
+                            @include('superadmin.medicine_master._medicine_fields')
+                        </div>
+                        <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
+                            <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-plus-lg"></i> Add Ward Medicine</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="editWardMedicineModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 20px 60px rgba(0,0,0,.15)">
+                    <div class="modal-header" style="background:#1B4F72;border-radius:12px 12px 0 0;padding:.875rem 1.25rem">
+                        <h5 class="modal-title" style="color:#fff;font-weight:700;font-size:.95rem"><i class="bi bi-pencil-fill me-2"></i>Edit Ward Medicine</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" id="editWardMedicineForm" action="">
+                        @csrf @method('PUT')
+                        <div class="modal-body" style="padding:1.25rem">
+                            @include('superadmin.medicine_master._medicine_fields', ['prefix' => 'editWard'])
+                        </div>
+                        <div class="modal-footer" style="border-top:1px solid #F1F5F9;padding:.75rem 1.25rem">
+                            <button type="button" class="hms-btn hms-btn-outline hms-btn-sm" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="hms-btn hms-btn-primary hms-btn-sm"><i class="bi bi-check-lg"></i> Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+
 @endsection
 
 @push('scripts')
+    <script>
+        document.querySelectorAll('.edit-ward-medicine-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                document.getElementById('editWardMedicineForm').action =
+                    '{{ route("superadmin.medicine-master.ward-medicines.update", ":id") }}'.replace(':id', this.dataset.id);
+                document.getElementById('editWardMedicineName').value = this.dataset.name || '';
+                document.getElementById('editWardMedicineType').value = this.dataset.typeId || '';
+                document.getElementById('editWardMedicineDosage').value = this.dataset.dosageId || '';
+                document.getElementById('editWardMedicineDuration').value = this.dataset.duration || '';
+                document.getElementById('editWardMedicineQty').value = this.dataset.qty || '';
+                document.getElementById('editWardMedicineCompany').value = this.dataset.company || '';
+                document.getElementById('editWardMedicinePrice').value = this.dataset.price || '';
+                document.getElementById('editWardMedicineComposition').value = this.dataset.composition || '';
+                new bootstrap.Modal(document.getElementById('editWardMedicineModal')).show();
+            });
+        });
+    </script>
+
     <script>
         (function () {
             /* ── Edit Dosage ── */

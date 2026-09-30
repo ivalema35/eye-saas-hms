@@ -56,6 +56,10 @@
         'HbA1c' => $preOp->hba1c,
     ], fn ($v) => ! blank($v)) : [];
 
+    $drops = $booking->relationLoaded('dilationEntries')
+        ? $booking->dilationEntries->sortBy([['administered_at', 'asc'], ['dose_number', 'asc']])->values()
+        : collect();
+
     $patientFields = [
         ['MRD No.', $patient?->patient_code],
         ['Phone', $patient?->contact_no],
@@ -204,6 +208,43 @@
                                 <div class="apm-amount-value">{{ $vValue }}</div>
                             </div>
                         @endforeach
+                    </div>
+                @endif
+
+                <div class="apm-section-title">
+                    <i class="bi bi-droplet-half"></i> Ward Medicine Log
+                    @if($drops->isNotEmpty())
+                        <span class="apm-badge apm-tone-blue">{{ $drops->count() }} {{ $drops->count() === 1 ? 'entry' : 'entries' }}</span>
+                    @endif
+                </div>
+                @if($drops->isEmpty())
+                    <div class="apm-empty"><i class="bi bi-inbox"></i> No ward medicines logged yet.</div>
+                @else
+                    <div class="table-responsive">
+                        <table class="apm-table">
+                            <thead>
+                                <tr>
+                                    <th>Dose</th>
+                                    <th>Medicine</th>
+                                    <th>Eye</th>
+                                    <th>Date / Time</th>
+                                    <th>Given By</th>
+                                    <th>Remarks</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($drops as $drop)
+                                    <tr>
+                                        <td>{{ $drop->dose_number ?: '-' }}</td>
+                                        <td>{{ $drop->medicine_name ?: '-' }}</td>
+                                        <td>{{ $drop->eye ?: '-' }}</td>
+                                        <td>{{ optional($drop->administered_at)->format('d M Y, h:i A') ?? '-' }}</td>
+                                        <td>{{ $drop->administeredBy?->name ?? '-' }}</td>
+                                        <td>{{ $drop->remarks ?: '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 @endif
 

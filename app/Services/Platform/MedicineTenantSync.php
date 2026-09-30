@@ -32,11 +32,12 @@ class MedicineTenantSync
                 continue;
             }
 
-            if (Medicine::withoutTenantScope()
+            $exists = Medicine::withoutTenantScope()
                 ->where('tenant_id', $tenantId)
                 ->whereRaw('LOWER(name) = ?', [strtolower($medicine->name)])
-                ->exists()
-            ) {
+                ->when($medicine->is_ward, fn ($q) => $q->where('usage_scope', 'ward'));
+
+            if ($exists->exists()) {
                 continue;
             }
 
@@ -58,6 +59,7 @@ class MedicineTenantSync
             $existing = Medicine::withoutTenantScope()
                 ->where('tenant_id', $tenantId)
                 ->whereRaw('LOWER(name) = ?', [strtolower($oldName)])
+                ->when($medicine->is_ward, fn ($q) => $q->where('usage_scope', 'ward'))
                 ->first();
 
             if (! $existing) {
@@ -67,6 +69,7 @@ class MedicineTenantSync
             $conflict = Medicine::withoutTenantScope()
                 ->where('tenant_id', $tenantId)
                 ->whereRaw('LOWER(name) = ?', [strtolower($medicine->name)])
+                ->when($medicine->is_ward, fn ($q) => $q->where('usage_scope', 'ward'))
                 ->where('id', '!=', $existing->id)
                 ->exists();
 
@@ -95,7 +98,7 @@ class MedicineTenantSync
         ?int $typeId,
         ?int $dosageId,
     ): array {
-        return [
+        $payload = [
             'tenant_id' => $tenantId,
             'medicine_type_id' => $typeId,
             'dosage_id' => $dosageId,
@@ -106,6 +109,12 @@ class MedicineTenantSync
             'company' => $medicine->company,
             'price' => $medicine->price,
         ];
+
+        if ($medicine->is_ward) {
+            $payload['usage_scope'] = 'ward';
+        }
+
+        return $payload;
     }
 
     private static function resolveTenantTypeId(int $tenantId, MasterMedicine $medicine): ?int

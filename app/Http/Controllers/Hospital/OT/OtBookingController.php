@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\Hospital\OT;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Hospital\Examination\StoreSecondaryExamRequest;
+use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtCounselling;
 use App\Models\Hospital\Patient;
+use App\Services\Hospital\ExaminationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -56,16 +59,19 @@ class OtBookingController extends Controller
             ->where('tenant_id', $tenantId)
             ->findOrFail($patientId);
 
-        $validated = $request->validate([
-            'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
-            // Doctor + OT Assistant, and OT date/slot, are set later in the OT flow.
-            'ot_surgery_type_id' => [
-                'required',
-                'integer',
-                Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
-            ],
-            'diagnosis_hint' => ['nullable', 'string', 'max:255'],
-        ]);
+        $validated = $request->validate(array_merge(
+            (new StoreSecondaryExamRequest())->rules(),
+            [
+                'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
+                // Doctor + OT Assistant, and OT date/slot, are set later in the OT flow.
+                'ot_surgery_type_id' => [
+                    'required',
+                    'integer',
+                    Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
+                ],
+                'diagnosis_hint' => ['nullable', 'string', 'max:255'],
+            ]
+        ));
 
         $surgeryType = DB::table('ot_surgery_types')
             ->where('tenant_id', $tenantId)
@@ -90,6 +96,37 @@ class OtBookingController extends Controller
                 ->with('error', 'This patient already has an active OT booking ('.$existing->ot_status.'). Complete or discharge it before recommending again.');
         }
 
+        $medicines = collect($validated['medicines'] ?? [])
+            ->filter(fn (array $m): bool => ! empty($m['name']))
+            ->map(function (array $medicine) use ($tenantId): array {
+                if (! empty($medicine['medicine_id']) || empty($medicine['name'])) {
+                    return $medicine;
+                }
+
+                $submittedName = trim($medicine['name']);
+                $foundMedicine = Medicine::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where(function ($query) use ($submittedName) {
+                        $query->where('brand_name', $submittedName)
+                            ->orWhere('name', $submittedName);
+                    })
+                    ->first(['id']);
+                $medicine['medicine_id'] = $foundMedicine?->id;
+
+                return $medicine;
+            })
+            ->all();
+
+        $examData = $validated['exam_data'] ?? [];
+        app(ExaminationService::class)->saveSecondaryExam(
+            $patient,
+            (int) $validated['doctor_id'],
+            $examData,
+            $medicines,
+            $tenantId,
+            $examData['advice'] ?? null
+        );
+
         // Date/slot and staff are assigned later (counsellor / ward) — not at recommend.
         $payload = [
             'surgery_date' => null,
@@ -102,7 +139,7 @@ class OtBookingController extends Controller
         if ($existing) {
             $existing->update($payload);
             $booking = $existing->fresh();
-            $message = 'Surgery recommendation updated. Patient is in the Counsellor queue.';
+            $message = 'Secondary exam saved. Patient is in the Counsellor queue.';
         } else {
             $booking = OtBooking::create([
                 'tenant_id' => $tenantId,
@@ -112,7 +149,7 @@ class OtBookingController extends Controller
                 'ot_assistant_id' => null,
                 ...$payload,
             ]);
-            $message = 'Surgery recommended. Patient sent to Counsellor queue.';
+            $message = 'Secondary exam saved. Patient sent to Counsellor queue.';
         }
 
         // Optional diagnosis hint → seed counselling row for counsellor form.

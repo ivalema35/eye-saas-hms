@@ -668,7 +668,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
         <div class="exam-layout-wrapper">
             <div class="doctor-stepper-sidebar d-print-none">
                 
-                <div class="step-group-label first">Primary Exam</div>
+                
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
@@ -679,21 +679,22 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
 
-                <div class="step-group-label">Secondary Exam</div>
+                
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
 
                 <hr>
-                                            <button type="submit" class="btn btn-success fw-bold w-100">Save Exam</button>
-                                                                            @haspermission('ot_surgery_recommend')
-                                                                                                                        <button type="button" class="btn fw-bold w-100 mt-2 text-white"
-                                                                                                                            style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);" data-bs-toggle="modal"
-                                                                                                                            data-bs-target="#recommendSurgeryModal">
-                                                                                                                            <i class="bi bi-hospital me-1"></i> Surgery Recommendation
-                                                                                                                        </button>
-                                                                                                                        @endhaspermission
-                                                                                    </div>
+                @haspermission('ot_surgery_recommend')
+                    <button type="button" class="btn fw-bold w-100 text-white"
+                        style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
+                        data-bs-toggle="modal"
+                        data-bs-target="#recommendSurgeryModal">
+                        <i class="bi bi-hospital me-1"></i> Surgery Recommendation
+                    </button>
+                @endhaspermission
+                <button type="submit" class="btn btn-success fw-bold w-100 mt-2">SAVE</button>
+            </div>
 
                                                                                     <div class="main-canvas">
                                                                                         <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
@@ -854,7 +855,6 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
-            <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
             @haspermission('ot_surgery_recommend')
                 <button type="button" class="btn btn-sm fw-bold px-3 text-white"
                         style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
@@ -862,6 +862,7 @@ $isDoctor = auth('hospital_user')->user()?->role?->slug === 'doctor';
                     <i class="bi bi-hospital me-1"></i> Recommend Surgery
                 </button>
             @endhaspermission
+            <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
         </div>
 
         <div class="card shadow-sm mx-auto" style="width:100%;max-width:1200px;background:white;padding:16px;" id="liveReportCanvas">
@@ -4134,13 +4135,18 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (addLabel) addLabel.textContent = addHid.value || '—';
         }
 
-        // Sync ST NEAR CYL/Axis from Distance (NC mirrors DC, NA mirrors AX)
+        // Near CYL/Axis copy from Distance only after Distance SPH, Distance CYL, and Near SPH are filled.
         function syncStNearFromDist(eye) {
+            function filled(key) {
+                var el = document.querySelector('[name="exam_data[st][' + eye + '][' + key + ']"]');
+                return !!el && String(el.value || '').trim() !== '';
+            }
+            var ready = filled('ds') && filled('dc') && filled('ns');
             [['dc','nc'],['ax','na']].forEach(function (pair) {
                 var distHid = document.querySelector('[name="exam_data[st][' + eye + '][' + pair[0] + ']"]');
                 var nearHid = document.querySelector('[name="exam_data[st][' + eye + '][' + pair[1] + ']"]');
                 if (!distHid || !nearHid) return;
-                var v = distHid.value;
+                var v = ready ? distHid.value : '';
                 nearHid.value = v;
                 var disp = nearHid.previousElementSibling;
                 if (disp && disp.tagName === 'INPUT') disp.value = v;

@@ -142,6 +142,7 @@ class OtAssistantApiController extends Controller
 
         $medicineGroups = MedicineGroup::with('items.medicine')
             ->where('tenant_id', $tenantId)
+            ->whereIn('usage_scope', ['ot', 'both'])
             ->orderBy('name')
             ->get();
 
@@ -234,7 +235,9 @@ class OtAssistantApiController extends Controller
             ->all();
 
         if ($otMedicines === [] && ! empty($validated['medicine_group_id'])) {
-            $group = MedicineGroup::with('items.medicine')->find($validated['medicine_group_id']);
+            $group = MedicineGroup::with('items.medicine')
+                ->whereIn('usage_scope', ['ot', 'both'])
+                ->find($validated['medicine_group_id']);
             $otMedicines = $group
                 ? $group->items->map(fn ($item) => [
                     'medicine' => $item->medicine?->name,

@@ -143,6 +143,9 @@ Route::prefix('{slug}')
                 Route::get('/dashboard/doctor-ot', [DoctorOtListController::class, 'index'])
                     ->name('dashboard.doctor-ot')
                     ->middleware('permission:exam_secondary|ot_patient_list|ot_surgery_recommend');
+                Route::get('/dashboard/ot-patients', [DoctorOtListController::class, 'deskPatients'])
+                    ->name('dashboard.ot-patients')
+                    ->middleware('permission:dashboard_clinical|exam_primary|exam_secondary|ot_patient_list|ot_surgery_recommend');
                 Route::post('/dashboard/doctor-ot/{bookingId}/assign-assistant', [DoctorOtListController::class, 'assignAssistant'])
                     ->name('dashboard.doctor-ot.assign-assistant')
                     ->whereNumber('bookingId')
@@ -305,6 +308,13 @@ Route::prefix('{slug}')
                     Route::get('/{medicine_group}/edit', [MedicineGroupController::class, 'edit'])->name('edit')->middleware('permission:medicine_edit');
                     Route::put('/{medicine_group}', [MedicineGroupController::class, 'update'])->name('update')->middleware('permission:medicine_edit');
                     Route::delete('/{medicine_group}', [MedicineGroupController::class, 'destroy'])->name('destroy')->middleware('permission:medicine_delete');
+                });
+
+                Route::prefix('ward-medicines')->name('ward-medicines.')->group(function () {
+                    Route::get('/', [MedicineController::class, 'index'])->name('index')->middleware('permission:medicine_view');
+                    Route::post('/', [MedicineController::class, 'store'])->name('store')->middleware('permission:medicine_add');
+                    Route::put('/{medicine}', [MedicineController::class, 'update'])->name('update')->middleware('permission:medicine_edit');
+                    Route::delete('/{medicine}', [MedicineController::class, 'destroy'])->name('destroy')->middleware('permission:medicine_delete');
                 });
 
                 // ============================================================

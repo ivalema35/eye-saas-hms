@@ -515,6 +515,10 @@ used across the rest of the app. --}}
         padding: 8px 10px !important;
         font-size: .82rem;
     }
+
+    .doctor-stepper-sidebar .step-group-label {
+        grid-column: 1 / -1;
+    }
 }
 /* ── Wait Status Pill ── */
 .wait-pill { display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px 3px 3px;font-weight:700;white-space:nowrap;transition:background .4s,box-shadow .4s;vertical-align:middle; }
@@ -629,7 +633,6 @@ $prescriptions = $exam?->prescriptions ?? collect();
 
             <div class="doctor-stepper-sidebar">
 
-                <div class="step-group-label first">Primary Exam</div>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-clinical" data-bs-toggle="modal" data-bs-target="#modalClinical">C/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-hko" data-bs-toggle="modal" data-bs-target="#modalHko">K/C/O &amp; H/O</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-vision" data-bs-toggle="modal" data-bs-target="#modalVision">Vision</button>
@@ -640,10 +643,10 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-fundus" data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-dilate" data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
 
-                <div class="step-group-label d-none">Secondary Exam</div>
-                <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-                <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-                <button type="button" class="btn btn-outline-secondary step-btn d-none" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+                
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
 
             <div class="main-canvas">
@@ -735,10 +738,10 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-oe"        data-bs-toggle="modal" data-bs-target="#modalOE">O/E</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-fundus"    data-bs-toggle="modal" data-bs-target="#modalFundus">Fundus</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-dilate"    data-bs-toggle="modal" data-bs-target="#modalDilate">Dilate</button>
-                <span class="step-group-tag ms-1 d-none">Secondary</span>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
-                <button type="button" class="btn btn-outline-secondary step-btn btn-sm d-none" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+                <span class="step-group-tag ms-1">Secondary</span>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
+                <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
         </div>
 
@@ -3923,13 +3926,18 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (addLabel) addLabel.textContent = addHid.value || '—';
         }
 
-        // Sync ST NEAR CYL/Axis from Distance (NC mirrors DC, NA mirrors AX)
+        // Near CYL/Axis copy from Distance only after Distance SPH, Distance CYL, and Near SPH are filled.
         function syncStNearFromDist(eye) {
+            function filled(key) {
+                var el = document.querySelector('[name="exam_data[st][' + eye + '][' + key + ']"]');
+                return !!el && String(el.value || '').trim() !== '';
+            }
+            var ready = filled('ds') && filled('dc') && filled('ns');
             [['dc','nc'],['ax','na']].forEach(function (pair) {
                 var distHid = document.querySelector('[name="exam_data[st][' + eye + '][' + pair[0] + ']"]');
                 var nearHid = document.querySelector('[name="exam_data[st][' + eye + '][' + pair[1] + ']"]');
                 if (!distHid || !nearHid) return;
-                var v = distHid.value;
+                var v = ready ? distHid.value : '';
                 nearHid.value = v;
                 var disp = nearHid.previousElementSibling;
                 if (disp && disp.tagName === 'INPUT') disp.value = v;

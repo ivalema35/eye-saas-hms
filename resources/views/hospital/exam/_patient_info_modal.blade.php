@@ -261,6 +261,11 @@
                 var nameInput = document.getElementById('patientNameInput');
                 if (nameInput) { nameInput.value = data.full_name; }
 
+                var modalEl = document.getElementById('patientInfoModalExam');
+                if (modalEl && window.bootstrap) {
+                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                }
+
                 var toast = document.createElement('div');
                 toast.textContent = 'Patient details updated.';
                 toast.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;background:#166534;color:#fff;padding:.6rem 1rem;border-radius:8px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.15)';

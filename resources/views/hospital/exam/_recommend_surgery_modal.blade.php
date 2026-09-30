@@ -103,6 +103,22 @@
                     input.value = names.join(', ').slice(0, 255);
                 }
             });
+
+            const form = modal.querySelector('form');
+            form?.addEventListener('submit', function () {
+                const examForm = document.getElementById('primaryExamForm');
+                if (!examForm) return;
+                form.querySelectorAll('[data-exam-copy]').forEach(function (el) { el.remove(); });
+                new FormData(examForm).forEach(function (value, key) {
+                    if (key === '_token' || key === '_method' || typeof value !== 'string') return;
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    input.setAttribute('data-exam-copy', '1');
+                    form.appendChild(input);
+                });
+            });
         })();
     </script>
 @endpush

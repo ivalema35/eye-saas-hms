@@ -77,6 +77,7 @@ class DashboardController extends Controller
         $pendingExams = null;
         $todayPrimary = null;
         $todaySecondary = null;
+        $otPipelineCount = 0;
         $primaryQueue = null;
         $doctorName = null;
         $doctorAssignedPatients = null;
@@ -96,6 +97,18 @@ class DashboardController extends Controller
                 ->count();
             $todaySecondary = Patient::whereDate('appointment_date', $today)
                 ->whereNotNull('secondary_done_at')
+                ->count();
+            $otPipelineCount = OtBooking::query()
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_BOOKED,
+                    OtBooking::STATUS_SURGERY_RECOMMENDED,
+                    OtBooking::STATUS_COUNSELLED,
+                    OtBooking::STATUS_PAID,
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                    OtBooking::STATUS_READY,
+                ])
                 ->count();
 
             $selectedDoctorId = null;
@@ -313,7 +326,6 @@ class DashboardController extends Controller
         $receptionistTodayCollection = null;
         $receptionistMyPatientsToday = null;
         $receptionistTodayPhone = null;
-        $receptionistCounsellingPending = null;
 
         if ($isReceptionistUser && $this->perm->can('dashboard_reception')) {
             $receptionistBasePatients = Patient::whereHas('reception.role', fn($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd', 'hospital_admin']));
@@ -341,13 +353,6 @@ class DashboardController extends Controller
                 ->whereNull('case_id')
                 ->whereDate('appointment_date', '>=', $today)
                 ->count();
-
-            if ($this->perm->can('ot_counselling_fill')) {
-                $receptionistCounsellingPending = OtBooking::whereIn('ot_status', [
-                    OtBooking::STATUS_BOOKED,
-                    OtBooking::STATUS_SURGERY_RECOMMENDED,
-                ])->assignedToCounsellor($user)->count();
-            }
         }
 
         // ── Financial Data (report.revenue) ──────────────────────────────────
@@ -549,6 +554,82 @@ class DashboardController extends Controller
 
             $dischargePendingCount = $dischargeLists['queue']->count();
             $dischargeCompletedCount = $dischargeLists['history']->count();
+        }
+
+        // ── Counselling desk (counselling role) ─────────────────────────────
+        // Same queue / history as OtCounsellorController::dashboard(), shown
+        // inline like Ward and Accountant. The dedicated role sees every case.
+        $isCounsellingUser = $user?->role?->slug === OtBooking::COUNSELLING_ROLE_SLUG;
+        $counsellingPendingCount = null;
+        $counsellingCompletedCount = null;
+        $counsellingPaymentCount = null;
+        $counsellingLists = null;
+
+        if ($isCounsellingUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_counselling_fill'))) {
+            $counsellingBase = fn () => OtBooking::query()
+                ->assignedToCounsellor($user)
+                ->with([
+                    'patient' => fn ($q) => $q->select(
+                        'id', 'patient_code', 'first_name', 'middle_name', 'last_name', 'age', 'gender', 'occupation',
+                        'contact_no', 'whatsapp_no', 'location_id', 'appointment_date', 'doctor_id', 'case_id', 'case_fee',
+                        'reception_id', 'referrer_id', 'type', 'checked_in_at', 'is_old_patient', 'primary_done_at',
+                        'secondary_done_at', 'created_at'
+                    ),
+                    'patient.doctor:id,name',
+                    'patient.reception:id,name',
+                    'patient.masterCity:id,name',
+                    'patient.location:id,city',
+                    'patient.caseType:id,case_type',
+                    'patient.referrer:id,name',
+                    'patient.primaryExamination:id,patient_id,doctor_id,examined_at',
+                    'patient.primaryExamination.doctor:id,name',
+                    'patient.secondaryExamination:id,patient_id,doctor_id,examined_at',
+                    'patient.secondaryExamination.doctor:id,name',
+                    'otDoctor:id,name',
+                    'payments',
+                ]);
+
+            $counsellingLists = [
+                'queue' => $counsellingBase()
+                    ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                    ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
+                    ->orderBy('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+                'history' => $counsellingBase()
+                    ->whereIn('ot_status', [
+                        OtBooking::STATUS_COUNSELLED,
+                        OtBooking::STATUS_PAID,
+                        OtBooking::STATUS_PAYMENT_VERIFIED,
+                        OtBooking::STATUS_IN_WARD,
+                        OtBooking::STATUS_DILATED,
+                        OtBooking::STATUS_READY,
+                        OtBooking::STATUS_OPERATED,
+                        OtBooking::STATUS_DISCHARGED,
+                        OtBooking::STATUS_SURGERY_REFUSED,
+                    ])
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->get(),
+            ];
+
+            $counsellingLists['payments'] = $counsellingBase()
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_PAID,
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                    OtBooking::STATUS_READY,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                ])
+                ->orderBy('surgery_date')
+                ->orderByDesc('id')
+                ->get();
+
+            $counsellingPendingCount = $counsellingLists['queue']->count();
+            $counsellingCompletedCount = $counsellingLists['history']->count();
+            $counsellingPaymentCount = $counsellingLists['payments']->count();
         }
 
         // ── Incoming Share Requests (hospital admin only) ─────────────────────
@@ -828,6 +909,7 @@ class DashboardController extends Controller
                 'todayPatients',
                 'todayPrimary',
                 'todaySecondary',
+                'otPipelineCount',
             ));
         }
 
@@ -856,6 +938,11 @@ class DashboardController extends Controller
             'dischargeCompletedCount',
             'dischargeLists',
             'dischargeInvoiceBookingIds',
+            'isCounsellingUser',
+            'counsellingPendingCount',
+            'counsellingCompletedCount',
+            'counsellingPaymentCount',
+            'counsellingLists',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',
@@ -881,7 +968,6 @@ class DashboardController extends Controller
             'receptionistTodayCollection',
             'receptionistMyPatientsToday',
             'receptionistTodayPhone',
-            'receptionistCounsellingPending',
             // Financial
             'revenueToday',
             'revenueMonth',

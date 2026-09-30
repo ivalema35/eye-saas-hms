@@ -239,6 +239,10 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         Route::post('/medicine-master/medicines/import', [MedicineMasterController::class, 'importMedicines'])->name('medicine-master.medicines.import');
         Route::get('/medicine-master/medicines/sample', [MedicineMasterController::class, 'downloadSampleMedicine'])->name('medicine-master.medicines.sample');
 
+        Route::post('/medicine-master/ward-medicines', [MedicineMasterController::class, 'storeWardMedicine'])->name('medicine-master.ward-medicines.store');
+        Route::put('/medicine-master/ward-medicines/{medicine}', [MedicineMasterController::class, 'updateWardMedicine'])->name('medicine-master.ward-medicines.update');
+        Route::delete('/medicine-master/ward-medicines/{medicine}', [MedicineMasterController::class, 'destroyWardMedicine'])->name('medicine-master.ward-medicines.destroy');
+
         // Diagnosis Master — global catalog, pushed down into every hospital's own tbl_master_diagnosis
         Route::get('/diagnosis-master', [DiagnosisMasterController::class, 'index'])->name('diagnosis-master.index');
         Route::post('/diagnosis-master', [DiagnosisMasterController::class, 'store'])->name('diagnosis-master.store');

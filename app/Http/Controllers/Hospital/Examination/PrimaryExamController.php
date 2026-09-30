@@ -397,6 +397,7 @@ class PrimaryExamController extends Controller
                 ->get(['id', 'name', 'brand_name', 'dosage_id', 'duration', 'qty']),
             'med_groups' => MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
                 ->where('tenant_id', $tenantId)
+                ->whereIn('usage_scope', ['opd', 'both'])
                 ->orderBy('name')
                 ->get(),
             'routes' => MedicineRoute::where('tenant_id', $tenantId)->orderBy('name')->get(['id', 'name']),
@@ -415,6 +416,7 @@ class PrimaryExamController extends Controller
     {
         $group = MedicineGroup::with('items.medicine', 'items.dosage', 'items.route')
             ->where('tenant_id', app('tenant')->id)
+            ->whereIn('usage_scope', ['opd', 'both'])
             ->findOrFail($id);
 
         return response()->json($group);

@@ -1,5 +1,5 @@
 @extends('hospital.layouts.app')
-@section('title', 'Medicine Groups')
+@section('title', ($isWard ?? false) ? 'Ward Medicine' : 'Medicine Groups')
 {{-- Layout page-header intentionally unused — the heading, breadcrumb, tabs
 and list all sit inside one bordered card, matching the superadmin Medicine
 Master design. --}}
@@ -175,6 +175,30 @@ Master design. --}}
         letter-spacing: .04em;
     }
 
+    .gti-scope-badge {
+        display: inline-block;
+        margin-top: .25rem;
+        margin-right: .3rem;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        border-radius: 999px;
+        padding: .16rem .5rem;
+        white-space: nowrap;
+    }
+
+    .gti-scope-opd {
+        color: #1B4F72;
+        background: rgba(27, 79, 114, .08);
+        border: 1px solid rgba(27, 79, 114, .22);
+    }
+
+    .gti-scope-ot {
+        color: #7a4a00;
+        background: rgba(214, 137, 16, .12);
+        border: 1px solid rgba(214, 137, 16, .35);
+    }
+
     .gti-diagnosis-badge {
         display: inline-block;
         margin-top: .25rem;
@@ -285,6 +309,11 @@ Master design. --}}
     }
 </style>
 
+@php
+    $isWard = $isWard ?? false;
+    $groupRoute = $isWard ? 'hospital.ward-medicines' : 'hospital.medicine-groups';
+@endphp
+
 <div class="medmaster-tabs-row">
     <ul class="nav nav-tabs type-nav-tabs">
         <li class="nav-item">
@@ -314,9 +343,15 @@ Master design. --}}
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link active"
+            <a class="nav-link {{ $isWard ? '' : 'active' }}"
                href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}">
                 <i class="bi bi-collection me-1"></i> Medicine Groups
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {{ $isWard ? 'active' : '' }}"
+               href="{{ route('hospital.ward-medicines.index', ['slug' => $slug]) }}">
+                <i class="bi bi-hospital me-1"></i> Ward Medicine
             </a>
         </li>
         {{-- <li class="nav-item">
@@ -333,7 +368,7 @@ Master design. --}}
                 data-bs-toggle="modal"
                 data-bs-target="#groupFormModal"
                 onclick="resetGroupForm()">
-            <i class="bi bi-plus-lg me-1"></i> New Group
+            <i class="bi bi-plus-lg me-1"></i> {{ $isWard ? 'New Ward Medicine' : 'New Group' }}
         </button>
         @endhaspermission
     </div>
@@ -341,7 +376,7 @@ Master design. --}}
 
 <div class="card premium-card border-0 shadow-sm med-card group-card">
     <div class="medmaster-list-header">
-        <h3 class="medmaster-list-title"><i class="bi bi-collection"></i> Medicine Group List</h3>
+        <h3 class="medmaster-list-title"><i class="bi {{ $isWard ? 'bi-hospital' : 'bi-collection' }}"></i> {{ $isWard ? 'Ward Medicine List' : 'Medicine Group List' }}</h3>
         <span class="medmaster-list-badge">{{ $groups->total() }} total</span>
     </div>
 
@@ -369,6 +404,7 @@ Master design. --}}
                                 'name'         => $group->name,
                                 'group_code'   => $group->group_code,
                                 'diagnosis_id' => $group->diagnosis_id,
+                                'usage_scope'  => $group->usage_scope,
                                 'items'        => $items->map(fn($it) => [
                                     'medicine_id' => $it->medicine_id,
                                     'dosage_id'   => $it->dosage_id,
@@ -384,7 +420,7 @@ Master design. --}}
                             <tr class="{{ $j === 0 ? 'gti-first-med' : '' }}">
                                 @if($j === 0)
                                 <td rowspan="{{ $rowspan }}" class="gti-action-cell text-center align-middle">
-                                    <a href="{{ route('hospital.medicine-groups.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                    <a href="{{ route($groupRoute.'.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
                                        class="gti-view-link">
                                         <i class="bi bi-eye-fill"></i> View
                                     </a>
@@ -394,6 +430,7 @@ Master design. --}}
                                     @if($group->group_code)
                                         <span class="gti-group-code">{{ $group->group_code }}</span>
                                     @endif
+                                    @include('hospital.medicine_groups._scope_badge', ['group' => $group])
                                     @if($group->diagnosis)
                                         <span class="gti-diagnosis-badge">
                                             <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
@@ -409,7 +446,7 @@ Master design. --}}
                                         </button>
                                         @endhaspermission
                                         @haspermission('medicine_delete')
-                                        <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                        <form action="{{ route($groupRoute.'.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
                                               method="POST"
                                               onsubmit="return confirm('Delete this medicine group?')">
                                             @csrf @method('DELETE')
@@ -431,7 +468,7 @@ Master design. --}}
                         @else
                             <tr class="gti-first-med">
                                 <td class="gti-action-cell text-center align-middle">
-                                    <a href="{{ route('hospital.medicine-groups.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                    <a href="{{ route($groupRoute.'.show', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
                                        class="gti-view-link">
                                         <i class="bi bi-eye-fill"></i> View
                                     </a>
@@ -441,6 +478,7 @@ Master design. --}}
                                     @if($group->group_code)
                                         <span class="gti-group-code">{{ $group->group_code }}</span>
                                     @endif
+                                    @include('hospital.medicine_groups._scope_badge', ['group' => $group])
                                     @if($group->diagnosis)
                                         <span class="gti-diagnosis-badge">
                                             <i class="bi bi-clipboard2-pulse me-1"></i>{{ $group->diagnosis->value }}
@@ -456,7 +494,7 @@ Master design. --}}
                                         </button>
                                         @endhaspermission
                                         @haspermission('medicine_delete')
-                                        <form action="{{ route('hospital.medicine-groups.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
+                                        <form action="{{ route($groupRoute.'.destroy', ['slug' => $slug, 'medicine_group' => $group->id]) }}"
                                               method="POST"
                                               onsubmit="return confirm('Delete this medicine group?')">
                                             @csrf @method('DELETE')
@@ -479,7 +517,7 @@ Master design. --}}
                     @empty
                     <tr>
                         <td colspan="7" class="text-center py-5 group-empty-cell">
-                            No medicine groups yet. Create one to speed up prescriptions.
+                            {{ $isWard ? 'No ward medicines yet.' : 'No medicine groups yet. Create one to speed up prescriptions.' }}
                         </td>
                     </tr>
                     @endforelse
