@@ -37,6 +37,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -132,6 +133,62 @@ class DashboardDrillDownApiController extends Controller
                 ])->values(),
             ],
         ]);
+    }
+
+    /**
+     * Exact mirror of `AdminCollectionController::export()` — the "Export"
+     * button on web's per-reception collection detail page. Was missing
+     * entirely from this API. See WEB_ADMIN_RECEPTIONIST_DASHBOARD_AUDIT.md
+     * (Total Collection redesign follow-up, 2026-09-30).
+     */
+    public function adminCollectionExport(string $slug, Request $request, int $receptionId): BinaryFileResponse
+    {
+        [$startDate, $endDate] = $this->resolvedDates($request);
+
+        $reception = HospitalUser::query()
+            ->whereHas('role', fn (Builder $q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))
+            ->findOrFail($receptionId);
+
+        $patients = Patient::query()
+            ->with(['caseType:id,case_type', 'doctor:id,name', 'latestOtBooking'])
+            ->where('reception_id', $receptionId)
+            ->whereDate('appointment_date', '>=', $startDate)
+            ->whereDate('appointment_date', '<=', $endDate)
+            ->orderBy('appointment_date')
+            ->orderBy('id')
+            ->get();
+
+        $rows = $patients->values()->map(function (Patient $patient, int $i): array {
+            $stage = $patient->workflowStage();
+
+            return [
+                $i + 1,
+                $patient->patient_code ?: '-',
+                $patient->full_name,
+                $patient->age !== null && $patient->age !== '' ? $patient->age : '-',
+                $patient->caseType?->case_type ?: '-',
+                (float) $patient->case_fee,
+                $patient->doctor?->name ? 'Dr. '.$patient->doctor->name : '-',
+                $stage['label'].($stage['sub'] ? ' ('.$stage['sub'].')' : ''),
+                $patient->appointment_date?->format('d M Y') ?? '-',
+            ];
+        })->all();
+
+        $rows[] = ['', '', 'Total', '', '', (float) $patients->sum(fn (Patient $p) => (float) $p->case_fee), '', '', ''];
+
+        $filename = 'Collection_'.Str::slug($reception->name).'_'.$startDate.'_to_'.$endDate.'.xlsx';
+
+        return Excel::download(new GenericArrayExport($rows, [
+            '#',
+            'Patient Code',
+            'Patient Name',
+            'Age',
+            'Case Type',
+            'Case Fee',
+            'Doctor',
+            'Status',
+            'Date',
+        ]), $filename);
     }
 
     private function receptionCollectionRows(string $startDate, string $endDate)
