@@ -64,10 +64,22 @@ class OtAssistantApiController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
+        // Web pull 2026-09-30 — the "View" button's read-only detail
+        // (`_view-modal.blade.php`: Surgery Record, Implanted Lens, Surgery
+        // Plan, Pre-Op Vitals, Patient Details) needs far more than the 5
+        // patient columns this previously selected. Mirrors
+        // OtWardApiController::bookings()'s own eager-load.
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
             ->with([
-                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
+                'patient.doctor:id,name',
+                'patient.masterCity.district',
+                'patient.masterCity.state',
+                'patient.reception:id,name',
+                'counselling.counsellor:id,name',
+                'preOp.enteredBy:id,name',
+                'surgery.operatedBy:id,name',
+                'lensDetail',
                 'otDoctor:id,name',
                 'otAssistant:id,name',
                 'payments',
@@ -92,10 +104,24 @@ class OtAssistantApiController extends Controller
 
         $bookings = $query->paginate((int) $request->integer('per_page', 25));
 
-        // payment_status is a computed accessor, not a real column — see the
-        // matching comment in OtAccountantApiController::bookings(). Safe
-        // here since `payments` is already eager-loaded above.
-        $bookings->getCollection()->each(fn (OtBooking $b) => $b->append(['payment_status']));
+        // payment_status/total_paid are computed accessors, not real columns
+        // — see the matching comment in OtAccountantApiController::bookings().
+        // Safe here since `payments` is already eager-loaded above.
+        $bookings->getCollection()->transform(function (OtBooking $b): array {
+            $b->append(['payment_status', 'total_paid']);
+            $arr = $b->toArray();
+            if ($b->patient) {
+                $arr['patient']['full_name'] = $b->patient->full_name;
+                $arr['patient']['location'] = [
+                    'id' => $b->patient->location_id,
+                    'city' => $b->patient->cityName,
+                    'district' => $b->patient->districtName,
+                    'state' => $b->patient->stateName,
+                ];
+            }
+
+            return $arr;
+        });
 
         return response()->json([
             'success' => true,
