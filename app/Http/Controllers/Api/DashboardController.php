@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
+use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\Patient;
@@ -190,10 +191,12 @@ class DashboardController extends Controller
             $totalReceptions = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['receptionist', 'receptionist_opd']))->count();
         }
 
-        // ── Hospital Admin's own 8-card set — is_super only (web parity)
+        // ── Hospital Admin's own 9-card set — is_super only (web parity)
         $todayPrimary = null;
         $todaySecondary = null;
         $otTotalToday = null;
+        $totalUsersAllRoles = null;
+        $totalMedicines = null;
         if ($isAdmin) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
             $todayPrimary = Patient::whereDate('appointment_date', $today)
@@ -203,10 +206,21 @@ class DashboardController extends Controller
                 ->whereNotNull('secondary_done_at')
                 ->count();
             try {
-                $otTotalToday = OtBooking::whereDate('surgery_date', $today)->count();
+                // Bug fix (2026-09-29): was `OtBooking::whereDate('surgery_date', ...)`
+                // — the wrong model/column entirely. Web's admin "OT Appointment"
+                // card (`$quickLinkCounts['ot_appointments_today']`) counts
+                // OtAppointment rows by appointment_date, matching the same
+                // card everywhere else on this dashboard (`$otToday` above).
+                $otTotalToday = OtAppointment::whereDate('appointment_date', $today)->count();
             } catch (\Throwable) {
                 $otTotalToday = 0;
             }
+            // Web's "Staff" card — ALL roles (`HospitalUser::count()`), distinct
+            // from `total_staff` above (doctors+receptionists only, used by the
+            // separate dashboard_staff-gated widget). And "Medicines" card.
+            // See WEB_ADMIN_RECEPTIONIST_DASHBOARD_AUDIT.md finding #1.
+            $totalUsersAllRoles = HospitalUser::count();
+            $totalMedicines = Medicine::count();
             if (! $canSeeRevenue) {
                 $revenueToday = $collectionService->summaryForDay($today)['total'];
                 $revenueMonth = $collectionService->summaryForCalendarMonth()['total'];
@@ -327,6 +341,15 @@ class DashboardController extends Controller
                     ->whereNull('case_id')
                     ->whereDate('appointment_date', '>=', $today)
                     ->count(),
+                // Web's 6th receptionist card, "OT Counselling"
+                // (`$receptionistCounsellingPending`, permission
+                // `ot_counselling_fill`) — was missing entirely from this API.
+                // See WEB_ADMIN_RECEPTIONIST_DASHBOARD_AUDIT.md finding #2.
+                'counselling_pending' => $this->perm->can('ot_counselling_fill')
+                    ? OtBooking::whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                        ->assignedToCounsellor($authUser)
+                        ->count()
+                    : null,
             ];
         }
 
@@ -423,6 +446,8 @@ class DashboardController extends Controller
                 'today_primary'               => $todayPrimary,
                 'today_secondary'             => $todaySecondary,
                 'ot_total_today'              => $otTotalToday,
+                'total_users_all_roles'       => $totalUsersAllRoles,
+                'total_medicines'             => $totalMedicines,
                 'primary_queue'               => $primaryQueue,
                 'receptionists'               => $receptionists,
                 'wait_thresholds'             => $thresholds,
