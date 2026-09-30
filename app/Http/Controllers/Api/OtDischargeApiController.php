@@ -55,11 +55,28 @@ class OtDischargeApiController extends Controller
         $isHistory = $activeFilter === 'history';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
+        // Web pull 2026-09-30 — the "View" button's read-only detail
+        // (`_view-modal.blade.php`: Discharge Documents, Invoice, Surgery
+        // Record, Implanted Lens, Surgery Plan, Patient Details) needs far
+        // more than the 3 patient columns this previously selected. Mirrors
+        // `OtBooking::DISCHARGE_VIEW_RELATIONS` (web's own eager-load list
+        // for this exact list+modal), adapted onto the masterCity.district/
+        // state + manually-built `location` pattern every other OT API
+        // controller in this series already uses (`patient.location` is a
+        // broken legacy relation — see PatientApiController's own comment).
         $query = OtBooking::query()
             ->where('tenant_id', $tenantId)
             ->with([
-                'patient:id,patient_code,first_name,middle_name,last_name,contact_no',
+                'patient.doctor:id,name',
+                'patient.masterCity.district',
+                'patient.masterCity.state',
+                'patient.reception:id,name',
+                'counselling.counsellor:id,name',
+                'surgery.operatedBy:id,name',
+                'lensDetail',
+                'invoice.generatedBy:id,name',
                 'otDoctor:id,name',
+                'otAssistant:id,name',
                 'payments',
             ]);
 
@@ -94,16 +111,26 @@ class OtDischargeApiController extends Controller
         // (web pull 2026-09-28) so the desk list can show "Prints 2/3" the
         // same way `hospital/ot/billing/index.blade.php` now does, instead
         // of the old (now-wrong) assumption that having an invoice means
-        // discharged.
-        $bookings->getCollection()->each(function (OtBooking $b) use ($invoiceBookingIds) {
-            $b->patient?->append('full_name');
-            $b->has_invoice = in_array($b->id, $invoiceBookingIds, true);
-            $b->discharge_prints_done = $b->dischargePrintsDoneCount();
-            $b->discharge_prints_total = count(OtBooking::DISCHARGE_PRINTS);
-            // summary_bill_printed_at/discharge_printed_at/certificate_printed_at
-            // are real, uncast-hidden columns on OtBooking — already
-            // serialized automatically, no extra work needed here for the
-            // app to show a per-document checkmark.
+        // discharged. `payment_status`/`total_paid`/`remaining_balance` are
+        // computed accessors the "View" modal's amounts row needs — safe to
+        // append since `payments` is already eager-loaded above.
+        $bookings->getCollection()->transform(function (OtBooking $b) use ($invoiceBookingIds): array {
+            $b->append(['payment_status', 'total_paid', 'remaining_balance']);
+            $arr = $b->toArray();
+            $arr['has_invoice'] = in_array($b->id, $invoiceBookingIds, true);
+            $arr['discharge_prints_done'] = $b->dischargePrintsDoneCount();
+            $arr['discharge_prints_total'] = count(OtBooking::DISCHARGE_PRINTS);
+            if ($b->patient) {
+                $arr['patient']['full_name'] = $b->patient->full_name;
+                $arr['patient']['location'] = [
+                    'id' => $b->patient->location_id,
+                    'city' => $b->patient->cityName,
+                    'district' => $b->patient->districtName,
+                    'state' => $b->patient->stateName,
+                ];
+            }
+
+            return $arr;
         });
 
         return response()->json([
