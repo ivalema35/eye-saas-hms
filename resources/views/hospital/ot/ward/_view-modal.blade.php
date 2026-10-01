@@ -1,7 +1,7 @@
 {{--
-  Ward → View: patient details, surgery / counselling, pre-op vitals and the eye-drop register.
-  Required: $booking (with patient.*, counselling, preOp, dilationEntries.administeredBy, payments, otDoctor, otAssistant)
-  Optional: $modalId (default wardView{id})
+Ward → View: patient details, surgery / counselling, pre-op vitals and the eye-drop register.
+Required: $booking (with patient.*, counselling, preOp, dilationEntries.administeredBy, payments, otDoctor, otAssistant)
+Optional: $modalId (default wardView{id})
 --}}
 @php
     use App\Models\Hospital\OT\OtBooking;
@@ -13,7 +13,7 @@
     $drops = $booking->relationLoaded('dilationEntries')
         ? $booking->dilationEntries->sortBy([['administered_at', 'asc'], ['dose_number', 'asc']])
         : collect();
-    $drName = fn (?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
+    $drName = fn(?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
 
     [$stageLabel, $stageTone] = match ($booking->ot_status) {
         OtBooking::STATUS_PAYMENT_VERIFIED => ['Awaiting Ward Entry', 'amber'],
@@ -55,7 +55,7 @@
         'Temp' => $preOp->temperature,
         'SpO2' => $preOp->spo2 !== null ? rtrim(rtrim((string) $preOp->spo2, '0'), '.') . '%' : null,
         'HbA1c' => $preOp->hba1c,
-    ], fn ($v) => ! blank($v)) : [];
+    ], fn($v) => !blank($v)) : [];
 
     $patientFields = [
         ['MRD No.', $patient?->patient_code],
@@ -63,7 +63,7 @@
         ['WhatsApp', $patient?->whatsapp_no],
         ['Age / Gender', $ageGender],
         ['City', $patient ? ($patient->cityName ?: null) : null],
-        ['Visit Type', match ($type) { 'phone' => 'Phone Booking', 'walkin' => 'Walk-in', '' => null, default => ucfirst($type) }],
+        ['Visit Type', match ($type) { 'phone' => 'Phone Booking', 'walkin' => 'Walk-in', '' => null, default => ucfirst($type)}],
         ['Consulting Doctor', $drName($patient?->doctor?->name)],
         ['Registered By', $patient?->reception?->name],
     ];
@@ -81,14 +81,16 @@
         ['OT Date', $booking->surgery_date?->format('d M Y')],
     ];
 @endphp
-<div class="modal fade ot-desk-view-modal apm-modal" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
+<div class="modal fade ot-desk-view-modal apm-modal ot-ward-patient-modal" id="{{ $modalId }}" tabindex="-1"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title mb-0">
                     <i class="bi bi-heart-pulse me-2"></i>Ward Patient Details
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="apm-hero">
@@ -153,7 +155,8 @@
                 <div class="apm-section-title">
                     <i class="bi bi-droplet-half"></i> Eye Drop Register
                     @if($drops->isNotEmpty())
-                        <span class="apm-badge apm-tone-blue">{{ $drops->count() }} {{ $drops->count() === 1 ? 'entry' : 'entries' }}</span>
+                        <span class="apm-badge apm-tone-blue">{{ $drops->count() }}
+                            {{ $drops->count() === 1 ? 'entry' : 'entries' }}</span>
                     @endif
                 </div>
                 @if($drops->isEmpty())
@@ -192,3 +195,145 @@
 </div>
 
 @include('hospital.ot.partials.detail-modal-styles')
+
+@once
+    @push('styles')
+        <style>
+            .ot-ward-patient-modal .modal-dialog {
+                max-width: 680px;
+                margin: .75rem auto;
+            }
+
+            .ot-ward-patient-modal .modal-content {
+                border: 1px solid rgba(27, 79, 114, .14);
+                border-radius: 18px;
+                box-shadow: 0 24px 64px rgba(16, 52, 76, .22);
+                overflow: hidden;
+            }
+
+            .ot-ward-patient-modal .modal-header {
+                padding: .8rem 1rem;
+                background: linear-gradient(135deg, #123d59 0%, #1b4f72 100%);
+            }
+
+            .ot-ward-patient-modal .modal-title {
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+                font-size: 1rem;
+                letter-spacing: .01em;
+            }
+
+            .ot-ward-patient-modal .modal-title i {
+                color: #a9e4e6;
+                margin-right: 0 !important;
+            }
+
+            .ot-ward-patient-modal .modal-body {
+                padding: .85rem .95rem 1rem;
+                background: #f5f9fc;
+            }
+
+            .ot-ward-patient-modal .apm-hero {
+                padding: .7rem .8rem;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 78%);
+                border-color: rgba(27, 79, 114, .16);
+            }
+
+            .ot-ward-patient-modal .apm-avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                box-shadow: 0 6px 14px rgba(27, 79, 114, .18);
+            }
+
+            .ot-ward-patient-modal .apm-name {
+                font-size: 1rem;
+            }
+
+            .ot-ward-patient-modal .apm-badge {
+                padding: .3rem .65rem;
+                font-size: .7rem;
+            }
+
+            .ot-ward-patient-modal .apm-section-title {
+                margin: .8rem 0 .35rem;
+                font-size: .69rem;
+            }
+
+            .ot-ward-patient-modal .apm-vitals {
+                gap: .5rem;
+            }
+
+            .ot-ward-patient-modal .apm-vitals .apm-amount {
+                padding: .5rem .4rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .04);
+            }
+
+            .ot-ward-patient-modal .apm-vitals .apm-amount-value {
+                font-size: .92rem;
+            }
+
+            .ot-ward-patient-modal .apm-grid {
+                gap: .5rem;
+            }
+
+            .ot-ward-patient-modal .apm-grid .ot-desk-modal-field {
+                padding: .5rem .6rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .025);
+            }
+
+            .ot-ward-patient-modal .apm-grid .ot-desk-modal-value {
+                font-size: .83rem;
+                line-height: 1.3;
+            }
+
+            .ot-ward-patient-modal .apm-empty {
+                padding: .7rem .8rem;
+                border-radius: 10px;
+                font-size: .8rem;
+            }
+
+            .ot-ward-patient-modal .apm-table {
+                border-radius: 10px;
+                box-shadow: 0 4px 14px rgba(27, 79, 114, .05);
+            }
+
+            .ot-ward-patient-modal .apm-table th {
+                padding: .45rem .6rem;
+                font-size: .64rem;
+                background: #e8f4f8;
+            }
+
+            .ot-ward-patient-modal .apm-table td {
+                padding: .45rem .6rem;
+                font-size: .78rem;
+            }
+
+            @media (max-width: 575.98px) {
+                .ot-ward-patient-modal .modal-dialog {
+                    margin: .5rem .75rem;
+                }
+
+                .ot-ward-patient-modal .modal-body {
+                    padding: .75rem;
+                }
+
+                .ot-ward-patient-modal .apm-hero {
+                    align-items: flex-start;
+                }
+
+                .ot-ward-patient-modal .apm-vitals {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .ot-ward-patient-modal .apm-table {
+                    min-width: 680px;
+                }
+            }
+        </style>
+    @endpush
+@endonce

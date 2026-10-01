@@ -1,8 +1,8 @@
 {{--
-  Discharge desk → View: discharge documents (print status), invoice, surgery record,
-  implanted lens, surgery plan and patient details.
-  Required: $booking (with OtBooking::DISCHARGE_VIEW_RELATIONS), $slug
-  Optional: $modalId (default dcView{id})
+Discharge desk → View: discharge documents (print status), invoice, surgery record,
+implanted lens, surgery plan and patient details.
+Required: $booking (with OtBooking::DISCHARGE_VIEW_RELATIONS), $slug
+Optional: $modalId (default dcView{id})
 --}}
 @php
     use App\Models\Hospital\OT\OtBooking;
@@ -16,9 +16,9 @@
     $isDischarged = strtolower((string) $booking->ot_status) === OtBooking::STATUS_DISCHARGED;
     $printsDone = $booking->dischargePrintsDoneCount();
     $printsTotal = count(OtBooking::DISCHARGE_PRINTS);
-    $drName = fn (?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
-    $title = fn (?string $v) => blank($v) ? null : (string) str($v)->replace('_', ' ')->title();
-    $num = fn ($v) => $v === null ? null : rtrim(rtrim((string) $v, '0'), '.');
+    $drName = fn(?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
+    $title = fn(?string $v) => blank($v) ? null : (string) str($v)->replace('_', ' ')->title();
+    $num = fn($v) => $v === null ? null : rtrim(rtrim((string) $v, '0'), '.');
 
     [$stageLabel, $stageTone] = $isDischarged
         ? ['Discharged', 'green']
@@ -46,7 +46,7 @@
         ['WhatsApp', $patient?->whatsapp_no],
         ['Age / Gender', $ageGender],
         ['City', $patient ? ($patient->cityName ?: null) : null],
-        ['Visit Type', match ($type) { 'phone' => 'Phone Booking', 'walkin' => 'Walk-in', '' => null, default => ucfirst($type) }],
+        ['Visit Type', match ($type) { 'phone' => 'Phone Booking', 'walkin' => 'Walk-in', '' => null, default => ucfirst($type)}],
         ['Consulting Doctor', $drName($patient?->doctor?->name)],
         ['Registered By', $patient?->reception?->name],
     ];
@@ -79,9 +79,12 @@
         ['Operated By', $drName($surgery->operatedBy?->name)],
         ['OT Room', $surgery->ot_room],
         ['Date', optional($surgery->surgery_at ?? $surgery->start_time)->format('d M Y')],
-        ['Time', $surgery->start_time
+        [
+            'Time',
+            $surgery->start_time
             ? $surgery->start_time->format('h:i A') . ($surgery->end_time ? ' – ' . $surgery->end_time->format('h:i A') : '')
-            : null],
+            : null
+        ],
         ['Duration', $durationMin !== null ? $durationMin . ' min' : null],
         ['Complication', $title($surgery->complication_status)],
         ['Complication Notes', $surgery->complication_notes],
@@ -103,16 +106,18 @@
         ['Follow-up Date', optional($invoice->follow_up_date)->format('d M Y')],
         ['Discharged On', $isDischarged ? optional($booking->discharged_at)->format('d M Y, h:i A') : null],
     ] : [];
-    $lineItems = $invoice ? collect((array) $invoice->line_items)->filter(fn ($i) => is_array($i) && (float) ($i['amount'] ?? 0) > 0) : collect();
+    $lineItems = $invoice ? collect((array) $invoice->line_items)->filter(fn($i) => is_array($i) && (float) ($i['amount'] ?? 0) > 0) : collect();
 @endphp
-<div class="modal fade ot-desk-view-modal apm-modal" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
+<div class="modal fade ot-desk-view-modal apm-modal ot-discharge-details-modal" id="{{ $modalId }}" tabindex="-1"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title mb-0">
                     <i class="bi bi-box-arrow-right me-2"></i>Discharge Details
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="apm-hero">
@@ -144,30 +149,35 @@
                     </div>
                     <div class="apm-amount">
                         <div class="apm-amount-label">Balance</div>
-                        <div class="apm-amount-value {{ $booking->remaining_balance > 0 ? 'is-amber' : 'is-green' }}">{{ money_code($booking->remaining_balance, 2) }}</div>
+                        <div class="apm-amount-value {{ $booking->remaining_balance > 0 ? 'is-amber' : 'is-green' }}">
+                            {{ money_code($booking->remaining_balance, 2) }}</div>
                     </div>
                     <div class="apm-amount">
                         <div class="apm-amount-label">Invoice Net</div>
-                        <div class="apm-amount-value">{{ $invoice ? money_code((float) $invoice->net_amount, 2) : '—' }}</div>
+                        <div class="apm-amount-value">{{ $invoice ? money_code((float) $invoice->net_amount, 2) : '—' }}
+                        </div>
                     </div>
                 </div>
 
                 <div class="apm-section-title">
                     <i class="bi bi-printer"></i> Discharge Documents
                     @unless($isDischarged && $printsDone < $printsTotal)
-                        <span class="apm-badge apm-tone-{{ $printsDone === $printsTotal ? 'green' : ($printsDone > 0 ? 'blue' : 'amber') }}">
+                        <span
+                            class="apm-badge apm-tone-{{ $printsDone === $printsTotal ? 'green' : ($printsDone > 0 ? 'blue' : 'amber') }}">
                             {{ $printsDone }} / {{ $printsTotal }} printed
                         </span>
                     @endunless
                 </div>
                 @unless($invoice)
-                    <div class="apm-empty mb-2"><i class="bi bi-info-circle"></i> Generate the invoice first, then print all {{ $printsTotal }} documents to discharge the patient.</div>
+                    <div class="apm-empty mb-2"><i class="bi bi-info-circle"></i> Generate the invoice first, then print all
+                        {{ $printsTotal }} documents to discharge the patient.</div>
                 @endunless
                 <div class="dcm-docs">
                     @foreach(OtBooking::DISCHARGE_PRINTS as $docKey => $doc)
                         @php $printedAt = $booking->{$doc['column']}; @endphp
                         <div class="dcm-doc {{ $printedAt ? 'is-done' : ($isDischarged ? 'is-legacy' : '') }}">
-                            <span class="dcm-doc-icon"><i class="bi {{ $printedAt ? 'bi-check-lg' : $doc['icon'] }}"></i></span>
+                            <span class="dcm-doc-icon"><i
+                                    class="bi {{ $printedAt ? 'bi-check-lg' : $doc['icon'] }}"></i></span>
                             <div class="dcm-doc-body">
                                 <div class="dcm-doc-label">{{ $doc['label'] }}</div>
                                 <div class="dcm-doc-meta">
@@ -181,7 +191,8 @@
                                 </div>
                             </div>
                             @if($invoice && hospital_can($doc['permission']))
-                                <a href="{{ route($doc['route'], ['slug' => $slug, 'bookingId' => $booking->id]) }}" class="dcm-doc-btn">
+                                <a href="{{ route($doc['route'], ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                    class="dcm-doc-btn">
                                     <i class="bi bi-printer"></i> {{ $printedAt ? 'Reprint' : 'Print' }}
                                 </a>
                             @endif
@@ -239,7 +250,7 @@
                 @endif
 
                 <div class="apm-section-title"><i class="bi bi-clipboard2-check"></i> Surgery Record</div>
-                @if(empty(array_filter(array_column($surgeryFields, 1), fn ($v) => ! blank($v))))
+                @if(empty(array_filter(array_column($surgeryFields, 1), fn($v) => !blank($v))))
                     <div class="apm-empty"><i class="bi bi-inbox"></i> Surgery record not found.</div>
                 @else
                     <div class="ot-desk-modal-grid apm-grid">
@@ -253,7 +264,7 @@
                     </div>
                 @endif
 
-                @if(! empty(array_filter(array_column($lensFields, 1), fn ($v) => ! blank($v))))
+                @if(!empty(array_filter(array_column($lensFields, 1), fn($v) => !blank($v))))
                     <div class="apm-section-title">
                         <i class="bi bi-circle-half"></i> Implanted Lens
                         @if($lensDetail?->is_implanted)
@@ -301,26 +312,246 @@
 @once
     @push('styles')
         <style>
-            .dcm-amounts { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-            .dcm-docs { display: grid; gap: .55rem; }
-            .dcm-doc { display: flex; align-items: center; gap: .75rem; padding: .65rem .85rem; border-radius: 12px;
-                background: #fff; border: 1px solid rgba(27, 79, 114, .12); }
-            .dcm-doc.is-done { background: #F3FBF7; border-color: #A9E4C4; }
-            .dcm-doc-icon { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
-                background: #FFF6DF; color: #92660A; flex: 0 0 auto; font-size: 1rem; }
-            .dcm-doc.is-done .dcm-doc-icon { background: #1E8E5A; color: #fff; }
-            .dcm-doc-body { flex: 1 1 auto; min-width: 0; }
-            .dcm-doc-label { font-weight: 800; color: #1B4F72; font-size: .9rem; }
-            .dcm-doc-meta { font-size: .76rem; font-weight: 600; color: #92660A; }
-            .dcm-doc.is-done .dcm-doc-meta { color: #1E8E5A; }
-            .dcm-doc.is-legacy .dcm-doc-icon { background: #eef2f6; color: #475569; }
-            .dcm-doc.is-legacy .dcm-doc-meta { color: #64748b; }
-            .dcm-doc-btn { display: inline-flex; align-items: center; gap: .35rem; padding: .35rem .75rem; border-radius: 8px;
-                border: 1px solid rgba(27, 79, 114, .2); background: #EBF5FB; color: #1B4F72; font-weight: 700; font-size: .78rem;
-                text-decoration: none; white-space: nowrap; }
-            .dcm-doc-btn:hover { background: #1B4F72; border-color: #1B4F72; color: #fff; }
-            .apm-table .dcm-total td { background: #EBF5FB; font-weight: 800; }
-            @media (max-width: 767.98px) { .dcm-amounts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+            .ot-discharge-details-modal .modal-dialog {
+                max-width: 680px;
+                margin: .75rem auto;
+            }
+
+            .ot-discharge-details-modal .modal-content {
+                border: 1px solid rgba(27, 79, 114, .14);
+                border-radius: 18px;
+                box-shadow: 0 24px 64px rgba(16, 52, 76, .22);
+                overflow: hidden;
+            }
+
+            .ot-discharge-details-modal .modal-header {
+                padding: .8rem 1rem;
+                background: linear-gradient(135deg, #123d59 0%, #1b4f72 100%);
+            }
+
+            .ot-discharge-details-modal .modal-title {
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+                font-size: 1rem;
+                letter-spacing: .01em;
+            }
+
+            .ot-discharge-details-modal .modal-title i {
+                color: #a9e4e6;
+                margin-right: 0 !important;
+            }
+
+            .ot-discharge-details-modal .modal-body {
+                padding: .85rem .95rem 1rem;
+                background: #f5f9fc;
+            }
+
+            .ot-discharge-details-modal .apm-hero {
+                padding: .7rem .8rem;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 78%);
+                border-color: rgba(27, 79, 114, .16);
+            }
+
+            .ot-discharge-details-modal .apm-avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                box-shadow: 0 6px 14px rgba(27, 79, 114, .18);
+            }
+
+            .ot-discharge-details-modal .apm-name {
+                font-size: 1rem;
+            }
+
+            .ot-discharge-details-modal .apm-badge {
+                padding: .3rem .65rem;
+                font-size: .7rem;
+            }
+
+            .ot-discharge-details-modal .apm-amounts {
+                gap: .5rem;
+                margin-top: .55rem;
+            }
+
+            .ot-discharge-details-modal .apm-amount {
+                padding: .5rem .6rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .04);
+            }
+
+            .ot-discharge-details-modal .apm-amount-value {
+                font-size: .95rem;
+            }
+
+            .ot-discharge-details-modal .apm-section-title {
+                margin: .8rem 0 .35rem;
+                font-size: .69rem;
+            }
+
+            .ot-discharge-details-modal .apm-grid {
+                gap: .5rem;
+            }
+
+            .ot-discharge-details-modal .apm-grid .ot-desk-modal-field {
+                padding: .5rem .6rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .025);
+            }
+
+            .ot-discharge-details-modal .apm-grid .ot-desk-modal-value {
+                font-size: .82rem;
+                line-height: 1.3;
+            }
+
+            .dcm-amounts {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .dcm-docs {
+                display: grid;
+                gap: .55rem;
+            }
+
+            .dcm-doc {
+                display: flex;
+                align-items: center;
+                gap: .6rem;
+                padding: .55rem .7rem;
+                border-radius: 10px;
+                background: #fff;
+                border: 1px solid rgba(27, 79, 114, .12);
+            }
+
+            .dcm-doc.is-done {
+                background: #F3FBF7;
+                border-color: #A9E4C4;
+            }
+
+            .dcm-doc-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                background: #FFF6DF;
+                color: #92660A;
+                flex: 0 0 auto;
+                font-size: 1rem;
+            }
+
+            .dcm-doc.is-done .dcm-doc-icon {
+                background: #1E8E5A;
+                color: #fff;
+            }
+
+            .dcm-doc-body {
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+
+            .dcm-doc-label {
+                font-weight: 800;
+                color: #1B4F72;
+                font-size: .82rem;
+            }
+
+            .dcm-doc-meta {
+                font-size: .7rem;
+                font-weight: 600;
+                color: #92660A;
+            }
+
+            .dcm-doc.is-done .dcm-doc-meta {
+                color: #1E8E5A;
+            }
+
+            .dcm-doc.is-legacy .dcm-doc-icon {
+                background: #eef2f6;
+                color: #475569;
+            }
+
+            .dcm-doc.is-legacy .dcm-doc-meta {
+                color: #64748b;
+            }
+
+            .dcm-doc-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: .35rem;
+                padding: .3rem .6rem;
+                border-radius: 7px;
+                border: 1px solid rgba(27, 79, 114, .2);
+                background: #EBF5FB;
+                color: #1B4F72;
+                font-weight: 700;
+                font-size: .72rem;
+                text-decoration: none;
+                white-space: nowrap;
+            }
+
+            .dcm-doc-btn:hover {
+                background: #1B4F72;
+                border-color: #1B4F72;
+                color: #fff;
+            }
+
+            .apm-table .dcm-total td {
+                background: #EBF5FB;
+                font-weight: 800;
+            }
+
+            .ot-discharge-details-modal .apm-table th,
+            .ot-discharge-details-modal .apm-table td {
+                padding: .45rem .6rem;
+            }
+
+            .ot-discharge-details-modal .apm-table th {
+                font-size: .64rem;
+                background: #e8f4f8;
+            }
+
+            .ot-discharge-details-modal .apm-table td {
+                font-size: .78rem;
+            }
+
+            @media (max-width: 767.98px) {
+                .dcm-amounts {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+
+            @media (max-width: 575.98px) {
+                .ot-discharge-details-modal .modal-dialog {
+                    margin: .5rem .75rem;
+                }
+
+                .ot-discharge-details-modal .modal-body {
+                    padding: .75rem;
+                }
+
+                .ot-discharge-details-modal .apm-hero {
+                    align-items: flex-start;
+                }
+
+                .ot-discharge-details-modal .dcm-amounts {
+                    grid-template-columns: 1fr;
+                }
+
+                .ot-discharge-details-modal .dcm-doc {
+                    align-items: flex-start;
+                }
+
+                .ot-discharge-details-modal .dcm-doc-btn {
+                    margin-left: auto;
+                }
+
+                .ot-discharge-details-modal .apm-table {
+                    min-width: 520px;
+                }
+            }
         </style>
     @endpush
 @endonce

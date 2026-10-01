@@ -717,6 +717,49 @@
             background: #0d9488;
         }
 
+        .doc-main-card .doc-ref-bar--opd {
+            gap: 7px;
+            background: transparent;
+            overflow: visible;
+        }
+
+        .doc-main-card .doc-ref-bar--opd>span:not(.doc-ref-div) {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            min-width: 0;
+            padding: 4px 3px;
+            border-radius: 5px;
+            background: #0a2f52;
+        }
+
+        .doc-main-card .doc-ref-bar--opd>.doc-ref-div {
+            display: none;
+        }
+
+        .doc-main-card .doc-ref-bar--ot {
+            gap: 7px;
+            background: transparent;
+            overflow: visible;
+        }
+
+        .doc-main-card .doc-ref-bar--ot>span:not(.doc-ref-div),
+        .doc-main-card .doc-ref-bar--ot>a.doc-ref-link {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            min-width: 0;
+            padding: 4px 3px;
+            border-radius: 5px;
+            background: #0d9488;
+        }
+
+        .doc-main-card .doc-ref-bar--ot>.doc-ref-div {
+            display: none;
+        }
+
         .doc-ref-bar a.doc-ref-link {
             color: inherit;
             text-decoration: none;
@@ -795,14 +838,14 @@
             flex-direction: column;
             justify-content: flex-start;
             box-sizing: border-box;
-            width: 196px;
+            width: 200px;
             min-width: 196px;
             height: 125px;
 
             background: #fff;
             border: 1px solid rgba(15, 79, 134, 0.2);
             border-radius: 8px;
-            padding: 12px 10px 7px;
+            padding: 15px 8px 5px;
 
             text-decoration: none;
             color: inherit;
@@ -833,7 +876,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            margin-bottom: 6px;
+            margin-bottom: 10px;
             font-size: 13px;
             font-weight: 800;
             color: #0f4f86;
@@ -858,6 +901,16 @@
         .doc-ref-btns {
             display: flex;
             gap: 6px;
+        }
+
+        .doc-list-card .doc-ref-btns:not(.doc-ref-btns--ot) {
+            gap: 6px;
+            background: transparent;
+            overflow: visible;
+        }
+
+        .doc-list-card .doc-ref-btns:not(.doc-ref-btns--ot) .doc-ref-btn {
+            border-radius: 5px;
         }
 
         .doc-ref-btns+.doc-ref-btns {
@@ -1016,14 +1069,19 @@
                             {{ $doc->name }}
                         </div>
                         <div class="doc-ref-btns">
-                            <span class="doc-ref-btn" title="Examination assigned today">Patient: {{ $doc->assigned_today ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Primary exam completed">P: {{ $doc->primary_count ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Secondary exam completed">S: {{ $doc->secondary_count ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Examination assigned today">Patient:
+                                {{ $doc->assigned_today ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Primary exam completed">P:
+                                {{ $doc->primary_count ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Secondary exam completed">S:
+                                {{ $doc->secondary_count ?? 0 }}</span>
                         </div>
                         <div class="doc-ref-btns doc-ref-btns--ot">
-                            <span class="doc-ref-btn" title="Total OT (complete + remaining)">OT: {{ $docOt->ot_total ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Total OT (complete + remaining)">OT:
+                                {{ $docOt->ot_total ?? 0 }}</span>
                             <span class="doc-ref-btn" title="Ward assigned (OP)"
-                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $doc->id, 'queue' => 'consult']) }}';">OP: {{ $docOt->ot_pending ?? 0 }}</span>
+                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $doc->id, 'queue' => 'consult']) }}';">OP:
+                                {{ $docOt->ot_pending ?? 0 }}</span>
                             <span class="doc-ref-btn" title="OT completed">OC: {{ $docOt->ot_complete ?? 0 }}</span>
                         </div>
                     </a>
@@ -1053,8 +1111,7 @@
     @endif
 
     <div class="mb-4">
-        <a href="{{ route('hospital.dashboard.ot-patients', ['slug' => $slug]) }}"
-            class="btn fw-bold text-white"
+        <a href="{{ route('hospital.dashboard.ot-patients', ['slug' => $slug]) }}" class="btn fw-bold text-white"
             style="background:#1B4F72;border-radius:10px;padding:10px 18px;">
             <i class="bi bi-hospital me-1"></i> OT Patients
         </a>

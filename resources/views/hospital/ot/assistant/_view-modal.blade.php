@@ -1,7 +1,7 @@
 {{--
-  OT Assistant → View: patient, surgery plan, pre-op vitals and (after OT) the surgery record + implanted lens.
-  Required: $booking (with OtBooking::OT_ASSISTANT_VIEW_RELATIONS)
-  Optional: $modalId (default otaView{id}), $showOperate (bool)
+OT Assistant → View: patient, surgery plan, pre-op vitals and (after OT) the surgery record + implanted lens.
+Required: $booking (with OtBooking::OT_ASSISTANT_VIEW_RELATIONS)
+Optional: $modalId (default otaView{id}), $showOperate (bool)
 --}}
 @php
     use App\Models\Hospital\OT\OtBooking;
@@ -14,8 +14,8 @@
     $surgery = $booking->relationLoaded('surgery') ? $booking->surgery : null;
     $lensDetail = $booking->relationLoaded('lensDetail') ? $booking->lensDetail : null;
     $isReady = $booking->ot_status === OtBooking::STATUS_READY;
-    $drName = fn (?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
-    $title = fn (?string $v) => blank($v) ? null : (string) str($v)->replace('_', ' ')->title();
+    $drName = fn(?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
+    $title = fn(?string $v) => blank($v) ? null : (string) str($v)->replace('_', ' ')->title();
 
     [$stageLabel, $stageTone] = match ($booking->ot_status) {
         OtBooking::STATUS_READY => ['Ready for OT', 'navy'],
@@ -54,7 +54,7 @@
         'Temp' => $preOp->temperature,
         'SpO2' => $preOp->spo2 !== null ? rtrim(rtrim((string) $preOp->spo2, '0'), '.') . '%' : null,
         'HbA1c' => $preOp->hba1c,
-    ], fn ($v) => ! blank($v)) : [];
+    ], fn($v) => !blank($v)) : [];
 
     $drops = $booking->relationLoaded('dilationEntries')
         ? $booking->dilationEntries->sortBy([['administered_at', 'asc'], ['dose_number', 'asc']])->values()
@@ -66,7 +66,7 @@
         ['WhatsApp', $patient?->whatsapp_no],
         ['Age / Gender', $ageGender],
         ['City', $patient ? ($patient->cityName ?: null) : null],
-        ['Visit Type', match ($type) { 'phone' => 'Phone Booking', 'walkin' => 'Walk-in', '' => null, default => ucfirst($type) }],
+        ['Visit Type', match ($type) { 'phone' => 'Phone Booking', 'walkin' => 'Walk-in', '' => null, default => ucfirst($type)}],
         ['Consulting Doctor', $drName($patient?->doctor?->name)],
         ['Registered By', $patient?->reception?->name],
     ];
@@ -101,9 +101,12 @@
         ['Operated By', $drName($surgery->operatedBy?->name)],
         ['OT Room', $surgery->ot_room],
         ['Date', optional($surgery->surgery_at ?? $surgery->start_time)->format('d M Y')],
-        ['Time', $surgery->start_time
+        [
+            'Time',
+            $surgery->start_time
             ? $surgery->start_time->format('h:i A') . ($surgery->end_time ? ' – ' . $surgery->end_time->format('h:i A') : '')
-            : null],
+            : null
+        ],
         ['Duration', $durationMin !== null ? $durationMin . ' min' : null],
         ['Status', $title($surgery->surgery_status)],
         ['Complication', $title($surgery->complication_status)],
@@ -119,14 +122,16 @@
         ['Serial No.', $lensDetail->serial_number],
     ] : [];
 @endphp
-<div class="modal fade ot-desk-view-modal apm-modal" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
+<div class="modal fade ot-desk-view-modal apm-modal ota2-view-modal ot-surgery-patient-modal" id="{{ $modalId }}"
+    tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title mb-0">
                     <i class="bi bi-activity me-2"></i>Surgery Patient Details
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="apm-hero">
@@ -149,7 +154,7 @@
 
                 @unless($isReady)
                     <div class="apm-section-title"><i class="bi bi-clipboard2-check"></i> Surgery Record</div>
-                    @if(empty(array_filter(array_column($surgeryFields, 1), fn ($v) => ! blank($v))))
+                    @if(empty(array_filter(array_column($surgeryFields, 1), fn($v) => !blank($v))))
                         <div class="apm-empty"><i class="bi bi-inbox"></i> Surgery record not found.</div>
                     @else
                         <div class="ot-desk-modal-grid apm-grid">
@@ -163,7 +168,7 @@
                         </div>
                     @endif
 
-                    @if(! empty(array_filter(array_column($lensFields, 1), fn ($v) => ! blank($v))))
+                    @if(!empty(array_filter(array_column($lensFields, 1), fn($v) => !blank($v))))
                         <div class="apm-section-title">
                             <i class="bi bi-circle-half"></i> Implanted Lens
                             @if($lensDetail?->is_implanted)
@@ -215,7 +220,8 @@
                 <div class="apm-section-title">
                     <i class="bi bi-droplet-half"></i> Ward Medicine Log
                     @if($drops->isNotEmpty())
-                        <span class="apm-badge apm-tone-blue">{{ $drops->count() }} {{ $drops->count() === 1 ? 'entry' : 'entries' }}</span>
+                        <span class="apm-badge apm-tone-blue">{{ $drops->count() }}
+                            {{ $drops->count() === 1 ? 'entry' : 'entries' }}</span>
                     @endif
                 </div>
                 @if($drops->isEmpty())
@@ -261,18 +267,171 @@
                 </div>
             </div>
             @if($showOperate)
-                @haspermission('ot_surgery_record')
-                <div class="modal-footer apm-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                        class="btn apm-primary-btn">
-                        <i class="bi bi-heart-pulse me-1"></i> Operate
-                    </a>
-                </div>
-                @endhaspermission
+            @haspermission('ot_surgery_record')
+            <div class="modal-footer apm-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                    class="btn apm-primary-btn">
+                    <i class="bi bi-heart-pulse me-1"></i> Operate
+                </a>
+            </div>
+            @endhaspermission
             @endif
         </div>
     </div>
 </div>
 
 @include('hospital.ot.partials.detail-modal-styles')
+
+@once
+    @push('styles')
+        <style>
+            .ot-surgery-patient-modal .modal-dialog {
+                max-width: 720px;
+                margin: .75rem auto;
+            }
+
+            .ot-surgery-patient-modal .modal-content {
+                border: 1px solid rgba(27, 79, 114, .14);
+                border-radius: 18px;
+                box-shadow: 0 24px 64px rgba(16, 52, 76, .22);
+                overflow: hidden;
+            }
+
+            .ot-surgery-patient-modal .modal-header {
+                padding: .8rem 1rem;
+                background: linear-gradient(135deg, #123d59 0%, #1b4f72 100%);
+            }
+
+            .ot-surgery-patient-modal .modal-title {
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+                font-size: 1rem;
+                letter-spacing: .01em;
+            }
+
+            .ot-surgery-patient-modal .modal-title i {
+                color: #a9e4e6;
+                margin-right: 0 !important;
+            }
+
+            .ot-surgery-patient-modal .modal-body {
+                padding: .85rem .95rem 1rem;
+                background: #f5f9fc;
+            }
+
+            .ot-surgery-patient-modal .apm-hero {
+                padding: .7rem .8rem;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 78%);
+                border-color: rgba(27, 79, 114, .16);
+            }
+
+            .ot-surgery-patient-modal .apm-avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                box-shadow: 0 6px 14px rgba(27, 79, 114, .18);
+            }
+
+            .ot-surgery-patient-modal .apm-name {
+                font-size: 1rem;
+            }
+
+            .ot-surgery-patient-modal .apm-badge {
+                padding: .3rem .65rem;
+                font-size: .7rem;
+            }
+
+            .ot-surgery-patient-modal .apm-section-title {
+                margin: .8rem 0 .35rem;
+                font-size: .69rem;
+            }
+
+            .ot-surgery-patient-modal .apm-grid {
+                gap: .5rem;
+            }
+
+            .ot-surgery-patient-modal .apm-grid .ot-desk-modal-field {
+                padding: .5rem .6rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .025);
+            }
+
+            .ot-surgery-patient-modal .apm-grid .ot-desk-modal-value {
+                font-size: .83rem;
+                line-height: 1.3;
+            }
+
+            .ot-surgery-patient-modal .apm-vitals {
+                gap: .5rem;
+            }
+
+            .ot-surgery-patient-modal .apm-vitals .apm-amount {
+                padding: .5rem .4rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .04);
+            }
+
+            .ot-surgery-patient-modal .apm-vitals .apm-amount-value {
+                font-size: .92rem;
+            }
+
+            .ot-surgery-patient-modal .apm-empty {
+                padding: .7rem .8rem;
+                border-radius: 10px;
+                font-size: .8rem;
+            }
+
+            .ot-surgery-patient-modal .apm-table {
+                border-radius: 10px;
+                box-shadow: 0 4px 14px rgba(27, 79, 114, .05);
+            }
+
+            .ot-surgery-patient-modal .apm-table th {
+                padding: .45rem .6rem;
+                font-size: .64rem;
+                background: #e8f4f8;
+            }
+
+            .ot-surgery-patient-modal .apm-table td {
+                padding: .45rem .6rem;
+                font-size: .78rem;
+            }
+
+            .ot-surgery-patient-modal .modal-footer {
+                padding: .65rem .9rem;
+                background: #fff;
+            }
+
+            .ot-surgery-patient-modal .apm-primary-btn {
+                padding: .42rem .75rem;
+                border-radius: 8px;
+                font-size: .8rem;
+            }
+
+            @media (max-width: 575.98px) {
+                .ot-surgery-patient-modal .modal-dialog {
+                    margin: .5rem .75rem;
+                }
+
+                .ot-surgery-patient-modal .modal-body {
+                    padding: .75rem;
+                }
+
+                .ot-surgery-patient-modal .apm-hero {
+                    align-items: flex-start;
+                }
+
+                .ot-surgery-patient-modal .apm-vitals {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .ot-surgery-patient-modal .apm-table {
+                    min-width: 720px;
+                }
+            }
+        </style>
+    @endpush
+@endonce
