@@ -208,8 +208,8 @@
 
         @else :root {
                 /* No more fixed top navbar for non-doctor roles — the sidebar
-                                                                               now runs full height and the search/profile bar lives
-                                                                               inside the scrollable content column (design refresh). */
+                                                                                           now runs full height and the search/profile bar lives
+                                                                                           inside the scrollable content column (design refresh). */
                 --hms-navbar-h: 0px;
             }
 
@@ -318,6 +318,54 @@
             gap: 1rem;
             flex-shrink: 0;
             margin-left: auto;
+        }
+
+        .hms-subscription-status {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            max-width: 12rem;
+            padding: .4rem .65rem;
+            border: 1px solid rgba(230, 126, 34, .28);
+            border-radius: 8px;
+            background: #fff8ef;
+            color: #a65310;
+            font-size: .72rem;
+            font-weight: 700;
+            line-height: 1.2;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .hms-subscription-status:hover {
+            border-color: rgba(230, 126, 34, .5);
+            background: #fff1df;
+            color: #8d450d;
+        }
+
+        .hms-subscription-status.is-expired {
+            border-color: rgba(192, 57, 43, .28);
+            background: #fff1f0;
+            color: #a93226;
+        }
+
+        .hms-subscription-status.is-expired:hover {
+            border-color: rgba(192, 57, 43, .5);
+            background: #ffe5e3;
+            color: #8e2a20;
+        }
+
+        .hms-subscription-status span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (max-width: 768px) {
+            .hms-subscription-status {
+                max-width: 7.5rem;
+                padding: .35rem .45rem;
+                font-size: .65rem;
+            }
         }
 
         .hms-content-user-info {
@@ -1895,6 +1943,22 @@
                         </a>
                         @endhaspermission
                     </div>
+                    @endif
+
+
+                    @if($contentTopbarUser?->role?->is_super && isset($subscriptionDaysLeft) && $subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
+                        <a href="{{ route('hospital.subscription.index', ['slug' => $contentTopbarSlug]) }}"
+                            class="hms-subscription-status {{ $subscriptionDaysLeft <= 0 ? 'is-expired' : '' }}"
+                            title="Open subscription details">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                            <span>
+                                @if($subscriptionDaysLeft <= 0)
+                                    Subscription expired
+                                @else
+                                    Expires in {{ $subscriptionDaysLeft }} day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}
+                                @endif
+                            </span>
+                        </a>
                     @endif
 
                     <div class="dropdown hms-content-profile">
