@@ -209,10 +209,10 @@
         }
 
         /*
-                          Hospital Admin Dashboard Theme
-                          Primary soft: #EBF5FB · Secondary: #1B4F72
-                          Hover: soft neutral shadow (no blue glow)
-                        */
+                              Hospital Admin Dashboard Theme
+                              Primary soft: #EBF5FB · Secondary: #1B4F72
+                              Hover: soft neutral shadow (no blue glow)
+                            */
 
         /* ── Theme tokens (scoped to this page) ────────────────────────────────── */
         .bento-page {
@@ -534,8 +534,8 @@
         }
 
         /* Type-colored icon badges — same idea as the receptionist 5-card row:
-                           each stat gets a pastel background tinted to match its own icon color
-                           (set inline per-icon), instead of one flat neutral tone. */
+                               each stat gets a pastel background tinted to match its own icon color
+                               (set inline per-icon), instead of one flat neutral tone. */
         .ig-blue {
             background: #EBF5FB !important;
             border: 1px solid rgba(27, 79, 114, .18) !important;
@@ -883,22 +883,22 @@
         }
 
         /* .dashboard-table-scroll .bento-table {
-                            min-width: 980px;
-                            width: max-content;
-                            width: -moz-max-content;
-                        } */
+                                min-width: 980px;
+                                width: max-content;
+                                width: -moz-max-content;
+                            } */
 
         /* .dashboard-table-scroll .bento-table thead th {
-                            position: sticky;
-                            top: 0;
-                            z-index: 2;
-                            background: var(--dash-secondary);
-                        } */
+                                position: sticky;
+                                top: 0;
+                                z-index: 2;
+                                background: var(--dash-secondary);
+                            } */
 
         /* .dashboard-table-scroll .bento-table thead th:first-child {
-                            left: 0;
-                            z-index: 3;
-                        } */
+                                left: 0;
+                                z-index: 3;
+                            } */
 
         .rec-detail-btn {
             display: inline-flex;
@@ -2138,18 +2138,18 @@
                 </div>
             </a>
             <!-- <a href="#counsellingPanel" data-acc-tab="history" class="bento-card span-2 text-decoration-none acc-tab-card">
-                        <span class="bento-gloss" aria-hidden="true"></span>
-                        <div class="bento-stat">
-                            <div class="bento-icon ig-green">
-                                <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                            <span class="bento-gloss" aria-hidden="true"></span>
+                            <div class="bento-stat">
+                                <div class="bento-icon ig-green">
+                                    <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                                </div>
+                                <div>
+                                    <p class="metric-label">Completed</p>
+                                    <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
+                                    <p class="metric-meta">Counselled &amp; onward</p>
+                                </div>
                             </div>
-                            <div>
-                                <p class="metric-label">Completed</p>
-                                <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
-                                <p class="metric-meta">Counselled &amp; onward</p>
-                            </div>
-                        </div>
-                    </a> -->
+                        </a> -->
             <a href="#counsellingPanel" data-acc-tab="payments" class="bento-card span-2 text-decoration-none acc-tab-card">
                 <span class="bento-gloss" aria-hidden="true"></span>
                 <div class="bento-stat">
@@ -2391,6 +2391,31 @@
         @if($hasRevenue || $hasPerf)
         <div class="{{ $hasQueue ? 'col-lg-4' : 'col-12' }} d-flex flex-column gap-4">
 
+
+
+            {{-- Revenue Overview (report_view / report_export context) --}}
+            @if($hasRevenue)
+                <div class="bento-card">
+                    <div class="bento-header">
+                        <h3 class="bento-title"><i class="fa-solid fa-chart-line me-1"></i> Revenue Overview</h3>
+                    </div>
+                    <div class="rev-grid">
+                        <div class="rev-col">
+                            <p class="rev-label">Today</p>
+                            <div class="rev-value">{{ money($revenueToday, 0) }}</div>
+                        </div>
+                        <div class="rev-col">
+                            <p class="rev-label">This Month</p>
+                            <div class="rev-value">{{ money($revenueMonth, 0) }}</div>
+                        </div>
+                        <div class="rev-col">
+                            <p class="rev-label">This Year</p>
+                            <div class="rev-value">{{ money($revenueYear, 0) }}</div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Reception Performance (user_reception_manage) --}}
             @if($hasPerf)
             <div class="bento-card">
@@ -2438,29 +2463,6 @@
                     </table>
                 </div>
             </div>
-            @endif
-
-            {{-- Revenue Overview (report_view / report_export context) --}}
-            @if($hasRevenue)
-                <div class="bento-card">
-                    <div class="bento-header">
-                        <h3 class="bento-title"><i class="fa-solid fa-chart-line me-1"></i> Revenue Overview</h3>
-                    </div>
-                    <div class="rev-grid">
-                        <div class="rev-col">
-                            <p class="rev-label">Today</p>
-                            <div class="rev-value">{{ money($revenueToday, 0) }}</div>
-                        </div>
-                        <div class="rev-col">
-                            <p class="rev-label">This Month</p>
-                            <div class="rev-value">{{ money($revenueMonth, 0) }}</div>
-                        </div>
-                        <div class="rev-col">
-                            <p class="rev-label">This Year</p>
-                            <div class="rev-value">{{ money($revenueYear, 0) }}</div>
-                        </div>
-                    </div>
-                </div>
             @endif
         </div>
         @endif
@@ -2857,9 +2859,9 @@
             <div class="col-12">
                 <div class="tap-table-wrap">
                     <!-- <div class="tap-header">
-                                        <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
-                                        <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
-                                    </div> -->
+                                            <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                                            <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+                                        </div> -->
                     <div class="tap-header">
                         <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
 
