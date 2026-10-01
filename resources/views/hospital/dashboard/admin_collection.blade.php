@@ -26,66 +26,66 @@ used across the rest of the app. --}}
         @php
             $bd = $breakdown ?? ['opd' => 0, 'ot_collected' => 0, 'ot_refunded' => 0, 'ot_net' => 0, 'total' => $grandTotal ?? 0];
         @endphp
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="card acoll-premium-card border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="acoll-icon"><i class="bi bi-cash-stack"></i></span>
-                            <span class="acoll-label">Grand Total</span>
-                        </div>
-                        <div class="acoll-value">{{ money($grandTotal, 0) }}</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card acoll-premium-card border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="acoll-icon"><i class="bi bi-clipboard2-pulse"></i></span>
-                            <span class="acoll-label">OPD</span>
-                        </div>
-                        <div class="acoll-value">{{ money((float) $bd['opd'], 0) }}</div>
-                        <div class="acoll-hint">Case fees (not cut by OT refund)</div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card acoll-premium-card border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="acoll-icon"><i class="bi bi-hospital"></i></span>
-                            <span class="acoll-label">OT Net</span>
-                        </div>
-                        <div class="acoll-value">{{ money((float) $bd['ot_net'], 0) }}</div>
-                        <div class="acoll-hint">
-                            {{ money((float) $bd['ot_collected'], 0) }} paid
-                            − {{ money((float) $bd['ot_refunded'], 0) }} refund
+        <div class="acoll-summary-grid mb-4">
+            <div class="acoll-summary-item">
+                <div class="card acoll-premium-card acoll-summary-card border-0 h-100">
+                    <div class="card-body acoll-summary-body">
+                        <span class="acoll-icon"><i class="bi bi-cash-stack"></i></span>
+                        <div class="acoll-summary-content">
+                            <div class="acoll-value">{{ money($grandTotal, 0) }}</div>
+                            <div class="acoll-label">Grand Total</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card acoll-premium-card border-0 h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center gap-2 mb-3">
-                            <span class="acoll-icon"><i class="bi bi-funnel-fill"></i></span>
-                            <span class="acoll-label">Date Range</span>
+            <div class="acoll-summary-item">
+                <div class="card acoll-premium-card acoll-summary-card border-0 h-100">
+                    <div class="card-body acoll-summary-body">
+                        <span class="acoll-icon"><i class="bi bi-clipboard2-pulse"></i></span>
+                        <div class="acoll-summary-content">
+                            <div class="acoll-value">{{ money((float) $bd['opd'], 0) }}</div>
+                            <div class="acoll-label">OPD</div>
+                            <div class="acoll-hint">Case fees (not cut by OT refund)</div>
                         </div>
-                        <form method="GET" action="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}">
-                            <div class="d-flex flex-wrap gap-2 align-items-end">
-                                <div style="min-width:160px;flex:1">
-                                    <label class="form-label acoll-form-label" for="date_range">Dates</label>
-                                    <input type="text" id="date_range" class="form-control clinical-input"
-                                        data-hms-date-range data-start-name="start_date" data-end-name="end_date"
-                                        data-start-value="{{ $startDate }}" data-end-value="{{ $endDate }}"
-                                        data-auto-submit="1" placeholder="Select start → end date" autocomplete="off"
-                                        readonly>
-                                </div>
-                                <a href="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}"
-                                    class="btn acoll-btn-outline">Reset</a>
+                    </div>
+                </div>
+            </div>
+            <div class="acoll-summary-item">
+                <div class="card acoll-premium-card acoll-summary-card border-0 h-100">
+                    <div class="card-body acoll-summary-body">
+                        <span class="acoll-icon"><i class="bi bi-hospital"></i></span>
+                        <div class="acoll-summary-content">
+                            <div class="acoll-value">{{ money((float) $bd['ot_net'], 0) }}</div>
+                            <div class="acoll-label">OT Net</div>
+                            <div class="acoll-hint">
+                                {{ money((float) $bd['ot_collected'], 0) }} paid
+                                − {{ money((float) $bd['ot_refunded'], 0) }} refund
                             </div>
-                        </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="acoll-summary-item">
+                <div class="card acoll-premium-card acoll-summary-card border-0 h-100">
+                    <div class="card-body acoll-summary-body">
+                        <span class="acoll-icon"><i class="bi bi-funnel-fill"></i></span>
+                        <div class="acoll-summary-content acoll-date-content">
+
+                            <form method="GET" action="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}">
+                                <div class="d-flex flex-wrap gap-2 align-items-end">
+                                    <div style="min-width:160px;flex:1">
+                                        <label class="form-label acoll-form-label" for="date_range">Dates</label>
+                                        <input type="text" id="date_range" class="form-control clinical-input"
+                                            data-hms-date-range data-start-name="start_date" data-end-name="end_date"
+                                            data-start-value="{{ $startDate }}" data-end-value="{{ $endDate }}"
+                                            data-auto-submit="1" placeholder="Select start → end date" autocomplete="off"
+                                            readonly>
+                                    </div>
+                                    <a href="{{ route('hospital.dashboard.collection', ['slug' => $slug]) }}"
+                                        class="btn acoll-btn-outline">Reset</a>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -144,10 +144,10 @@ used across the rest of the app. --}}
 @push('styles')
     <style>
         /*
-                          Total Collection (Design refresh)
-                          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                          Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-                        */
+                                  Total Collection (Design refresh)
+                                  Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                                  Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+                                */
 
         .acoll-page {
             --ot-secondary: #1B4F72;
@@ -241,6 +241,88 @@ used across the rest of the app. --}}
             border-radius: 16px;
             box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
             overflow: hidden;
+        }
+
+        .acoll-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        .acoll-summary-card {
+            height: 92px !important;
+            min-height: 92px !important;
+            max-height: 92px;
+            border: 1px solid var(--hms-border, #e2e8f0) !important;
+            border-left: 4px solid var(--hms-primary, #1B4F72) !important;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(15, 79, 134, .06);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .acoll-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(15, 79, 134, .12);
+        }
+
+        .acoll-summary-body {
+            height: 100% !important;
+            min-height: 0;
+            padding: .7rem 1rem !important;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .acoll-summary-body .acoll-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 12px;
+            background: #1B4F72;
+            color: #fff;
+            font-size: 1.25rem;
+        }
+
+        .acoll-summary-content {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .acoll-summary-body .acoll-value {
+            font-size: 1.65rem;
+            line-height: 1.15;
+            margin: 0 0 .18rem;
+        }
+
+        .acoll-summary-body .acoll-label {
+            display: block;
+            font-size: .72rem;
+        }
+
+        .acoll-summary-body .acoll-hint {
+            line-height: 1.35;
+            margin-top: .2rem;
+            white-space: nowrap;
+        }
+
+        .acoll-date-content form,
+        .acoll-date-content form>div {
+            width: 100%;
+        }
+
+        .acoll-date-content .acoll-form-label {
+            margin-top: 0;
+        }
+
+        .acoll-date-content form .form-control {
+            min-width: 0;
+            width: 100%;
+            font-size: .82rem;
+        }
+
+        .acoll-date-content form .acoll-btn-outline {
+            padding: .375rem .7rem;
+            font-size: .82rem;
         }
 
         .acoll-icon {
@@ -411,6 +493,18 @@ used across the rest of the app. --}}
             color: rgba(27, 79, 114, 0.72) !important;
             font-weight: 800;
             white-space: normal !important;
+        }
+
+        @media (max-width: 992px) {
+            .acoll-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 576px) {
+            .acoll-summary-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         @media (prefers-reduced-motion: reduce) {
