@@ -1846,7 +1846,7 @@ foreach ($masters['advices'] as $_a) {
                         <div class="d-flex gap-2 align-items-center flex-wrap">
                             <div class="input-group input-group-sm" style="width:auto;">
                                 <label class="input-group-text" style="font-size:12px;background:#f0f4f8;color:#1B4F72;font-weight:600;border-color:#1B4F72;">Group</label>
-                                <select id="rxGroupSelector" class="form-select form-select-sm" style="min-width:180px;border-color:#1B4F72;">
+                                <select id="rxGroupSelector" class="form-select form-select-sm" style="min-width:180px;padding-right:12rem;border-color:#1B4F72;">
                                     <option value="">-- Load Group --</option>
                                     @foreach($masters['med_groups'] as $grp)<option value="{{ $grp->id }}">{{ $grp->name }}</option>@endforeach
                                 </select>

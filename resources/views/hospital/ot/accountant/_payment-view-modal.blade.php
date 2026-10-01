@@ -66,7 +66,8 @@
 
     $payments = $booking->relationLoaded('payments') ? $booking->payments->sortBy('id') : collect();
 @endphp
-<div class="modal fade ot-desk-view-modal apm-modal" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
+<div class="modal fade ot-desk-view-modal apm-modal ot-payment-details-modal" id="{{ $modalId }}" tabindex="-1"
+    aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header">
@@ -164,3 +165,142 @@
 </div>
 
 @include('hospital.ot.partials.detail-modal-styles')
+
+@once
+    @push('styles')
+        <style>
+            .ot-payment-details-modal .modal-dialog {
+                max-width: 640px;
+                margin: .75rem auto;
+            }
+
+            .ot-payment-details-modal .modal-content {
+                border: 1px solid rgba(27, 79, 114, .14);
+                border-radius: 18px;
+                box-shadow: 0 24px 64px rgba(16, 52, 76, .22);
+                overflow: hidden;
+            }
+
+            .ot-payment-details-modal .modal-header {
+                padding: .8rem 1rem;
+                background: linear-gradient(135deg, #123d59 0%, #1b4f72 100%);
+            }
+
+            .ot-payment-details-modal .modal-title {
+                display: flex;
+                align-items: center;
+                gap: .55rem;
+                font-size: 1rem;
+                letter-spacing: .01em;
+            }
+
+            .ot-payment-details-modal .modal-title i {
+                color: #a9e4e6;
+                margin-right: 0 !important;
+            }
+
+            .ot-payment-details-modal .modal-body {
+                padding: .8rem .9rem .95rem;
+                background: #f5f9fc;
+            }
+
+            .ot-payment-details-modal .apm-hero {
+                padding: .7rem .8rem;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 78%);
+                border-color: rgba(27, 79, 114, .16);
+            }
+
+            .ot-payment-details-modal .apm-avatar {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                background: #1b4f72;
+                box-shadow: 0 6px 14px rgba(27, 79, 114, .18);
+            }
+
+            .ot-payment-details-modal .apm-name {
+                font-size: 1rem;
+            }
+
+            .ot-payment-details-modal .apm-badge {
+                padding: .32rem .7rem;
+                font-size: .72rem;
+            }
+
+            .ot-payment-details-modal .apm-amounts {
+                gap: .6rem;
+                margin-top: .55rem;
+            }
+
+            .ot-payment-details-modal .apm-amount {
+                padding: .55rem .65rem;
+                border-radius: 11px;
+                box-shadow: 0 4px 12px rgba(27, 79, 114, .04);
+            }
+
+            .ot-payment-details-modal .apm-amount-value {
+                font-size: 1rem;
+            }
+
+            .ot-payment-details-modal .apm-section-title {
+                margin-top: .75rem;
+                margin-bottom: .35rem;
+                font-size: .7rem;
+            }
+
+            .ot-payment-details-modal .apm-grid {
+                gap: .5rem;
+            }
+
+            .ot-payment-details-modal .apm-grid .ot-desk-modal-field {
+                padding: .5rem .6rem;
+                border-radius: 10px;
+                box-shadow: 0 3px 10px rgba(27, 79, 114, .025);
+            }
+
+            .ot-payment-details-modal .apm-grid .ot-desk-modal-value {
+                font-size: .84rem;
+                line-height: 1.3;
+            }
+
+            .ot-payment-details-modal .apm-table {
+                border-radius: 10px;
+                box-shadow: 0 4px 14px rgba(27, 79, 114, .05);
+            }
+
+            .ot-payment-details-modal .apm-table th {
+                background: #e8f4f8;
+                padding: .45rem .6rem;
+                font-size: .66rem;
+            }
+
+            .ot-payment-details-modal .apm-table td {
+                padding: .45rem .6rem;
+                font-size: .8rem;
+            }
+
+            @media (max-width: 575.98px) {
+                .ot-payment-details-modal .modal-dialog {
+                    margin: .5rem .75rem;
+                }
+
+                .ot-payment-details-modal .modal-body {
+                    padding: .8rem;
+                }
+
+                .ot-payment-details-modal .apm-hero {
+                    align-items: flex-start;
+                }
+
+                .ot-payment-details-modal .apm-amounts {
+                    grid-template-columns: 1fr;
+                }
+
+                .ot-payment-details-modal .apm-table {
+                    min-width: 560px;
+                }
+            }
+        </style>
+    @endpush
+@endonce

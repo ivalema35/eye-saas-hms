@@ -1,6 +1,6 @@
 {{-- Awaiting Counselling → View: registration details + primary / secondary exam progress. Required: $booking --}}
 @php
-    $drName = fn (?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
+    $drName = fn(?string $name) => blank($name) ? null : (preg_match('/^dr\b\.?/i', trim($name)) ? trim($name) : 'Dr. ' . trim($name));
     $patient = $booking->patient;
     $primary = $patient?->primaryExamination;
     $secondary = $patient?->secondaryExamination;
@@ -42,14 +42,16 @@
         ['Registered At', optional($patient?->created_at)->format('d M Y, h:i A')],
     ];
 @endphp
-<div class="modal fade ot-desk-view-modal" id="otCounselPatient{{ $booking->id }}" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+<div class="modal fade ot-desk-view-modal ocp-modal" id="otCounselPatient{{ $booking->id }}" tabindex="-1"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable ocp-modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title mb-0">
                     <i class="bi bi-person-vcard me-2"></i>{{ $patient?->full_name ?? 'Patient' }}
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="ocp-section-title"><i class="bi bi-clipboard2-check"></i> Examination</div>

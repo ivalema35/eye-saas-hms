@@ -77,7 +77,8 @@ design. --}}
                                             <td>{{ $booking->ot_type }}</td>
                                             <td>
                                                 @if($isHistory)
-                                                    <span class="ot-status-badge ot-status-booked">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span>
+                                                    <span
+                                                        class="ot-status-badge ot-status-booked">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span>
                                                 @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
                                                     <span class="ot-status-badge ot-status-recommended">Surgery Recommended</span>
                                                 @else
@@ -86,15 +87,16 @@ design. --}}
                                             </td>
                                             <td class="text-end">
                                                 @if($isHistory)
-                                                    <button type="button" class="btn btn-sm ot-outline-btn"
-                                                        data-bs-toggle="modal" data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                    <button type="button" class="btn btn-sm ot-outline-btn" data-bs-toggle="modal"
+                                                        data-bs-target="#otCounselPatient{{ $booking->id }}"
                                                         title="View patient details">
                                                         <i class="bi bi-eye-fill me-1"></i> View
                                                     </button>
                                                 @else
                                                     <div class="d-inline-flex align-items-center gap-2">
                                                         <button type="button" class="btn btn-sm ot-outline-btn"
-                                                            data-bs-toggle="modal" data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#otCounselPatient{{ $booking->id }}"
                                                             title="View patient details">
                                                             <i class="bi bi-eye-fill me-1"></i> View
                                                         </button>
@@ -122,60 +124,60 @@ design. --}}
             </div>
 
             @if(!$isHistory)
-            {{-- Payment Status panel — queue view only --}}
-            <div class="ot-inner-panel">
-                <div class="ot-card-header">
-                    <div class="ot-title-wrap">
-                        <span class="ot-title-icon" aria-hidden="true">
-                            <i class="bi bi-shield-check" style="font-size: 1.2rem;"></i>
-                        </span>
-                        <div class="flex-grow-1">
-                            <h5 class="ot-title">Payment Status</h5>
+                {{-- Payment Status panel — queue view only --}}
+                <div class="ot-inner-panel">
+                    <div class="ot-card-header">
+                        <div class="ot-title-wrap">
+                            <span class="ot-title-icon" aria-hidden="true">
+                                <i class="bi bi-shield-check" style="font-size: 1.2rem;"></i>
+                            </span>
+                            <div class="flex-grow-1">
+                                <h5 class="ot-title">Payment Status</h5>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="card-body p-0">
-                    <div class="ot-table-wrap">
-                        <div id="otPaymentStatusTableContainer">
-                            <table class="otCounselling-table" id="otPaymentStatusTable" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Phone</th>
-                                        <th>Package Amount</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($paymentVerificationQueue as $booking)
+                    <div class="card-body p-0">
+                        <div class="ot-table-wrap">
+                            <div id="otPaymentStatusTableContainer">
+                                <table class="otCounselling-table" id="otPaymentStatusTable" style="width:100%">
+                                    <thead>
                                         <tr>
-                                            <td><span class="ot-patient-cell"><i
-                                                        class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
-                                            </td>
-                                            <td>{{ $booking->patient?->contact_no ?? '-' }}</td>
-                                            <td>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</td>
-                                            <td>
-                                                @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_PAID)
-                                                    <span class="ot-pay-badge ot-pay-pending">Paid</span>
-                                                @else
-                                                    <span class="ot-pay-badge ot-pay-paid">Paid</span>
-                                                @endif
-                                            </td>
+                                            <th>Patient</th>
+                                            <th>Phone</th>
+                                            <th>Package Amount</th>
+                                            <th>Status</th>
                                         </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="4" class="text-center ot-empty">
-                                                <i class="bi bi-inbox me-1"></i> No bookings paid yet.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($paymentVerificationQueue as $booking)
+                                            <tr>
+                                                <td><span class="ot-patient-cell"><i
+                                                            class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
+                                                </td>
+                                                <td>{{ $booking->patient?->contact_no ?? '-' }}</td>
+                                                <td>{{ money_code((float) ($booking->package_amount ?? 0), 2) }}</td>
+                                                <td>
+                                                    @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_PAID)
+                                                        <span class="ot-pay-badge ot-pay-pending">Paid</span>
+                                                    @else
+                                                        <span class="ot-pay-badge ot-pay-paid">Paid</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center ot-empty">
+                                                    <i class="bi bi-inbox me-1"></i> No bookings paid yet.
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
             @endif
         </div>
     </div>
@@ -189,9 +191,9 @@ design. --}}
     @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
-                            OT Counsellor Dashboard — design refresh (hospital shell theme, #1B4F72).
-                            Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                        */
+                                OT Counsellor Dashboard — design refresh (hospital shell theme, #1B4F72).
+                                Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                            */
 
         .ot-counsellor-page {
             --ot-secondary: #1B4F72;
@@ -556,6 +558,97 @@ design. --}}
             margin-top: 0;
         }
 
+        .ocp-modal {
+            --ocp-border: rgba(27, 79, 114, .12);
+        }
+
+        .ocp-modal .ocp-modal-dialog {
+            max-width: 640px;
+            margin: .75rem auto;
+        }
+
+        .ocp-modal .modal-content {
+            border: 1px solid var(--ocp-border);
+            border-radius: 14px;
+            box-shadow: 0 18px 48px rgba(27, 79, 114, .18);
+        }
+
+        .ocp-modal .modal-header {
+            padding: .8rem 1rem;
+            background: linear-gradient(135deg, #174562, #1b4f72);
+        }
+
+        .ocp-modal .modal-title {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            font-size: .98rem;
+            line-height: 1.25;
+        }
+
+        .ocp-modal .modal-title i {
+            flex: 0 0 auto;
+            color: #9ed8df;
+        }
+
+        .ocp-modal .modal-body {
+            padding: .9rem 1rem 1rem;
+            background: #f7fbfe;
+        }
+
+        .ocp-modal .ocp-section-title {
+            margin: .85rem 0 .45rem;
+            font-size: .68rem;
+        }
+
+        .ocp-modal .ocp-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .ocp-modal .ocp-steps {
+            gap: .55rem;
+        }
+
+        .ocp-modal .ocp-step {
+            gap: .55rem;
+            padding: .6rem .7rem;
+            border-radius: 9px;
+        }
+
+        .ocp-modal .ocp-step-icon {
+            font-size: 1.05rem;
+        }
+
+        .ocp-modal .ocp-step-label {
+            font-size: .8rem;
+        }
+
+        .ocp-modal .ocp-step-state,
+        .ocp-modal .ocp-step-meta {
+            font-size: .7rem;
+        }
+
+        .ocp-modal .ot-desk-modal-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .5rem;
+        }
+
+        .ocp-modal .ot-desk-modal-field {
+            min-width: 0;
+            padding: .55rem .65rem;
+            border-radius: 9px;
+        }
+
+        .ocp-modal .ot-desk-modal-label {
+            margin-bottom: .2rem;
+            font-size: .61rem;
+        }
+
+        .ocp-modal .ot-desk-modal-value {
+            font-size: .78rem;
+            line-height: 1.3;
+        }
+
         .ocp-steps {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -624,6 +717,20 @@ design. --}}
             .ocp-steps {
                 grid-template-columns: 1fr;
             }
+
+            .ocp-modal .ocp-modal-dialog {
+                margin: .5rem .75rem;
+            }
+
+            .ocp-modal .ot-desk-modal-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 380px) {
+            .ocp-modal .ot-desk-modal-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .ot-empty {
@@ -688,8 +795,8 @@ design. --}}
 
             initOtTable('#otCounsellingTable', @json(($activeFilter ?? 'queue') === 'history' ? 'No counselled patients in this date range.' : 'No bookings awaiting counselling.'));
             @if(($activeFilter ?? 'queue') !== 'history')
-            initOtTable('#otPaymentStatusTable', 'No bookings paid yet.');
+                initOtTable('#otPaymentStatusTable', 'No bookings paid yet.');
             @endif
-        });
+            });
     </script>
 @endpush
