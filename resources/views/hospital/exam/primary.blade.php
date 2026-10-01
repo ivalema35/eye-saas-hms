@@ -647,6 +647,17 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-diagnosis" data-bs-toggle="modal" data-bs-target="#modalDiagnosis">Diagnosis</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-rx" data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn" id="btn-advice" data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
+
+                <hr>
+                @haspermission('ot_surgery_recommend')
+                    <button type="button" class="btn fw-bold w-100 text-white"
+                        style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
+                        data-bs-toggle="modal"
+                        data-bs-target="#recommendSurgeryModal">
+                        <i class="bi bi-hospital me-1"></i> Surgery Recommendation
+                    </button>
+                @endhaspermission
+                <button type="submit" class="btn btn-success fw-bold w-100 mt-2">SAVE</button>
             </div>
 
             <div class="main-canvas">
@@ -743,6 +754,14 @@ $prescriptions = $exam?->prescriptions ?? collect();
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-rx"        data-bs-toggle="modal" data-bs-target="#modalRx">Medicine</button>
                 <button type="button" class="btn btn-outline-secondary step-btn btn-sm" id="btn-advice"    data-bs-toggle="modal" data-bs-target="#modalAdvice">Advice</button>
             </div>
+            @haspermission('ot_surgery_recommend')
+                <button type="button" class="btn btn-sm fw-bold px-3 text-white"
+                        style="background:var(--color-primary, #1B4F72);border-color:var(--color-primary, #1B4F72);"
+                        data-bs-toggle="modal" data-bs-target="#recommendSurgeryModal">
+                    <i class="bi bi-hospital me-1"></i> Recommend Surgery
+                </button>
+            @endhaspermission
+            <button type="submit" class="btn btn-success fw-bold px-4 btn-sm">Save Exam</button>
         </div>
 
 
@@ -5138,5 +5157,7 @@ if (!document.documentElement.classList.contains('exam-inline')) {
     input.addEventListener('blur', cancelEdit);
 })();
 </script>
+
+@include('hospital.exam._recommend_surgery_modal')
 
 @endsection

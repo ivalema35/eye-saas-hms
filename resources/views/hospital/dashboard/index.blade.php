@@ -209,10 +209,10 @@
         }
 
         /*
-                      Hospital Admin Dashboard Theme
-                      Primary soft: #EBF5FB · Secondary: #1B4F72
-                      Hover: soft neutral shadow (no blue glow)
-                    */
+                          Hospital Admin Dashboard Theme
+                          Primary soft: #EBF5FB · Secondary: #1B4F72
+                          Hover: soft neutral shadow (no blue glow)
+                        */
 
         /* ── Theme tokens (scoped to this page) ────────────────────────────────── */
         .bento-page {
@@ -534,8 +534,8 @@
         }
 
         /* Type-colored icon badges — same idea as the receptionist 5-card row:
-                       each stat gets a pastel background tinted to match its own icon color
-                       (set inline per-icon), instead of one flat neutral tone. */
+                           each stat gets a pastel background tinted to match its own icon color
+                           (set inline per-icon), instead of one flat neutral tone. */
         .ig-blue {
             background: #EBF5FB !important;
             border: 1px solid rgba(27, 79, 114, .18) !important;
@@ -883,22 +883,22 @@
         }
 
         /* .dashboard-table-scroll .bento-table {
-                        min-width: 980px;
-                        width: max-content;
-                        width: -moz-max-content;
-                    } */
+                            min-width: 980px;
+                            width: max-content;
+                            width: -moz-max-content;
+                        } */
 
         /* .dashboard-table-scroll .bento-table thead th {
-                        position: sticky;
-                        top: 0;
-                        z-index: 2;
-                        background: var(--dash-secondary);
-                    } */
+                            position: sticky;
+                            top: 0;
+                            z-index: 2;
+                            background: var(--dash-secondary);
+                        } */
 
         /* .dashboard-table-scroll .bento-table thead th:first-child {
-                        left: 0;
-                        z-index: 3;
-                    } */
+                            left: 0;
+                            z-index: 3;
+                        } */
 
         .rec-detail-btn {
             display: inline-flex;
@@ -1524,25 +1524,6 @@
         $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
     @endphp
 
-    {{-- Subscription alert — hospital admin only --}}
-    @if($isHospitalAdmin)
-        @if($subscriptionDaysLeft !== null && $subscriptionDaysLeft <= 30)
-            <a href="{{ route('hospital.subscription.index', ['slug' => $slug]) }}"
-                class="bento-alert bento-alert-link {{ $subscriptionDaysLeft <= 3 ? 'bento-alert-danger' : 'bento-alert-warn' }}">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span>
-                    @if($subscriptionDaysLeft <= 0)
-                        Your subscription has <strong>expired</strong>. Please renew now.
-                    @else
-                        Subscription expires in <strong>{{ $subscriptionDaysLeft }}
-                            day{{ $subscriptionDaysLeft === 1 ? '' : 's' }}</strong>. Please renew soon.
-                    @endif
-                </span>
-                <i class="fa-solid fa-chevron-right bento-alert-arrow"></i>
-            </a>
-        @endif
-    @endif
-
     {{-- ────────────────────────────────────────────────────────────────────────
     FALLBACK: No dashboard permissions
     ──────────────────────────────────────────────────────────────────────────── --}}
@@ -2157,18 +2138,18 @@
                 </div>
             </a>
             <!-- <a href="#counsellingPanel" data-acc-tab="history" class="bento-card span-2 text-decoration-none acc-tab-card">
-                    <span class="bento-gloss" aria-hidden="true"></span>
-                    <div class="bento-stat">
-                        <div class="bento-icon ig-green">
-                            <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                        <span class="bento-gloss" aria-hidden="true"></span>
+                        <div class="bento-stat">
+                            <div class="bento-icon ig-green">
+                                <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                            </div>
+                            <div>
+                                <p class="metric-label">Completed</p>
+                                <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
+                                <p class="metric-meta">Counselled &amp; onward</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="metric-label">Completed</p>
-                            <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
-                            <p class="metric-meta">Counselled &amp; onward</p>
-                        </div>
-                    </div>
-                </a> -->
+                    </a> -->
             <a href="#counsellingPanel" data-acc-tab="payments" class="bento-card span-2 text-decoration-none acc-tab-card">
                 <span class="bento-gloss" aria-hidden="true"></span>
                 <div class="bento-stat">
@@ -2876,9 +2857,9 @@
             <div class="col-12">
                 <div class="tap-table-wrap">
                     <!-- <div class="tap-header">
-                                    <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
-                                    <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
-                                </div> -->
+                                        <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                                        <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+                                    </div> -->
                     <div class="tap-header">
                         <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
 
@@ -2886,7 +2867,8 @@
                             id="today-patients-form" class="d-flex gap-2">
                             <div class="input-group">
                                 <input type="text" name="search_contact" value="{{ request('search_contact') }}"
-                                    class="form-control form-control-sm" placeholder="Search by name or mobile..." autocomplete="off">
+                                    class="form-control form-control-sm" placeholder="Search by name or mobile..."
+                                    autocomplete="off">
                                 <button type="submit" class="btn btn-sm btn-primary"><i class="bi bi-search"></i></button>
                                 @if(request('search_contact'))
                                     <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}"
