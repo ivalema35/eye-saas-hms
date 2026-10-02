@@ -499,6 +499,78 @@ class OtAccountantApiController extends Controller
         ], 201);
     }
 
+    /**
+     * Collected vs refunded report — same numbers and rows as
+     * OtAccountantController::moneyReport().
+     */
+    public function moneyReport(Request $request): JsonResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $today = now()->toDateString();
+        $start = (string) ($request->input('start_date') ?: $today);
+        $end = (string) ($request->input('end_date') ?: $start);
+        if ($end < $start) {
+            [$start, $end] = [$end, $start];
+        }
+
+        $collected = (float) OtPayment::query()
+            ->where('tenant_id', $tenantId)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->sum('package_amount');
+
+        $refunded = (float) OtRefund::query()
+            ->where('tenant_id', $tenantId)
+            ->whereDate('refunded_at', '>=', $start)
+            ->whereDate('refunded_at', '<=', $end)
+            ->sum('amount');
+
+        $payments = OtPayment::query()
+            ->with(['booking.patient:id,first_name,middle_name,last_name'])
+            ->where('tenant_id', $tenantId)
+            ->whereDate('paid_at', '>=', $start)
+            ->whereDate('paid_at', '<=', $end)
+            ->orderByDesc('paid_at')
+            ->limit(200)
+            ->get()
+            ->map(fn (OtPayment $payment) => [
+                'at' => optional($payment->paid_at)?->toIso8601String(),
+                'patient' => $payment->booking?->patient?->full_name ?? '—',
+                'amount' => (float) $payment->package_amount,
+                'mode' => strtoupper((string) $payment->payment_mode),
+            ])
+            ->values();
+
+        $refunds = OtRefund::query()
+            ->with(['booking.patient:id,first_name,middle_name,last_name'])
+            ->where('tenant_id', $tenantId)
+            ->whereDate('refunded_at', '>=', $start)
+            ->whereDate('refunded_at', '<=', $end)
+            ->orderByDesc('refunded_at')
+            ->limit(200)
+            ->get()
+            ->map(fn (OtRefund $refund) => [
+                'at' => optional($refund->refunded_at)?->toIso8601String(),
+                'patient' => $refund->booking?->patient?->full_name ?? '—',
+                'amount' => (float) $refund->amount,
+                'mode' => strtoupper((string) $refund->payment_mode),
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'start_date' => $start,
+                'end_date' => $end,
+                'collected' => $collected,
+                'refunded' => $refunded,
+                'net' => round($collected - $refunded, 2),
+                'payments' => $payments,
+                'refunds' => $refunds,
+            ],
+        ]);
+    }
+
     private function generateUniqueInvoiceNumber(int $tenantId): string
     {
         do {

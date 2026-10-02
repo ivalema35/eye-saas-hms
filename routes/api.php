@@ -285,6 +285,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('/dashboard/doctor-ot', [DashboardDrillDownApiController::class, 'doctorOtIndex'])
                         ->name('dashboard.doctor-ot')
                         ->middleware('permission:exam_secondary|ot_patient_list|ot_surgery_recommend');
+                    Route::get('/dashboard/ot-patients', [DashboardDrillDownApiController::class, 'doctorOtDeskIndex'])
+                        ->name('dashboard.ot-patients')
+                        ->middleware('permission:dashboard_clinical|exam_primary|exam_secondary|ot_patient_list|ot_surgery_recommend');
                     Route::post('/dashboard/doctor-ot/{bookingId}/assign-assistant', [DashboardDrillDownApiController::class, 'doctorOtAssignAssistant'])
                         ->name('dashboard.doctor-ot.assign-assistant')
                         ->whereNumber('bookingId')
@@ -648,6 +651,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     Route::get('ot/accountant/bookings', [OtAccountantApiController::class, 'bookings'])
                         ->name('ot.accountant.bookings')
                         ->middleware('permission:ot_payment_record|ot_counselling_fill');
+                    Route::get('ot/accountant/money', [OtAccountantApiController::class, 'moneyReport'])
+                        ->name('ot.accountant.money')
+                        ->middleware('permission:ot_payment_record');
 
                     Route::prefix('ot/bookings/{id}')->whereNumber('id')->group(function () {
                         Route::get('payment-status', [OtAccountantApiController::class, 'paymentStatus'])

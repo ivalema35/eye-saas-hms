@@ -327,9 +327,20 @@ class DashboardDrillDownApiController extends Controller
         [$startDate, $endDate] = $this->resolvedDates($request);
         $doctorId = $request->filled('doctor_id') ? (int) $request->input('doctor_id') : null;
 
+        $consultOnly = $request->input('queue') === 'consult';
+
         $query = OtBooking::query()
-            ->with(['patient:id,first_name,middle_name,last_name,contact_no,age', 'otDoctor:id,name', 'otAssistant:id,name', 'preOp'])
-            ->where(function ($q) use ($startDate, $endDate) {
+            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender', 'otDoctor:id,name', 'otAssistant:id,name', 'preOp']);
+
+        if ($consultOnly) {
+            // Same as web DoctorOtListController when OP is clicked: the open
+            // ward→doctor consult queue, not the date-filtered OT list.
+            $query->doctorConsultationPending();
+            if ($doctorId) {
+                $query->where('ot_doctor_id', $doctorId);
+            }
+        } else {
+            $query->where(function ($q) use ($startDate, $endDate) {
                 $q->whereBetween(DB::raw('DATE(surgery_date)'), [$startDate, $endDate])
                     ->orWhere(function ($nullDate) use ($startDate, $endDate) {
                         $today = now()->toDateString();
@@ -344,13 +355,14 @@ class DashboardDrillDownApiController extends Controller
                     });
             });
 
-        if ($doctorId) {
-            $query->where(function ($q) use ($doctorId) {
-                $q->where('ot_doctor_id', $doctorId)
-                    ->orWhere(function ($inner) use ($doctorId) {
-                        $inner->whereNull('ot_doctor_id')->where('booked_by', $doctorId);
-                    });
-            });
+            if ($doctorId) {
+                $query->where(function ($q) use ($doctorId) {
+                    $q->where('ot_doctor_id', $doctorId)
+                        ->orWhere(function ($inner) use ($doctorId) {
+                            $inner->whereNull('ot_doctor_id')->where('booked_by', $doctorId);
+                        });
+                });
+            }
         }
 
         $bookings = $query->orderByDesc('surgery_date')->orderByDesc('id')->paginate((int) $request->integer('per_page', 25));
@@ -539,6 +551,38 @@ class DashboardDrillDownApiController extends Controller
             'success' => true,
             'data' => $patients,
             'meta' => ['start_date' => $startDate, 'end_date' => $endDate, 'collection' => $collection],
+        ]);
+    }
+
+    /**
+     * Doctor dashboard "OT Patients" button — counselling through OT Assistant.
+     * Same query as DoctorOtListController::deskPatients().
+     */
+    public function doctorOtDeskIndex(Request $request): JsonResponse
+    {
+        [$startDate, $endDate] = $this->resolvedDates($request);
+
+        $bookings = OtBooking::query()
+            ->with([
+                'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender',
+                'otDoctor:id,name',
+            ])
+            ->betweenCounsellingAndAssistant($startDate, $endDate)
+            ->orderByRaw(
+                'CASE ot_status WHEN ? THEN 1 WHEN ? THEN 2 WHEN ? THEN 3 WHEN ? THEN 4 WHEN ? THEN 5 WHEN ? THEN 6 WHEN ? THEN 7 WHEN ? THEN 8 ELSE 9 END',
+                OtBooking::counsellingToAssistantStatuses()
+            )
+            ->orderByDesc('id')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $bookings,
+            'meta' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'total' => $bookings->count(),
+            ],
         ]);
     }
 
