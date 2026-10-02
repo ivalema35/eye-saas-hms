@@ -34,8 +34,9 @@ class OtCounsellorApiController extends Controller
     public function bookings(Request $request): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
-        $activeFilter = $this->resolveOtDeskFilter($request);
+        $activeFilter = $this->resolveOtDeskFilter($request, ['queue', 'history', 'payments']);
         $isHistory = $activeFilter === 'history';
+        $isPayments = $activeFilter === 'payments';
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
 
         // Web pull 2026-09-30 — the "View" button's read-only patient detail
@@ -59,7 +60,20 @@ class OtCounsellorApiController extends Controller
                 'payments',
             ]);
 
-        if ($isHistory) {
+        if ($isPayments) {
+            // Home desk + counsellor Payment Status. Same statuses as
+            // OtCounsellorController's payment queue and the dashboard
+            // counselling panel. No date clamp.
+            $query->whereIn('ot_status', [
+                OtBooking::STATUS_PAID,
+                OtBooking::STATUS_PAYMENT_VERIFIED,
+                OtBooking::STATUS_IN_WARD,
+                OtBooking::STATUS_DILATED,
+                OtBooking::STATUS_READY,
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ])->orderBy('surgery_date')->orderByDesc('id');
+        } elseif ($isHistory) {
             $query->whereIn('ot_status', [
                 OtBooking::STATUS_COUNSELLED,
                 OtBooking::STATUS_PAID,

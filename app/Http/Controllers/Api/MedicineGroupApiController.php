@@ -12,15 +12,27 @@ use App\Models\Hospital\MedicineRoute;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class MedicineGroupApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $groups = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route', 'diagnosis'])
-            ->withCount('items')
-            ->latest()
-            ->paginate(25);
+        $scope = $request->query('scope');
+        $groupsQuery = MedicineGroup::with(['items.medicine', 'items.dosage', 'items.route', 'diagnosis'])
+            ->withCount('items');
+        if ($scope === 'ot') {
+            $groupsQuery->whereIn('usage_scope', ['ot', 'both']);
+        } elseif ($scope === 'opd') {
+            $groupsQuery->where(function ($q) {
+                $q->whereNull('usage_scope')->orWhereIn('usage_scope', ['opd', 'both']);
+            });
+        } else {
+            $groupsQuery->where(function ($q) {
+                $q->whereNull('usage_scope')->orWhere('usage_scope', '!=', 'ward');
+            });
+        }
+        $groups = $groupsQuery->latest()->paginate(25);
 
         return response()->json([
             'success' => true,
@@ -62,6 +74,7 @@ class MedicineGroupApiController extends Controller
             'name'                => ['required', 'string', 'max:255'],
             'group_code'          => ['nullable', 'string', 'max:50'],
             'diagnosis_id'        => ['nullable', 'exists:tbl_master_diagnosis,id'],
+            'usage_scope'         => ['required', Rule::in(['opd', 'ot'])],
             'items'               => ['required', 'array', 'min:1'],
             'items.*.medicine_id' => ['required', 'exists:medicines,id'],
             'items.*.dosage_id'   => ['nullable', 'exists:dosages,id'],
@@ -75,6 +88,7 @@ class MedicineGroupApiController extends Controller
                 'name'         => $request->name,
                 'group_code'   => $request->group_code ?? null,
                 'diagnosis_id' => $request->diagnosis_id ?: null,
+                'usage_scope'  => $request->usage_scope,
             ]);
 
             MedicineGroupItem::insert($this->buildItems($request->items, $g->id));
@@ -93,6 +107,7 @@ class MedicineGroupApiController extends Controller
             'name'                => ['required', 'string', 'max:255'],
             'group_code'          => ['nullable', 'string', 'max:50'],
             'diagnosis_id'        => ['nullable', 'exists:tbl_master_diagnosis,id'],
+            'usage_scope'         => ['required', Rule::in(['opd', 'ot'])],
             'items'               => ['required', 'array', 'min:1'],
             'items.*.medicine_id' => ['required', 'exists:medicines,id'],
             'items.*.dosage_id'   => ['nullable', 'exists:dosages,id'],
@@ -106,6 +121,7 @@ class MedicineGroupApiController extends Controller
                 'name'         => $request->name,
                 'group_code'   => $request->group_code ?? null,
                 'diagnosis_id' => $request->diagnosis_id ?: null,
+                'usage_scope'  => $request->usage_scope,
             ]);
 
             $group->items()->delete();
@@ -147,6 +163,7 @@ class MedicineGroupApiController extends Controller
             'name'         => $g->name,
             'group_code'   => $g->group_code,
             'diagnosis_id' => $g->diagnosis_id,
+            'usage_scope'  => $g->usage_scope ?: 'opd',
             'diagnosis'    => $g->diagnosis ? ['id' => $g->diagnosis->id, 'value' => $g->diagnosis->value] : null,
             'items_count'  => $g->items_count ?? $g->items->count(),
             'items'        => $g->items->map(fn ($item) => [
