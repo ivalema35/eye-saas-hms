@@ -243,7 +243,11 @@ class PatientApiController extends Controller
      */
     public function quickUpdatePersonal(string $slug, Request $request, Patient $patient): JsonResponse
     {
-        abort_unless($request->user()?->role?->slug === 'doctor', 403);
+        abort_unless(
+            $request->user()?->role?->slug === 'doctor',
+            403,
+            'Only a doctor can update these patient details.',
+        );
 
         $rawPhone = (string) $request->input('contact_no', '');
         $plus = str_starts_with(trim($rawPhone), '+');
