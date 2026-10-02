@@ -70,6 +70,7 @@ class OtBookingController extends Controller
                     Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
                 ],
                 'diagnosis_hint' => ['nullable', 'string', 'max:255'],
+                'dilation_time' => ['nullable', 'integer', 'min:1', 'max:180'],
             ]
         ));
 
@@ -118,7 +119,20 @@ class OtBookingController extends Controller
             ->all();
 
         $examData = $validated['exam_data'] ?? [];
-        app(ExaminationService::class)->saveSecondaryExam(
+        $examinationService = app(ExaminationService::class);
+
+        // The primary page can finish both exams. Stamp primary as well, otherwise
+        // primary_done_at stays empty and the patient remains on the Primary list.
+        $examinationService->savePrimary(
+            $patient,
+            (int) $validated['doctor_id'],
+            $examData,
+            $medicines,
+            $tenantId,
+            ! empty($validated['dilation_time']) ? (int) $validated['dilation_time'] : null
+        );
+
+        $examinationService->saveSecondaryExam(
             $patient,
             (int) $validated['doctor_id'],
             $examData,

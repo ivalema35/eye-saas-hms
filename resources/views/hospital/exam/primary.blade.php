@@ -1239,50 +1239,87 @@ $pgMasterOpts = [
         </div>
     </div>
 
-    {{-- MODAL: PG Value Picker --}}
+    {{-- MODAL: PG / ST value picker (positive or negative) --}}
     <div class="modal fade" id="modalPGPicker" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="width:70%;max-width:70%;">
-            <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-                <div class="modal-header py-2 px-4" style="background:#1B4F72;">
-                    <h6 class="modal-title text-white fw-bold mb-0 fs-6" id="pgPickerTitle">Select Value</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered pg-val-dialog">
+            <div class="modal-content pg-val-modal" id="pgPickerShell" data-sign="neg">
+                <div class="pg-val-head">
+                    <span class="pg-val-sign" id="pgPickerKicker">−</span>
+                    <div class="pg-val-head-text">
+                        <h6 class="pg-val-title" id="pgPickerTitle">Negative</h6>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4" style="background:#f8fafc;">
-                    <div id="pgPickerGrid" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;justify-items:stretch;align-items:stretch;max-height:340px;overflow-y:auto;" class="mb-4"></div>
-                    <div class="d-flex align-items-center gap-3 px-4 py-3 rounded-3" style="background:white;border:1px solid #dde3ea;box-shadow:0 1px 4px rgba(0,0,0,.05);">
-                        <div class="d-flex flex-column align-items-center gap-1" style="min-width:90px;">
-                            <span style="font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;font-weight:600;">Selected</span>
-                            <span id="pgPickerCurrent" class="fw-bold px-3 py-1 rounded-2 text-center" style="font-size:18px;color:white;background:#1B4F72;min-width:80px;letter-spacing:.02em;">—</span>
-                        </div>
-                        <div style="width:1px;height:44px;background:#e2e8f0;"></div>
-                        <button type="button" class="btn btn-sm btn-danger d-flex align-items-center gap-1" id="pgPickerClear" style="border-radius:8px;font-size:12px;font-weight:600;padding:6px 14px;">
-                             Clear
-                        </button>
-                        <div class="ms-auto d-flex align-items-center gap-2">
-                            <div class="input-group" style="width:200px;">
-                                <span class="input-group-text" style="background:#f0f4f8;border-color:#1B4F72;color:#1B4F72;font-size:11px;font-weight:700;letter-spacing:.05em;">CUSTOM</span>
-                                <input type="number" id="pgPickerManual" class="form-control" step="0.25" style="border-color:#1B4F72;font-size:13px;font-weight:600;" placeholder="e.g. −3.75">
-                            </div>
-                            <button type="button" class="btn btn-primary d-flex align-items-center gap-1 px-3" id="pgPickerSaveManual" style="background:#1B4F72;border-color:#1B4F72;border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap;">
-                                 Apply
-                            </button>
-                        </div>
+                <div class="pg-val-body">
+                    <div id="pgPickerGrid" class="pg-val-groups"></div>
+                    <div class="pg-val-bar">
+                        <input type="number" id="pgPickerManual" step="0.25" placeholder="Custom value">
+                        <button type="button" id="pgPickerSaveManual">Apply</button>
+                        <button type="button" id="pgPickerClear">Clear</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    <style>
+        .pg-val-dialog { width: 640px; max-width: calc(100vw - 1.5rem); margin: .75rem auto; }
+        .pg-val-modal { border: 0; border-radius: 18px; overflow: hidden; box-shadow: 0 18px 42px rgba(27,79,114,.24); }
+        .pg-val-head { display: flex; align-items: center; gap: .7rem; padding: .7rem .8rem; background: #1B4F72; color: #fff; }
+        .pg-val-sign {
+            width: 28px; height: 28px; border-radius: 14px; flex: 0 0 auto;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: #EBF5FB; color: #1B4F72; font-size: 1.6rem; font-weight: 800; line-height: 1;
+        }
+        .pg-val-head-text { flex: 1; min-width: 0; }
+        .pg-val-title { margin: 0; color: #fff; font-weight: 800; font-size: 1rem; }
+        .pg-val-body { background: #EBF5FB; padding: .7rem; }
+        .pg-val-groups {
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: .4rem;
+            overflow: visible;
+        }
+        .pg-picker-chip {
+            border: 1px solid rgba(27,79,114,.16); background: #fff; color: #1B4F72;
+            border-radius: 10px; min-height: 38px; padding: 0 .15rem;
+            font-weight: 800; font-size: .82rem; cursor: pointer;
+            box-shadow: 0 1px 0 rgba(27,79,114,.06);
+        }
+        .pg-picker-chip:hover { background: #fff; border-color: #1B4F72; }
+        .pg-picker-chip.is-selected, .pg-picker-chip.is-selected:hover {
+            background: #1B4F72; border-color: #1B4F72; color: #fff;
+        }
+        .pg-val-bar { display: flex; gap: .35rem; margin-top: .55rem; }
+        .pg-val-bar input {
+            flex: 1; min-width: 0; border: 1px solid rgba(27,79,114,.2); border-radius: 10px;
+            background: #fff; color: #1B4F72; font-weight: 700; font-size: .82rem; padding: .42rem .55rem;
+        }
+        .pg-val-bar input:focus { outline: none; border-color: #1B4F72; box-shadow: 0 0 0 .15rem rgba(27,79,114,.15); }
+        #pgPickerSaveManual, #pgPickerClear, #axisPickerSaveManual, #axisPickerClear {
+            border-radius: 10px; font-weight: 800; font-size: .78rem; padding: .42rem .7rem; white-space: nowrap;
+        }
+        #pgPickerSaveManual, #axisPickerSaveManual { background: #1B4F72; color: #fff; border: 0; }
+        #pgPickerSaveManual:hover, #axisPickerSaveManual:hover { background: #154360; }
+        #pgPickerClear, #axisPickerClear { background: #fff; color: #1B4F72; border: 1px solid rgba(27,79,114,.22); }
+        #pgPickerClear:hover, #axisPickerClear:hover { background: #fff; }
+    </style>
 
-    {{-- MODAL: Axis Picker --}}
+    {{-- MODAL: Axis Picker — same card as the SPH/CYL value picker --}}
     <div class="modal fade" id="modalAxisPicker" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="border:none;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-                <div class="modal-header py-2 px-4" style="background:#1B4F72;">
-                    <h6 class="modal-title text-white fw-bold mb-0 fs-6 text-uppercase">AXIS</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-dialog modal-dialog-centered pg-val-dialog">
+            <div class="modal-content pg-val-modal">
+                <div class="pg-val-head">
+                    <!-- <span class="pg-val-sign">°</span> -->
+                    <div class="pg-val-head-text">
+                        <h6 class="pg-val-title">Axis</h6>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-3" style="background:#fff;">
-                    <div id="axisPickerGrid" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;padding:4px;"></div>
+                <div class="pg-val-body">
+                    <div id="axisPickerGrid" class="pg-val-groups"></div>
+                    <div class="pg-val-bar">
+                        <input type="number" id="axisPickerManual" min="0" max="180" step="1" placeholder="Custom">
+                        <button type="button" id="axisPickerSaveManual">Apply</button>
+                        <button type="button" id="axisPickerClear">Clear</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3983,55 +4020,35 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (!inp) return;
             pgPickTarget = { inp, hid };
 
-            // Title
-            const colHeader = btn.closest('td')?.previousElementSibling?.previousElementSibling;
-            const fieldName = '';
-            document.getElementById('pgPickerTitle').textContent = sign === 'pos' ? '+ Positive Values' : '− Negative Values';
+            const shell = document.getElementById('pgPickerShell');
+            if (shell) shell.dataset.sign = sign === 'pos' ? 'pos' : 'neg';
+            const kicker = document.getElementById('pgPickerKicker');
+            if (kicker) kicker.textContent = sign === 'pos' ? '+' : '−';
+            document.getElementById('pgPickerTitle').textContent = sign === 'pos' ? 'Positive' : 'Negative';
 
-            // Build grid
             const grid = document.getElementById('pgPickerGrid');
             grid.innerHTML = '';
             const cur = String(inp.value || '').trim();
+            function pgChip(fmt) {
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'pg-picker-chip' + (cur === fmt ? ' is-selected' : '');
+                chip.textContent = fmt;
+                chip.dataset.val = fmt;
+                return chip;
+            }
+            const nums = [0];
             const masterVals = @json($pgMasterOpts['sph_cyl']);
             masterVals.forEach(function (rawVal) {
                 const num = parseFloat(rawVal);
                 if (isNaN(num) || num <= 0) return;
-                const v   = num.toFixed(2);
-                const fmt = sign === 'pos' ? '+' + v : '-' + v;
-                const chip = document.createElement('button');
-                chip.type = 'button';
-                chip.className = 'pg-picker-chip';
-                chip.textContent = fmt;
-                chip.dataset.val = fmt;
-                if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
-                } else {
-                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
-                }
-                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
-                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
-                grid.appendChild(chip);
+                nums.push(num);
+            });
+            nums.sort(function (a, b) { return a - b; }).forEach(function (num) {
+                const fmt = num === 0 ? '0.00' : (sign === 'pos' ? '+' : '-') + num.toFixed(2);
+                grid.appendChild(pgChip(fmt));
             });
 
-            // Always show 0.00 as last chip
-            (function () {
-                const fmt  = '0.00';
-                const chip = document.createElement('button');
-                chip.type = 'button';
-                chip.className = 'pg-picker-chip';
-                chip.textContent = fmt;
-                chip.dataset.val = fmt;
-                if (cur === fmt) {
-                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:#e8f1f8;color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
-                } else {
-                    chip.style.cssText = 'width:100%;box-sizing:border-box;padding:10px 4px;font-size:14px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114);background:rgb(255,255,255);color:rgb(27,79,114);cursor:pointer;transition:all .12s;';
-                }
-                chip.addEventListener('mouseover', function () { if (this.dataset.val !== cur) { this.style.background = '#e8f1f8'; } });
-                chip.addEventListener('mouseout',  function () { if (this.dataset.val !== cur) { this.style.background = 'rgb(255,255,255)'; } });
-                grid.appendChild(chip);
-            })();
-
-            document.getElementById('pgPickerCurrent').textContent = cur || '—';
             document.getElementById('pgPickerManual').value = '';
 
             // Bootstrap can't stack two modals — close parent modal first, then open picker
@@ -4077,8 +4094,6 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (!pgPickTarget) return;
             pgPickTarget.inp.value = val;
             if (pgPickTarget.hid) pgPickTarget.hid.value = val;
-            document.getElementById('pgPickerCurrent').textContent = val || '—';
-
             // Sync Axis disabled state when CYL changes
             const hidName = pgPickTarget.hid?.name || '';
             if (hidName.includes('[dc]') || hidName.includes('[nc]')) {
@@ -4163,15 +4178,12 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
         function buildGrid(currentVal) {
             grid.innerHTML = '';
             axisValues.forEach(function (v) {
-                const btn      = document.createElement('button');
-                btn.type       = 'button';
-                btn.className  = 'axis-picker-btn';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isSel = String(currentVal) === String(v);
+                btn.className = 'axis-picker-btn pg-picker-chip' + (isSel ? ' is-selected' : '');
                 btn.textContent = v + '°';
                 btn.dataset.val = String(v);
-                const isSel    = String(currentVal) === String(v);
-                btn.style.cssText = 'width:100%;padding:10px 4px;font-size:13px;font-weight:700;border-radius:8px;border:2px solid rgb(27,79,114)'
-                    + ';background:' + (isSel ? '#e8f1f8' : 'rgb(255,255,255)')
-                    + ';color:rgb(27,79,114);cursor:pointer;transition:background .12s,color .12s,border-color .12s;';
                 grid.appendChild(btn);
             });
         }
@@ -4182,6 +4194,8 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
                 hid: inp.closest('.pg-select-wrap')?.querySelector('input[type="hidden"]'),
             };
             buildGrid(String(inp.value || '').trim().replace('°', ''));
+            const manual = document.getElementById('axisPickerManual');
+            if (manual) manual.value = '';
 
             axisParentModalEl   = inp.closest('.modal');
             const pickerModalEl = document.getElementById('modalAxisPicker');
@@ -4209,11 +4223,37 @@ $__dxAdvices = $masters['advices']->map(fn($a) => ['id' => $a->id, 'advice' => $
             if (typeof updateLivePreview === 'function') updateLivePreview();
         }
 
+        function closeAxisPicker() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAxisPicker')).hide();
+        }
+
         grid.addEventListener('click', function (e) {
             const btn = e.target.closest('.axis-picker-btn');
             if (!btn) return;
             applyAxisVal(btn.dataset.val);
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAxisPicker')).hide();
+            closeAxisPicker();
+        });
+
+        document.getElementById('axisPickerClear')?.addEventListener('click', function () {
+            applyAxisVal('');
+            closeAxisPicker();
+        });
+
+        document.getElementById('axisPickerSaveManual')?.addEventListener('click', function () {
+            const raw = document.getElementById('axisPickerManual').value.trim();
+            if (!raw) return;
+            const num = parseInt(raw, 10);
+            if (isNaN(num) || num < 0 || num > 180) return;
+            applyAxisVal(String(num));
+            closeAxisPicker();
+        });
+
+        document.getElementById('axisPickerManual')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                document.getElementById('axisPickerSaveManual')?.click();
+            }
         });
 
         document.getElementById('modalAxisPicker').addEventListener('hidden.bs.modal', function () {

@@ -123,18 +123,40 @@ class PrimaryExamController extends Controller
             })
             ->all();
 
+        $examData = $data['exam_data'] ?? [];
+
         $this->examinationService->savePrimary(
             $patient,
             (int) $data['doctor_id'],
-            $data['exam_data'] ?? [],
+            $examData,
             $medicines,
             $tenant->id,
             !empty($data['dilation_time']) ? (int) $data['dilation_time'] : null
         );
 
+        $dilated = ($examData['dilate'] ?? 'No') === 'Yes';
+
+        // Primary doctor filled Diagnosis / Medicine / Advice on this page and did not dilate.
+        // That finishes secondary too, so the patient leaves both queues.
+        // Dilate still only completes primary and sends the patient to the secondary queue.
+        if (! $dilated && $this->secondarySectionsFilled($examData, $medicines)) {
+            $this->examinationService->saveSecondaryExam(
+                $patient,
+                (int) $data['doctor_id'],
+                $examData,
+                $medicines,
+                $tenant->id,
+                is_string($examData['advice'] ?? null) ? $examData['advice'] : null
+            );
+
+            return redirect()
+                ->route('hospital.dashboard', ['slug' => $slug])
+                ->with('success', 'Primary and secondary examination saved.');
+        }
+
         // Not dilated → patient proceeds straight to Secondary Exam.
         // Dilated → patient waits out the lock time, so send the exam back to the dashboard.
-        if (($data['exam_data']['dilate'] ?? 'No') === 'Yes') {
+        if ($dilated) {
             return redirect()
                 ->route('hospital.dashboard', ['slug' => $slug])
                 ->with('success', 'Primary examination saved. Patient dilated — return after the lock time.');
@@ -420,5 +442,36 @@ class PrimaryExamController extends Controller
             ->findOrFail($id);
 
         return response()->json($group);
+    }
+
+    /**
+     * Diagnosis, medicine, or advice on the primary page means the primary doctor finished secondary too.
+     *
+     * @param  array<string, mixed>  $examData
+     * @param  array<int, array<string, mixed>>  $medicines
+     */
+    private function secondarySectionsFilled(array $examData, array $medicines): bool
+    {
+        $diagnoses = array_filter(
+            $examData['diagnoses'] ?? [],
+            fn ($value): bool => trim((string) $value) !== ''
+        );
+        if ($diagnoses !== []) {
+            return true;
+        }
+
+        foreach (['advice', 'special_advice'] as $key) {
+            if (trim((string) ($examData[$key] ?? '')) !== '') {
+                return true;
+            }
+        }
+
+        foreach ($medicines as $line) {
+            if (trim((string) ($line['name'] ?? '')) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
