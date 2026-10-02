@@ -143,6 +143,10 @@ class DashboardController extends Controller
         $wardPendingCount = null;
         $otAssistantPendingCount = null;
         $dischargePendingCount = null;
+        $dischargeCompletedCount = null;
+        $wardCompletedCount = null;
+        $otAssistantCompletedCount = null;
+        $otAssistantPeers = [];
         $counsellingPendingCount = null;
         $counsellingPaymentCount = null;
         $canSeeOtWidget = $this->perm->can('dashboard_ot');
@@ -172,15 +176,51 @@ class DashboardController extends Controller
                     OtBooking::STATUS_IN_WARD,
                     OtBooking::STATUS_DILATED,
                 ])->count();
+                // Web ward history card: ready + operated + discharged.
+                $wardCompletedCount = OtBooking::whereIn('ot_status', [
+                    OtBooking::STATUS_READY,
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                ])->count();
             } elseif ($isOtDoctor && ($canSeeOtWidget || $this->perm->can('ot_surgery_ready'))) {
-                $otAssistantReadyQuery = OtBooking::where('ot_status', OtBooking::STATUS_READY);
                 $seeAll = $isAdmin || $roleSlug === 'hospital_admin';
-                if (! $seeAll) {
-                    $otAssistantReadyQuery->where('ot_assistant_id', (int) $authUser->id);
-                }
-                $otAssistantPendingCount = $otAssistantReadyQuery->count();
+                $scopeAssistant = function ($query) use ($seeAll, $authUser) {
+                    if (! $seeAll) {
+                        $query->where('ot_assistant_id', (int) $authUser->id);
+                    }
+
+                    return $query;
+                };
+                $otAssistantPendingCount = $scopeAssistant(OtBooking::where('ot_status', OtBooking::STATUS_READY))->count();
+                $otAssistantCompletedCount = $scopeAssistant(OtBooking::whereIn('ot_status', [
+                    OtBooking::STATUS_OPERATED,
+                    OtBooking::STATUS_DISCHARGED,
+                ]))->count();
+
+                $readyByAssistant = OtBooking::query()
+                    ->where('ot_status', OtBooking::STATUS_READY)
+                    ->whereNotNull('ot_assistant_id')
+                    ->selectRaw('ot_assistant_id, COUNT(*) as assigned_count')
+                    ->groupBy('ot_assistant_id')
+                    ->pluck('assigned_count', 'ot_assistant_id');
+
+                $otAssistantPeers = HospitalUser::query()
+                    ->active()
+                    ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+                    ->where('id', '!=', (int) $authUser->id)
+                    ->orderBy('name')
+                    ->get(['id', 'name'])
+                    ->map(fn (HospitalUser $peer) => [
+                        'id' => (int) $peer->id,
+                        'name' => (string) $peer->name,
+                        'assigned_count' => (int) ($readyByAssistant[$peer->id] ?? $readyByAssistant[(string) $peer->id] ?? 0),
+                    ])
+                    ->values()
+                    ->all();
             } elseif ($roleSlug === 'discharge_counter' && ($canSeeOtWidget || $this->perm->can('ot_billing_manage'))) {
-                $dischargePendingCount = OtBooking::whereIn('ot_status', ['operated', 'discharged', 'OPERATED', 'DISCHARGED'])->count();
+                // Web splits the desk: pending is operated only, completed is discharged.
+                $dischargePendingCount = OtBooking::whereIn('ot_status', [OtBooking::STATUS_OPERATED, 'OPERATED'])->count();
+                $dischargeCompletedCount = OtBooking::whereIn('ot_status', [OtBooking::STATUS_DISCHARGED, 'DISCHARGED'])->count();
             } elseif ($roleSlug === OtBooking::COUNSELLING_ROLE_SLUG && ($canSeeOtWidget || $this->perm->can('ot_counselling_fill'))) {
                 $counsellingPendingCount = OtBooking::query()
                     ->assignedToCounsellor($authUser)
@@ -477,8 +517,12 @@ class DashboardController extends Controller
                 'accountant_refunds_count'    => $accountantRefundsCount,
                 'accountant_completed_count'  => $accountantCompletedCount,
                 'ward_pending_count'          => $wardPendingCount,
+                'ward_completed_count'        => $wardCompletedCount,
                 'ot_assistant_pending_count'  => $otAssistantPendingCount,
+                'ot_assistant_completed_count'=> $otAssistantCompletedCount,
+                'ot_assistant_peers'          => $otAssistantPeers,
                 'discharge_pending_count'     => $dischargePendingCount,
+                'discharge_completed_count'   => $dischargeCompletedCount,
                 'counselling_pending_count'   => $counsellingPendingCount,
                 'counselling_payment_count'   => $counsellingPaymentCount,
             ],
