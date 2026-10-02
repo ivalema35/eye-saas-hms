@@ -70,7 +70,7 @@ class OtBookingApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Patient not found.'], 404);
         }
 
-        $validated = $request->validate([
+        $rules = [
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
             // Doctor + OT Assistant, and OT date/slot, are set later in the OT flow —
             // matches web exactly (OtBookingController::recommendSurgery(), web pull
@@ -81,7 +81,13 @@ class OtBookingApiController extends Controller
                 Rule::exists('ot_surgery_types', 'id')->where(fn ($q) => $q->where('tenant_id', $tenantId)->whereNull('deleted_at')),
             ],
             'diagnosis_hint' => ['nullable', 'string', 'max:255'],
-        ]);
+        ];
+        // Web copies the open exam form into this post and saves both exams
+        // before the booking. Older app builds send only the booking fields.
+        if ($request->filled('doctor_id')) {
+            $rules = array_merge((new \App\Http\Requests\Hospital\Examination\StorePrimaryExamRequest())->rules(), $rules);
+        }
+        $validated = $request->validate($rules);
 
         $surgeryType = DB::table('ot_surgery_types')
             ->where('tenant_id', $tenantId)
@@ -107,6 +113,28 @@ class OtBookingApiController extends Controller
                 'success' => false,
                 'message' => "This patient already has an active OT booking ({$existing->ot_status}). Complete or discharge it before recommending again.",
             ], 422);
+        }
+
+        if (! empty($validated['doctor_id']) && is_array($validated['exam_data'] ?? null)) {
+            $examData = $validated['exam_data'];
+            $medicines = $validated['medicines'] ?? [];
+            $examinationService = app(\App\Services\Hospital\ExaminationService::class);
+            $examinationService->savePrimary(
+                $patient,
+                (int) $validated['doctor_id'],
+                $examData,
+                $medicines,
+                $tenantId,
+                ! empty($validated['dilation_time']) ? (int) $validated['dilation_time'] : null
+            );
+            $examinationService->saveSecondaryExam(
+                $patient,
+                (int) $validated['doctor_id'],
+                $examData,
+                $medicines,
+                $tenantId,
+                is_string($examData['advice'] ?? null) ? $examData['advice'] : null
+            );
         }
 
         // Date/slot and staff are assigned later (counsellor / ward) — not at recommend.
