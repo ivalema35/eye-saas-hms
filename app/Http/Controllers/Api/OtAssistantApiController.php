@@ -251,6 +251,7 @@ class OtAssistantApiController extends Controller
             'lens_type' => ['nullable', Rule::in(self::LENS_TYPES)],
             'estimated_power' => ['nullable', 'numeric', 'between:-99.99,999.99'],
             'lens_cost' => ['nullable', 'numeric', 'min:0'],
+            'lens_implantation' => ['nullable', Rule::in(['yes', 'no'])],
         ], [
             'eye_operated.in' => 'Eye operated must match the eye selected at Recommend Surgery'
                 .($lockedEye ? " ({$lockedEye})." : '.'),
@@ -289,6 +290,9 @@ class OtAssistantApiController extends Controller
                 'lens_type' => $validated['lens_type'] ?? null,
                 'estimated_power' => $validated['estimated_power'] ?? null,
                 'lens_cost' => $validated['lens_cost'] ?? null,
+                'lens_implantation' => array_key_exists('lens_implantation', $validated) && $validated['lens_implantation'] !== null
+                    ? $validated['lens_implantation'] === 'yes'
+                    : null,
                 'updated_at' => now(),
             ];
 

@@ -322,6 +322,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         ->name('patients.next-mrd');
                     Route::get('patients/search-by-contact', [PatientApiController::class, 'searchByContact'])
                         ->name('patients.search-by-contact');
+                    Route::get('patients/phone-history', [PatientApiController::class, 'phoneHistory'])
+                        ->name('patients.phone-history')
+                        ->middleware('permission:patient_register_phone');
                     Route::get('patients', [PatientApiController::class, 'index'])
                         ->name('patients.index')
                         ->middleware('permission:patient_view');

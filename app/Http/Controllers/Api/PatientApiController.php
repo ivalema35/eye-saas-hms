@@ -174,6 +174,68 @@ class PatientApiController extends Controller
     }
 
     /**
+     * Phone appointment history — same filters as the hospital page
+     * (type=phone, optional date range, name or mobile search).
+     */
+    public function phoneHistory(Request $request): JsonResponse
+    {
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+        $search = trim((string) $request->input('search', ''));
+
+        $query = Patient::with([
+            'doctor:id,name',
+            'reception:id,name',
+            'caseType:id,case_type',
+            'masterCity.district',
+            'masterCity.state',
+        ])->where('type', 'phone');
+
+        if ($fromDate) {
+            $query->whereDate('appointment_date', '>=', $fromDate);
+        }
+        if ($toDate) {
+            $query->whereDate('appointment_date', '<=', $toDate);
+        }
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw("TRIM(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name)) like ?", ["%{$search}%"])
+                    ->orWhere('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('contact_no', 'like', "%{$search}%")
+                    ->orWhere('whatsapp_no', 'like', "%{$search}%")
+                    ->orWhere('patient_code', 'like', "%{$search}%");
+            });
+        }
+
+        $patients = $query
+            ->orderByDesc('appointment_date')
+            ->orderByDesc('created_at')
+            ->paginate(25);
+
+        $items = $patients->getCollection()->map(function (Patient $p) {
+            $arr = $p->toArray();
+            $arr['full_name'] = $p->full_name;
+            $arr['location'] = $this->locationArray($p);
+
+            return $arr;
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'data' => $items,
+                'meta' => [
+                    'total' => $patients->total(),
+                    'per_page' => $patients->perPage(),
+                    'current_page' => $patients->currentPage(),
+                    'last_page' => $patients->lastPage(),
+                ],
+            ],
+        ]);
+    }
+
+    /**
      * Exam screens' "Patient Details" modal — inline personal-info edit,
      * mirrors web's Hospital\Patient\PatientController::quickUpdatePersonal
      * exactly (same doctor-only gate, same validation, same response shape).
@@ -182,6 +244,11 @@ class PatientApiController extends Controller
     public function quickUpdatePersonal(string $slug, Request $request, Patient $patient): JsonResponse
     {
         abort_unless($request->user()?->role?->slug === 'doctor', 403);
+
+        $rawPhone = (string) $request->input('contact_no', '');
+        $plus = str_starts_with(trim($rawPhone), '+');
+        $digits = preg_replace('/\D+/', '', $rawPhone) ?? '';
+        $request->merge(['contact_no' => $plus ? '+'.$digits : $digits]);
 
         $data = $request->validate([
             'full_name' => ['required', 'string', 'max:150'],
@@ -371,12 +438,16 @@ class PatientApiController extends Controller
     {
         $contact = trim((string) $request->input('contact', ''));
 
-        if ($contact === '') {
+        if (mb_strlen($contact) < 3) {
             return response()->json(['found' => false, 'patients' => []]);
         }
 
-        $localPatients = Patient::where('contact_no', $contact)
+        $localPatients = Patient::query()
+            ->where(function ($q) use ($contact) {
+                $this->applyPatientLookup($q, $contact);
+            })
             ->latest()
+            ->limit(20)
             ->get()
             ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
 
@@ -388,6 +459,7 @@ class PatientApiController extends Controller
             'age'         => $p->age,
             'gender'      => $p->gender,
             'whatsapp_no' => $p->whatsapp_no,
+            'contact_no'  => $p->contact_no,
             'occupation'  => $p->occupation,
             'location_id' => $p->location_id,
         ]);
@@ -409,8 +481,11 @@ class PatientApiController extends Controller
             $sharedPatients = Patient::withoutTenantScope()
                 ->with('tenant:id,name')
                 ->whereIn('tenant_id', $partnerTenantIds)
-                ->where('contact_no', $contact)
+                ->where(function ($q) use ($contact) {
+                    $this->applyPatientLookup($q, $contact);
+                })
                 ->latest()
+                ->limit(20)
                 ->get()
                 ->unique(fn($p) => strtolower(trim($p->first_name . '|' . $p->last_name)));
 
@@ -423,6 +498,7 @@ class PatientApiController extends Controller
                 'age'           => $p->age,
                 'gender'        => $p->gender,
                 'whatsapp_no'   => $p->whatsapp_no,
+                'contact_no'    => $p->contact_no,
                 'occupation'    => $p->occupation,
                 'location_id'   => null,
             ]);
@@ -481,5 +557,40 @@ class PatientApiController extends Controller
         $arr['location'] = $this->locationArray($patient);
 
         return response()->json(['success' => true, 'data' => $arr, 'message' => 'Patient checked in successfully.']);
+    }
+
+    /**
+     * Walk-in and phone registration lookup: a name matches first / middle /
+     * last / full name, a number matches contact or WhatsApp.
+     */
+    private function applyPatientLookup($query, string $term): void
+    {
+        $digits = preg_replace('/\D+/', '', $term) ?? '';
+        $hasLetter = preg_match('/[a-z]/i', $term) === 1;
+
+        $query->where(function ($q) use ($term, $digits, $hasLetter) {
+            if ($hasLetter) {
+                $q->where('first_name', 'like', "%{$term}%")
+                    ->orWhere('last_name', 'like', "%{$term}%")
+                    ->orWhere('middle_name', 'like', "%{$term}%")
+                    ->orWhereRaw("TRIM(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name)) like ?", ["%{$term}%"]);
+            }
+            if ($digits !== '') {
+                $phone = function ($inner) use ($digits, $term) {
+                    $inner->where('contact_no', 'like', "%{$digits}%")
+                        ->orWhere('whatsapp_no', 'like', "%{$digits}%")
+                        ->orWhere('contact_no', $term)
+                        ->orWhere('whatsapp_no', $term);
+                };
+                if ($hasLetter) {
+                    $q->orWhere($phone);
+                } else {
+                    $q->where($phone);
+                }
+            }
+            if (! $hasLetter && $digits === '') {
+                $q->whereRaw('0 = 1');
+            }
+        });
     }
 }
