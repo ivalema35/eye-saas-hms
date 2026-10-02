@@ -52,17 +52,31 @@ class ExamApiController extends Controller
         $isFinal = $request->boolean('is_final', true);
         $previousDoneAt = $patient->primary_done_at;
 
+        $examData = $validated['exam_data'] ?? [];
+        $medicines = $validated['medicines'] ?? [];
+
         $exam = $this->examinationService->savePrimary(
             $patient,
             (int) $validated['doctor_id'],
-            $validated['exam_data'] ?? [],
-            $validated['medicines'] ?? [],
+            $examData,
+            $medicines,
             $tenantId,
             ! empty($validated['dilation_time']) ? (int) $validated['dilation_time'] : null
         );
 
         if (! $isFinal) {
             $patient->update(['primary_done_at' => $previousDoneAt]);
+        } elseif (($examData['dilate'] ?? 'No') !== 'Yes' && $this->secondarySectionsFilled($examData, $medicines)) {
+            // Same rule as the web primary page: no dilation, and Diagnosis,
+            // Medicine or Advice was filled, so secondary is finished too.
+            $this->examinationService->saveSecondaryExam(
+                $patient,
+                (int) $validated['doctor_id'],
+                $examData,
+                $medicines,
+                $tenantId,
+                is_string($examData['advice'] ?? null) ? $examData['advice'] : null
+            );
         }
 
         return response()->json([
@@ -137,5 +151,37 @@ class ExamApiController extends Controller
             'data' => $exam,
             'message' => 'Secondary examination saved successfully.',
         ], 201);
+    }
+
+    /**
+     * Diagnosis, medicine, or advice on the primary save means secondary is finished too.
+     * Matches PrimaryExamController::secondarySectionsFilled.
+     *
+     * @param  array<string, mixed>  $examData
+     * @param  array<int, array<string, mixed>>  $medicines
+     */
+    private function secondarySectionsFilled(array $examData, array $medicines): bool
+    {
+        $diagnoses = array_filter(
+            $examData['diagnoses'] ?? [],
+            fn ($value): bool => trim((string) $value) !== ''
+        );
+        if ($diagnoses !== []) {
+            return true;
+        }
+
+        foreach (['advice', 'special_advice'] as $key) {
+            if (trim((string) ($examData[$key] ?? '')) !== '') {
+                return true;
+            }
+        }
+
+        foreach ($medicines as $line) {
+            if (trim((string) ($line['name'] ?? '')) !== '') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
