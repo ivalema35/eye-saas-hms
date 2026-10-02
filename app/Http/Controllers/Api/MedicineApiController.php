@@ -16,7 +16,12 @@ class MedicineApiController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        $ward = $request->query('scope') === 'ward';
         $medicines = Medicine::with('medicineType', 'dosage')
+            ->when($ward, fn ($q) => $q->where('usage_scope', 'ward'))
+            ->when(! $ward, fn ($q) => $q->where(function ($q2) {
+                $q2->whereNull('usage_scope')->orWhere('usage_scope', '!=', 'ward');
+            }))
             ->when(
                 $request->filled('search'),
                 fn ($q) => $q->where(function ($q2) use ($request) {
@@ -66,9 +71,14 @@ class MedicineApiController extends Controller
             'price'            => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $med = Medicine::create($validated);
+        $scope = $request->input('usage_scope') === 'ward' ? 'ward' : 'opd';
+        $med = Medicine::create($validated + ['usage_scope' => $scope]);
 
-        return response()->json(['success' => true, 'message' => 'Medicine added successfully.', 'id' => $med->id], 201);
+        return response()->json([
+            'success' => true,
+            'message' => $scope === 'ward' ? 'Ward medicine added successfully.' : 'Medicine added successfully.',
+            'id' => $med->id,
+        ], 201);
     }
 
     public function update(string $slug, Request $request, int $id): JsonResponse
@@ -85,16 +95,27 @@ class MedicineApiController extends Controller
             'price'            => ['nullable', 'numeric', 'min:0'],
         ]);
 
-        $medicine->update($validated);
+        $ward = $medicine->usage_scope === 'ward' || $request->input('usage_scope') === 'ward';
+        $medicine->update($validated + [
+            'usage_scope' => $ward ? 'ward' : ($medicine->usage_scope ?: 'opd'),
+        ]);
 
-        return response()->json(['success' => true, 'message' => 'Medicine updated successfully.']);
+        return response()->json([
+            'success' => true,
+            'message' => $ward ? 'Ward medicine updated successfully.' : 'Medicine updated successfully.',
+        ]);
     }
 
     public function destroy(string $slug, int $id): JsonResponse
     {
-        Medicine::findOrFail($id)->delete();
+        $medicine = Medicine::findOrFail($id);
+        $ward = $medicine->usage_scope === 'ward';
+        $medicine->delete();
 
-        return response()->json(['success' => true, 'message' => 'Medicine deleted successfully.']);
+        return response()->json([
+            'success' => true,
+            'message' => $ward ? 'Ward medicine deleted successfully.' : 'Medicine deleted successfully.',
+        ]);
     }
 
     public function import(Request $request): JsonResponse
