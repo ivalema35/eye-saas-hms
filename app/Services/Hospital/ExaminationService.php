@@ -26,9 +26,10 @@ class ExaminationService
         array $examData,
         array $medicines,
         int $tenantId,
-        ?int $dilationTime = null
+        ?int $dilationTime = null,
+        bool $stampDone = true
     ): PrimaryExamination {
-        return DB::transaction(function () use ($patient, $doctorId, $examData, $medicines, $tenantId, $dilationTime) {
+        return DB::transaction(function () use ($patient, $doctorId, $examData, $medicines, $tenantId, $dilationTime, $stampDone) {
             // Merge with existing exam_data so a per-step save never wipes other sections
             $existing = PrimaryExamination::where([
                 'patient_id' => $patient->id,
@@ -72,8 +73,13 @@ class ExaminationService
                 ]);
             }
 
-            // Stamp the patient so patient list shows primary done
-            $patient->update(['primary_done_at' => now()]);
+            // Stamp the patient so patient list shows primary done. Only on
+            // a final submit — an app progress autosave ($stampDone=false)
+            // must never touch this column, so it can't race a concurrent
+            // final save and erase its timestamp (see ExamApiController).
+            if ($stampDone) {
+                $patient->update(['primary_done_at' => now()]);
+            }
 
             return $exam;
         });
@@ -92,9 +98,10 @@ class ExaminationService
         array $examData,
         array $medicines,
         int $tenantId,
-        ?string $advice = null
+        ?string $advice = null,
+        bool $stampDone = true
     ): SecondaryExamination {
-        return DB::transaction(function () use ($patient, $doctorId, $examData, $medicines, $tenantId, $advice) {
+        return DB::transaction(function () use ($patient, $doctorId, $examData, $medicines, $tenantId, $advice, $stampDone) {
             // Merge with existing exam_data so a per-step save never wipes other sections
             $existingSec = SecondaryExamination::where([
                 'patient_id' => $patient->id,
@@ -149,7 +156,10 @@ class ExaminationService
                 $exam->update(['exam_data' => $mergedSecData]);
             }
 
-            $patient->update(['secondary_done_at' => now()]);
+            // See savePrimary() above — only stamp on a final submit.
+            if ($stampDone) {
+                $patient->update(['secondary_done_at' => now()]);
+            }
 
             return $exam;
         });

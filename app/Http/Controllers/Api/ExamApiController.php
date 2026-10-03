@@ -50,23 +50,29 @@ class ExamApiController extends Controller
         // and never sends this field, so it keeps stamping every time —
         // untouched, since the shared service call below is unchanged.
         $isFinal = $request->boolean('is_final', true);
-        $previousDoneAt = $patient->primary_done_at;
 
         $examData = $validated['exam_data'] ?? [];
         $medicines = $validated['medicines'] ?? [];
 
+        // Only a final submit stamps primary_done_at — savePrimary() skips
+        // the column entirely when $stampDone is false, instead of writing
+        // it and reverting it afterwards. The old revert approach wrote
+        // then reset primary_done_at in two separate steps, so a slow
+        // autosave request could finish after a concurrent final save's
+        // commit and silently erase "Primary Done" — exactly the bug
+        // reported where Dilate=No + Done still left the patient looking
+        // like primary was never completed.
         $exam = $this->examinationService->savePrimary(
             $patient,
             (int) $validated['doctor_id'],
             $examData,
             $medicines,
             $tenantId,
-            ! empty($validated['dilation_time']) ? (int) $validated['dilation_time'] : null
+            ! empty($validated['dilation_time']) ? (int) $validated['dilation_time'] : null,
+            $isFinal
         );
 
-        if (! $isFinal) {
-            $patient->update(['primary_done_at' => $previousDoneAt]);
-        } elseif (($examData['dilate'] ?? 'No') !== 'Yes' && $this->secondarySectionsFilled($examData, $medicines)) {
+        if ($isFinal && ($examData['dilate'] ?? 'No') !== 'Yes' && $this->secondarySectionsFilled($examData, $medicines)) {
             // Same rule as the web primary page: no dilation, and Diagnosis,
             // Medicine or Advice was filled, so secondary is finished too.
             $this->examinationService->saveSecondaryExam(
@@ -131,20 +137,17 @@ class ExamApiController extends Controller
         // and never sends this field, so it keeps stamping every time —
         // untouched, since the shared service call below is unchanged.
         $isFinal = $request->boolean('is_final', true);
-        $previousDoneAt = $patient->secondary_done_at;
 
+        // See savePrimary() above — stamp only on a final submit.
         $exam = $this->examinationService->saveSecondaryExam(
             $patient,
             (int) $validated['doctor_id'],
             $examData,
             $validated['medicines'] ?? [],
             $tenantId,
-            $advice
+            $advice,
+            $isFinal
         );
-
-        if (! $isFinal) {
-            $patient->update(['secondary_done_at' => $previousDoneAt]);
-        }
 
         return response()->json([
             'success' => true,
