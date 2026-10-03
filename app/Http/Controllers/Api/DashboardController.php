@@ -395,7 +395,11 @@ class DashboardController extends Controller
                 'my_total_patients'    => (clone $myPatientsQuery)->count(),
                 'my_walkin'            => (clone $myPatientsQuery)->where('type', 'walkin')->count(),
                 'my_phone'             => (clone $myPatientsQuery)->where('type', 'phone')->count(),
-                'today_collection'     => (float) Patient::whereDate('appointment_date', $today)->sum('case_fee'),
+                // Unified hospital collection (Hospital\Dashboard\DashboardController.php:339):
+                // OPD case_fee + OT payments − OT refunds — was only summing
+                // OPD case_fee here, so this card never included OT revenue
+                // and didn't match web's "Today Collection" value.
+                'today_collection'     => (float) $collectionService->summaryForDay($today)['total'],
                 'pending_phone_checkin' => Patient::where('type', 'phone')
                     ->whereNull('case_id')
                     ->whereDate('appointment_date', '>=', $today)

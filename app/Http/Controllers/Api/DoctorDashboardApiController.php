@@ -66,6 +66,13 @@ class DoctorDashboardApiController extends Controller
             ->whereNotNull('primary_done_at')->count();
         $tenantTodaySecondary = Patient::whereDate('appointment_date', $today)
             ->whereNotNull('secondary_done_at')->count();
+        // 4th pill on web's top bar (doctoredashboard.blade.php:1017,
+        // tooltip "Today — counselling through OT Assistant") — was missing
+        // here entirely, so neither app could show it no matter what the UI
+        // did. Same scope/params as Hospital\Dashboard\DashboardController.php:101-103.
+        $tenantTodayOtPipeline = OtBooking::query()
+            ->betweenCounsellingAndAssistant($today, $today)
+            ->count();
 
         // ── Doctor cards (all OPD doctors, skip OT Doctor) ────────────────────
         $doctorCards = HospitalUser::with('role')
@@ -244,6 +251,7 @@ class DoctorDashboardApiController extends Controller
                 'tenant_today_patients'  => $tenantTodayPatients,
                 'tenant_today_primary'   => $tenantTodayPrimary,
                 'tenant_today_secondary' => $tenantTodaySecondary,
+                'tenant_today_ot_pipeline' => $tenantTodayOtPipeline,
                 'doctor_cards'   => $doctorCards,
                 'ot_doctor_cards'=> $otDoctorCards,
                 'ot_summary'     => $otSummary,
