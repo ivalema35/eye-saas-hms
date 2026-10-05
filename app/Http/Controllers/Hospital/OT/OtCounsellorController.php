@@ -34,49 +34,59 @@ class OtCounsellorController extends Controller
 
     public function dashboard(Request $request, string $slug): View
     {
-        // Single combined list (no Queue/All toggle) — every booking assigned
-        // to this counsellor in the date range, awaiting counselling or not.
-        // Defaults to today; the date filter widget lets it be widened.
+        // Three tables, three independent date filters (each defaults to today):
+        // Booking Patient (still awaiting counselling), Complete Patient
+        // (counselling done or further), Payment Status.
+        [$bookingFromDate, $bookingToDate] = $this->resolveOtDeskDateRange($request, true, 'booking_from_date', 'booking_to_date');
         [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
-        // Payment Status runs its own independent date filter (defaults to today too).
         [$payFromDate, $payToDate] = $this->resolveOtDeskDateRange($request, true, 'pay_from_date', 'pay_to_date');
 
         $counsellor = auth('hospital_user')->user();
 
-        $bookingsQuery = OtBooking::query()
+        $withRelations = [
+            'patient' => fn ($q) => $q->select(
+                'id', 'patient_code', 'first_name', 'middle_name', 'last_name', 'age', 'gender', 'occupation',
+                'contact_no', 'whatsapp_no', 'location_id', 'appointment_date', 'doctor_id', 'case_id', 'case_fee',
+                'reception_id', 'referrer_id', 'type', 'checked_in_at', 'is_old_patient', 'primary_done_at',
+                'secondary_done_at', 'created_at'
+            ),
+            'patient.doctor:id,name',
+            'patient.reception:id,name',
+            'patient.masterCity:id,name',
+            'patient.location:id,city',
+            'patient.caseType:id,case_type',
+            'patient.referrer:id,name',
+            'patient.primaryExamination:id,patient_id,doctor_id,examined_at',
+            'patient.primaryExamination.doctor:id,name',
+            'patient.secondaryExamination:id,patient_id,doctor_id,examined_at',
+            'patient.secondaryExamination.doctor:id,name',
+            'otDoctor:id,name',
+            'payments',
+        ];
+
+        $pendingStatuses = [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED];
+
+        $pendingQuery = OtBooking::query()
             ->assignedToCounsellor($counsellor)
-            ->with([
-                'patient' => fn ($q) => $q->select(
-                    'id', 'patient_code', 'first_name', 'middle_name', 'last_name', 'age', 'gender', 'occupation',
-                    'contact_no', 'whatsapp_no', 'location_id', 'appointment_date', 'doctor_id', 'case_id', 'case_fee',
-                    'reception_id', 'referrer_id', 'type', 'checked_in_at', 'is_old_patient', 'primary_done_at',
-                    'secondary_done_at', 'created_at'
-                ),
-                'patient.doctor:id,name',
-                'patient.reception:id,name',
-                'patient.masterCity:id,name',
-                'patient.location:id,city',
-                'patient.caseType:id,case_type',
-                'patient.referrer:id,name',
-                'patient.primaryExamination:id,patient_id,doctor_id,examined_at',
-                'patient.primaryExamination.doctor:id,name',
-                'patient.secondaryExamination:id,patient_id,doctor_id,examined_at',
-                'patient.secondaryExamination.doctor:id,name',
-                'otDoctor:id,name',
-                'payments',
-            ]);
+            ->with($withRelations)
+            ->whereIn('ot_status', $pendingStatuses);
+        $this->applyOtDeskDateRange($pendingQuery, $bookingFromDate, $bookingToDate);
+        $pendingBookings = $pendingQuery
+            // Doctor-recommended cases first (Phase A1), then receptionist bookings.
+            ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
+            ->orderBy('surgery_date')
+            ->orderByDesc('id')
+            ->get();
 
-        $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
-        $bookingsQuery
-            // Doctor-recommended / still-pending cases first, then everything else.
-            ->orderByRaw('CASE WHEN ot_status IN (?, ?) THEN 0 ELSE 1 END', [
-                OtBooking::STATUS_SURGERY_RECOMMENDED,
-                OtBooking::STATUS_BOOKED,
-            ])
+        $completeQuery = OtBooking::query()
+            ->assignedToCounsellor($counsellor)
+            ->with($withRelations)
+            ->whereNotIn('ot_status', $pendingStatuses);
+        $this->applyOtDeskDateRange($completeQuery, $fromDate, $toDate);
+        $completeBookings = $completeQuery
             ->orderByDesc('surgery_date')
-            ->orderByDesc('id');
-
-        $bookings = $bookingsQuery->get();
+            ->orderByDesc('id')
+            ->get();
 
         $paymentVerificationQueue = OtBooking::query()
             ->assignedToCounsellor($counsellor)
@@ -98,8 +108,11 @@ class OtCounsellorController extends Controller
 
         return view('hospital.ot.counsellor.dashboard', [
             'slug' => $slug,
-            'bookings' => $bookings,
+            'pendingBookings' => $pendingBookings,
+            'completeBookings' => $completeBookings,
             'paymentVerificationQueue' => $paymentVerificationQueue,
+            'bookingFromDate' => $bookingFromDate,
+            'bookingToDate' => $bookingToDate,
             'fromDate' => $fromDate,
             'toDate' => $toDate,
             'payFromDate' => $payFromDate,

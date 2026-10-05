@@ -24,6 +24,104 @@ design. --}}
                 </nav>
             </div>
 
+        <div class="ot-inner-panel">
+            <div class="ot-card-header">
+                <div class="ot-title-wrap">
+                    <span class="ot-title-icon" aria-hidden="true">
+                        <i class="bi bi-hourglass-split" style="font-size: 1.2rem;"></i>
+                    </span>
+                    <div class="flex-grow-1">
+                        <h5 class="ot-title">Booking Patient</h5>
+                    </div>
+                </div>
+                <form method="GET" action="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}"
+                    class="ot-desk-date-form d-inline-flex align-items-center gap-2">
+                    <input type="hidden" name="from_date" value="{{ $fromDate ?? now()->toDateString() }}">
+                    <input type="hidden" name="to_date" value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}">
+                    <input type="hidden" name="pay_from_date" value="{{ $payFromDate ?? now()->toDateString() }}">
+                    <input type="hidden" name="pay_to_date" value="{{ $payToDate ?? ($payFromDate ?? now()->toDateString()) }}">
+                    <input type="text"
+                        class="form-control form-control-sm ot-desk-date-input"
+                        data-hms-date-range
+                        data-start-name="booking_from_date"
+                        data-end-name="booking_to_date"
+                        data-start-value="{{ $bookingFromDate ?? now()->toDateString() }}"
+                        data-end-value="{{ $bookingToDate ?? ($bookingFromDate ?? now()->toDateString()) }}"
+                        data-auto-submit="1"
+                        placeholder="Date range"
+                        autocomplete="off"
+                        readonly
+                        style="min-width:200px;">
+                </form>
+            </div>
+
+            <div class="card-body p-0">
+                @if(session('success'))
+                    <div class="alert alert-success mx-4 mt-3 ot-alert">{{ session('success') }}</div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger mx-4 mt-3 ot-alert">{{ session('error') }}</div>
+                @endif
+
+                <div class="ot-table-wrap">
+                    <div id="otBookingPatientTableContainer">
+                        <table class="otCounselling-table" id="otBookingPatientTable" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Patient</th>
+                                    <th>Phone</th>
+                                    <th>Eye</th>
+                                    <th>Surgery Type</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pendingBookings as $booking)
+                                    <tr>
+                                        <td><span class="ot-patient-cell"><i
+                                                    class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
+                                        </td>
+                                        <td>{{ $booking->patient?->contact_no ?? '-' }}</td>
+                                        <td><span class="ot-type-badge">{{ $booking->eye }}</span></td>
+                                        <td>{{ $booking->ot_type }}</td>
+                                        <td>
+                                            @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
+                                                <span class="ot-status-badge ot-status-recommended">Surgery Recommended</span>
+                                            @else
+                                                <span class="ot-status-badge ot-status-booked">Booked</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="d-inline-flex align-items-center gap-2">
+                                                <button type="button" class="btn btn-sm ot-outline-btn"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                    title="View patient details">
+                                                    <i class="bi bi-eye-fill me-1"></i> View
+                                                </button>
+                                                <a href="{{ route('hospital.ot.counsellor.form', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                                    class="btn btn-sm ot-view-btn">
+                                                    <i class="bi bi-chat-left-text me-1"></i> Counsel
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="text-center ot-empty">
+                                            <i class="bi bi-inbox me-1"></i>
+                                            No bookings awaiting counselling in this date range.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-4 ot-panels-row">
             <div class="col-lg-6">
             <div class="ot-inner-panel">
@@ -33,11 +131,13 @@ design. --}}
                             <i class="bi bi-chat-left-heart" style="font-size: 1.2rem;"></i>
                         </span>
                         <div class="flex-grow-1">
-                            <h5 class="ot-title">All Bookings</h5>
+                            <h5 class="ot-title">Complete Patient</h5>
                         </div>
                     </div>
                     <form method="GET" action="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}"
                         class="ot-desk-date-form d-inline-flex align-items-center gap-2">
+                        <input type="hidden" name="booking_from_date" value="{{ $bookingFromDate ?? now()->toDateString() }}">
+                        <input type="hidden" name="booking_to_date" value="{{ $bookingToDate ?? ($bookingFromDate ?? now()->toDateString()) }}">
                         <input type="hidden" name="pay_from_date" value="{{ $payFromDate ?? now()->toDateString() }}">
                         <input type="hidden" name="pay_to_date" value="{{ $payToDate ?? ($payFromDate ?? now()->toDateString()) }}">
                         <input type="text"
@@ -56,13 +156,6 @@ design. --}}
                 </div>
 
                 <div class="card-body p-0">
-                    @if(session('success'))
-                        <div class="alert alert-success mx-4 mt-3 ot-alert">{{ session('success') }}</div>
-                    @endif
-                    @if(session('error'))
-                        <div class="alert alert-danger mx-4 mt-3 ot-alert">{{ session('error') }}</div>
-                    @endif
-
                     <div class="ot-table-wrap">
                         <div id="otCounsellingTableContainer">
                             <table class="otCounselling-table" id="otCounsellingTable" style="width:100%">
@@ -77,13 +170,7 @@ design. --}}
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($bookings as $booking)
-                                        @php
-                                            $isPending = in_array($booking->ot_status, [
-                                                \App\Models\Hospital\OT\OtBooking::STATUS_BOOKED,
-                                                \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED,
-                                            ], true);
-                                        @endphp
+                                    @forelse($completeBookings as $booking)
                                         <tr>
                                             <td><span class="ot-patient-cell"><i
                                                         class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
@@ -92,36 +179,15 @@ design. --}}
                                             <td><span class="ot-type-badge">{{ $booking->eye }}</span></td>
                                             <td>{{ $booking->ot_type }}</td>
                                             <td>
-                                                @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
-                                                    <span class="ot-status-badge ot-status-recommended">Surgery Recommended</span>
-                                                @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_BOOKED)
-                                                    <span class="ot-status-badge ot-status-booked">Booked</span>
-                                                @else
-                                                    <span
-                                                        class="ot-status-badge ot-status-booked">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span>
-                                                @endif
+                                                <span
+                                                    class="ot-status-badge ot-status-booked">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span>
                                             </td>
                                             <td class="text-end">
-                                                @if($isPending)
-                                                    <div class="d-inline-flex align-items-center gap-2">
-                                                        <button type="button" class="btn btn-sm ot-outline-btn"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#otCounselPatient{{ $booking->id }}"
-                                                            title="View patient details">
-                                                            <i class="bi bi-eye-fill me-1"></i> View
-                                                        </button>
-                                                        <a href="{{ route('hospital.ot.counsellor.form', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
-                                                            class="btn btn-sm ot-view-btn">
-                                                            <i class="bi bi-chat-left-text me-1"></i> Counsel
-                                                        </a>
-                                                    </div>
-                                                @else
-                                                    <button type="button" class="btn btn-sm ot-outline-btn" data-bs-toggle="modal"
-                                                        data-bs-target="#otCounselPatient{{ $booking->id }}"
-                                                        title="View patient details">
-                                                        <i class="bi bi-eye-fill me-1"></i> View
-                                                    </button>
-                                                @endif
+                                                <button type="button" class="btn btn-sm ot-outline-btn" data-bs-toggle="modal"
+                                                    data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                    title="View patient details">
+                                                    <i class="bi bi-eye-fill me-1"></i> View
+                                                </button>
                                             </td>
                                         </tr>
                                     @empty
@@ -153,6 +219,8 @@ design. --}}
                         </div>
                         <form method="GET" action="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}"
                             class="ot-desk-date-form d-inline-flex align-items-center gap-2">
+                            <input type="hidden" name="booking_from_date" value="{{ $bookingFromDate ?? now()->toDateString() }}">
+                            <input type="hidden" name="booking_to_date" value="{{ $bookingToDate ?? ($bookingFromDate ?? now()->toDateString()) }}">
                             <input type="hidden" name="from_date" value="{{ $fromDate ?? now()->toDateString() }}">
                             <input type="hidden" name="to_date" value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}">
                             <input type="text"
@@ -216,7 +284,7 @@ design. --}}
         </div>
         </div>
 
-    @foreach($bookings as $booking)
+    @foreach($pendingBookings->concat($completeBookings) as $booking)
         @include('hospital.ot.counsellor._patient-view-modal', ['booking' => $booking])
     @endforeach
 @endsection
@@ -839,6 +907,7 @@ design. --}}
                 });
             }
 
+            initOtTable('#otBookingPatientTable', 'No bookings awaiting counselling in this date range.');
             initOtTable('#otCounsellingTable', 'No bookings in this date range.');
             initOtTable('#otPaymentStatusTable', 'No bookings paid yet.');
             });

@@ -231,6 +231,14 @@ class OtAppointmentController extends Controller
         return redirect()->back()->with('success', 'Appointment cancelled.');
     }
 
+    public function destroy(string $slug, int $id): RedirectResponse
+    {
+        $appointment = OtAppointment::query()->findOrFail($id);
+        $appointment->delete();
+
+        return redirect()->back()->with('success', 'Appointment deleted.');
+    }
+
     /**
      * AJAX search used by Reception check-in (Patient registration) — matches by
      * appointment number (APT-000123), mobile number, or patient name; returns only
