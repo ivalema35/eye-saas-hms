@@ -37,7 +37,11 @@ class OtCounsellorApiController extends Controller
         $activeFilter = $this->resolveOtDeskFilter($request, ['queue', 'history', 'payments']);
         $isHistory = $activeFilter === 'history';
         $isPayments = $activeFilter === 'payments';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Web's counsellor dashboard now scopes all three tables (Booking
+        // Patient / Complete Patient / Payment Status) to today by default,
+        // each independently widenable — matches the queue/refunds/history
+        // fix already applied to the other 4 OT desk controllers.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         // Web pull 2026-09-30 — the "View" button's read-only patient detail
         // (matches `_patient-view-modal.blade.php` exactly: Examination
@@ -63,7 +67,9 @@ class OtCounsellorApiController extends Controller
         if ($isPayments) {
             // Home desk + counsellor Payment Status. Same statuses as
             // OtCounsellorController's payment queue and the dashboard
-            // counselling panel. No date clamp.
+            // counselling panel — now date-clamped to match the full web
+            // dashboard page's Payment Status table (its own today-default
+            // date range, same as queue/history).
             $query->whereIn('ot_status', [
                 OtBooking::STATUS_PAID,
                 OtBooking::STATUS_PAYMENT_VERIFIED,
@@ -72,7 +78,9 @@ class OtCounsellorApiController extends Controller
                 OtBooking::STATUS_READY,
                 OtBooking::STATUS_OPERATED,
                 OtBooking::STATUS_DISCHARGED,
-            ])->orderBy('surgery_date')->orderByDesc('id');
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderBy('surgery_date')->orderByDesc('id');
         } elseif ($isHistory) {
             $query->whereIn('ot_status', [
                 OtBooking::STATUS_COUNSELLED,
@@ -88,8 +96,9 @@ class OtCounsellorApiController extends Controller
             $this->applyOtDeskDateRange($query, $fromDate, $toDate);
             $query->orderByDesc('surgery_date')->orderByDesc('id');
         } else {
-            $query->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
-                ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
+            $query->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
                 ->orderBy('surgery_date')
                 ->orderByDesc('id');
         }
