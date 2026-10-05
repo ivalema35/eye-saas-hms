@@ -38,10 +38,12 @@ trait FiltersOtDeskLists
 
     /**
      * History date range. Defaults to today when history is active and dates omitted.
+     * $fromKey/$toKey let a page run two independent date filters side by side
+     * (e.g. one per panel) without colliding on the same query string params.
      *
      * @return array{0: string, 1: string} [from Y-m-d, to Y-m-d]
      */
-    protected function resolveOtDeskDateRange(Request $request, bool $forHistory): array
+    protected function resolveOtDeskDateRange(Request $request, bool $forHistory, string $fromKey = 'from_date', string $toKey = 'to_date'): array
     {
         $today = now()->toDateString();
 
@@ -49,8 +51,16 @@ trait FiltersOtDeskLists
             return [$today, $today];
         }
 
-        $from = (string) ($request->query('from_date') ?: $request->query('from') ?: $today);
-        $to = (string) ($request->query('to_date') ?: $request->query('to') ?: $from);
+        $from = (string) (
+            $request->query($fromKey)
+            ?: ($fromKey === 'from_date' ? $request->query('from') : null)
+            ?: $today
+        );
+        $to = (string) (
+            $request->query($toKey)
+            ?: ($toKey === 'to_date' ? $request->query('to') : null)
+            ?: $from
+        );
 
         try {
             $fromCarbon = Carbon::parse($from)->startOfDay();

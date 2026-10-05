@@ -24,8 +24,8 @@ design. --}}
                 </nav>
             </div>
 
-            @php $isHistory = ($activeFilter ?? 'queue') === 'history'; @endphp
-
+        <div class="row g-4 ot-panels-row">
+            <div class="col-lg-6">
             <div class="ot-inner-panel">
                 <div class="ot-card-header">
                     <div class="ot-title-wrap">
@@ -33,16 +33,26 @@ design. --}}
                             <i class="bi bi-chat-left-heart" style="font-size: 1.2rem;"></i>
                         </span>
                         <div class="flex-grow-1">
-                            <h5 class="ot-title">{{ $isHistory ? 'Counselled Patients' : 'Awaiting Counselling' }}</h5>
+                            <h5 class="ot-title">All Bookings</h5>
                         </div>
                     </div>
-                    @include('hospital.ot.partials.desk-filters', [
-                        'slug' => $slug,
-                        'routeName' => 'hospital.ot.counsellor.dashboard',
-                        'activeFilter' => $activeFilter ?? 'queue',
-                        'fromDate' => $fromDate ?? now()->toDateString(),
-                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
-                    ])
+                    <form method="GET" action="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}"
+                        class="ot-desk-date-form d-inline-flex align-items-center gap-2">
+                        <input type="hidden" name="pay_from_date" value="{{ $payFromDate ?? now()->toDateString() }}">
+                        <input type="hidden" name="pay_to_date" value="{{ $payToDate ?? ($payFromDate ?? now()->toDateString()) }}">
+                        <input type="text"
+                            class="form-control form-control-sm ot-desk-date-input"
+                            data-hms-date-range
+                            data-start-name="from_date"
+                            data-end-name="to_date"
+                            data-start-value="{{ $fromDate ?? now()->toDateString() }}"
+                            data-end-value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}"
+                            data-auto-submit="1"
+                            placeholder="Date range"
+                            autocomplete="off"
+                            readonly
+                            style="min-width:200px;">
+                    </form>
                 </div>
 
                 <div class="card-body p-0">
@@ -68,6 +78,12 @@ design. --}}
                                 </thead>
                                 <tbody>
                                     @forelse($bookings as $booking)
+                                        @php
+                                            $isPending = in_array($booking->ot_status, [
+                                                \App\Models\Hospital\OT\OtBooking::STATUS_BOOKED,
+                                                \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED,
+                                            ], true);
+                                        @endphp
                                         <tr>
                                             <td><span class="ot-patient-cell"><i
                                                         class="bi bi-person-fill"></i>{{ $booking->patient?->full_name ?? '-' }}</span>
@@ -76,23 +92,17 @@ design. --}}
                                             <td><span class="ot-type-badge">{{ $booking->eye }}</span></td>
                                             <td>{{ $booking->ot_type }}</td>
                                             <td>
-                                                @if($isHistory)
+                                                @if($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
+                                                    <span class="ot-status-badge ot-status-recommended">Surgery Recommended</span>
+                                                @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_BOOKED)
+                                                    <span class="ot-status-badge ot-status-booked">Booked</span>
+                                                @else
                                                     <span
                                                         class="ot-status-badge ot-status-booked">{{ str($booking->ot_status)->replace('_', ' ')->title() }}</span>
-                                                @elseif($booking->ot_status === \App\Models\Hospital\OT\OtBooking::STATUS_SURGERY_RECOMMENDED)
-                                                    <span class="ot-status-badge ot-status-recommended">Surgery Recommended</span>
-                                                @else
-                                                    <span class="ot-status-badge ot-status-booked">Booked</span>
                                                 @endif
                                             </td>
                                             <td class="text-end">
-                                                @if($isHistory)
-                                                    <button type="button" class="btn btn-sm ot-outline-btn" data-bs-toggle="modal"
-                                                        data-bs-target="#otCounselPatient{{ $booking->id }}"
-                                                        title="View patient details">
-                                                        <i class="bi bi-eye-fill me-1"></i> View
-                                                    </button>
-                                                @else
+                                                @if($isPending)
                                                     <div class="d-inline-flex align-items-center gap-2">
                                                         <button type="button" class="btn btn-sm ot-outline-btn"
                                                             data-bs-toggle="modal"
@@ -105,6 +115,12 @@ design. --}}
                                                             <i class="bi bi-chat-left-text me-1"></i> Counsel
                                                         </a>
                                                     </div>
+                                                @else
+                                                    <button type="button" class="btn btn-sm ot-outline-btn" data-bs-toggle="modal"
+                                                        data-bs-target="#otCounselPatient{{ $booking->id }}"
+                                                        title="View patient details">
+                                                        <i class="bi bi-eye-fill me-1"></i> View
+                                                    </button>
                                                 @endif
                                             </td>
                                         </tr>
@@ -112,7 +128,7 @@ design. --}}
                                         <tr>
                                             <td colspan="6" class="text-center ot-empty">
                                                 <i class="bi bi-inbox me-1"></i>
-                                                {{ $isHistory ? 'No counselled patients in this date range.' : 'No bookings awaiting counselling.' }}
+                                                No bookings in this date range.
                                             </td>
                                         </tr>
                                     @endforelse
@@ -122,10 +138,10 @@ design. --}}
                     </div>
                 </div>
             </div>
+            </div>
 
-            @if(!$isHistory)
-                {{-- Payment Status panel — queue view only --}}
-                <div class="ot-inner-panel">
+            <div class="col-lg-6">
+            <div class="ot-inner-panel">
                     <div class="ot-card-header">
                         <div class="ot-title-wrap">
                             <span class="ot-title-icon" aria-hidden="true">
@@ -135,6 +151,23 @@ design. --}}
                                 <h5 class="ot-title">Payment Status</h5>
                             </div>
                         </div>
+                        <form method="GET" action="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}"
+                            class="ot-desk-date-form d-inline-flex align-items-center gap-2">
+                            <input type="hidden" name="from_date" value="{{ $fromDate ?? now()->toDateString() }}">
+                            <input type="hidden" name="to_date" value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}">
+                            <input type="text"
+                                class="form-control form-control-sm ot-desk-date-input"
+                                data-hms-date-range
+                                data-start-name="pay_from_date"
+                                data-end-name="pay_to_date"
+                                data-start-value="{{ $payFromDate ?? now()->toDateString() }}"
+                                data-end-value="{{ $payToDate ?? ($payFromDate ?? now()->toDateString()) }}"
+                                data-auto-submit="1"
+                                placeholder="Date range"
+                                autocomplete="off"
+                                readonly
+                                style="min-width:200px;">
+                        </form>
                     </div>
 
                     <div class="card-body p-0">
@@ -178,9 +211,10 @@ design. --}}
                         </div>
                     </div>
                 </div>
-            @endif
+            </div>
+            </div>
         </div>
-    </div>
+        </div>
 
     @foreach($bookings as $booking)
         @include('hospital.ot.counsellor._patient-view-modal', ['booking' => $booking])
@@ -292,6 +326,18 @@ design. --}}
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 16px rgba(27, 79, 114, 0.06);
+        }
+
+        /* All Bookings / Payment Status side by side (mirrors the Doctor
+           dashboard's Primary/Secondary queue layout). The row supplies the
+           outer gutter, so panels inside it drop their own side margins. */
+        .ot-panels-row {
+            margin: 0 1.5rem 1.5rem;
+        }
+
+        .ot-panels-row .ot-inner-panel {
+            margin: 0;
+            height: 100%;
         }
 
         .ot-card-header {
@@ -793,10 +839,8 @@ design. --}}
                 });
             }
 
-            initOtTable('#otCounsellingTable', @json(($activeFilter ?? 'queue') === 'history' ? 'No counselled patients in this date range.' : 'No bookings awaiting counselling.'));
-            @if(($activeFilter ?? 'queue') !== 'history')
-                initOtTable('#otPaymentStatusTable', 'No bookings paid yet.');
-            @endif
+            initOtTable('#otCounsellingTable', 'No bookings in this date range.');
+            initOtTable('#otPaymentStatusTable', 'No bookings paid yet.');
             });
     </script>
 @endpush

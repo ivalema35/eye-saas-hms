@@ -45,6 +45,7 @@ Appointments / Ward Management / OT Assistant design. --}}
                         'activeFilter' => $activeFilter ?? 'queue',
                         'fromDate' => $fromDate ?? now()->toDateString(),
                         'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                        'alwaysShowDateRange' => true,
                     ])
                 </div>
 

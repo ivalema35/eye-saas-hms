@@ -446,6 +446,7 @@
                         'fromDate' => $fromDate ?? now()->toDateString(),
                         'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
                         'extraQuery' => !empty($viewingAssistant) ? ['view_assistant' => $viewingAssistant->id] : [],
+                        'alwaysShowDateRange' => true,
                     ])
     </div>
 

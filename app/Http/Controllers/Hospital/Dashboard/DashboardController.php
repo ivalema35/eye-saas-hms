@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\Dosage;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
@@ -38,6 +39,8 @@ use Illuminate\View\View;
  */
 class DashboardController extends Controller
 {
+    use FiltersOtDeskLists;
+
     public function __construct(
         private readonly RolePermissionService $perm,
         private readonly HospitalCollectionService $collectionService,
@@ -336,7 +339,8 @@ class DashboardController extends Controller
 
             // Today-specific stats for receptionist dashboard cards
             // Unified: OPD case_fee + OT net (payments − refunds). OT refund never cuts OPD.
-            $receptionistTodayCollection = (float) $this->collectionService->summaryForDay($today)['total'];
+            // Scoped to the logged-in receptionist only (not all receptionists).
+            $receptionistTodayCollection = (float) $this->collectionService->summaryForDay($today, $user?->id)['total'];
             $receptionistMyPatientsToday = Patient::where('reception_id', $user?->id)
                 ->whereDate('appointment_date', $today)
                 ->count();
@@ -408,15 +412,18 @@ class DashboardController extends Controller
                 'otDoctor:id,name',
             ]);
 
+            // All three tabs scoped to today (by last status-change), so the cards and the tables underneath agree.
             $accountantLists = [
                 'queue' => $accountantBase()
                     ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
+                    ->whereDate('updated_at', $today)
                     ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
                     ->orderBy('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
                 'refunds' => $accountantBase()
                     ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                    ->whereDate('updated_at', $today)
                     ->orderByDesc('updated_at')
                     ->orderByDesc('id')
                     ->get(),
@@ -429,6 +436,7 @@ class DashboardController extends Controller
                         OtBooking::STATUS_OPERATED,
                         OtBooking::STATUS_DISCHARGED,
                     ])
+                    ->whereDate('updated_at', $today)
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
@@ -452,6 +460,7 @@ class DashboardController extends Controller
         if ($isWardManagementUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_ward_entry'))) {
             $wardBase = fn () => OtBooking::query()->with(OtBooking::WARD_VIEW_RELATIONS);
 
+            // Both tabs scoped to today (by last status-change), so the cards and the tables underneath agree.
             $wardLists = [
                 'queue' => $wardBase()
                     ->whereIn('ot_status', [
@@ -459,6 +468,7 @@ class DashboardController extends Controller
                         OtBooking::STATUS_IN_WARD,
                         OtBooking::STATUS_DILATED,
                     ])
+                    ->whereDate('updated_at', $today)
                     ->orderBy('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
@@ -468,6 +478,7 @@ class DashboardController extends Controller
                         OtBooking::STATUS_OPERATED,
                         OtBooking::STATUS_DISCHARGED,
                     ])
+                    ->whereDate('updated_at', $today)
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
@@ -495,9 +506,11 @@ class DashboardController extends Controller
                 ->active()
                 ->orderBy('name')
                 ->get(['id', 'name']);
-            $assistantCounts = OtBooking::query()
+            $assistantCountsQuery = OtBooking::query()
                 ->where('ot_status', OtBooking::STATUS_READY)
-                ->whereIn('ot_assistant_id', $otAssistantCards->pluck('id'))
+                ->whereIn('ot_assistant_id', $otAssistantCards->pluck('id'));
+            $this->applyOtDeskDateRange($assistantCountsQuery, $today, $today);
+            $assistantCounts = $assistantCountsQuery
                 ->selectRaw('ot_assistant_id, COUNT(*) as assigned_count')
                 ->groupBy('ot_assistant_id')
                 ->pluck('assigned_count', 'ot_assistant_id');
@@ -520,14 +533,17 @@ class DashboardController extends Controller
                 return $query;
             };
 
+            // Both tabs scoped to today (by last status-change), so the cards and the tables underneath agree.
             $otAssistantLists = [
                 'queue' => $otAssistantBase()
                     ->where('ot_status', OtBooking::STATUS_READY)
+                    ->whereDate('updated_at', $today)
                     ->orderBy('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
                 'history' => $otAssistantBase()
                     ->whereIn('ot_status', [OtBooking::STATUS_OPERATED, OtBooking::STATUS_DISCHARGED])
+                    ->whereDate('updated_at', $today)
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
@@ -548,14 +564,17 @@ class DashboardController extends Controller
         if ($isDischargeCounterUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_billing_manage'))) {
             $dischargeBase = fn () => OtBooking::query()->with(OtBooking::DISCHARGE_VIEW_RELATIONS);
 
+            // Both tabs scoped to today (by last status-change), so the cards and the tables underneath agree.
             $dischargeLists = [
                 'queue' => $dischargeBase()
                     ->whereIn('ot_status', [OtBooking::STATUS_OPERATED, 'OPERATED'])
+                    ->whereDate('updated_at', $today)
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
                 'history' => $dischargeBase()
                     ->whereIn('ot_status', [OtBooking::STATUS_DISCHARGED, 'DISCHARGED'])
+                    ->whereDate('updated_at', $today)
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
@@ -604,9 +623,11 @@ class DashboardController extends Controller
                     'payments',
                 ]);
 
+            // All three tabs scoped to today, so the cards and the tables underneath agree.
             $counsellingLists = [
                 'queue' => $counsellingBase()
                     ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                    ->whereHas('patient', fn ($q) => $q->whereDate('appointment_date', $today))
                     ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
                     ->orderBy('surgery_date')
                     ->orderByDesc('id')
@@ -623,6 +644,7 @@ class DashboardController extends Controller
                         OtBooking::STATUS_DISCHARGED,
                         OtBooking::STATUS_SURGERY_REFUSED,
                     ])
+                    ->whereHas('counselling', fn ($q) => $q->whereDate('counselled_at', $today))
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
                     ->get(),
@@ -638,6 +660,7 @@ class DashboardController extends Controller
                     OtBooking::STATUS_OPERATED,
                     OtBooking::STATUS_DISCHARGED,
                 ])
+                ->whereHas('payments', fn ($q) => $q->whereDate('paid_at', $today))
                 ->orderBy('surgery_date')
                 ->orderByDesc('id')
                 ->get();

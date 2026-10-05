@@ -689,9 +689,9 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                         'fromDate' => $fromDate ?? now()->toDateString(),
                         'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
                         'showRefunds' => true,
-                        'refundsPendingCount' => $refundsPendingCount,
+                        'alwaysShowDateRange' => true,
                     ])
-                    <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
+                    <!-- <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
                         class="ota-total-pill text-decoration-none" title="Collected vs Refunded">
                         Collected {{ money_code((float) ($moneySummary['collected'] ?? 0), 0) }}
                         · Returned {{ money_code((float) ($moneySummary['refunded'] ?? 0), 0) }}
@@ -699,7 +699,7 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                             · Pending refunds {{ $moneySummary['refunds_pending'] }}
                         @endif
                         <i class="bi bi-arrow-right-short"></i>
-                    </a>
+                    </a> -->
                 </div>
             </div>
 

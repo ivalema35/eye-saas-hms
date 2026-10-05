@@ -26,7 +26,8 @@ class OtAccountantController extends Controller
     {
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Both tabs default to today and accept the same date filter widget.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         $bookingsQuery = OtBooking::query()->with(OtBooking::WARD_VIEW_RELATIONS);
 
@@ -46,9 +47,9 @@ class OtAccountantController extends Controller
                     OtBooking::STATUS_PAYMENT_VERIFIED,
                     OtBooking::STATUS_IN_WARD,
                     OtBooking::STATUS_DILATED,
-                ])
-                ->orderBy('surgery_date')
-                ->orderByDesc('id');
+                ]);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery->orderBy('surgery_date')->orderByDesc('id');
         }
 
         return view('hospital.ot.accountant.ward', [
@@ -63,8 +64,8 @@ class OtAccountantController extends Controller
     public function dashboard(Request $request, string $slug): View
     {
         $activeFilter = $this->resolveOtDeskFilter($request, ['queue', 'history', 'refunds'], 'queue');
-        $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // All three tabs default to today and accept the same date filter widget.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         $bookingsQuery = OtBooking::query()
             ->with([
@@ -83,13 +84,17 @@ class OtAccountantController extends Controller
         if ($activeFilter === 'queue') {
             // Pending payment queue — counselled / partial-paid awaiting collection.
             $bookingsQuery
-                ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
+                ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID]);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery
                 ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
                 ->orderBy('surgery_date')
                 ->orderByDesc('id');
         } elseif ($activeFilter === 'refunds') {
             $bookingsQuery
-                ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
+                ->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED);
+            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+            $bookingsQuery
                 ->orderByDesc('updated_at')
                 ->orderByDesc('id');
         } else {

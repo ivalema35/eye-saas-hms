@@ -326,6 +326,13 @@ class PatientController extends Controller
         $toDate = $request->input('to_date');
         $search = trim((string) $request->input('search', ''));
 
+        // Default view: today's phone appointments — checked-in and pending
+        // alike. Searching or picking a date range opens it up to that date
+        // range / the matching patients.
+        if ($search === '' && !$fromDate && !$toDate) {
+            $fromDate = $toDate = now()->toDateString();
+        }
+
         $query = Patient::with(['doctor:id,name', 'reception:id,name', 'caseType:id,case_type'])
             ->where('type', 'phone');
 
@@ -359,6 +366,10 @@ class PatientController extends Controller
             ? now()->parse((string) $patient->appointment_date)->format('Y-m-d')
             : $patient->created_at->format('Y-m-d')
         );
+
+        if ($request->ajax()) {
+            return view('hospital.patients.partials.phone-history-results', compact('slug', 'patients', 'groupedPatients', 'fromDate', 'toDate', 'search'));
+        }
 
         return view('hospital.patients.phone-history', compact('slug', 'patients', 'groupedPatients', 'fromDate', 'toDate', 'search'));
     }
@@ -399,12 +410,20 @@ class PatientController extends Controller
             ->orderBy('name')
             ->get();
         $referrers = Referrer::where('tenant_id', $tenantId)->orderBy('name')->get();
+        $slots = $this->loadPatientSlots($tenantId);
+
+        // Still-pending phone appointment (not checked in yet) — no case/fee assigned,
+        // so edit with the slimmer phone form (slot instead of case type/fee).
+        // Once checked in, it has a real case and edits like any other patient.
+        if ($patient->type === 'phone' && $patient->case_id === null) {
+            return view('hospital.patients.edit-phone', compact('patient', 'slug', 'doctors', 'locations', 'slots', 'referrers'));
+        }
+
         $cases = DB::table('tbl_cases')
             ->where('tenant_id', app('tenant')->id)
             ->whereNull('deleted_at')
             ->select('id', 'case_type as name', 'case_fee as fee')
             ->get();
-        $slots = $this->loadPatientSlots($tenantId);
 
         return view('hospital.patients.edit', compact('patient', 'slug', 'doctors', 'locations', 'cases', 'slots', 'referrers'));
     }

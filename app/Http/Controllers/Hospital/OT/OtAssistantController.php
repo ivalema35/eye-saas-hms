@@ -49,7 +49,8 @@ class OtAssistantController extends Controller
 
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Both tabs default to today and accept the same date filter widget.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         $readyQuery = OtBooking::query()->with(OtBooking::OT_ASSISTANT_VIEW_RELATIONS);
 
@@ -62,9 +63,9 @@ class OtAssistantController extends Controller
             $readyQuery->orderByDesc('surgery_date')->orderByDesc('id');
         } else {
             // Ready-for-surgery queue — absorbed from the old ot_doctor role (docs/tulsi.md §5).
-            $readyQuery->where('ot_status', OtBooking::STATUS_READY)
-                ->orderBy('surgery_date')
-                ->orderByDesc('id');
+            $readyQuery->where('ot_status', OtBooking::STATUS_READY);
+            $this->applyOtDeskDateRange($readyQuery, $fromDate, $toDate);
+            $readyQuery->orderBy('surgery_date')->orderByDesc('id');
         }
 
         // Default queue is the logged-in assistant. Another assistant's card
@@ -495,9 +496,12 @@ class OtAssistantController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $counts = OtBooking::query()
+        $today = now()->toDateString();
+        $countsQuery = OtBooking::query()
             ->where('ot_status', OtBooking::STATUS_READY)
-            ->whereIn('ot_assistant_id', $assistants->pluck('id'))
+            ->whereIn('ot_assistant_id', $assistants->pluck('id'));
+        $this->applyOtDeskDateRange($countsQuery, $today, $today);
+        $counts = $countsQuery
             ->selectRaw('ot_assistant_id, COUNT(*) as assigned_count')
             ->groupBy('ot_assistant_id')
             ->pluck('assigned_count', 'ot_assistant_id');

@@ -1,21 +1,37 @@
 @extends('hospital.layouts.app')
 @section('title', $label)
-@section('page-header', $label)
-
-@section('page-actions')
-    <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-arrow-left me-1"></i> Back to Patient Reports
-    </a>
-@endsection
 
 @section('content')
 <div class="ot-reports-page">
 
-    <div class="card ot-premium-card border-0 mb-4">
+    <div class="ot-channel-hero">
+        <div class="ot-channel-hero-copy">
+            <div class="ot-channel-eyebrow"><i class="bi bi-activity"></i> Patient analytics</div>
+            <h1 class="ot-channel-title">{{ $label }}</h1>
+            <nav class="ot-reports-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="ot-reports-breadcrumb-sep">/</span>
+                <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}">Reports</a>
+                <span class="ot-reports-breadcrumb-sep">/</span>
+                <span class="ot-reports-breadcrumb-current">{{ $label }}</span>
+            </nav>
+        </div>
+        <a href="{{ route('hospital.reports.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline ot-back-btn">
+            <i class="bi bi-arrow-left me-1"></i> All Reports
+        </a>
+    </div>
+
+    <div class="card ot-premium-card ot-filter-card border-0 mb-4">
         <div class="card-body">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <span class="ot-filter-icon"><i class="bi bi-funnel-fill"></i></span>
-                <strong class="ot-filter-title">Report Filters</strong>
+            <div class="ot-section-heading">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="ot-filter-icon"><i class="bi bi-sliders2-vertical"></i></span>
+                    <div>
+                        <strong class="ot-filter-title d-block">Refine your report</strong>
+                        <span class="ot-section-hint">Choose filters to narrow down the patient list</span>
+                    </div>
+                </div>
+                <span class="ot-filter-status"><i class="bi bi-shield-check me-1"></i> Live data</span>
             </div>
 
             <form method="GET" action="{{ route('hospital.reports.channel.show', ['slug' => $slug, 'channel' => $channel]) }}" id="channelFilterForm">
@@ -94,7 +110,7 @@
         </div>
     </div>
 
-    <div class="card ot-premium-card border-0 mb-4">
+    <div class="card ot-premium-card ot-export-card border-0 mb-4">
         <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2 py-3">
             <div class="d-flex gap-2 flex-wrap">
                 @hasanypermission('report_export|opd_reports_export')
@@ -110,7 +126,7 @@
         </div>
     </div>
 
-    <div class="card ot-premium-card border-0">
+    <div class="card ot-premium-card ot-results-card border-0">
         <div class="ot-card-header">
             <div class="ot-title-wrap">
                 <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-clipboard2-data" style="font-size: 1.1rem;"></i></span>
@@ -207,6 +223,91 @@
         to   { opacity: 1; transform: translateY(0); }
     }
 
+    .ot-channel-hero {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin: .15rem 0 1.35rem;
+        padding: 1.35rem 1.5rem;
+        border: 1px solid var(--ot-s2-12);
+        border-radius: 22px;
+        overflow: hidden;
+        background:
+            radial-gradient(circle at 91% 18%, rgba(36, 113, 163, .14), transparent 28%),
+            linear-gradient(125deg, rgba(235, 245, 251, .98), rgba(255, 255, 255, .96) 62%);
+        box-shadow: 0 16px 38px rgba(27, 79, 114, .08);
+    }
+
+    .ot-channel-hero::after {
+        content: "";
+        position: absolute;
+        right: 1.5rem;
+        bottom: -2.8rem;
+        width: 118px;
+        height: 118px;
+        border: 18px solid rgba(27, 79, 114, .055);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .ot-channel-hero-copy,
+    .ot-back-btn { position: relative; z-index: 1; }
+
+    .ot-channel-eyebrow {
+        color: #2471a3;
+        font-size: .7rem;
+        font-weight: 900;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+    }
+
+    .ot-channel-eyebrow i { margin-right: .3rem; }
+
+    .ot-channel-title {
+        margin: .3rem 0 0;
+        color: var(--ot-secondary);
+        font-size: clamp(1.45rem, 2.4vw, 2rem);
+        font-weight: 900;
+        letter-spacing: -.035em;
+    }
+
+    .ot-reports-breadcrumb {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: .4rem;
+        margin-top: .45rem;
+        color: #8891a0;
+        font-size: .8rem;
+    }
+
+    .ot-reports-breadcrumb a {
+        color: #748196;
+        text-decoration: none;
+    }
+
+    .ot-reports-breadcrumb a:hover { color: var(--ot-secondary); }
+    .ot-reports-breadcrumb-sep { color: #c3c9d3; }
+    .ot-reports-breadcrumb-current { color: #4a5568; font-weight: 700; }
+
+    .ot-back-btn {
+        border-radius: 11px;
+        border-color: var(--ot-s2-18);
+        color: var(--ot-secondary);
+        background: rgba(255, 255, 255, .72);
+        font-weight: 800;
+    }
+
+    .ot-back-btn:hover {
+        color: var(--ot-secondary);
+        border-color: var(--ot-secondary);
+        background: #fff;
+        transform: translateY(-1px);
+    }
+
     .ot-premium-card {
         background: rgba(255, 255, 255, 0.84);
         border: 1px solid var(--ot-s2-12) !important;
@@ -234,11 +335,64 @@
         font-weight: 800;
     }
 
+    .ot-section-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .ot-section-hint {
+        display: block;
+        margin-top: .15rem;
+        color: #8a97a8;
+        font-size: .76rem;
+    }
+
+    .ot-filter-status {
+        padding: .4rem .7rem;
+        border: 1px solid rgba(17, 122, 101, .18);
+        border-radius: 999px;
+        background: rgba(17, 122, 101, .07);
+        color: #117a65;
+        font-size: .72rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
     .ot-filter-label {
         color: var(--ot-secondary);
         font-weight: 600;
         font-size: .85rem;
     }
+
+    .clinical-input {
+        min-height: 42px;
+        border-color: rgba(27, 79, 114, .15);
+        border-radius: 11px;
+        color: #274b65;
+        box-shadow: 0 3px 10px rgba(27, 79, 114, .035);
+        transition: border-color 170ms ease, box-shadow 170ms ease, background 170ms ease;
+    }
+
+    .clinical-input:hover { border-color: var(--ot-s2-24); }
+
+    .clinical-input:focus {
+        border-color: var(--ot-secondary);
+        background: #fff;
+        box-shadow: 0 0 0 .2rem rgba(27, 79, 114, .11);
+    }
+
+    .ot-filter-card .card-body { padding: 1.35rem; }
+
+    .ot-export-card {
+        border-radius: 16px;
+        box-shadow: 0 10px 28px rgba(27, 79, 114, .075);
+    }
+
+    .ot-export-card .card-body { padding: .85rem 1rem; }
+    .ot-results-card { box-shadow: 0 20px 52px rgba(27, 79, 114, .12); }
 
     .ot-btn-primary {
         background: var(--ot-secondary);
@@ -448,6 +602,15 @@
         color: rgba(27, 79, 114, 0.72) !important;
         font-weight: 800;
         white-space: normal !important;
+    }
+
+    @media (max-width: 575.98px) {
+        .ot-channel-hero { padding: 1.15rem; }
+        .ot-channel-title { font-size: 1.45rem; }
+        .ot-back-btn { width: 100%; text-align: center; }
+        .ot-section-heading { align-items: flex-start; flex-direction: column; }
+        .ot-filter-status { align-self: flex-start; }
+        .ot-filter-card .card-body { padding: 1rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {

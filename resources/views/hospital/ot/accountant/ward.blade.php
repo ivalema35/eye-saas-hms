@@ -43,6 +43,7 @@ Appointments page design. --}}
                         'activeFilter' => $activeFilter ?? 'queue',
                         'fromDate' => $fromDate ?? now()->toDateString(),
                         'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                        'alwaysShowDateRange' => true,
                     ])
                 </div>
 

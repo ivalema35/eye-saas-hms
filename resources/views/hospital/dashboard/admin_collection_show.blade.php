@@ -3,17 +3,17 @@
 
 @section('content')
     @php
-        $isSingleDay = $startDate === $endDate;
-        $rangeLabel = $isSingleDay
-            ? \Carbon\Carbon::parse($startDate)->format('d M Y')
-            : \Carbon\Carbon::parse($startDate)->format('d M Y') . ' – ' . \Carbon\Carbon::parse($endDate)->format('d M Y');
-        $backUrl = route('hospital.dashboard.collection', ['slug' => $slug, 'start_date' => $startDate, 'end_date' => $endDate]);
-        $exportUrl = route('hospital.dashboard.collection.export', [
-            'slug' => $slug,
-            'reception' => $reception->id,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ]);
+$isSingleDay = $startDate === $endDate;
+$rangeLabel = $isSingleDay
+    ? \Carbon\Carbon::parse($startDate)->format('d M Y')
+    : \Carbon\Carbon::parse($startDate)->format('d M Y') . ' – ' . \Carbon\Carbon::parse($endDate)->format('d M Y');
+$backUrl = route('hospital.dashboard.collection', ['slug' => $slug, 'start_date' => $startDate, 'end_date' => $endDate]);
+$exportUrl = route('hospital.dashboard.collection.export', [
+    'slug' => $slug,
+    'reception' => $reception->id,
+    'start_date' => $startDate,
+    'end_date' => $endDate,
+]);
     @endphp
     <div class="acs-page">
 
@@ -273,7 +273,7 @@
             margin-bottom: 1.25rem;
             border-radius: 22px;
             color: #fff;
-            background: linear-gradient(135deg, #154360 0%, #1B4F72 55%, #2471A3 100%);
+            background: #1b4f72;
             box-shadow: 0 20px 44px rgba(27, 79, 114, .25);
         }
 

@@ -34,9 +34,12 @@ class OtCounsellorController extends Controller
 
     public function dashboard(Request $request, string $slug): View
     {
-        $activeFilter = $this->resolveOtDeskFilter($request);
-        $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Single combined list (no Queue/All toggle) — every booking assigned
+        // to this counsellor in the date range, awaiting counselling or not.
+        // Defaults to today; the date filter widget lets it be widened.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
+        // Payment Status runs its own independent date filter (defaults to today too).
+        [$payFromDate, $payToDate] = $this->resolveOtDeskDateRange($request, true, 'pay_from_date', 'pay_to_date');
 
         $counsellor = auth('hospital_user')->user();
 
@@ -63,60 +66,44 @@ class OtCounsellorController extends Controller
                 'payments',
             ]);
 
-        if ($isHistory) {
-            // Counselling complete → visible in All (history), date-filtered.
-            $bookingsQuery
-                ->whereIn('ot_status', [
-                    OtBooking::STATUS_COUNSELLED,
-                    OtBooking::STATUS_PAID,
-                    OtBooking::STATUS_PAYMENT_VERIFIED,
-                    OtBooking::STATUS_IN_WARD,
-                    OtBooking::STATUS_DILATED,
-                    OtBooking::STATUS_READY,
-                    OtBooking::STATUS_OPERATED,
-                    OtBooking::STATUS_DISCHARGED,
-                    OtBooking::STATUS_SURGERY_REFUSED,
-                ]);
-            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
-            $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
-        } else {
-            $bookingsQuery
-                ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
-                // Prefer doctor-recommended cases first (Phase A1), then receptionist bookings.
-                ->orderByRaw('CASE WHEN ot_status = ? THEN 0 ELSE 1 END', [OtBooking::STATUS_SURGERY_RECOMMENDED])
-                ->orderBy('surgery_date')
-                ->orderByDesc('id');
-        }
+        $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+        $bookingsQuery
+            // Doctor-recommended / still-pending cases first, then everything else.
+            ->orderByRaw('CASE WHEN ot_status IN (?, ?) THEN 0 ELSE 1 END', [
+                OtBooking::STATUS_SURGERY_RECOMMENDED,
+                OtBooking::STATUS_BOOKED,
+            ])
+            ->orderByDesc('surgery_date')
+            ->orderByDesc('id');
 
         $bookings = $bookingsQuery->get();
 
-        // Payment status panel — queue view only (Accounts progress for counselled cases).
-        $paymentVerificationQueue = collect();
-        if (! $isHistory) {
-            $paymentVerificationQueue = OtBooking::query()
-                ->assignedToCounsellor($counsellor)
-                ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'payments'])
-                ->whereIn('ot_status', [
-                    OtBooking::STATUS_PAID,
-                    OtBooking::STATUS_PAYMENT_VERIFIED,
-                    OtBooking::STATUS_IN_WARD,
-                    OtBooking::STATUS_DILATED,
-                    OtBooking::STATUS_READY,
-                    OtBooking::STATUS_OPERATED,
-                    OtBooking::STATUS_DISCHARGED,
-                ])
-                ->orderBy('surgery_date')
-                ->orderByDesc('id')
-                ->get();
-        }
+        $paymentVerificationQueue = OtBooking::query()
+            ->assignedToCounsellor($counsellor)
+            ->with(['patient:id,patient_code,first_name,middle_name,last_name,contact_no', 'payments'])
+            ->whereIn('ot_status', [
+                OtBooking::STATUS_PAID,
+                OtBooking::STATUS_PAYMENT_VERIFIED,
+                OtBooking::STATUS_IN_WARD,
+                OtBooking::STATUS_DILATED,
+                OtBooking::STATUS_READY,
+                OtBooking::STATUS_OPERATED,
+                OtBooking::STATUS_DISCHARGED,
+            ]);
+        $this->applyOtDeskDateRange($paymentVerificationQueue, $payFromDate, $payToDate);
+        $paymentVerificationQueue = $paymentVerificationQueue
+            ->orderBy('surgery_date')
+            ->orderByDesc('id')
+            ->get();
 
         return view('hospital.ot.counsellor.dashboard', [
             'slug' => $slug,
             'bookings' => $bookings,
             'paymentVerificationQueue' => $paymentVerificationQueue,
-            'activeFilter' => $activeFilter,
             'fromDate' => $fromDate,
             'toDate' => $toDate,
+            'payFromDate' => $payFromDate,
+            'payToDate' => $payToDate,
         ]);
     }
 
