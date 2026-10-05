@@ -29,6 +29,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Exports\GenericArrayExport;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
@@ -39,6 +40,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class OtAccountantApiController extends Controller
 {
@@ -569,6 +572,69 @@ class OtAccountantApiController extends Controller
                 'refunds' => $refunds,
             ],
         ]);
+    }
+
+    /**
+     * Mobile/tablet mirror of OtAccountantController::moneyExport() — web's
+     * OT Money Report page has two separate "Export" buttons (Payments in
+     * range / Refunds in range), both backed by this one route via
+     * `section`. This endpoint never existed in the API at all — the app
+     * screens had the data but no export action to call.
+     */
+    public function moneyExport(Request $request): BinaryFileResponse
+    {
+        $tenantId = (int) app('tenant')->id;
+        $today = now()->toDateString();
+        $start = (string) ($request->input('start_date') ?: $today);
+        $end = (string) ($request->input('end_date') ?: $start);
+        $section = $request->input('section', 'payments');
+
+        if ($end < $start) {
+            [$start, $end] = [$end, $start];
+        }
+
+        abort_unless(in_array($section, ['payments', 'refunds'], true), 404);
+
+        if ($section === 'payments') {
+            $rows = OtPayment::query()
+                ->with('booking.patient')
+                ->where('tenant_id', $tenantId)
+                ->whereDate('paid_at', '>=', $start)
+                ->whereDate('paid_at', '<=', $end)
+                ->orderByDesc('paid_at')
+                ->limit(200)
+                ->get()
+                ->map(fn (OtPayment $payment): array => [
+                    optional($payment->paid_at)->format('d M Y H:i') ?? '-',
+                    $payment->booking?->patient?->full_name ?? '-',
+                    (float) $payment->package_amount,
+                    strtoupper((string) $payment->payment_mode),
+                ])
+                ->all();
+        } else {
+            $rows = OtRefund::query()
+                ->with('booking.patient')
+                ->where('tenant_id', $tenantId)
+                ->whereDate('refunded_at', '>=', $start)
+                ->whereDate('refunded_at', '<=', $end)
+                ->orderByDesc('refunded_at')
+                ->limit(200)
+                ->get()
+                ->map(fn (OtRefund $refund): array => [
+                    optional($refund->refunded_at)->format('d M Y H:i') ?? '-',
+                    $refund->booking?->patient?->full_name ?? '-',
+                    (float) $refund->amount,
+                    strtoupper((string) $refund->payment_mode),
+                ])
+                ->all();
+        }
+
+        $headings = ['Date', 'Patient', 'Amount', 'Mode'];
+
+        return Excel::download(
+            new GenericArrayExport($rows, $headings),
+            'ot_'.$section.'_'.now()->format('Y-m-d').'.xlsx'
+        );
     }
 
     private function generateUniqueInvoiceNumber(int $tenantId): string
