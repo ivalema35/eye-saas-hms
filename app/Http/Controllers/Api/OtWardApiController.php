@@ -50,7 +50,9 @@ class OtWardApiController extends Controller
         $tenantId = (int) app('tenant')->id;
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Web pull 2026-10-05 (commit 65865858) — both tabs default to today
+        // and accept the same date filter, not just history.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         // Web pull 2026-09-30 — the "View" button's read-only detail
         // (`_view-modal.blade.php`: Pre-Op Vitals, full Patient Details,
@@ -85,9 +87,9 @@ class OtWardApiController extends Controller
                 OtBooking::STATUS_PAYMENT_VERIFIED,
                 OtBooking::STATUS_IN_WARD,
                 OtBooking::STATUS_DILATED,
-            ])
-                ->orderBy('surgery_date')
-                ->orderByDesc('id');
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderBy('surgery_date')->orderByDesc('id');
         }
 
         $bookings = $query->paginate((int) $request->integer('per_page', 25));
