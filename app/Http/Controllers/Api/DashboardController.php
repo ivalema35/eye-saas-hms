@@ -305,7 +305,7 @@ class DashboardController extends Controller
         $primaryQueue = collect();
 
         if ($canSeeClinical) {
-            $primaryQueueQuery = Patient::with(['doctor:id,name,doctor_prefix'])
+            $primaryQueueQuery = Patient::with(['doctor:id,name,doctor_prefix', 'reception:id,name'])
                 ->whereDate('appointment_date', $today)
                 ->whereNull('primary_done_at')
                 ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
@@ -330,6 +330,7 @@ class DashboardController extends Controller
                 'registered_at'     => $p->created_at?->toISOString(),
                 'doctor_name'       => $p->doctor?->name,
                 'doctor_prefix'     => $p->doctor?->doctor_prefix,
+                'receptionist_name' => $p->reception?->name,
                 'has_history'       => (bool) ($p->has_history ?? false),
             ]);
         }
@@ -396,10 +397,11 @@ class DashboardController extends Controller
                 'my_walkin'            => (clone $myPatientsQuery)->where('type', 'walkin')->count(),
                 'my_phone'             => (clone $myPatientsQuery)->where('type', 'phone')->count(),
                 // Unified hospital collection (Hospital\Dashboard\DashboardController.php:339):
-                // OPD case_fee + OT payments − OT refunds — was only summing
-                // OPD case_fee here, so this card never included OT revenue
-                // and didn't match web's "Today Collection" value.
-                'today_collection'     => (float) $collectionService->summaryForDay($today)['total'],
+                // OPD case_fee + OT payments − OT refunds. Web pull
+                // 2026-10-05 (commit 65865858) — also scoped to this
+                // receptionist's own collection only (was tenant-wide,
+                // summing every receptionist's collection into one card).
+                'today_collection'     => (float) $collectionService->summaryForDay($today, $authUser->id)['total'],
                 'pending_phone_checkin' => Patient::where('type', 'phone')
                     ->whereNull('case_id')
                     ->whereDate('appointment_date', '>=', $today)

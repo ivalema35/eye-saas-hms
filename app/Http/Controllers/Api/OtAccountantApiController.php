@@ -77,8 +77,9 @@ class OtAccountantApiController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $activeFilter = $this->resolveOtDeskFilter($request, ['queue', 'history', 'refunds'], 'queue');
-        $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Web pull 2026-10-05 (commit 65865858) — all three tabs default to
+        // today and accept the same date filter, not just history.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         // Web pull 2026-09-30 — the "View" button's read-only detail
         // (`_payment-view-modal.blade.php`) needs far more than the 5 patient
@@ -100,13 +101,15 @@ class OtAccountantApiController extends Controller
 
         if ($activeFilter === 'queue') {
             // Pending payment queue — matches web exactly.
-            $query->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
-                ->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
+            $query->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByRaw('CASE WHEN surgery_date IS NULL THEN 0 ELSE 1 END')
                 ->orderBy('surgery_date')
                 ->orderByDesc('id');
         } elseif ($activeFilter === 'refunds') {
-            $query->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED)
-                ->orderByDesc('updated_at')
+            $query->where('ot_status', OtBooking::STATUS_SURGERY_REFUSED);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('updated_at')
                 ->orderByDesc('id');
         } else {
             $query->whereIn('ot_status', [

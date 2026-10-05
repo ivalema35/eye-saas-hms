@@ -53,7 +53,9 @@ class OtDischargeApiController extends Controller
         $tenantId = (int) app('tenant')->id;
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Web pull 2026-10-05 (commit 65865858) — both tabs default to today
+        // and accept the same date filter, not just history.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         // Web pull 2026-09-30 — the "View" button's read-only detail
         // (`_view-modal.blade.php`: Discharge Documents, Invoice, Surgery
@@ -91,9 +93,9 @@ class OtDischargeApiController extends Controller
             $query->whereIn('ot_status', [
                 OtBooking::STATUS_OPERATED,
                 'OPERATED',
-            ])
-                ->orderByDesc('surgery_date')
-                ->orderByDesc('id');
+            ]);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderByDesc('surgery_date')->orderByDesc('id');
         }
 
         $bookings = $query->paginate((int) $request->integer('per_page', (int) config('app.pagination_limit', 25)));

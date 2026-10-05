@@ -183,6 +183,13 @@ class PatientApiController extends Controller
         $toDate = $request->input('to_date');
         $search = trim((string) $request->input('search', ''));
 
+        // Web pull 2026-10-05 (commit 65865858) — default view is today's
+        // phone appointments only. Searching or picking an explicit date
+        // range opens it up to that range / the matching patients.
+        if ($search === '' && !$fromDate && !$toDate) {
+            $fromDate = $toDate = now()->toDateString();
+        }
+
         $query = Patient::with([
             'doctor:id,name',
             'reception:id,name',

@@ -62,7 +62,9 @@ class OtAssistantApiController extends Controller
 
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Web pull 2026-10-05 (commit 65865858) — both tabs default to today
+        // and accept the same date filter, not just history.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         // Web pull 2026-09-30 — the "View" button's read-only detail
         // (`_view-modal.blade.php`: Surgery Record, Implanted Lens, Surgery
@@ -93,9 +95,9 @@ class OtAssistantApiController extends Controller
             $this->applyOtDeskDateRange($query, $fromDate, $toDate);
             $query->orderByDesc('surgery_date')->orderByDesc('id');
         } else {
-            $query->where('ot_status', OtBooking::STATUS_READY)
-                ->orderBy('surgery_date')
-                ->orderByDesc('id');
+            $query->where('ot_status', OtBooking::STATUS_READY);
+            $this->applyOtDeskDateRange($query, $fromDate, $toDate);
+            $query->orderBy('surgery_date')->orderByDesc('id');
         }
 
         $requestedAssistantId = (int) $request->query('assistant_id', 0);
