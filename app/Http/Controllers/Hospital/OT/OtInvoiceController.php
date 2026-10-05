@@ -19,7 +19,8 @@ class OtInvoiceController extends Controller
         $tenantId = (int) app('tenant')->id;
         $activeFilter = $this->resolveOtDeskFilter($request);
         $isHistory = $activeFilter === 'history';
-        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, $isHistory);
+        // Both tabs default to today and accept the same date filter widget.
+        [$fromDate, $toDate] = $this->resolveOtDeskDateRange($request, true);
 
         $bookingsQuery = OtBooking::query()->with(OtBooking::DISCHARGE_VIEW_RELATIONS);
 
@@ -29,18 +30,17 @@ class OtInvoiceController extends Controller
                 OtBooking::STATUS_DISCHARGED,
                 'DISCHARGED',
             ]);
-            $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
-            $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
         } else {
             // Queue: operated patients awaiting invoice / discharge docs.
             $bookingsQuery
                 ->whereIn('ot_status', [
                     OtBooking::STATUS_OPERATED,
                     'OPERATED',
-                ])
-                ->orderByDesc('surgery_date')
-                ->orderByDesc('id');
+                ]);
         }
+
+        $this->applyOtDeskDateRange($bookingsQuery, $fromDate, $toDate);
+        $bookingsQuery->orderByDesc('surgery_date')->orderByDesc('id');
 
         $invoiceBookingIds = DB::table('ot_invoices')
             ->where('tenant_id', $tenantId)

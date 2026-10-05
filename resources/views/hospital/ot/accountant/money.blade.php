@@ -332,31 +332,30 @@
             position: relative;
             display: flex;
             align-items: center;
-            gap: .8rem;
-            min-height: 122px;
-            padding: 1.15rem 1.2rem;
+            gap: .65rem;
+            padding: .7rem .9rem;
             overflow: hidden;
             background: linear-gradient(135deg, #ffffff 0%, #fbfdfe 100%);
             border: 1px solid var(--ot-money-line);
             border-left: 4px solid currentColor;
-            border-radius: 16px;
-            box-shadow: 0 12px 28px rgba(27, 79, 114, .07);
+            border-radius: 12px;
+            box-shadow: 0 6px 16px rgba(27, 79, 114, .06);
             transition: transform 180ms ease, box-shadow 180ms ease;
         }
 
         .ot-money-stat:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 18px 38px rgba(27, 79, 114, .14);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 22px rgba(27, 79, 114, .12);
         }
 
         .ot-money-stat::after {
             position: absolute;
-            right: -24px;
-            bottom: -35px;
-            width: 105px;
-            height: 105px;
+            right: -18px;
+            bottom: -26px;
+            width: 70px;
+            height: 70px;
             content: '';
-            border: 18px solid currentColor;
+            border: 12px solid currentColor;
             border-radius: 50%;
             opacity: .07;
         }
@@ -365,36 +364,36 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 46px;
-            height: 46px;
-            flex: 0 0 46px;
-            border-radius: 13px;
-            font-size: 1.15rem;
-            box-shadow: 0 8px 18px rgba(27, 79, 114, .1);
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            border-radius: 10px;
+            font-size: .95rem;
+            box-shadow: 0 6px 14px rgba(27, 79, 114, .1);
         }
 
         .ot-money-stat-label {
             display: block;
             color: var(--ot-money-muted);
-            font-size: .73rem;
+            font-size: .68rem;
             font-weight: 800;
-            letter-spacing: .07em;
+            letter-spacing: .06em;
             text-transform: uppercase;
         }
 
         .ot-money-stat strong {
             display: block;
-            margin-top: .2rem;
-            font-size: 1.35rem;
+            margin-top: .1rem;
+            font-size: 1.05rem;
             letter-spacing: -.02em;
         }
 
         .ot-money-stat-mark {
             position: absolute;
-            top: 1rem;
-            right: 1rem;
+            top: .6rem;
+            right: .7rem;
             color: currentColor;
-            font-size: .65rem;
+            font-size: .6rem;
             font-weight: 900;
             letter-spacing: .1em;
             opacity: .55;

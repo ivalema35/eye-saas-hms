@@ -769,11 +769,11 @@
             transition: background .15s ease, color .15s ease;
         }
 
-        .doc-ref-bar a.doc-ref-link:hover {
-            background: rgba(255, 255, 255, .22);
-            color: #fff;
-            text-decoration: underline;
-        }
+        /* .doc-ref-bar a.doc-ref-link:hover {
+                background: rgba(255, 255, 255, .22);
+                color: #fff;
+                text-decoration: underline;
+            } */
 
         .doc-ref-mid {
             display: flex;

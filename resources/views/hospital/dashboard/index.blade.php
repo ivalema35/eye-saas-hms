@@ -1987,7 +1987,7 @@
                     <div>
                         <p class="metric-label">Pending Patients</p>
                         <div class="metric-value">{{ $accountantPendingCount }}</div>
-                        <p class="metric-meta">Awaiting OT package payment</p>
+                        <p class="metric-meta">Awaiting OT package payment today</p>
                     </div>
                 </div>
             </a>
@@ -2001,7 +2001,7 @@
                     <div>
                         <p class="metric-label">Refunds</p>
                         <div class="metric-value">{{ $accountantRefundsCount }}</div>
-                        <p class="metric-meta">Surgery refused</p>
+                        <p class="metric-meta">Surgery refused today</p>
                     </div>
                 </div>
             </a>
@@ -2015,7 +2015,7 @@
                     <div>
                         <p class="metric-label">Completed</p>
                         <div class="metric-value">{{ $accountantCompletedCount }}</div>
-                        <p class="metric-meta">Payment verified &amp; onward</p>
+                        <p class="metric-meta">Payment verified today</p>
                     </div>
                 </div>
             </a>
@@ -2045,7 +2045,7 @@
                     <div>
                         <p class="metric-label">Pending Patient</p>
                         <div class="metric-value">{{ $wardPendingCount }}</div>
-                        <p class="metric-meta">Awaiting ward entry</p>
+                        <p class="metric-meta">Awaiting ward entry today</p>
                     </div>
                 </div>
             </a>
@@ -2058,7 +2058,7 @@
                     <div>
                         <p class="metric-label">Completed</p>
                         <div class="metric-value">{{ $wardCompletedCount ?? 0 }}</div>
-                        <p class="metric-meta">Moved to OT / discharged</p>
+                        <p class="metric-meta">Moved to OT / discharged today</p>
                     </div>
                 </div>
             </a>
@@ -2074,7 +2074,7 @@
                     <div>
                         <p class="metric-label">Pending Patient</p>
                         <div class="metric-value">{{ $otAssistantPendingCount }}</div>
-                        <p class="metric-meta">Ready for OT — record surgery</p>
+                        <p class="metric-meta">Ready for OT today — record surgery</p>
                     </div>
                 </div>
             </a>
@@ -2087,7 +2087,7 @@
                     <div>
                         <p class="metric-label">Completed</p>
                         <div class="metric-value">{{ $otAssistantCompletedCount ?? 0 }}</div>
-                        <p class="metric-meta">Surgery done</p>
+                        <p class="metric-meta">Surgery done today</p>
                     </div>
                 </div>
             </a>
@@ -2104,7 +2104,7 @@
                     <div>
                         <p class="metric-label">Pending Patient</p>
                         <div class="metric-value">{{ $dischargePendingCount }}</div>
-                        <p class="metric-meta">Discharge &amp; invoices pending</p>
+                        <p class="metric-meta">Discharge &amp; invoices pending today</p>
                     </div>
                 </div>
             </a>
@@ -2117,7 +2117,7 @@
                     <div>
                         <p class="metric-label">Completed</p>
                         <div class="metric-value">{{ $dischargeCompletedCount ?? 0 }}</div>
-                        <p class="metric-meta">Patients discharged</p>
+                        <p class="metric-meta">Patients discharged today</p>
                     </div>
                 </div>
             </a>
@@ -2132,24 +2132,24 @@
                     </div>
                     <div>
                         <p class="metric-label">Pending Patient</p>
-                        <div class="metric-value">{{ $counsellingPendingCount }}</div>
-                        <p class="metric-meta">Awaiting counselling</p>
+                        <div class="metric-value">{{ $counsellingPendingCount ?? 0 }}</div>
+                        <p class="metric-meta">Awaiting counselling today</p>
                     </div>
                 </div>
             </a>
-            <!-- <a href="#counsellingPanel" data-acc-tab="history" class="bento-card span-2 text-decoration-none acc-tab-card">
-                            <span class="bento-gloss" aria-hidden="true"></span>
-                            <div class="bento-stat">
-                                <div class="bento-icon ig-green">
-                                    <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
-                                </div>
-                                <div>
-                                    <p class="metric-label">Completed</p>
-                                    <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
-                                    <p class="metric-meta">Counselled &amp; onward</p>
-                                </div>
-                            </div>
-                        </a> -->
+            <a href="#counsellingPanel" data-acc-tab="history" class="bento-card span-2 text-decoration-none acc-tab-card">
+                <span class="bento-gloss" aria-hidden="true"></span>
+                <div class="bento-stat">
+                    <div class="bento-icon ig-green">
+                        <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">Completed</p>
+                        <div class="metric-value">{{ $counsellingCompletedCount ?? 0 }}</div>
+                        <p class="metric-meta">Counselled today</p>
+                    </div>
+                </div>
+            </a>
             <a href="#counsellingPanel" data-acc-tab="payments" class="bento-card span-2 text-decoration-none acc-tab-card">
                 <span class="bento-gloss" aria-hidden="true"></span>
                 <div class="bento-stat">
@@ -2159,7 +2159,7 @@
                     <div>
                         <p class="metric-label">Payment Status</p>
                         <div class="metric-value">{{ $counsellingPaymentCount ?? 0 }}</div>
-                        <p class="metric-meta">Package paid &amp; onward</p>
+                        <p class="metric-meta">Paid today</p>
                     </div>
                 </div>
             </a>
@@ -2306,6 +2306,7 @@
                                 <th>MRD</th>
                                 <th>Patient</th>
                                 @if($isHospitalAdmin)
+                                    <th>Doctor</th>
                                     <th>Receptionist</th>
                                 @endif
                                 <th>Age / Gender</th>
@@ -2314,7 +2315,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @php $pqColspan = $isHospitalAdmin ? 7 : 6; @endphp
+                            @php $pqColspan = $isHospitalAdmin ? 8 : 6; @endphp
                             @forelse($primaryQueue as $i => $patient)
                             @php
                                 $qArrivedAt = $patient->checked_in_at ?? $patient->created_at;
@@ -2327,6 +2328,7 @@
                                 <td><strong>{{ $patient->patient_code }}</strong></td>
                                 <td>{{ $patient->full_name }}</td>
                                 @if($isHospitalAdmin)
+                                    <td>{{ $patient->doctor?->name ?? '—' }}</td>
                                     <td>
                                         @if($patient->reception?->name)
                                             <span class="pq-rec-chip" title="Added by {{ $patient->reception->name }}">

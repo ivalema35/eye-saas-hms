@@ -395,7 +395,8 @@ Roles / History / OT Patients panel design. --}}
                 <strong class="ph-filter-title">Search &amp; Date Range Filter</strong>
             </div>
 
-            <form method="GET" class="phone-history-filter">
+            <form method="GET" id="phoneHistoryFilterForm" class="phone-history-filter"
+                action="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}">
                 <div>
                     <label class="form-label" for="ph_search">Name / Mobile number</label>
                     <div class="ph-search-wrap">
@@ -429,117 +430,8 @@ Roles / History / OT Patients panel design. --}}
         </div>
     </div>
 
-    <div class="phone-history-card">
-        <div class="phone-history-header">
-            <h3 class="phone-history-title"><i class="bi bi-calendar2-week"></i> Phone Appointment Patients</h3>
-            <span style="color:rgba(255,255,255,.85);font-size:.8rem;font-weight:600">{{ $patients->total() }} {{ Str::plural('record', $patients->total()) }}</span>
-        </div>
-
-        <div class="phone-history-body">
-            @if($search !== '')
-                <div class="ph-active-search">
-                    <i class="bi bi-search"></i> Showing results for "<strong>{{ $search }}</strong>"
-                    <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug, 'from_date' => $fromDate, 'to_date' => $toDate]) }}"><i class="bi bi-x-circle-fill"></i></a>
-                </div>
-            @endif
-            @forelse($groupedPatients as $date => $rows)
-                <h4 class="phone-history-date">{{ \Carbon\Carbon::parse($date)->format('d M Y') }}</h4>
-                <div class="table-responsive">
-                    <table class="table phone-history-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>MRD</th>
-                                <th>Patient</th>
-                                <th>Doctor</th>
-                                <th>Reception</th>
-                                <th>Contact</th>
-                                <th>Case</th>
-                                <th>Status</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($rows as $index => $patient)
-                                @php $checkedIn = !is_null($patient->case_id); @endphp
-                                <tr style="{{ $checkedIn ? '' : 'background:rgba(255,243,205,.25)' }}">
-                                    <td>{{ $index + 1 }}</td>
-                                    <td><strong>{{ $patient->patient_code }}</strong></td>
-                                    <td>{{ $patient->full_name }}</td>
-                                    <td>{{ $patient->doctor?->name ?? '—' }}</td>
-                                    <td>{{ $patient->reception?->name ?? '—' }}</td>
-                                    <td>{{ $patient->contact_no ?: '—' }}</td>
-                                    <td>
-                                        @if($checkedIn)
-                                            {{ $patient->caseType?->case_type ?? '—' }}
-                                            <div style="font-size:.75rem;color:#64748B">{{ money((float)$patient->case_fee, 0) }}</div>
-                                        @else
-                                            <span style="color:#94A3B8;font-size:.8rem">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($checkedIn)
-                                            <span class="ph-badge-done">
-                                                <i class="bi bi-check-circle-fill"></i> Checked In
-                                            </span>
-                                        @else
-                                            <span class="ph-badge-pending">
-                                                <i class="bi bi-clock"></i> Pending
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td style="white-space:nowrap">
-                                        {{-- View button — always shown --}}
-                                        <button type="button"
-                                            class="ph-view-btn"
-                                            data-mrd="{{ $patient->patient_code }}"
-                                            data-name="{{ $patient->full_name }}"
-                                            data-age="{{ $patient->age }}"
-                                            data-gender="{{ ucfirst($patient->gender) }}"
-                                            data-contact="{{ $patient->contact_no }}"
-                                            data-whatsapp="{{ $patient->whatsapp_no ?: '' }}"
-                                            data-city="{{ $patient->cityName ?: '—' }}"
-                                            data-date="{{ $patient->appointment_date ? \Carbon\Carbon::parse($patient->appointment_date)->format('d M Y') : '—' }}"
-                                            data-doctor="{{ $patient->doctor?->name ?? '—' }}"
-                                            data-reception="{{ $patient->reception?->name ?? '—' }}"
-                                            data-case="{{ $patient->caseType?->case_type ?? '—' }}"
-                                            data-fee="{{ $patient->case_fee ? money((float)$patient->case_fee, 0) : '—' }}"
-                                            data-registered="{{ $patient->created_at?->format('d M Y, h:i A') }}"
-                                            data-occupation="{{ $patient->occupation ?: '' }}"
-                                            data-checkin-url="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                            data-checked="{{ $patient->case_id ? '1' : '0' }}">
-                                            <i class="bi bi-eye"></i> View
-                                        </button>
-                                        {{-- Check In button — only for pending --}}
-                                        @haspermission('patient_register')
-                                        @if(!$checkedIn)
-                                            <a href="{{ route('hospital.patients.checkin', ['slug' => $slug, 'patient' => $patient->id]) }}"
-                                               class="ph-checkin-btn ms-1">
-                                                <i class="bi bi-person-check-fill"></i> Check In
-                                            </a>
-                                        @endif
-                                        @endhaspermission
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @empty
-                <div class="phone-history-empty">
-                    <i class="bi bi-inbox" style="font-size:1.8rem;display:block;margin-bottom:.5rem;color:rgba(27,79,114,.35)"></i>
-                    @if($search !== '')
-                        No phone appointment history found for "{{ $search }}".
-                    @else
-                        No phone appointment history found for selected dates.
-                    @endif
-                </div>
-            @endforelse
-
-            <div class="phone-history-footer">
-                {{ $patients->links('vendor.pagination.hms') }}
-            </div>
-        </div>
+    <div id="phoneHistoryResults">
+        @include('hospital.patients.partials.phone-history-results')
     </div>
     </div>{{-- /.phone-history-outer-card --}}
 </div>
@@ -669,45 +561,91 @@ Roles / History / OT Patients panel design. --}}
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const resultsBox = document.getElementById('phoneHistoryResults');
+    const filterForm = document.getElementById('phoneHistoryFilterForm');
+    const searchInput = document.getElementById('ph_search');
+
+    // AJAX refresh of the results block only — the filter form (and the
+    // focused search input inside it) is never touched, so typing never
+    // loses the cursor/focus the way a full page reload would.
+    function loadResults(url) {
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (res) {
+                if (!res.ok) { throw new Error('bad response'); }
+                return res.text();
+            })
+            .then(function (html) {
+                resultsBox.innerHTML = html;
+                window.history.replaceState(null, '', url);
+            })
+            .catch(function () {
+                window.location.href = url; // fallback: plain navigation
+            });
+    }
+
+    if (filterForm && resultsBox) {
+        filterForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const params = new URLSearchParams(new FormData(filterForm));
+            loadResults(filterForm.action + '?' + params.toString());
+        });
+    }
+
+    if (searchInput && filterForm) {
+        let phSearchTimer = null;
+        searchInput.addEventListener('input', function () {
+            clearTimeout(phSearchTimer);
+            phSearchTimer = setTimeout(function () {
+                if (typeof filterForm.requestSubmit === 'function') {
+                    filterForm.requestSubmit();
+                } else {
+                    filterForm.submit();
+                }
+            }, 500);
+        });
+    }
+
     const modal = new bootstrap.Modal(document.getElementById('patientDetailModal'));
 
-    document.querySelectorAll('.ph-view-btn').forEach(function (btn) {
-        btn.addEventListener('click', function () {
-            const d = btn.dataset;
-            const checkedIn = d.checked === '1';
+    // Delegated so it keeps working on rows swapped in by loadResults() above.
+    document.addEventListener('click', function (e) {
+        const btn = e.target.closest('.ph-view-btn');
+        if (!btn) { return; }
 
-            document.getElementById('mdlName').textContent = d.name;
-            document.getElementById('mdlMrd').textContent = d.mrd;
-            document.getElementById('mdlMeta').textContent =
-                d.age + 'y / ' + d.gender + (d.occupation ? ' · ' + d.occupation : '') + '  |  MRD: ' + d.mrd;
+        const d = btn.dataset;
+        const checkedIn = d.checked === '1';
 
-            document.getElementById('mdlContact').textContent  = d.contact  || '—';
-            document.getElementById('mdlWhatsapp').textContent = d.whatsapp || 'Same as mobile';
-            document.getElementById('mdlCity').textContent     = d.city     || '—';
-            document.getElementById('mdlDate').textContent     = d.date     || '—';
-            document.getElementById('mdlDoctor').textContent   = d.doctor   || '—';
-            document.getElementById('mdlReception').textContent= d.reception|| '—';
-            document.getElementById('mdlCase').textContent     = d.case     || '—';
-            document.getElementById('mdlFee').textContent      = d.fee      || '—';
-            document.getElementById('mdlRegistered').textContent = d.registered || '—';
+        document.getElementById('mdlName').textContent = d.name;
+        document.getElementById('mdlMrd').textContent = d.mrd;
+        document.getElementById('mdlMeta').textContent =
+            d.age + 'y / ' + d.gender + (d.occupation ? ' · ' + d.occupation : '') + '  |  MRD: ' + d.mrd;
 
-            const badge = document.getElementById('mdlStatusBadge');
-            if (checkedIn) {
-                badge.innerHTML = '<span style="background:rgba(39,174,96,.25);color:#D5F5E3;border:1px solid rgba(39,174,96,.4);border-radius:20px;padding:.25rem .85rem;font-size:.72rem;font-weight:700"><i class=\'bi bi-check-circle-fill\'></i> Checked In</span>';
-            } else {
-                badge.innerHTML = '<span style="background:rgba(255,193,7,.2);color:#FFEAA7;border:1px solid rgba(255,193,7,.35);border-radius:20px;padding:.25rem .85rem;font-size:.72rem;font-weight:700"><i class=\'bi bi-clock\'></i> Pending</span>';
-            }
+        document.getElementById('mdlContact').textContent  = d.contact  || '—';
+        document.getElementById('mdlWhatsapp').textContent = d.whatsapp || 'Same as mobile';
+        document.getElementById('mdlCity').textContent     = d.city     || '—';
+        document.getElementById('mdlDate').textContent     = d.date     || '—';
+        document.getElementById('mdlDoctor').textContent   = d.doctor   || '—';
+        document.getElementById('mdlReception').textContent= d.reception|| '—';
+        document.getElementById('mdlCase').textContent     = d.case     || '—';
+        document.getElementById('mdlFee').textContent      = d.fee      || '—';
+        document.getElementById('mdlRegistered').textContent = d.registered || '—';
 
-            const footer = document.getElementById('mdlCheckinFooter');
-            if (!checkedIn) {
-                document.getElementById('mdlCheckinLink').href = d.checkinUrl;
-                footer.style.display = 'flex';
-            } else {
-                footer.style.display = 'none';
-            }
+        const badge = document.getElementById('mdlStatusBadge');
+        if (checkedIn) {
+            badge.innerHTML = '<span style="background:rgba(39,174,96,.25);color:#D5F5E3;border:1px solid rgba(39,174,96,.4);border-radius:20px;padding:.25rem .85rem;font-size:.72rem;font-weight:700"><i class=\'bi bi-check-circle-fill\'></i> Checked In</span>';
+        } else {
+            badge.innerHTML = '<span style="background:rgba(255,193,7,.2);color:#FFEAA7;border:1px solid rgba(255,193,7,.35);border-radius:20px;padding:.25rem .85rem;font-size:.72rem;font-weight:700"><i class=\'bi bi-clock\'></i> Pending</span>';
+        }
 
-            modal.show();
-        });
+        const footer = document.getElementById('mdlCheckinFooter');
+        if (!checkedIn) {
+            document.getElementById('mdlCheckinLink').href = d.checkinUrl;
+            footer.style.display = 'flex';
+        } else {
+            footer.style.display = 'none';
+        }
+
+        modal.show();
     });
 });
 </script>

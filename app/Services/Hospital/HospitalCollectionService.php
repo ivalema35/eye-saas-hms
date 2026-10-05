@@ -27,21 +27,24 @@ class HospitalCollectionService
      *     total: float
      * }
      */
-    public function summaryForDateRange(string $startDate, string $endDate): array
+    public function summaryForDateRange(string $startDate, string $endDate, ?int $receptionistId = null): array
     {
         $opd = (float) Patient::query()
             ->whereDate('appointment_date', '>=', $startDate)
             ->whereDate('appointment_date', '<=', $endDate)
+            ->when($receptionistId, fn($q) => $q->where('reception_id', $receptionistId))
             ->sum('case_fee');
 
         $otCollected = (float) OtPayment::query()
             ->whereDate('paid_at', '>=', $startDate)
             ->whereDate('paid_at', '<=', $endDate)
+            ->when($receptionistId, fn($q) => $q->where('recorded_by', $receptionistId))
             ->sum('package_amount');
 
         $otRefunded = (float) OtRefund::query()
             ->whereDate('refunded_at', '>=', $startDate)
             ->whereDate('refunded_at', '<=', $endDate)
+            ->when($receptionistId, fn($q) => $q->where('refunded_by', $receptionistId))
             ->sum('amount');
 
         $otNet = round($otCollected - $otRefunded, 2);
@@ -65,11 +68,11 @@ class HospitalCollectionService
      *     total: float
      * }
      */
-    public function summaryForDay(CarbonInterface|string $day): array
+    public function summaryForDay(CarbonInterface|string $day, ?int $receptionistId = null): array
     {
         $date = Carbon::parse($day)->toDateString();
 
-        return $this->summaryForDateRange($date, $date);
+        return $this->summaryForDateRange($date, $date, $receptionistId);
     }
 
     /**

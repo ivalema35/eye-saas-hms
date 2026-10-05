@@ -5,8 +5,8 @@
         : ($nextAppointmentNumber ?? 'Auto on save');
 @endphp
 
-{{-- Row 1 --}}
-<div class="rpc-grid rpc-grid--4">
+{{-- Row 1: Appointment ID, Type, Date --}}
+<div class="rpc-grid rpc-grid--3">
     <div class="rpc-field">
         <label class="form-label">Appointment ID</label>
         <input type="text" class="form-control hms-input" value="{{ $appointmentIdDisplay }}" readonly tabindex="-1"
@@ -25,6 +25,21 @@
         <input type="text" name="appointment_date" id="appointment_date" class="form-control flatpickr hms-input"
             value="{{ old('appointment_date', optional($appointment?->appointment_date)->format('Y-m-d') ?? ($doctorLoadDate ?? now()->toDateString())) }}"
             required>
+    </div>
+</div>
+
+{{-- Row 2: Doctor, Time, Contact, WhatsApp --}}
+<div class="rpc-grid rpc-grid--4">
+    <div class="rpc-field">
+        <label class="form-label">Doctor Name <span class="req">*</span></label>
+        <select name="doctor_id" id="doctor_id" class="form-control select2 hms-select rpc-auto-open" required>
+            <option value="">Select doctor...</option>
+            @foreach($doctors as $doctor)
+                <option value="{{ $doctor->id }}" {{ (string) old('doctor_id', $appointment->doctor_id ?? '') === (string) $doctor->id ? 'selected' : '' }}>
+                    Dr. {{ $doctor->name }}
+                </option>
+            @endforeach
+        </select>
     </div>
     <div class="rpc-field">
         <label class="form-label">Appointment Time</label>
@@ -52,10 +67,6 @@
             <div id="slotAppointmentsChips" class="ot-slot-occupancy-chips"></div>
         </div>
     </div>
-</div>
-
-{{-- Row 2 --}}
-<div class="rpc-grid rpc-grid--4">
     <div class="rpc-field">
         <label class="form-label">Contact Number <span class="req">*</span></label>
         <input type="text" name="mobile_no" id="mobile_no"
@@ -73,6 +84,10 @@
         @error('whatsapp_no')
         <div class="invalid-feedback d-block">{{ $message }}</div>@enderror
     </div>
+</div>
+
+{{-- Row 3: First name, Surname, Middle name --}}
+<div class="rpc-grid rpc-grid--3">
     <div class="rpc-field">
         <label class="form-label">First Name <span class="req">*</span></label>
         <input type="text" name="patient_name" class="form-control hms-input"
@@ -83,25 +98,10 @@
         <input type="text" name="surname" class="form-control hms-input"
             value="{{ old('surname', $appointment->surname ?? '') }}" required placeholder="Surname">
     </div>
-</div>
-
-{{-- Row 3 --}}
-<div class="rpc-grid rpc-grid--2">
     <div class="rpc-field">
         <label class="form-label">Middle Name</label>
         <input type="text" name="middle_name" class="form-control hms-input"
             value="{{ old('middle_name', $appointment->middle_name ?? '') }}" placeholder="Middle name">
-    </div>
-    <div class="rpc-field">
-        <label class="form-label">Doctor Name <span class="req">*</span></label>
-        <select name="doctor_id" id="doctor_id" class="form-control select2 hms-select rpc-auto-open" required>
-            <option value="">Select doctor...</option>
-            @foreach($doctors as $doctor)
-                <option value="{{ $doctor->id }}" {{ (string) old('doctor_id', $appointment->doctor_id ?? '') === (string) $doctor->id ? 'selected' : '' }}>
-                    Dr. {{ $doctor->name }}
-                </option>
-            @endforeach
-        </select>
     </div>
 </div>
 
