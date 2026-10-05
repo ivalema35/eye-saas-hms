@@ -102,6 +102,17 @@ class OtCounsellorApiController extends Controller
         // id, so the correct city/district/state has to come from the
         // `masterCity` accessor chain, not a plain eager-loaded relation.
         $bookings->getCollection()->transform(function (OtBooking $booking): array {
+            // payment_status/total_paid/remaining_balance are Eloquent
+            // accessors, not real columns — `toArray()` omits them unless
+            // explicitly appended first (same pattern as OtWardApiController,
+            // OtAssistantApiController, OtDischargeApiController,
+            // OtAccountantApiController). This controller never did, so the
+            // mobile/tablet "Payment Status" tab always serialized
+            // `payment_status` as missing/null → rendered as "—" client-side
+            // even though the web counsellor dashboard reads the same
+            // accessor directly (`$booking->payment_status` works fine as a
+            // plain property access, independent of array/JSON serialization).
+            $booking->append(['payment_status', 'total_paid', 'remaining_balance']);
             $arr = $booking->toArray();
             if ($booking->patient) {
                 $arr['patient']['full_name'] = $booking->patient->full_name;
