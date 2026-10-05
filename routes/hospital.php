@@ -518,6 +518,11 @@ Route::prefix('{slug}')
                             ->whereNumber('id')
                             ->middleware('permission:ot_appointment_cancel');
 
+                        Route::delete('/{id}', [OtAppointmentController::class, 'destroy'])
+                            ->name('destroy')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_appointment_cancel');
+
                         // Reception check-in also uses this (search by UHID/name/mobile/appointment
                         // number) — allow either OT staff or OPD reception to hit it.
                         Route::get('/search', [OtAppointmentController::class, 'search'])

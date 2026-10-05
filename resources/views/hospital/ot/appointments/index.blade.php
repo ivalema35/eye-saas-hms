@@ -5,148 +5,162 @@ rendered inside the card itself so the whole block (heading, breadcrumb,
 panel bar, table) sits inside one bordered card, per design refresh. --}}
 
 @section('content')
-    <div class="ot-appt-page">
-        <div class="card ot-premium-card border-0">
-            <div class="ot-header-block">
-                <div class="ot-header-title">
-                    <i class="bi bi-calendar2-check-fill"></i> OT Appointments
-                </div>
-                <nav class="ot-breadcrumb" aria-label="breadcrumb">
-                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
-                    <span class="ot-breadcrumb-sep">/</span>
-                    <span>OT</span>
-                    <span class="ot-breadcrumb-sep">/</span>
-                    <span class="ot-breadcrumb-current">Appointments</span>
-                </nav>
+<div class="ot-appt-page">
+    <div class="card ot-premium-card border-0">
+        <div class="ot-header-block">
+            <div class="ot-header-title">
+                <i class="bi bi-calendar2-check-fill"></i> OT Appointments
             </div>
-            <div class="ot-inner-panel">
-                <div class="ot-card-header">
-                    <div class="ot-title-wrap">
-                        <span class="ot-title-icon" aria-hidden="true">
-                            <i class="bi bi-calendar2-week" style="font-size: 1.2rem;"></i>
-                        </span>
-                        <div class="flex-grow-1">
-                            <h5 class="ot-title">Appointment Register</h5>
-                            <div class="ot-subtitle">Pre-registration appointments booked over
-                                phone/walk-in/online/referral.
-                            </div>
+            <nav class="ot-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="ot-breadcrumb-sep">/</span>
+                <span>OT</span>
+                <span class="ot-breadcrumb-sep">/</span>
+                <span class="ot-breadcrumb-current">Appointments</span>
+            </nav>
+        </div>
+        <div class="ot-inner-panel">
+            <div class="ot-card-header">
+                <div class="ot-title-wrap">
+                    <span class="ot-title-icon" aria-hidden="true">
+                        <i class="bi bi-calendar2-week" style="font-size: 1.2rem;"></i>
+                    </span>
+                    <div class="flex-grow-1">
+                        <h5 class="ot-title">Appointment Register</h5>
+                        <div class="ot-subtitle">Pre-registration appointments booked over
+                            phone/walk-in/online/referral.
                         </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 flex-wrap ot-header-actions">
-                        <form method="GET" action="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
-                            class="ot-status-form">
-                            <select name="status" class="form-select form-select-sm ot-status-select"
-                                onchange="this.form.submit()">
-                                <option value="all" {{ $activeStatus === 'all' ? 'selected' : '' }}>
-                                    All Status ({{ $stageCounts->sum() }})
-                                </option>
-                                @foreach($stages as $value => $label)
-                                    <option value="{{ $value }}" {{ $activeStatus === $value ? 'selected' : '' }}>
-                                        {{ $label }} ({{ $stageCounts[$value] ?? 0 }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </form>
-                        @haspermission('ot_appointment_create')
-                        <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="ot-add-btn">
-                            <i class="bi bi-plus-lg"></i> New Appointment
-                        </a>
-                        @endhaspermission
                     </div>
                 </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap ot-header-actions">
+                    <form method="GET" action="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
+                        class="ot-status-form">
+                        <select name="status" class="form-select form-select-sm ot-status-select"
+                            onchange="this.form.submit()">
+                            <option value="all" {{ $activeStatus === 'all' ? 'selected' : '' }}>
+                                All Status ({{ $stageCounts->sum() }})
+                            </option>
+                            @foreach($stages as $value => $label)
+                                <option value="{{ $value }}" {{ $activeStatus === $value ? 'selected' : '' }}>
+                                    {{ $label }} ({{ $stageCounts[$value] ?? 0 }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                    @haspermission('ot_appointment_create')
+                    <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="ot-add-btn">
+                        <i class="bi bi-plus-lg"></i> New Appointment
+                    </a>
+                    @endhaspermission
+                </div>
+            </div>
 
-                <div class="card-body p-0">
-                    @if(session('success'))
-                        <div class="alert alert-success mx-4 mt-3 ot-alert"><i
-                                class="bi bi-check-circle me-1"></i>{{ session('success') }}</div>
-                    @endif
-                    @if(session('error'))
-                        <div class="alert alert-danger mx-4 mt-3 ot-alert"><i
-                                class="bi bi-exclamation-triangle me-1"></i>{{ session('error') }}</div>
-                    @endif
+            <div class="card-body p-0">
+                @if(session('success'))
+                    <div class="alert alert-success mx-4 mt-3 ot-alert"><i
+                            class="bi bi-check-circle me-1"></i>{{ session('success') }}</div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger mx-4 mt-3 ot-alert"><i
+                            class="bi bi-exclamation-triangle me-1"></i>{{ session('error') }}</div>
+                @endif
 
-                    <div class="ot-table-wrap">
-                        <div id="otAppointmentsTableContainer">
-                            <table class="ot-table" id="otAppointmentsTable" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th>Appt #</th>
-                                        <th>Patient</th>
-                                        <th>Mobile</th>
-                                        <th>Type</th>
-                                        <th>Date</th>
-                                        <th>Doctor</th>
-                                        <th>Status</th>
-                                        <th class="ot-actions-col">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($appointments as $appointment)
-                                        <tr>
-                                            <td class="fw-bold">{{ $appointment->appointment_number }}</td>
-                                            <td>{{ $appointment->patient_name }}</td>
-                                            <td>{{ $appointment->mobile_no }}</td>
-                                            <td><span
-                                                    class="badge ot-type-badge {{ $appointment->appointment_type === 'ot' ? '' : 'text-capitalize' }}">{{ $appointment->appointment_type === 'ot' ? 'OT' : str_replace('_', ' ', $appointment->appointment_type) }}</span>
-                                            </td>
-                                            <td>{{ optional($appointment->appointment_date)->format('d M Y') }}</td>
-                                            <td>{{ $appointment->doctor?->name ? 'Dr. ' . $appointment->doctor->name : '-' }}
-                                            </td>
-                                            <td>
-                                                <span
-                                                    class="badge ot-status-badge {{ $appointment->stage_badge_class }}">{{ $appointment->stage_label }}</span>
-                                            </td>
-                                            <td class="ot-actions-cell">
-                                                @if(in_array($appointment->status, ['booked', 'confirmed']))
-                                                    @if($appointment->canWalkIn())
-                                                        @haspermission('patient_register')
-                                                        <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
-                                                            class="ot-walkin-btn me-1"
-                                                            title="Register as walk-in (prefill from this appointment)">
-                                                            <i class="bi bi-person-walking"></i> Walk-In
-                                                        </a>
-                                                        @endhaspermission
-                                                    @endif
-                                                    @haspermission('ot_appointment_edit')
-                                                    <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
-                                                        class="ot-edit-btn" title="Edit appointment">
-                                                        <i class="bi bi-pencil-square"></i> Edit
-                                                    </a>
-                                                    @endhaspermission
-                                                    @unless(
-                                                        ($appointment->canWalkIn() && hospital_can('patient_register'))
-                                                        || hospital_can('ot_appointment_edit')
-                                                    )
-                                                        <span class="text-muted small">-</span>
-                                                    @endunless
-                                                @else
-                                                    <span class="text-muted small">-</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="8" class="text-center ot-empty">
-                                                <i class="bi bi-inbox me-1"></i> No appointments found.
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                <div class="ot-table-wrap">
+                    <div id="otAppointmentsTableContainer">
+                        <table class="ot-table" id="otAppointmentsTable" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Appt #</th>
+                                    <th>Patient</th>
+                                    <th>Mobile</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Doctor</th>
+                                    <th>Status</th>
+                                    <th class="ot-actions-col">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($appointments as $appointment)
+                                <tr>
+                                    <td class="fw-bold">{{ $appointment->appointment_number }}</td>
+                                    <td>{{ $appointment->patient_name }}</td>
+                                    <td>{{ $appointment->mobile_no }}</td>
+                                    <td><span
+                                            class="badge ot-type-badge {{ $appointment->appointment_type === 'ot' ? '' : 'text-capitalize' }}">{{ $appointment->appointment_type === 'ot' ? 'OT' : str_replace('_', ' ', $appointment->appointment_type) }}</span>
+                                    </td>
+                                    <td>{{ optional($appointment->appointment_date)->format('d M Y') }}</td>
+                                    <td>{{ $appointment->doctor?->name ? 'Dr. ' . $appointment->doctor->name : '-' }}
+                                    </td>
+                                    <td>
+                                        <span
+                                            class="badge ot-status-badge {{ $appointment->stage_badge_class }}">{{ $appointment->stage_label }}</span>
+                                    </td>
+                                    <td class="ot-actions-cell">
+                                        @if(in_array($appointment->status, ['booked', 'confirmed']))
+                                        @if($appointment->canWalkIn())
+                                        @haspermission('patient_register')
+                                        <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
+                                            class="ot-walkin-btn me-1"
+                                            title="Register as walk-in (prefill from this appointment)">
+                                            <i class="bi bi-person-walking"></i> Walk-In
+                                        </a>
+                                        @endhaspermission
+                                        @endif
+                                        @haspermission('ot_appointment_edit')
+                                        <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
+                                            class="ot-edit-btn me-1" title="Edit appointment">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        @endhaspermission
+                                        @endif
+                                        @haspermission('ot_appointment_cancel')
+                                        <form method="POST"
+                                            action="{{ route('hospital.ot.appointments.destroy', ['slug' => $slug, 'id' => $appointment->id]) }}"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Delete this appointment? This cannot be undone.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="ot-icon-btn ot-icon-btn-cancel"
+                                                title="Delete appointment">
+                                                <i class="bi bi-trash3"></i>
+                                            </button>
+                                        </form>
+                                        @endhaspermission
+                                        @unless(
+                                                (in_array($appointment->status, ['booked', 'confirmed']) && (
+                                                    ($appointment->canWalkIn() && hospital_can('patient_register'))
+                                                    || hospital_can('ot_appointment_edit')
+                                                ))
+                                                || hospital_can('ot_appointment_cancel')
+                                            )
+                                            <span class="text-muted small">-</span>
+                                        @endunless
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="8" class="text-center ot-empty">
+                                        <i class="bi bi-inbox me-1"></i> No appointments found.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 @endsection
 
 @push('styles')
     <style>
         /*
-                                            OT Appointments Index — design refresh (hospital shell theme, #1B4F72).
-                                            Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                                        */
+                                                OT Appointments Index — design refresh (hospital shell theme, #1B4F72).
+                                                Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                                            */
 
         .ot-appt-page {
             --ot-primary: #1B4F72;

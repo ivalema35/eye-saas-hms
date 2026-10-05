@@ -209,10 +209,10 @@
         }
 
         /*
-                              Hospital Admin Dashboard Theme
-                              Primary soft: #EBF5FB · Secondary: #1B4F72
-                              Hover: soft neutral shadow (no blue glow)
-                            */
+                                  Hospital Admin Dashboard Theme
+                                  Primary soft: #EBF5FB · Secondary: #1B4F72
+                                  Hover: soft neutral shadow (no blue glow)
+                                */
 
         /* ── Theme tokens (scoped to this page) ────────────────────────────────── */
         .bento-page {
@@ -534,8 +534,8 @@
         }
 
         /* Type-colored icon badges — same idea as the receptionist 5-card row:
-                               each stat gets a pastel background tinted to match its own icon color
-                               (set inline per-icon), instead of one flat neutral tone. */
+                                   each stat gets a pastel background tinted to match its own icon color
+                                   (set inline per-icon), instead of one flat neutral tone. */
         .ig-blue {
             background: #EBF5FB !important;
             border: 1px solid rgba(27, 79, 114, .18) !important;
@@ -883,22 +883,22 @@
         }
 
         /* .dashboard-table-scroll .bento-table {
-                                min-width: 980px;
-                                width: max-content;
-                                width: -moz-max-content;
-                            } */
+                                    min-width: 980px;
+                                    width: max-content;
+                                    width: -moz-max-content;
+                                } */
 
         /* .dashboard-table-scroll .bento-table thead th {
-                                position: sticky;
-                                top: 0;
-                                z-index: 2;
-                                background: var(--dash-secondary);
-                            } */
+                                    position: sticky;
+                                    top: 0;
+                                    z-index: 2;
+                                    background: var(--dash-secondary);
+                                } */
 
         /* .dashboard-table-scroll .bento-table thead th:first-child {
-                                left: 0;
-                                z-index: 3;
-                            } */
+                                    left: 0;
+                                    z-index: 3;
+                                } */
 
         .rec-detail-btn {
             display: inline-flex;
@@ -2283,7 +2283,7 @@
             <div class="bento-card h-100">
                 <div class="bento-header pq-header">
                     <h3 class="bento-title">
-                        <i class="fa-solid fa-list-ol me-1"></i> My Primary Queue
+                        <i class="fa-solid fa-list-ol me-1"></i>Primary Queue
                     </h3>
                     <div class="pq-tools">
                         @if($primaryQueue->count() > 0)
@@ -2861,9 +2861,9 @@
             <div class="col-12">
                 <div class="tap-table-wrap">
                     <!-- <div class="tap-header">
-                                            <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
-                                            <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
-                                        </div> -->
+                                                <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                                                <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+                                            </div> -->
                     <div class="tap-header">
                         <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
 
