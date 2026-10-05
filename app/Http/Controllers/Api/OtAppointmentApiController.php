@@ -265,6 +265,19 @@ class OtAppointmentApiController extends Controller
         return response()->json(['success' => true, 'message' => 'Appointment cancelled.', 'data' => ['status' => $appointment->status]]);
     }
 
+    public function destroy(string $slug, int $id): JsonResponse
+    {
+        $appointment = OtAppointment::query()->find($id);
+
+        if (! $appointment) {
+            return response()->json(['success' => false, 'message' => 'Appointment not found.'], 404);
+        }
+
+        $appointment->delete();
+
+        return response()->json(['success' => true, 'message' => 'Appointment deleted.']);
+    }
+
     public function search(Request $request): JsonResponse
     {
         $term = trim((string) $request->query('q', ''));

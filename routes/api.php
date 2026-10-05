@@ -586,6 +586,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                             ->name('cancel')
                             ->whereNumber('id')
                             ->middleware('permission:ot_appointment_cancel');
+
+                        Route::delete('{id}', [OtAppointmentApiController::class, 'destroy'])
+                            ->name('destroy')
+                            ->whereNumber('id')
+                            ->middleware('permission:ot_appointment_cancel');
                     });
 
                     // ========================================================
