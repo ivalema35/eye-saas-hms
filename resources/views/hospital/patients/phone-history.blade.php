@@ -1,439 +1,70 @@
 @extends('hospital.layouts.app')
 @section('title', 'Phone Appointment History')
-{{-- Layout page-header intentionally unused — the heading, breadcrumb and
-list all sit inside one bordered card, matching the Medicine Master / Users /
-Roles / History / OT Patients panel design. --}}
-
-@push('styles')
-<style>
-.phone-history-page {
-    padding-bottom: .25rem;
-}
-
-.phone-history-outer-card {
-    background: #ffffff;
-    border: 1px solid rgba(15, 79, 134, 0.12);
-    border-radius: 16px;
-    box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
-    overflow: hidden;
-    padding: 1.25rem 1.5rem 1.5rem;
-}
-
-.phone-history-header-block {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: .75rem;
-    padding: 0 0 1rem;
-}
-
-.phone-history-page-title {
-    font-weight: 800;
-    font-size: 1.3rem;
-    color: #1B4F72;
-    letter-spacing: -.015em;
-    display: flex;
-    align-items: center;
-    gap: .65rem;
-}
-
-.phone-history-page-title .ph-title-icon {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #1B4F72, #2980B9);
-    color: #fff;
-    font-size: 1.05rem;
-    box-shadow: 0 6px 14px rgba(27, 79, 114, 0.28);
-}
-
-.phone-history-breadcrumb {
-    margin-top: .4rem;
-    display: flex;
-    align-items: center;
-    gap: .4rem;
-    font-size: .85rem;
-    color: #8891a0;
-}
-
-.phone-history-breadcrumb a {
-    color: #8891a0;
-    text-decoration: none;
-}
-
-.phone-history-breadcrumb a:hover {
-    color: #1B4F72;
-}
-
-.phone-history-breadcrumb-sep {
-    color: #c3c9d3;
-}
-
-.phone-history-breadcrumb-current {
-    color: #4a5568;
-    font-weight: 600;
-}
-
-.phone-history-card {
-    background: #ffffff;
-    border: 1px solid rgba(15, 79, 134, 0.08);
-    border-radius: 16px;
-    box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
-    overflow: hidden;
-}
-
-.phone-history-header {
-    padding: 1rem 1.25rem;
-    background: #1B4F72;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.phone-history-title {
-    margin: 0;
-    font-size: .95rem;
-    font-weight: 700;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-}
-
-.phone-history-card-body {
-    padding: 1.25rem 1.5rem;
-}
-
-.ph-filter-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 12px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(27, 79, 114, 0.10);
-    color: #1B4F72;
-    font-size: 1rem;
-}
-
-.ph-filter-title {
-    color: #1B4F72;
-    font-weight: 800;
-}
-
-.ph-btn-outline {
-    border: 1.5px solid rgba(27, 79, 114, 0.24);
-    color: #1B4F72;
-    font-weight: 700;
-    border-radius: 10px;
-    background: #fff;
-    transition: background 170ms ease, border-color 170ms ease;
-}
-
-.ph-btn-outline:hover {
-    background: rgba(27, 79, 114, 0.06);
-    color: #1B4F72;
-    border-color: #1B4F72;
-}
-
-.phone-history-filter {
-    display: flex;
-    align-items: end;
-    gap: .65rem;
-    flex-wrap: wrap;
-}
-
-.phone-history-filter .form-label {
-    font-size: .78rem;
-    font-weight: 700;
-    color: rgba(27, 79, 114, 0.8);
-    margin-bottom: .25rem;
-}
-
-.phone-history-filter .form-control {
-    min-width: 170px;
-    border-radius: 10px;
-    border: 1px solid rgba(27, 79, 114, 0.16);
-    transition: border-color 170ms ease, box-shadow 170ms ease;
-}
-
-.phone-history-filter .form-control:focus {
-    border-color: #1B4F72;
-    box-shadow: 0 0 0 .18rem rgba(27, 79, 114, 0.12);
-}
-
-.phone-history-filter .btn {
-    border-radius: 10px;
-    font-weight: 600;
-    padding: .45rem .9rem;
-}
-
-.ph-filter-divider {
-    width: 1px;
-    align-self: stretch;
-    min-height: 42px;
-    background: rgba(27, 79, 114, 0.12);
-    margin: 0 .15rem;
-}
-
-.ph-search-wrap {
-    position: relative;
-}
-
-.ph-search-wrap i {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: rgba(27, 79, 114, 0.5);
-    font-size: .9rem;
-    pointer-events: none;
-}
-
-.ph-search-wrap .form-control {
-    min-width: 260px;
-    padding-left: 34px;
-}
-
-.ph-btn-search {
-    border-radius: 10px;
-    font-weight: 700;
-    padding: .45rem 1.1rem;
-    background: #1B4F72;
-    border: 1.5px solid #1B4F72;
-    color: #fff;
-    transition: background 170ms ease, box-shadow 170ms ease;
-}
-
-.ph-btn-search:hover {
-    background: #154360;
-    color: #fff;
-    box-shadow: 0 6px 16px rgba(27, 79, 114, 0.28);
-}
-
-.ph-active-search {
-    display: inline-flex;
-    align-items: center;
-    gap: .4rem;
-    background: rgba(27, 79, 114, 0.08);
-    color: #1B4F72;
-    border: 1px solid rgba(27, 79, 114, 0.18);
-    border-radius: 20px;
-    padding: .3rem .85rem;
-    font-size: .8rem;
-    font-weight: 600;
-    margin-bottom: .9rem;
-}
-
-.ph-active-search a {
-    color: #1B4F72;
-    margin-left: .3rem;
-}
-
-.phone-history-body {
-    padding: 1rem 1.25rem 1.25rem;
-}
-
-.phone-history-date {
-    margin: .9rem 0 .55rem;
-    font-size: .94rem;
-    font-weight: 700;
-    color: #1B4F72;
-}
-
-.phone-history-table {
-    margin: 0;
-}
-
-.phone-history-table thead th {
-    background: #F8FAFC;
-    color: #4A5568;
-    font-size: .75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    border-bottom: 1px solid #E2E8F0;
-}
-
-.phone-history-table tbody tr:hover td {
-    background: #F5F8FC;
-}
-
-.phone-history-table td {
-    vertical-align: middle;
-    color: #1F3345;
-    font-size: .9rem;
-}
-
-.phone-history-empty {
-    text-align: center;
-    color: rgba(27, 79, 114, 0.7);
-    padding: 2.2rem 1rem;
-}
-
-.ph-badge-pending {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    background: #FFF3CD;
-    color: #856404;
-    border: 1px solid #FFECB5;
-    border-radius: 20px;
-    padding: .2rem .7rem;
-    font-size: .73rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-.ph-badge-done {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    background: #D1F2EB;
-    color: #0E6655;
-    border: 1px solid #A2DFD0;
-    border-radius: 20px;
-    padding: .2rem .7rem;
-    font-size: .73rem;
-    font-weight: 700;
-    white-space: nowrap;
-}
-.ph-checkin-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    background: #1B4F72;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    padding: .3rem .8rem;
-    font-size: .78rem;
-    font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-    transition: background .15s;
-}
-.ph-checkin-btn:hover { background: #154360; color: #fff; }
-.ph-view-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .3rem;
-    background: #EAF4FB;
-    color: #1B4F72;
-    border: 1px solid rgba(27,79,114,.22);
-    border-radius: 8px;
-    padding: .3rem .8rem;
-    font-size: .78rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background .15s;
-}
-.ph-view-btn:hover { background: #D6EAF8; }
-
-.phone-history-footer {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: flex-end;
-}
-
-@media (max-width: 768px) {
-    .phone-history-header {
-        padding: 1rem;
-    }
-
-    .phone-history-body {
-        padding: .9rem;
-    }
-
-    .phone-history-filter .form-control {
-        min-width: 140px;
-    }
-
-    .ph-search-wrap .form-control {
-        min-width: 100%;
-        width: 100%;
-    }
-
-    .phone-history-filter {
-        width: 100%;
-    }
-
-    .phone-history-filter > div {
-        width: 100%;
-    }
-
-    .ph-filter-divider {
-        display: none;
-    }
-}
-</style>
-@endpush
+{{-- Layout page-header intentionally unused — the heading + breadcrumb are
+rendered inside the card itself, matching the OT Appointments (Appointment
+Register) design refresh: ot-appt-page / ot-premium-card / ot-inner-panel. --}}
 
 @section('content')
-<div class="phone-history-page">
-    <div class="phone-history-outer-card">
-        <div class="phone-history-header-block">
-            <div>
-                <div class="phone-history-page-title"><span class="ph-title-icon"><i class="bi bi-telephone-fill"></i></span> Phone Appointment History</div>
-                <nav class="phone-history-breadcrumb" aria-label="breadcrumb">
-                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
-                    <span class="phone-history-breadcrumb-sep">/</span>
-                    <span class="phone-history-breadcrumb-current">Phone Appointment History</span>
-                </nav>
+<div class="ot-appt-page">
+    <div class="card ot-premium-card border-0">
+        <div class="ot-header-block">
+            <div class="ot-header-title">
+                <i class="bi bi-telephone-fill"></i> Phone Appointment History
             </div>
+            <nav class="ot-breadcrumb" aria-label="breadcrumb">
+                <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                <span class="ot-breadcrumb-sep">/</span>
+                <span class="ot-breadcrumb-current">Phone Appointment History</span>
+            </nav>
         </div>
 
-    <div class="phone-history-card mb-4">
-        <div class="phone-history-card-body">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <span class="ph-filter-icon"><i class="bi bi-funnel-fill"></i></span>
-                <strong class="ph-filter-title">Search &amp; Date Range Filter</strong>
-            </div>
-
-            <form method="GET" id="phoneHistoryFilterForm" class="phone-history-filter"
-                action="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}">
-                <div>
-                    <label class="form-label" for="ph_search">Name / Mobile number</label>
-                    <div class="ph-search-wrap">
-                        <i class="bi bi-search"></i>
-                        <input type="text" id="ph_search" name="search" class="form-control"
-                            value="{{ $search }}"
-                            placeholder="Search by patient name or mobile number"
-                            autocomplete="off">
+        <div class="ot-inner-panel">
+            <div class="ot-card-header">
+                <div class="ot-title-wrap">
+                    <span class="ot-title-icon" aria-hidden="true">
+                        <i class="bi bi-calendar2-week" style="font-size: 1.2rem;"></i>
+                    </span>
+                    <div class="flex-grow-1">
+                        <h5 class="ot-title">Phone Appointment Patients</h5>
+                        <div class="ot-subtitle">Search by name/mobile and filter by date range.</div>
                     </div>
                 </div>
-                <div class="ph-filter-divider d-none d-md-block"></div>
-                <div>
-                    <label class="form-label" for="date_range">Date range</label>
-                    <input type="text" id="date_range" class="form-control"
-                        data-hms-date-range
-                        data-start-name="from_date"
-                        data-end-name="to_date"
-                        data-start-value="{{ $fromDate }}"
-                        data-end-value="{{ $toDate }}"
-                        data-auto-submit="1"
-                        placeholder="Select start → end date"
-                        autocomplete="off"
-                        readonly
-                        style="min-width:220px;">
+                <div class="d-flex align-items-center gap-2 flex-wrap ot-header-actions">
+                    <form method="GET" id="phoneHistoryFilterForm"
+                        class="d-inline-flex align-items-center gap-2 flex-wrap"
+                        action="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}">
+                        <div class="ph-search-wrap">
+                            <i class="bi bi-search"></i>
+                            <input type="text" id="ph_search" name="search"
+                                class="form-control form-control-sm ot-desk-date-input ph-search-input"
+                                value="{{ $search }}"
+                                placeholder="Search by name or mobile"
+                                autocomplete="off">
+                        </div>
+                        <input type="text" id="date_range" class="form-control form-control-sm ot-desk-date-input"
+                            data-hms-date-range
+                            data-start-name="from_date"
+                            data-end-name="to_date"
+                            data-start-value="{{ $fromDate }}"
+                            data-end-value="{{ $toDate }}"
+                            data-auto-submit="1"
+                            placeholder="Date range"
+                            autocomplete="off"
+                            readonly
+                            style="min-width:200px;">
+                    </form>
                 </div>
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn ph-btn-search"><i class="bi bi-search"></i> Search</button>
-                    <a href="{{ route('hospital.patients.phone-history', ['slug' => $slug]) }}" class="btn ph-btn-outline">Reset</a>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="ot-table-wrap">
+                    <div id="phoneHistoryResults">
+                        @include('hospital.patients.partials.phone-history-results')
+                    </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
-
-    <div id="phoneHistoryResults">
-        @include('hospital.patients.partials.phone-history-results')
-    </div>
-    </div>{{-- /.phone-history-outer-card --}}
 </div>
 @endsection
 
@@ -556,6 +187,395 @@ Roles / History / OT Patients panel design. --}}
         </div>
     </div>
 </div>
+@endpush
+
+@push('styles')
+    @include('hospital.ot.partials.desk-filter-styles')
+    <style>
+        /*
+            Phone Appointment History — reuses the OT Appointments (Appointment
+            Register) design refresh (hospital shell theme, #1B4F72).
+        */
+
+        .ot-appt-page {
+            --ot-primary: #1B4F72;
+            --ot-primary-dark: #154160;
+            --ot-s2-06: rgba(27, 79, 114, 0.06);
+            --ot-s2-08: rgba(27, 79, 114, 0.08);
+            --ot-s2-12: rgba(27, 79, 114, 0.12);
+            --ot-s2-18: rgba(27, 79, 114, 0.18);
+            --ot-s2-24: rgba(27, 79, 114, 0.24);
+
+            position: relative;
+            padding: .25rem 0 1.25rem;
+            color: var(--ot-primary);
+            animation: ot-page-in 420ms ease both;
+        }
+
+        @keyframes ot-page-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ot-appt-page .btn,
+        .ot-appt-page .hms-btn {
+            border-radius: 10px;
+            font-weight: 700;
+            transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
+        }
+
+        .ot-appt-page .btn:hover,
+        .ot-appt-page .hms-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .ot-premium-card {
+            background: #ffffff;
+            border: 1px solid rgba(15, 79, 134, 0.12) !important;
+            border-radius: 0.90rem;
+            box-shadow: 0 18px 48px rgba(27, 79, 114, 0.10);
+            overflow: hidden;
+            animation: ot-card-rise 520ms cubic-bezier(.2, .9, .2, 1) both;
+        }
+
+        @keyframes ot-card-rise {
+            from {
+                opacity: 0;
+                transform: translateY(10px) scale(0.99);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .ot-header-block {
+            background: #ffffff;
+            padding: 1.25rem 1.5rem 1rem;
+        }
+
+        .ot-header-title {
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #1b4f72;
+            letter-spacing: -.015em;
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+        }
+
+        .ot-header-title i {
+            color: var(--ot-primary);
+            font-size: 1.2rem;
+        }
+
+        .ot-breadcrumb {
+            margin-top: .4rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .85rem;
+            color: #8891a0;
+        }
+
+        .ot-breadcrumb a {
+            color: #8891a0;
+            text-decoration: none;
+        }
+
+        .ot-breadcrumb a:hover {
+            color: var(--ot-primary);
+        }
+
+        .ot-breadcrumb-sep {
+            color: #c3c9d3;
+        }
+
+        .ot-breadcrumb-current {
+            color: #4a5568;
+            font-weight: 600;
+        }
+
+        .ot-inner-panel {
+            margin: 0 1.5rem 1.5rem;
+            border: 1px solid rgba(15, 79, 134, 0.12);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(27, 79, 114, 0.06);
+        }
+
+        .ot-card-header {
+            background: var(--ot-primary);
+            padding: 1.15rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .ot-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            min-width: 0;
+        }
+
+        .ot-title-wrap>div {
+            min-width: 0;
+        }
+
+        .ot-title-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .ot-title {
+            font-weight: 800;
+            letter-spacing: -0.2px;
+            margin: 0;
+            color: #ffffff;
+        }
+
+        .ot-subtitle {
+            margin: .15rem 0 0;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.78);
+            font-size: .85rem;
+        }
+
+        .ot-header-actions {
+            flex-wrap: wrap;
+        }
+
+        .ot-alert {
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .ot-table-wrap {
+            padding: 0 1.5rem 1.25rem !important;
+            overflow-x: auto;
+        }
+
+        .ot-table {
+            width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+        }
+
+        .ot-table thead th {
+            background: #ffffff;
+            color: rgba(27, 79, 114, 0.62);
+            border-bottom: 2px solid var(--ot-s2-12);
+            font-size: .72rem;
+            letter-spacing: .06em;
+            font-weight: 800;
+            text-transform: uppercase;
+            padding: .85rem .95rem;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .ot-table tbody td {
+            padding: .85rem .95rem;
+            font-weight: 550;
+            font-size: .9rem;
+            color: rgba(23, 50, 77, 0.86);
+            vertical-align: middle;
+            white-space: nowrap;
+            border-bottom: 1px solid var(--ot-s2-08);
+        }
+
+        .ot-table tbody td:first-child {
+            font-weight: 800;
+            color: var(--ot-primary);
+        }
+
+        .ot-table tbody tr:nth-child(even) td {
+            background: #f7fbfe;
+        }
+
+        .ot-table tbody tr:hover td {
+            background: var(--ot-s2-06);
+        }
+
+        .ot-empty {
+            padding: 2.25rem 1rem !important;
+            color: rgba(27, 79, 114, 0.55) !important;
+            font-weight: 700;
+        }
+
+        .ot-date-heading {
+            margin: 1.1rem 0 .55rem;
+            font-size: .94rem;
+            font-weight: 800;
+            color: var(--ot-primary);
+        }
+
+        .ot-date-heading:first-child {
+            margin-top: .25rem;
+        }
+
+        /* Phone-specific pieces (search box, active-search chip, status badges,
+           check-in / view buttons) — same hospital shell palette as above. */
+        .ph-search-wrap {
+            position: relative;
+        }
+
+        .ph-search-wrap i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(27, 79, 114, 0.5);
+            font-size: .85rem;
+            pointer-events: none;
+        }
+
+        .ph-search-input {
+            min-width: 230px;
+            padding-left: 32px !important;
+        }
+
+        .ph-active-search {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: var(--ot-s2-08);
+            color: var(--ot-primary);
+            border: 1px solid var(--ot-s2-18);
+            border-radius: 20px;
+            padding: .3rem .85rem;
+            font-size: .8rem;
+            font-weight: 600;
+            margin: 1rem 0 0;
+        }
+
+        .ph-active-search a {
+            color: var(--ot-primary);
+            margin-left: .3rem;
+        }
+
+        .ph-badge-pending {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            background: #FFF3CD;
+            color: #856404;
+            border: 1px solid #FFECB5;
+            border-radius: 20px;
+            padding: .2rem .7rem;
+            font-size: .73rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .ph-badge-done {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            background: #D1F2EB;
+            color: #0E6655;
+            border: 1px solid #A2DFD0;
+            border-radius: 20px;
+            padding: .2rem .7rem;
+            font-size: .73rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .ph-checkin-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            background: var(--ot-primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: .3rem .8rem;
+            font-size: .78rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .ph-checkin-btn:hover {
+            background: var(--ot-primary-dark);
+            color: #fff;
+        }
+
+        .ph-view-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            background: #EAF4FB;
+            color: var(--ot-primary);
+            border: 1px solid rgba(27, 79, 114, .22);
+            border-radius: 8px;
+            padding: .3rem .8rem;
+            font-size: .78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background .15s;
+        }
+
+        .ph-view-btn:hover {
+            background: #D6EAF8;
+        }
+
+        .ph-footer {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .ot-appt-page,
+            .ot-premium-card,
+            .ot-appt-page .btn,
+            .ot-appt-page .hms-btn {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ot-card-header {
+                align-items: flex-start;
+            }
+
+            .ph-search-input {
+                min-width: 100%;
+                width: 100%;
+            }
+
+            #phoneHistoryFilterForm {
+                width: 100%;
+            }
+
+            #phoneHistoryFilterForm>* {
+                width: 100%;
+            }
+        }
+    </style>
 @endpush
 
 @push('scripts')
