@@ -46,11 +46,17 @@ class OtAppointmentApiController extends Controller
         // convertedPatient.latestOtBooking is eager-loaded so the stage_label/
         // stage_badge_class/stage_key accessors below (same ones web's
         // index.blade.php reads) stay N+1-safe across the whole set.
-        $query = OtAppointment::query()->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking']);
+        // Web pull 2026-10-06 — index() moved off a single optional `date`
+        // filter to a `from_date`/`to_date` range that defaults to today,
+        // matching Hospital\OT\OtAppointmentController::index()'s own move.
+        $today = now()->toDateString();
+        $fromDate = (string) ($request->query('from_date') ?: $today);
+        $toDate = (string) ($request->query('to_date') ?: $fromDate);
 
-        if ($date = $request->query('date')) {
-            $query->whereDate('appointment_date', $date);
-        }
+        $query = OtAppointment::query()
+            ->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking'])
+            ->whereDate('appointment_date', '>=', $fromDate)
+            ->whereDate('appointment_date', '<=', $toDate);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function ($q) use ($search): void {
@@ -115,6 +121,8 @@ class OtAppointmentApiController extends Controller
                 // shorter/stale copy of this list.
                 'stages' => OtAppointment::STAGES,
                 'stage_counts' => $stageCounts,
+                'from_date' => $fromDate,
+                'to_date' => $toDate,
             ],
         ]);
     }
