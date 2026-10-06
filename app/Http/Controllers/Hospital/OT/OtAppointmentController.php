@@ -40,12 +40,15 @@ class OtAppointmentController extends Controller
             $status = 'all';
         }
 
-        $query = OtAppointment::query()
-            ->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking']);
+        // Defaults to today; the date filter widget lets it be widened.
+        $today = now()->toDateString();
+        $fromDate = (string) ($request->query('from_date') ?: $today);
+        $toDate = (string) ($request->query('to_date') ?: $fromDate);
 
-        if ($date = $request->query('date')) {
-            $query->whereDate('appointment_date', $date);
-        }
+        $query = OtAppointment::query()
+            ->with(['doctor:id,name', 'location:id,name', 'convertedPatient.latestOtBooking'])
+            ->whereDate('appointment_date', '>=', $fromDate)
+            ->whereDate('appointment_date', '<=', $toDate);
 
         if ($search = trim((string) $request->query('search', ''))) {
             $query->where(function ($q) use ($search): void {
@@ -78,6 +81,8 @@ class OtAppointmentController extends Controller
             'activeStatus' => $status,
             'stages' => OtAppointment::STAGES,
             'stageCounts' => $stageCounts,
+            'fromDate' => $fromDate,
+            'toDate' => $toDate,
         ]);
     }
 
