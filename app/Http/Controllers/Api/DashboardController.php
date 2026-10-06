@@ -148,6 +148,7 @@ class DashboardController extends Controller
         $otAssistantCompletedCount = null;
         $otAssistantPeers = [];
         $counsellingPendingCount = null;
+        $counsellingCompletedCount = null;
         $counsellingPaymentCount = null;
         $canSeeOtWidget = $this->perm->can('dashboard_ot');
 
@@ -225,6 +226,23 @@ class DashboardController extends Controller
                 $counsellingPendingCount = OtBooking::query()
                     ->assignedToCounsellor($authUser)
                     ->whereIn('ot_status', [OtBooking::STATUS_BOOKED, OtBooking::STATUS_SURGERY_RECOMMENDED])
+                    ->count();
+                // Matches the web dashboard's "Completed" card (Counselled
+                // Patients) — same status list as the full desk's own
+                // "Complete Patient" table's `whereNotIn($pendingStatuses)`.
+                $counsellingCompletedCount = OtBooking::query()
+                    ->assignedToCounsellor($authUser)
+                    ->whereIn('ot_status', [
+                        OtBooking::STATUS_COUNSELLED,
+                        OtBooking::STATUS_PAID,
+                        OtBooking::STATUS_PAYMENT_VERIFIED,
+                        OtBooking::STATUS_IN_WARD,
+                        OtBooking::STATUS_DILATED,
+                        OtBooking::STATUS_READY,
+                        OtBooking::STATUS_OPERATED,
+                        OtBooking::STATUS_DISCHARGED,
+                        OtBooking::STATUS_SURGERY_REFUSED,
+                    ])
                     ->count();
                 $counsellingPaymentCount = OtBooking::query()
                     ->assignedToCounsellor($authUser)
@@ -530,6 +548,7 @@ class DashboardController extends Controller
                 'discharge_pending_count'     => $dischargePendingCount,
                 'discharge_completed_count'   => $dischargeCompletedCount,
                 'counselling_pending_count'   => $counsellingPendingCount,
+                'counselling_completed_count' => $counsellingCompletedCount,
                 'counselling_payment_count'   => $counsellingPaymentCount,
             ],
         ]);
