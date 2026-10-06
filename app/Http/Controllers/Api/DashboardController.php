@@ -414,6 +414,11 @@ class DashboardController extends Controller
                 'my_total_patients'    => (clone $myPatientsQuery)->count(),
                 'my_walkin'            => (clone $myPatientsQuery)->where('type', 'walkin')->count(),
                 'my_phone'             => (clone $myPatientsQuery)->where('type', 'phone')->count(),
+                // Web pull 2026-10-06 (`receptionistMyPhoneToday`) — today-only,
+                // under the Phone Appt card. Distinct from `my_phone` above,
+                // which is this receptionist's lifetime phone-patient total.
+                'my_phone_today'       => (clone $myPatientsQuery)->where('type', 'phone')
+                    ->whereDate('appointment_date', $today)->count(),
                 // Unified hospital collection (Hospital\Dashboard\DashboardController.php:339):
                 // OPD case_fee + OT payments − OT refunds. Web pull
                 // 2026-10-05 (commit 65865858) — also scoped to this
