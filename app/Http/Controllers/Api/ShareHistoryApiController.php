@@ -3,13 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Hospital\Dosage;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Patient;
+use App\Models\Hospital\PrimaryExamination;
+use App\Models\Hospital\SecondaryExamination;
 use App\Models\Platform\HospitalShareRequest;
 use App\Models\Platform\Tenant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 
 class ShareHistoryApiController extends Controller
 {
@@ -386,6 +390,155 @@ class ShareHistoryApiController extends Controller
                 ],
             ],
         ]);
+    }
+
+    // ── Partner hospital patient's own exam history (the View action web's
+    // partner_history.blade.php links to `hospital.shared.patient.history`
+    // for — this API never had an equivalent, so the Flutter apps' partner
+    // patient lists have always omitted their View button entirely).
+    // Mirrors PatientHistoryApiController::buildHistory()'s exam-fetching
+    // shape exactly (same JSON keys) so the apps can reuse the same
+    // ExamHistoryData model/parsing — deliberately duplicated rather than
+    // refactored out of that controller, to avoid touching the already-
+    // working normal-patient history endpoint. ────────────────────────────
+
+    public function patientHistory(Request $request, string $slug): JsonResponse
+    {
+        $currentTenant    = app('tenant');
+        $partnerTenantIds = $this->partnerTenantIds($currentTenant);
+
+        $rawIds     = (string) $request->query('patient_ids', '');
+        $patientIds = array_values(array_filter(array_map('intval', explode(',', $rawIds))));
+
+        if (empty($patientIds)) {
+            return response()->json(['success' => false, 'message' => 'patient_ids is required.'], 422);
+        }
+
+        $patients = Patient::withoutTenantScope()
+            ->whereIn('id', $patientIds)
+            ->whereIn('tenant_id', $partnerTenantIds)
+            ->with(['masterCity.district', 'masterCity.state'])
+            ->get();
+
+        if ($patients->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Patient not found or not accessible.'], 404);
+        }
+
+        $patient       = $patients->sortByDesc('id')->first();
+        $dosageMasters = Dosage::all(['id', 'dosage'])->keyBy('id');
+
+        $primaryExams = PrimaryExamination::withoutGlobalScope('tenant')
+            ->with([
+                'doctor'                 => fn ($q) => $q->withoutGlobalScopes()->select('id', 'name'),
+                'prescriptions.medicine' => fn ($q) => $q->withoutGlobalScopes(),
+                'prescriptions.dosage',
+            ])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(fn ($exam) => [
+                'patient_id'    => $exam->patient_id,
+                'id'            => $exam->id,
+                'type'          => 'primary',
+                'examined_at'   => $exam->examined_at?->toISOString(),
+                'doctor'        => $exam->doctor?->name,
+                'exam_data'     => $this->normalizeSharedExamData($exam->exam_data),
+                'prescriptions' => $exam->prescriptions->map(fn ($rx) => [
+                    'medicine_name' => $rx->medicine?->brand_name ?: ($rx->medicine?->name ?? '-'),
+                    'dosage'        => $rx->dosage?->dosage ?? '-',
+                    'duration'      => $rx->duration ? $rx->duration.' D' : '-',
+                    'eye'           => $rx->eye ?? '-',
+                ])->values()->all(),
+            ]);
+
+        $secondaryExams = SecondaryExamination::withoutGlobalScope('tenant')
+            ->with(['doctor' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'name')])
+            ->whereIn('patient_id', $patientIds)
+            ->get()
+            ->map(function ($exam) use ($dosageMasters) {
+                $prescriptions = collect($exam->exam_data['rx'] ?? [])
+                    ->map(fn ($rx) => [
+                        'medicine_name' => $rx['name'] ?? '-',
+                        'dosage'        => isset($rx['dosage_id'])
+                            ? ($dosageMasters->get((int) $rx['dosage_id'])?->dosage ?? '-')
+                            : '-',
+                        'duration' => ! empty($rx['duration']) ? $rx['duration'].' D' : '-',
+                        'eye'      => $rx['eye'] ?? '-',
+                    ])
+                    ->values()
+                    ->all();
+
+                return [
+                    'patient_id'    => $exam->patient_id,
+                    'id'            => $exam->id,
+                    'type'          => 'secondary',
+                    'examined_at'   => $exam->examined_at?->toISOString(),
+                    'doctor'        => $exam->doctor?->name,
+                    'exam_data'     => $this->normalizeSharedExamData($exam->exam_data),
+                    'prescriptions' => $prescriptions,
+                ];
+            });
+
+        // One exam per visit (patient_id): secondary once done, primary until then.
+        $allExams = $secondaryExams->keyBy('patient_id')
+            ->union($primaryExams->keyBy('patient_id'))
+            ->sortByDesc('examined_at')
+            ->values()
+            ->all();
+
+        $visitDays = collect($allExams)
+            ->groupBy(fn ($e) => $e['examined_at'] ? substr($e['examined_at'], 0, 10) : 'unknown')
+            ->count();
+
+        $diagnosisMasters = DB::table('tbl_master_diagnosis')
+            ->where('tenant_id', $patient->tenant_id)
+            ->orderBy('id')
+            ->get(['id', 'value'])
+            ->pluck('value', 'id')
+            ->all();
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'patient' => [
+                    'id'           => $patient->id,
+                    'name'         => trim(implode(' ', array_filter([
+                        $patient->first_name,
+                        $patient->middle_name,
+                        $patient->last_name,
+                    ]))),
+                    'patient_code' => $patient->patient_code,
+                    'gender'       => $patient->gender,
+                    'age'          => $patient->age,
+                    'contact_no'   => $patient->contact_no,
+                    'location'     => $patient->locationLabel,
+                    'created_at'   => $patient->created_at?->toISOString(),
+                    'visit_days'   => $visitDays,
+                ],
+                'exams'             => $allExams,
+                'diagnosis_masters' => empty($diagnosisMasters) ? new \stdClass() : $diagnosisMasters,
+                // No further partner-of-partner nesting, matching web's
+                // loadSharedExamHistoryForIds() — this response IS already
+                // the partner's own data.
+                'partner_hospitals' => [],
+            ],
+        ]);
+    }
+
+    // Same re-indexing fix as PatientHistoryApiController::normalizeExamData()
+    // — kept as a private duplicate rather than a shared dependency (see the
+    // class-level note above this section).
+    private function normalizeSharedExamData(mixed $raw): array|\stdClass
+    {
+        if (! is_array($raw) || count($raw) === 0) {
+            return new \stdClass();
+        }
+        foreach (['co_rows', 'kco_rows', 'diagnoses', 'rx'] as $field) {
+            if (isset($raw[$field]) && is_array($raw[$field])) {
+                $raw[$field] = array_values($raw[$field]);
+            }
+        }
+
+        return $raw;
     }
 
     // ── Private helper ─────────────────────────────────────────────────

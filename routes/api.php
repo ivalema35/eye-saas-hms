@@ -987,6 +987,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                             ->name('requests.remove');
                         Route::get('partner/{partnerTenantId}/patients', [ShareHistoryApiController::class, 'partnerPatients'])
                             ->name('partner.patients');
+                        Route::get('patient-history', [ShareHistoryApiController::class, 'patientHistory'])
+                            ->name('patient-history');
                     });
 
                 }); // end authenticated
