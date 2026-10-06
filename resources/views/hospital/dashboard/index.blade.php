@@ -1598,7 +1598,7 @@
 
         {{-- OT Appointment --}}
         @if($hasOt)
-            <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}" class="rec-5card rec-5link">
+            <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}" class="rec-5card rec-5link">
                 <span class="bento-gloss" aria-hidden="true"></span>
                 <div class="rec-5icon" style="background:#FCE4EC;color:#C2185B">
                     <i class="bi bi-activity"></i>
@@ -1678,7 +1678,7 @@
         </div>
 
         @hasanypermission('ot_appointment_view|ot_patient_list')
-        <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
+        <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
             class="bento-card span-2 text-decoration-none">
             <span class="bento-gloss" aria-hidden="true"></span>
             <div class="bento-stat">
@@ -2167,7 +2167,7 @@
             {{-- OT Appointment (ot_patient_list / ot_appointment_view) --}}
             {{-- Receptionist: shown in the top 6-card row instead --}}
         @elseif($hasOt && !$isReceptionistUser)
-            <a href="{{ route('hospital.dashboard.ot-appointments', ['slug' => $slug]) }}"
+            <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
                 class="bento-card span-3 text-decoration-none">
                 <div class="bento-stat">
                     <div class="bento-icon ig-purple">
