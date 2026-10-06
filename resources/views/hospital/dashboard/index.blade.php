@@ -1593,6 +1593,7 @@
             </div>
             <p class="rec-5label">Phone Appt</p>
             <div class="rec-5value">{{ $receptionistTodayPhone }}</div>
+            <p class="rec-5meta">My Patient: {{ $receptionistMyPhoneToday ?? 0 }}</p>
         </a>
 
         {{-- OT Appointment --}}

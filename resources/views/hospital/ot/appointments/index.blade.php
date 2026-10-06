@@ -35,6 +35,8 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                 <div class="d-flex align-items-center gap-2 flex-wrap ot-header-actions">
                     <form method="GET" action="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
                         class="ot-status-form">
+                        <input type="hidden" name="from_date" value="{{ $fromDate ?? now()->toDateString() }}">
+                        <input type="hidden" name="to_date" value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}">
                         <select name="status" class="form-select form-select-sm ot-status-select"
                             onchange="this.form.submit()">
                             <option value="all" {{ $activeStatus === 'all' ? 'selected' : '' }}>
@@ -46,6 +48,22 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                 </option>
                             @endforeach
                         </select>
+                    </form>
+                    <form method="GET" action="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
+                        class="ot-desk-date-form d-inline-flex align-items-center">
+                        <input type="hidden" name="status" value="{{ $activeStatus }}">
+                        <input type="text"
+                            class="form-control form-control-sm ot-desk-date-input"
+                            data-hms-date-range
+                            data-start-name="from_date"
+                            data-end-name="to_date"
+                            data-start-value="{{ $fromDate ?? now()->toDateString() }}"
+                            data-end-value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}"
+                            data-auto-submit="1"
+                            placeholder="Date range"
+                            autocomplete="off"
+                            readonly
+                            style="min-width:200px;">
                     </form>
                     @haspermission('ot_appointment_create')
                     <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="ot-add-btn">
@@ -156,6 +174,7 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
 @endsection
 
 @push('styles')
+    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                                                 OT Appointments Index — design refresh (hospital shell theme, #1B4F72).
