@@ -341,7 +341,7 @@ used across the rest of the app. --}}
                                     </div>
 
                                     <div class="d-flex justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
-                                        <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                        <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
                                             <i class="bi bi-check2-circle me-1"></i> Save Counselling
                                         </button>
                                     </div>
@@ -413,7 +413,7 @@ used across the rest of the app. --}}
                                     </div>
 
                                     <div class="d-flex justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
-                                        <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                        <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
                                             <i class="bi bi-check2-circle me-1"></i> Save Consent
                                         </button>
                                     </div>
@@ -425,7 +425,7 @@ used across the rest of the app. --}}
                         <div class="card ot-premium-card border-0 mb-4">
                             <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
                                 <div>
-                                    <div class="ot-title" style="font-size: 1rem; color: #1b4f72;">Ready for Billing?</div>
+                                    <div class="ot-billing-title">Ready for Billing?</div>
                                     <div class="ot-subtitle">Requires counselling saved and consent given.</div>
                                 </div>
                                 <form method="POST"
@@ -444,98 +444,68 @@ used across the rest of the app. --}}
 @push('styles')
     <style>
         /*
-          OT Counselling Form (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72).
+          OT Counselling Form — simple design matching the Walk-in register form
+          (reception-patient-form.css). CSS-only; Blade/dynamic logic untouched.
         */
 
         .ot-counselling-page {
-            --ot-secondary: #1B4F72;
-            --ot-s2-06: rgba(27, 79, 114, 0.06);
-            --ot-s2-08: rgba(27, 79, 114, 0.08);
-            --ot-s2-12: rgba(27, 79, 114, 0.12);
-            --ot-s2-18: rgba(27, 79, 114, 0.18);
-            --ot-s2-24: rgba(27, 79, 114, 0.24);
+            --oc-primary: #1B4F72;
+            --oc-primary-dark: #154360;
+            --oc-accent: #2980B9;
+            --oc-success: #27AE60;
+            --oc-border: rgba(27, 79, 114, 0.14);
+            --oc-input-border: #d1dce6;
+            --oc-muted: #64748B;
+            --oc-focus: rgba(39, 174, 96, 0.22);
+            --oc-soft: #EBF5FB;
 
-            position: relative;
             padding: .25rem 0 1.25rem;
-            color: var(--ot-secondary);
-            animation: ot-page-in 420ms ease both;
+            color: #1a2a3a;
         }
 
-        @keyframes ot-page-in {
-            from {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .ot-counselling-page .btn,
-        .ot-counselling-page .hms-btn {
-            border-radius: 12px;
-            font-weight: 800;
-            transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
-        }
-
-        .ot-counselling-page .btn:hover,
-        .ot-counselling-page .hms-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 26px rgba(27, 79, 114, 0.14);
-        }
-
+        /* ── Page header ─────────────────────────────────────────── */
         .ot-outer-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.12);
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
-            padding: 1.1rem 1.5rem;
-            margin-bottom: 1.25rem;
+            background: #fff;
+            border: 1px solid var(--oc-border);
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
+            padding: .85rem 1.25rem;
+            margin-bottom: 1rem;
         }
 
         .ot-header-block {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: .75rem;
         }
 
         .ot-header-title {
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--ot-secondary);
-            letter-spacing: -.015em;
             display: flex;
             align-items: center;
-            gap: .55rem;
-        }
-
-        .ot-header-title i {
-            color: var(--ot-secondary);
-            font-size: 1.2rem;
+            gap: .5rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb {
-            margin-top: .4rem;
+            margin-top: .25rem;
             display: flex;
             align-items: center;
             gap: .4rem;
-            font-size: .85rem;
-            color: #8891a0;
+            font-size: .8rem;
+            color: var(--oc-muted);
         }
 
         .ot-breadcrumb a {
-            color: #8891a0;
+            color: var(--oc-muted);
             text-decoration: none;
         }
 
         .ot-breadcrumb a:hover {
-            color: var(--ot-secondary);
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb-sep {
@@ -543,217 +513,395 @@ used across the rest of the app. --}}
         }
 
         .ot-breadcrumb-current {
-            color: #4a5568;
-            font-weight: 600;
+            color: var(--oc-primary);
+            font-weight: 700;
         }
 
+        .ot-header-block .hms-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            padding: .4rem .9rem;
+            border: 1px solid var(--oc-border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--oc-primary);
+            font-size: .8rem;
+            font-weight: 700;
+        }
+
+        .ot-header-block .hms-btn-outline:hover {
+            background: var(--oc-soft);
+            border-color: var(--oc-primary);
+        }
+
+        /* ── Cards ───────────────────────────────────────────────── */
         .ot-premium-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.08) !important;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
+            background: #fff;
+            border: 1px solid var(--oc-border) !important;
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
             overflow: hidden;
+            margin-bottom: 1rem !important;
         }
 
+        .ot-premium-card > .card-body {
+            padding: 1rem 1.25rem 1.25rem !important;
+        }
+
+        /* Gradient strip header — same as Walk-in "ADD PATIENT" title */
         .ot-card-header {
-            background: #1b4f72;
-            border-bottom: 1px solid var(--ot-s2-12);
-            padding: 1.15rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            background: linear-gradient(135deg, var(--oc-primary) 0%, var(--oc-accent) 100%);
+            padding: .55rem 1rem;
         }
 
         .ot-title-wrap {
             display: flex;
             align-items: center;
-            gap: .85rem;
+            gap: .6rem;
             min-width: 0;
         }
 
-        .ot-title-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 14px;
-            background: #ffffff;
-            color: #1b4f72;
+        .ot-card-header .ot-title-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 14px 30px rgba(27, 79, 114, 0.22);
             flex: 0 0 auto;
         }
 
-        .ot-title {
-            font-weight: 900;
-            letter-spacing: -0.2px;
+        .ot-card-header .ot-title-icon i {
+            font-size: .9rem !important;
+        }
+
+        .ot-card-header .ot-title {
             margin: 0;
-            color: #ffffff;
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
         }
 
-        .ot-subtitle {
-            margin: .15rem 0 0;
-            font-weight: 650;
-            color: rgba(27, 79, 114, 0.72);
-            font-size: .85rem;
-        }
-
+        /* ── Patient banner ──────────────────────────────────────── */
         .ot-patient-banner {
-            background: linear-gradient(135deg, #EBF5FB 0%, #ffffff 70%);
-            border: 1px solid rgba(27, 79, 114, 0.14) !important;
+            background: linear-gradient(135deg, var(--oc-soft) 0%, #fff 75%);
         }
 
         .ot-patient-banner .card-body {
-            padding: 1.1rem 1.35rem;
-        }
-
-        .ot-patient-banner .ot-title {
-            color: #1B4F72;
-            font-size: 1.25rem;
-            line-height: 1.25;
+            padding: .9rem 1.25rem !important;
         }
 
         .ot-patient-banner .ot-title-icon {
-            width: 48px;
-            height: 48px;
-            background: #1B4F72;
-            color: #ffffff;
-            box-shadow: 0 8px 20px rgba(27, 79, 114, 0.22);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--oc-primary);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .ot-patient-banner .ot-title {
+            margin: 0;
+            color: var(--oc-primary);
+            font-size: 1.15rem;
+            font-weight: 800;
         }
 
         .ot-banner-chips {
             display: flex;
             flex-wrap: wrap;
-            gap: .4rem;
-            margin-top: .35rem;
+            gap: .35rem;
+            margin-top: .3rem;
         }
 
         .ot-banner-chip {
             display: inline-flex;
             align-items: center;
-            gap: .35rem;
-            padding: .28rem .65rem;
+            gap: .3rem;
+            padding: .2rem .6rem;
             border-radius: 999px;
-            background: #ffffff;
-            border: 1px solid rgba(27, 79, 114, 0.16);
-            color: #1B4F72;
-            font-size: .78rem;
+            background: #fff;
+            border: 1px solid var(--oc-border);
+            color: var(--oc-primary);
+            font-size: .75rem;
             font-weight: 700;
             white-space: nowrap;
         }
 
         .ot-banner-chip i {
-            font-size: .8rem;
-            opacity: .75;
+            opacity: .7;
         }
 
-        .ot-patient-banner .ot-booking-meta {
+        .ot-booking-meta {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            gap: .4rem;
-            color: rgba(27, 79, 114, 0.72);
-            font-weight: 700;
-            font-size: .82rem;
-            flex: 0 0 auto;
-        }
-
-        .ot-banner-status {
-            display: inline-block;
-            padding: .35rem .8rem;
-            border-radius: 999px;
-            background: #1B4F72;
-            color: #ffffff;
+            gap: .35rem;
+            color: var(--oc-muted);
             font-size: .78rem;
-            font-weight: 800;
-        }
-
-        .ot-banner-status.is-recommended {
-            background: #E0A800;
+            font-weight: 700;
         }
 
         @media (min-width: 768px) {
-            .ot-patient-banner .ot-booking-meta {
+            .ot-booking-meta {
                 align-items: flex-end;
             }
         }
 
-        .ot-alert {
-            border-radius: 14px;
-            font-weight: 650;
+        .ot-banner-status {
+            display: inline-block;
+            padding: .3rem .75rem;
+            border-radius: 999px;
+            background: var(--oc-primary);
+            color: #fff;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .03em;
+            text-transform: uppercase;
         }
 
+        .ot-banner-status.is-recommended {
+            background: #E67E22;
+        }
+
+        .ot-alert {
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        /* ── Fields — Walk-in form look ──────────────────────────── */
         .ot-counselling-page .form-label {
+            display: block;
+            margin: 0 0 .35rem;
+            font-size: .7rem;
             font-weight: 800;
-            font-size: .82rem;
-            color: var(--ot-secondary);
-            letter-spacing: .01em;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--oc-muted);
+            line-height: 1.2;
+        }
+
+        .ot-counselling-page [class*="col-"]:focus-within > .form-label {
+            color: var(--oc-primary);
         }
 
         .ot-counselling-page .form-control,
         .ot-counselling-page .form-select {
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px;
-            padding: .55rem .85rem;
-            background: rgba(255, 255, 255, 0.92);
-            color: var(--ot-secondary);
-            font-weight: 600;
-            transition: border-color 160ms ease, box-shadow 160ms ease;
+            min-height: 38px;
+            padding: .35rem .65rem;
+            font-size: .84rem;
+            color: #1a2a3a;
+            background-color: #fff;
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px;
+            box-shadow: none;
         }
 
         .ot-counselling-page .form-control:focus,
         .ot-counselling-page .form-select:focus {
-            border-color: var(--ot-secondary);
-            box-shadow: 0 0 0 .2rem var(--ot-s2-12);
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
+            outline: none;
         }
 
         .ot-counselling-page .input-group-text {
-            background: var(--ot-s2-08);
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px 0 0 12px;
-            color: var(--ot-secondary);
+            min-height: 38px;
+            padding: .35rem .6rem;
+            font-size: .75rem;
             font-weight: 800;
+            color: var(--oc-primary);
+            background: var(--oc-soft);
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px 0 0 6px;
+        }
+
+        .ot-counselling-page .input-group .form-control {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .ot-counselling-page .select2-container--default .select2-selection--single {
+            min-height: 38px !important;
+            height: 38px !important;
+            display: flex;
+            align-items: center;
+            padding: 0 .45rem;
+            border: 1px solid var(--oc-input-border) !important;
+            border-radius: 6px !important;
+        }
+
+        .ot-counselling-page .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: .84rem;
+            line-height: 36px !important;
+            padding-left: 0 !important;
+            color: #1a2a3a !important;
+        }
+
+        .ot-counselling-page .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+
+        .ot-counselling-page .select2-container--default.select2-container--focus .select2-selection--single,
+        .ot-counselling-page .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: var(--oc-success) !important;
+            box-shadow: 0 0 0 3px var(--oc-focus) !important;
+        }
+
+        /* Yes / No radios */
+        .ot-counselling-page .form-check-inline {
+            margin-right: 1rem;
+        }
+
+        .ot-counselling-page .form-check-label {
+            font-size: .84rem;
+            font-weight: 600;
+            color: #1a2a3a;
         }
 
         .ot-counselling-page .form-check-input:checked {
-            background-color: var(--ot-secondary);
-            border-color: var(--ot-secondary);
+            background-color: var(--oc-primary);
+            border-color: var(--oc-primary);
         }
 
+        .ot-counselling-page .form-check-input:focus {
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
+        }
+
+        /* Section sub-headings inside a card */
         .ot-counselling-page hr {
-            border-top: 1px solid var(--ot-s2-12);
+            margin: 1.15rem 0 .85rem !important;
+            border-top: 1px dashed var(--oc-border);
             opacity: 1;
         }
 
         .ot-section-title {
-            color: var(--ot-secondary);
-            font-weight: 900;
-            letter-spacing: -.01em;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            margin-bottom: .75rem !important;
+            padding-left: .55rem;
+            border-left: 3px solid var(--oc-accent);
+            font-size: .78rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--oc-primary);
         }
 
-        .ot-form-actions {
-            border-top: 1px solid var(--ot-s2-12);
-        }
-
+        /* Total estimate */
         .ot-total-box {
-            background: linear-gradient(135deg, rgba(235, 245, 251, 0.92), rgba(255, 255, 255, 0.94));
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 14px;
-            padding: .9rem 1.15rem;
-            color: var(--ot-secondary);
-            box-shadow: 0 10px 22px rgba(27, 79, 114, 0.08);
+            background: var(--oc-soft);
+            border: 1px solid var(--oc-border);
+            border-left: 4px solid var(--oc-primary);
+            border-radius: 8px;
+            padding: .7rem 1rem;
+            color: var(--oc-primary);
+        }
+
+        .ot-total-box > span:first-child {
+            font-size: .75rem;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        /* ── Actions ─────────────────────────────────────────────── */
+        .ot-form-actions {
+            margin-top: 1rem !important;
+            padding-top: .85rem !important;
+            border-top: 1px solid var(--oc-border);
+        }
+
+        .ot-counselling-page .ot-save-btn,
+        .ot-counselling-page .ot-billing-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            min-width: 140px;
+            justify-content: center;
+            padding: .45rem 1.25rem;
+            border: 2px solid var(--oc-primary);
+            border-radius: 6px;
+            background: var(--oc-primary);
+            color: #fff !important;
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .ot-counselling-page .ot-save-btn:hover {
+            background: var(--oc-primary-dark);
+            border-color: var(--oc-primary-dark);
+        }
+
+        .ot-counselling-page .ot-save-btn:focus {
+            background: var(--oc-success);
+            border-color: #1e8449;
+            box-shadow: 0 0 0 4px var(--oc-focus);
+            outline: none;
+        }
+
+        .ot-counselling-page .ot-billing-btn {
+            background: var(--oc-success);
+            border-color: var(--oc-success);
+        }
+
+        .ot-counselling-page .ot-billing-btn:hover {
+            background: #1e8449;
+            border-color: #1e8449;
+        }
+
+        .ot-counselling-page .ot-billing-btn:disabled {
+            background: #eef2f6;
+            border-color: var(--oc-input-border);
+            color: var(--oc-muted) !important;
+            cursor: not-allowed;
+        }
+
+        .ot-billing-title {
+            font-size: .95rem;
+            font-weight: 800;
+            color: var(--oc-primary);
+        }
+
+        .ot-subtitle {
+            margin-top: .15rem;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--oc-muted);
+        }
+
+        /* ── Signature pads (JS relies on .ot-signature-wrap / .is-signed) ── */
+        .ot-clear-pad {
+            font-size: .72rem;
+            font-weight: 700;
+            color: #e74c3c !important;
+            text-decoration: none;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         .ot-signature-wrap {
+            position: relative;
+            z-index: 5;
             width: 100%;
             max-width: 480px;
             height: 160px;
-            border: 1px dashed var(--ot-s2-24);
-            border-radius: 14px;
-            background: #fff;
-            position: relative;
-            z-index: 5;
             overflow: hidden;
+            background: #fafcfe;
+            border: 1px dashed #b9c9d8;
+            border-radius: 8px;
             touch-action: none;
             -ms-touch-action: none;
         }
@@ -762,14 +910,14 @@ used across the rest of the app. --}}
             content: 'Draw signature here';
             position: absolute;
             inset: 0;
+            z-index: 0;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: rgba(27, 79, 114, 0.28);
-            font-size: .9rem;
+            color: rgba(27, 79, 114, 0.3);
+            font-size: .82rem;
             font-weight: 700;
             pointer-events: none;
-            z-index: 0;
         }
 
         .ot-signature-wrap.is-signed::after {
@@ -788,37 +936,6 @@ used across the rest of the app. --}}
             pointer-events: auto !important;
             user-select: none;
             -webkit-user-select: none;
-        }
-
-        .ot-billing-btn {
-            background: #1E8E5A;
-            border: 1px solid #1E8E5A;
-            color: #fff;
-        }
-
-        .ot-billing-btn:hover {
-            background: #17714a;
-            border-color: #17714a;
-            color: #fff;
-        }
-
-        .ot-billing-btn:disabled {
-            background: rgba(27, 79, 114, 0.18);
-            border-color: rgba(27, 79, 114, 0.18);
-            color: rgba(27, 79, 114, 0.6);
-            transform: none !important;
-            box-shadow: none !important;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-
-            .ot-counselling-page,
-            .ot-premium-card,
-            .ot-counselling-page .btn,
-            .ot-counselling-page .hms-btn {
-                animation: none !important;
-                transition: none !important;
-            }
         }
     </style>
 @endpush

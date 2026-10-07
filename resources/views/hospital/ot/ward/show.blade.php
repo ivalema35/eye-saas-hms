@@ -127,7 +127,7 @@ used across the rest of the app. --}}
                                 <input type="hidden" name="pre_op_status" value="{{ old('pre_op_status', $preOp->pre_op_status ?? \App\Models\Hospital\OT\OtPreOp::STATUS_PREPARING) }}">
 
                                 <div class="d-flex justify-content-end mt-4 pt-3 ot-form-actions">
-                                    <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                    <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
                                         <i class="bi bi-check2-circle me-1"></i> Save Vitals
                                     </button>
                                 </div>
@@ -240,7 +240,7 @@ used across the rest of the app. --}}
                                 </div>
 
                                 <div class="d-flex justify-content-end mt-3">
-                                    <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                    <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
                                         <i class="bi bi-plus-circle me-1"></i> Log Dose
                                     </button>
                                 </div>
@@ -320,7 +320,7 @@ used across the rest of the app. --}}
                                 @enderror
 
                                 <div class="d-flex justify-content-end mt-3 pt-3 ot-form-actions">
-                                    <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                    <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
                                         <i class="bi bi-check2-circle me-1"></i> Save Status
                                     </button>
                                 </div>
@@ -332,7 +332,7 @@ used across the rest of the app. --}}
                     <div class="card ot-premium-card border-0 mb-4">
                         <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
                             <div>
-                                <div class="ot-title" style="font-size: 1rem; color: #1b4f72;">Ready to send to OT Assistant?</div>
+                                <div class="ot-handoff-title">Ready to send to OT Assistant?</div>
                             </div>
                             @php
     $canSendReady = in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAYMENT_VERIFIED, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true)
@@ -359,91 +359,68 @@ used across the rest of the app. --}}
 @push('styles')
     <style>
         /*
-          OT Ward Preparation (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72).
+          OT Ward Preparation — simple design matching the Walk-in register form
+          (reception-patient-form.css). CSS-only; Blade/dynamic logic untouched.
         */
 
         .ot-ward-page {
-            --ot-secondary: #1B4F72;
-            --ot-s2-06: rgba(27, 79, 114, 0.06);
-            --ot-s2-08: rgba(27, 79, 114, 0.08);
-            --ot-s2-12: rgba(27, 79, 114, 0.12);
-            --ot-s2-18: rgba(27, 79, 114, 0.18);
-            --ot-s2-24: rgba(27, 79, 114, 0.24);
+            --oc-primary: #1B4F72;
+            --oc-primary-dark: #154360;
+            --oc-accent: #2980B9;
+            --oc-success: #27AE60;
+            --oc-border: rgba(27, 79, 114, 0.14);
+            --oc-input-border: #d1dce6;
+            --oc-muted: #64748B;
+            --oc-focus: rgba(39, 174, 96, 0.22);
+            --oc-soft: #EBF5FB;
 
-            position: relative;
             padding: .25rem 0 1.25rem;
-            color: var(--ot-secondary);
-            animation: ot-page-in 420ms ease both;
+            color: #1a2a3a;
         }
 
-        @keyframes ot-page-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .ot-ward-page .btn,
-        .ot-ward-page .hms-btn {
-            border-radius: 12px;
-            font-weight: 800;
-            transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
-        }
-
-        .ot-ward-page .btn:hover,
-        .ot-ward-page .hms-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 26px rgba(27, 79, 114, 0.14);
-        }
-
+        /* ── Page header ─────────────────────────────────────────── */
         .ot-outer-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.12);
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
-            padding: 1.1rem 1.5rem;
-            margin-bottom: 1.25rem;
+            background: #fff;
+            border: 1px solid var(--oc-border);
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
+            padding: .85rem 1.25rem;
+            margin-bottom: 1rem;
         }
 
         .ot-header-block {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: .75rem;
         }
 
         .ot-header-title {
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--ot-secondary);
-            letter-spacing: -.015em;
             display: flex;
             align-items: center;
-            gap: .55rem;
-        }
-
-        .ot-header-title i {
-            color: var(--ot-secondary);
-            font-size: 1.2rem;
+            gap: .5rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb {
-            margin-top: .4rem;
+            margin-top: .25rem;
             display: flex;
             align-items: center;
             gap: .4rem;
-            font-size: .85rem;
-            color: #8891a0;
+            font-size: .8rem;
+            color: var(--oc-muted);
         }
 
         .ot-breadcrumb a {
-            color: #8891a0;
+            color: var(--oc-muted);
             text-decoration: none;
         }
 
         .ot-breadcrumb a:hover {
-            color: var(--ot-secondary);
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb-sep {
@@ -451,153 +428,289 @@ used across the rest of the app. --}}
         }
 
         .ot-breadcrumb-current {
-            color: #4a5568;
-            font-weight: 600;
+            color: var(--oc-primary);
+            font-weight: 700;
         }
 
+        .ot-ward-page .hms-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            padding: .4rem .9rem;
+            border: 1px solid var(--oc-border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--oc-primary);
+            font-size: .8rem;
+            font-weight: 700;
+        }
+
+        .ot-ward-page .hms-btn-outline:hover {
+            background: var(--oc-soft);
+            border-color: var(--oc-primary);
+            color: var(--oc-primary);
+        }
+
+        /* ── Cards ───────────────────────────────────────────────── */
         .ot-premium-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.08) !important;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
+            background: #fff;
+            border: 1px solid var(--oc-border) !important;
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
             overflow: hidden;
+            margin-bottom: 1rem !important;
         }
 
+        .ot-premium-card > .card-body {
+            padding: 1rem 1.25rem 1.25rem !important;
+        }
+
+        /* Gradient strip header — same as Walk-in "ADD PATIENT" title */
         .ot-card-header {
-            background: #1b4f72;
-            border-bottom: 1px solid var(--ot-s2-12);
-            padding: 1.15rem 1.25rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            background: linear-gradient(135deg, var(--oc-primary) 0%, var(--oc-accent) 100%);
+            padding: .55rem 1rem;
         }
 
         .ot-title-wrap {
             display: flex;
             align-items: center;
-            gap: .85rem;
+            gap: .6rem;
             min-width: 0;
         }
 
-        .ot-title-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 14px;
-            background: #ffffff;
-            color: #1b4f72;
+        .ot-card-header .ot-title-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 14px 30px rgba(27, 79, 114, 0.22);
             flex: 0 0 auto;
         }
 
-        .ot-title {
-            font-weight: 900;
-            letter-spacing: -0.2px;
+        .ot-card-header .ot-title-icon i {
+            font-size: .9rem !important;
+        }
+
+        .ot-card-header .ot-title {
             margin: 0;
-            color: #ffffff;
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        /* ── Patient banner ──────────────────────────────────────── */
+        .ot-patient-banner {
+            background: linear-gradient(135deg, var(--oc-soft) 0%, #fff 75%);
+        }
+
+        .ot-patient-banner .card-body {
+            padding: .9rem 1.25rem !important;
+        }
+
+        .ot-patient-banner .ot-title-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: var(--oc-primary);
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+        }
+
+        .ot-patient-banner .ot-title {
+            margin: 0;
+            color: var(--oc-primary);
+            font-size: 1.15rem;
+            font-weight: 800;
         }
 
         .ot-subtitle {
-            margin: .15rem 0 0;
-            font-weight: 650;
-            color: rgba(27, 79, 114, 0.72);
-            font-size: .85rem;
+            margin-top: .15rem;
+            font-size: .8rem;
+            font-weight: 600;
+            color: var(--oc-muted);
+        }
+
+        .ot-subtitle strong {
+            color: var(--oc-primary);
         }
 
         .ot-booking-meta {
-            color: rgba(27, 79, 114, 0.72);
+            color: var(--oc-muted);
+            font-size: .78rem;
             font-weight: 700;
-            font-size: .88rem;
         }
 
-        .ot-alert { border-radius: 14px; font-weight: 650; }
-
-        .ot-ward-page .form-label {
+        .ot-booking-meta .badge {
+            padding: .3rem .7rem;
+            border-radius: 999px;
+            font-size: .72rem;
             font-weight: 800;
-            font-size: .82rem;
-            color: var(--ot-secondary);
-            letter-spacing: .01em;
+        }
+
+        .ot-alert {
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        /* ── Fields — Walk-in form look ──────────────────────────── */
+        .ot-ward-page .form-label {
+            display: block;
+            margin: 0 0 .35rem;
+            font-size: .7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--oc-muted);
+            line-height: 1.2;
+        }
+
+        .ot-ward-page [class*="col-"]:focus-within > .form-label {
+            color: var(--oc-primary);
         }
 
         .ot-ward-page .form-control,
         .ot-ward-page .form-select {
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px;
-            padding: .55rem .85rem;
-            background: rgba(255, 255, 255, 0.92);
-            color: var(--ot-secondary);
-            font-weight: 600;
-            transition: border-color 160ms ease, box-shadow 160ms ease;
+            min-height: 38px;
+            padding: .35rem .65rem;
+            font-size: .84rem;
+            color: #1a2a3a;
+            background-color: #fff;
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px;
+            box-shadow: none;
         }
 
         .ot-ward-page .form-control:focus,
         .ot-ward-page .form-select:focus {
-            border-color: var(--ot-secondary);
-            box-shadow: 0 0 0 .2rem var(--ot-s2-12);
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
+            outline: none;
+        }
+
+        /* Read-only values — same as the Walk-in MRD field */
+        .ot-ward-page .ot-readonly {
+            background: #eef2f6 !important;
+            color: var(--oc-primary);
+            font-weight: 700;
+        }
+
+        .ot-ward-page .select2-container--default .select2-selection--single {
+            min-height: 38px !important;
+            height: 38px !important;
+            display: flex;
+            align-items: center;
+            padding: 0 .45rem;
+            border: 1px solid var(--oc-input-border) !important;
+            border-radius: 6px !important;
+        }
+
+        .ot-ward-page .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: .84rem;
+            line-height: 36px !important;
+            padding-left: 0 !important;
+            color: #1a2a3a !important;
+        }
+
+        .ot-ward-page .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+
+        .ot-ward-page .select2-container--default.select2-container--focus .select2-selection--single,
+        .ot-ward-page .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: var(--oc-success) !important;
+            box-shadow: 0 0 0 3px var(--oc-focus) !important;
+        }
+
+        /* Patient status radios */
+        .ot-ward-page .form-check-inline {
+            margin-right: 1.1rem;
+        }
+
+        .ot-ward-page .form-check-label {
+            font-size: .84rem;
+            font-weight: 600;
+            color: #1a2a3a;
         }
 
         .ot-ward-page .form-check-input:checked {
-            background-color: var(--ot-secondary);
-            border-color: var(--ot-secondary);
+            background-color: var(--oc-primary);
+            border-color: var(--oc-primary);
         }
 
-        .ot-form-actions {
-            border-top: 1px solid var(--ot-s2-12);
+        .ot-ward-page .form-check-input:focus {
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
         }
 
+        /* Last-recorded strip */
         .ot-total-box {
-            background: linear-gradient(135deg, rgba(235, 245, 251, 0.92), rgba(255, 255, 255, 0.94));
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 14px;
-            padding: .8rem 1.1rem;
-            color: var(--ot-secondary);
-            box-shadow: 0 10px 22px rgba(27, 79, 114, 0.08);
+            background: var(--oc-soft);
+            border: 1px solid var(--oc-border);
+            border-left: 4px solid var(--oc-primary);
+            border-radius: 8px;
+            padding: .6rem 1rem;
+            font-size: .82rem;
+            color: var(--oc-primary);
         }
 
         .ot-status-badge {
             border-radius: 999px;
-            padding: .45rem .70rem;
-            font-weight: 900;
+            padding: .3rem .7rem;
+            font-size: .72rem;
+            font-weight: 800;
             letter-spacing: .02em;
         }
 
         .ot-status-generic {
-            background: var(--ot-secondary);
-            color: #fff;
+            background: #eef2f6;
+            border: 1px solid var(--oc-input-border);
+            color: var(--oc-primary);
         }
 
         .ot-type-badge {
-            background: rgba(27, 79, 114, 0.08);
-            border: 1px solid var(--ot-s2-18);
-            color: var(--ot-secondary);
+            background: var(--oc-soft);
+            border: 1px solid var(--oc-border);
+            color: var(--oc-primary);
             border-radius: 999px;
-            padding: .4rem .7rem;
+            padding: .3rem .65rem;
+            font-size: .75rem;
             font-weight: 800;
         }
 
+        /* ── Eye drop table ──────────────────────────────────────── */
         .ot-table-wrap {
             overflow-x: auto;
+            border: 1px solid var(--oc-border);
+            border-radius: 8px;
         }
 
         .ot-premium-table {
-            margin-bottom: 0;
-            border-collapse: collapse;
             width: 100%;
             min-width: 820px;
+            margin-bottom: 0;
+            border-collapse: collapse;
         }
 
         .ot-premium-table thead th {
-            background: #F8FAFC !important;
-            color: #4A5568 !important;
+            background: var(--oc-soft) !important;
+            color: var(--oc-primary) !important;
             border: 0;
-            border-bottom: 1px solid #E2E8F0 !important;
-            font-size: .75rem;
+            border-bottom: 1px solid var(--oc-border) !important;
+            padding: .6rem .9rem;
+            font-size: .7rem;
+            font-weight: 800;
             letter-spacing: .05em;
-            font-weight: 700;
             text-transform: uppercase;
-            padding: .7rem 1rem;
             white-space: nowrap;
             text-align: left;
         }
@@ -605,17 +718,18 @@ used across the rest of the app. --}}
         .ot-premium-table tbody td {
             background: transparent;
             border: 0;
-            border-bottom: 1px solid var(--ot-s2-12);
-            padding: .75rem 1rem;
+            border-bottom: 1px solid #edf1f5;
+            padding: .6rem .9rem;
+            font-size: .84rem;
             font-weight: 600;
-            color: rgba(27, 79, 114, 0.90);
+            color: #1a2a3a;
             vertical-align: middle;
             white-space: nowrap;
         }
 
         .ot-premium-table tbody td:first-child {
-            color: rgba(27, 79, 114, 0.82);
-            font-weight: 700;
+            color: var(--oc-primary);
+            font-weight: 800;
         }
 
         .ot-premium-table tbody tr:last-child td {
@@ -623,35 +737,67 @@ used across the rest of the app. --}}
         }
 
         .ot-premium-table tbody tr:hover td {
-            background: #F5F8FC;
+            background: #f7fbfe;
         }
 
         .ot-empty {
-            padding: 1.5rem 1rem !important;
-            color: rgba(27, 79, 114, 0.72) !important;
+            padding: 1.25rem 1rem !important;
+            color: var(--oc-muted) !important;
+            font-weight: 700;
+        }
+
+        /* ── Actions ─────────────────────────────────────────────── */
+        .ot-form-actions {
+            margin-top: 1rem !important;
+            padding-top: .85rem !important;
+            border-top: 1px solid var(--oc-border);
+        }
+
+        .ot-ward-page .ot-save-btn,
+        .ot-ward-page .ot-send-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            min-width: 140px;
+            padding: .45rem 1.25rem;
+            border: 2px solid var(--oc-primary);
+            border-radius: 6px;
+            background: var(--oc-primary);
+            color: #fff !important;
+            font-size: .82rem;
             font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
         }
 
-        .ot-send-btn {
-            background: #1E8E5A;
-            border: 1px solid #1E8E5A;
-            color: #fff;
+        .ot-ward-page .ot-save-btn:hover {
+            background: var(--oc-primary-dark);
+            border-color: var(--oc-primary-dark);
         }
 
-        .ot-send-btn:hover {
-            background: #17714a;
-            border-color: #17714a;
-            color: #fff;
+        .ot-ward-page .ot-save-btn:focus {
+            background: var(--oc-success);
+            border-color: #1e8449;
+            box-shadow: 0 0 0 4px var(--oc-focus);
+            outline: none;
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            .ot-ward-page,
-            .ot-premium-card,
-            .ot-ward-page .btn,
-            .ot-ward-page .hms-btn {
-                animation: none !important;
-                transition: none !important;
-            }
+        .ot-ward-page .ot-send-btn {
+            background: var(--oc-success);
+            border-color: var(--oc-success);
+        }
+
+        .ot-ward-page .ot-send-btn:hover {
+            background: #1e8449;
+            border-color: #1e8449;
+        }
+
+        .ot-handoff-title {
+            font-size: .95rem;
+            font-weight: 800;
+            color: var(--oc-primary);
         }
     </style>
 @endpush

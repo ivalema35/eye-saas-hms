@@ -153,7 +153,7 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
                                     <div class="d-flex flex-column flex-sm-row justify-content-end gap-2 mt-4 pt-3 ot-form-actions">
                                         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug]) }}"
                                             class="hms-btn hms-btn-outline px-4">Cancel</a>
-                                        <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;"
+                                        <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4"
                                             @if($defaultPackageAmount <= 0) disabled @endif>
                                             <i class="bi bi-check2-circle me-1"></i> Save Payment
                                         </button>
@@ -170,91 +170,68 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
 @push('styles')
     <style>
         /*
-          OT Record Payment (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72).
+          OT Record Payment — simple design matching the Walk-in register form
+          (reception-patient-form.css). CSS-only; Blade/dynamic logic untouched.
         */
 
         .ot-payment-page {
-            --ot-secondary: #1B4F72;
-            --ot-s2-06: rgba(27, 79, 114, 0.06);
-            --ot-s2-08: rgba(27, 79, 114, 0.08);
-            --ot-s2-12: rgba(27, 79, 114, 0.12);
-            --ot-s2-18: rgba(27, 79, 114, 0.18);
-            --ot-s2-24: rgba(27, 79, 114, 0.24);
+            --oc-primary: #1B4F72;
+            --oc-primary-dark: #154360;
+            --oc-accent: #2980B9;
+            --oc-success: #27AE60;
+            --oc-border: rgba(27, 79, 114, 0.14);
+            --oc-input-border: #d1dce6;
+            --oc-muted: #64748B;
+            --oc-focus: rgba(39, 174, 96, 0.22);
+            --oc-soft: #EBF5FB;
 
-            position: relative;
             padding: .25rem 0 1.25rem;
-            color: var(--ot-secondary);
-            animation: ot-page-in 420ms ease both;
+            color: #1a2a3a;
         }
 
-        @keyframes ot-page-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .ot-payment-page .btn,
-        .ot-payment-page .hms-btn {
-            border-radius: 12px;
-            font-weight: 800;
-            transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
-        }
-
-        .ot-payment-page .btn:hover,
-        .ot-payment-page .hms-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 26px rgba(27, 79, 114, 0.14);
-        }
-
+        /* ── Page header ─────────────────────────────────────────── */
         .ot-outer-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.12);
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
-            padding: 1.1rem 1.5rem;
-            margin-bottom: 1.25rem;
+            background: #fff;
+            border: 1px solid var(--oc-border);
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
+            padding: .85rem 1.25rem;
+            margin-bottom: 1rem;
         }
 
         .ot-header-block {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: .75rem;
         }
 
         .ot-header-title {
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--ot-secondary);
-            letter-spacing: -.015em;
             display: flex;
             align-items: center;
-            gap: .55rem;
-        }
-
-        .ot-header-title i {
-            color: var(--ot-secondary);
-            font-size: 1.2rem;
+            gap: .5rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb {
-            margin-top: .4rem;
+            margin-top: .25rem;
             display: flex;
             align-items: center;
             gap: .4rem;
-            font-size: .85rem;
-            color: #8891a0;
+            font-size: .8rem;
+            color: var(--oc-muted);
         }
 
         .ot-breadcrumb a {
-            color: #8891a0;
+            color: var(--oc-muted);
             text-decoration: none;
         }
 
         .ot-breadcrumb a:hover {
-            color: var(--ot-secondary);
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb-sep {
@@ -262,134 +239,238 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
         }
 
         .ot-breadcrumb-current {
-            color: #4a5568;
-            font-weight: 600;
+            color: var(--oc-primary);
+            font-weight: 700;
         }
 
+        .ot-payment-page .hms-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .4rem .9rem;
+            border: 1px solid var(--oc-border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--oc-primary);
+            font-size: .8rem;
+            font-weight: 700;
+        }
+
+        .ot-payment-page .hms-btn-outline:hover {
+            background: var(--oc-soft);
+            border-color: var(--oc-primary);
+            color: var(--oc-primary);
+        }
+
+        /* ── Card ────────────────────────────────────────────────── */
         .ot-premium-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.08) !important;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
+            background: #fff;
+            border: 1px solid var(--oc-border) !important;
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
             overflow: hidden;
         }
 
+        .ot-premium-card > .card-body {
+            padding: 1rem 1.25rem 1.25rem !important;
+        }
+
+        /* Gradient strip header — same as Walk-in "ADD PATIENT" title */
         .ot-card-header {
-            background: #1b4f72;
-            border-bottom: 1px solid var(--ot-s2-12);
-            padding: 1.15rem 1.25rem;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
+            background: linear-gradient(135deg, var(--oc-primary) 0%, var(--oc-accent) 100%);
+            padding: .55rem 1rem;
         }
 
         .ot-title-wrap {
             display: flex;
             align-items: center;
-            gap: .85rem;
+            gap: .6rem;
             min-width: 0;
         }
 
         .ot-title-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 15px;
-            background: #ffffff;
-            color: #1b4f72;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 14px 30px rgba(27, 79, 114, 0.22);
             flex: 0 0 auto;
         }
 
+        .ot-title-icon i {
+            font-size: .9rem !important;
+        }
+
         .ot-title {
-            font-weight: 900;
-            letter-spacing: -0.2px;
             margin: 0;
-            color: #ffffff;
-        }
-
-        .ot-subtitle {
-            margin: .15rem 0 0;
-            font-weight: 650;
-            color: rgba(27, 79, 114, 0.72);
-            font-size: .85rem;
-        }
-
-        .ot-alert { border-radius: 14px; font-weight: 650; }
-
-        .ot-payment-page .form-label {
+            color: #fff;
+            font-size: .95rem;
             font-weight: 800;
-            font-size: .82rem;
-            color: var(--ot-secondary);
-            letter-spacing: .01em;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+        }
+
+        .ot-alert {
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
+
+        /* ── Fields — Walk-in form look ──────────────────────────── */
+        .ot-payment-page .form-label {
+            display: block;
+            margin: 0 0 .35rem;
+            font-size: .7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--oc-muted);
+            line-height: 1.2;
+        }
+
+        .ot-payment-page .form-label .text-muted {
+            text-transform: none;
+            letter-spacing: 0;
+            font-weight: 600;
+        }
+
+        .ot-payment-page [class*="col-"]:focus-within > .form-label {
+            color: var(--oc-primary);
         }
 
         .ot-payment-page .form-control,
         .ot-payment-page .form-select {
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px;
-            padding: .55rem .85rem;
-            background: rgba(255, 255, 255, 0.92);
-            color: var(--ot-secondary);
-            font-weight: 600;
-            transition: border-color 160ms ease, box-shadow 160ms ease;
+            min-height: 38px;
+            padding: .35rem .65rem;
+            font-size: .84rem;
+            color: #1a2a3a;
+            background-color: #fff;
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px;
+            box-shadow: none;
         }
 
         .ot-payment-page .form-control:focus,
         .ot-payment-page .form-select:focus {
-            border-color: var(--ot-secondary);
-            box-shadow: 0 0 0 .2rem var(--ot-s2-12);
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
+            outline: none;
+        }
+
+        /* Read-only values — same as the Walk-in MRD field */
+        .ot-payment-page .ot-readonly {
+            background: #eef2f6 !important;
+            color: var(--oc-primary);
+            font-weight: 700;
         }
 
         .ot-payment-page .input-group-text {
-            background: var(--ot-s2-08);
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px 0 0 12px;
-            color: var(--ot-secondary);
+            min-height: 38px;
+            padding: .35rem .6rem;
+            font-size: .75rem;
+            font-weight: 800;
+            color: var(--oc-primary);
+            background: var(--oc-soft);
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px 0 0 6px;
+        }
+
+        .ot-payment-page .input-group .form-control {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .ot-payment-page .select2-container--default .select2-selection--single {
+            min-height: 38px !important;
+            height: 38px !important;
+            display: flex;
+            align-items: center;
+            padding: 0 .45rem;
+            border: 1px solid var(--oc-input-border) !important;
+            border-radius: 6px !important;
+        }
+
+        .ot-payment-page .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: .84rem;
+            line-height: 36px !important;
+            padding-left: 0 !important;
+            color: #1a2a3a !important;
+        }
+
+        .ot-payment-page .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+
+        .ot-payment-page .select2-container--default.select2-container--focus .select2-selection--single,
+        .ot-payment-page .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: var(--oc-success) !important;
+            box-shadow: 0 0 0 3px var(--oc-focus) !important;
+        }
+
+        /* Auto-generate receipt button */
+        .ot-payment-page .ot-btn-outline {
+            min-height: 38px;
+            padding: .35rem .9rem;
+            border: 1px solid var(--oc-primary);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--oc-primary);
+            font-size: .8rem;
             font-weight: 800;
         }
 
-        .ot-payment-page .ot-readonly {
-            background: rgba(27, 79, 114, 0.05) !important;
-            color: rgba(27, 79, 114, 0.65);
+        .ot-payment-page .ot-btn-outline:hover {
+            background: var(--oc-primary);
+            color: #fff;
         }
 
-        .ot-payment-page .form-text {
-            color: rgba(27, 79, 114, 0.6);
-            font-weight: 600;
-            font-size: .78rem;
-        }
-
-        .ot-btn-outline {
-            border: 1px solid var(--ot-s2-24);
-            color: var(--ot-secondary);
-            background: #ffffff;
-            border-radius: 12px;
-            font-weight: 800;
-        }
-
-        .ot-btn-outline:hover {
-            background: var(--ot-secondary);
-            color: #ffffff;
-            border-color: var(--ot-secondary);
-        }
-
+        /* ── Actions ─────────────────────────────────────────────── */
         .ot-form-actions {
-            border-top: 1px solid var(--ot-s2-12);
+            margin-top: 1rem !important;
+            padding-top: .85rem !important;
+            border-top: 1px solid var(--oc-border);
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            .ot-payment-page,
-            .ot-premium-card,
-            .ot-payment-page .btn,
-            .ot-payment-page .hms-btn {
-                animation: none !important;
-                transition: none !important;
-            }
+        .ot-payment-page .ot-save-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            min-width: 140px;
+            padding: .45rem 1.25rem;
+            border: 2px solid var(--oc-primary);
+            border-radius: 6px;
+            background: var(--oc-primary);
+            color: #fff !important;
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+        }
+
+        .ot-payment-page .ot-save-btn:hover {
+            background: var(--oc-primary-dark);
+            border-color: var(--oc-primary-dark);
+        }
+
+        .ot-payment-page .ot-save-btn:focus {
+            background: var(--oc-success);
+            border-color: #1e8449;
+            box-shadow: 0 0 0 4px var(--oc-focus);
+            outline: none;
+        }
+
+        .ot-payment-page .ot-save-btn:disabled,
+        .ot-payment-page .ot-btn-outline:disabled {
+            background: #eef2f6;
+            border-color: var(--oc-input-border);
+            color: var(--oc-muted) !important;
+            cursor: not-allowed;
         }
     </style>
 @endpush
