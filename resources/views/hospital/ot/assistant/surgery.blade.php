@@ -7,7 +7,7 @@ used across the rest of the app. --}}
 @section('content')
         <div class="ot-surgery-page">
             <div class="row justify-content-center">
-                <div class="col-12 col-xl-10">
+                <div class="col-12">
                     <div class="ot-outer-card">
                         <div class="ot-header-block">
                             <div>
@@ -61,28 +61,28 @@ used across the rest of the app. --}}
                                 </div>
                                 <div class="ot-section-body">
                                     <div class="row g-3">
-                                        <div class="col-md-6">
+                                        <div class="col-md-6 col-lg-4">
                                             <label class="form-label text-muted">Patient Name</label>
                                             <input type="text" class="form-control ot-readonly"
                                                 value="{{ $booking->patient?->full_name ?? '-' }}" readonly>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-6 col-lg-2">
                                             <label class="form-label text-muted">Phone</label>
                                             <input type="text" class="form-control ot-readonly"
                                                 value="{{ $booking->patient?->contact_no ?? '-' }}" readonly>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-4 col-lg-2">
                                             <label class="form-label">OT Date <span class="text-danger">*</span></label>
                                             <input type="date" name="surgery_date" class="form-control" required
                                                 value="{{ old('surgery_date', optional($booking->surgery_date)->format('Y-m-d') ?: now()->format('Y-m-d')) }}">
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-4 col-lg-2">
                                             <label class="form-label text-muted">Package</label>
                                             <input type="text" class="form-control ot-readonly"
                                                 value="{{ money_code((float) ($counselling?->package_amount ?? $booking->package_amount ?? 0), 2) }}"
                                                 readonly>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-4 col-lg-2">
                                             <label class="form-label text-muted">Mediclaim</label>
                                             <input type="text" class="form-control ot-readonly"
                                                 value="{{ ($counselling?->mediclaim ?? $booking->has_mediclaim) ? 'YES' : 'NO' }}"
@@ -98,7 +98,7 @@ used across the rest of the app. --}}
                                     </div>
                                     <div class="ot-section-body">
                                         <div class="row g-3 mb-1">
-                                            <div class="col-md-6">
+                                            <div class="col-md-6 col-lg-4">
                                                 <label class="form-label">Surgery Name <span
                                                         class="text-danger">*</span></label>
                                                 <select name="surgery_name" class="form-select" required>
@@ -111,7 +111,7 @@ used across the rest of the app. --}}
                                                 </select>
                                             </div>
 
-                                            <div class="col-md-6">
+                                            <div class="col-md-6 col-lg-2">
                                                 <label class="form-label d-block mb-2">Eye Operated <span
                                                         class="text-danger">*</span></label>
                                                 @php
@@ -138,20 +138,20 @@ used across the rest of the app. --}}
                                                 </div>
                                             </div>
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-4 col-lg-2">
                                                 <label class="form-label">OT Room</label>
                                                 <input type="text" name="ot_room" class="form-control" value="{{ old('ot_room') }}" placeholder="e.g. OT-1">
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-4 col-lg-2">
                                                 <label class="form-label">Start Time</label>
                                                 <input type="datetime-local" name="start_time" id="start_time" class="form-control" value="{{ old('start_time') }}">
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-md-4 col-lg-2">
                                                 <label class="form-label">End Time</label>
                                                 <input type="datetime-local" name="end_time" id="end_time" class="form-control" value="{{ old('end_time') }}">
                                             </div>
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-4 col-lg-2">
                                                 <label class="form-label">Complication Status <span
                                                         class="text-danger">*</span></label>
                                                 <select name="complication_status" id="complication_status" class="form-select"
@@ -162,12 +162,12 @@ used across the rest of the app. --}}
                                                 </select>
                                             </div>
 
-                                            <div class="col-md-4">
+                                            <div class="col-md-4 col-lg-2">
                                                 <label class="form-label">Blood Loss</label>
                                                 <input type="text" name="blood_loss" class="form-control" value="{{ old('blood_loss') }}" placeholder="e.g. Minimal, 50ml">
                                             </div>
 
-                                            <div class="col-md-12">
+                                            <div class="col-md-12 col-lg-8">
                                                 <label class="form-label">Complication Notes</label>
                                                 <textarea name="complication_notes" id="complication_notes" rows="2"
                                                     class="form-control"
@@ -197,7 +197,7 @@ used across the rest of the app. --}}
                                             Auto-filled from Counsellor form — confirm or adjust if needed before saving surgery.
                                         </p>
                                         <div class="row g-3">
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label">Lens Category</label>
                                                 <select name="lens_category" class="form-select">
                                                     <option value="">Select...</option>
@@ -205,17 +205,17 @@ used across the rest of the app. --}}
                                                     <option value="premium" @selected(old('lens_category', $c->lens_category ?? '') === 'premium')>Premium</option>
                                                 </select>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label">Lens Company</label>
                                                 <input type="text" name="lens_company" class="form-control"
                                                     value="{{ old('lens_company', $c->lens_company ?? '') }}">
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label">Lens Model</label>
                                                 <input type="text" name="lens_model" class="form-control"
                                                     value="{{ old('lens_model', $c->lens_model ?? '') }}">
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label">Lens Type</label>
                                                 <select name="lens_type" class="form-select">
                                                     <option value="">Select...</option>
@@ -224,12 +224,12 @@ used across the rest of the app. --}}
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label">Estimated Power</label>
                                                 <input type="number" step="0.01" name="estimated_power" class="form-control"
                                                     value="{{ old('estimated_power', $c->estimated_power ?? '') }}">
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label">Lens Cost</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">{{ currency_code() }}</span>
@@ -238,7 +238,7 @@ used across the rest of the app. --}}
                                                         placeholder="Enter lens cost">
                                                 </div>
                                             </div>
-                                            <div class="col-md-3">
+                                            <div class="col-md-3 col-xl">
                                                 <label class="form-label d-block">Lens Implantation</label>
                                                 <div class="form-check form-check-inline">
                                                     <input class="form-check-input" type="radio" name="lens_implantation"
@@ -266,7 +266,7 @@ used across the rest of the app. --}}
                                     <div class="ot-section-body">
                                         @if($medicineGroups->isNotEmpty())
                                             <div class="row g-3 mb-3">
-                                                <div class="col-md-6">
+                                                <div class="col-md-6 col-lg-4">
                                                     <label class="form-label">Quick-fill from OT Medicine Group</label>
                                                     <select id="medicineGroupPicker" name="medicine_group_id" class="form-select">
                                                         <option value="">Select group (optional)...</option>
@@ -568,8 +568,11 @@ used across the rest of the app. --}}
             box-shadow: none;
         }
 
+        /* Notes sit beside status/blood loss — one line, still resizable */
         .ot-surgery-page textarea.form-control {
-            min-height: 60px;
+            height: 38px;
+            min-height: 38px;
+            resize: vertical;
         }
 
         .ot-surgery-page .form-control:focus,
