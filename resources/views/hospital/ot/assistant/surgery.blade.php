@@ -337,7 +337,7 @@ used across the rest of the app. --}}
                                 <div class="d-flex justify-content-end gap-2 pt-3 ot-form-actions">
                                     <a href="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug]) }}"
                                         class="hms-btn hms-btn-outline">Cancel</a>
-                                    <button type="submit" class="hms-btn hms-btn-primary px-4" style="color: #1b4f72;">
+                                    <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
                                         <i class="bi bi-check2-circle me-1"></i> Save Surgery
                                     </button>
                                 </div>
@@ -352,91 +352,68 @@ used across the rest of the app. --}}
 @push('styles')
     <style>
         /*
-          OT Surgery Recording Form (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72).
+          OT Surgery Recording Form — simple design matching the Walk-in register
+          form (reception-patient-form.css). CSS-only; Blade/dynamic logic untouched.
         */
 
         .ot-surgery-page {
-            --ot-secondary: #1B4F72;
-            --ot-s2-06: rgba(27, 79, 114, 0.06);
-            --ot-s2-08: rgba(27, 79, 114, 0.08);
-            --ot-s2-12: rgba(27, 79, 114, 0.12);
-            --ot-s2-18: rgba(27, 79, 114, 0.18);
-            --ot-s2-24: rgba(27, 79, 114, 0.24);
+            --oc-primary: #1B4F72;
+            --oc-primary-dark: #154360;
+            --oc-accent: #2980B9;
+            --oc-success: #27AE60;
+            --oc-border: rgba(27, 79, 114, 0.14);
+            --oc-input-border: #d1dce6;
+            --oc-muted: #64748B;
+            --oc-focus: rgba(39, 174, 96, 0.22);
+            --oc-soft: #EBF5FB;
 
-            position: relative;
             padding: .25rem 0 1.25rem;
-            color: var(--ot-secondary);
-            animation: ot-page-in 420ms ease both;
+            color: #1a2a3a;
         }
 
-        @keyframes ot-page-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .ot-surgery-page .btn,
-        .ot-surgery-page .hms-btn {
-            border-radius: 12px;
-            font-weight: 800;
-            transition: transform 170ms ease, box-shadow 170ms ease, background 170ms ease, border-color 170ms ease, color 170ms ease;
-        }
-
-        .ot-surgery-page .btn:hover,
-        .ot-surgery-page .hms-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 12px 26px rgba(27, 79, 114, 0.14);
-        }
-
+        /* ── Page header ─────────────────────────────────────────── */
         .ot-outer-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.12);
-            border-radius: 16px;
-            box-shadow: 0 12px 32px rgba(15, 79, 134, 0.08);
-            padding: 1.1rem 1.5rem;
-            margin-bottom: 1.25rem;
+            background: #fff;
+            border: 1px solid var(--oc-border);
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
+            padding: .85rem 1.25rem;
+            margin-bottom: 1rem;
         }
 
         .ot-header-block {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
             gap: .75rem;
         }
 
         .ot-header-title {
-            font-weight: 800;
-            font-size: 1.3rem;
-            color: var(--ot-secondary);
-            letter-spacing: -.015em;
             display: flex;
             align-items: center;
-            gap: .55rem;
-        }
-
-        .ot-header-title i {
-            color: var(--ot-secondary);
-            font-size: 1.2rem;
+            gap: .5rem;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb {
-            margin-top: .4rem;
+            margin-top: .25rem;
             display: flex;
             align-items: center;
             gap: .4rem;
-            font-size: .85rem;
-            color: #8891a0;
+            font-size: .8rem;
+            color: var(--oc-muted);
         }
 
         .ot-breadcrumb a {
-            color: #8891a0;
+            color: var(--oc-muted);
             text-decoration: none;
         }
 
         .ot-breadcrumb a:hover {
-            color: var(--ot-secondary);
+            color: var(--oc-primary);
         }
 
         .ot-breadcrumb-sep {
@@ -444,222 +421,333 @@ used across the rest of the app. --}}
         }
 
         .ot-breadcrumb-current {
-            color: #4a5568;
-            font-weight: 600;
+            color: var(--oc-primary);
+            font-weight: 700;
         }
 
+        .ot-surgery-page .hms-btn-outline {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .4rem .9rem;
+            border: 1px solid var(--oc-border);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--oc-primary);
+            font-size: .8rem;
+            font-weight: 700;
+        }
+
+        .ot-surgery-page .hms-btn-outline:hover {
+            background: var(--oc-soft);
+            border-color: var(--oc-primary);
+            color: var(--oc-primary);
+        }
+
+        /* ── Card ────────────────────────────────────────────────── */
         .ot-premium-card {
-            background: #ffffff;
-            border: 1px solid rgba(15, 79, 134, 0.08) !important;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(15, 79, 134, 0.05);
+            background: #fff;
+            border: 1px solid var(--oc-border) !important;
+            border-radius: 10px;
+            box-shadow: 0 8px 28px rgba(27, 79, 114, 0.08);
             overflow: hidden;
         }
 
+        .ot-premium-card > .card-body {
+            padding: 1rem 1.25rem 1.25rem !important;
+        }
+
+        /* Gradient strip header — same as Walk-in "ADD PATIENT" title */
         .ot-card-header {
-            background: #1b4f72;
-            border-bottom: 1px solid var(--ot-s2-12);
-            padding: 1.15rem 1.25rem;
+            background: linear-gradient(135deg, var(--oc-primary) 0%, var(--oc-accent) 100%);
+            padding: .55rem 1rem;
         }
 
         .ot-title-wrap {
             display: flex;
             align-items: center;
-            gap: 0.9rem;
+            gap: .6rem;
+            min-width: 0;
         }
 
         .ot-title-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 15px;
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: #1b4f72;
-            background: #ffffff;
-            box-shadow: 0 14px 30px rgba(27, 79, 114, 0.22);
             flex: 0 0 auto;
         }
 
+        .ot-title-icon i {
+            font-size: .9rem !important;
+        }
+
         .ot-title {
-            font-weight: 900;
-            letter-spacing: -0.2px;
-            color: #ffffff;
+            margin: 0 !important;
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
         }
 
         .ot-subtitle {
-            font-weight: 650;
-            color: #ffffff;
-            font-size: .85rem;
+            margin-top: .1rem;
+            font-size: .75rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.82);
         }
 
-        .ot-alert { border-radius: 14px; font-weight: 650; }
+        .ot-alert {
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+        }
 
+        /* ── Sections A–D ────────────────────────────────────────── */
         .ot-section {
-            border: 1px solid var(--ot-s2-12);
-            border-radius: 16px;
+            border: 1px solid var(--oc-border);
+            border-radius: 8px;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.9);
+            background: #fff;
+            margin-bottom: 1rem !important;
         }
 
         .ot-section-header {
-            padding: 0.85rem 1.1rem;
-            border-bottom: 1px solid var(--ot-s2-12);
-            background: #1B4F72;
-            color: #ffffff;
+            padding: .5rem .9rem;
+            background: var(--oc-soft);
+            border-bottom: 1px solid var(--oc-border);
+            border-left: 3px solid var(--oc-accent);
         }
 
-        .ot-section-header h6,
-        .ot-section-header h6 i {
-            color: #ffffff !important;
+        .ot-section-header h6 {
+            font-size: .78rem;
+            font-weight: 800 !important;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--oc-primary);
         }
 
         .ot-section-body {
-            padding: 1.1rem;
+            padding: .9rem 1rem 1rem;
         }
 
+        .ot-section-body > p.text-muted {
+            font-size: .78rem;
+        }
+
+        /* ── Fields — Walk-in form look ──────────────────────────── */
         .ot-surgery-page .form-label {
+            display: block;
+            margin: 0 0 .35rem;
+            font-size: .7rem;
             font-weight: 800;
-            font-size: .82rem;
-            color: var(--ot-secondary);
-            letter-spacing: .01em;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--oc-muted) !important;
+            line-height: 1.2;
+        }
+
+        .ot-surgery-page [class*="col-"]:focus-within > .form-label {
+            color: var(--oc-primary) !important;
         }
 
         .ot-surgery-page .form-control,
         .ot-surgery-page .form-select {
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px;
-            padding: .55rem .85rem;
-            background: rgba(255, 255, 255, 0.95);
-            color: var(--ot-secondary);
-            font-weight: 600;
-            transition: border-color 160ms ease, box-shadow 160ms ease;
+            min-height: 38px;
+            padding: .35rem .65rem;
+            font-size: .84rem;
+            color: #1a2a3a;
+            background-color: #fff;
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px;
+            box-shadow: none;
+        }
+
+        .ot-surgery-page textarea.form-control {
+            min-height: 60px;
         }
 
         .ot-surgery-page .form-control:focus,
         .ot-surgery-page .form-select:focus {
-            border-color: var(--ot-secondary);
-            box-shadow: 0 0 0 .2rem var(--ot-s2-12);
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
+            outline: none;
         }
 
-        .ot-readonly {
-            background: rgba(27, 79, 114, 0.05) !important;
-            color: rgba(27, 79, 114, 0.65);
+        /* Read-only values — same as the Walk-in MRD field */
+        .ot-surgery-page .ot-readonly {
+            background: #eef2f6 !important;
+            color: var(--oc-primary);
+            font-weight: 700;
+        }
+
+        .ot-surgery-page .input-group-text {
+            min-height: 38px;
+            padding: .35rem .6rem;
+            font-size: .75rem;
+            font-weight: 800;
+            color: var(--oc-primary);
+            background: var(--oc-soft);
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px 0 0 6px;
+        }
+
+        .ot-surgery-page .input-group .form-control {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .ot-surgery-page .select2-container--default .select2-selection--single {
+            min-height: 38px !important;
+            height: 38px !important;
+            display: flex;
+            align-items: center;
+            padding: 0 .45rem;
+            border: 1px solid var(--oc-input-border) !important;
+            border-radius: 6px !important;
+        }
+
+        .ot-surgery-page .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: .84rem;
+            line-height: 36px !important;
+            padding-left: 0 !important;
+            color: #1a2a3a !important;
+        }
+
+        .ot-surgery-page .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+
+        .ot-surgery-page .select2-container--default.select2-container--focus .select2-selection--single,
+        .ot-surgery-page .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: var(--oc-success) !important;
+            box-shadow: 0 0 0 3px var(--oc-focus) !important;
+        }
+
+        /* Radios — Eye operated pill + Yes/No */
+        .ot-surgery-page .form-check-label {
+            font-size: .84rem;
+            font-weight: 600;
+            color: #1a2a3a;
+        }
+
+        .ot-surgery-page .form-check-input:checked {
+            background-color: var(--oc-primary);
+            border-color: var(--oc-primary);
+        }
+
+        .ot-surgery-page .form-check-input:focus {
+            border-color: var(--oc-success);
+            box-shadow: 0 0 0 3px var(--oc-focus);
         }
 
         .ot-radio-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.55rem;
+            gap: .5rem;
         }
 
         .ot-radio-pill {
             margin: 0;
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 999px;
-            padding: 0.45rem 0.9rem;
-            background: #fff;
-        }
-
-        .ot-radio-pill .form-check-input {
-            border-color: var(--ot-s2-24);
-        }
-
-        .ot-radio-pill .form-check-input:checked {
-            background-color: var(--ot-secondary);
-            border-color: var(--ot-secondary);
-        }
-
-        .ot-check-pill {
-            display: flex;
+            min-height: 38px;
+            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            margin: 0;
-            border: 1px solid var(--ot-s2-18);
-            border-radius: 12px;
-            padding: 0.6rem 0.75rem;
+            gap: .4rem;
+            padding: .35rem .9rem .35rem 2.1rem;
+            border: 1px solid var(--oc-input-border);
+            border-radius: 6px;
             background: #fff;
-            cursor: pointer;
-            font-weight: 700;
-            color: var(--ot-secondary);
-            transition: background 160ms ease, border-color 160ms ease;
         }
 
-        .ot-check-pill .form-check-input {
-            margin: 0;
-            float: none;
-            border-color: var(--ot-s2-24);
+        .ot-radio-pill:has(.form-check-input:checked) {
+            background: var(--oc-soft);
+            border-color: var(--oc-primary);
         }
 
-        .ot-check-pill:has(.form-check-input:checked) {
-            background: rgba(30, 142, 90, 0.08);
-            border-color: rgba(30, 142, 90, 0.45);
+        .ot-radio-pill .form-check-label {
+            font-weight: 800;
+            color: var(--oc-primary);
         }
 
+        /* In-ward medicine rows */
         .ot-medicine-row {
-            border: 1px dashed var(--ot-s2-18);
-            border-radius: 14px;
-            padding: 0.85rem;
-            background: linear-gradient(180deg, #fff, #f7fbfe);
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            padding: .6rem .4rem;
+            border: 1px dashed #c9d6e2;
+            border-radius: 8px;
+            background: #fafcfe;
         }
 
-        .ot-btn-outline {
-            border: 1px solid var(--ot-s2-24);
-            color: var(--ot-secondary);
-            background: #ffffff;
+        .ot-surgery-page .ot-btn-outline {
+            padding: .3rem .75rem;
+            border: 1px solid var(--oc-primary);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--oc-primary);
+            font-size: .75rem;
+            font-weight: 800;
         }
 
-        .ot-btn-outline:hover {
-            background: var(--ot-secondary);
-            color: #ffffff;
-            border-color: var(--ot-secondary);
+        .ot-surgery-page .ot-btn-outline:hover {
+            background: var(--oc-primary);
+            color: #fff;
         }
 
-        .ot-btn-danger {
-            border: 1px solid rgba(192, 57, 43, 0.3);
-            color: #C0392B;
-            background: rgba(192, 57, 43, 0.06);
+        .ot-surgery-page .ot-btn-danger {
+            min-height: 38px;
+            border: 1px solid rgba(231, 76, 60, 0.35);
+            border-radius: 6px;
+            background: #fdf0ef;
+            color: #e74c3c;
+            font-weight: 800;
         }
 
-        .ot-btn-danger:hover {
-            background: rgba(192, 57, 43, 0.14);
-            color: #C0392B;
-            border-color: rgba(192, 57, 43, 0.4);
+        .ot-surgery-page .ot-btn-danger:hover {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            color: #fff;
         }
 
+        /* ── Actions ─────────────────────────────────────────────── */
         .ot-form-actions {
-            border-top: 1px solid var(--ot-s2-12);
-            margin-top: 0.25rem;
+            margin-top: .25rem;
+            padding-top: .85rem !important;
+            border-top: 1px solid var(--oc-border);
         }
 
-        @media (prefers-reduced-motion: reduce) {
-            .ot-surgery-page,
-            .ot-premium-card,
-            .ot-surgery-page .btn,
-            .ot-surgery-page .hms-btn {
-                animation: none !important;
-                transition: none !important;
-            }
+        .ot-surgery-page .ot-save-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .35rem;
+            min-width: 140px;
+            padding: .45rem 1.25rem;
+            border: 2px solid var(--oc-primary);
+            border-radius: 6px;
+            background: var(--oc-primary);
+            color: #fff !important;
+            font-size: .82rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
         }
 
-        @media (max-width: 991.98px) {
-            .ot-card-header {
-                padding: 1rem;
-            }
-
-            .ot-section-body {
-                padding: 0.9rem;
-            }
+        .ot-surgery-page .ot-save-btn:hover {
+            background: var(--oc-primary-dark);
+            border-color: var(--oc-primary-dark);
         }
 
-        @media (max-width: 767.98px) {
-            .ot-title-wrap {
-                align-items: flex-start;
-            }
-
-            .ot-medicine-row {
-                padding: 0.7rem;
-            }
+        .ot-surgery-page .ot-save-btn:focus {
+            background: var(--oc-success);
+            border-color: #1e8449;
+            box-shadow: 0 0 0 4px var(--oc-focus);
+            outline: none;
         }
     </style>
 @endpush
