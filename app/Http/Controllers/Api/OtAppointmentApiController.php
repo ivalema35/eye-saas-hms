@@ -120,7 +120,13 @@ class OtAppointmentApiController extends Controller
                 // web's filter <select>, so the app doesn't hardcode a
                 // shorter/stale copy of this list.
                 'stages' => OtAppointment::STAGES,
-                'stage_counts' => $stageCounts,
+                // Cast to object: an empty Laravel Collection serializes as
+                // JSON `[]`, not `{}` — PHP can't tell an empty array from
+                // an empty map — which the apps then fail to decode as a
+                // map. Only bites on a date range with zero appointments
+                // (e.g. the new today-default range before this had never
+                // naturally come up empty).
+                'stage_counts' => (object) $stageCounts->toArray(),
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
             ],

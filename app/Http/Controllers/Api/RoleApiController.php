@@ -69,7 +69,10 @@ class RoleApiController extends Controller
                 'is_super'    => $role->is_super,
                 'users_count' => $role->users_count,
                 'is_deletable' => $role->isDeletable(),
-                'permissions'  => $modules,
+                // Empty PHP arrays json_encode as [] — Flutter expects a Map
+                // {} (role_models.dart's _parseModuleTree happens to guard
+                // against this today, but don't rely on that at the source).
+                'permissions'  => empty($modules) ? new \stdClass() : $modules,
             ],
         ]);
     }
@@ -238,7 +241,8 @@ class RoleApiController extends Controller
             );
         }
 
-        return response()->json(['success' => true, 'data' => $modules]);
+        // Empty PHP arrays json_encode as [] — Flutter expects a Map {}.
+        return response()->json(['success' => true, 'data' => empty($modules) ? new \stdClass() : $modules]);
     }
 
     private function assertUniqueRole(int $tenantId, string $name, string $slug, ?int $ignoreId = null): void
