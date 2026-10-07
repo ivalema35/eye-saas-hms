@@ -1575,7 +1575,10 @@ class DashboardController extends Controller
                         ->orWhere('patient_name', 'like', "%{$searchContact}%")
                         ->orWhere('middle_name', 'like', "%{$searchContact}%")
                         ->orWhere('surname', 'like', "%{$searchContact}%")
-                        ->orWhereRaw("TRIM(CONCAT(patient_name, ' ', COALESCE(middle_name, ''), ' ', surname)) like ?", ["%{$searchContact}%"]);
+                        // Same double-space bug as the Patient-name searches
+                        // elsewhere (CONCAT + COALESCE leaves two spaces when
+                        // middle_name is blank) — CONCAT_WS + NULLIF skips it.
+                        ->orWhereRaw("TRIM(CONCAT_WS(' ', patient_name, NULLIF(middle_name, ''), surname)) like ?", ["%{$searchContact}%"]);
                 });
             })
             ->orderByDesc('created_at')

@@ -595,7 +595,27 @@ class DashboardController extends Controller
         ])
             ->where('reception_id', $authUser->id)
             ->whereDate('appointment_date', $today)
-            ->when($searchContact !== '', fn ($q) => $q->where('contact_no', 'like', "%{$searchContact}%"))
+            // Client report (2026-10-07): was contact-only (param name/hint
+            // text still say "contact", kept as-is to avoid an app-side
+            // rename) — now matches name too, same field set
+            // PatientApiController's own search uses.
+            //
+            // Follow-up client report, same day: typing a correct full name
+            // still returned zero rows. Root cause: CONCAT(first, ' ',
+            // COALESCE(middle, ''), ' ', last) leaves a double space when
+            // middle_name is blank ("Jiya  Mehta"), which a normally-typed
+            // single-space search never matches. CONCAT_WS skips NULL args
+            // (value + its separator) entirely; NULLIF(..., '') turns a blank
+            // middle_name into NULL first so it's skipped too, not just an
+            // actual NULL. Same fix applied to PatientApiController.php's two
+            // identical patterns, the only other place this exact bug lived.
+            ->when($searchContact !== '', fn ($q) => $q->where(function ($qq) use ($searchContact): void {
+                $qq->whereRaw("TRIM(CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name)) like ?", ["%{$searchContact}%"])
+                    ->orWhere('first_name', 'like', "%{$searchContact}%")
+                    ->orWhere('last_name', 'like', "%{$searchContact}%")
+                    ->orWhere('contact_no', 'like', "%{$searchContact}%")
+                    ->orWhere('patient_code', 'like', "%{$searchContact}%");
+            }))
             ->latest('created_at')
             ->get();
 

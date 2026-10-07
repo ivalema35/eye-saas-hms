@@ -346,7 +346,13 @@ class PatientController extends Controller
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->where(DB::raw("TRIM(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name))"), 'like', "%{$search}%")
+                // CONCAT(first, ' ', COALESCE(middle, ''), ' ', last) leaves a
+                // double space when middle_name is blank, so a normally-typed
+                // single-space full-name search never matched it. CONCAT_WS +
+                // NULLIF skips the blank middle_name entirely instead of
+                // leaving an empty placeholder — see the API controllers'
+                // identical fix (PatientApiController, DashboardController).
+                $q->where(DB::raw("TRIM(CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name))"), 'like', "%{$search}%")
                     ->orWhere('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('contact_no', 'like', "%{$search}%")
