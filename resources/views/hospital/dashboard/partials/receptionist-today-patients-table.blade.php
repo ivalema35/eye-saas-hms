@@ -1,4 +1,4 @@
-{{-- Receptionist "Today Added Patients" — separate tables (Walk-in / Phone / OT / Patient Status).
+{{-- Receptionist "Today Added Patients" — separate tables (Walk-in / Phone / Patient Status).
      Tabs show/hide panes. Primary-done patients stay in Walk-in until the secondary exam
      (or an OT booking) moves them to Patient Status. --}}
 @php
@@ -15,16 +15,10 @@
     $tapGroups = [
         'phone' => collect(),
         'walkin' => collect(),
-        'ot' => collect(),
         'status' => collect(),
     ];
     foreach ($receptionistTodayPatients as $p) {
-        $src = (string) ($p->source ?? 'patient');
         $type = strtolower(trim((string) ($p->type ?? '')));
-        if ($src === 'ot_appointment' || $type === 'ot') {
-            $tapGroups['ot']->push($p);
-            continue;
-        }
 
         $isPhoneType = $type === 'phone' || $type === '1';
         if ($isPhoneType) {
@@ -42,7 +36,6 @@
     $tapEmpty = [
         'phone' => 'No phone patients today',
         'walkin' => 'No walk-in patients waiting',
-        'ot' => 'No OT appointments today',
         'status' => 'No patient has completed secondary exam yet',
     ];
 @endphp
@@ -50,9 +43,8 @@
     data-patient-count="{{ $receptionistTodayPatients->count() }}"
     data-tap-count-phone="{{ $tapGroups['phone']->count() }}"
     data-tap-count-walkin="{{ $tapGroups['walkin']->count() }}"
-    data-tap-count-ot="{{ $tapGroups['ot']->count() }}"
     data-tap-count-status="{{ $tapGroups['status']->count() }}">
-    @foreach (['walkin', 'phone', 'ot', 'status'] as $tapKey)
+    @foreach (['walkin', 'phone', 'status'] as $tapKey)
         <div class="tap-pane{{ $tapKey === 'walkin' ? ' is-active' : '' }}"
             data-tap-pane="{{ $tapKey }}"
             @if($tapKey !== 'walkin') hidden @endif>

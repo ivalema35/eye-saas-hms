@@ -567,7 +567,6 @@ return [
             permission_matrix_crud_keys('referrer'),
             [
                 'dashboard_reception',
-                'dashboard_ot',
                 'patient_register',
                 'patient_register_phone',
                 'patient_view',
@@ -577,17 +576,9 @@ return [
                 'bill_print',
                 'report_view',
                 'report_export',
-                'ot_appointment_view',
-                'ot_appointment_create',
-                'ot_appointment_edit',
-                'ot_appointment_confirm',
-                'ot_appointment_cancel',
                 'ot_booking_create',
                 'ot_booking_modify',
                 'ot_booking_cancel',
-                'ot_patient_list',
-                'ot_invoice_view',
-                'ot_bill_print',
             ]
         ),
         'accountant' => [
@@ -630,6 +621,15 @@ return [
             'ot_counselling_fill',
             'ot_consent_capture',
             'ot_package_set',
+        ],
+        // Dedicated OT appointment desk. Receptionist no longer books OT appointments.
+        'ot_appointment' => [
+            'dashboard_ot',
+            'ot_appointment_view',
+            'ot_appointment_create',
+            'ot_appointment_edit',
+            'ot_appointment_confirm',
+            'ot_appointment_cancel',
         ],
     ],
 ];

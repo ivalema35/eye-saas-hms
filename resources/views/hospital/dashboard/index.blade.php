@@ -1520,7 +1520,8 @@
             || ($accountantPendingCount ?? null) !== null
             || ($wardPendingCount ?? null) !== null
             || ($otAssistantPendingCount ?? null) !== null
-            || ($counsellingPendingCount ?? null) !== null;
+            || ($counsellingPendingCount ?? null) !== null
+            || ($otAppointmentTodayCount ?? null) !== null;
         $pendingShareRequestsCount = $pendingShareRequestsCount ?? null;
     @endphp
 
@@ -2164,6 +2165,36 @@
                     </div>
                 </div>
             </a>
+            {{-- OT Appointment desk: Today / Completed (replaces OT Appointment card) --}}
+        @elseif(($isOtAppointmentUser ?? false) && ($otAppointmentTodayCount ?? null) !== null)
+            <a href="#otAppointmentPanel" data-acc-tab="today"
+                class="bento-card span-2 text-decoration-none acc-tab-card is-active">
+                <span class="bento-gloss" aria-hidden="true"></span>
+                <div class="bento-stat">
+                    <div class="bento-icon" style="background:#FCE4EC;border-color:rgba(194,24,91,.22);">
+                        <i class="bi bi-calendar2-check" style="font-size:22px;color:#C2185B"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">OT Appointment</p>
+                        <div class="metric-value">{{ $otAppointmentTodayCount ?? 0 }}</div>
+                        <p class="metric-meta">Appointments today</p>
+                    </div>
+                </div>
+            </a>
+            <a href="#otAppointmentPanel" data-acc-tab="completed"
+                class="bento-card span-2 text-decoration-none acc-tab-card">
+                <span class="bento-gloss" aria-hidden="true"></span>
+                <div class="bento-stat">
+                    <div class="bento-icon ig-green">
+                        <i class="bi bi-check-circle-fill" style="font-size:22px;color:#27AE60"></i>
+                    </div>
+                    <div>
+                        <p class="metric-label">Completed</p>
+                        <div class="metric-value">{{ $otAppointmentCompletedCount ?? 0 }}</div>
+                        <p class="metric-meta">Checked in today</p>
+                    </div>
+                </div>
+            </a>
             {{-- OT Appointment (ot_patient_list / ot_appointment_view) --}}
             {{-- Receptionist: shown in the top 6-card row instead --}}
         @elseif($hasOt && !$isReceptionistUser)
@@ -2220,6 +2251,10 @@
 
     @if($isCounsellingUser && !empty($counsellingLists))
         @include('hospital.dashboard.partials.counselling-panel')
+    @endif
+
+    @if(($isOtAppointmentUser ?? false) && !empty($otAppointmentLists))
+        @include('hospital.dashboard.partials.ot-appointment-panel')
     @endif
 
     @if($isDoctorUser && $doctorStripCards->isNotEmpty())
@@ -2894,9 +2929,6 @@
                         <button type="button" class="tap-tab-btn" data-tap-tab="phone">
                             <i class="bi bi-telephone"></i> Phone <span class="tap-tab-n" data-tap-n="phone">0</span>
                         </button>
-                        <button type="button" class="tap-tab-btn" data-tap-tab="ot">
-                            <i class="bi bi-hospital"></i> OT <span class="tap-tab-n" data-tap-n="ot">0</span>
-                        </button>
                         <button type="button" class="tap-tab-btn" data-tap-tab="status">
                             <i class="bi bi-clipboard2-pulse"></i> Patient Status <span class="tap-tab-n"
                                 data-tap-n="status">0</span>
@@ -2926,7 +2958,7 @@
                                 });
                                 var marker = results.querySelector('[data-patient-count]');
                                 if (marker) {
-                                    ['walkin', 'phone', 'ot', 'status'].forEach(function (key) {
+                                    ['walkin', 'phone', 'status'].forEach(function (key) {
                                         var n = marker.getAttribute('data-tap-count-' + key);
                                         var el = tabsWrap.querySelector('[data-tap-n="' + key + '"]');
                                         if (el && n !== null) el.textContent = n;

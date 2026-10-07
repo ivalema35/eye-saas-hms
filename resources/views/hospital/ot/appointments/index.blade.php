@@ -34,24 +34,8 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap ot-header-actions">
                     <form method="GET" action="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
-                        class="ot-status-form">
-                        <input type="hidden" name="from_date" value="{{ $fromDate ?? now()->toDateString() }}">
-                        <input type="hidden" name="to_date" value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}">
-                        <select name="status" class="form-select form-select-sm ot-status-select"
-                            onchange="this.form.submit()">
-                            <option value="all" {{ $activeStatus === 'all' ? 'selected' : '' }}>
-                                All Status ({{ $stageCounts->sum() }})
-                            </option>
-                            @foreach($stages as $value => $label)
-                                <option value="{{ $value }}" {{ $activeStatus === $value ? 'selected' : '' }}>
-                                    {{ $label }} ({{ $stageCounts[$value] ?? 0 }})
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                    <form method="GET" action="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}"
                         class="ot-desk-date-form d-inline-flex align-items-center">
-                        <input type="hidden" name="status" value="{{ $activeStatus }}">
+                        <input type="hidden" name="tab" value="{{ $activeTab }}">
                         <input type="text"
                             class="form-control form-control-sm ot-desk-date-input"
                             data-hms-date-range
@@ -65,12 +49,21 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                             readonly
                             style="min-width:200px;">
                     </form>
-                    @haspermission('ot_appointment_create')
-                    <a href="{{ route('hospital.ot.appointments.create', ['slug' => $slug]) }}" class="ot-add-btn">
-                        <i class="bi bi-plus-lg"></i> New Appointment
-                    </a>
-                    @endhaspermission
                 </div>
+            </div>
+
+            @php
+                $tabQuery = ['slug' => $slug, 'from_date' => $fromDate, 'to_date' => $toDate];
+            @endphp
+            <div class="ot-tabs">
+                <a href="{{ route('hospital.ot.appointments.index', $tabQuery + ['tab' => 'booked']) }}"
+                    class="ot-tab {{ $activeTab === 'booked' ? 'is-active' : '' }}">
+                    <i class="bi bi-calendar2-plus"></i> Booked <span class="ot-tab-n">{{ $bookedCount }}</span>
+                </a>
+                <a href="{{ route('hospital.ot.appointments.index', $tabQuery + ['tab' => 'completed']) }}"
+                    class="ot-tab {{ $activeTab === 'completed' ? 'is-active' : '' }}">
+                    <i class="bi bi-check2-circle"></i> Completed <span class="ot-tab-n">{{ $completedCount }}</span>
+                </a>
             </div>
 
             <div class="card-body p-0">
@@ -95,7 +88,9 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                     <th>Date</th>
                                     <th>Doctor</th>
                                     <th>Status</th>
+                                    @if($activeTab === 'booked')
                                     <th class="ot-actions-col">Action</th>
+                                    @endif
                                 </tr>
                             </thead>
                             <tbody>
@@ -110,55 +105,45 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                                     <td>{{ optional($appointment->appointment_date)->format('d M Y') }}</td>
                                     <td>{{ $appointment->doctor?->name ? 'Dr. ' . $appointment->doctor->name : '-' }}
                                     </td>
+                                    @if($activeTab === 'booked')
                                     <td>
-                                        <span
-                                            class="badge ot-status-badge {{ $appointment->stage_badge_class }}">{{ $appointment->stage_label }}</span>
+                                        <span class="badge ot-status-badge ot-stage-booked">Booked</span>
                                     </td>
                                     <td class="ot-actions-cell">
-                                        @if(in_array($appointment->status, ['booked', 'confirmed']))
-                                        @if($appointment->canWalkIn())
-                                        @haspermission('patient_register')
-                                        <a href="{{ route('hospital.patients.create', ['slug' => $slug, 'ot_appointment_id' => $appointment->id]) }}"
-                                            class="ot-walkin-btn me-1"
-                                            title="Register as walk-in (prefill from this appointment)">
-                                            <i class="bi bi-person-walking"></i> Walk-In
-                                        </a>
-                                        @endhaspermission
-                                        @endif
                                         @haspermission('ot_appointment_edit')
                                         <a href="{{ route('hospital.ot.appointments.edit', ['slug' => $slug, 'id' => $appointment->id]) }}"
-                                            class="ot-edit-btn me-1" title="Edit appointment">
+                                            class="ot-edit-btn" title="Edit appointment">
                                             <i class="bi bi-pencil-square"></i>
                                         </a>
+                                        @else
+                                        <span class="text-muted small">-</span>
                                         @endhaspermission
-                                        @endif
-                                        @haspermission('ot_appointment_cancel')
-                                        <form method="POST"
-                                            action="{{ route('hospital.ot.appointments.destroy', ['slug' => $slug, 'id' => $appointment->id]) }}"
-                                            class="d-inline"
-                                            onsubmit="return confirm('Delete this appointment? This cannot be undone.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="ot-icon-btn ot-icon-btn-cancel"
-                                                title="Delete appointment">
-                                                <i class="bi bi-trash3"></i>
-                                            </button>
-                                        </form>
-                                        @endhaspermission
-                                        @unless(
-                                                (in_array($appointment->status, ['booked', 'confirmed']) && (
-                                                    ($appointment->canWalkIn() && hospital_can('patient_register'))
-                                                    || hospital_can('ot_appointment_edit')
-                                                ))
-                                                || hospital_can('ot_appointment_cancel')
-                                            )
-                                            <span class="text-muted small">-</span>
-                                        @endunless
                                     </td>
+                                    @else
+                                    @php
+                                        // Patient's live stage: Primary → Secondary → Counselling → Account → Ward → OT → Discharge.
+                                        $stage = $appointment->convertedPatient?->workflowStage();
+                                        $stageClass = [
+                                            'warning' => 'ot-stage-booked',
+                                            'info' => 'ot-stage-counselled',
+                                            'purple' => 'ot-stage-recommended',
+                                            'teal' => 'ot-stage-ready',
+                                            'success' => 'ot-stage-confirmed',
+                                            'primary' => 'ot-stage-operated',
+                                            'danger' => 'ot-stage-cancelled',
+                                        ][$stage['tone'] ?? ''] ?? 'ot-stage-checkedin';
+                                    @endphp
+                                    <td>
+                                        <span class="badge ot-status-badge {{ $stageClass }}">{{ $stage['label'] ?? 'Walk-In Completed' }}</span>
+                                        @if(!empty($stage['sub']))
+                                            <div class="small text-muted mt-1">{{ $stage['sub'] }}</div>
+                                        @endif
+                                    </td>
+                                    @endif
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="8" class="text-center ot-empty">
+                                    <td colspan="{{ $activeTab === 'booked' ? 8 : 7 }}" class="text-center ot-empty">
                                         <i class="bi bi-inbox me-1"></i> No appointments found.
                                     </td>
                                 </tr>
@@ -387,6 +372,52 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
         .ot-add-btn:hover {
             background: #eaf3fa;
             color: var(--ot-primary-dark);
+        }
+
+        .ot-tabs {
+            display: flex;
+            gap: .5rem;
+            flex-wrap: wrap;
+            padding: 1rem 1.5rem 0;
+        }
+
+        .ot-tab {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .5rem 1rem;
+            border-radius: 999px;
+            border: 1px solid var(--ot-s2-18);
+            background: #ffffff;
+            color: var(--ot-primary);
+            font-weight: 700;
+            font-size: .85rem;
+            text-decoration: none;
+            transition: background 160ms ease, color 160ms ease;
+        }
+
+        .ot-tab:hover {
+            background: var(--ot-s2-08);
+            color: var(--ot-primary);
+        }
+
+        .ot-tab.is-active {
+            background: var(--ot-primary);
+            border-color: var(--ot-primary);
+            color: #ffffff;
+        }
+
+        .ot-tab-n {
+            min-width: 22px;
+            padding: 0 .4rem;
+            border-radius: 999px;
+            background: var(--ot-s2-12);
+            font-size: .75rem;
+            text-align: center;
+        }
+
+        .ot-tab.is-active .ot-tab-n {
+            background: rgba(255, 255, 255, 0.22);
         }
 
         .ot-alert {
