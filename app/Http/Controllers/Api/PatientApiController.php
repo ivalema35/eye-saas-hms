@@ -206,7 +206,13 @@ class PatientApiController extends Controller
         }
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
-                $q->whereRaw("TRIM(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name)) like ?", ["%{$search}%"])
+                // CONCAT(first, ' ', COALESCE(middle, ''), ' ', last) leaves a
+                // double space when middle_name is blank/null (e.g. "Jiya  Mehta"),
+                // so a search typed the normal way ("Jiya Mehta", one space) never
+                // matched it. CONCAT_WS skips NULL args entirely (both the value
+                // and its separator) — NULLIF(..., '') turns an empty string into
+                // NULL first so it's skipped too, not just an actual NULL.
+                $q->whereRaw("TRIM(CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name)) like ?", ["%{$search}%"])
                     ->orWhere('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%")
                     ->orWhere('contact_no', 'like', "%{$search}%")
@@ -584,7 +590,10 @@ class PatientApiController extends Controller
                 $q->where('first_name', 'like', "%{$term}%")
                     ->orWhere('last_name', 'like', "%{$term}%")
                     ->orWhere('middle_name', 'like', "%{$term}%")
-                    ->orWhereRaw("TRIM(CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name)) like ?", ["%{$term}%"]);
+                    // See the note on the same pattern above applyPatientLookup's
+                    // sibling search — CONCAT_WS + NULLIF avoids the double-space
+                    // that broke a plain "First Last" search when middle_name is blank.
+                    ->orWhereRaw("TRIM(CONCAT_WS(' ', first_name, NULLIF(middle_name, ''), last_name)) like ?", ["%{$term}%"]);
             }
             if ($digits !== '') {
                 $phone = function ($inner) use ($digits, $term) {
