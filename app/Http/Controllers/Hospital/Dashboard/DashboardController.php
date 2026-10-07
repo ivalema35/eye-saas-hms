@@ -675,6 +675,36 @@ class DashboardController extends Controller
             $counsellingPaymentCount = $counsellingLists['payments']->count();
         }
 
+        // ── OT Appointment desk (ot_appointment role) ───────────────────────
+        // Today's OT appointments vs. those already checked in as OPD patients.
+        $isOtAppointmentUser = $user?->role?->slug === 'ot_appointment';
+        $otAppointmentTodayCount = null;
+        $otAppointmentCompletedCount = null;
+        $otAppointmentLists = null;
+
+        if ($isOtAppointmentUser && ($this->perm->can('dashboard_ot') || $this->perm->can('ot_appointment_view'))) {
+            // Same rows the cards count, rendered inline below them.
+            $todayAppointments = OtAppointment::query()
+                ->with(['doctor:id,name', 'convertedPatient.latestOtBooking'])
+                ->whereDate('appointment_date', $today)
+                ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+                ->orderByDesc('id')
+                ->get();
+
+            $otAppointmentLists = [
+                // Walked-in appointments move out of Today into Completed.
+                'today' => $todayAppointments
+                    ->filter(fn (OtAppointment $appointment) => $appointment->canWalkIn())
+                    ->values(),
+                'completed' => $todayAppointments
+                    ->where('status', OtAppointment::STATUS_COMPLETED)
+                    ->values(),
+            ];
+
+            $otAppointmentTodayCount = $otAppointmentLists['today']->count();
+            $otAppointmentCompletedCount = $otAppointmentLists['completed']->count();
+        }
+
         // ── Incoming Share Requests (hospital admin only) ─────────────────────
         $pendingShareRequestsCount = null;
         $isHospitalAdmin = (bool) ($user?->role?->is_super || $user?->role?->slug === 'hospital_admin');
@@ -833,13 +863,6 @@ class DashboardController extends Controller
                     'patients.created_at',
                     'tbl_slots.slot_name as slot_name',
                 ]);
-
-            // Also list today’s OT appointments (pre-registration) in the same table
-            $receptionistTodayPatients = $this->mergeTodayOtAppointments(
-                $receptionistTodayPatients,
-                $today,
-                request('search_contact')
-            );
         }
 
         // AJAX-filter for the receptionist "Today Added Patients" widget (mobile
@@ -995,6 +1018,10 @@ class DashboardController extends Controller
             'counsellingCompletedCount',
             'counsellingPaymentCount',
             'counsellingLists',
+            'isOtAppointmentUser',
+            'otAppointmentTodayCount',
+            'otAppointmentCompletedCount',
+            'otAppointmentLists',
             'subscriptionDaysLeft',
             // Clinical
             'todayPatients',

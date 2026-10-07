@@ -35,10 +35,8 @@ class OtAppointmentController extends Controller
 {
     public function index(Request $request, string $slug): View
     {
-        $status = strtolower((string) $request->query('status', 'all'));
-        if ($status !== 'all' && !array_key_exists($status, OtAppointment::STAGES)) {
-            $status = 'all';
-        }
+        // Booked = not yet walked in; Completed = converted to an OPD patient.
+        $tab = $request->query('tab') === 'completed' ? 'completed' : 'booked';
 
         // Defaults to today; the date filter widget lets it be widened.
         $today = now()->toDateString();
@@ -66,21 +64,19 @@ class OtAppointmentController extends Controller
             ->orderByDesc('id')
             ->get();
 
-        // Stage depends on the linked patient's latest OT booking, so filter in memory.
-        $stageCounts = $appointments->countBy(fn(OtAppointment $appointment) => $appointment->stage_key);
-
-        if ($status !== 'all') {
-            $appointments = $appointments
-                ->filter(fn(OtAppointment $appointment) => $appointment->stage_key === $status)
-                ->values();
-        }
+        $bookedAppointments = $appointments
+            ->filter(fn(OtAppointment $appointment) => $appointment->canWalkIn())
+            ->values();
+        $completedAppointments = $appointments
+            ->filter(fn(OtAppointment $appointment) => (bool) $appointment->converted_patient_id)
+            ->values();
 
         return view('hospital.ot.appointments.index', [
             'slug' => $slug,
-            'appointments' => $appointments,
-            'activeStatus' => $status,
-            'stages' => OtAppointment::STAGES,
-            'stageCounts' => $stageCounts,
+            'appointments' => $tab === 'completed' ? $completedAppointments : $bookedAppointments,
+            'activeTab' => $tab,
+            'bookedCount' => $bookedAppointments->count(),
+            'completedCount' => $completedAppointments->count(),
             'fromDate' => $fromDate,
             'toDate' => $toDate,
         ]);

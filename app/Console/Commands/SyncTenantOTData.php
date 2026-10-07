@@ -37,6 +37,7 @@ class SyncTenantOTData extends Command
             ['name' => 'OT Assistant', 'slug' => 'ot_assistant', 'color' => '#CA6F1E', 'is_super' => false],
             ['name' => 'Discharge Counter', 'slug' => 'discharge_counter', 'color' => '#2E86C1', 'is_super' => false, 'is_system' => true],
             ['name' => 'Counselling', 'slug' => 'counselling', 'color' => '#D68910', 'is_super' => false, 'is_system' => true],
+            ['name' => 'OT Appointment', 'slug' => 'ot_appointment', 'color' => '#C2185B', 'is_super' => false, 'is_system' => true],
         ];
 
         $defaultRoles = array_map(static function (array $role): array {
@@ -187,15 +188,9 @@ class SyncTenantOTData extends Command
     private function syncSection24PermissionMatrix(array $roleIdsBySlug): void
     {
         $matrix = [
-            // Reception books OT. Counselling lives on the dedicated counselling role.
+            // Reception books OT. Counselling and OT appointments live on their dedicated roles.
             'receptionist' => [
-                'ot.appointment.*',
                 'ot.booking.*',
-                'ot.patient.list',
-                'ot.payment.record',
-                'ot.payment.export',
-                'ot.invoice.view',
-                'ot.bill.print',
                 'opd.patient.view',
                 'opd.exam.history',
                 'reports.view',
@@ -238,6 +233,15 @@ class SyncTenantOTData extends Command
                 'ot_consent_capture',
                 'ot_package_set',
                 'dashboard_ot',
+            ],
+            // Dedicated OT appointment desk.
+            'ot_appointment' => [
+                'dashboard_ot',
+                'ot_appointment_view',
+                'ot_appointment_create',
+                'ot_appointment_edit',
+                'ot_appointment_confirm',
+                'ot_appointment_cancel',
             ],
             // Discharge Counter — new role, owns Discharge & Invoices (docs/tulsi.md §6).
             'discharge_counter' => [

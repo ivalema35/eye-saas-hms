@@ -151,10 +151,10 @@ Roles / History / OT Patients panel design. --}}
 @push('styles')
     <style>
         /*
-                              OT Appointment (Dashboard) — Design refresh
-                              Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                              Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-                            */
+                                          OT Appointment (Dashboard) — Design refresh
+                                          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                                          Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+                                        */
 
         .ota-list-page {
             --ota-secondary: #1B4F72;

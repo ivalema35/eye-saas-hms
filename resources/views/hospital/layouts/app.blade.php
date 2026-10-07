@@ -1897,7 +1897,8 @@
                 $contentTopbarUser = auth('hospital_user')->user();
                 $contentTopbarSlug = request()->route('slug');
                 $isReceptionistUser = in_array($contentTopbarUser?->role?->slug, ['receptionist', 'receptionist_opd'], true);
-                $showReceptionRegisterActions = $isReceptionistUser && request()->routeIs('hospital.dashboard');
+                $isOtAppointmentUser = $contentTopbarUser?->role?->slug === 'ot_appointment';
+                $showReceptionRegisterActions = ($isReceptionistUser || $isOtAppointmentUser) && request()->routeIs('hospital.dashboard');
             @endphp
 
             {{-- In-content top bar: search + profile menu (design refresh) --}}
