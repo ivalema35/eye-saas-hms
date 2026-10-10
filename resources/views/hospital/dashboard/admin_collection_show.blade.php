@@ -26,7 +26,7 @@ $exportUrl = route('hospital.dashboard.collection.export', [
                 <span class="acs-current">{{ $reception->name }}</span>
             </nav>
             <a href="{{ $backUrl }}" class="acs-btn acs-btn-light">
-                <i class="bi bi-arrow-left"></i> All Reception
+                 All Reception
             </a>
         </div>
 

@@ -34,8 +34,6 @@ used across the rest of the app. --}}
                                 </span>
                                 <div>
                                     <h5 class="mb-1 ot-title">Surgery Recording Form</h5>
-                                    <p class="mb-0 ot-subtitle">Complete surgery details and ward medicines in one flow.
-                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -193,9 +191,6 @@ used across the rest of the app. --}}
                                         <h6 class="fw-bold mb-0"><i class="bi bi-eyeglasses me-1"></i> C. Lens Selection</h6>
                                     </div>
                                     <div class="ot-section-body">
-                                        <p class="text-muted small mb-3 mb-md-2">
-                                            Auto-filled from Counsellor form — confirm or adjust if needed before saving surgery.
-                                        </p>
                                         <div class="row g-3">
                                             <div class="col-md-3 col-xl">
                                                 <label class="form-label">Lens Category</label>
