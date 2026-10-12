@@ -36,7 +36,7 @@ rendered above the report groups instead. --}}
             <div class="card-body">
                 <div class="ot-report-grid">
                     @foreach($reports as $report)
-                        <a href="{{ route('hospital.reports.ot.show', ['slug' => $slug, 'type' => $report['key']]) }}" class="ot-report-tile">
+                        <a href="{{ !empty($report['route']) ? route($report['route'], ['slug' => $slug]) : route('hospital.reports.ot.show', ['slug' => $slug, 'type' => $report['key']]) }}" class="ot-report-tile">
                             <span class="ot-report-tile-icon"><i class="bi bi-file-earmark-bar-graph"></i></span>
                             <span class="ot-report-tile-label">{{ $report['label'] }}</span>
                         </a>

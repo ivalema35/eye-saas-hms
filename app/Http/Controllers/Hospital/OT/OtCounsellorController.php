@@ -19,6 +19,7 @@ use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtConsent;
 use App\Models\Hospital\OT\OtCounselling;
+use App\Models\Hospital\OT\OtLensPower;
 use App\Models\Hospital\OT\OtPackageMaster;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -161,6 +162,13 @@ class OtCounsellorController extends Controller
             ->orderBy('surgery_name')
             ->get(['id', 'surgery_name']);
 
+        // Lens Power master — active records only, not restricted to favourites.
+        $lensPowers = OtLensPower::query()
+            ->where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->orderBy('power')
+            ->get(['id', 'power', 'is_favourite']);
+
         return view('hospital.ot.counsellor.form', [
             'slug' => $slug,
             'booking' => $booking,
@@ -168,6 +176,7 @@ class OtCounsellorController extends Controller
             'consent' => $consent,
             'packageCostOptions' => $packageCostOptions,
             'otSurgeryTypes' => $otSurgeryTypes,
+            'lensPowers' => $lensPowers,
         ]);
     }
 
@@ -235,6 +244,14 @@ class OtCounsellorController extends Controller
             $surgeryTypeNames[] = $booking->ot_type;
         }
 
+        // Existing Lens Power value on this booking (if any) stays selectable even
+        // if it no longer matches an active master row, so resaving the form
+        // without touching this field never silently wipes legacy data.
+        $existingEstimatedPower = OtCounselling::query()
+            ->where('tenant_id', $tenantId)
+            ->where('ot_booking_id', $booking->id)
+            ->value('estimated_power');
+
         $validated = $request->validate([
             'diagnosis' => ['nullable', 'string', 'max:255'],
             'eye' => ['required', Rule::in(['RE', 'LE', 'Both'])],
@@ -244,7 +261,29 @@ class OtCounsellorController extends Controller
             'lens_company' => ['nullable', 'string', 'max:150'],
             'lens_model' => ['nullable', 'string', 'max:150'],
             'lens_type' => ['nullable', 'string', 'max:100'],
-            'estimated_power' => ['nullable', 'numeric', 'between:-99.99,999.99'],
+            'estimated_power' => [
+                'nullable',
+                'numeric',
+                'between:-99.99,999.99',
+                function ($attribute, $value, $fail) use ($tenantId, $existingEstimatedPower) {
+                    if ($value === null || $value === '') {
+                        return;
+                    }
+
+                    $matchesActiveMaster = OtLensPower::query()
+                        ->where('tenant_id', $tenantId)
+                        ->where('is_active', true)
+                        ->where('power', $value)
+                        ->exists();
+
+                    $matchesExisting = $existingEstimatedPower !== null
+                        && (float) $value === (float) $existingEstimatedPower;
+
+                    if (! $matchesActiveMaster && ! $matchesExisting) {
+                        $fail('Select a valid Lens Power from the list.');
+                    }
+                },
+            ],
             'lens_cost' => ['nullable', 'numeric', 'min:0'],
             'package_name' => ['nullable', 'string', 'max:150'],
             'room_category' => ['nullable', Rule::in(['general', 'private'])],
