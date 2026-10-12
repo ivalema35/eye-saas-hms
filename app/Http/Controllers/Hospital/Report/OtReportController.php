@@ -79,6 +79,18 @@ class OtReportController extends Controller
             ->map(fn (array $meta, string $key) => [...$meta, 'key' => $key])
             ->groupBy('group');
 
+        // Lens Report has its own dedicated page (summary cards + lens-power
+        // breakdown) rather than the generic headings/rows show() used by
+        // self::REPORTS, so it's appended here instead of into that list.
+        $reportsByGroup = $reportsByGroup->map(fn ($reports, $group) => $group === 'Clinical Reports'
+            ? $reports->push([
+                'group' => 'Clinical Reports',
+                'label' => 'Lens Report',
+                'key' => 'lens-report',
+                'route' => 'hospital.reports.ot.lens-report',
+            ])
+            : $reports);
+
         return view('hospital.reports.ot.index', [
             'slug' => $slug,
             'reportsByGroup' => $reportsByGroup,
@@ -139,6 +151,112 @@ class OtReportController extends Controller
         ])->setPaper('a4', 'landscape');
 
         return $pdf->download($filename);
+    }
+
+    /**
+     * Lens Report — actual lens usage (ot_lens_details.is_implanted = true), not
+     * the counselling-stage estimate. One ot_lens_details row per booking
+     * (OtAssistantController::storeLens() upserts on tenant_id+ot_booking_id),
+     * so counting rows never double-counts a surgery. Defaults to today; a
+     * dedicated Start/End + Apply/Reset filter (not the generic date-range
+     * picker) per the Lens Report's own requirements.
+     */
+    public function lensReport(Request $request, string $slug): View
+    {
+        $this->authorizeAnyPermission(['report_view', 'ot_reports_view']);
+
+        [$from, $to] = $this->resolveLensReportDateRange($request);
+        $tenantId = (int) app('tenant')->id;
+
+        return view('hospital.reports.ot.lens_report', [
+            'slug' => $slug,
+            'from' => $from->toDateString(),
+            'to' => $to->toDateString(),
+            ...$this->buildLensReportData($tenantId, $from, $to),
+        ]);
+    }
+
+    public function lensReportExport(Request $request, string $slug): BinaryFileResponse
+    {
+        $this->authorizeAnyPermission(['report_export', 'ot_reports_export']);
+
+        [$from, $to] = $this->resolveLensReportDateRange($request);
+        $tenantId = (int) app('tenant')->id;
+
+        $data = $this->buildLensReportData($tenantId, $from, $to);
+
+        $filename = 'lens_report_'.$from->toDateString().'_to_'.$to->toDateString().'.xlsx';
+
+        return Excel::download(new GenericArrayExport($data['detailRows'], $data['detailHeadings']), $filename);
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function resolveLensReportDateRange(Request $request): array
+    {
+        $validated = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
+        $today = now()->toDateString();
+        $from = $validated['from'] ?? $today;
+        $to = $validated['to'] ?? $today;
+
+        if ($to < $from) {
+            [$from, $to] = [$to, $from];
+        }
+
+        return [Carbon::parse($from)->startOfDay(), Carbon::parse($to)->endOfDay()];
+    }
+
+    /**
+     * @return array{summary: array{totalLensesUsed: int, totalSurgeries: int, uniquePowers: int}, powerSummary: \Illuminate\Support\Collection, detailHeadings: list<string>, detailRows: list<array<int, mixed>>}
+     */
+    private function buildLensReportData(int $tenantId, Carbon $from, Carbon $to): array
+    {
+        $lensDetails = OtLensDetail::query()
+            ->with([
+                'booking.patient:id,patient_code,first_name,middle_name,last_name',
+                'booking.otDoctor:id,name',
+                'inventoryItem:id,lens_code,manufacturer',
+            ])
+            ->where('tenant_id', $tenantId)
+            ->where('is_implanted', true)
+            ->whereBetween('implanted_at', [$from, $to])
+            ->orderByDesc('implanted_at')
+            ->get();
+
+        $summary = [
+            'totalLensesUsed' => $lensDetails->count(),
+            'totalSurgeries' => $lensDetails->pluck('ot_booking_id')->unique()->count(),
+            'uniquePowers' => $lensDetails->pluck('lens_power')->map(fn ($p) => number_format((float) $p, 2))->unique()->count(),
+        ];
+
+        $powerSummary = $lensDetails
+            ->groupBy(fn (OtLensDetail $d) => number_format((float) $d->lens_power, 2))
+            ->map(fn ($group, $power) => ['power' => $power, 'quantity' => $group->count()])
+            ->sortBy(fn ($row) => (float) $row['power'])
+            ->values();
+
+        $detailHeadings = ['Surgery Date', 'Patient Name', 'MRD No.', 'Lens Power', 'Lens Name', 'Lens Company', 'Doctor'];
+        $detailRows = $lensDetails->map(fn (OtLensDetail $d) => [
+            optional($d->implanted_at)->format('d M Y') ?? '-',
+            $d->booking?->patient?->full_name ?? '-',
+            $d->booking?->patient?->patient_code ?? '-',
+            '+'.number_format((float) $d->lens_power, 2).'D',
+            $d->lens_name ?: '-',
+            $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
+            $d->booking?->otDoctor?->name ?? '-',
+        ])->all();
+
+        return [
+            'summary' => $summary,
+            'powerSummary' => $powerSummary,
+            'detailHeadings' => $detailHeadings,
+            'detailRows' => $detailRows,
+        ];
     }
 
     /**

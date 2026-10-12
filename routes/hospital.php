@@ -329,6 +329,8 @@ Route::prefix('{slug}')
                     // OT Reports — Phase 8 of OT Workflow Upgrade (docs/OT_WORKFLOW_UPGRADE_PRD.md §8)
                     Route::prefix('ot')->name('ot.')->group(function () {
                         Route::get('/', [OtReportController::class, 'index'])->name('index')->middleware('permission:report_view|ot_reports_view');
+                        Route::get('/lens-report', [OtReportController::class, 'lensReport'])->name('lens-report')->middleware('permission:report_view|ot_reports_view');
+                        Route::get('/lens-report/export', [OtReportController::class, 'lensReportExport'])->name('lens-report.export')->middleware('permission:report_export|ot_reports_export');
                         Route::get('/{type}', [OtReportController::class, 'show'])->name('show')->middleware('permission:report_view|ot_reports_view');
                         Route::get('/{type}/export', [OtReportController::class, 'export'])->name('export')->middleware('permission:report_export|ot_reports_export');
                         Route::get('/{type}/export-pdf', [OtReportController::class, 'exportPdf'])->name('export.pdf')->middleware('permission:report_export|ot_reports_export');

@@ -159,9 +159,31 @@ used across the rest of the app. --}}
                                         </div>
 
                                         <div class="col-md-3">
-                                            <label class="form-label">Estimated Power</label>
-                                            <input type="number" step="0.01" name="estimated_power" class="form-control"
-                                                value="{{ old('estimated_power', $counselling->estimated_power ?? '') }}">
+                                            <label class="form-label">Lens Power</label>
+                                            @php
+                                                $lensPowers = $lensPowers ?? collect();
+                                                $currentEstimatedPower = old('estimated_power', $counselling->estimated_power ?? '');
+                                                $currentEstimatedPower = $currentEstimatedPower !== null && $currentEstimatedPower !== ''
+                                                    ? number_format((float) $currentEstimatedPower, 2, '.', '')
+                                                    : '';
+                                                $estimatedPowerMatchesMaster = $lensPowers->contains(
+                                                    fn($power) => number_format((float) $power->power, 2, '.', '') === $currentEstimatedPower
+                                                );
+                                            @endphp
+                                            <select name="estimated_power" class="form-select">
+                                                <option value="">Select...</option>
+                                                @forelse($lensPowers as $power)
+                                                    @php $powerValue = number_format((float) $power->power, 2, '.', ''); @endphp
+                                                    <option value="{{ $powerValue }}" {{ $currentEstimatedPower === $powerValue ? 'selected' : '' }}>
+                                                        {{ $power->is_favourite ? '★ ' : '' }}+{{ $powerValue }}D
+                                                    </option>
+                                                @empty
+                                                    <option value="" disabled>No Lens Power master entries — add from Masters</option>
+                                                @endforelse
+                                                @if($currentEstimatedPower !== '' && !$estimatedPowerMatchesMaster)
+                                                    <option value="{{ $currentEstimatedPower }}" selected>+{{ $currentEstimatedPower }}D (previously saved)</option>
+                                                @endif
+                                            </select>
                                         </div>
                                     </div>
 
