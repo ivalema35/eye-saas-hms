@@ -30,22 +30,31 @@ use Illuminate\Validation\Rule;
 
 class OtAppointmentApiController extends Controller
 {
+    // Web pull 2026-10-07 — tone → the same `ot-stage-*` badge classes the
+    // apps' StatusBadge.otAppointmentStage() already has colors for (it
+    // used to read this off OtAppointment::STAGES; now off the converted
+    // patient's own Patient::workflowStage(), same map
+    // `resources/views/hospital/ot/appointments/index.blade.php` uses for
+    // its Completed tab).
+    private const STAGE_TONE_CLASS = [
+        'warning' => 'ot-stage-booked',
+        'info' => 'ot-stage-counselled',
+        'purple' => 'ot-stage-recommended',
+        'teal' => 'ot-stage-ready',
+        'success' => 'ot-stage-confirmed',
+        'primary' => 'ot-stage-operated',
+        'danger' => 'ot-stage-cancelled',
+    ];
+
     public function index(Request $request): JsonResponse
     {
-        // Web pull 2026-09-28 — 16-stage filter (`OtAppointment::STAGES`),
-        // replacing the old 4-value raw-`status` whitelist. `stage_key`
-        // depends on the converted patient's latest OT booking, not just this
-        // row's own `status` column, so it can no longer be a plain SQL
-        // WHERE — mirrors Hospital\OT\OtAppointmentController::index()'s own
-        // move off SQL filtering for the exact same reason.
-        $status = strtolower((string) $request->query('status', 'all'));
-        if ($status !== 'all' && ! array_key_exists($status, OtAppointment::STAGES)) {
-            $status = 'all';
-        }
+        // Web pull 2026-10-07 — the 16-stage filter (`OtAppointment::STAGES`)
+        // was replaced by a simple Booked/Completed split — mirrors
+        // Hospital\OT\OtAppointmentController::index()'s own move. Booked =
+        // not yet walked in (`canWalkIn()`); Completed = converted to an
+        // OPD patient (`converted_patient_id`).
+        $tab = $request->query('tab') === 'completed' ? 'completed' : 'booked';
 
-        // convertedPatient.latestOtBooking is eager-loaded so the stage_label/
-        // stage_badge_class/stage_key accessors below (same ones web's
-        // index.blade.php reads) stay N+1-safe across the whole set.
         // Web pull 2026-10-06 — index() moved off a single optional `date`
         // filter to a `from_date`/`to_date` range that defaults to today,
         // matching Hospital\OT\OtAppointmentController::index()'s own move.
@@ -70,39 +79,51 @@ class OtAppointmentApiController extends Controller
         }
 
         // NOTE: same trade-off web accepted — without a `date` filter this
-        // loads every appointment matching `search` into memory (stage can't
-        // be computed in SQL), instead of the old query's cheap LIMIT/OFFSET.
-        // Callers that page through a large, all-time, no-date list should
-        // pass `date` to keep this bounded; neither app currently does by
-        // default (matches web, which never paginated this list at all).
+        // loads every appointment matching `search` into memory, instead of
+        // the old query's cheap LIMIT/OFFSET. Callers that page through a
+        // large, all-time, no-date list should pass a date range to keep
+        // this bounded; neither app currently does by default (matches web,
+        // which never paginated this list at all).
         $all = $query->orderByDesc('appointment_date')->orderByDesc('id')->get();
 
-        // Web's $stageCounts is computed over the full date/search-filtered
-        // set, BEFORE the status/stage filter narrows it — so the filter
-        // dropdown's counts always reflect every stage, not just the active
-        // one.
-        $stageCounts = $all->countBy(fn (OtAppointment $appt) => $appt->stage_key);
-
-        $filtered = $status !== 'all'
-            ? $all->filter(fn (OtAppointment $appt) => $appt->stage_key === $status)->values()
-            : $all;
+        // Both counts computed over the full date/search-filtered set, like
+        // web's own $bookedCount/$completedCount, so the tab pills always
+        // show both totals regardless of which tab is active.
+        $bookedAppointments = $all->filter(fn (OtAppointment $appt) => $appt->canWalkIn())->values();
+        $completedAppointments = $all->filter(fn (OtAppointment $appt) => (bool) $appt->converted_patient_id)->values();
+        $filtered = $tab === 'completed' ? $completedAppointments : $bookedAppointments;
 
         $perPage = (int) $request->integer('per_page', 25);
         $page = (int) $request->integer('page', 1);
         $pageItems = $filtered->forPage($page, $perPage)->values()
-            // Same granular stage web's index shows (Surgery Recommended, In
-            // Ward, Ready for OT, etc.) instead of the raw 4-value status —
-            // apps were previously blind to this and showed only the enum.
-            ->map(fn (OtAppointment $appt) => [
-                ...$appt->toArray(),
-                // appointment_number is a computed accessor (APT-000123),
-                // not a real column — never in toArray() on its own, so the
-                // apps' list/edit screens saw it as blank without this.
-                'appointment_number' => $appt->appointment_number,
-                'stage_label' => $appt->stage_label,
-                'stage_badge_class' => $appt->stage_badge_class,
-                'stage_key' => $appt->stage_key,
-            ]);
+            ->map(function (OtAppointment $appt) use ($tab) {
+                if ($tab === 'completed') {
+                    // Patient's live stage: Primary → Secondary → Counselling
+                    // → Account → Ward → OT → Discharge — same as web's
+                    // Completed tab, not the old OT-booking-specific stage
+                    // system.
+                    $stage = $appt->convertedPatient?->workflowStage();
+                    $stageBadgeClass = self::STAGE_TONE_CLASS[$stage['tone'] ?? ''] ?? 'ot-stage-checkedin';
+                    $stageLabel = $stage['label'] ?? 'Walk-In Completed';
+                    $stageSub = $stage['sub'] ?? null;
+                } else {
+                    $stageBadgeClass = 'ot-stage-booked';
+                    $stageLabel = 'Booked';
+                    $stageSub = null;
+                }
+
+                return [
+                    ...$appt->toArray(),
+                    // appointment_number is a computed accessor (APT-000123),
+                    // not a real column — never in toArray() on its own, so
+                    // the apps' list/edit screens saw it as blank without
+                    // this.
+                    'appointment_number' => $appt->appointment_number,
+                    'stage_label' => $stageLabel,
+                    'stage_badge_class' => $stageBadgeClass,
+                    'stage_sub' => $stageSub,
+                ];
+            });
 
         $paginator = new LengthAwarePaginator(
             $pageItems,
@@ -116,17 +137,9 @@ class OtAppointmentApiController extends Controller
             'success' => true,
             'data' => $paginator,
             'meta' => [
-                // key => label, in workflow order — same 16 entries as
-                // web's filter <select>, so the app doesn't hardcode a
-                // shorter/stale copy of this list.
-                'stages' => OtAppointment::STAGES,
-                // Cast to object: an empty Laravel Collection serializes as
-                // JSON `[]`, not `{}` — PHP can't tell an empty array from
-                // an empty map — which the apps then fail to decode as a
-                // map. Only bites on a date range with zero appointments
-                // (e.g. the new today-default range before this had never
-                // naturally come up empty).
-                'stage_counts' => (object) $stageCounts->toArray(),
+                'active_tab' => $tab,
+                'booked_count' => $bookedAppointments->count(),
+                'completed_count' => $completedAppointments->count(),
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
             ],
