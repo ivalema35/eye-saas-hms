@@ -150,6 +150,9 @@ class DashboardController extends Controller
         $counsellingPendingCount = null;
         $counsellingCompletedCount = null;
         $counsellingPaymentCount = null;
+        // Web pull 2026-10-07 — new dedicated `ot_appointment` role/desk.
+        $otAppointmentPendingCount = null;
+        $otAppointmentCompletedCount = null;
         $canSeeOtWidget = $this->perm->can('dashboard_ot');
 
         try {
@@ -255,6 +258,20 @@ class DashboardController extends Controller
                         OtBooking::STATUS_OPERATED,
                         OtBooking::STATUS_DISCHARGED,
                     ])
+                    ->count();
+            } elseif ($roleSlug === 'ot_appointment' && ($canSeeOtWidget || $this->perm->can('ot_appointment_view'))) {
+                // Web pull 2026-10-07 (Hospital\Dashboard\DashboardController
+                // .php's $otAppointmentLists) — today's OT appointments vs.
+                // those already checked in as OPD patients. Scoped to today
+                // only, unlike the full OT Appointments list screen's own
+                // date range.
+                $otAppointmentPendingCount = OtAppointment::whereDate('appointment_date', $today)
+                    ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+                    ->get()
+                    ->filter(fn (OtAppointment $appt) => $appt->canWalkIn())
+                    ->count();
+                $otAppointmentCompletedCount = OtAppointment::whereDate('appointment_date', $today)
+                    ->where('status', OtAppointment::STATUS_COMPLETED)
                     ->count();
             }
         } catch (\Throwable) {}
@@ -555,6 +572,8 @@ class DashboardController extends Controller
                 'counselling_pending_count'   => $counsellingPendingCount,
                 'counselling_completed_count' => $counsellingCompletedCount,
                 'counselling_payment_count'   => $counsellingPaymentCount,
+                'ot_appointment_pending_count'   => $otAppointmentPendingCount,
+                'ot_appointment_completed_count' => $otAppointmentCompletedCount,
             ],
         ]);
     }
@@ -618,8 +637,6 @@ class DashboardController extends Controller
             }))
             ->latest('created_at')
             ->get();
-
-        $alreadyLinkedIds = $patients->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $patientRows = $patients->map(function (Patient $p) {
             $arr = $p->toArray();
@@ -694,40 +711,12 @@ class DashboardController extends Controller
             return $arr;
         });
 
-        $otRows = OtAppointment::query()
-            ->with(['doctor:id,name', 'location:id,name'])
-            ->whereDate('appointment_date', $today)
-            ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
-            ->when($searchContact !== '', function ($q) use ($searchContact) {
-                $q->where(function ($qq) use ($searchContact) {
-                    $qq->where('mobile_no', 'like', "%{$searchContact}%")
-                        ->orWhere('whatsapp_no', 'like', "%{$searchContact}%");
-                });
-            })
-            ->orderByDesc('created_at')
-            ->orderByDesc('id')
-            ->get()
-            ->reject(function (OtAppointment $appt) use ($alreadyLinkedIds) {
-                $convertedId = (int) ($appt->converted_patient_id ?? 0);
-
-                return $convertedId > 0 && in_array($convertedId, $alreadyLinkedIds, true);
-            })
-            ->map(function (OtAppointment $appt) {
-                $arr = $appt->toArray();
-                $arr['source'] = 'ot_appointment';
-                // Matches web's Hospital\Dashboard\DashboardController — an OT
-                // appointment isn't a patient yet, so its MRD column shows its
-                // own appointment number instead. Was missing entirely here,
-                // leaving the MRD column blank for every OT row.
-                $arr['patient_code'] = $appt->appointment_number;
-                // Web pull 2026-09-28 — OT-sourced rows always belong to the
-                // "OT" tab only, never "Patient Status".
-                $arr['tap_groups'] = ['ot'];
-
-                return $arr;
-            });
-
-        $rows = $patientRows->concat($otRows)
+        // Web pull 2026-10-07 — OT appointments no longer merge into this
+        // list (receptionist lost ot_appointment_view; that's the new
+        // dedicated `ot_appointment` role's own desk now). Matches
+        // Hospital\Dashboard\DashboardController's removal of its
+        // mergeTodayOtAppointments() call here.
+        $rows = $patientRows
             ->sortByDesc(fn ($row) => strtotime((string) ($row['created_at'] ?? '')) ?: 0)
             ->values();
 
