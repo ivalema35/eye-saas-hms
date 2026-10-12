@@ -56,6 +56,7 @@ Appointments page design. --}}
                                         <th>Patient Name</th>
                                         <th>Phone</th>
                                         <th>Status</th>
+                                        <th>Dilate</th>
                                         <th>Payment</th>
                                         <th class="ward-actions-col">Actions</th>
                                     </tr>
@@ -71,6 +72,26 @@ Appointments page design. --}}
                                             </td>
                                             <td><span
                                                     class="ward-status-badge">{{ strtoupper((string) $booking->ot_status) }}</span>
+                                            </td>
+                                            <td>
+                                                @php
+                                                    $dilateEntry = $booking->dilationEntries
+                                                        ->where('dilate', 'Yes')
+                                                        ->whereNotNull('dilation_time')
+                                                        ->sortByDesc('administered_at')
+                                                        ->first();
+                                                @endphp
+                                                @if($dilateEntry)
+                                                    @php
+                                                        $dilateUnlockAt = \Carbon\Carbon::parse($dilateEntry->administered_at)->addMinutes((int) $dilateEntry->dilation_time);
+                                                    @endphp
+                                                    <span class="ward-dilate-pill" data-unlock-ms="{{ $dilateUnlockAt->timestamp * 1000 }}">
+                                                        <i class="bi bi-droplet-half me-1"></i>
+                                                        <span class="ward-dilate-time">--:--</span>
+                                                    </span>
+                                                @else
+                                                    <span class="ward-dilate-none">-</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if($booking->payment_status === 'paid')
@@ -98,7 +119,7 @@ Appointments page design. --}}
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="5" class="text-center ward-empty">
+                                            <td colspan="6" class="text-center ward-empty">
                                                 <i class="bi bi-inbox me-1"></i>
                                                 {{ $isHistory ? 'No ward history in this date range.' : 'No records available for ward workflow.' }}
                                             </td>
@@ -440,6 +461,29 @@ Appointments page design. --}}
             color: #C0392B;
         }
 
+        .ward-dilate-pill {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            padding: .35rem .7rem;
+            font-weight: 700;
+            font-size: .78rem;
+            background: #FFF6DF;
+            border: 1px solid #F0D48A;
+            color: #92660A;
+        }
+
+        .ward-dilate-pill.ward-dilate-ready {
+            background: #E7F8EF;
+            border-color: #A9E4C4;
+            color: #1E8E5A;
+        }
+
+        .ward-dilate-none {
+            color: rgba(27, 79, 134, 0.35);
+            font-weight: 700;
+        }
+
         .ward-send-btn {
             display: inline-flex;
             align-items: center;
@@ -501,6 +545,30 @@ Appointments page design. --}}
 @endpush
 
 @push('scripts')
+    {{-- Dilate column: live countdown to the dilation unlock time. --}}
+    <script>
+        (function () {
+            function updateWardDilateCountdowns() {
+                document.querySelectorAll('.ward-dilate-pill[data-unlock-ms]').forEach(function (el) {
+                    var unlockMs = parseInt(el.getAttribute('data-unlock-ms'), 10);
+                    var diff = unlockMs - Date.now();
+                    var timeEl = el.querySelector('.ward-dilate-time');
+                    if (!timeEl) return;
+                    if (diff <= 0) {
+                        timeEl.textContent = 'Ready';
+                        el.classList.add('ward-dilate-ready');
+                    } else {
+                        var m = Math.floor(diff / 60000);
+                        var s = Math.floor((diff % 60000) / 1000);
+                        timeEl.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+                    }
+                });
+            }
+            updateWardDilateCountdowns();
+            setInterval(updateWardDilateCountdowns, 1000);
+        })();
+    </script>
+
     {{-- Ward table: client-side DataTable (search box, page-length, and
     pagination) — mirrors the pattern used on the OT Appointments index page. --}}
     <script>

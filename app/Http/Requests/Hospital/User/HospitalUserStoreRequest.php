@@ -46,6 +46,21 @@ class HospitalUserStoreRequest extends FormRequest
             'experience_years'=> ['nullable', 'integer', 'min:0', 'max:60'],
             'signature'       => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'   => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
+            'default_ot_assistant_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('hospital_users', 'id')->where(function ($query) {
+                    return $query
+                        ->where('tenant_id', config('app.tenant_id'))
+                        ->where('status', 'active')
+                        ->whereExists(function ($sub) {
+                            $sub->selectRaw('1')
+                                ->from('roles')
+                                ->whereColumn('roles.id', 'hospital_users.role_id')
+                                ->where('roles.slug', 'ot_assistant');
+                        });
+                }),
+            ],
         ];
     }
 

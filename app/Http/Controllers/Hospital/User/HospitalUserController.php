@@ -38,8 +38,9 @@ class HospitalUserController extends Controller
         $roles = $this->rolesForUserForms();
         $roleFilterKey = $roleFilter['key'] ?? null;
         $roleFilterLabel = $roleFilter['label'] ?? null;
+        $otAssistants = $this->activeOtAssistants();
 
-        return view('hospital.users.index', compact('users', 'slug', 'roles', 'roleFilterKey', 'roleFilterLabel'));
+        return view('hospital.users.index', compact('users', 'slug', 'roles', 'roleFilterKey', 'roleFilterLabel', 'otAssistants'));
     }
 
     /**
@@ -107,8 +108,21 @@ class HospitalUserController extends Controller
 
         $slug = request()->route('slug');
         $roles = $this->rolesForUserForms();
+        $otAssistants = $this->activeOtAssistants();
 
-        return view('hospital.users.create', compact('slug', 'roles'));
+        return view('hospital.users.create', compact('slug', 'roles', 'otAssistants'));
+    }
+
+    /**
+     * Active OT Assistants for the "Connected OT Assistant" doctor field.
+     */
+    private function activeOtAssistants(): Collection
+    {
+        return HospitalUser::query()
+            ->where('status', 'active')
+            ->whereHas('role', fn (Builder $q) => $q->where('slug', 'ot_assistant'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     public function store(HospitalUserStoreRequest $request): RedirectResponse
@@ -141,6 +155,7 @@ class HospitalUserController extends Controller
             'experience_years' => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
             'signature_path' => $canPerformClinicalExams ? $signaturePath : null,
             'profile_photo_path' => $canPerformClinicalExams ? $profilePhotoPath : null,
+            'default_ot_assistant_id' => $canPerformClinicalExams ? ($data['default_ot_assistant_id'] ?? null) : null,
         ]);
 
         return redirect()
@@ -189,8 +204,9 @@ class HospitalUserController extends Controller
             ->findOrFail((int) $id);
 
         $roles = $this->rolesForUserForms();
+        $otAssistants = $this->activeOtAssistants();
 
-        return view('hospital.users.edit', compact('slug', 'user', 'roles'));
+        return view('hospital.users.edit', compact('slug', 'user', 'roles', 'otAssistants'));
     }
 
     public function update(HospitalUserUpdateRequest $request, string $slug, string $id): RedirectResponse
@@ -223,6 +239,7 @@ class HospitalUserController extends Controller
             'experience_years' => $canPerformClinicalExams ? ($data['experience_years'] ?? null) : null,
             'signature_path' => $canPerformClinicalExams ? $signaturePath : null,
             'profile_photo_path' => $canPerformClinicalExams ? $profilePhotoPath : null,
+            'default_ot_assistant_id' => $canPerformClinicalExams ? ($data['default_ot_assistant_id'] ?? null) : null,
         ];
 
         if (!empty($data['password'])) {

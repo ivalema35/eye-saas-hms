@@ -908,10 +908,12 @@ class DashboardController extends Controller
                 ->sortBy(fn($doc) => $doc->id === $user->id ? 0 : 1)
                 ->values();
 
-            // OT doctor cards:
-            // OP = ward-assigned consult queue (ot_doctor_id + not ready)
-            // OC = complete (operated / discharged / surgery_refused)
-            // OT = total for this doctor (ot_doctor_id) = complete + remaining
+            // OT doctor cards (OT tab) — doctor-specific breakdown, scoped to today
+            // (by last status change), kept consistent with the OT Pending/Completed
+            // patient lists below (same ot_doctor_id scoping, same complete-status set).
+            // OT = this doctor's bookings updated today.
+            // OC = complete today (operated / discharged / surgery_refused).
+            // Pending = total - complete (still open today in this doctor's OT pipeline).
             $completeStatuses = [
                 OtBooking::STATUS_OPERATED,
                 OtBooking::STATUS_DISCHARGED,
@@ -920,9 +922,8 @@ class DashboardController extends Controller
             $doctorIds = $doctorCards->pluck('id')->all();
 
             $otStatsByDoctorId = collect();
-            $otConsultByDoctorId = collect();
             if ($doctorIds !== []) {
-                $otRows = OtBooking::query()
+                $otStatsByDoctorId = OtBooking::query()
                     ->selectRaw('ot_doctor_id as doctor_key')
                     ->selectRaw('COUNT(*) as ot_total')
                     ->selectRaw(
@@ -930,30 +931,18 @@ class DashboardController extends Controller
                         $completeStatuses
                     )
                     ->whereIn('ot_doctor_id', $doctorIds)
-                    ->groupBy('ot_doctor_id')
-                    ->get()
-                    ->keyBy('doctor_key');
-
-                $otStatsByDoctorId = $otRows;
-
-                $otConsultByDoctorId = OtBooking::query()
-                    ->doctorConsultationPending()
-                    ->whereIn('ot_doctor_id', $doctorIds)
-                    ->selectRaw('ot_doctor_id as doctor_key')
-                    ->selectRaw('COUNT(*) as ot_pending')
+                    ->whereDate('updated_at', $today)
                     ->groupBy('ot_doctor_id')
                     ->get()
                     ->keyBy('doctor_key');
             }
 
-            $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId, $otConsultByDoctorId) {
+            $otDoctorCards = $doctorCards->map(function ($doc) use ($otStatsByDoctorId) {
                 $stats = $otStatsByDoctorId->get($doc->id);
-                $consult = $otConsultByDoctorId->get($doc->id);
                 $clone = clone $doc;
-                $clone->ot_complete = (int) ($stats->ot_complete ?? 0);
-                $clone->ot_pending = (int) ($consult->ot_pending ?? 0);
-                // OT = complete + remaining (remaining includes OP consult + other active)
                 $clone->ot_total = (int) ($stats->ot_total ?? 0);
+                $clone->ot_complete = (int) ($stats->ot_complete ?? 0);
+                $clone->ot_pending = $clone->ot_total - $clone->ot_complete;
 
                 return $clone;
             });
@@ -963,6 +952,59 @@ class DashboardController extends Controller
                 'pending' => (int) $otDoctorCards->sum('ot_pending'),
                 'complete' => (int) $otDoctorCards->sum('ot_complete'),
             ];
+
+            // OT Pending / Completed patient lists for the doctor whose dashboard is
+            // open (self, or ?view_doctor= another doctor) — mirrors the OPD
+            // Primary/Secondary queues above, scoped to ot_bookings.ot_doctor_id and
+            // to today (by last status change), matching the OT doctor-card counts.
+            $otPendingQueue = collect();
+            $otCompletedQueue = collect();
+            if ($selectedDoctorId) {
+                $otBookingsQuery = OtBooking::with([
+                    'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender,location_id',
+                    'patient.location:id,city',
+                    'patient.masterCity:id,name',
+                ])->where('ot_doctor_id', $selectedDoctorId)
+                    ->whereDate('updated_at', $today);
+
+                $otPendingQueue = (clone $otBookingsQuery)
+                    ->with('preOp:id,ot_booking_id,pre_op_status')
+                    ->whereNotIn('ot_status', $completeStatuses)
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->take(50)
+                    ->get();
+
+                $otCompletedQueue = (clone $otBookingsQuery)
+                    ->whereIn('ot_status', $completeStatuses)
+                    ->orderByDesc('discharged_at')
+                    ->orderByDesc('operated_at')
+                    ->orderByDesc('id')
+                    ->take(50)
+                    ->get();
+            }
+
+            // Top bar (OT tab) — hospital-wide "today" counters, same scoping
+            // convention as the Ward / Discharge Counter dashboard panels:
+            // OT = OT-appointment walk-ins converted today.
+            // PD = pending payment queue (mirrors OtAccountantController::dashboard() 'queue' tab).
+            // OC = at the discharge counter — operated, not yet discharged (mirrors
+            //      the Discharge Counter panel's 'queue' tab).
+            $todayOtWalkins = OtAppointment::query()
+                ->where('appointment_type', OtAppointment::TYPE_OT)
+                ->whereNotNull('converted_patient_id')
+                ->whereDate('appointment_date', $today)
+                ->count();
+
+            $todayPaymentPending = OtBooking::query()
+                ->whereIn('ot_status', [OtBooking::STATUS_COUNSELLED, OtBooking::STATUS_PAID])
+                ->whereDate('updated_at', $today)
+                ->count();
+
+            $todayDischargeCounter = OtBooking::query()
+                ->where('ot_status', OtBooking::STATUS_OPERATED)
+                ->whereDate('updated_at', $today)
+                ->count();
 
             return view('hospital.dashboard.doctoredashboard', compact(
                 'slug',
@@ -978,10 +1020,15 @@ class DashboardController extends Controller
                 'viewingDoctor',
                 'otDoctorCards',
                 'otSummary',
+                'otPendingQueue',
+                'otCompletedQueue',
                 'todayPatients',
                 'todayPrimary',
                 'todaySecondary',
                 'otPipelineCount',
+                'todayOtWalkins',
+                'todayPaymentPending',
+                'todayDischargeCounter',
             ));
         }
 

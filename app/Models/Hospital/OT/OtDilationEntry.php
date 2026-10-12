@@ -34,6 +34,8 @@ class OtDilationEntry extends Model
         'is_instilled',
         'administered_by',
         'remarks',
+        'dilate',
+        'dilation_time',
     ];
 
     protected $casts = [
