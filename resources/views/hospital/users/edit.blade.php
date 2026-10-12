@@ -139,6 +139,21 @@
                     @endif
                     @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
                 </div>
+
+                <div class="hms-form-group doctor-only" style="display:none">
+                    <label>Connected OT Assistant <span style="font-size:.75rem;color:#64748B;font-weight:400">(auto-assigned on Ready for OT)</span></label>
+                    <select name="default_ot_assistant_id" class="hms-select @error('default_ot_assistant_id') is-invalid @enderror">
+                        <option value="">None</option>
+                        @forelse(($otAssistants ?? collect()) as $assistant)
+                            <option value="{{ $assistant->id }}" @selected((string) old('default_ot_assistant_id', $user->default_ot_assistant_id) === (string) $assistant->id)>
+                                {{ $assistant->name }}
+                            </option>
+                        @empty
+                            <option value="" disabled>No OT Assistants yet — add one first</option>
+                        @endforelse
+                    </select>
+                    @error('default_ot_assistant_id')<div class="hms-field-error">{{ $message }}</div>@enderror
+                </div>
             </div>
         </div>
     </div>

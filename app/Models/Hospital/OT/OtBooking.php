@@ -77,7 +77,7 @@ class OtBooking extends Model
         'patient.reception:id,name',
         'counselling:id,ot_booking_id,diagnosis,mediclaim,lens_category,lens_company,lens_model,package_name,room_category',
         'preOp:id,ot_booking_id,bp,pulse,rbs,temperature,spo2,hba1c,pre_op_status',
-        'dilationEntries:id,ot_booking_id,administered_at,medicine_name,eye,dose_number,drops_count,administered_by',
+        'dilationEntries:id,ot_booking_id,administered_at,medicine_name,eye,dose_number,drops_count,administered_by,dilate,dilation_time',
         'dilationEntries.administeredBy:id,name',
         'payments',
         'otDoctor:id,name',
@@ -440,5 +440,25 @@ class OtBooking extends Model
         $paid = $this->total_paid;
 
         return $paid > 0 && $this->total_refunded + 0.001 >= $paid;
+    }
+
+    /**
+     * Human-readable label + colour tone for an ot_status value, for desk/list UIs.
+     *
+     * @return array{label:string, tone:string}
+     */
+    public static function statusLabel(string $status): array
+    {
+        return match ($status) {
+            self::STATUS_BOOKED, self::STATUS_SURGERY_RECOMMENDED => ['label' => 'Counselling', 'tone' => '#f59e0b'],
+            self::STATUS_COUNSELLED, self::STATUS_PAID => ['label' => 'Payment Pending', 'tone' => '#0ea5e9'],
+            self::STATUS_PAYMENT_VERIFIED, self::STATUS_IN_WARD, self::STATUS_DILATED => ['label' => 'Ward Management', 'tone' => '#8b5cf6'],
+            self::STATUS_READY => ['label' => 'Ready for OT', 'tone' => '#0d9488'],
+            self::STATUS_OPERATED => ['label' => 'Operated', 'tone' => '#16a34a'],
+            self::STATUS_DISCHARGED => ['label' => 'Discharged', 'tone' => '#16a34a'],
+            self::STATUS_SURGERY_REFUSED => ['label' => 'Surgery Refused', 'tone' => '#dc2626'],
+            self::STATUS_CANCELLED => ['label' => 'Cancelled', 'tone' => '#64748b'],
+            default => ['label' => ucfirst(str_replace('_', ' ', $status)), 'tone' => '#64748b'],
+        };
     }
 }

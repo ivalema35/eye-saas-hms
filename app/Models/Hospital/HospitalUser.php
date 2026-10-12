@@ -58,6 +58,7 @@ class HospitalUser extends Authenticatable
         'experience_years',    // Only for Doctor role
         'signature_path',      // Only for Doctor role: signature image
         'profile_photo_path',  // Only for Doctor role: profile photo
+        'default_ot_assistant_id', // Only for Doctor role: OT Assistant auto-assigned on "Ready for OT"
         'last_login_at',
     ];
 
@@ -90,6 +91,12 @@ class HospitalUser extends Authenticatable
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    /** OT Assistant this doctor is linked with — auto-assigned when a ward marks their patient Ready for OT. */
+    public function defaultOtAssistant(): BelongsTo
+    {
+        return $this->belongsTo(HospitalUser::class, 'default_ot_assistant_id');
     }
 
     // â”€â”€ Password Reset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

@@ -852,6 +852,7 @@
 
                     <img src="{{ platform_logo_light_url() }}" alt="{{ config('app.name') }}"
                         class="form-side-logo platform-logo-on-light">
+                    </img>
 
                     <a href="{{ route('home') }}" class="back-link"><i class="bi bi-arrow-left"></i> Back to EYNOSIS</a>
 

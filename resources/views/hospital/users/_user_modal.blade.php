@@ -336,6 +336,20 @@
                             </div>
                             @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
+
+                        <div class="hms-form-group user-doctor-only" style="display:none">
+                            <label>Connected OT Assistant <span style="font-size:.75rem;color:#64748B;font-weight:400">(auto-assigned on Ready for OT)</span></label>
+                            <select name="default_ot_assistant_id" id="user-default-ot-assistant-id"
+                                class="hms-select @error('default_ot_assistant_id') is-invalid @enderror">
+                                <option value="">None</option>
+                                @forelse(($otAssistants ?? collect()) as $assistant)
+                                    <option value="{{ $assistant->id }}">{{ $assistant->name }}</option>
+                                @empty
+                                    <option value="" disabled>No OT Assistants yet — add one first</option>
+                                @endforelse
+                            </select>
+                            @error('default_ot_assistant_id')<div class="hms-field-error">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
 
@@ -481,6 +495,8 @@
             document.getElementById('user-photo-preview').style.display = 'none';
             document.getElementById('user-signature-current').style.display = 'none';
             document.getElementById('user-photo-current').style.display = 'none';
+            const defaultAssistantResetEl = document.getElementById('user-default-ot-assistant-id');
+            if (defaultAssistantResetEl) defaultAssistantResetEl.value = '';
             document.getElementById('user-password').value = '';
             document.getElementById('user-password-confirmation').value = '';
             setUserPasswordRequired(true);
@@ -505,6 +521,8 @@
             document.getElementById('user-doctor-prefix').value = (record.doctor_prefix ?? '').toUpperCase();
             document.getElementById('user-registration-no').value = record.registration_no ?? '';
             document.getElementById('user-experience-years').value = record.experience_years ?? '';
+            const defaultAssistantEditEl = document.getElementById('user-default-ot-assistant-id');
+            if (defaultAssistantEditEl) defaultAssistantEditEl.value = record.default_ot_assistant_id ?? '';
             document.getElementById('user-signature').value = '';
             document.getElementById('user-profile-photo').value = '';
             document.getElementById('user-signature-preview').style.display = 'none';
@@ -579,6 +597,8 @@
                     document.getElementById('user-doctor-prefix').value = (@json(old('doctor_prefix', ''))).toUpperCase();
                     document.getElementById('user-registration-no').value = @json(old('registration_no', ''));
                     document.getElementById('user-experience-years').value = @json(old('experience_years', ''));
+                    const defaultAssistantOldEl = document.getElementById('user-default-ot-assistant-id');
+                    if (defaultAssistantOldEl) defaultAssistantOldEl.value = @json(old('default_ot_assistant_id', ''));
 
                     if (oldMethod === 'PUT' && oldUserId) {
                         document.getElementById('userFormModalTitle').innerText = 'Edit User';

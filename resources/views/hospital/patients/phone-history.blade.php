@@ -436,6 +436,8 @@ Register) design refresh: ot-appt-page / ot-premium-card / ot-inner-panel. --}}
            check-in / view buttons) — same hospital shell palette as above. */
         .ph-search-wrap {
             position: relative;
+            width: 230px;
+            flex: 0 0 230px;
         }
 
         .ph-search-wrap i {
@@ -449,8 +451,15 @@ Register) design refresh: ot-appt-page / ot-premium-card / ot-inner-panel. --}}
         }
 
         .ph-search-input {
-            min-width: 230px;
+            width: 100%;
+            min-width: 0;
             padding-left: 32px !important;
+        }
+
+        #date_range {
+            width: 230px;
+            min-width: 230px !important;
+            flex: 0 0 230px;
         }
 
         .ph-active-search {
@@ -565,6 +574,13 @@ Register) design refresh: ot-appt-page / ot-premium-card / ot-inner-panel. --}}
             .ph-search-input {
                 min-width: 100%;
                 width: 100%;
+            }
+
+            .ph-search-wrap,
+            #date_range {
+                width: 100%;
+                min-width: 100% !important;
+                flex-basis: 100%;
             }
 
             #phoneHistoryFilterForm {

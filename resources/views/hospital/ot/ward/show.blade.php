@@ -155,6 +155,7 @@ used across the rest of the app. --}}
                                                 <th><i class="bi bi-clock-history me-1"></i>Date / Time</th>
                                                 <th><i class="bi bi-person-badge me-1"></i>Administered By</th>
                                                 <th><i class="bi bi-chat-left-text me-1"></i>Remarks</th>
+                                                <th><i class="bi bi-droplet me-1"></i>Dilate</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -166,10 +167,17 @@ used across the rest of the app. --}}
                                                     <td>{{ optional($drop->administered_at)->format('d M Y, h:i A') }}</td>
                                                     <td>{{ $drop->administeredBy?->name ?? '-' }}</td>
                                                     <td>{{ $drop->remarks ?? '-' }}</td>
+                                                    <td>
+                                                        @if($drop->dilate === 'Yes')
+                                                            <span class="badge ot-type-badge">Yes{{ $drop->dilation_time ? ' · '.$drop->dilation_time.' mins' : '' }}</span>
+                                                        @else
+                                                            -
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="6" class="text-center ot-empty">
+                                                    <td colspan="7" class="text-center ot-empty">
                                                         <i class="bi bi-inbox me-1"></i> No eye drops logged yet.
                                                     </td>
                                                 </tr>
@@ -237,6 +245,26 @@ used across the rest of the app. --}}
                                         <label class="form-label">Remarks</label>
                                         <input type="text" name="remarks" class="form-control">
                                     </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Dilate</label>
+                                        <div class="d-flex align-items-center gap-3 pt-2">
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input" type="radio" name="dilate" id="eyeDropDilateYes" value="Yes">
+                                                <label class="form-check-label" for="eyeDropDilateYes">Yes</label>
+                                            </div>
+                                            <div class="form-check form-check-inline mb-0">
+                                                <input class="form-check-input" type="radio" name="dilate" id="eyeDropDilateNo" value="No" checked>
+                                                <label class="form-check-label" for="eyeDropDilateNo">No</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2" id="eyeDropDilationTimeWrap" style="display:none;">
+                                        <label class="form-label">Dilation Time</label>
+                                        <div class="input-group">
+                                            <input type="number" name="dilation_time" id="eyeDropDilationTime" min="1" max="180" class="form-control" placeholder="Mins">
+                                            <span class="input-group-text">mins</span>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="d-flex justify-content-end mt-3">
@@ -268,12 +296,6 @@ used across the rest of the app. --}}
         \App\Models\Hospital\OT\OtPreOp::STATUS_HOLD => 'Hold',
         \App\Models\Hospital\OT\OtPreOp::STATUS_COMPLICATED => 'Complicated',
     ];
-    $readyStatus = \App\Models\Hospital\OT\OtPreOp::STATUS_READY_FOR_SURGERY;
-    $isReadyUi = $currentStatus === $readyStatus;
-    $selectedAssistantId = (int) old('ot_assistant_id', $booking->ot_assistant_id);
-    $otAssistants = $otAssistants ?? collect();
-    $opdDoctorId = (int) ($opdDoctorId ?? $booking->patient?->doctor_id ?? 0);
-    $opdDoctorName = $opdDoctorName ?? $booking->patient?->doctor?->name;
                                 @endphp
                                 @foreach($statusOptions as $value => $label)
                                     <div class="form-check form-check-inline">
@@ -284,40 +306,10 @@ used across the rest of the app. --}}
                                     </div>
                                 @endforeach
 
-                                <div class="row g-3 mt-3">
-                                    {{-- Preparing / Hold / Complicated: OPD doctor is auto-assigned (not manual). --}}
-                                    <div class="col-md-6" id="wardOpdDoctorWrap" @if($isReadyUi) style="display:none" @endif>
-                                        @if($opdDoctorId > 0 && $opdDoctorName)
-                                            <input type="text" class="form-control ot-readonly" readonly
-                                                value="Dr. {{ $opdDoctorName }}">
-                                        @else
-                                            <input type="text" class="form-control is-invalid" readonly
-                                                value="No OPD doctor on patient">
-                                            <div class="invalid-feedback d-block">
-                                                Assign an OPD doctor on the patient profile before Preparing / Hold / Complicated.
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="col-md-6" id="wardAssistantWrap" @if(!$isReadyUi) style="display:none" @endif>
-                                        <label class="form-label" for="ward_ot_assistant_id">
-                                            OT Assistant
-                                            <span class="text-danger ward-assistant-req">*</span>
-                                        </label>
-                                        <select name="ot_assistant_id" id="ward_ot_assistant_id" class="form-select"
-                                            @if($isReadyUi) required @endif>
-                                            <option value="">Select OT assistant</option>
-                                            @foreach($otAssistants as $assistant)
-                                                <option value="{{ $assistant->id }}" {{ $selectedAssistantId === (int) $assistant->id ? 'selected' : '' }}>
-                                                    {{ $assistant->name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                </div>
-
-                                @error('ot_assistant_id')
-                                    <div class="text-danger small mt-2">{{ $message }}</div>
-                                @enderror
+                                {{-- No doctor / OT Assistant fields here — both are assigned automatically on
+                                save: Preparing/Hold/Complicated → the patient's OPD doctor; Ready for OT →
+                                that doctor's connected OT Assistant (set on the doctor's profile). If either
+                                can't be resolved, the error banner above explains what to fix. --}}
 
                                 <div class="d-flex justify-content-end mt-3 pt-3 ot-form-actions">
                                     <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
@@ -805,29 +797,20 @@ used across the rest of the app. --}}
 @push('scripts')
 <script>
     (function () {
-        const readyValue = @json(\App\Models\Hospital\OT\OtPreOp::STATUS_READY_FOR_SURGERY);
-        const radios = document.querySelectorAll('.ward-status-radio');
-        const opdWrap = document.getElementById('wardOpdDoctorWrap');
-        const assistantWrap = document.getElementById('wardAssistantWrap');
-        const assistantSelect = document.getElementById('ward_ot_assistant_id');
+        const dilateYes = document.getElementById('eyeDropDilateYes');
+        const dilateNo = document.getElementById('eyeDropDilateNo');
+        const timeWrap = document.getElementById('eyeDropDilationTimeWrap');
+        const timeInput = document.getElementById('eyeDropDilationTime');
 
-        function syncUi() {
-            const checked = document.querySelector('.ward-status-radio:checked');
-            const isReady = checked && checked.value === readyValue;
-            if (opdWrap) opdWrap.style.display = isReady ? 'none' : '';
-            if (assistantWrap) assistantWrap.style.display = isReady ? '' : 'none';
-            if (assistantSelect) {
-                assistantSelect.required = !!isReady;
-                if (!isReady) {
-                    assistantSelect.value = '';
-                }
-            }
+        function syncDilateUi() {
+            const isYes = dilateYes?.checked;
+            if (timeWrap) timeWrap.style.display = isYes ? '' : 'none';
+            if (!isYes && timeInput) timeInput.value = '';
         }
 
-        radios.forEach(function (el) {
-            el.addEventListener('change', syncUi);
-        });
-        syncUi();
+        dilateYes?.addEventListener('change', syncDilateUi);
+        dilateNo?.addEventListener('change', syncDilateUi);
+        syncDilateUi();
     })();
 </script>
 @endpush

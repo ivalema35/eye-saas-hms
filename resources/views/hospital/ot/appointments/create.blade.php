@@ -11,7 +11,7 @@
                 <div class="rpc-form-title-row">
                     <h2 class="rpc-form-title">Book Appointment</h2>
                     <a href="{{ route('hospital.ot.appointments.index', ['slug' => $slug]) }}" class="rpc-back-btn">
-                        <i class="bi bi-arrow-left"></i> Back to Appointments
+                        Back to Appointments
                     </a>
                 </div>
                 <p class="rpc-checkin-note">

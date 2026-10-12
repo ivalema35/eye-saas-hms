@@ -770,10 +770,10 @@
         }
 
         /* .doc-ref-bar a.doc-ref-link:hover {
-                background: rgba(255, 255, 255, .22);
-                color: #fff;
-                text-decoration: underline;
-            } */
+                        background: rgba(255, 255, 255, .22);
+                        color: #fff;
+                        text-decoration: underline;
+                    } */
 
         .doc-ref-mid {
             display: flex;
@@ -840,7 +840,7 @@
             box-sizing: border-box;
             width: 200px;
             min-width: 196px;
-            height: 125px;
+            height: 105px;
 
             background: #fff;
             border: 1px solid rgba(15, 79, 134, 0.2);
@@ -963,11 +963,57 @@
                 grid-template-columns: repeat(auto-fill, 196px);
             }
         }
+
+        /* ==================== OPD / OT DASHBOARD TAB TOGGLE ==================== */
+        .dash-tab-bar {
+            display: inline-flex;
+            gap: 6px;
+            background: #eef2f6;
+            border-radius: 10px;
+            padding: 4px;
+        }
+
+        .dash-tab-btn {
+            border: none;
+            background: transparent;
+            color: #5b7385;
+            font-weight: 800;
+            font-size: 13px;
+            padding: 8px 22px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background .15s ease, color .15s ease;
+        }
+
+        .dash-tab-btn.active {
+            background: #1B4F72;
+            color: #fff;
+        }
+
+        .doctor-page-wrap[data-active-tab="opd"] .ot-only {
+            display: none !important;
+        }
+
+        .doctor-page-wrap[data-active-tab="ot"] .opd-only {
+            display: none !important;
+        }
+
+        .ot-status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            color: #fff;
+            white-space: nowrap;
+        }
     </style>
 @endpush
 
 @section('content')
-<div class="doctor-page-wrap">
+<div class="doctor-page-wrap" data-active-tab="opd">
 
     @php
         $waitStatusLabel = $waitStatusLabel ?? 'Waiting';
@@ -1003,18 +1049,29 @@
         )->values();
     @endphp
 
+    {{-- OPD / OT dashboard tabs — OPD is selected by default --}}
+    <div class="dash-tab-bar mb-3">
+        <button type="button" class="dash-tab-btn active" data-tab-target="opd">OPD</button>
+        <button type="button" class="dash-tab-btn" data-tab-target="ot">OT</button>
+    </div>
+
     <div class="doc-overview-panel mb-4">
         {{-- Featured card: whichever doctor's dashboard is currently open --}}
         <div class="doc-overview-featured">
             <div class="doc-main-card">
-                <div class="doc-ref-bar doc-ref-bar--top" title="Hospital today">
+                <div class="doc-ref-bar doc-ref-bar--top opd-only" title="Hospital today">
                     <span title="Patients today">C: {{ $todayPatients ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Primary completed today">PC: {{ $todayPrimary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Secondary completed today">SC: {{ $todaySecondary ?? 0 }}</span>
+                </div>
+                <div class="doc-ref-bar doc-ref-bar--top ot-only" title="Hospital today — OT">
+                    <span title="OT appointment walk-ins converted today">OT: {{ $todayOtWalkins ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Today — counselling through OT Assistant">OT: {{ $otPipelineCount ?? 0 }}</span>
+                    <span title="Patients currently pending payment">PD: {{ $todayPaymentPending ?? 0 }}</span>
+                    <span class="doc-ref-div"></span>
+                    <span title="Patients at the discharge counter">OC: {{ $todayDischargeCounter ?? 0 }}</span>
                 </div>
                 <div class="doc-ref-mid">
                     <div class="doc-avatar">
@@ -1030,20 +1087,18 @@
                         @endif
                     </div>
                 </div>
-                <div class="doc-ref-bar doc-ref-bar--opd" title="My OPD">
+                <div class="doc-ref-bar doc-ref-bar--opd opd-only" title="My OPD">
                     <span title="Examination assigned today">Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Primary exam completed">P: {{ $doctorPrimaryDone ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Secondary exam completed">S: {{ $doctorSecondaryDone ?? 0 }}</span>
                 </div>
-                <div class="doc-ref-bar doc-ref-bar--ot" title="OT">
-                    <span title="Total OT (complete + remaining)">OT: {{ $activeOtStats->ot_total ?? 0 }}</span>
+                <div class="doc-ref-bar doc-ref-bar--ot ot-only" title="OT">
+                    <span title="OT patient count (all-time, this doctor)">OT:
+                        {{ $activeOtStats->ot_total ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId, 'queue' => 'consult']) }}"
-                        class="doc-ref-link" title="Ward-assigned OT patients — click to manage">
-                        OP: {{ $activeOtStats->ot_pending ?? 0 }}
-                    </a>
+                    <span title="OT work still pending">Pending: {{ $activeOtStats->ot_pending ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="OT completed">OC: {{ $activeOtStats->ot_complete ?? 0 }}</span>
                 </div>
@@ -1068,7 +1123,7 @@
                             <i class="bi bi-person-badge"></i>
                             {{ $doc->name }}
                         </div>
-                        <div class="doc-ref-btns">
+                        <div class="doc-ref-btns opd-only">
                             <span class="doc-ref-btn" title="Examination assigned today">Patient:
                                 {{ $doc->assigned_today ?? 0 }}</span>
                             <span class="doc-ref-btn" title="Primary exam completed">P:
@@ -1076,11 +1131,10 @@
                             <span class="doc-ref-btn" title="Secondary exam completed">S:
                                 {{ $doc->secondary_count ?? 0 }}</span>
                         </div>
-                        <div class="doc-ref-btns doc-ref-btns--ot">
-                            <span class="doc-ref-btn" title="Total OT (complete + remaining)">OT:
+                        <div class="doc-ref-btns doc-ref-btns--ot ot-only">
+                            <span class="doc-ref-btn" title="OT patient count (all-time, this doctor)">OT:
                                 {{ $docOt->ot_total ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Ward assigned (OP)"
-                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $doc->id, 'queue' => 'consult']) }}';">OP:
+                            <span class="doc-ref-btn" title="OT work still pending">Pending:
                                 {{ $docOt->ot_pending ?? 0 }}</span>
                             <span class="doc-ref-btn" title="OT completed">OC: {{ $docOt->ot_complete ?? 0 }}</span>
                         </div>
@@ -1110,14 +1164,14 @@
         </div>
     @endif
 
-    <div class="mb-4">
-        <a href="{{ route('hospital.dashboard.ot-patients', ['slug' => $slug]) }}" class="btn fw-bold text-white"
+    <!-- <div class="mb-4 opd-only">
+        <button type="button" data-tab-target="ot" class="btn fw-bold text-white"
             style="background:#1B4F72;border-radius:10px;padding:10px 18px;">
             <i class="bi bi-hospital me-1"></i> OT Patients
-        </a>
-    </div>
+        </button>
+    </div> -->
 
-    <div class="row g-4">
+    <div class="row g-4 opd-only">
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
                 <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
@@ -1366,6 +1420,182 @@
             </div>
         </div>
     </div>
+
+    {{-- ==================== OT DASHBOARD: Pending / Completed ==================== --}}
+    <div class="row g-4 ot-only">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
+                <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
+                    OT Pending Patients
+                </div>
+                <div class="p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-1 text-secondary small">
+                            Show entries
+                            <select class="form-select form-select-sm w-auto">
+                                <option>10</option>
+                                <option>20</option>
+                                <option>30</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 text-secondary small">
+                            search <input type="search" class="form-control form-control-sm w-auto"
+                                style="border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center mb-0"
+                            style="font-size: 13.5px; border-color: #e2e8f0;">
+                            <thead class="table-light text-secondary">
+                                <tr>
+                                    <th class="patient-col-no">#</th>
+                                    <th class="patient-col-name">Patient Name</th>
+                                    <th>Gender</th>
+                                    <th>Age</th>
+                                    <th>City</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($otPendingQueue ?? [] as $i => $booking)
+                                @php
+                                    $otPatient = $booking->patient;
+                                    $otMeta = \App\Models\Hospital\OT\OtBooking::statusLabel($booking->ot_status);
+                                @endphp
+                                <tr>
+                                    <td class="patient-col-no">{{ $i + 1 }}</td>
+                                    <td class="patient-col-name fw-semibold" style="color: #1B4F72;">
+                                        {{ $otPatient?->first_name }} {{ $otPatient?->last_name }}
+                                    </td>
+                                    <td>{{ $otPatient?->gender ? ucfirst($otPatient->gender) : '—' }}</td>
+                                    <td>{{ $otPatient?->age ?? '—' }}</td>
+                                    <td>{{ $otPatient?->cityName ?: '-' }}</td>
+                                    <td>
+                                        <span class="ot-status-pill" style="background-color: {{ $otMeta['tone'] }};">
+                                            {{ $otMeta['label'] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @hasanypermission('exam_secondary|ot_patient_list|ot_surgery_recommend')
+                                        @if($booking->isDoctorConsultationPending())
+                                            <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId, 'queue' => 'consult']) }}"
+                                                class="btn btn-sm text-white px-3 fw-semibold"
+                                                style="background-color: #1B4F72; border-radius: 4px;">
+                                                Review
+                                            </a>
+                                        @else
+                                            <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId]) }}"
+                                                class="btn btn-sm px-3 fw-semibold"
+                                                style="background-color: #64748b; color:#fff; border-radius: 4px;">
+                                                View
+                                            </a>
+                                        @endif
+                                        @endhasanypermission
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="py-4 text-muted bg-light">No Data Found</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
+                        <div>Showing 1 to entries of 0 entries</div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Previous</button>
+                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Right Table Panel: OT Completed Patients --}}
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
+                <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
+                    OT Completed Patients
+                </div>
+                <div class="p-3 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center gap-1 text-secondary small">
+                            Show entries
+                            <select class="form-select form-select-sm w-auto">
+                                <option>10</option>
+                                <option>20</option>
+                                <option>30</option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 text-secondary small">
+                            search <input type="search" class="form-control form-control-sm w-auto"
+                                style="border: 1px solid #cbd5e1;">
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle text-center mb-0"
+                            style="font-size: 13.5px; border-color: #e2e8f0;">
+                            <thead class="table-light text-secondary">
+                                <tr>
+                                    <th class="patient-col-no">#</th>
+                                    <th class="patient-col-name">Patient Name</th>
+                                    <th>Gender</th>
+                                    <th>Age</th>
+                                    <th>City</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($otCompletedQueue ?? [] as $i => $booking)
+                                @php
+                                    $otPatient = $booking->patient;
+                                    $otMeta = \App\Models\Hospital\OT\OtBooking::statusLabel($booking->ot_status);
+                                @endphp
+                                <tr>
+                                    <td class="patient-col-no">{{ $i + 1 }}</td>
+                                    <td class="patient-col-name fw-semibold" style="color: #1B4F72;">
+                                        {{ $otPatient?->first_name }} {{ $otPatient?->last_name }}
+                                    </td>
+                                    <td>{{ $otPatient?->gender ? ucfirst($otPatient->gender) : '—' }}</td>
+                                    <td>{{ $otPatient?->age ?? '—' }}</td>
+                                    <td>{{ $otPatient?->cityName ?: '-' }}</td>
+                                    <td>
+                                        <span class="ot-status-pill" style="background-color: {{ $otMeta['tone'] }};">
+                                            {{ $otMeta['label'] }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @hasanypermission('exam_secondary|ot_patient_list|ot_surgery_recommend')
+                                        <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId]) }}"
+                                            class="btn btn-sm px-3 fw-semibold"
+                                            style="background-color: #0d9488; color:#fff; border-radius: 4px;">
+                                            View
+                                        </a>
+                                        @endhasanypermission
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="7" class="py-4 text-muted bg-light">No Data Found</td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 small text-muted">
+                        <div>Showing 1 to entries of 0 entries</div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Previous</button>
+                            <button class="btn btn-sm btn-outline-secondary px-3" disabled>Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {{-- Dilation Override Modal --}}
 <div id="dilOverrideModal"
@@ -1431,6 +1661,20 @@
 
 @push('scripts')
     <script>
+        (function () {
+            // OPD / OT dashboard tab toggle
+            const dashWrap = document.querySelector('.doctor-page-wrap');
+            document.querySelectorAll('[data-tab-target]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    const tab = btn.dataset.tabTarget;
+                    dashWrap.setAttribute('data-active-tab', tab);
+                    document.querySelectorAll('.dash-tab-btn[data-tab-target]').forEach(function (b) {
+                        b.classList.toggle('active', b.dataset.tabTarget === tab);
+                    });
+                });
+            });
+        })();
+
         (function () {
             const W = { green: {{ $wGreen }}, orange: {{ $wOrange }}, red: {{ $wRed }} };
             function getWC(m, g, o, r) { return m < g ? 'wait-green' : m < o ? 'wait-orange' : m < r ? 'wait-red' : 'wait-fire'; }

@@ -120,15 +120,17 @@ class OtAssistantController extends Controller
             ->orderBy('surgery_name')
             ->get(['id', 'surgery_name']);
 
-        $medicines = Medicine::query()
-            ->orderBy('name')
-            ->get(['name']);
-
         $medicineGroups = MedicineGroup::with('items.medicine')
             ->where('tenant_id', $tenantId)
             ->whereIn('usage_scope', ['ot', 'both'])
             ->orderBy('name')
             ->get();
+        $medicines = $medicineGroups
+            ->flatMap(fn (MedicineGroup $group) => $group->items->pluck('medicine'))
+            ->filter()
+            ->unique('name')
+            ->sortBy('name')
+            ->values();
 
         return view('hospital.ot.assistant.surgery', [
             'slug' => $slug,

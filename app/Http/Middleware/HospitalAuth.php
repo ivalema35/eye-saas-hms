@@ -29,7 +29,7 @@ class HospitalAuth
             if ($tenant && $user->tenant_id !== $tenant->id) {
                 auth('hospital_user')->logout();
                 // Fall through to redirect below
-            } elseif ($tenant && ! $tenant->hasAccess()) {
+            } elseif ($tenant && !$tenant->hasAccess()) {
                 $tenant->refresh();
                 $tenant->markExpiredIfNeeded();
                 $tenant->refresh();
