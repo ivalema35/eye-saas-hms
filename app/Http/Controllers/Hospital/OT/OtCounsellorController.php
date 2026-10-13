@@ -291,14 +291,7 @@ class OtCounsellorController extends Controller
             'surgeon_charges' => ['nullable', 'numeric', 'min:0'],
             'nursing_charges' => ['nullable', 'numeric', 'min:0'],
             'consumables_charges' => ['nullable', 'numeric', 'min:0'],
-            'payment_mode' => [
-                'nullable',
-                Rule::in(
-                    filter_var($request->input('mediclaim'), FILTER_VALIDATE_BOOLEAN)
-                        ? ['mediclaim']
-                        : ['cash', 'online']
-                ),
-            ],
+            'payment_mode' => ['nullable', Rule::in(['cash', 'online', 'mediclaim'])],
             'report_ok' => ['nullable', 'boolean'],
             'blood_reports_verified' => ['required', 'boolean'],
             'blood_reports_normal' => ['required', 'boolean'],
