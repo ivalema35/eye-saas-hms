@@ -44,6 +44,7 @@ class SeedTenantDefaultMasters implements ShouldQueue
             'seedOtTypes',
             'seedOtSurgeryTypes',
             'seedLensOptions',
+            'seedLensPowers',
             'seedDurations',
             'seedChiefComplaints',
             'seedKcos',
@@ -260,6 +261,33 @@ class SeedTenantDefaultMasters implements ShouldQueue
                 'updated_at' => $this->ts(),
             ]);
         }
+    }
+
+    /**
+     * Standard IOL power range +10.00D to +30.00D in 0.50D steps (41 values),
+     * with the most-used cataract range +18.00D–+24.00D flagged as favourites.
+     */
+    private function seedLensPowers(): void
+    {
+        if (DB::table('ot_lens_powers')->where('tenant_id', $this->tenantId)->exists()) {
+            return;
+        }
+
+        $ts = $this->ts();
+        $rows = [];
+
+        for ($power = 10.00; $power <= 30.00; $power += 0.50) {
+            $rows[] = [
+                'tenant_id' => $this->tenantId,
+                'power' => number_format($power, 2),
+                'is_favourite' => $power >= 18.00 && $power <= 24.00,
+                'is_active' => true,
+                'created_at' => $ts,
+                'updated_at' => $ts,
+            ];
+        }
+
+        $this->insert('ot_lens_powers', $rows);
     }
 
     private function seedOtSurgeryTypes(): void

@@ -109,7 +109,7 @@ class ReseedTenantData extends Command
             // Prescription
             'tbl_master_advice', 'tbl_master_diagnosis', 'tbl_master_medicine_instructions',
             // OT masters
-            'ot_types', 'ot_lens_options', 'ot_charge_heads', 'tbl_ot_slots',
+            'ot_types', 'ot_lens_options', 'ot_charge_heads', 'tbl_ot_slots', 'ot_lens_powers',
         ];
 
         $empty = 0;
