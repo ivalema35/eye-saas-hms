@@ -93,6 +93,13 @@ class UserApiController extends Controller
                     ['value' => 'primary',   'label' => 'Primary (Ophthalmologist)'],
                     ['value' => 'secondary', 'label' => 'Secondary (Optometrist)'],
                 ],
+                // "Connected OT Assistant" doctor-only field's picker options
+                // — mirrors web's HospitalUserController::activeOtAssistants().
+                'ot_assistants' => HospitalUser::query()
+                    ->where('status', 'active')
+                    ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+                    ->orderBy('name')
+                    ->get(['id', 'name']),
             ],
         ]);
     }
@@ -101,7 +108,7 @@ class UserApiController extends Controller
 
     public function show(Request $request, string $slug, string $id): JsonResponse
     {
-        $user = HospitalUser::with('role.grantedPermissions')->findOrFail($id);
+        $user = HospitalUser::with(['role.grantedPermissions', 'defaultOtAssistant:id,name'])->findOrFail($id);
         $this->authorizeTarget($request, $user, 'view');
         $viewerIsAdmin = (bool) $request->user()->role?->is_super;
 
@@ -131,6 +138,19 @@ class UserApiController extends Controller
             'doctor_prefix'    => ['nullable', 'string', 'min:2', 'max:5', 'alpha'],
             'registration_no'  => ['nullable', 'string', 'max:50'],
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'default_ot_assistant_id' => [
+                'nullable', 'integer',
+                Rule::exists('hospital_users', 'id')->where(function ($q) {
+                    $q->where('tenant_id', (int) config('app.tenant_id'))
+                        ->where('status', 'active')
+                        ->whereExists(function ($sub) {
+                            $sub->selectRaw('1')
+                                ->from('roles')
+                                ->whereColumn('roles.id', 'hospital_users.role_id')
+                                ->where('roles.slug', 'ot_assistant');
+                        });
+                }),
+            ],
             // Files
             'signature'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
@@ -158,11 +178,12 @@ class UserApiController extends Controller
                                     : null,
             'registration_no'   => $validated['registration_no'] ?? null,
             'experience_years'  => $validated['experience_years'] ?? null,
+            'default_ot_assistant_id' => $this->isDoctorRole($role) ? ($validated['default_ot_assistant_id'] ?? null) : null,
             'signature_path'    => $signaturePath,
             'profile_photo_path'=> $profilePhotoPath,
         ]);
 
-        $user->load('role.grantedPermissions');
+        $user->load(['role.grantedPermissions', 'defaultOtAssistant:id,name']);
 
         return response()->json([
             'success' => true,
@@ -194,6 +215,19 @@ class UserApiController extends Controller
             'doctor_prefix'    => ['nullable', 'string', 'min:2', 'max:5', 'alpha'],
             'registration_no'  => ['nullable', 'string', 'max:50'],
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'default_ot_assistant_id' => [
+                'nullable', 'integer',
+                Rule::exists('hospital_users', 'id')->where(function ($q) {
+                    $q->where('tenant_id', (int) config('app.tenant_id'))
+                        ->where('status', 'active')
+                        ->whereExists(function ($sub) {
+                            $sub->selectRaw('1')
+                                ->from('roles')
+                                ->whereColumn('roles.id', 'hospital_users.role_id')
+                                ->where('roles.slug', 'ot_assistant');
+                        });
+                }),
+            ],
             // Files
             'signature'        => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
             'profile_photo'    => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:20'],
@@ -254,6 +288,7 @@ class UserApiController extends Controller
                                     : null,
             'registration_no'   => $validated['registration_no'] ?? null,
             'experience_years'  => $validated['experience_years'] ?? null,
+            'default_ot_assistant_id' => $this->isDoctorRole($destinationRole) ? ($validated['default_ot_assistant_id'] ?? null) : null,
             'signature_path'    => $signaturePath,
             'profile_photo_path'=> $profilePhotoPath,
         ]);
@@ -268,7 +303,7 @@ class UserApiController extends Controller
             $user->save();
         }
 
-        $user->load('role.grantedPermissions');
+        $user->load(['role.grantedPermissions', 'defaultOtAssistant:id,name']);
 
         return response()->json([
             'success' => true,
@@ -359,6 +394,12 @@ class UserApiController extends Controller
                 : null;
             $base['profile_photo_url'] = $user->profile_photo_path
                 ? Storage::disk('public')->url($user->profile_photo_path)
+                : null;
+            // Doctor-only — the OT Assistant auto-assigned when Ward marks
+            // this doctor's patient "Ready for OT" (web pull 2026-10-12).
+            $base['default_ot_assistant_id'] = $user->default_ot_assistant_id;
+            $base['default_ot_assistant'] = $user->relationLoaded('defaultOtAssistant') && $user->defaultOtAssistant
+                ? ['id' => $user->defaultOtAssistant->id, 'name' => $user->defaultOtAssistant->name]
                 : null;
         }
 
