@@ -56,6 +56,14 @@ class OtReportApiController extends OtReportController
             ->map(fn (array $meta, string $key) => [...$meta, 'key' => $key])
             ->groupBy('group');
 
+        // Lens Report has its own dedicated endpoint/screen (summary +
+        // lens-power breakdown) rather than the generic headings/rows
+        // apiShow() used by self::REPORTS, so it's appended here instead of
+        // into that list — matches web's index() exactly.
+        $reportsByGroup = $reportsByGroup->map(fn ($reports, $group) => $group === 'Clinical Reports'
+            ? $reports->push(['group' => 'Clinical Reports', 'label' => 'Lens Report', 'key' => 'lens-report'])
+            : $reports);
+
         return response()->json(['success' => true, 'data' => $reportsByGroup]);
     }
 
@@ -77,6 +85,34 @@ class OtReportApiController extends OtReportController
                 'rows' => $rows,
                 'from' => $from,
                 'to' => $to,
+            ],
+        ]);
+    }
+
+    /**
+     * JSON mirror of the parent's lensReport() (which returns a View) — same
+     * buildLensReportData()/resolveLensReportDateRange() (both changed from
+     * private to protected on the parent for exactly this reuse, same as
+     * buildReport()/resolveDateRange() above). lensReportExport() is
+     * inherited UNCHANGED (not overridden) — it already returns a file
+     * download, no View involved, so the API route points straight at it.
+     */
+    public function apiLensReport(Request $request, string $slug): JsonResponse
+    {
+        [$from, $to] = $this->resolveLensReportDateRange($request);
+        $tenantId = (int) app('tenant')->id;
+
+        $data = $this->buildLensReportData($tenantId, $from, $to);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+                'summary' => $data['summary'],
+                'power_summary' => $data['powerSummary'],
+                'detail_headings' => $data['detailHeadings'],
+                'detail_rows' => $data['detailRows'],
             ],
         ]);
     }

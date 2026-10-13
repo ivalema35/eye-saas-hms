@@ -326,6 +326,32 @@ class OtAssistantApiController extends Controller
                 ]));
             }
 
+            // Lens Implantation = Yes → this is the actual-usage record the Lens
+            // Report reads (ot_lens_details.is_implanted), distinct from the
+            // counselling-stage plan synced above. Written only when the
+            // assistant confirms implantation here, with a Lens Power. Matches
+            // web's OtAssistantController::storeSurgery() exactly.
+            if (($validated['lens_implantation'] ?? null) === 'yes' && ! empty($validated['estimated_power'])) {
+                $existingLensDetail = OtLensDetail::query()
+                    ->where('tenant_id', $tenantId)
+                    ->where('ot_booking_id', $booking->id)
+                    ->first();
+
+                OtLensDetail::query()->updateOrCreate(
+                    ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
+                    [
+                        'lens_name' => $validated['lens_model'] ?: (! empty($validated['lens_category']) ? ucfirst($validated['lens_category']) . ' Lens' : 'Lens'),
+                        'manufacturer' => $validated['lens_company'] ?? null,
+                        'lens_type' => $validated['lens_type'] ?? 'Monofocal',
+                        'lens_power' => $validated['estimated_power'],
+                        'lens_mrp' => $validated['lens_cost'] ?? 0,
+                        'is_implanted' => true,
+                        'implanted_at' => $existingLensDetail?->implanted_at ?? now(),
+                        'entered_by' => $assistantId,
+                    ]
+                );
+            }
+
             // Auto-record verification checklist (matches web — UI checklist removed there too).
             OtVerification::query()->updateOrCreate(
                 ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],

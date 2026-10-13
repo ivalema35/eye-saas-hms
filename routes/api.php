@@ -796,6 +796,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                         Route::get('prescription/{patient}/pdf', [OtReportApiController::class, 'apiPrescriptionPdf'])
                             ->name('prescription-pdf')
                             ->middleware('permission:report_view|ot_reports_view');
+                        Route::get('lens-report', [OtReportApiController::class, 'apiLensReport'])
+                            ->name('lens-report')
+                            ->middleware('permission:report_view|ot_reports_view');
+                        Route::get('lens-report/export', [OtReportApiController::class, 'lensReportExport'])
+                            ->name('lens-report.export')
+                            ->middleware('permission:report_export|ot_reports_export');
                         Route::get('{type}', [OtReportApiController::class, 'apiShow'])
                             ->name('show')
                             ->middleware('permission:report_view|ot_reports_view');
