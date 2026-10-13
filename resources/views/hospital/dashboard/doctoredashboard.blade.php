@@ -770,10 +770,10 @@
         }
 
         /* .doc-ref-bar a.doc-ref-link:hover {
-                        background: rgba(255, 255, 255, .22);
-                        color: #fff;
-                        text-decoration: underline;
-                    } */
+                            background: rgba(255, 255, 255, .22);
+                            color: #fff;
+                            text-decoration: underline;
+                        } */
 
         .doc-ref-mid {
             display: flex;
@@ -840,7 +840,7 @@
             box-sizing: border-box;
             width: 200px;
             min-width: 196px;
-            height: 105px;
+            height: 102px;
 
             background: #fff;
             border: 1px solid rgba(15, 79, 134, 0.2);
