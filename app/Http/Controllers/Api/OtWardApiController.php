@@ -230,27 +230,32 @@ class OtWardApiController extends Controller
             $isReady = $validated['pre_op_status'] === OtPreOp::STATUS_READY_FOR_SURGERY;
 
             if ($isReady) {
-                // Ready for OT → only OT Assistant is required (manual) —
-                // matches web exactly.
-                $staff = $request->validate([
-                    'ot_assistant_id' => [
-                        'required', 'integer',
-                        Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
-                            $q->where('tenant_id', $tenantId)
-                                ->where('status', 'active')
-                                ->whereExists(function ($sub) {
-                                    $sub->selectRaw('1')
-                                        ->from('roles')
-                                        ->whereColumn('roles.id', 'hospital_users.role_id')
-                                        ->where('roles.slug', 'ot_assistant');
-                                });
-                        }),
-                    ],
-                ], [
-                    'ot_assistant_id.required' => 'Select an OT Assistant when the patient is Ready for OT.',
-                ]);
+                // Ready for OT → OT Assistant is resolved purely from this
+                // booking's doctor's connected OT Assistant (set on the
+                // doctor's profile) — no manual pick any more (web pull
+                // 2026-10-12). If the doctor has no OT Assistant connected
+                // (or it's no longer a valid active one), reject with a
+                // clear fix-it message instead.
+                $linkedDoctorId = (int) ($booking->ot_doctor_id ?: ($booking->patient?->doctor_id ?? 0));
+                $defaultAssistantId = $linkedDoctorId > 0
+                    ? HospitalUser::query()->whereKey($linkedDoctorId)->value('default_ot_assistant_id')
+                    : null;
 
-                $booking->update(['ot_assistant_id' => (int) $staff['ot_assistant_id']]);
+                $isValidAssistant = $defaultAssistantId && HospitalUser::query()
+                    ->whereKey($defaultAssistantId)
+                    ->where('tenant_id', $tenantId)
+                    ->where('status', 'active')
+                    ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+                    ->exists();
+
+                if (! $isValidAssistant) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "This doctor has no active OT Assistant connected. Connect one on the doctor's profile (Users → Edit Doctor) before marking Ready for OT.",
+                    ], 422);
+                }
+
+                $booking->update(['ot_assistant_id' => (int) $defaultAssistantId]);
                 $message = 'Status saved. Patient assigned to OT Assistant.';
             } else {
                 // Preparing / Hold / Complicated → auto-assign the OPD doctor
@@ -355,11 +360,16 @@ class OtWardApiController extends Controller
             'dose_number' => ['required', 'integer', 'min:1', 'max:20'],
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
+            'dilate' => ['nullable', Rule::in(['Yes', 'No'])],
+            'dilation_time' => ['nullable', 'required_if:dilate,Yes', 'integer', 'min:1', 'max:180'],
         ], [
             'medicine_name.exists' => 'Select a ward medicine.',
             'eye.in' => 'Eye must match Recommend Surgery selection'
                 . (in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' (' . $booking->eye . ').' : '.'),
+            'dilation_time.required_if' => 'Enter the dilation time (minutes).',
         ]);
+
+        $dilate = $validated['dilate'] ?? null;
 
         $entry = OtDilationEntry::query()->create([
             'tenant_id' => $tenantId,
@@ -371,6 +381,8 @@ class OtWardApiController extends Controller
             'is_instilled' => true,
             'administered_by' => (int) auth('sanctum')->id(),
             'remarks' => $validated['remarks'] ?? null,
+            'dilate' => $dilate,
+            'dilation_time' => $dilate === 'Yes' ? ($validated['dilation_time'] ?? null) : null,
         ]);
 
         return response()->json([
@@ -416,14 +428,28 @@ class OtWardApiController extends Controller
                     ? ['id' => $booking->patient->doctor->id, 'name' => $booking->patient->doctor->name]
                     : null,
                 'ot_assistant' => $booking->otAssistant,
-                // Web embeds OT Assistant picker options on the ward show page
-                // under ot_ward_entry — do NOT force apps through /config/users.
-                'ot_assistants' => HospitalUser::query()
-                    ->where('tenant_id', $tenantId)
-                    ->where('status', 'active')
-                    ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
-                    ->orderBy('name')
-                    ->get(['id', 'name']),
+                // Web pull 2026-10-12 — the OT Assistant picker is gone; Ready
+                // for OT now auto-resolves the assistant from the linked
+                // doctor's `default_ot_assistant_id` (see storeVitals()). This
+                // surfaces who THAT will be so the Status form can show it
+                // read-only instead of a dropdown, and warn before saving if
+                // it's missing/invalid rather than only after a 422.
+                'default_ot_assistant' => (function () use ($booking, $tenantId) {
+                    $linkedDoctorId = (int) ($booking->ot_doctor_id ?: ($booking->patient?->doctor_id ?? 0));
+                    $defaultAssistantId = $linkedDoctorId > 0
+                        ? HospitalUser::query()->whereKey($linkedDoctorId)->value('default_ot_assistant_id')
+                        : null;
+                    if (! $defaultAssistantId) {
+                        return null;
+                    }
+
+                    return HospitalUser::query()
+                        ->whereKey($defaultAssistantId)
+                        ->where('tenant_id', $tenantId)
+                        ->where('status', 'active')
+                        ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+                        ->first(['id', 'name']);
+                })(),
                 // Eye Drop Register medicine picker — Ward Medicine list
                 'ot_medicines' => Medicine::query()
                     ->where('tenant_id', $tenantId)
