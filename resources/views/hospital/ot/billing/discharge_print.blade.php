@@ -42,6 +42,37 @@
                 box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
             }
         }
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #d1d5db;
+        }
+        .print-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            background: #F8FAFC;
+            border: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .print-logo img { width: 100%; height: 100%; object-fit: contain; padding: 5px; }
+        .header h1 {
+            margin: 0;
+            font-size: 14px;
+            color: #111;
+        }
+        .header p {
+            margin: 2px 0 0;
+            color: #6b7280;
+            font-size: 10px;
+        }
         .title {
             text-align: center;
             font-size: 18px;
@@ -233,6 +264,25 @@
 <button class="print-btn" onclick="window.print()">Print</button>
 
 <div class="page">
+    @php $letterPad = hospital_setting('letter_pad', 'unavailable'); @endphp
+    @if($letterPad !== 'available')
+        <div class="header">
+            <div class="print-logo">
+                @if(hospital_print_logo_url())
+                    <img src="{{ hospital_print_logo_url() }}" alt="{{ hospital_name() }} logo">
+                @else
+                    <span>👁</span>
+                @endif
+            </div>
+            <div>
+                <h1>{{ hospital_name() }}</h1>
+                @if(hospital_full_address())
+                    <p>{{ hospital_full_address() }}</p>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <h1 class="title">Discharge Card</h1>
 
     <div class="row">

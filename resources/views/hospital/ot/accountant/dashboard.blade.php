@@ -782,7 +782,7 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                                         <button type="button" class="btn btn-sm btn-outline-secondary ota-view-btn me-2"
                                             data-bs-toggle="modal" data-bs-target="#otaDetailModal{{ $booking->id }}">
                                             <i class="bi bi-eye-fill me-1"></i> View
-                                        </button>
+                                        </button>+
                                         @if(($activeFilter ?? '') === 'history')
                                         @if($booking->payments->isNotEmpty())
                                         @haspermission('ot_bill_print')
