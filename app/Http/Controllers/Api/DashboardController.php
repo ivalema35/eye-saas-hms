@@ -8,6 +8,7 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
+use App\Models\Hospital\OT\OtLensDetail;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
@@ -291,6 +292,7 @@ class DashboardController extends Controller
         $otTotalToday = null;
         $totalUsersAllRoles = null;
         $totalMedicines = null;
+        $totalLensToday = null;
         if ($isAdmin) {
             $todayPatients = Patient::whereDate('appointment_date', $today)->count();
             $todayPrimary = Patient::whereDate('appointment_date', $today)
@@ -315,6 +317,10 @@ class DashboardController extends Controller
             // See WEB_ADMIN_RECEPTIONIST_DASHBOARD_AUDIT.md finding #1.
             $totalUsersAllRoles = HospitalUser::count();
             $totalMedicines = Medicine::count();
+            // Web's new "Lens Report" quick-link card (web pull 2026-10-14,
+            // $quickLinkCounts['lens_today']) — lenses actually implanted
+            // today, same scoping as OtReportController::buildLensReportData().
+            $totalLensToday = OtLensDetail::where('is_implanted', true)->whereDate('implanted_at', $today)->count();
             if (! $canSeeRevenue) {
                 $revenueToday = $collectionService->summaryForDay($today)['total'];
                 $revenueMonth = $collectionService->summaryForCalendarMonth()['total'];
@@ -553,6 +559,7 @@ class DashboardController extends Controller
                 'ot_total_today'              => $otTotalToday,
                 'total_users_all_roles'       => $totalUsersAllRoles,
                 'total_medicines'             => $totalMedicines,
+                'total_lens_today'            => $totalLensToday,
                 'primary_queue'               => $primaryQueue,
                 'receptionists'               => $receptionists,
                 'wait_thresholds'             => $thresholds,
