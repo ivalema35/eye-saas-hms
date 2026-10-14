@@ -1060,9 +1060,9 @@
         <div class="doc-overview-featured">
             <div class="doc-main-card">
                 <div class="doc-ref-bar doc-ref-bar--top opd-only" title="Hospital today">
-                    <span title="Patients today">C: {{ $todayPatients ?? 0 }}</span>
+                    <span title="Walk-ins still pending (whole hospital)">C: {{ $todayPendingWalkin ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Primary completed today">PC: {{ $todayPrimary ?? 0 }}</span>
+                    <span title="Primary done, secondary still pending (whole hospital)">PC: {{ $todayPrimaryAwaitingSecondary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Secondary completed today">SC: {{ $todaySecondary ?? 0 }}</span>
                 </div>
@@ -1088,9 +1088,9 @@
                     </div>
                 </div>
                 <div class="doc-ref-bar doc-ref-bar--opd opd-only" title="My OPD">
-                    <span title="Examination assigned today">Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
+                    <span title="Walk-ins still pending for this doctor">Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Primary exam completed">P: {{ $doctorPrimaryDone ?? 0 }}</span>
+                    <span title="Primary done, secondary still pending">P: {{ $doctorPrimaryAwaitingSecondary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Secondary exam completed">S: {{ $doctorSecondaryDone ?? 0 }}</span>
                 </div>
@@ -1124,9 +1124,9 @@
                             {{ $doc->name }}
                         </div>
                         <div class="doc-ref-btns opd-only">
-                            <span class="doc-ref-btn" title="Examination assigned today">Patient:
+                            <span class="doc-ref-btn" title="Walk-ins still pending for this doctor">Patient:
                                 {{ $doc->assigned_today ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="Primary exam completed">P:
+                            <span class="doc-ref-btn" title="Primary done, secondary still pending">P:
                                 {{ $doc->primary_count ?? 0 }}</span>
                             <span class="doc-ref-btn" title="Secondary exam completed">S:
                                 {{ $doc->secondary_count ?? 0 }}</span>
