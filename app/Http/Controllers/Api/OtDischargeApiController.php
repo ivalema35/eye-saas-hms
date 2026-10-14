@@ -38,10 +38,12 @@ use App\Http\Controllers\Hospital\OT\Concerns\FiltersOtDeskLists;
 use App\Models\Hospital\OT\OtBooking;
 use App\Models\Hospital\OT\OtDischargeSummary;
 use App\Models\Hospital\OT\OtSurgery;
+use App\Support\PublicStorage;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class OtDischargeApiController extends Controller
@@ -619,6 +621,20 @@ class OtDischargeApiController extends Controller
     private function domPdfSafeHtml(string $view, array $data): string
     {
         $html = view($view, $data)->render();
+        // DomPDF's `enable_remote` is off (barryvdh/laravel-dompdf's package
+        // default — no config/dompdf.php published), so `<img src="https://
+        // .../files/...">`/`.../storage/...` (hospital logo, doctor
+        // signature — both served off this same app) silently fail to load
+        // and DomPDF renders the `alt` text in a bordered placeholder box
+        // instead. Web itself never hits this: its own "print" is a real
+        // browser window.print(), not DomPDF. Fixed by inlining these
+        // same-origin images as base64 data URIs (read straight off the
+        // public disk — no HTTP round trip, so `enable_remote` is moot)
+        // instead of enabling remote fetch, which would also affect every
+        // other DomPDF caller in the app, including web's own. See client
+        // report 2026-10-14 (certificate PDF logo box showing "shivanshi
+        // logo" placeholder text).
+        $html = $this->inlineLocalImages($html);
         $html = preg_replace('/<button[^>]*class="print-btn"[^>]*>.*?<\/button>/s', '', $html) ?? $html;
         $html = preg_replace('/@media\s+screen\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
         $html = preg_replace('/@media\s+print\s*\{(?:[^{}]|\{[^{}]*\})*\}/s', '', $html) ?? $html;
@@ -643,6 +659,59 @@ class OtDischargeApiController extends Controller
         ) ?? $html;
 
         return $html;
+    }
+
+    /**
+     * Replaces any `<img src="...">` pointing at this app's own `/storage/`
+     * or `/files/` URLs with a base64 data URI read straight off the public
+     * disk, so DomPDF (remote image fetching disabled) can still render it.
+     * Genuinely remote/external image URLs are left untouched.
+     */
+    private function inlineLocalImages(string $html): string
+    {
+        return preg_replace_callback(
+            '/(<img[^>]+src=")([^"]+)(")/i',
+            function (array $m): string {
+                $dataUri = $this->localImageAsDataUri($m[2]);
+
+                return $dataUri !== null ? $m[1].$dataUri.$m[3] : $m[0];
+            },
+            $html
+        ) ?? $html;
+    }
+
+    private function localImageAsDataUri(string $src): ?string
+    {
+        $parts = parse_url($src);
+        if ($parts === false) {
+            return null;
+        }
+
+        if (isset($parts['host'])) {
+            $appHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+            if ($appHost === null || strcasecmp($parts['host'], $appHost) !== 0) {
+                return null;
+            }
+        }
+
+        $path = ltrim($parts['path'] ?? '', '/');
+        if (str_starts_with($path, 'storage/')) {
+            $relative = substr($path, strlen('storage/'));
+        } elseif (str_starts_with($path, 'files/')) {
+            $relative = rawurldecode(substr($path, strlen('files/')));
+        } else {
+            return null;
+        }
+
+        $relative = PublicStorage::normalizePath($relative);
+        if ($relative === null || ! Storage::disk('public')->exists($relative)) {
+            return null;
+        }
+
+        $contents = Storage::disk('public')->get($relative);
+        $mime = Storage::disk('public')->mimeType($relative) ?: 'application/octet-stream';
+
+        return 'data:'.$mime.';base64,'.base64_encode($contents);
     }
 
     private function findWithDischargeRelations(int $bookingId): OtBooking
