@@ -62,7 +62,7 @@ class OtReportController extends Controller
         'hospital-report' => ['group' => 'Clinical Reports', 'label' => 'Hospital Report'],
         'surgery-wise' => ['group' => 'Clinical Reports', 'label' => 'Surgery-wise Report'],
         'doctor-wise' => ['group' => 'Clinical Reports', 'label' => 'Doctor-wise Report'],
-        'lens-usage' => ['group' => 'Clinical Reports', 'label' => 'Lens Usage Report'],
+        // 'lens-usage' => ['group' => 'Clinical Reports', 'label' => 'Lens Usage Report'],
         'complications' => ['group' => 'Clinical Reports', 'label' => 'Complication Report'],
         // Financial Reports
         'daily-collection' => ['group' => 'Financial Reports', 'label' => 'Daily Collection'],
@@ -76,13 +76,13 @@ class OtReportController extends Controller
         $this->authorizeAnyPermission(['report_view', 'ot_reports_view']);
 
         $reportsByGroup = collect(self::REPORTS)
-            ->map(fn (array $meta, string $key) => [...$meta, 'key' => $key])
+            ->map(fn(array $meta, string $key) => [...$meta, 'key' => $key])
             ->groupBy('group');
 
         // Lens Report has its own dedicated page (summary cards + lens-power
         // breakdown) rather than the generic headings/rows show() used by
         // self::REPORTS, so it's appended here instead of into that list.
-        $reportsByGroup = $reportsByGroup->map(fn ($reports, $group) => $group === 'Clinical Reports'
+        $reportsByGroup = $reportsByGroup->map(fn($reports, $group) => $group === 'Clinical Reports'
             ? $reports->push([
                 'group' => 'Clinical Reports',
                 'label' => 'Lens Report',
@@ -126,7 +126,7 @@ class OtReportController extends Controller
         [$from, $to] = $this->resolveDateRange($request);
         [$headings, $rows] = $this->buildReport($type, $from, $to);
 
-        $filename = str_replace('-', '_', $type).'_'.now()->format('Y-m-d').'.xlsx';
+        $filename = str_replace('-', '_', $type) . '_' . now()->format('Y-m-d') . '.xlsx';
 
         return Excel::download(new GenericArrayExport($rows, $headings), $filename);
     }
@@ -140,7 +140,7 @@ class OtReportController extends Controller
         [$from, $to] = $this->resolveDateRange($request);
         [$headings, $rows] = $this->buildReport($type, $from, $to);
 
-        $filename = str_replace('-', '_', $type).'_'.now()->format('Y-m-d').'.pdf';
+        $filename = str_replace('-', '_', $type) . '_' . now()->format('Y-m-d') . '.pdf';
 
         $pdf = Pdf::loadView('hospital.reports.ot.pdf', [
             'label' => self::REPORTS[$type]['label'],
@@ -185,7 +185,7 @@ class OtReportController extends Controller
 
         $data = $this->buildLensReportData($tenantId, $from, $to);
 
-        $filename = 'lens_report_'.$from->toDateString().'_to_'.$to->toDateString().'.xlsx';
+        $filename = 'lens_report_' . $from->toDateString() . '_to_' . $to->toDateString() . '.xlsx';
 
         return Excel::download(new GenericArrayExport($data['detailRows'], $data['detailHeadings']), $filename);
     }
@@ -231,21 +231,21 @@ class OtReportController extends Controller
         $summary = [
             'totalLensesUsed' => $lensDetails->count(),
             'totalSurgeries' => $lensDetails->pluck('ot_booking_id')->unique()->count(),
-            'uniquePowers' => $lensDetails->pluck('lens_power')->map(fn ($p) => number_format((float) $p, 2))->unique()->count(),
+            'uniquePowers' => $lensDetails->pluck('lens_power')->map(fn($p) => number_format((float) $p, 2))->unique()->count(),
         ];
 
         $powerSummary = $lensDetails
-            ->groupBy(fn (OtLensDetail $d) => number_format((float) $d->lens_power, 2))
-            ->map(fn ($group, $power) => ['power' => $power, 'quantity' => $group->count()])
-            ->sortBy(fn ($row) => (float) $row['power'])
+            ->groupBy(fn(OtLensDetail $d) => number_format((float) $d->lens_power, 2))
+            ->map(fn($group, $power) => ['power' => $power, 'quantity' => $group->count()])
+            ->sortBy(fn($row) => (float) $row['power'])
             ->values();
 
         $detailHeadings = ['Surgery Date', 'Patient Name', 'MRD No.', 'Lens Power', 'Lens Name', 'Lens Company', 'Doctor'];
-        $detailRows = $lensDetails->map(fn (OtLensDetail $d) => [
+        $detailRows = $lensDetails->map(fn(OtLensDetail $d) => [
             optional($d->implanted_at)->format('d M Y') ?? '-',
             $d->booking?->patient?->full_name ?? '-',
             $d->booking?->patient?->patient_code ?? '-',
-            '+'.number_format((float) $d->lens_power, 2).'D',
+            '+' . number_format((float) $d->lens_power, 2) . 'D',
             $d->lens_name ?: '-',
             $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
             $d->booking?->otDoctor?->name ?? '-',
@@ -281,7 +281,7 @@ class OtReportController extends Controller
             ->with('prescriptions.medicine.medicineType', 'prescriptions.dosage', 'doctor')
             ->first();
 
-        abort_if(! $primaryExam && ! $secondaryExam, 404, 'No examination found for this patient.');
+        abort_if(!$primaryExam && !$secondaryExam, 404, 'No examination found for this patient.');
 
         $primaryDoctorName = $primaryExam?->doctor?->name;
         $secondaryDoctorName = $secondaryExam?->doctor?->name;
@@ -379,7 +379,7 @@ class OtReportController extends Controller
             'discharge' => $this->dischargeReport($tenantId, $fromStart, $toEnd),
             'surgery-wise' => $this->surgeryWiseReport($tenantId, $fromStart, $toEnd),
             'doctor-wise' => $this->doctorWiseReport($tenantId, $fromStart, $toEnd),
-            'lens-usage' => $this->lensUsageReport($tenantId, $fromStart, $toEnd),
+            // 'lens-usage' => $this->lensUsageReport($tenantId, $fromStart, $toEnd),
             'complications' => $this->complicationsReport($tenantId, $fromStart, $toEnd),
             'daily-collection' => $this->dailyCollectionReport($tenantId, $fromStart, $toEnd),
             'monthly-revenue' => $this->monthlyRevenueReport($tenantId, $fromStart, $toEnd),
@@ -413,12 +413,12 @@ class OtReportController extends Controller
                 $registerType = in_array((string) $p->type, ['phone', '1'], true) ? 'Phone' : 'Walk-in';
 
                 $primaryMeds = collect($p->primaryExamination?->prescriptions ?? [])
-                    ->map(fn (ExamPrescription $rx) => $rx->medicine?->brand_name ?: $rx->medicine?->name)
+                    ->map(fn(ExamPrescription $rx) => $rx->medicine?->brand_name ?: $rx->medicine?->name)
                     ->filter()
                     ->values();
 
                 $secondaryMeds = collect($p->secondaryExamination?->exam_data['rx'] ?? [])
-                    ->map(fn (array $rx) => $rx['name'] ?? null)
+                    ->map(fn(array $rx) => $rx['name'] ?? null)
                     ->filter()
                     ->values();
 
@@ -454,7 +454,7 @@ class OtReportController extends Controller
         $checkInRows = Patient::query()
             ->with([
                 'doctor:id,name',
-                'otBookings' => fn ($q) => $q->orderByDesc('id')->limit(1),
+                'otBookings' => fn($q) => $q->orderByDesc('id')->limit(1),
             ])
             ->where('tenant_id', $tenantId)
             ->whereBetween('checked_in_at', [$from, $to])
@@ -487,13 +487,13 @@ class OtReportController extends Controller
             ])
             ->orderByDesc('appointment_date')
             ->get()
-            ->map(fn (OtAppointment $a) => [
+            ->map(fn(OtAppointment $a) => [
                 $a->appointment_number,
                 $a->patient_name,
                 $a->mobile_no ?? '-',
-                optional($a->appointment_date)->format('d M Y').($a->appointment_time ? ' '.substr((string) $a->appointment_time, 0, 5) : ''),
+                optional($a->appointment_date)->format('d M Y') . ($a->appointment_time ? ' ' . substr((string) $a->appointment_time, 0, 5) : ''),
                 $a->doctor?->name ?? '-',
-                'OT Appointment ('.str_replace('_', ' ', $a->appointment_type).')',
+                'OT Appointment (' . str_replace('_', ' ', $a->appointment_type) . ')',
                 '-',
                 ucfirst($a->status),
             ]);
@@ -514,7 +514,7 @@ class OtReportController extends Controller
             ->whereBetween('appointment_date', [$from->toDateString(), $to->toDateString()])
             ->orderByDesc('appointment_date')
             ->get()
-            ->map(fn (OtAppointment $a) => [
+            ->map(fn(OtAppointment $a) => [
                 $a->appointment_number,
                 $a->patient_name,
                 $a->mobile_no,
@@ -536,7 +536,7 @@ class OtReportController extends Controller
             ->whereNotNull('primary_done_at')
             ->orderByDesc('appointment_date')
             ->get()
-            ->map(fn (Patient $p) => [
+            ->map(fn(Patient $p) => [
                 $p->patient_code,
                 $p->full_name,
                 $p->doctor?->name ?? '-',
@@ -555,7 +555,7 @@ class OtReportController extends Controller
             ->whereBetween('counselled_at', [$from, $to])
             ->orderByDesc('counselled_at')
             ->get()
-            ->map(fn (OtCounselling $c) => [
+            ->map(fn(OtCounselling $c) => [
                 $c->booking?->patient?->full_name ?? '-',
                 $c->diagnosis ?? '-',
                 $c->lens_option ?? '-',
@@ -575,7 +575,7 @@ class OtReportController extends Controller
             ->whereBetween('paid_at', [$from, $to])
             ->orderByDesc('paid_at')
             ->get()
-            ->map(fn (OtPayment $p) => [
+            ->map(fn(OtPayment $p) => [
                 $p->booking?->patient?->full_name ?? '-',
                 $p->receipt_number ?? '-',
                 number_format((float) $p->package_amount, 2),
@@ -595,7 +595,7 @@ class OtReportController extends Controller
             ->whereBetween('surgery_at', [$from, $to])
             ->orderByDesc('surgery_at')
             ->get()
-            ->map(fn (OtSurgery $s) => [
+            ->map(fn(OtSurgery $s) => [
                 $s->booking?->patient?->full_name ?? '-',
                 $s->surgery_name,
                 $s->eye_operated,
@@ -619,8 +619,8 @@ class OtReportController extends Controller
             ->orderByDesc('ot_invoices.created_at')
             ->select('patients.first_name', 'patients.last_name', 'ot_invoices.invoice_number', 'ot_invoices.net_amount', 'ot_invoices.follow_up_date', 'ot_bookings.discharged_at')
             ->get()
-            ->map(fn ($row) => [
-                trim($row->first_name.' '.$row->last_name),
+            ->map(fn($row) => [
+                trim($row->first_name . ' ' . $row->last_name),
                 $row->invoice_number,
                 number_format((float) $row->net_amount, 2),
                 $row->follow_up_date ? Carbon::parse($row->follow_up_date)->format('d M Y') : '-',
@@ -639,7 +639,7 @@ class OtReportController extends Controller
             ->groupBy('surgery_name')
             ->orderByDesc('total')
             ->get()
-            ->map(fn ($row) => [$row->surgery_name, $row->total, $row->complications])
+            ->map(fn($row) => [$row->surgery_name, $row->total, $row->complications])
             ->all();
 
         return [['Surgery', 'Total Performed', 'With Complications'], $rows];
@@ -663,34 +663,34 @@ class OtReportController extends Controller
                 ];
             })
             ->values()
-            ->sortByDesc(fn ($row) => $row[1])
+            ->sortByDesc(fn($row) => $row[1])
             ->values()
             ->all();
 
         return [['Doctor', 'Surgeries Performed', 'With Complications'], $rows];
     }
 
-    private function lensUsageReport(int $tenantId, Carbon $from, Carbon $to): array
-    {
-        $rows = OtLensDetail::query()
-            ->with(['booking.patient:id,first_name,middle_name,last_name', 'inventoryItem:id,lens_code,manufacturer'])
-            ->where('tenant_id', $tenantId)
-            ->where('is_implanted', true)
-            ->whereBetween('implanted_at', [$from, $to])
-            ->orderByDesc('implanted_at')
-            ->get()
-            ->map(fn (OtLensDetail $l) => [
-                $l->booking?->patient?->full_name ?? '-',
-                $l->lens_name,
-                $l->manufacturer ?? $l->inventoryItem?->manufacturer ?? '-',
-                $l->lens_type,
-                '+'.number_format((float) $l->lens_power, 2).'D',
-                $l->inventoryItem?->lens_code ?? '-',
-                optional($l->implanted_at)->format('d M Y') ?? '-',
-            ])->all();
+    // private function lensUsageReport(int $tenantId, Carbon $from, Carbon $to): array
+    // {
+    //     $rows = OtLensDetail::query()
+    //         ->with(['booking.patient:id,first_name,middle_name,last_name', 'inventoryItem:id,lens_code,manufacturer'])
+    //         ->where('tenant_id', $tenantId)
+    //         ->where('is_implanted', true)
+    //         ->whereBetween('implanted_at', [$from, $to])
+    //         ->orderByDesc('implanted_at')
+    //         ->get()
+    //         ->map(fn(OtLensDetail $l) => [
+    //             $l->booking?->patient?->full_name ?? '-',
+    //             $l->lens_name,
+    //             $l->manufacturer ?? $l->inventoryItem?->manufacturer ?? '-',
+    //             $l->lens_type,
+    //             '+' . number_format((float) $l->lens_power, 2) . 'D',
+    //             $l->inventoryItem?->lens_code ?? '-',
+    //             optional($l->implanted_at)->format('d M Y') ?? '-',
+    //         ])->all();
 
-        return [['Patient', 'Lens', 'Manufacturer', 'Type', 'Power', 'Inventory Code', 'Implanted On'], $rows];
-    }
+    //     return [['Patient', 'Lens', 'Manufacturer', 'Type', 'Power', 'Inventory Code', 'Implanted On'], $rows];
+    // }
 
     private function complicationsReport(int $tenantId, Carbon $from, Carbon $to): array
     {
@@ -701,7 +701,7 @@ class OtReportController extends Controller
             ->whereBetween('surgery_at', [$from, $to])
             ->orderByDesc('surgery_at')
             ->get()
-            ->map(fn (OtSurgery $s) => [
+            ->map(fn(OtSurgery $s) => [
                 $s->booking?->patient?->full_name ?? '-',
                 $s->surgery_name,
                 $s->operatedBy?->name ?? '-',
@@ -722,7 +722,7 @@ class OtReportController extends Controller
             ->groupBy('day')
             ->orderByDesc('day')
             ->get()
-            ->map(fn ($row) => [Carbon::parse($row->day)->format('d M Y'), number_format((float) $row->total, 2), $row->txns])
+            ->map(fn($row) => [Carbon::parse($row->day)->format('d M Y'), number_format((float) $row->total, 2), $row->txns])
             ->all();
 
         return [['Date', 'Total Collected', 'Transactions'], $rows];
@@ -737,7 +737,7 @@ class OtReportController extends Controller
             ->groupBy('ym')
             ->orderByDesc('ym')
             ->get()
-            ->map(fn ($row) => [Carbon::createFromFormat('Y-m', $row->ym)->format('M Y'), number_format((float) $row->total, 2), $row->txns])
+            ->map(fn($row) => [Carbon::createFromFormat('Y-m', $row->ym)->format('M Y'), number_format((float) $row->total, 2), $row->txns])
             ->all();
 
         return [['Month', 'Total Revenue', 'Transactions'], $rows];
@@ -753,7 +753,7 @@ class OtReportController extends Controller
             ->groupBy('package_name')
             ->orderByDesc('total_revenue')
             ->get()
-            ->map(fn ($row) => [$row->package_name, $row->total_bookings, number_format((float) $row->total_revenue, 2)])
+            ->map(fn($row) => [$row->package_name, $row->total_bookings, number_format((float) $row->total_revenue, 2)])
             ->all();
 
         return [['Package', 'Bookings', 'Total Revenue'], $rows];
@@ -766,8 +766,8 @@ class OtReportController extends Controller
             ->where('tenant_id', $tenantId)
             ->whereBetween('surgery_date', [$from->toDateString(), $to->toDateString()])
             ->get()
-            ->filter(fn (OtBooking $b) => $b->payment_status !== 'paid')
-            ->map(fn (OtBooking $b) => [
+            ->filter(fn(OtBooking $b) => $b->payment_status !== 'paid')
+            ->map(fn(OtBooking $b) => [
                 $b->patient?->full_name ?? '-',
                 $b->patient?->contact_no ?? '-',
                 number_format((float) ($b->package_amount ?? 0), 2),
