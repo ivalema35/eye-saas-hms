@@ -226,4 +226,3 @@ rendered above the content instead. --}}
     }
 </style>
 @endpush
-
