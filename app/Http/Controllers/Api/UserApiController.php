@@ -388,7 +388,17 @@ class UserApiController extends Controller
             $base['doctor_type']       = $user->doctor_type;
             $base['doctor_prefix']     = $user->doctor_prefix;
             $base['registration_no']   = $user->registration_no;
-            $base['experience_years']  = $user->experience_years;
+            // (int) cast here, not a model $cast — HospitalUser.php is
+            // shared with web, which never hits this bug (it redirects to a
+            // fresh GET after save, re-fetching from the DB with the
+            // correct native type regardless). This API response is the
+            // only place that serializes a model straight to JSON right
+            // after `::create()`/`->update()` on an uncast attribute, which
+            // — since every multipart/form-data field arrives as a string —
+            // otherwise stays a string in memory and breaks the apps'
+            // `(j[...] as num?)` parsing right after a successful save. See
+            // client report 2026-10-14.
+            $base['experience_years']  = $user->experience_years !== null ? (int) $user->experience_years : null;
             $base['signature_url']     = $user->signature_path
                 ? Storage::disk('public')->url($user->signature_path)
                 : null;
@@ -397,7 +407,7 @@ class UserApiController extends Controller
                 : null;
             // Doctor-only — the OT Assistant auto-assigned when Ward marks
             // this doctor's patient "Ready for OT" (web pull 2026-10-12).
-            $base['default_ot_assistant_id'] = $user->default_ot_assistant_id;
+            $base['default_ot_assistant_id'] = $user->default_ot_assistant_id !== null ? (int) $user->default_ot_assistant_id : null;
             $base['default_ot_assistant'] = $user->relationLoaded('defaultOtAssistant') && $user->defaultOtAssistant
                 ? ['id' => $user->defaultOtAssistant->id, 'name' => $user->defaultOtAssistant->name]
                 : null;

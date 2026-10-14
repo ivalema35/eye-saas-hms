@@ -348,14 +348,13 @@ class OtCounsellorApiController extends Controller
             'surgeon_charges' => ['nullable', 'numeric', 'min:0'],
             'nursing_charges' => ['nullable', 'numeric', 'min:0'],
             'consumables_charges' => ['nullable', 'numeric', 'min:0'],
-            'payment_mode' => [
-                'nullable',
-                Rule::in(
-                    filter_var($request->input('mediclaim'), FILTER_VALIDATE_BOOLEAN)
-                        ? ['mediclaim']
-                        : ['cash', 'online']
-                ),
-            ],
+            // Web pull (same one that dropped the counselling form's old
+            // mediclaim↔payment_mode JS auto-sync): Mediclaim and Payment
+            // Mode are independent fields now — Mediclaim is "does this
+            // claim have insurance" (drives OtAccountantController's
+            // export_amount halving), Payment Mode is "how was it
+            // collected," freely any of the 3 regardless of the other.
+            'payment_mode' => ['nullable', Rule::in(['cash', 'online', 'mediclaim'])],
             'report_ok' => ['nullable', 'boolean'],
             'blood_reports_verified' => ['required', 'boolean'],
             'blood_reports_normal' => ['required', 'boolean'],
