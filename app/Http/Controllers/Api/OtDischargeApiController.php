@@ -567,7 +567,23 @@ class OtDischargeApiController extends Controller
         ) ?? $html;
         $html = preg_replace(
             '/<\/head>/i',
-            '<style>html,body{margin:0 !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}</style></head>',
+            '<style>html,body{margin:0 !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}'
+            // DomPDF has no flexbox support (confirmed: dompdf/dompdf ^3.0,
+            // still CSS2.1 + partial CSS3, no display:flex layout engine at
+            // all) — the web-only letterhead header added 2026-10-13
+            // (.header / .print-logo, both `display:flex`) silently renders
+            // broken/invisible here regardless of the `letter_pad` setting,
+            // which is exactly why toggling it saved correctly but never
+            // visibly changed anything in the apps' downloaded PDFs (client
+            // report 2026-10-14) — web itself never hits this, since it
+            // renders that header in a real browser via window.print(), a
+            // completely different path from this DomPDF route. Re-laid out
+            // here as DomPDF's well-supported table/table-cell alternative,
+            // overriding the original (DomPDF-ignored) flex rules by
+            // specificity — the blade file itself is untouched, so web's
+            // own browser-rendered print is completely unaffected.
+            .'.header{display:table !important;width:100% !important;}.header>div{display:table-cell !important;vertical-align:middle !important;}.header>div.print-logo{width:52px !important;text-align:center !important;}'
+            .'</style></head>',
             $html,
             1
         ) ?? $html;
