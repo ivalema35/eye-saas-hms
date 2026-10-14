@@ -327,8 +327,9 @@ class OtDischargeApiController extends Controller
 
         $lineItems = is_string($invoice->line_items) ? (json_decode($invoice->line_items, true) ?: []) : (array) $invoice->line_items;
 
-        return Pdf::loadView('hospital.ot.billing.invoice_print', compact('booking', 'invoice', 'lineItems', 'slug'))
-            ->download("Invoice_{$bookingId}.pdf");
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.invoice_print', compact('booking', 'invoice', 'lineItems', 'slug'));
+
+        return Pdf::loadHTML($html)->download("Invoice_{$bookingId}.pdf");
     }
 
     public function summaryBillPrint(string $slug, int $bookingId): Response
@@ -413,11 +414,13 @@ class OtDischargeApiController extends Controller
 
         $surgery = $this->latestSurgery($bookingId);
 
-        return Pdf::loadView('hospital.ot.billing.medicine_slip_print', [
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.medicine_slip_print', [
             'booking' => $booking,
             'surgery' => $surgery,
             'wardMedicines' => $surgery?->medicinesForPrint() ?? [],
-        ])->download("MedicineSlip_{$bookingId}.pdf");
+        ]);
+
+        return Pdf::loadHTML($html)->download("MedicineSlip_{$bookingId}.pdf");
     }
 
     public function prescriptionPrint(string $slug, int $bookingId): Response
@@ -432,12 +435,14 @@ class OtDischargeApiController extends Controller
 
         $surgery = $this->latestSurgery($bookingId);
 
-        return Pdf::loadView('hospital.ot.billing.prescription_print', [
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.prescription_print', [
             'booking' => $booking,
             'surgery' => $surgery,
             'wardMedicines' => $surgery?->medicinesForPrint() ?? [],
             'slug' => $slug,
-        ])->download("Prescription_{$bookingId}.pdf");
+        ]);
+
+        return Pdf::loadHTML($html)->download("Prescription_{$bookingId}.pdf");
     }
 
     public function lensSlipPrint(string $slug, int $bookingId): Response
@@ -452,8 +457,9 @@ class OtDischargeApiController extends Controller
 
         $lensDetail = DB::table('ot_lens_details')->where('tenant_id', $tenantId)->where('ot_booking_id', $booking->id)->latest('id')->first();
 
-        return Pdf::loadView('hospital.ot.billing.lens_slip_print', compact('booking', 'lensDetail', 'slug'))
-            ->download("LensSlip_{$bookingId}.pdf");
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.lens_slip_print', compact('booking', 'lensDetail', 'slug'));
+
+        return Pdf::loadHTML($html)->download("LensSlip_{$bookingId}.pdf");
     }
 
     public function followupSlipPrint(string $slug, int $bookingId): Response
@@ -469,8 +475,9 @@ class OtDischargeApiController extends Controller
         $invoice = DB::table('ot_invoices')->where('tenant_id', $tenantId)->where('ot_booking_id', $booking->id)->first();
         abort_if(! $invoice, 404, 'Generate the invoice/discharge first to set a follow-up date.');
 
-        return Pdf::loadView('hospital.ot.billing.followup_slip_print', compact('booking', 'invoice', 'slug'))
-            ->download("FollowupSlip_{$bookingId}.pdf");
+        $html = $this->domPdfSafeHtml('hospital.ot.billing.followup_slip_print', compact('booking', 'invoice', 'slug'));
+
+        return Pdf::loadHTML($html)->download("FollowupSlip_{$bookingId}.pdf");
     }
 
     /**
@@ -548,6 +555,67 @@ class OtDischargeApiController extends Controller
      * never goes through this code path), are completely unaffected by any
      * of this.
      */
+    /**
+     * DomPDF has no flexbox support (confirmed: dompdf/dompdf ^3.0, still
+     * CSS2.1 + partial CSS3, no display:flex layout engine at all) — every
+     * one of the 8 OT billing documents' web-only letterhead header (web
+     * pull 2026-10-13, `letter_pad` setting) uses `display:flex` somewhere
+     * in its header, and silently renders broken/stacked here regardless
+     * of the setting — which is exactly why toggling `letter_pad` saved
+     * correctly but never visibly changed anything in the apps' downloaded
+     * PDFs (client report 2026-10-14). Web itself never hits this: it
+     * renders these headers in a real browser via `window.print()`, a
+     * completely different path from this DomPDF route. Re-laid out below
+     * as DomPDF's well-supported table/table-cell alternative, overriding
+     * the original (DomPDF-ignored) flex rules by specificity — the blade
+     * files themselves are untouched, so web's own browser-rendered print
+     * is completely unaffected.
+     *
+     * Three header shapes exist across the 8 blades (confirmed by reading
+     * each one, not assumed):
+     *  - certificate/discharge/summary_bill_print: `.header` is a
+     *    `<style>`-block class, used ONLY for the branded (non-letterhead)
+     *    case — safe to table-ify unconditionally.
+     *  - medicine_slip/prescription/lens_slip/followup_slip_print:
+     *    `.header` is reused for BOTH states — inline `style="display:flex"`
+     *    on the branded case, a plain stacked (non-flex) `.header` on the
+     *    letterhead case. A blanket override would wrongly table-ify that
+     *    second, already-correct case too, so this is scoped to only the
+     *    `.header` that actually carries an inline flex style.
+     *  - invoice_print: `.header` itself is inline-flex on the letterhead
+     *    case (title + generated-date, space-between) but plain on the
+     *    branded case, which instead nests its own flex row (logo + text)
+     *    one level inside `.header` — both forms are covered.
+     */
+    private function dompdfHeaderFixCss(string $view): string
+    {
+        $inlineHeaderViews = [
+            'hospital.ot.billing.medicine_slip_print',
+            'hospital.ot.billing.prescription_print',
+            'hospital.ot.billing.lens_slip_print',
+            'hospital.ot.billing.followup_slip_print',
+        ];
+
+        if (in_array($view, $inlineHeaderViews, true)) {
+            return '.header[style*="flex"]{display:table !important;width:100% !important;}'
+                .'.header[style*="flex"]>*{display:table-cell !important;vertical-align:middle !important;}'
+                .'.header[style*="flex"]>div:first-child{text-align:center !important;}';
+        }
+
+        if ($view === 'hospital.ot.billing.invoice_print') {
+            return '.header[style*="flex"]{display:table !important;width:100% !important;}'
+                .'.header[style*="flex"]>*{display:table-cell !important;vertical-align:middle !important;}'
+                .'.header div[style*="align-items"]{display:table !important;width:100% !important;}'
+                .'.header div[style*="align-items"]>*{display:table-cell !important;vertical-align:middle !important;}'
+                .'.print-logo{text-align:center !important;}';
+        }
+
+        // certificate_print / discharge_print / summary_bill_print.
+        return '.header{display:table !important;width:100% !important;}'
+            .'.header>div{display:table-cell !important;vertical-align:middle !important;}'
+            .'.print-logo{text-align:center !important;}';
+    }
+
     private function domPdfSafeHtml(string $view, array $data): string
     {
         $html = view($view, $data)->render();
@@ -568,21 +636,7 @@ class OtDischargeApiController extends Controller
         $html = preg_replace(
             '/<\/head>/i',
             '<style>html,body{margin:0 !important;}.page{width:100% !important;max-width:100% !important;margin:0 !important;padding:0 !important;box-sizing:border-box !important;}'
-            // DomPDF has no flexbox support (confirmed: dompdf/dompdf ^3.0,
-            // still CSS2.1 + partial CSS3, no display:flex layout engine at
-            // all) — the web-only letterhead header added 2026-10-13
-            // (.header / .print-logo, both `display:flex`) silently renders
-            // broken/invisible here regardless of the `letter_pad` setting,
-            // which is exactly why toggling it saved correctly but never
-            // visibly changed anything in the apps' downloaded PDFs (client
-            // report 2026-10-14) — web itself never hits this, since it
-            // renders that header in a real browser via window.print(), a
-            // completely different path from this DomPDF route. Re-laid out
-            // here as DomPDF's well-supported table/table-cell alternative,
-            // overriding the original (DomPDF-ignored) flex rules by
-            // specificity — the blade file itself is untouched, so web's
-            // own browser-rendered print is completely unaffected.
-            .'.header{display:table !important;width:100% !important;}.header>div{display:table-cell !important;vertical-align:middle !important;}.header>div.print-logo{width:52px !important;text-align:center !important;}'
+            .$this->dompdfHeaderFixCss($view)
             .'</style></head>',
             $html,
             1
