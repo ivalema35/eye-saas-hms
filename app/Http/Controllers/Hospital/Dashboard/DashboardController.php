@@ -78,14 +78,17 @@ class DashboardController extends Controller
         // Today's patients and pending exam queue. Counts stay 0 when empty —
         // UI still renders; uncheck the Role → Dashboard widget to hide.
         $todayPatients = null;
+        $todayPendingWalkin = null;
         $pendingExams = null;
         $todayPrimary = null;
         $todaySecondary = null;
+        $todayPrimaryAwaitingSecondary = null;
         $otPipelineCount = 0;
         $primaryQueue = null;
         $doctorName = null;
         $doctorAssignedPatients = null;
         $doctorPrimaryDone = null;
+        $doctorPrimaryAwaitingSecondary = null;
         $doctorSecondaryDone = null;
         $secondaryQueue = null;
         $primaryQueueCount = null;
@@ -96,11 +99,24 @@ class DashboardController extends Controller
             $pendingExams = Patient::whereDate('appointment_date', $today)
                 ->whereNull('primary_done_at')
                 ->count();
+            // Hospital-wide "walk-in still pending" — whole hospital, not doctor-scoped.
+            // Same predicate as $primaryQueueCount below (per-doctor pending queue),
+            // just without the doctor filter. Feeds the doctor dashboard's top "C:" badge.
+            $todayPendingWalkin = Patient::whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->where(fn($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+                ->count();
             $todayPrimary = Patient::whereDate('appointment_date', $today)
                 ->whereNotNull('primary_done_at')
                 ->count();
             $todaySecondary = Patient::whereDate('appointment_date', $today)
                 ->whereNotNull('secondary_done_at')
+                ->count();
+            // Doctor dashboard's PC badge: primary done but NOT secondary — so a
+            // patient who finished both only counts once, under SC (not both PC and SC).
+            $todayPrimaryAwaitingSecondary = Patient::whereDate('appointment_date', $today)
+                ->whereNotNull('primary_done_at')
+                ->whereNull('secondary_done_at')
                 ->count();
             $otPipelineCount = OtBooking::query()
                 ->betweenCounsellingAndAssistant($today, $today)
@@ -272,13 +288,24 @@ class DashboardController extends Controller
                     $secondaryQueue = collect();
                 } else {
 
+                    // Patient = this doctor's walk-ins still pending (not yet examined),
+                    // same predicate as the hospital-wide $todayPendingWalkin above.
                     $doctorAssignedPatients = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
+                        ->whereNull('primary_done_at')
+                        ->where(fn($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
                         ->count();
                     // P = primary exam completed (any); S = secondary completed
                     $doctorPrimaryDone = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
                         ->whereNotNull('primary_done_at')
+                        ->count();
+                    // Doctor dashboard's P badge: primary done but NOT secondary, so a
+                    // patient who finished both counts once, under S (not both P and S).
+                    $doctorPrimaryAwaitingSecondary = Patient::where('doctor_id', $statsDoctorId)
+                        ->whereDate('appointment_date', $today)
+                        ->whereNotNull('primary_done_at')
+                        ->whereNull('secondary_done_at')
                         ->count();
                     $doctorSecondaryDone = Patient::where('doctor_id', $statsDoctorId)
                         ->whereDate('appointment_date', $today)
@@ -890,8 +917,12 @@ class DashboardController extends Controller
             $doctorStatsById = Patient::whereDate('appointment_date', $today)
                 ->whereIn('doctor_id', $doctorCards->pluck('id'))
                 ->select('doctor_id')
-                ->selectRaw('COUNT(*) as assigned_today')
-                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL THEN 1 ELSE 0 END) as primary_count')
+                // assigned_today = pending walk-ins for this doctor (not yet examined),
+                // same predicate as $doctorAssignedPatients / $todayPendingWalkin above.
+                ->selectRaw("SUM(CASE WHEN primary_done_at IS NULL AND (type != 'phone' OR checked_in_at IS NOT NULL) THEN 1 ELSE 0 END) as assigned_today")
+                // P = primary done but NOT secondary, so a patient who finished both
+                // counts once, under S — never both P and S.
+                ->selectRaw('SUM(CASE WHEN primary_done_at IS NOT NULL AND secondary_done_at IS NULL THEN 1 ELSE 0 END) as primary_count')
                 ->selectRaw('SUM(CASE WHEN secondary_done_at IS NOT NULL THEN 1 ELSE 0 END) as secondary_count')
                 ->groupBy('doctor_id')
                 ->get()
@@ -1017,6 +1048,7 @@ class DashboardController extends Controller
                 'doctorName',
                 'doctorAssignedPatients',
                 'doctorPrimaryDone',
+                'doctorPrimaryAwaitingSecondary',
                 'doctorSecondaryDone',
                 'doctorCards',
                 'viewingDoctor',
@@ -1025,7 +1057,9 @@ class DashboardController extends Controller
                 'otPendingQueue',
                 'otCompletedQueue',
                 'todayPatients',
+                'todayPendingWalkin',
                 'todayPrimary',
+                'todayPrimaryAwaitingSecondary',
                 'todaySecondary',
                 'otPipelineCount',
                 'todayOtWalkins',
