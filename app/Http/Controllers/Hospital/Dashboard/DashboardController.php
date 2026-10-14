@@ -9,6 +9,7 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Hospital\Medicine;
 use App\Models\Hospital\OT\OtAppointment;
 use App\Models\Hospital\OT\OtBooking;
+use App\Models\Hospital\OT\OtLensDetail;
 use App\Models\Hospital\Patient;
 use App\Models\Hospital\PrimaryExamination;
 use App\Models\Hospital\SecondaryExamination;
@@ -768,6 +769,7 @@ class DashboardController extends Controller
                 'users' => HospitalUser::count(),
                 'medicines' => Medicine::count(),
                 'ot_appointments_today' => OtAppointment::whereDate('appointment_date', $today)->count(),
+                'lens_today' => OtLensDetail::where('is_implanted', true)->whereDate('implanted_at', $today)->count(),
             ];
         }
 

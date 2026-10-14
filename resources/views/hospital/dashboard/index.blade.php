@@ -209,10 +209,10 @@
         }
 
         /*
-                                                  Hospital Admin Dashboard Theme
-                                                  Primary soft: #EBF5FB · Secondary: #1B4F72
-                                                  Hover: soft neutral shadow (no blue glow)
-                                                */
+                                                          Hospital Admin Dashboard Theme
+                                                          Primary soft: #EBF5FB · Secondary: #1B4F72
+                                                          Hover: soft neutral shadow (no blue glow)
+                                                        */
 
         /* ── Theme tokens (scoped to this page) ────────────────────────────────── */
         .bento-page {
@@ -534,8 +534,8 @@
         }
 
         /* Type-colored icon badges — same idea as the receptionist 5-card row:
-                                                   each stat gets a pastel background tinted to match its own icon color
-                                                   (set inline per-icon), instead of one flat neutral tone. */
+                                                           each stat gets a pastel background tinted to match its own icon color
+                                                           (set inline per-icon), instead of one flat neutral tone. */
         .ig-blue {
             background: #EBF5FB !important;
             border: 1px solid rgba(27, 79, 114, .18) !important;
@@ -883,22 +883,22 @@
         }
 
         /* .dashboard-table-scroll .bento-table {
-                                                    min-width: 980px;
-                                                    width: max-content;
-                                                    width: -moz-max-content;
-                                                } */
+                                                            min-width: 980px;
+                                                            width: max-content;
+                                                            width: -moz-max-content;
+                                                        } */
 
         /* .dashboard-table-scroll .bento-table thead th {
-                                                    position: sticky;
-                                                    top: 0;
-                                                    z-index: 2;
-                                                    background: var(--dash-secondary);
-                                                } */
+                                                            position: sticky;
+                                                            top: 0;
+                                                            z-index: 2;
+                                                            background: var(--dash-secondary);
+                                                        } */
 
         /* .dashboard-table-scroll .bento-table thead th:first-child {
-                                                    left: 0;
-                                                    z-index: 3;
-                                                } */
+                                                            left: 0;
+                                                            z-index: 3;
+                                                        } */
 
         .rec-detail-btn {
             display: inline-flex;
@@ -1753,38 +1753,38 @@
         @endhasanypermission
 
         @haspermission('medicine_view')
-            <a href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}"
+        <a href="{{ route('hospital.medicines.index', ['slug' => $slug]) }}"
+            class="bento-card span-2 text-decoration-none">
+            <span class="bento-gloss" aria-hidden="true"></span>
+            <div class="bento-stat">
+                <div class="bento-icon ig-purple">
+                    <i class="bi bi-capsule" style="font-size:22px;color:#8E44AD"></i>
+                </div>
+                <div>
+                    <p class="metric-label">Medicines</p>
+                    <div class="metric-value">{{ number_format($quickLinkCounts['medicines'] ?? 0) }}</div>
+                    <p class="metric-meta">Medicine master list</p>
+                </div>
+            </div>
+        </a>
+        @endhaspermission
+
+        @hasanypermission('report_view|ot_reports_view')
+            <a href="{{ route('hospital.reports.ot.lens-report', ['slug' => $slug]) }}"
                 class="bento-card span-2 text-decoration-none">
                 <span class="bento-gloss" aria-hidden="true"></span>
                 <div class="bento-stat">
-                    <div class="bento-icon ig-purple">
-                        <i class="bi bi-capsule" style="font-size:22px;color:#8E44AD"></i>
+                    <div class="bento-icon ig-cobalt">
+                        <i class="bi bi-eyeglasses" style="font-size:22px;color:#2980B9"></i>
                     </div>
                     <div>
-                        <p class="metric-label">Medicines</p>
-                        <div class="metric-value">{{ number_format($quickLinkCounts['medicines'] ?? 0) }}</div>
-                        <p class="metric-meta">Medicine master list</p>
+                        <p class="metric-label">Lens Report</p>
+                        <div class="metric-value">{{ number_format($quickLinkCounts['lens_today'] ?? 0) }}</div>
+                        <p class="metric-meta">Lenses used today</p>
                     </div>
                 </div>
             </a>
-            @endhaspermission
-
-            <!-- @haspermission('medicine_view')
-                <a href="{{ route('hospital.reports.ot.lens-report', ['slug' => $slug]) }}"
-                    class="bento-card span-2 text-decoration-none">
-                    <span class="bento-gloss" aria-hidden="true"></span>
-                    <div class="bento-stat">
-                        <div class="bento-icon ig-purple">
-                            <i class="bi bi-capsule" style="font-size:22px;color:#8E44AD"></i>
-                        </div>
-                        <div>
-                            <p class="metric-label">Lens Report</p>
-                            <div class="metric-value">{{ number_format($quickLinkCounts['medicines'] ?? 0) }}</div>
-                            <p class="metric-meta">Lens Report</p>
-                        </div>
-                    </div>
-                </a>
-                @endhaspermission -->
+            @endhasanypermission
 
         @else
         {{-- Non-admin: existing card set (unchanged) --}}
@@ -2914,9 +2914,9 @@
             <div class="col-12">
                 <div class="tap-table-wrap">
                     <!-- <div class="tap-header">
-                                                                <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
-                                                                <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
-                                                            </div> -->
+                                                                        <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
+                                                                        <span class="tap-count">{{ $receptionistTodayPatients->count() }} today</span>
+                                                                    </div> -->
                     <div class="tap-header">
                         <h3 class="tap-title"><i class="bi bi-people-fill"></i> Today Added Patients</h3>
 
