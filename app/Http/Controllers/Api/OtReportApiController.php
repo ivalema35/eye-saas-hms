@@ -90,29 +90,76 @@ class OtReportApiController extends OtReportController
     }
 
     /**
-     * JSON mirror of the parent's lensReport() (which returns a View) — same
-     * buildLensReportData()/resolveLensReportDateRange() (both changed from
-     * private to protected on the parent for exactly this reuse, same as
-     * buildReport()/resolveDateRange() above). lensReportExport() is
-     * inherited UNCHANGED (not overridden) — it already returns a file
-     * download, no View involved, so the API route points straight at it.
+     * JSON mirror of the parent's lensReport() (which returns a View).
+     * Deliberately self-contained (not reusing the parent's private
+     * resolveLensReportDateRange()/buildLensReportData() — those stay
+     * private and web-only) rather than widening the web controller's
+     * surface for this API's sake. lensReportExport() is inherited
+     * UNCHANGED (not overridden) — it already returns a file download, no
+     * View involved, so the API route points straight at it.
      */
     public function apiLensReport(Request $request, string $slug): JsonResponse
     {
-        [$from, $to] = $this->resolveLensReportDateRange($request);
+        $validated = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+        ]);
+
+        $today = now()->toDateString();
+        $fromDate = $validated['from'] ?? $today;
+        $toDate = $validated['to'] ?? $today;
+        if ($toDate < $fromDate) {
+            [$fromDate, $toDate] = [$toDate, $fromDate];
+        }
+        $from = Carbon::parse($fromDate)->startOfDay();
+        $to = Carbon::parse($toDate)->endOfDay();
+
         $tenantId = (int) app('tenant')->id;
 
-        $data = $this->buildLensReportData($tenantId, $from, $to);
+        $lensDetails = OtLensDetail::query()
+            ->with([
+                'booking.patient:id,patient_code,first_name,middle_name,last_name',
+                'booking.otDoctor:id,name',
+                'inventoryItem:id,lens_code,manufacturer',
+            ])
+            ->where('tenant_id', $tenantId)
+            ->where('is_implanted', true)
+            ->whereBetween('implanted_at', [$from, $to])
+            ->orderByDesc('implanted_at')
+            ->get();
+
+        $summary = [
+            'totalLensesUsed' => $lensDetails->count(),
+            'totalSurgeries' => $lensDetails->pluck('ot_booking_id')->unique()->count(),
+            'uniquePowers' => $lensDetails->pluck('lens_power')->map(fn ($p) => number_format((float) $p, 2))->unique()->count(),
+        ];
+
+        $powerSummary = $lensDetails
+            ->groupBy(fn (OtLensDetail $d) => number_format((float) $d->lens_power, 2))
+            ->map(fn ($group, $power) => ['power' => $power, 'quantity' => $group->count()])
+            ->sortBy(fn ($row) => (float) $row['power'])
+            ->values();
+
+        $detailHeadings = ['Surgery Date', 'Patient Name', 'MRD No.', 'Lens Power', 'Lens Name', 'Lens Company', 'Doctor'];
+        $detailRows = $lensDetails->map(fn (OtLensDetail $d) => [
+            optional($d->implanted_at)->format('d M Y') ?? '-',
+            $d->booking?->patient?->full_name ?? '-',
+            $d->booking?->patient?->patient_code ?? '-',
+            '+'.number_format((float) $d->lens_power, 2).'D',
+            $d->lens_name ?: '-',
+            $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
+            $d->booking?->otDoctor?->name ?? '-',
+        ])->all();
 
         return response()->json([
             'success' => true,
             'data' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),
-                'summary' => $data['summary'],
-                'power_summary' => $data['powerSummary'],
-                'detail_headings' => $data['detailHeadings'],
-                'detail_rows' => $data['detailRows'],
+                'summary' => $summary,
+                'power_summary' => $powerSummary,
+                'detail_headings' => $detailHeadings,
+                'detail_rows' => $detailRows,
             ],
         ]);
     }

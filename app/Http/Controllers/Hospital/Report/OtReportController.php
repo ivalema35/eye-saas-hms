@@ -193,7 +193,7 @@ class OtReportController extends Controller
     /**
      * @return array{0: Carbon, 1: Carbon}
      */
-    protected function resolveLensReportDateRange(Request $request): array
+    private function resolveLensReportDateRange(Request $request): array
     {
         $validated = $request->validate([
             'from' => ['nullable', 'date'],
@@ -214,7 +214,7 @@ class OtReportController extends Controller
     /**
      * @return array{summary: array{totalLensesUsed: int, totalSurgeries: int, uniquePowers: int}, powerSummary: \Illuminate\Support\Collection, detailHeadings: list<string>, detailRows: list<array<int, mixed>>}
      */
-    protected function buildLensReportData(int $tenantId, Carbon $from, Carbon $to): array
+    private function buildLensReportData(int $tenantId, Carbon $from, Carbon $to): array
     {
         $lensDetails = OtLensDetail::query()
             ->with([
