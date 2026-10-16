@@ -34,14 +34,14 @@
     }
 
     .user-form-modal .modal-header {
-        background: linear-gradient(135deg, rgba(235, 245, 251, .96), rgba(255, 255, 255, .94));
+        background: #1b4f72;
         border-bottom: 1px solid rgba(27, 79, 114, .12) !important;
         padding: 1.25rem 1.5rem !important;
     }
 
     .user-form-modal .modal-title,
     .user-form-modal .form-label {
-        color: #1B4F72;
+        color: #ffffff;
         font-weight: 900;
     }
 
@@ -53,8 +53,8 @@
     }
 
     .user-form-modal .btn-close {
-        width: 34px;
-        height: 34px;
+        width: 25px;
+        height: 25px;
         border-radius: 50%;
         background-color: rgba(255, 255, 255, .92);
         border: 1px solid rgba(27, 79, 114, .14);
@@ -180,7 +180,8 @@
                             <input type="text" name="name" id="user-name" value="{{ old('name') }}"
                                 class="hms-input @error('name') is-invalid @enderror" placeholder="Enter full name"
                                 required>
-                            @error('name')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('name')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
@@ -189,23 +190,24 @@
                                 class="hms-select @error('role_id') is-invalid @enderror" required>
                                 <option value="">Select Role</option>
                                 @foreach($roles as $role)
-                                    <option value="{{ $role->id }}"
-                                        data-slug="{{ $role->slug }}"
+                                    <option value="{{ $role->id }}" data-slug="{{ $role->slug }}"
                                         data-doctor-fields="{{ !empty($role->shows_doctor_fields) ? '1' : '0' }}"
                                         @selected(old('role_id') == $role->id)>
                                         {{ $role->name }}
                                     </option>
                                 @endforeach
                             </select>
-                            @error('role_id')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('role_id')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
                             <label>Contact</label>
                             <input type="text" name="contact" id="user-contact" value="{{ old('contact') }}"
-                                class="hms-input @error('contact') is-invalid @enderror"
-                                placeholder="+919876543210" data-intl-phone>
-                            @error('contact')<div class="hms-field-error">{{ $message }}</div>@enderror
+                                class="hms-input @error('contact') is-invalid @enderror" placeholder="+919876543210"
+                                data-intl-phone>
+                            @error('contact')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
@@ -213,7 +215,8 @@
                             <input type="email" name="email" id="user-email" value="{{ old('email') }}"
                                 class="hms-input @error('email') is-invalid @enderror" placeholder="name@example.com"
                                 required>
-                            @error('email')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('email')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
@@ -231,7 +234,8 @@
                                     </svg>
                                 </button>
                             </div>
-                            @error('password')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('password')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group">
@@ -258,7 +262,8 @@
                                 <option value="active" @selected(old('status', 'active') === 'active')>Active</option>
                                 <option value="inactive" @selected(old('status') === 'inactive')>Inactive</option>
                             </select>
-                            @error('status')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('status')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <!-- <div class="hms-form-group user-doctor-only" style="display:none">
@@ -280,7 +285,8 @@
                             <div style="font-size:.72rem;color:#94A3B8;margin-top:.2rem">Daily serial format:
                                 <strong>JP-001, JP-002…</strong>
                             </div>
-                            @error('doctor_prefix')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('doctor_prefix')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
@@ -288,7 +294,8 @@
                             <input type="text" name="registration_no" id="user-registration-no"
                                 class="hms-input @error('registration_no') is-invalid @enderror"
                                 placeholder="e.g. MCI-12345">
-                            @error('registration_no')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('registration_no')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
@@ -296,7 +303,8 @@
                                     style="font-size:.75rem;color:#64748B;font-weight:400">(years)</span></label>
                             <input type="number" name="experience_years" id="user-experience-years" min="0" max="60"
                                 class="hms-input @error('experience_years') is-invalid @enderror" placeholder="e.g. 5">
-                            @error('experience_years')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('experience_years')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
@@ -315,7 +323,8 @@
                                 <img src="" alt="Current Signature"
                                     style="max-height:44px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
                             </div>
-                            @error('signature')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('signature')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
@@ -334,11 +343,14 @@
                                 <img src="" alt="Current Photo"
                                     style="max-height:55px;border:1px solid rgba(27,79,114,.15);border-radius:8px;padding:3px;">
                             </div>
-                            @error('profile_photo')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('profile_photo')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="hms-form-group user-doctor-only" style="display:none">
-                            <label>Connected OT Assistant <span style="font-size:.75rem;color:#64748B;font-weight:400">(auto-assigned on Ready for OT)</span></label>
+                            <label>Connected OT Assistant <span
+                                    style="font-size:.75rem;color:#64748B;font-weight:400">(auto-assigned on Ready for
+                                    OT)</span></label>
                             <select name="default_ot_assistant_id" id="user-default-ot-assistant-id"
                                 class="hms-select @error('default_ot_assistant_id') is-invalid @enderror">
                                 <option value="">None</option>
@@ -348,7 +360,8 @@
                                     <option value="" disabled>No OT Assistants yet — add one first</option>
                                 @endforelse
                             </select>
-                            @error('default_ot_assistant_id')<div class="hms-field-error">{{ $message }}</div>@enderror
+                            @error('default_ot_assistant_id')
+                            <div class="hms-field-error">{{ $message }}</div>@enderror
                         </div>
                     </div>
                 </div>
@@ -356,7 +369,7 @@
                 <div class="modal-footer border-0 gap-2">
                     <button type="button" class="hms-btn hms-btn-outline" data-bs-dismiss="modal">Cancel</button>
                     <button type="submit" class="hms-btn hms-btn-primary" id="userFormSubmitBtn">
-                        <i class="fa-solid fa-check"></i> Save User
+                        Save User
                     </button>
                 </div>
             </form>
@@ -475,7 +488,7 @@
 
         function resetUserForm() {
             document.getElementById('userFormModalTitle').innerText = 'Add User';
-            document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
+            document.getElementById('userFormSubmitBtn').innerHTML = 'Save User';
             document.getElementById('userForm').action = userStoreUrl;
             document.getElementById('userFormMethod').value = 'POST';
             document.getElementById('user-id').value = '';
@@ -607,7 +620,7 @@
                         setUserPasswordRequired(true);
                     } else {
                         document.getElementById('userFormModalTitle').innerText = 'Add User';
-                        document.getElementById('userFormSubmitBtn').innerHTML = '<i class="fa-solid fa-check"></i> Save User';
+                        document.getElementById('userFormSubmitBtn').innerHTML = 'Save User';
                         document.getElementById('userForm').action = userStoreUrl;
                         setUserPasswordRequired(true);
                     }
@@ -619,6 +632,6 @@
             @else
                 resetUserForm();
             @endif
-                });
+                                            });
     </script>
 @endpush
