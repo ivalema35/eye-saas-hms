@@ -48,9 +48,15 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
                                 <span class="ot-breadcrumb-current">Booking #{{ $booking->id }}</span>
                             </nav>
                         </div>
-                        <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-                            <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-                        </a>
+                        <div class="ot-header-actions">
+                            <div class="ot-payment-amount">
+                                <span>Amount Being Paid Now</span>
+                                <strong>{{ currency_code() }} {{ number_format((float) $defaultPackageAmount, 2) }}</strong>
+                            </div>
+                            <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -207,6 +213,38 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
             gap: .75rem;
         }
 
+        .ot-header-actions {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: .65rem;
+        }
+
+        .ot-payment-amount {
+            display: inline-flex;
+            align-items: center;
+            gap: .5rem;
+            min-height: 34px;
+            padding: .35rem .7rem;
+            border: 1px solid rgba(39, 174, 96, .25);
+            border-radius: 6px;
+            background: #eef9f1;
+            color: var(--oc-primary);
+            font-size: .75rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .ot-payment-amount span {
+            color: var(--oc-muted);
+        }
+
+        .ot-payment-amount strong {
+            color: var(--oc-success);
+            font-size: .85rem;
+        }
+
         .ot-header-title {
             display: flex;
             align-items: center;
@@ -260,6 +298,13 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
             background: var(--oc-soft);
             border-color: var(--oc-primary);
             color: var(--oc-primary);
+        }
+
+        @media (max-width: 576px) {
+            .ot-header-actions {
+                width: 100%;
+                justify-content: flex-start;
+            }
         }
 
         /* ── Card ────────────────────────────────────────────────── */

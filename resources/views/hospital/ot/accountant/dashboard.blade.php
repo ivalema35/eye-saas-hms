@@ -136,40 +136,68 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
             gap: .6rem;
         }
 
-        .ota-filter-wrap {
+        .ota-date-form {
             display: inline-flex;
             align-items: center;
-            gap: .45rem;
-            background: rgba(255, 255, 255, .8);
-            border: 1px solid var(--ota-secondary-12);
-            border-radius: 999px;
-            padding: .25rem;
-            box-shadow: 0 8px 18px rgba(27, 79, 114, .08);
+            margin: 0;
         }
 
-        .ota-filter-btn {
+        .ota-date-input {
+            min-width: 250px;
+            min-height: 42px;
+            border: 0 !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, .95) !important;
+            color: var(--ota-secondary) !important;
+            font-weight: 700;
+        }
+
+        .ota-filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            padding: 1rem 1.5rem;
+            background: #fff;
+            border-bottom: 1px solid var(--ota-secondary-12);
+        }
+
+        .ota-filter-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             text-decoration: none;
-            border: 1px solid transparent;
+            border: 1px solid var(--ota-secondary-18);
             border-radius: 999px;
-            padding: .38rem .75rem;
+            padding: .55rem 1.1rem;
             font-weight: 900;
-            font-size: .75rem;
-            letter-spacing: .04em;
-            color: rgba(27, 79, 114, .72);
-            transition: all 160ms ease;
-        }
-
-        .ota-filter-btn:hover {
+            font-size: .82rem;
             color: var(--ota-secondary);
-            background: rgba(27, 79, 114, .08);
-            border-color: rgba(27, 79, 114, .14);
+            background: #fff;
+            transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
         }
 
-        .ota-filter-btn.active {
+        .ota-filter-tab:hover {
+            color: var(--ota-secondary);
+            background: var(--ota-secondary-06);
+            border-color: var(--ota-secondary-24);
+        }
+
+        .ota-filter-tab.active {
             background: var(--ota-secondary);
             border-color: var(--ota-secondary);
             color: #fff;
             box-shadow: 0 8px 16px rgba(27, 79, 114, .20);
+        }
+
+        @media (max-width: 576px) {
+            .ota-date-input {
+                min-width: 190px;
+            }
+
+            .ota-filter-tabs {
+                padding: .85rem 1rem;
+                overflow-x: auto;
+            }
         }
 
         .ota-table-wrap {
@@ -682,15 +710,15 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                     </div>
                 </div>
                 <div class="ota-head-actions">
-                    @include('hospital.ot.partials.desk-filters', [
-                        'slug' => $slug,
-                        'routeName' => 'hospital.ot.accountant.dashboard',
-                        'activeFilter' => $activeFilter ?? 'queue',
-                        'fromDate' => $fromDate ?? now()->toDateString(),
-                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
-                        'showRefunds' => true,
-                        'alwaysShowDateRange' => true,
-                    ])
+                    <form method="GET" action="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug]) }}"
+                        class="ota-date-form">
+                        <input type="hidden" name="filter" value="{{ $activeFilter ?? 'queue' }}">
+                        <input type="text" class="form-control ota-date-input" data-hms-date-range
+                            data-start-name="from_date" data-end-name="to_date"
+                            data-start-value="{{ $fromDate ?? now()->toDateString() }}"
+                            data-end-value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}"
+                            data-auto-submit="1" placeholder="Date range" autocomplete="off" readonly>
+                    </form>
                     <!-- <a href="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
                         class="ota-total-pill text-decoration-none" title="Collected vs Refunded">
                         Collected {{ money_code((float) ($moneySummary['collected'] ?? 0), 0) }}
@@ -701,6 +729,25 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                         <i class="bi bi-arrow-right-short"></i>
                     </a> -->
                 </div>
+            </div>
+
+            <div class="ota-filter-tabs" role="group" aria-label="OT payment filter">
+                <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'queue']) }}"
+                    class="ota-filter-tab {{ ($activeFilter ?? 'queue') === 'queue' ? 'active' : '' }}">
+                    Queue
+                </a>
+                <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}"
+                    class="ota-filter-tab {{ ($activeFilter ?? 'queue') === 'refunds' ? 'active' : '' }}">
+                    Refunds
+                </a>
+                <a href="{{ route('hospital.ot.accountant.dashboard', [
+                    'slug' => $slug,
+                    'filter' => 'history',
+                    'from_date' => $fromDate ?? now()->toDateString(),
+                    'to_date' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                ]) }}" class="ota-filter-tab {{ ($activeFilter ?? 'queue') === 'history' ? 'active' : '' }}">
+                    All
+                </a>
             </div>
 
             <div class="card-body p-0">
@@ -782,7 +829,7 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                                         <button type="button" class="btn btn-sm btn-outline-secondary ota-view-btn me-2"
                                             data-bs-toggle="modal" data-bs-target="#otaDetailModal{{ $booking->id }}">
                                             <i class="bi bi-eye-fill me-1"></i> View
-                                        </button>+
+                                        </button>
                                         @if(($activeFilter ?? '') === 'history')
                                         @if($booking->payments->isNotEmpty())
                                         @haspermission('ot_bill_print')
