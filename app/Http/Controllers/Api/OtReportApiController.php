@@ -116,39 +116,41 @@ class OtReportApiController extends OtReportController
 
         $tenantId = (int) app('tenant')->id;
 
+        // Mirrors web's OtReportController::buildLensReportData() (web pull
+        // 2026-10-17): one row per full lens configuration (Power + Category +
+        // Company + Model + Type) with how many times it was implanted. Lens
+        // Category lives on ot_counselling, pulled via the booking relation.
         $lensDetails = OtLensDetail::query()
             ->with([
-                'booking.patient:id,patient_code,first_name,middle_name,last_name',
-                'booking.otDoctor:id,name',
+                'booking.counselling:id,ot_booking_id,lens_category',
                 'inventoryItem:id,lens_code,manufacturer',
             ])
             ->where('tenant_id', $tenantId)
             ->where('is_implanted', true)
             ->whereBetween('implanted_at', [$from, $to])
-            ->orderByDesc('implanted_at')
             ->get();
 
-        $summary = [
-            'totalLensesUsed' => $lensDetails->count(),
-            'totalSurgeries' => $lensDetails->pluck('ot_booking_id')->unique()->count(),
-            'uniquePowers' => $lensDetails->pluck('lens_power')->map(fn ($p) => number_format((float) $p, 2))->unique()->count(),
-        ];
-
-        $powerSummary = $lensDetails
-            ->groupBy(fn (OtLensDetail $d) => number_format((float) $d->lens_power, 2))
-            ->map(fn ($group, $power) => ['power' => $power, 'quantity' => $group->count()])
-            ->sortBy(fn ($row) => (float) $row['power'])
+        $breakdown = $lensDetails
+            ->map(fn (OtLensDetail $d) => [
+                'power' => number_format((float) $d->lens_power, 2),
+                'category' => $d->booking?->counselling?->lens_category ? ucfirst($d->booking->counselling->lens_category) : '-',
+                'company' => $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
+                'model' => $d->lens_name ?: '-',
+                'type' => $d->lens_type ?: '-',
+            ])
+            ->groupBy(fn (array $row) => implode('|', $row))
+            ->map(fn ($group) => [...$group->first(), 'count' => $group->count()])
+            ->sortBy(fn (array $row) => (float) $row['power'])
             ->values();
 
-        $detailHeadings = ['Surgery Date', 'Patient Name', 'MRD No.', 'Lens Power', 'Lens Name', 'Lens Company', 'Doctor'];
-        $detailRows = $lensDetails->map(fn (OtLensDetail $d) => [
-            optional($d->implanted_at)->format('d M Y') ?? '-',
-            $d->booking?->patient?->full_name ?? '-',
-            $d->booking?->patient?->patient_code ?? '-',
-            '+'.number_format((float) $d->lens_power, 2).'D',
-            $d->lens_name ?: '-',
-            $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
-            $d->booking?->otDoctor?->name ?? '-',
+        $headings = ['Lens Power', 'Lens Category', 'Lens Company', 'Lens Model', 'Lens Type', 'Count'];
+        $rows = $breakdown->map(fn (array $row) => [
+            '+'.$row['power'].'D',
+            $row['category'],
+            $row['company'],
+            $row['model'],
+            $row['type'],
+            $row['count'],
         ])->all();
 
         return response()->json([
@@ -156,10 +158,8 @@ class OtReportApiController extends OtReportController
             'data' => [
                 'from' => $from->toDateString(),
                 'to' => $to->toDateString(),
-                'summary' => $summary,
-                'power_summary' => $powerSummary,
-                'detail_headings' => $detailHeadings,
-                'detail_rows' => $detailRows,
+                'headings' => $headings,
+                'rows' => $rows,
             ],
         ]);
     }
