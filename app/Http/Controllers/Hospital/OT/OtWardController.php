@@ -262,16 +262,11 @@ class OtWardController extends Controller
             'dose_number' => ['required', 'integer', 'min:1', 'max:20'],
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
-            'dilate' => ['nullable', Rule::in(['Yes', 'No'])],
-            'dilation_time' => ['nullable', 'required_if:dilate,Yes', 'integer', 'min:1', 'max:180'],
         ], [
             'medicine_name.exists' => 'Select a ward medicine.',
             'eye.in' => 'Eye must match Recommend Surgery selection'
                 .(in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' ('.$booking->eye.').' : '.'),
-            'dilation_time.required_if' => 'Enter the dilation time (minutes).',
         ]);
-
-        $dilate = $validated['dilate'] ?? null;
 
         OtDilationEntry::query()->create([
             'tenant_id' => $tenantId,
@@ -283,8 +278,6 @@ class OtWardController extends Controller
             'is_instilled' => true,
             'administered_by' => (int) auth('hospital_user')->id(),
             'remarks' => $validated['remarks'] ?? null,
-            'dilate' => $dilate,
-            'dilation_time' => $dilate === 'Yes' ? ($validated['dilation_time'] ?? null) : null,
         ]);
 
         return redirect()

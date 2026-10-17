@@ -155,7 +155,6 @@ used across the rest of the app. --}}
                                                 <th><i class="bi bi-clock-history me-1"></i>Date / Time</th>
                                                 <th><i class="bi bi-person-badge me-1"></i>Administered By</th>
                                                 <th><i class="bi bi-chat-left-text me-1"></i>Remarks</th>
-                                                <th><i class="bi bi-droplet me-1"></i>Dilate</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -167,17 +166,10 @@ used across the rest of the app. --}}
                                                     <td>{{ optional($drop->administered_at)->format('d M Y, h:i A') }}</td>
                                                     <td>{{ $drop->administeredBy?->name ?? '-' }}</td>
                                                     <td>{{ $drop->remarks ?? '-' }}</td>
-                                                    <td>
-                                                        @if($drop->dilate === 'Yes')
-                                                            <span class="badge ot-type-badge">Yes{{ $drop->dilation_time ? ' · '.$drop->dilation_time.' mins' : '' }}</span>
-                                                        @else
-                                                            -
-                                                        @endif
-                                                    </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="7" class="text-center ot-empty">
+                                                    <td colspan="6" class="text-center ot-empty">
                                                         <i class="bi bi-inbox me-1"></i> No eye drops logged yet.
                                                     </td>
                                                 </tr>
@@ -244,26 +236,6 @@ used across the rest of the app. --}}
                                     <div class="col-md-3">
                                         <label class="form-label">Remarks</label>
                                         <input type="text" name="remarks" class="form-control">
-                                    </div>
-                                    <div class="col-md-2">
-                                        <label class="form-label">Dilate</label>
-                                        <div class="d-flex align-items-center gap-3 pt-2">
-                                            <div class="form-check form-check-inline mb-0">
-                                                <input class="form-check-input" type="radio" name="dilate" id="eyeDropDilateYes" value="Yes">
-                                                <label class="form-check-label" for="eyeDropDilateYes">Yes</label>
-                                            </div>
-                                            <div class="form-check form-check-inline mb-0">
-                                                <input class="form-check-input" type="radio" name="dilate" id="eyeDropDilateNo" value="No" checked>
-                                                <label class="form-check-label" for="eyeDropDilateNo">No</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2" id="eyeDropDilationTimeWrap" style="display:none;">
-                                        <label class="form-label">Dilation Time</label>
-                                        <div class="input-group">
-                                            <input type="number" name="dilation_time" id="eyeDropDilationTime" min="1" max="180" class="form-control" placeholder="Mins">
-                                            <span class="input-group-text">mins</span>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -769,23 +741,3 @@ used across the rest of the app. --}}
     </style>
 @endpush
 
-@push('scripts')
-<script>
-    (function () {
-        const dilateYes = document.getElementById('eyeDropDilateYes');
-        const dilateNo = document.getElementById('eyeDropDilateNo');
-        const timeWrap = document.getElementById('eyeDropDilationTimeWrap');
-        const timeInput = document.getElementById('eyeDropDilationTime');
-
-        function syncDilateUi() {
-            const isYes = dilateYes?.checked;
-            if (timeWrap) timeWrap.style.display = isYes ? '' : 'none';
-            if (!isYes && timeInput) timeInput.value = '';
-        }
-
-        dilateYes?.addEventListener('change', syncDilateUi);
-        dilateNo?.addEventListener('change', syncDilateUi);
-        syncDilateUi();
-    })();
-</script>
-@endpush

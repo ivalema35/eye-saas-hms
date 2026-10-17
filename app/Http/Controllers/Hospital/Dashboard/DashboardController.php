@@ -494,17 +494,25 @@ class DashboardController extends Controller
             $wardBase = fn () => OtBooking::query()->with(OtBooking::WARD_VIEW_RELATIONS);
 
             // Both tabs scoped to today (by last status-change), so the cards and the tables underneath agree.
+            // Preparing/Hold/Complicated hands the patient off to their doctor for
+            // consult (isDoctorConsultationPending()) — they belong on the doctor's
+            // Ward Management queue now, not here, until the doctor sends them back
+            // as Ready for OT.
+            $wardQueueList = $wardBase()
+                ->whereIn('ot_status', [
+                    OtBooking::STATUS_PAYMENT_VERIFIED,
+                    OtBooking::STATUS_IN_WARD,
+                    OtBooking::STATUS_DILATED,
+                ])
+                ->whereDate('updated_at', $today)
+                ->orderBy('surgery_date')
+                ->orderByDesc('id')
+                ->get()
+                ->reject(fn (OtBooking $b) => $b->isDoctorConsultationPending())
+                ->values();
+
             $wardLists = [
-                'queue' => $wardBase()
-                    ->whereIn('ot_status', [
-                        OtBooking::STATUS_PAYMENT_VERIFIED,
-                        OtBooking::STATUS_IN_WARD,
-                        OtBooking::STATUS_DILATED,
-                    ])
-                    ->whereDate('updated_at', $today)
-                    ->orderBy('surgery_date')
-                    ->orderByDesc('id')
-                    ->get(),
+                'queue' => $wardQueueList,
                 'history' => $wardBase()
                     ->whereIn('ot_status', [
                         OtBooking::STATUS_READY,
