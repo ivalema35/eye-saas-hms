@@ -835,8 +835,8 @@ used across the rest of the app. --}}
             // ── OT Medicine Group quick-fill (Phase 4) ──────────────────────
             const medicineGroupPicker = document.getElementById('medicineGroupPicker');
             if (medicineGroupPicker) {
-                medicineGroupPicker.addEventListener('change', function () {
-                    const selected = this.options[this.selectedIndex];
+                const onGroupChange = function () {
+                    const selected = medicineGroupPicker.options[medicineGroupPicker.selectedIndex];
                     const itemsJson = selected ? selected.dataset.items : null;
                     if (!itemsJson) { return; }
 
@@ -848,7 +848,16 @@ used across the rest of the app. --}}
                     items.forEach(function (item) {
                         addWardMedicineRow(item.medicine, item.dose);
                     });
-                });
+                };
+
+                // The global Select2 initializer (hospital.layouts.app) wraps every
+                // .form-select — including this one — after this script runs. A plain
+                // addEventListener('change', ...) doesn't reliably see changes made
+                // through Select2's own UI, so bind via jQuery too once it's ready.
+                medicineGroupPicker.addEventListener('change', onGroupChange);
+                if (window.jQuery) {
+                    jQuery(medicineGroupPicker).on('change', onGroupChange);
+                }
             }
 
             function toggleComplicationNotesRequired() {

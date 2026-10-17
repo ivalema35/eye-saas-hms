@@ -1036,6 +1036,7 @@ class DashboardController extends Controller
             // isDoctorConsultationPending() applies, hence the Review action here).
             $otPendingQueue = collect();
             $otWardQueue = collect();
+            $otReadyQueue = collect();
             if ($selectedDoctorId) {
                 $otBookingsQuery = OtBooking::with([
                     'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender,location_id,doctor_id',
@@ -1072,6 +1073,16 @@ class DashboardController extends Controller
                         OtBooking::STATUS_IN_WARD,
                         OtBooking::STATUS_DILATED,
                     ])
+                    ->where($matchesDoctor)
+                    ->orderByDesc('surgery_date')
+                    ->orderByDesc('id')
+                    ->take(50)
+                    ->get();
+
+                // Ready for Surgery — doctor can operate these themselves (same
+                // Surgery Recording Form the OT Assistant uses), not just hand off.
+                $otReadyQueue = (clone $otBookingsQuery)
+                    ->where('ot_status', OtBooking::STATUS_READY)
                     ->where($matchesDoctor)
                     ->orderByDesc('surgery_date')
                     ->orderByDesc('id')
@@ -1124,6 +1135,7 @@ class DashboardController extends Controller
                 'otSummary',
                 'otPendingQueue',
                 'otWardQueue',
+                'otReadyQueue',
                 'todayPatients',
                 'todayPendingWalkin',
                 'todayPrimary',

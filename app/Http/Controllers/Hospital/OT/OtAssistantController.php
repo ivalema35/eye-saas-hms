@@ -43,6 +43,7 @@ class OtAssistantController extends Controller
         $user = auth('hospital_user')->user();
         $assistantId = (int) $user->id;
         $seeAll = $user->isSuperUser() || ($user->role?->slug === 'hospital_admin');
+        $isDoctorViewer = $user->role?->slug === 'doctor';
         $otAssistantCards = $this->otAssistantCards();
         $viewingAssistant = $this->viewingAssistant($request, $assistantId, $otAssistantCards);
         $scopeAssistantId = $viewingAssistant ? (int) $viewingAssistant->id : $assistantId;
@@ -68,9 +69,22 @@ class OtAssistantController extends Controller
             $readyQuery->orderBy('surgery_date')->orderByDesc('id');
         }
 
-        // Default queue is the logged-in assistant. Another assistant's card
-        // switches the list; any OT assistant can still open Operate on it.
-        if (! $seeAll || $viewingAssistant) {
+        if ($isDoctorViewer) {
+            // Doctor viewing this page directly — scope to their own patients
+            // (ot_doctor_id when set, else the OPD walk-in doctor on bookings
+            // that never had it stamped — see OtWardController@storeVitals),
+            // not ot_assistant_id which never matches a doctor's own user id.
+            $doctorId = $assistantId;
+            $readyQuery->where(function ($q) use ($doctorId) {
+                $q->where('ot_doctor_id', $doctorId)
+                    ->orWhere(function ($q2) use ($doctorId) {
+                        $q2->whereNull('ot_doctor_id')
+                            ->whereHas('patient', fn ($p) => $p->where('doctor_id', $doctorId));
+                    });
+            });
+        } elseif (! $seeAll || $viewingAssistant) {
+            // Default queue is the logged-in assistant. Another assistant's card
+            // switches the list; any OT assistant can still open Operate on it.
             $readyQuery->where('ot_assistant_id', $scopeAssistantId);
         }
 
@@ -93,14 +107,11 @@ class OtAssistantController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $user = auth('hospital_user')->user();
-        $assistantId = (int) $user->id;
 
         $bookingQuery = OtBooking::query()
             ->with(['patient:id,first_name,middle_name,last_name,contact_no']);
 
-        if (! $this->canOperateAnyAssistant($user)) {
-            $bookingQuery->where('ot_assistant_id', $assistantId);
-        }
+        $this->restrictToOperableBookings($bookingQuery, $user);
 
         $booking = $bookingQuery->findOrFail($bookingId);
 
@@ -151,9 +162,7 @@ class OtAssistantController extends Controller
         $assistantId = (int) $user->id;
 
         $bookingQuery = OtBooking::query();
-        if (! $this->canOperateAnyAssistant($user)) {
-            $bookingQuery->where('ot_assistant_id', $assistantId);
-        }
+        $this->restrictToOperableBookings($bookingQuery, $user);
         $booking = $bookingQuery->findOrFail($bookingId);
 
         abort_unless((int) $booking->tenant_id === $tenantId, 403, 'Unauthorized booking access.');
@@ -563,5 +572,35 @@ class OtAssistantController extends Controller
         }
 
         return in_array($user->role?->slug, ['hospital_admin', 'ot_assistant'], true);
+    }
+
+    /**
+     * Scope a booking query to what the current user may Operate on.
+     * Admin / OT assistant: unrestricted (canOperateAnyAssistant()).
+     * Doctor: only their own patients — ot_doctor_id when set, else the OPD
+     * walk-in doctor (patient.doctor_id), since a booking that went straight
+     * to "Ready for OT" never had ot_doctor_id stamped (see OtWardController).
+     * Anyone else: only bookings assigned to them as OT assistant.
+     */
+    private function restrictToOperableBookings($query, $user): void
+    {
+        if ($this->canOperateAnyAssistant($user)) {
+            return;
+        }
+
+        if ($user?->role?->slug === 'doctor') {
+            $doctorId = (int) $user->id;
+            $query->where(function ($q) use ($doctorId) {
+                $q->where('ot_doctor_id', $doctorId)
+                    ->orWhere(function ($q2) use ($doctorId) {
+                        $q2->whereNull('ot_doctor_id')
+                            ->whereHas('patient', fn ($p) => $p->where('doctor_id', $doctorId));
+                    });
+            });
+
+            return;
+        }
+
+        $query->where('ot_assistant_id', (int) $user->id);
     }
 }

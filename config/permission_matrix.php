@@ -558,6 +558,7 @@ return [
                 'exam_history',
                 'prescription_print',
                 'ot_surgery_recommend',
+                'ot_surgery_record',
                 'report_view',
             ]
         ),

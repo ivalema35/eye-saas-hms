@@ -1399,6 +1399,77 @@
         </div>
     </div>
 
+    {{-- Ready for Surgery — small toggle revealing this doctor's own Ready-for-OT
+    patients, with an Operate action (same Surgery Recording Form the OT
+    Assistant uses) so the doctor can record the surgery themselves. --}}
+    <div class="d-flex justify-content-end mb-3 ot-only">
+        <button type="button" class="hms-btn hms-btn-outline px-3" data-bs-toggle="collapse"
+            data-bs-target="#readyForSurgeryPanel" aria-expanded="false" aria-controls="readyForSurgeryPanel">
+            <i class="bi bi-scissors me-1"></i> Ready for Surgery
+            @if(($otReadyQueue ?? collect())->count() > 0)
+                <span class="badge bg-success ms-1">{{ $otReadyQueue->count() }}</span>
+            @endif
+        </button>
+    </div>
+
+    <div class="collapse mb-4 ot-only" id="readyForSurgeryPanel">
+        <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
+            <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
+                Ready for Surgery
+            </div>
+            <div class="p-3 bg-white">
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle text-center mb-0"
+                        style="font-size: 13.5px; border-color: #e2e8f0;">
+                        <thead class="table-light text-secondary">
+                            <tr>
+                                <th class="patient-col-no">#</th>
+                                <th class="patient-col-name">Patient Name</th>
+                                <th>Gender</th>
+                                <th>Age</th>
+                                <th>City</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($otReadyQueue ?? [] as $i => $booking)
+                            @php
+                                $readyPatient = $booking->patient;
+                            @endphp
+                            <tr>
+                                <td class="patient-col-no">{{ $i + 1 }}</td>
+                                <td class="patient-col-name fw-semibold" style="color: #1B4F72;">
+                                    {{ $readyPatient?->first_name }} {{ $readyPatient?->last_name }}
+                                </td>
+                                <td>{{ $readyPatient?->gender ? ucfirst($readyPatient->gender) : '—' }}</td>
+                                <td>{{ $readyPatient?->age ?? '—' }}</td>
+                                <td>{{ $readyPatient?->cityName ?: '-' }}</td>
+                                <td>
+                                    <span class="ot-status-pill" style="background-color: #0d9488;">Ready for OT</span>
+                                </td>
+                                <td>
+                                    @haspermission('ot_surgery_record')
+                                    <a href="{{ route('hospital.ot.surgery.create', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
+                                        class="btn btn-sm text-white px-3 fw-semibold"
+                                        style="background-color: #1B4F72; border-radius: 4px;">
+                                        Operate
+                                    </a>
+                                    @endhaspermission
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="7" class="py-4 text-muted bg-light">No patients ready for surgery.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- ==================== OT DASHBOARD: Pending / Completed ==================== --}}
     <div class="row g-4 ot-only">
         <div class="col-lg-6">
