@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:printing/printing.dart';
@@ -15,11 +16,16 @@ import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/status_badge.dart';
 import 'platform_hospital_detail_screen.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformBillingScreen extends StatefulWidget {
   final PlatformAdmin admin;
   final VoidCallback onMenuTap;
@@ -98,7 +104,7 @@ class _PlatformBillingScreenState extends State<PlatformBillingScreen> {
   Widget _tabBtn(int index, String label, IconData icon) {
     final selected = _tab == index;
     return Expanded(
-      child: GestureDetector(
+      child: PressScaleWrapper(
         onTap: () => setState(() => _tab = index),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -241,7 +247,7 @@ class _PaymentsTabState extends State<_PaymentsTab> {
 
             Expanded(
               child: _loading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const AppSkeletonList()
                   : _error != null
                       ? AppErrorState(message: _error!, onRetry: _load)
                       : (_result?.payments.isEmpty ?? true)
@@ -250,7 +256,7 @@ class _PaymentsTabState extends State<_PaymentsTab> {
                               icon: Icons.receipt_outlined,
                               onRefresh: _load,
                             )
-                          : RefreshIndicator(
+                          : AppRefreshIndicator(
                               color: AppColors.primary,
                               onRefresh: () => _load(page: _page),
                               child: ListView.builder(
@@ -574,7 +580,7 @@ class _RecordPaymentSheetState extends State<_RecordPaymentSheet> {
                       ),
                       const SizedBox(height: 8),
                       if (_tenantsLoading)
-                        const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                        const AppSkeletonList(count: 3, itemHeight: 56)
                       else if (_filteredTenants.isEmpty)
                         const Padding(
                           padding: EdgeInsets.all(12),
@@ -830,7 +836,7 @@ class _SubscriptionsTabState extends State<_SubscriptionsTab> {
 
         Expanded(
           child: _loading
-              ? const Center(child: CircularProgressIndicator())
+              ? const AppSkeletonList()
               : _error != null
                   ? AppErrorState(message: _error!, onRetry: _load)
                   : (_result?.subscriptions.isEmpty ?? true)
@@ -839,7 +845,7 @@ class _SubscriptionsTabState extends State<_SubscriptionsTab> {
                           icon: Icons.loop_outlined,
                           onRefresh: _load,
                         )
-                      : RefreshIndicator(
+                      : AppRefreshIndicator(
                           color: AppColors.primary,
                           onRefresh: () => _load(page: _page),
                           child: ListView.builder(

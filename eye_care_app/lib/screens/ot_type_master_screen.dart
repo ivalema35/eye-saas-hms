@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_type_master_service.dart';
 import '../models/ot_inventory_models.dart';
 
@@ -15,10 +20,15 @@ class OtTypeMasterScreen extends StatefulWidget {
 }
 
 class _OtTypeMasterScreenState extends State<OtTypeMasterScreen> {
+  final _p = PermissionService.instance;
   List<OtTypeMasterItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd => _p.can(Perm.masterOtTypeAdd);
+  bool get _canEdit => _p.can(Perm.masterOtTypeEdit);
+  bool get _canDelete => _p.can(Perm.masterOtTypeDelete);
 
   List<OtTypeMasterItem> get _filtered =>
       _query.isEmpty ? _all : _all.where((i) => i.name.toLowerCase().contains(_query.toLowerCase())).toList();
@@ -92,7 +102,7 @@ class _OtTypeMasterScreenState extends State<OtTypeMasterScreen> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         title: const Text('OT Types', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-        actions: [IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
+        actions: [if (_canAdd) IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
       ),
       body: Column(children: [_buildSearch(), Expanded(child: _buildBody())]),
     );
@@ -114,20 +124,9 @@ class _OtTypeMasterScreenState extends State<OtTypeMasterScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white)),
-          ]),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     final items = _filtered;
     if (items.isEmpty) {
@@ -142,7 +141,7 @@ class _OtTypeMasterScreenState extends State<OtTypeMasterScreen> {
         ),
       ]);
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -160,9 +159,9 @@ class _OtTypeMasterScreenState extends State<OtTypeMasterScreen> {
                 Container(width: 30, height: 30, alignment: Alignment.center, decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.sm)), child: Text('${i + 1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: widget.accentColor))),
                 const SizedBox(width: 12),
                 Expanded(child: Text(item.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkNavy))),
-                InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
-                const SizedBox(width: 2),
-                InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
+                if (_canEdit) InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
+                if (_canDelete) const SizedBox(width: 2),
+                if (_canDelete) InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
               ]),
             ),
           );

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 class ProfileRoleData {
   final int id;
@@ -74,31 +74,16 @@ class ProfileData {
       );
 }
 
-class ProfileService {
+class ProfileService with AuthenticatedService {
   ProfileService._();
   static final ProfileService instance = ProfileService._();
 
-  Future<Map<String, String>> _headers() async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
   Future<ProfileData> fetchProfile() async {
     final res = await http
-        .get(
-          Uri.parse('${AppConfig.hospitalApiUrl}/profile'),
-          headers: await _headers(),
-        )
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/profile'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Request failed (${res.statusCode})');
-    }
+    final body = parseApiResponse(res);
     return ProfileData.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -131,23 +116,12 @@ class ProfileService {
     final res = await http
         .put(
           Uri.parse('${AppConfig.hospitalApiUrl}/profile'),
-          headers: await _headers(),
+          headers: await headers,
           body: jsonEncode(payload),
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        final msg = firstVal is List
-            ? firstVal.first.toString()
-            : firstVal.toString();
-        throw Exception(msg);
-      }
-      throw Exception(body['message'] ?? 'Update failed (${res.statusCode})');
-    }
+    final body = parseApiResponse(res);
     return ProfileData.fromJson(body['data'] as Map<String, dynamic>);
   }
 }

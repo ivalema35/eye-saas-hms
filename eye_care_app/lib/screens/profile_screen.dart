@@ -7,6 +7,7 @@ import '../models/auth_models.dart';
 import '../services/onboarding_service.dart';
 import '../services/profile_service.dart';
 import '../widgets/widgets.dart';
+import 'debug_error_preview_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final UserInfo user;
@@ -163,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.backgroundAlt,
       appBar: _buildAppBar(),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
               ? _buildError()
               : _buildBody(),
@@ -212,29 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.error_outline_rounded, size: 48,
-                color: AppColors.red.withValues(alpha: 0.6)),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center,
-                style: const TextStyle(color: AppColors.textSecondary)),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _load,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
+    return AppErrorState(message: _error!, onRetry: _load);
   }
 
   Widget _buildBody() {
@@ -525,9 +504,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onTap: () async {
               await OnboardingService.instance.resetForTesting();
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Onboarding will show again on next app open.')),
-              );
+              showAppSnackBar(context, 'Onboarding will show again on next app open.', isSuccess: true);
             },
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -543,6 +520,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Text('Reset Onboarding', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
+                  ),
+                  Icon(Icons.chevron_right_rounded, color: AppColors.primaryA50),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.primaryA08),
+            boxShadow: [BoxShadow(color: AppColors.primaryA05, blurRadius: 8, offset: const Offset(0, 2))],
+          ),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const DebugErrorPreviewScreen()),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(color: AppColors.background, borderRadius: BorderRadius.circular(AppRadius.md)),
+                    alignment: Alignment.center,
+                    child: Icon(Icons.error_outline_rounded, color: AppColors.primary, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Text('Error Screen Previews', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.darkNavy)),
                   ),
                   Icon(Icons.chevron_right_rounded, color: AppColors.primaryA50),
                 ],

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -12,6 +13,7 @@ import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_pagination_bar.dart';
 import '../widgets/app_search_bar.dart';
 import '../widgets/app_section_header.dart';
@@ -19,6 +21,10 @@ import '../widgets/status_badge.dart';
 import 'platform_hospital_detail_screen.dart';
 import 'platform_hospital_form_screen.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformHospitalsScreen extends StatefulWidget {
   final PlatformAdmin admin;
   final VoidCallback onMenuTap;
@@ -168,7 +174,7 @@ class _PlatformHospitalsScreenState extends State<PlatformHospitalsScreen> {
           // List
           Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const AppSkeletonList()
                 : _error != null
                     ? AppErrorState(message: _error!, onRetry: _load)
                     : _hospitals.isEmpty
@@ -177,7 +183,7 @@ class _PlatformHospitalsScreenState extends State<PlatformHospitalsScreen> {
                             icon: Icons.local_hospital_outlined,
                             onRefresh: _load,
                           )
-                        : RefreshIndicator(
+                        : AppRefreshIndicator(
                             color: AppColors.primary,
                             onRefresh: () => _load(page: _currentPage),
                             child: ListView.builder(

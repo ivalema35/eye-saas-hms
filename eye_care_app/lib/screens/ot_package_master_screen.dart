@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_inventory_service.dart';
 import '../models/ot_inventory_models.dart';
+import '../utils/currency_format.dart';
 
 class OtPackageMasterScreen extends StatefulWidget {
   final Color accentColor;
@@ -16,10 +22,15 @@ class OtPackageMasterScreen extends StatefulWidget {
 }
 
 class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
+  final _p = PermissionService.instance;
   List<OtPackageMasterItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd => _p.can(Perm.masterOtPackageAdd);
+  bool get _canEdit => _p.can(Perm.masterOtPackageEdit);
+  bool get _canDelete => _p.can(Perm.masterOtPackageDelete);
 
   List<OtPackageMasterItem> get _filtered =>
       _query.isEmpty ? _all : _all.where((i) => i.packageName.toLowerCase().contains(_query.toLowerCase())).toList();
@@ -72,16 +83,18 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
       builder: (_) => _PackageSheet(
         item: item,
         accentColor: widget.accentColor,
-        onSave: (packageName, roomCategory, otCharges, surgeonCharges, nursingCharges, consumablesCharges) async {
+        onSave: (packageName, roomCategory, otCharges, surgeonCharges, nursingCharges, consumablesCharges, isActive) async {
           if (item == null) {
             await OtInventoryService.instance.createPackage(
               packageName: packageName, roomCategory: roomCategory,
               otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges,
+              isActive: isActive,
             );
           } else {
             await OtInventoryService.instance.updatePackage(item.id,
               packageName: packageName, roomCategory: roomCategory,
               otCharges: otCharges, surgeonCharges: surgeonCharges, nursingCharges: nursingCharges, consumablesCharges: consumablesCharges,
+              isActive: isActive,
             );
           }
           await _load();
@@ -99,7 +112,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         title: const Text('OT Packages', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-        actions: [IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
+        actions: [if (_canAdd) IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
       ),
       body: Column(children: [_buildSearch(), Expanded(child: _buildBody())]),
     );
@@ -121,20 +134,9 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white)),
-          ]),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     final items = _filtered;
     if (items.isEmpty) {
@@ -149,7 +151,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
         ),
       ]);
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -171,13 +173,19 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
                     decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.10), borderRadius: BorderRadius.circular(AppRadius.sm)),
                     child: Text(item.roomCategory == 'private' ? 'Private' : 'General', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: widget.accentColor)),
                   ),
-                  const SizedBox(width: 2),
-                  InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
-                  InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(color: (item.isActive ? AppColors.green : AppColors.textDisabled).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.sm)),
+                    child: Text(item.isActive ? 'Active' : 'Inactive', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: item.isActive ? AppColors.green : AppColors.textDisabled)),
+                  ),
+                  if (_canEdit) const SizedBox(width: 2),
+                  if (_canEdit) InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
+                  if (_canDelete) InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
                 ]),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
-                  child: Text('Total ₹${item.totalPreview.toStringAsFixed(0)}  ·  OT ₹${item.otCharges.toStringAsFixed(0)} · Surgeon ₹${item.surgeonCharges.toStringAsFixed(0)} · Nursing ₹${item.nursingCharges.toStringAsFixed(0)} · Consumables ₹${item.consumablesCharges.toStringAsFixed(0)}',
+                  child: Text('Total ${currentCurrencySymbol()}${item.totalPreview.toStringAsFixed(0)}  ·  OT ${currentCurrencySymbol()}${item.otCharges.toStringAsFixed(0)} · Surgeon ${currentCurrencySymbol()}${item.surgeonCharges.toStringAsFixed(0)} · Nursing ${currentCurrencySymbol()}${item.nursingCharges.toStringAsFixed(0)} · Consumables ${currentCurrencySymbol()}${item.consumablesCharges.toStringAsFixed(0)}',
                       style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
                 ),
               ]),
@@ -194,7 +202,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
 class _PackageSheet extends StatefulWidget {
   final OtPackageMasterItem? item;
   final Color accentColor;
-  final Future<void> Function(String packageName, String roomCategory, double otCharges, double surgeonCharges, double nursingCharges, double consumablesCharges) onSave;
+  final Future<void> Function(String packageName, String roomCategory, double otCharges, double surgeonCharges, double nursingCharges, double consumablesCharges, bool isActive) onSave;
 
   const _PackageSheet({required this.item, required this.accentColor, required this.onSave});
 
@@ -205,6 +213,11 @@ class _PackageSheet extends StatefulWidget {
 class _PackageSheetState extends State<_PackageSheet> {
   late final TextEditingController _nameCtrl, _otCtrl, _surgeonCtrl, _nursingCtrl, _consumablesCtrl;
   String _roomCategory = 'general';
+  // Web's Add-Package form has an "Active" checkbox checked by default —
+  // without sending this, the API silently defaults new packages to
+  // inactive, which is why they never showed up in the Counselling form's
+  // package dropdown (that dropdown only lists is_active=true rows).
+  bool _isActive = true;
   bool _saving = false;
   String? _nameError;
 
@@ -218,6 +231,7 @@ class _PackageSheetState extends State<_PackageSheet> {
     _nursingCtrl = TextEditingController(text: it != null ? it.nursingCharges.toStringAsFixed(2) : '0');
     _consumablesCtrl = TextEditingController(text: it != null ? it.consumablesCharges.toStringAsFixed(2) : '0');
     _roomCategory = it?.roomCategory ?? 'general';
+    _isActive = it?.isActive ?? true;
   }
 
   @override
@@ -242,6 +256,7 @@ class _PackageSheetState extends State<_PackageSheet> {
         double.tryParse(_surgeonCtrl.text.trim()) ?? 0,
         double.tryParse(_nursingCtrl.text.trim()) ?? 0,
         double.tryParse(_consumablesCtrl.text.trim()) ?? 0,
+        _isActive,
       );
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -305,16 +320,25 @@ class _PackageSheetState extends State<_PackageSheet> {
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
-                    Expanded(child: TextFormField(controller: _otCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('OT Charges', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _otCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('OT Charges', suffix: currentCurrencySymbol()))),
                     const SizedBox(width: 10),
-                    Expanded(child: TextFormField(controller: _surgeonCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Surgeon Charges', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _surgeonCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Surgeon Charges', suffix: currentCurrencySymbol()))),
                   ]),
                   const SizedBox(height: 12),
                   Row(children: [
-                    Expanded(child: TextFormField(controller: _nursingCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Nursing Charges', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _nursingCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Nursing Charges', suffix: currentCurrencySymbol()))),
                     const SizedBox(width: 10),
-                    Expanded(child: TextFormField(controller: _consumablesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Consumables', suffix: '₹'))),
+                    Expanded(child: TextFormField(controller: _consumablesCtrl, keyboardType: const TextInputType.numberWithOptions(decimal: true), inputFormatters: numFmt, decoration: _deco('Consumables', suffix: currentCurrencySymbol()))),
                   ]),
+                  const SizedBox(height: 4),
+                  CheckboxListTile(
+                    value: _isActive,
+                    onChanged: (v) => setState(() => _isActive = v ?? true),
+                    title: const Text('Active'),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                  ),
                 ]),
               ),
               Padding(

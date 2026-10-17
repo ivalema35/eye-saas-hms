@@ -1,26 +1,43 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/medicine_models.dart';
 import '../services/medicine_service.dart';
+import '../services/permission_service.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/app_pagination_bar.dart';
+import '../widgets/app_record_card.dart';
 import '../widgets/skeleton.dart';
 import 'medicine_group_detail_screen.dart';
 import 'medicine_group_form_screen.dart';
+import '../utils/currency_format.dart';
 
 BoxDecoration _cardDeco() => BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: AppColors.primaryA10),
-      boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
-    );
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(14),
+  border: Border.all(color: AppColors.primaryA10),
+  boxShadow: [
+    BoxShadow(
+      color: AppColors.primaryA06,
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ],
+);
 
-
+bool get _medCanAdd => PermissionService.instance.can(Perm.masterMedicineAdd);
+bool get _medCanEdit => PermissionService.instance.can(Perm.masterMedicineEdit);
+bool get _medCanDelete =>
+    PermissionService.instance.can(Perm.masterMedicineDelete);
 
 // ── Tab definitions ────────────────────────────────────────────────────────────
 
@@ -30,7 +47,8 @@ enum _Tab {
   categories('Categories', Icons.grid_view_rounded),
   routes('Route/Admin', Icons.arrow_circle_right_outlined),
   medicines('Medicines', Icons.medication_liquid_outlined),
-  groups('Med. Groups', Icons.collections_bookmark_outlined);
+  groups('Med. Groups', Icons.collections_bookmark_outlined),
+  ward('Ward Medicine', Icons.local_hospital_outlined);
 
   final String label;
   final IconData icon;
@@ -111,7 +129,8 @@ class _MedicinesScreenState extends State<MedicinesScreen>
           _SimpleMasterTab(
             key: const ValueKey('types'),
             title: 'Medicine Types',
-            subtitle: 'Classify medicines (e.g. Antibiotic, Lubricant, Steroid).',
+            subtitle:
+                'Classify medicines (e.g. Antibiotic, Lubricant, Steroid).',
             fieldLabel: 'Type Name',
             fieldHint: 'e.g. Antibiotic',
             fetchAll: MedicineService.instance.fetchTypes,
@@ -122,7 +141,8 @@ class _MedicinesScreenState extends State<MedicinesScreen>
           _SimpleMasterTab(
             key: const ValueKey('categories'),
             title: 'Medicine Categories',
-            subtitle: 'Broad groupings (e.g. Eye Drops, Oral Tablets, Ointments).',
+            subtitle:
+                'Broad groupings (e.g. Eye Drops, Oral Tablets, Ointments).',
             fieldLabel: 'Category Name',
             fieldHint: 'e.g. Eye Drops',
             fetchAll: MedicineService.instance.fetchCategories,
@@ -147,6 +167,7 @@ class _MedicinesScreenState extends State<MedicinesScreen>
             user: widget.user,
             hospital: widget.hospital,
           ),
+          const _MedicinesTab(key: ValueKey('ward'), ward: true),
         ],
       ),
     );
@@ -168,18 +189,29 @@ class _MedicinesScreenState extends State<MedicinesScreen>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 margin: const EdgeInsets.only(right: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: active ? Colors.white : Colors.white.withValues(alpha: 0.15),
+                  color: active
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: active ? Colors.white : Colors.white.withValues(alpha: 0.30),
+                    color: active
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.30),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(t.icon, size: 13, color: active ? AppColors.primary : Colors.white),
+                    Icon(
+                      t.icon,
+                      size: 13,
+                      color: active ? AppColors.primary : Colors.white,
+                    ),
                     const SizedBox(width: 5),
                     Text(
                       t.label,
@@ -204,7 +236,7 @@ class _MedicinesScreenState extends State<MedicinesScreen>
 // SIMPLE MASTER TAB — shared by Dosages / Types / Categories / Routes
 // ═════════════════════════════════════════════════════════════════════════════
 
-typedef _FetchAll  = Future<List<MedMasterItem>> Function();
+typedef _FetchAll = Future<List<MedMasterItem>> Function();
 typedef _MutateOne = Future<void> Function(int id, String value);
 typedef _CreateOne = Future<void> Function(String value);
 typedef _DeleteOne = Future<void> Function(int id);
@@ -251,12 +283,23 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final items = await widget.fetchAll();
-      if (mounted) setState(() { _items = items; _loading = false; });
+      if (mounted)
+        setState(() {
+          _items = items;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString().replaceFirst('Exception: ', '');
+          _loading = false;
+        });
     }
   }
 
@@ -266,7 +309,8 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (ctx) => _SingleFieldSheet(
         fieldLabel: widget.fieldLabel,
         fieldHint: widget.fieldHint,
@@ -291,10 +335,16 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
         title: const Text('Delete?'),
         content: Text('Delete "${item.name}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFD94841))),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.redDark),
+            ),
           ),
         ],
       ),
@@ -304,14 +354,19 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
       await widget.onDelete(item.id);
       await _load();
     } catch (e) {
-      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      if (mounted)
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _load,
       color: AppColors.primary,
       child: ListView(
@@ -322,7 +377,7 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
             title: widget.title,
             subtitle: widget.subtitle,
             count: _items.length,
-            onAdd: () => _openSheet(),
+            onAdd: _medCanAdd ? () => _openSheet() : null,
           ),
           const SizedBox(height: 12),
           if (_loading)
@@ -337,7 +392,10 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 13,
+                  ),
                   decoration: _cardDeco(),
                   child: Row(
                     children: [
@@ -369,17 +427,20 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
                           ),
                         ),
                       ),
-                      _IconBtn(
-                        icon: Icons.edit_outlined,
-                        color: AppColors.primary,
-                        onTap: () => _openSheet(item: item),
-                      ),
-                      const SizedBox(width: 4),
-                      _IconBtn(
-                        icon: Icons.delete_outline_rounded,
-                        color: Color(0xFFD94841),
-                        onTap: () => _confirmDelete(item),
-                      ),
+                      if (_medCanEdit)
+                        _IconBtn(
+                          icon: Icons.edit_outlined,
+                          color: AppColors.primary,
+                          onTap: () => _openSheet(item: item),
+                        ),
+                      if (_medCanEdit && _medCanDelete)
+                        const SizedBox(width: 4),
+                      if (_medCanDelete)
+                        _IconBtn(
+                          icon: Icons.delete_outline_rounded,
+                          color: AppColors.redDark,
+                          onTap: () => _confirmDelete(item),
+                        ),
                     ],
                   ),
                 ),
@@ -396,7 +457,8 @@ class _SimpleMasterTabState extends State<_SimpleMasterTab>
 // ═════════════════════════════════════════════════════════════════════════════
 
 class _MedicinesTab extends StatefulWidget {
-  const _MedicinesTab({super.key});
+  final bool ward;
+  const _MedicinesTab({super.key, this.ward = false});
 
   @override
   State<_MedicinesTab> createState() => _MedicinesTabState();
@@ -429,15 +491,28 @@ class _MedicinesTabState extends State<_MedicinesTab>
 
   Future<void> _load({int? page}) async {
     final p = page ?? _page;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final result = await MedicineService.instance.fetchMedicines(
         search: _searchCtrl.text.trim(),
         page: p,
+        ward: widget.ward,
       );
-      if (mounted) setState(() { _result = result; _page = p; _loading = false; });
+      if (mounted)
+        setState(() {
+          _result = result;
+          _page = p;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString().replaceFirst('Exception: ', '');
+          _loading = false;
+        });
     }
   }
 
@@ -450,10 +525,10 @@ class _MedicinesTabState extends State<_MedicinesTab>
   }
 
   void _openSheet({MedItem? item}) {
-    final types   = _result?.types ?? [];
+    final types = _result?.types ?? [];
     final dosages = _result?.dosages ?? [];
     if (types.isEmpty) {
-      showAppSnackBar(context, 'Load medicines list first');
+      showAppSnackBar(context, 'Load medicines list first', isError: true);
       return;
     }
     showModalBottomSheet(
@@ -461,11 +536,13 @@ class _MedicinesTabState extends State<_MedicinesTab>
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
       builder: (ctx) => _MedFormSheet(
         types: types,
         dosages: dosages,
         item: item,
+        ward: widget.ward,
         onSave: (data) async {
           if (item == null) {
             await MedicineService.instance.createMedicine(data);
@@ -478,6 +555,19 @@ class _MedicinesTabState extends State<_MedicinesTab>
     );
   }
 
+  void _openImportSheet() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl)),
+      ),
+      builder: (ctx) =>
+          _ImportMedicinesSheet(onImported: () => _load(page: _page)),
+    );
+  }
+
   Future<void> _confirmDelete(MedItem item) async {
     final ok = await showDialog<bool>(
       context: context,
@@ -485,10 +575,16 @@ class _MedicinesTabState extends State<_MedicinesTab>
         title: const Text('Delete Medicine?'),
         content: Text('Delete "${item.name}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFD94841))),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.redDark),
+            ),
           ),
         ],
       ),
@@ -498,7 +594,12 @@ class _MedicinesTabState extends State<_MedicinesTab>
       await MedicineService.instance.deleteMedicine(item.id);
       await _load(page: _page);
     } catch (e) {
-      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      if (mounted)
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
     }
   }
 
@@ -506,7 +607,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
   Widget build(BuildContext context) {
     super.build(context);
     final result = _result;
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _load,
       color: AppColors.primary,
       child: ListView(
@@ -514,10 +615,15 @@ class _MedicinesTabState extends State<_MedicinesTab>
         padding: const EdgeInsets.fromLTRB(14, 14, 14, 90),
         children: [
           _SectionHeader(
-            title: 'Medicines',
-            subtitle: 'Manage medicine names, brands, companies, pricing, and types.',
+            title: widget.ward ? 'Ward Medicine' : 'Medicines',
+            subtitle: widget.ward
+                ? 'Used on the ward. These names show in Ward Management.'
+                : 'Manage medicine names, brands, companies, pricing, and types.',
             count: result?.meta.total,
-            onAdd: () => _openSheet(),
+            onAdd: _medCanAdd ? () => _openSheet() : null,
+            onImport: (!widget.ward && _medCanAdd)
+                ? () => _openImportSheet()
+                : null,
           ),
           const SizedBox(height: 10),
           // Search bar
@@ -529,11 +635,22 @@ class _MedicinesTabState extends State<_MedicinesTab>
               style: const TextStyle(fontSize: 14, color: Color(0xFF18324A)),
               decoration: InputDecoration(
                 hintText: 'Search name or company…',
-                hintStyle: TextStyle(color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontSize: 13),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF6B7D93), size: 20),
+                hintStyle: TextStyle(
+                  color: Color(0xFF6B7D93).withValues(alpha: 0.60),
+                  fontSize: 13,
+                ),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: Color(0xFF6B7D93),
+                  size: 20,
+                ),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.close_rounded, size: 18, color: Color(0xFF6B7D93)),
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 18,
+                          color: Color(0xFF6B7D93),
+                        ),
                         onPressed: () {
                           _searchCtrl.clear();
                           setState(() => _page = 1);
@@ -553,7 +670,13 @@ class _MedicinesTabState extends State<_MedicinesTab>
             AppErrorState(message: _error!, onRetry: _load)
           else if (result != null) ...[
             if (result.items.isEmpty)
-              AppEmptyState(message: _searchCtrl.text.isNotEmpty ? 'No results for "${_searchCtrl.text}"' : 'No medicines yet')
+              AppEmptyState(
+                message: _searchCtrl.text.isNotEmpty
+                    ? 'No results for "${_searchCtrl.text}"'
+                    : (widget.ward
+                          ? 'No ward medicines yet'
+                          : 'No medicines yet'),
+              )
             else ...[
               ...List.generate(result.items.length, (i) {
                 final m = result.items[i];
@@ -563,17 +686,22 @@ class _MedicinesTabState extends State<_MedicinesTab>
                     key: ValueKey(m.id),
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: _MedCard(item: m, onEdit: () => _openSheet(item: m), onDelete: () => _confirmDelete(m)),
+                      child: _MedCard(
+                        item: m,
+                        canEdit: _medCanEdit,
+                        canDelete: _medCanDelete,
+                        onEdit: () => _openSheet(item: m),
+                        onDelete: () => _confirmDelete(m),
+                      ),
                     ),
                   ),
                 );
               }),
               const SizedBox(height: 4),
-              _PaginationRow(
-                meta: result.meta,
-                loading: _loading,
-                onPrev: () => _load(page: _page - 1),
-                onNext: () => _load(page: _page + 1),
+              AppPaginationBar(
+                currentPage: result.meta.currentPage,
+                totalPages: result.meta.lastPage,
+                onPageChange: (page) => _load(page: page),
               ),
             ],
           ],
@@ -585,62 +713,99 @@ class _MedicinesTabState extends State<_MedicinesTab>
 
 class _MedCard extends StatelessWidget {
   final MedItem item;
+  final bool canEdit;
+  final bool canDelete;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _MedCard({required this.item, required this.onEdit, required this.onDelete});
+  const _MedCard({
+    required this.item,
+    required this.canEdit,
+    required this.canDelete,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _cardDeco(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.name,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
+    final fields = <AppRecordField>[
+      if (item.medicineTypeName != null)
+        AppRecordField(
+          'Type',
+          item.medicineTypeName!,
+          icon: Icons.label_outline_rounded,
+          color: RecordFieldColors.caseType,
+        ),
+      if (item.dosageText != null)
+        AppRecordField(
+          'Dosage',
+          item.dosageText!,
+          icon: Icons.medication_outlined,
+          color: RecordFieldColors.doctor,
+        ),
+      if (item.duration != null)
+        AppRecordField(
+          'Duration',
+          item.duration!,
+          icon: Icons.timer_outlined,
+          color: RecordFieldColors.date,
+        ),
+      if (item.qty != null)
+        AppRecordField(
+          'Qty',
+          item.qty!,
+          icon: Icons.inventory_2_outlined,
+          color: AppColors.purple,
+        ),
+      if (item.company != null)
+        AppRecordField(
+          'Company',
+          item.company!,
+          icon: Icons.business_outlined,
+          color: AppColors.textSecondary,
+        ),
+    ];
+
+    return AppRecordCard(
+      title: item.name,
+      trailing: item.price != null
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.green.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+              ),
+              child: Text(
+                '${currentCurrencySymbol()}${item.price!.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.green,
                 ),
               ),
-              if (item.price != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(color: Color(0xFF1F9D55).withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.xl)),
-                  child: Text(
-                    '₹${item.price!.toStringAsFixed(2)}',
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF1F9D55)),
+            )
+          : null,
+      fields: fields,
+      actions: (canEdit || canDelete)
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (canEdit)
+                  _IconBtn(
+                    icon: Icons.edit_outlined,
+                    color: AppColors.primary,
+                    onTap: onEdit,
                   ),
-                ),
-              const SizedBox(width: 6),
-              _IconBtn(icon: Icons.edit_outlined, color: AppColors.primary, onTap: onEdit),
-              const SizedBox(width: 4),
-              _IconBtn(icon: Icons.delete_outline_rounded, color: Color(0xFFD94841), onTap: onDelete),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 10,
-            runSpacing: 4,
-            children: [
-              _InfoChip(item.usageScope == 'ot' ? Icons.local_hospital_outlined : Icons.storefront_outlined, item.usageScope.toUpperCase()),
-              if (item.medicineTypeName != null)
-                _InfoChip(Icons.label_outline_rounded, item.medicineTypeName!),
-              if (item.dosageText != null)
-                _InfoChip(Icons.medication_outlined, item.dosageText!),
-              if (item.duration != null)
-                _InfoChip(Icons.timer_outlined, item.duration!),
-              if (item.qty != null)
-                _InfoChip(Icons.inventory_2_outlined, item.qty!),
-              if (item.company != null)
-                _InfoChip(Icons.business_outlined, item.company!),
-            ],
-          ),
-        ],
-      ),
+                if (canEdit && canDelete) const SizedBox(width: 8),
+                if (canDelete)
+                  _IconBtn(
+                    icon: Icons.delete_outline_rounded,
+                    color: AppColors.redDark,
+                    onTap: onDelete,
+                  ),
+              ],
+            )
+          : null,
     );
   }
 }
@@ -677,23 +842,36 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
 
   Future<void> _load({int? page}) async {
     final p = page ?? _page;
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final r = await MedicineService.instance.fetchGroups(page: p);
-      if (mounted) setState(() { _result = r; _page = p; _loading = false; });
+      if (mounted)
+        setState(() {
+          _result = r;
+          _page = p;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString().replaceFirst('Exception: ', '');
+          _loading = false;
+        });
     }
   }
 
   Future<void> _pushForm({MedGroup? group}) async {
     final refreshed = await Navigator.push<bool>(
       context,
-      appRoute(MedicineGroupFormScreen(
-        user: widget.user,
-        hospital: widget.hospital,
-        existing: group,
-      ),
+      appRoute(
+        MedicineGroupFormScreen(
+          user: widget.user,
+          hospital: widget.hospital,
+          existing: group,
+        ),
       ),
     );
     if (refreshed == true && mounted) _load(page: _page);
@@ -704,12 +882,20 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Group?'),
-        content: Text('Delete "${group.name}"?\nAll medicine rows will be removed.'),
+        content: Text(
+          'Delete "${group.name}"?\nAll medicine rows will be removed.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFD94841))),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: AppColors.redDark),
+            ),
           ),
         ],
       ),
@@ -719,7 +905,12 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
       await MedicineService.instance.deleteGroup(group.id);
       await _load(page: _page);
     } catch (e) {
-      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      if (mounted)
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
     }
   }
 
@@ -727,7 +918,7 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
   Widget build(BuildContext context) {
     super.build(context);
     final result = _result;
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _load,
       color: AppColors.primary,
       child: ListView(
@@ -738,7 +929,7 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
             title: 'Prescription Groups',
             subtitle: 'Reusable medicine sets for faster prescriptions.',
             count: result?.meta.total,
-            onAdd: () => _pushForm(),
+            onAdd: _medCanAdd ? () => _pushForm() : null,
           ),
           const SizedBox(height: 12),
           if (_loading && result == null)
@@ -759,13 +950,17 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _GroupCard(
                         group: g,
+                        canEdit: _medCanEdit,
+                        canDelete: _medCanDelete,
                         onView: () => Navigator.push(
                           context,
-                          appRoute(MedicineGroupDetailScreen(
-                            user: widget.user,
-                            hospital: widget.hospital,
-                            groupId: g.id,
-                          )),
+                          appRoute(
+                            MedicineGroupDetailScreen(
+                              user: widget.user,
+                              hospital: widget.hospital,
+                              groupId: g.id,
+                            ),
+                          ),
                         ),
                         onEdit: () => _pushForm(group: g),
                         onDelete: () => _confirmDelete(g),
@@ -774,11 +969,10 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
                   ),
                 );
               }),
-              _PaginationRow(
-                meta: result.meta,
-                loading: _loading,
-                onPrev: () => _load(page: _page - 1),
-                onNext: () => _load(page: _page + 1),
+              AppPaginationBar(
+                currentPage: result.meta.currentPage,
+                totalPages: result.meta.lastPage,
+                onPageChange: (page) => _load(page: page),
               ),
             ],
           ],
@@ -790,104 +984,154 @@ class _MedGroupsTabState extends State<_MedGroupsTab>
 
 class _GroupCard extends StatelessWidget {
   final MedGroup group;
+  final bool canEdit;
+  final bool canDelete;
   final VoidCallback onView;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
-  const _GroupCard({required this.group, required this.onView, required this.onEdit, required this.onDelete});
+  const _GroupCard({
+    required this.group,
+    required this.canEdit,
+    required this.canDelete,
+    required this.onView,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _cardDeco(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    final scopeLabel = switch (group.usageScope) {
+      'ot' => 'OT',
+      'both' => 'OPD + OT',
+      'opd' => 'OPD',
+      _ => null,
+    };
+
+    final fields = <AppRecordField>[
+      if (group.diagnosisValue != null)
+        AppRecordField(
+          'Diagnosis',
+          group.diagnosisValue!,
+          icon: Icons.sick_outlined,
+          color: AppColors.green,
+        ),
+      AppRecordField(
+        'Medicines',
+        '${group.itemsCount} medicine${group.itemsCount == 1 ? '' : 's'}',
+        icon: Icons.medication_outlined,
+        color: AppColors.primary,
+      ),
+    ];
+
+    return AppRecordCard(
+      title: group.name,
+      subtitle: group.groupCode,
+      trailing: scopeLabel != null
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.darkNavy.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(AppRadius.xl),
+              ),
+              child: Text(
+                scopeLabel,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.darkNavy,
+                ),
+              ),
+            )
+          : null,
+      fields: fields,
+      footer: group.items.isEmpty
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(height: 1, color: AppColors.primaryA08),
+                const SizedBox(height: 8),
+                ...group.items
+                    .take(3)
+                    .map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.medication_outlined,
+                              size: 12,
+                              color: AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                item.medicineName ?? '-',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            if (item.dosageText != null)
+                              Text(
+                                item.dosageText!,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textDisabled,
+                                ),
+                              ),
+                            if (item.duration != null)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8),
+                                child: Text(
+                                  item.duration!,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textDisabled,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                if (group.itemsCount > 3)
+                  Text(
+                    '+${group.itemsCount - 3} more — tap View',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.textDisabled,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+      actions: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(group.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF18324A))),
-                    if (group.groupCode != null) ...[
-                      const SizedBox(height: 2),
-                      Text(group.groupCode!, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontWeight: FontWeight.w600)),
-                    ],
-                  ],
-                ),
-              ),
-              _IconBtn(icon: Icons.visibility_outlined, color: const Color(0xFF2C6E99), onTap: onView),
-              const SizedBox(width: 4),
-              _IconBtn(icon: Icons.edit_outlined, color: AppColors.primary, onTap: onEdit),
-              const SizedBox(width: 4),
-              _IconBtn(icon: Icons.delete_outline_rounded, color: Color(0xFFD94841), onTap: onDelete),
-            ],
+          _IconBtn(
+            icon: Icons.visibility_outlined,
+            color: AppColors.blue,
+            onTap: onView,
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              if (group.diagnosisValue != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  margin: const EdgeInsets.only(right: 8),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF1F9D55).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppRadius.xl),
-                  ),
-                  child: Text(
-                    group.diagnosisValue!,
-                    style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF1F9D55)),
-                  ),
-                ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryA12,
-                  borderRadius: BorderRadius.circular(AppRadius.xl),
-                ),
-                child: Text(
-                  '${group.itemsCount} medicine${group.itemsCount == 1 ? '' : 's'}',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
-                ),
-              ),
-            ],
-          ),
-          if (group.items.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            const Divider(height: 1),
-            const SizedBox(height: 8),
-            ...group.items.take(3).map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  const Icon(Icons.medication_outlined, size: 12, color: Color(0xFF6B7D93)),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      item.medicineName ?? '-',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF18324A)),
-                    ),
-                  ),
-                  if (item.dosageText != null)
-                    Text(item.dosageText!, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
-                  if (item.duration != null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 8),
-                      child: Text(item.duration!, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
-                    ),
-                ],
-              ),
-            )),
-            if (group.itemsCount > 3)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  '+${group.itemsCount - 3} more — tap View',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontStyle: FontStyle.italic),
-                ),
-              ),
+          if (canEdit) ...[
+            const SizedBox(width: 8),
+            _IconBtn(
+              icon: Icons.edit_outlined,
+              color: AppColors.primary,
+              onTap: onEdit,
+            ),
+          ],
+          if (canDelete) ...[
+            const SizedBox(width: 8),
+            _IconBtn(
+              icon: Icons.delete_outline_rounded,
+              color: AppColors.redDark,
+              onTap: onDelete,
+            ),
           ],
         ],
       ),
@@ -943,7 +1187,11 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
       }
     }
   }
@@ -952,7 +1200,9 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(
-        left: 20, right: 20, top: 20,
+        left: 20,
+        right: 20,
+        top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       child: Column(
@@ -962,8 +1212,14 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
           Row(
             children: [
               Text(
-                widget.isEdit ? 'Edit ${widget.fieldLabel}' : 'Add ${widget.fieldLabel}',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
+                widget.isEdit
+                    ? 'Edit ${widget.fieldLabel}'
+                    : 'Add ${widget.fieldLabel}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF18324A),
+                ),
               ),
               const Spacer(),
               IconButton(
@@ -981,7 +1237,9 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
             decoration: InputDecoration(
               labelText: '${widget.fieldLabel} *',
               hintText: widget.fieldHint,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: AppColors.primary, width: 2),
@@ -998,17 +1256,25 @@ class _SingleFieldSheetState extends State<_SingleFieldSheet> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
               ),
               child: _saving
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : Text(
                       widget.isEdit ? 'Update' : 'Save',
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
                     ),
             ),
           ),
@@ -1024,12 +1290,14 @@ class _MedFormSheet extends StatefulWidget {
   final List<MedMasterItem> types;
   final List<MedMasterItem> dosages;
   final MedItem? item;
+  final bool ward;
   final Future<void> Function(Map<String, dynamic> data) onSave;
 
   const _MedFormSheet({
     required this.types,
     required this.dosages,
     this.item,
+    this.ward = false,
     required this.onSave,
   });
 
@@ -1041,29 +1309,38 @@ class _MedFormSheetState extends State<_MedFormSheet> {
   final _formKey = GlobalKey<FormState>();
   late int? _typeId;
   late int? _dosageId;
-  late String _usageScope;
-  late final TextEditingController _name, _duration, _qty, _company, _composition, _price;
+  late final TextEditingController _name,
+      _duration,
+      _qty,
+      _company,
+      _composition,
+      _price;
   bool _saving = false;
 
   @override
   void initState() {
     super.initState();
     final m = widget.item;
-    _typeId   = m?.medicineTypeId;
+    _typeId = m?.medicineTypeId;
     _dosageId = m?.dosageId;
-    _usageScope = m?.usageScope ?? 'opd';
-    _name        = TextEditingController(text: m?.name ?? '');
-    _duration    = TextEditingController(text: m?.duration ?? '');
-    _qty         = TextEditingController(text: m?.qty ?? '');
-    _company     = TextEditingController(text: m?.company ?? '');
+    _name = TextEditingController(text: m?.name ?? '');
+    _duration = TextEditingController(text: m?.duration ?? '');
+    _qty = TextEditingController(text: m?.qty ?? '');
+    _company = TextEditingController(text: m?.company ?? '');
     _composition = TextEditingController(text: m?.composition ?? '');
-    _price       = TextEditingController(text: m?.price?.toStringAsFixed(2) ?? '0.00');
+    _price = TextEditingController(
+      text: m?.price?.toStringAsFixed(2) ?? '0.00',
+    );
   }
 
   @override
   void dispose() {
-    _name.dispose(); _duration.dispose(); _qty.dispose();
-    _company.dispose(); _composition.dispose(); _price.dispose();
+    _name.dispose();
+    _duration.dispose();
+    _qty.dispose();
+    _company.dispose();
+    _composition.dispose();
+    _price.dispose();
     super.dispose();
   }
 
@@ -1073,20 +1350,26 @@ class _MedFormSheetState extends State<_MedFormSheet> {
     try {
       await widget.onSave({
         'medicine_type_id': _typeId,
-        'name':             _name.text.trim(),
-        'usage_scope':      _usageScope,
-        'dosage_id':        _dosageId,
-        'duration':         _duration.text.trim(),
-        'qty':              _qty.text.trim(),
-        'company':          _company.text.trim().isEmpty ? null : _company.text.trim(),
-        'composition':      _composition.text.trim().isEmpty ? null : _composition.text.trim(),
-        'price':            double.tryParse(_price.text) ?? 0.0,
+        'name': _name.text.trim(),
+        'dosage_id': _dosageId,
+        'duration': _duration.text.trim(),
+        'qty': _qty.text.trim(),
+        'company': _company.text.trim().isEmpty ? null : _company.text.trim(),
+        'composition': _composition.text.trim().isEmpty
+            ? null
+            : _composition.text.trim(),
+        'price': double.tryParse(_price.text) ?? 0.0,
+        if (widget.ward) 'usage_scope': 'ward',
       });
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
-        showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
       }
     }
   }
@@ -1095,7 +1378,9 @@ class _MedFormSheetState extends State<_MedFormSheet> {
   Widget build(BuildContext context) {
     final isEdit = widget.item != null;
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: DraggableScrollableSheet(
         expand: false,
         initialChildSize: 0.90,
@@ -1110,13 +1395,22 @@ class _MedFormSheetState extends State<_MedFormSheet> {
               Row(
                 children: [
                   Text(
-                    isEdit ? 'Edit Medicine' : 'Add Medicine',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF18324A)),
+                    isEdit
+                        ? (widget.ward ? 'Edit Ward Medicine' : 'Edit Medicine')
+                        : (widget.ward ? 'Add Ward Medicine' : 'Add Medicine'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF18324A),
+                    ),
                   ),
                   const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close_rounded, color: Color(0xFF6B7D93)),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Color(0xFF6B7D93),
+                    ),
                     visualDensity: VisualDensity.compact,
                   ),
                 ],
@@ -1126,53 +1420,69 @@ class _MedFormSheetState extends State<_MedFormSheet> {
               _Dropdown<int>(
                 hint: 'Select type',
                 value: _typeId,
-                items: widget.types.map((t) => DropdownMenuItem(value: t.id, child: Text(t.name))).toList(),
+                items: widget.types
+                    .map(
+                      (t) => DropdownMenuItem(value: t.id, child: Text(t.name)),
+                    )
+                    .toList(),
                 onChanged: (v) => setState(() => _typeId = v),
                 validator: (v) => v == null ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               _label('Medicine Name *'),
-              _Field(ctrl: _name, hint: 'Add Tab / Caps / Oint at end', validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
-              const SizedBox(height: 12),
-              _label('Select Type *'),
-              Row(children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('OPD'),
-                    selected: _usageScope == 'opd',
-                    onSelected: (_) => setState(() => _usageScope = 'opd'),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('OT'),
-                    selected: _usageScope == 'ot',
-                    onSelected: (_) => setState(() => _usageScope = 'ot'),
-                  ),
-                ),
-              ]),
+              _Field(
+                ctrl: _name,
+                hint: 'Add Tab / Caps / Oint at end',
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+              ),
               const SizedBox(height: 12),
               _label('Dosage *'),
               _Dropdown<int>(
                 hint: 'Select dosage',
                 value: _dosageId,
-                items: widget.dosages.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(),
+                items: widget.dosages
+                    .map(
+                      (d) => DropdownMenuItem(value: d.id, child: Text(d.name)),
+                    )
+                    .toList(),
                 onChanged: (v) => setState(() => _dosageId = v),
                 validator: (v) => v == null ? 'Required' : null,
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _label('Duration *'),
-                    _Field(ctrl: _duration, hint: 'e.g. 4 days', validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
-                  ])),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('Duration *'),
+                        _Field(
+                          ctrl: _duration,
+                          hint: 'e.g. 4 days',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Required'
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    _label('Qty *'),
-                    _Field(ctrl: _qty, hint: 'e.g. 10 tablets', validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
-                  ])),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _label('Qty *'),
+                        _Field(
+                          ctrl: _qty,
+                          hint: 'e.g. 10 tablets',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Required'
+                              : null,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -1180,10 +1490,20 @@ class _MedFormSheetState extends State<_MedFormSheet> {
               _Field(ctrl: _company, hint: 'e.g. Alcon, Sun Pharma'),
               const SizedBox(height: 12),
               _label('Composition'),
-              _Field(ctrl: _composition, hint: 'e.g. Moxifloxacin 0.5% w/v', maxLines: 2),
+              _Field(
+                ctrl: _composition,
+                hint: 'e.g. Moxifloxacin 0.5% w/v',
+                maxLines: 2,
+              ),
               const SizedBox(height: 12),
-              _label('Price (₹)'),
-              _Field(ctrl: _price, hint: '0.00', keyboardType: const TextInputType.numberWithOptions(decimal: true)),
+              _label('Price (${currentCurrencySymbol()})'),
+              _Field(
+                ctrl: _price,
+                hint: '0.00',
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
@@ -1193,12 +1513,26 @@ class _MedFormSheetState extends State<_MedFormSheet> {
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
                   ),
                   child: _saving
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : Text(isEdit ? 'Update Medicine' : 'Save Medicine',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          isEdit ? 'Update Medicine' : 'Save Medicine',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -1213,13 +1547,336 @@ class _MedFormSheetState extends State<_MedFormSheet> {
 // SHARED SMALL WIDGETS
 // ═════════════════════════════════════════════════════════════════════════════
 
+// ── CSV/Excel bulk import ────────────────────────────────────────────────────
+// See CSV_MEDICINE_IMPORT_PARITY_PLAN.md — mirrors web's import modal.
+
+class _ImportMedicinesSheet extends StatefulWidget {
+  final VoidCallback onImported;
+
+  const _ImportMedicinesSheet({required this.onImported});
+
+  @override
+  State<_ImportMedicinesSheet> createState() => _ImportMedicinesSheetState();
+}
+
+class _ImportMedicinesSheetState extends State<_ImportMedicinesSheet> {
+  PlatformFile? _picked;
+  bool _importing = false;
+  bool _downloadingSample = false;
+  MedicineImportResult? _result;
+
+  Future<void> _pickFile() async {
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: ['csv', 'xls', 'xlsx'],
+    );
+    if (file == null) return;
+    setState(() {
+      _picked = file;
+      _result = null;
+    });
+  }
+
+  Future<void> _downloadSample() async {
+    setState(() => _downloadingSample = true);
+    try {
+      await MedicineService.instance.downloadSampleFile();
+    } catch (e) {
+      if (mounted)
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
+    } finally {
+      if (mounted) setState(() => _downloadingSample = false);
+    }
+  }
+
+  Future<void> _import() async {
+    final path = _picked?.path;
+    if (path == null) return;
+    setState(() {
+      _importing = true;
+      _result = null;
+    });
+    try {
+      final result = await MedicineService.instance.importMedicines(File(path));
+      if (!mounted) return;
+      setState(() {
+        _importing = false;
+        _result = result;
+      });
+      if (result.imported > 0) widget.onImported();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _importing = false);
+      showAppSnackBar(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+        isError: true,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'CSV Upload',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF18324A),
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded, color: Color(0xFF6B7D93)),
+                visualDensity: VisualDensity.compact,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Required Excel Format',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1D4ED8),
+                    fontSize: 12.5,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _csvChip('Medicine Name', required: true),
+                    for (final c in [
+                      'Medicine Type',
+                      'Dosage',
+                      'Duration',
+                      'Qty',
+                      'Company',
+                      'Composition',
+                      'Price',
+                    ])
+                      _csvChip(c, required: false),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Blue = required, gray = optional — only Medicine Name is required. Medicine Type & Dosage (if provided) must match existing entries (case-insensitive). Duplicate names are skipped.',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                ),
+                const SizedBox(height: 8),
+                InkWell(
+                  onTap: _downloadingSample ? null : _downloadSample,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _downloadingSample
+                          ? const SizedBox(
+                              width: 12,
+                              height: 12,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.download_rounded,
+                              size: 14,
+                              color: Color(0xFF1D4ED8),
+                            ),
+                      const SizedBox(width: 4),
+                      const Text(
+                        'Download a sample file',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF1D4ED8),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          const Text(
+            'Select File (.xlsx, .xls, .csv)',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
+          ),
+          const SizedBox(height: 6),
+          OutlinedButton.icon(
+            onPressed: _pickFile,
+            icon: const Icon(Icons.attach_file_rounded, size: 16),
+            label: Text(
+              _picked?.name ?? 'Choose File',
+              overflow: TextOverflow.ellipsis,
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primaryA30),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          if (_result != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: _result!.imported > 0
+                    ? const Color(0xFFF0FDF4)
+                    : const Color(0xFFFEF2F2),
+                border: Border.all(
+                  color: _result!.imported > 0
+                      ? const Color(0xFFBBF7D0)
+                      : const Color(0xFFFECACA),
+                ),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Imported ${_result!.imported}, skipped ${_result!.skipped}.',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12.5,
+                    ),
+                  ),
+                  if (_result!.errors.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 140),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: _result!.errors
+                              .map(
+                                (e) => Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Text(
+                                    '• $e',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Color(0xFF6B7280),
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text('Close'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: (_picked == null || _importing) ? null : _import,
+                  icon: _importing
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.upload_rounded, size: 16),
+                  label: Text(_importing ? 'Importing…' : 'Import Now'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _csvChip(String label, {required bool required}) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    decoration: BoxDecoration(
+      color: required ? const Color(0xFFDBEAFE) : const Color(0xFFF3F4F6),
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontSize: 10.5,
+        color: required ? const Color(0xFF1D4ED8) : const Color(0xFF6B7280),
+      ),
+    ),
+  );
+}
+
 class _SectionHeader extends StatelessWidget {
   final String title;
   final String subtitle;
   final int? count;
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
+  final VoidCallback? onImport;
 
-  const _SectionHeader({required this.title, required this.subtitle, this.count, required this.onAdd});
+  const _SectionHeader({
+    required this.title,
+    required this.subtitle,
+    this.count,
+    this.onAdd,
+    this.onImport,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1230,9 +1887,22 @@ class _SectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.primary)),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.primary,
+                ),
+              ),
               const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF6B7D93).withValues(alpha: 0.60),
+                ),
+              ),
             ],
           ),
         ),
@@ -1240,75 +1910,57 @@ class _SectionHeader extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 8, top: 2),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(color: AppColors.primaryA12, borderRadius: BorderRadius.circular(AppRadius.xl)),
-            child: Text('$count', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
-          ),
-        ElevatedButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add_rounded, size: 15),
-          label: const Text('Add', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            elevation: 0,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _PaginationRow extends StatelessWidget {
-  final MedMeta meta;
-  final bool loading;
-  final VoidCallback onPrev;
-  final VoidCallback onNext;
-
-  const _PaginationRow({required this.meta, required this.loading, required this.onPrev, required this.onNext});
-
-  @override
-  Widget build(BuildContext context) {
-    if (meta.lastPage <= 1) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: (meta.hasPrev && !loading) ? onPrev : null,
-              icon: const Icon(Icons.arrow_back_ios_rounded, size: 13),
-              label: const Text('Prev'),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(color: AppColors.primaryA10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(
+              color: AppColors.primaryA12,
+              borderRadius: BorderRadius.circular(AppRadius.xl),
+            ),
+            child: Text(
+              '$count',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                color: AppColors.primary,
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: loading
-                ? SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2))
-                : Text('${meta.currentPage} / ${meta.lastPage}',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
-          ),
-          Expanded(
-            child: OutlinedButton.icon(
-              onPressed: (meta.hasNext && !loading) ? onNext : null,
-              icon: const Icon(Icons.arrow_forward_ios_rounded, size: 13),
-              label: const Text('Next'),
-              iconAlignment: IconAlignment.end,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: BorderSide(color: AppColors.primaryA10),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        if (onImport != null) ...[
+          OutlinedButton.icon(
+            onPressed: onImport,
+            icon: const Icon(Icons.file_upload_outlined, size: 15),
+            label: const Text(
+              'CSV',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              side: BorderSide(color: AppColors.primaryA30),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
           ),
+          const SizedBox(width: 8),
         ],
-      ),
+        if (onAdd != null)
+          ElevatedButton.icon(
+            onPressed: onAdd,
+            icon: const Icon(Icons.add_rounded, size: 15),
+            label: const Text(
+              'Add',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              elevation: 0,
+            ),
+          ),
+      ],
     );
   }
 }
@@ -1318,45 +1970,40 @@ class _IconBtn extends StatelessWidget {
   final Color color;
   final VoidCallback onTap;
 
-  const _IconBtn({required this.icon, required this.color, required this.onTap});
+  const _IconBtn({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => InkWell(
-        onTap: onTap,
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(AppRadius.sm),
+    child: Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(AppRadius.sm),
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.10),
-            borderRadius: BorderRadius.circular(AppRadius.sm),
-          ),
-          child: Icon(icon, size: 16, color: color),
-        ),
-      );
-}
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  const _InfoChip(this.icon, this.text);
-
-  @override
-  Widget build(BuildContext context) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 11, color: Color(0xFF6B7D93)),
-          const SizedBox(width: 3),
-          Text(text, style: TextStyle(fontSize: 11, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontWeight: FontWeight.w600)),
-        ],
-      );
+      ),
+      child: Icon(icon, size: 16, color: color),
+    ),
+  );
 }
 
 // ── Form helpers ──────────────────────────────────────────────────────────────
 
 Widget _label(String text) => Padding(
-      padding: const EdgeInsets.only(bottom: 5),
-      child: Text(text, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF6B7D93))),
-    );
+  padding: const EdgeInsets.only(bottom: 5),
+  child: Text(
+    text,
+    style: const TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      color: Color(0xFF6B7D93),
+    ),
+  ),
+);
 
 class _Field extends StatelessWidget {
   final TextEditingController ctrl;
@@ -1365,27 +2012,36 @@ class _Field extends StatelessWidget {
   final TextInputType? keyboardType;
   final String? Function(String?)? validator;
 
-  const _Field({required this.ctrl, this.hint, this.maxLines = 1, this.keyboardType, this.validator});
+  const _Field({
+    required this.ctrl,
+    this.hint,
+    this.maxLines = 1,
+    this.keyboardType,
+    this.validator,
+  });
 
   @override
   Widget build(BuildContext context) => TextFormField(
-        controller: ctrl,
-        maxLines: maxLines,
-        keyboardType: keyboardType,
-        style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
-        validator: validator,
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: AppColors.primary, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          isDense: true,
-        ),
-      );
+    controller: ctrl,
+    maxLines: maxLines,
+    keyboardType: keyboardType,
+    style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
+    validator: validator,
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(
+        fontSize: 12,
+        color: Color(0xFF6B7D93).withValues(alpha: 0.60),
+      ),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: AppColors.primary, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      isDense: true,
+    ),
+  );
 }
 
 class _Dropdown<T> extends StatelessWidget {
@@ -1395,26 +2051,38 @@ class _Dropdown<T> extends StatelessWidget {
   final ValueChanged<T?> onChanged;
   final String? Function(T?)? validator;
 
-  const _Dropdown({required this.hint, required this.value, required this.items, required this.onChanged, this.validator});
+  const _Dropdown({
+    required this.hint,
+    required this.value,
+    required this.items,
+    required this.onChanged,
+    this.validator,
+  });
 
   @override
   Widget build(BuildContext context) => DropdownButtonFormField<T>(
-        value: value,
-        hint: Text(hint, style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60))),
-        items: items,
-        onChanged: onChanged,
-        validator: validator,
-        isExpanded: true,
-        dropdownColor: Colors.white,
-        decoration: InputDecoration(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(color: AppColors.primary, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
-          isDense: true,
-        ),
-        style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
-      );
+    value: value,
+    hint: Text(
+      hint,
+      style: TextStyle(
+        fontSize: 12,
+        color: Color(0xFF6B7D93).withValues(alpha: 0.60),
+      ),
+    ),
+    items: items,
+    onChanged: onChanged,
+    validator: validator,
+    isExpanded: true,
+    dropdownColor: Colors.white,
+    decoration: InputDecoration(
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: AppColors.primary, width: 2),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      isDense: true,
+    ),
+    style: const TextStyle(fontSize: 13, color: Color(0xFF18324A)),
+  );
 }

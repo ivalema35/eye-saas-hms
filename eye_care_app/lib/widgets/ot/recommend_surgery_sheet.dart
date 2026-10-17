@@ -14,20 +14,22 @@ Future<bool?> showRecommendSurgerySheet(
   BuildContext context, {
   required Patient patient,
   String? diagnosisHint,
+  Future<void> Function()? beforeRecommend,
 }) {
   return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.white,
     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-    builder: (_) => _RecommendSurgerySheet(patient: patient, diagnosisHint: diagnosisHint),
+    builder: (_) => _RecommendSurgerySheet(patient: patient, diagnosisHint: diagnosisHint, beforeRecommend: beforeRecommend),
   );
 }
 
 class _RecommendSurgerySheet extends StatefulWidget {
   final Patient patient;
   final String? diagnosisHint;
-  const _RecommendSurgerySheet({required this.patient, this.diagnosisHint});
+  final Future<void> Function()? beforeRecommend;
+  const _RecommendSurgerySheet({required this.patient, this.diagnosisHint, this.beforeRecommend});
 
   @override
   State<_RecommendSurgerySheet> createState() => _RecommendSurgerySheetState();
@@ -61,7 +63,7 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
 
   Future<void> _loadMasters() async {
     try {
-      final surgeryTypes = await OtSurgeryTypeService.instance.fetchAll();
+      final surgeryTypes = await OtBookingService.instance.fetchSurgeryTypesForRecommend();
       if (!mounted) return;
       setState(() {
         _surgeryTypes = surgeryTypes;
@@ -84,6 +86,7 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
 
     setState(() => _saving = true);
     try {
+      if (widget.beforeRecommend != null) await widget.beforeRecommend!();
       await OtBookingService.instance.recommendSurgery(
         patientId: widget.patient.id,
         eye: _eye,
@@ -185,6 +188,9 @@ class _RecommendSurgerySheetState extends State<_RecommendSurgerySheet> {
                   TextFormField(
                     controller: _diagnosisCtrl,
                     maxLines: 2,
+                    // Matches web's `maxlength="255"` on this exact field —
+                    // the backend's diagnosis_hint validation is max:255.
+                    maxLength: 255,
                     decoration: _deco('Diagnosis Hint (optional)'),
                   ),
                 ]),

@@ -1,14 +1,23 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
+import '../widgets/app_animations.dart';
+import '../widgets/app_refresh_indicator.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/exam_clinical_data_view.dart';
+import '../widgets/skeleton.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
 import '../models/patient_history_models.dart';
 import '../services/patient_history_service.dart';
 import '../services/permission_service.dart';
+import '../utils/date_format.dart';
 import 'prescription_print_screen.dart';
+import 'patient_history_print_screen.dart';
+import 'primary_exam_screen.dart';
+import 'secondary_exam_screen.dart';
 
 
 // ─── Screen ────────────────────────────────────────────────────────────────────
@@ -17,12 +26,18 @@ class PatientHistoryScreen extends StatefulWidget {
   final UserInfo user;
   final HospitalInfo hospital;
   final Patient patient;
+  // Share History's connected-hospital patients aren't fetchable through the
+  // normal tenant-scoped history endpoint — this lets that one call site
+  // swap in ShareHistoryService.fetchPartnerPatientHistory() instead, while
+  // every other call site keeps using the default (PatientHistoryService).
+  final Future<ExamHistoryData> Function(int patientId)? historyLoader;
 
   const PatientHistoryScreen({
     super.key,
     required this.user,
     required this.hospital,
     required this.patient,
+    this.historyLoader,
   });
 
   @override
@@ -34,9 +49,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   bool _loading = true;
   String? _error;
 
-  // Tracks which exam IDs have their "View Clinical Data" panel open.
-  final Set<int>    _expanded        = {};
-  final Set<String> _partnerExpanded = {};
+  // UX pull 2026-10-05 (tablet parity): clinical data is now always shown
+  // inline (no collapse) — this instead tracks which exam IDs are showing
+  // the FULL exam form rather than the default "filled fields only" view.
+  final Set<int>    _fullExam   = {};
+  final Set<String> _partnerFull = {};
 
   @override
   void initState() {
@@ -47,8 +64,8 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Future<void> _loadHistory() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final data = await PatientHistoryService.instance
-          .fetchHistory(widget.patient.id);
+      final loader = widget.historyLoader ?? PatientHistoryService.instance.fetchHistory;
+      final data = await loader(widget.patient.id);
       if (mounted) setState(() { _history = data; _loading = false; });
     } catch (e) {
       if (mounted) setState(() { _error = e.toString(); _loading = false; });
@@ -63,7 +80,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
         children: [
           _buildAppBar(context),
           Expanded(
-            child: RefreshIndicator(
+            child: AppRefreshIndicator(
               color: AppColors.primary,
               onRefresh: _loadHistory,
               child: ListView(
@@ -143,6 +160,22 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                   ],
                 ),
               ),
+              // Print Full History — mirrors web's printer icon next to the
+              // Clinical Timeline heading. See PATIENT_HISTORY_PRINT_PLAN.md.
+              if (_history != null && _history!.exams.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.print_outlined, color: Colors.white),
+                  tooltip: 'Print History',
+                  onPressed: () => Navigator.push(
+                    context,
+                    appRoute(PatientHistoryPrintScreen(
+                      patient: _history!.patient,
+                      exams: _history!.exams,
+                      diagnosisMasters: _history!.diagnosisMasters,
+                      hospital: widget.hospital,
+                    )),
+                  ),
+                ),
             ],
           ),
         ),
@@ -232,7 +265,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
               title: 'Case Details',
               rows: [
                 ('Case Type',   p.caseType?.caseType ?? '—'),
-                ('Case Fee',    p.caseFee != null ? '₹${_fmtFee(p.caseFee!)}' : '—'),
+                ('Case Fee',    p.caseFee != null ? '${widget.hospital.currencySymbol}${_fmtFee(p.caseFee!)}' : '—'),
                 ('Referred By', p.referrer?.name ?? '—'),
               ],
             )),
@@ -359,42 +392,11 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _buildTimelineBody() {
     if (_loading) {
-      return Padding(
-        padding: EdgeInsets.symmetric(vertical: 32),
-        child: Center(
-          child: CircularProgressIndicator(
-            color: AppColors.primary, strokeWidth: 2.5),
-        ),
-      );
+      return const AppSkeletonList();
     }
 
     if (_error != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
-        child: Column(
-          children: [
-            Icon(Icons.wifi_off_rounded, size: 38, color: AppColors.primaryA50),
-            const SizedBox(height: 12),
-            Text('Failed to load history',
-                style: TextStyle(
-                    fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primaryA62)),
-            const SizedBox(height: 4),
-            Text(_error!, textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: AppColors.primaryA50)),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _loadHistory,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppRadius.xl)),
-              ),
-            ),
-          ],
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _loadHistory);
     }
 
     if (_history == null || _history!.exams.isEmpty) {
@@ -479,7 +481,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
 
   Widget _buildExamCard(ExamRecord exam) {
     final isPrimary  = exam.isPrimary;
-    final isExpanded = _expanded.contains(exam.id);
+    final showFull   = _fullExam.contains(exam.id);
     final headerBg   = isPrimary ? AppColors.primaryA08 : const Color(0xFFF3F4F6);
     final headerFg   = isPrimary ? AppColors.primary : Color(0xFF6B7280);
     final label      = isPrimary ? 'Primary Exam' : 'Secondary Exam';
@@ -552,55 +554,16 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                     ),
                   ),
 
-                // Toggle + Print buttons row
-                Row(
+                // Print/Edit buttons row — clinical data itself is always
+                // shown below (filled-fields-only by default); the toggle
+                // to see the full exam form sits on the data's own header.
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    GestureDetector(
-                      onTap: () => setState(() {
-                        if (isExpanded) {
-                          _expanded.remove(exam.id);
-                        } else {
-                          _expanded.add(exam.id);
-                        }
-                      }),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: isExpanded ? AppColors.primaryA08 : Colors.white,
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
-                          border: Border.all(
-                              color: isExpanded ? AppColors.primaryA24 : AppColors.primaryA18),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isExpanded
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.description_outlined,
-                              size: 14, color: AppColors.primary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isExpanded ? 'Hide Clinical Data' : 'View Clinical Data',
-                              style: TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              isExpanded
-                                  ? Icons.keyboard_arrow_up_rounded
-                                  : Icons.keyboard_arrow_down_rounded,
-                              size: 16, color: AppColors.primary,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                     if (exam.prescriptions.isNotEmpty &&
                         PermissionService.instance.can(Perm.opdPrescriptionPrint)) ...[
-                      const SizedBox(width: 8),
-                      GestureDetector(
+                      PressScaleWrapper(
                         onTap: () => Navigator.push(
                           context,
                           appRoute(PrescriptionPrintScreen(
@@ -631,19 +594,94 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                         ),
                       ),
                     ],
+                    // Edit — reopens the same exam form pre-filled with the
+                    // saved data, matching web parity. Gated by the same
+                    // permission that already guards fresh entry.
+                    if (PermissionService.instance.can(
+                        isPrimary ? Perm.opdExamPrimary : Perm.opdExamSecondary)) ...[
+                      PressScaleWrapper(
+                        onTap: () async {
+                          final result = await Navigator.push<bool>(
+                            context,
+                            appRoute(isPrimary
+                                ? PrimaryExamScreen(
+                                    user: widget.user,
+                                    hospital: widget.hospital,
+                                    patient: widget.patient,
+                                  )
+                                : SecondaryExamScreen(
+                                    user: widget.user,
+                                    hospital: widget.hospital,
+                                    patient: widget.patient,
+                                  )),
+                          );
+                          if (result == true && mounted) _loadHistory();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(AppRadius.sm),
+                            border: Border.all(color: AppColors.primaryA18),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
+                              const SizedBox(width: 6),
+                              Text('Edit',
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppColors.primary)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                    // Filled-only (default, concise) ↔ Full exam form —
+                    // tablet parity: clinical data is always shown below,
+                    // this just controls how much of it.
+                    PressScaleWrapper(
+                      onTap: () => setState(() {
+                        if (showFull) {
+                          _fullExam.remove(exam.id);
+                        } else {
+                          _fullExam.add(exam.id);
+                        }
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: showFull ? AppColors.primaryA08 : Colors.white,
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          border: Border.all(
+                              color: showFull ? AppColors.primaryA24 : AppColors.primaryA18),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              showFull ? Icons.compress_rounded : Icons.open_in_full_rounded,
+                              size: 14, color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              showFull ? 'Filled Only' : 'Full Exam',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
 
-                // Expandable clinical data
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeInOut,
-                  child: isExpanded
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: _buildClinicalData(exam),
-                        )
-                      : const SizedBox.shrink(),
+                // Clinical data — always shown, density controlled above.
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: buildExamClinicalData(exam, _history!.diagnosisMasters, onlyFilled: !showFull),
                 ),
               ],
             ),
@@ -653,499 +691,17 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
     );
   }
 
-  // ── Clinical data boxes ────────────────────────────────────────────────────
 
-  Widget _buildClinicalData(ExamRecord exam, {Map<int, String>? diagnosisMap}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildBox('History & Vision',   _buildHistoryVision(exam)),
-        const SizedBox(height: 8),
-        _buildBox('Subjective Testing (ST) & Diagnosis & Rx', _buildStAndRx(exam, diagnosisMap: diagnosisMap)),
-        const SizedBox(height: 8),
-        _buildBox('On Examination (O/E)', _buildOeTable(exam.oe)),
-        const SizedBox(height: 8),
-        _buildBox('Fundus',              _buildFundusTable(exam.fundus)),
-        if (exam.advice.trim().isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _buildBox('Advice', _buildAdvice(exam.advice)),
-        ],
-      ],
-    );
-  }
+  // Hospital-timezone-aware (not raw UTC / device-local) — see
+  // PATIENT_DATE_TIME_DISPLAY_AUDIT.md.
+  String _fmtDate(String? s) => formatDateString(s);
 
-  Widget _buildBox(String title, Widget content) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.primaryA18),
-        borderRadius: BorderRadius.circular(AppRadius.sm),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(7)),
-            ),
-            child: Text(title.toUpperCase(),
-                style: const TextStyle(
-                    fontSize: 10, fontWeight: FontWeight.w800,
-                    color: Colors.white, letterSpacing: 0.4)),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: content,
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ── Box 1: History & Vision ────────────────────────────────────────────────
-
-  Widget _buildHistoryVision(ExamRecord exam) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // C/O table
-        _buildSectionLabel('C/O'),
-        _buildTable(
-          headers: const ['Complaint', 'Since', 'Eye', 'Comment'],
-          widths:  const [2.0, 1.0, 1.0, 1.5],
-          rows: exam.coRows
-              .where((r) => (r['complaint'] ?? '').isNotEmpty)
-              .map((r) => <String>[
-                    (r['complaint'] ?? '-').toString(),
-                    '${r['since'] ?? '-'} ${r['unit'] ?? ''}'.trim(),
-                    (r['eye'] ?? '-').toString(),
-                    (r['comment'] ?? '-').toString(),
-                  ])
-              .toList(),
-          emptyLabel: '—',
-        ),
-
-        // K/C/O table (only if has rows)
-        if (exam.kcoRows.where((r) => (r['condition'] ?? '').isNotEmpty).isNotEmpty) ...[
-          const SizedBox(height: 6),
-          _buildSectionLabel('K/C/O'),
-          _buildTable(
-            headers: const ['Condition', 'Since', 'Comment'],
-            widths:  const [2.0, 1.0, 1.5],
-            rows: exam.kcoRows
-                .where((r) => (r['condition'] ?? '').isNotEmpty)
-                .map((r) => <String>[
-                      (r['condition'] ?? '-').toString(),
-                      '${r['since'] ?? '-'} ${r['unit'] ?? ''}'.trim(),
-                      (r['comment'] ?? '-').toString(),
-                    ])
-                .toList(),
-            emptyLabel: '—',
-          ),
-        ],
-
-        // Vn / PH / NrVn / IOP row
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 10,
-          runSpacing: 4,
-          children: [
-            _vnChip('Vn',    _cv(exam.vision['vn_re']),   _cv(exam.vision['vn_le'])),
-            _vnChip('PH',    _cv(exam.vision['pnvn_re']), _cv(exam.vision['pnvn_le'])),
-            _vnChip('NrVn',  _cv(exam.vision['nrvn_re']), _cv(exam.vision['nrvn_le'])),
-            _vnChip('IOP',   _cv(exam.nct['iop_re']),     _cv(exam.nct['iop_le'])),
-          ],
-        ),
-
-        // PG refraction table
-        const SizedBox(height: 8),
-        _buildRefractionTable('RIGHT EYE (RE) / LEFT EYE (LE)', exam.pgRe, exam.pgLe),
-      ],
-    );
-  }
-
-  Widget _vnChip(String label, String re, String le) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: AppColors.primaryA06,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: AppColors.primaryA12),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: TextStyle(fontSize: 11, color: AppColors.primary),
-          children: [
-            TextSpan(text: '$label  ',
-                style: const TextStyle(fontWeight: FontWeight.w800)),
-            TextSpan(text: '$re/$le'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRefractionTable(String title, Map<String, dynamic> re, Map<String, dynamic> le) {
-    // Flutter Table has no colspan — every row must have exactly 9 children.
-    // Group labels are placed only in their first column; filler cells are empty.
-    return Table(
-      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
-      columnWidths: const {
-        0: FixedColumnWidth(18),
-        1: FlexColumnWidth(),
-        2: FlexColumnWidth(),
-        3: FlexColumnWidth(),
-        4: FlexColumnWidth(),
-        5: FlexColumnWidth(),
-        6: FlexColumnWidth(),
-        7: FlexColumnWidth(),
-        8: FlexColumnWidth(),
-      },
-      children: [
-        // Row 1: group labels — RE label in col-1, LE label in col-5, rest empty
-        TableRow(
-          decoration: BoxDecoration(color: AppColors.primary),
-          children: [
-            _th(''),
-            _th('RIGHT EYE (RE)'), _th(''), _th(''), _th(''),
-            _th('LEFT EYE (LE)'),  _th(''), _th(''), _th(''),
-          ],
-        ),
-        // Row 2: column sub-headers
-        TableRow(
-          decoration: BoxDecoration(color: AppColors.primaryA08),
-          children: [
-            _thSub(''),
-            _thSub('SPH'), _thSub('CYL'), _thSub('AXIS'), _thSub('VN'),
-            _thSub('SPH'), _thSub('CYL'), _thSub('AXIS'), _thSub('VN'),
-          ],
-        ),
-        TableRow(children: [
-          _rowLabel('D'),
-          _td(_cv(re['ds'])), _td(_cv(re['dc'])), _td(_cv(re['ax'])), _td(_cv(re['vn'])),
-          _td(_cv(le['ds'])), _td(_cv(le['dc'])), _td(_cv(le['ax'])), _td(_cv(le['vn'])),
-        ]),
-        TableRow(children: [
-          _rowLabel('N'),
-          _td(_cv(re['ns'])), _td(_cv(re['nc'])), _td(_cv(re['na'])), _td(_cv(re['near_vn'])),
-          _td(_cv(le['ns'])), _td(_cv(le['nc'])), _td(_cv(le['na'])), _td(_cv(le['near_vn'])),
-        ]),
-      ],
-    );
-  }
-
-  // ── Box 2: ST + Diagnosis & Rx ─────────────────────────────────────────────
-
-  Widget _buildStAndRx(ExamRecord exam, {Map<int, String>? diagnosisMap}) {
-    final effectiveDx = diagnosisMap ?? _history!.diagnosisMasters;
-
-    // Resolve diagnosis names
-    final dxIds = exam.diagnoses
-        .map((id) => (id is num) ? id.toInt() : int.tryParse(id.toString()))
-        .whereType<int>()
-        .toList();
-    final dxNames = dxIds
-        .map((id) => effectiveDx[id] ?? '')
-        .where((s) => s.isNotEmpty)
-        .join(', ');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ST table
-        _buildRefractionTable(
-            'RIGHT EYE (RE) / LEFT EYE (LE)', exam.stRe, exam.stLe),
-
-        // ADD row
-        if ((exam.stRe['add'] ?? '').isNotEmpty ||
-            (exam.stLe['add'] ?? '').isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Row(
-            children: [
-              Text('ADD  ',
-                  style: TextStyle(
-                      fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
-              Text('RE: ${exam.stRe['add'] ?? '-'}  LE: ${exam.stLe['add'] ?? '-'}',
-                  style: TextStyle(fontSize: 11, color: AppColors.primary)),
-            ],
-          ),
-        ],
-
-        // ST badges
-        if (exam.stBadges.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Wrap(
-            spacing: 4, runSpacing: 4,
-            children: exam.stBadges.map((b) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Text(b,
-                  style: const TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
-            )).toList(),
-          ),
-        ],
-
-        // Diagnosis & dilate
-        const SizedBox(height: 8),
-        _buildSectionLabel('Diagnosis & Rx'),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: Wrap(
-            children: [
-              RichText(
-                text: TextSpan(
-                  style: TextStyle(fontSize: 11, color: AppColors.primary),
-                  children: [
-                    const TextSpan(text: 'Dx: ',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                    TextSpan(text: dxNames.isEmpty ? '-' : dxNames),
-                    const TextSpan(text: '   Dilate: ',
-                        style: TextStyle(fontWeight: FontWeight.w800)),
-                    TextSpan(text: exam.dilate),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        // Medicine table
-        _buildTable(
-          headers: const ['Medicine', 'Dosage', 'Days', 'Eye'],
-          widths:  const [2.5, 1.2, 1.0, 1.0],
-          rows: exam.prescriptions
-              .map((rx) => [rx.medicineName, rx.dosage, rx.duration, rx.eye])
-              .toList(),
-          emptyLabel: 'No medicines',
-        ),
-      ],
-    );
-  }
-
-  // ── Box 3: O/E ────────────────────────────────────────────────────────────
-
-  Widget _buildOeTable(Map<String, dynamic> oe) {
-    const fields = [
-      ('sac',       'SAC'),
-      ('lid',       'LID'),
-      ('conj',      'CONJ'),
-      ('cornea',    'CORNEA'),
-      ('ac',        'AC'),
-      ('iris',      'IRIS'),
-      ('pupil',     'PUPIL'),
-      ('lens',      'LENS'),
-      ('em',        'EM'),
-      ('covertest', 'COVERTEST'),
-      ('other',     'OTHER'),
-    ];
-
-    return Table(
-      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
-      columnWidths: const {
-        0: FlexColumnWidth(1.6),
-        1: FlexColumnWidth(1.0),
-        2: FlexColumnWidth(1.0),
-      },
-      children: [
-        TableRow(
-          decoration: BoxDecoration(color: AppColors.primary),
-          children: [
-            _th('O/E', align: TextAlign.left),
-            _th('RIGHT'),
-            _th('LEFT'),
-          ],
-        ),
-        ...fields.map((f) => TableRow(children: [
-          _rowLabel(f.$2, align: TextAlign.left),
-          _td(_cv(oe['${f.$1}_re'])),
-          _td(_cv(oe['${f.$1}_le'])),
-        ])),
-      ],
-    );
-  }
-
-  // ── Box 4: Fundus ─────────────────────────────────────────────────────────
-
-  Widget _buildFundusTable(Map<String, dynamic> fundus) {
-    return Table(
-      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
-      columnWidths: const {
-        0: FlexColumnWidth(1.6),
-        1: FlexColumnWidth(1.0),
-        2: FlexColumnWidth(1.0),
-      },
-      children: [
-        TableRow(
-          decoration: BoxDecoration(color: AppColors.primary),
-          children: [
-            _th('Fundus', align: TextAlign.left),
-            _th('RIGHT'),
-            _th('LEFT'),
-          ],
-        ),
-        TableRow(children: [
-          _rowLabel('DISC',    align: TextAlign.left),
-          _td(_cv(fundus['disc_re'])),
-          _td(_cv(fundus['disc_le'])),
-        ]),
-        TableRow(children: [
-          _rowLabel('FR',      align: TextAlign.left),
-          _td(_cv(fundus['fr_re'])),
-          _td(_cv(fundus['fr_le'])),
-        ]),
-        TableRow(children: [
-          _rowLabel('COMMENT', align: TextAlign.left),
-          _td(_cv(fundus['comment_re'])),
-          _td(_cv(fundus['comment_le'])),
-        ]),
-      ],
-    );
-  }
-
-  // ── Advice ────────────────────────────────────────────────────────────────
-
-  Widget _buildAdvice(String text) {
-    return Text(text.trim(),
-        style: TextStyle(
-            fontSize: 12, height: 1.6, color: AppColors.primary));
-  }
-
-  // ── Shared table helpers ───────────────────────────────────────────────────
-
-  Widget _buildSectionLabel(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 10, fontWeight: FontWeight.w800,
-              color: AppColors.primary, letterSpacing: 0.3)),
-    );
-  }
-
-  Widget _buildTable({
-    required List<String> headers,
-    required List<double> widths,
-    required List<List<String>> rows,
-    required String emptyLabel,
-  }) {
-    final colWidths = <int, TableColumnWidth>{};
-    for (var i = 0; i < widths.length; i++) {
-      colWidths[i] = FlexColumnWidth(widths[i]);
-    }
-
-    return Table(
-      border: TableBorder.all(color: AppColors.primaryA18, width: 0.8),
-      columnWidths: colWidths,
-      children: [
-        TableRow(
-          decoration: BoxDecoration(color: AppColors.primary),
-          children: headers.asMap().map((i, h) => MapEntry(i,
-            _th(h, align: i == 0 ? TextAlign.left : TextAlign.center),
-          )).values.toList(),
-        ),
-        if (rows.isEmpty)
-          TableRow(children: [
-            TableCell(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: Text(emptyLabel,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        fontSize: 10, color: AppColors.primaryA50)),
-              ),
-            ),
-            ...List.generate(headers.length - 1,
-                (_) => TableCell(child: const SizedBox())),
-          ])
-        else
-          ...rows.map((row) => TableRow(
-            children: row.asMap().map((i, cell) => MapEntry(i,
-              i == 0
-                  ? _rowLabel(cell, align: TextAlign.left)
-                  : _td(cell),
-            )).values.toList(),
-          )),
-      ],
-    );
-  }
-
-  // ── Table cell builders ────────────────────────────────────────────────────
-
-  Widget _th(String text, {TextAlign align = TextAlign.center}) => TableCell(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-      child: Text(text,
-          textAlign: align,
-          style: const TextStyle(
-              fontSize: 9, fontWeight: FontWeight.w800, color: Colors.white)),
-    ),
-  );
-
-  Widget _thSub(String text) => TableCell(
-    child: Container(
-      color: AppColors.primaryA08,
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              fontSize: 8, fontWeight: FontWeight.w700, color: AppColors.primaryA62)),
-    ),
-  );
-
-  Widget _rowLabel(String text, {TextAlign align = TextAlign.center}) => TableCell(
-    child: Container(
-      color: AppColors.primaryA06,
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 5),
-      child: Text(text,
-          textAlign: align,
-          style: TextStyle(
-              fontSize: 9, fontWeight: FontWeight.w800, color: AppColors.primary)),
-    ),
-  );
-
-  Widget _td(String text) => TableCell(
-    child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
-      child: Text(text,
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: AppColors.primary)),
-    ),
-  );
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  static String _cv(dynamic v) =>
-      (v != null && v != '') ? v.toString() : '-';
-
-  String _fmtDate(String? s) {
-    if (s == null || s.isEmpty) return '—';
-    final dt = DateTime.tryParse(s);
-    if (dt == null) return s;
-    const m = ['Jan','Feb','Mar','Apr','May','Jun',
-                'Jul','Aug','Sep','Oct','Nov','Dec'];
-    return '${dt.day} ${m[dt.month - 1]} ${dt.year}';
-  }
-
-  String _fmtDateTime(DateTime dt) {
-    const m = ['Jan','Feb','Mar','Apr','May','Jun',
-                'Jul','Aug','Sep','Oct','Nov','Dec'];
-    final h   = dt.hour;
-    final min = dt.minute.toString().padLeft(2, '0');
-    final p   = h >= 12 ? 'PM' : 'AM';
-    final h12 = h > 12 ? h - 12 : (h == 0 ? 12 : h);
-    return '${dt.day} ${m[dt.month - 1]} ${dt.year}, $h12:$min $p';
-  }
+  String _fmtDateTime(DateTime dt) => toDisplayDateTime(dt);
 
   String _fmtTime(DateTime dt) {
-    final h   = dt.hour;
-    final min = dt.minute.toString().padLeft(2, '0');
+    final local = toHospitalTime(dt);
+    final h   = local.hour;
+    final min = local.minute.toString().padLeft(2, '0');
     final p   = h >= 12 ? 'PM' : 'AM';
     final h12 = h > 12 ? h - 12 : (h == 0 ? 12 : h);
     return '$h12:$min $p';
@@ -1291,7 +847,7 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
   Widget _buildPartnerExamCard(int partnerIdx, ExamRecord exam, Map<int, String> dm) {
     final isPrimary   = exam.isPrimary;
     final expandKey   = '${partnerIdx}_${exam.id}';
-    final isExpanded  = _partnerExpanded.contains(expandKey);
+    final showFull    = _partnerFull.contains(expandKey);
     final headerBg    = isPrimary ? AppColors.primaryA08 : const Color(0xFFF3F4F6);
     final headerFg    = isPrimary ? AppColors.primary : Color(0xFF6B7280);
     final label       = isPrimary ? 'Primary Exam' : 'Secondary Exam';
@@ -1357,52 +913,44 @@ class _PatientHistoryScreenState extends State<PatientHistoryScreen> {
                       ],
                     ),
                   ),
-                GestureDetector(
-                  onTap: () => setState(() {
-                    if (isExpanded) {
-                      _partnerExpanded.remove(expandKey);
-                    } else {
-                      _partnerExpanded.add(expandKey);
-                    }
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                    decoration: BoxDecoration(
-                      color: isExpanded ? AppColors.primaryA08 : Colors.white,
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                      border: Border.all(color: isExpanded ? AppColors.primaryA24 : AppColors.primaryA18),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          isExpanded ? Icons.visibility_off_outlined : Icons.description_outlined,
-                          size: 14, color: AppColors.primary,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isExpanded ? 'Hide Clinical Data' : 'View Clinical Data',
-                          style: TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          isExpanded ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
-                          size: 16, color: AppColors.primary,
-                        ),
-                      ],
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: PressScaleWrapper(
+                    onTap: () => setState(() {
+                      if (showFull) {
+                        _partnerFull.remove(expandKey);
+                      } else {
+                        _partnerFull.add(expandKey);
+                      }
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: showFull ? AppColors.primaryA08 : Colors.white,
+                        borderRadius: BorderRadius.circular(AppRadius.sm),
+                        border: Border.all(color: showFull ? AppColors.primaryA24 : AppColors.primaryA18),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            showFull ? Icons.compress_rounded : Icons.open_in_full_rounded,
+                            size: 14, color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            showFull ? 'Filled Only' : 'Full Exam',
+                            style: TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 280),
-                  curve: Curves.easeInOut,
-                  child: isExpanded
-                      ? Padding(
-                          padding: const EdgeInsets.only(top: 12),
-                          child: _buildClinicalData(exam, diagnosisMap: dm),
-                        )
-                      : const SizedBox.shrink(),
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: buildExamClinicalData(exam, dm, onlyFilled: !showFull),
                 ),
               ],
             ),

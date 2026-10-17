@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../widgets/app_error_state.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -7,13 +8,20 @@ import '../models/medicine_models.dart';
 import '../services/medicine_service.dart';
 import '../utils/app_route.dart';
 import 'medicine_group_form_screen.dart';
+import '../widgets/skeleton.dart';
 
 BoxDecoration _cardDeco() => BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      border: Border.all(color: AppColors.primaryA10),
-      boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
-    );
+  color: Colors.white,
+  borderRadius: BorderRadius.circular(14),
+  border: Border.all(color: AppColors.primaryA10),
+  boxShadow: [
+    BoxShadow(
+      color: AppColors.primaryA06,
+      blurRadius: 8,
+      offset: const Offset(0, 2),
+    ),
+  ],
+);
 
 // ═════════════════════════════════════════════════════════════════════════════
 // DETAIL SCREEN
@@ -32,7 +40,8 @@ class MedicineGroupDetailScreen extends StatefulWidget {
   });
 
   @override
-  State<MedicineGroupDetailScreen> createState() => _MedicineGroupDetailScreenState();
+  State<MedicineGroupDetailScreen> createState() =>
+      _MedicineGroupDetailScreenState();
 }
 
 class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
@@ -47,23 +56,36 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
     try {
       final g = await MedicineService.instance.fetchGroup(widget.groupId);
-      if (mounted) setState(() { _group = g; _loading = false; });
+      if (mounted)
+        setState(() {
+          _group = g;
+          _loading = false;
+        });
     } catch (e) {
-      if (mounted) setState(() { _error = e.toString().replaceFirst('Exception: ', ''); _loading = false; });
+      if (mounted)
+        setState(() {
+          _error = e.toString().replaceFirst('Exception: ', '');
+          _loading = false;
+        });
     }
   }
 
   Future<void> _pushEdit() async {
     final refreshed = await Navigator.push<bool>(
       context,
-      appRoute(MedicineGroupFormScreen(
-        user: widget.user,
-        hospital: widget.hospital,
-        existing: _group,
-      )),
+      appRoute(
+        MedicineGroupFormScreen(
+          user: widget.user,
+          hospital: widget.hospital,
+          existing: _group,
+        ),
+      ),
     );
     if (refreshed == true && mounted) _load();
   }
@@ -91,17 +113,17 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
         ],
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
-              ? AppErrorState(message: _error!, onRetry: _load)
-              : _group != null
-                  ? _buildBody(_group!)
-                  : const SizedBox.shrink(),
+          ? AppErrorState(message: _error!, onRetry: _load)
+          : _group != null
+          ? _buildBody(_group!)
+          : const SizedBox.shrink(),
     );
   }
 
   Widget _buildBody(MedGroup group) {
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _load,
       color: AppColors.primary,
       child: ListView(
@@ -124,24 +146,44 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
                         children: [
                           Text(
                             group.name,
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: AppColors.primary),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w900,
+                              color: AppColors.primary,
+                            ),
                           ),
                           if (group.groupCode != null) ...[
                             const SizedBox(height: 4),
                             Text(
                               group.groupCode!,
-                              style: TextStyle(fontSize: 13, color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontWeight: FontWeight.w600),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(
+                                  0xFF6B7D93,
+                                ).withValues(alpha: 0.60),
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(color: AppColors.primaryA12, borderRadius: BorderRadius.circular(AppRadius.xl)),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryA12,
+                        borderRadius: BorderRadius.circular(AppRadius.xl),
+                      ),
                       child: Text(
                         '${group.itemsCount} med${group.itemsCount == 1 ? '' : 's'}',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
                       ),
                     ),
                   ],
@@ -150,11 +192,19 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(Icons.local_hospital_outlined, size: 14, color: Color(0xFF1F9D55)),
+                      const Icon(
+                        Icons.local_hospital_outlined,
+                        size: 14,
+                        color: AppColors.green,
+                      ),
                       const SizedBox(width: 5),
                       Text(
                         group.diagnosisValue!,
-                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF1F9D55)),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.green,
+                        ),
                       ),
                     ],
                   ),
@@ -171,7 +221,10 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
               child: Center(
                 child: Text(
                   'No medicines in this group.',
-                  style: TextStyle(color: Color(0xFF6B7D93).withValues(alpha: 0.60), fontSize: 14),
+                  style: TextStyle(
+                    color: Color(0xFF6B7D93).withValues(alpha: 0.60),
+                    fontSize: 14,
+                  ),
                 ),
               ),
             )
@@ -183,29 +236,68 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
                     color: AppColors.primaryA06,
                     child: Row(
                       children: [
                         Expanded(
                           flex: 3,
-                          child: Text('Medicine', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                          child: Text(
+                            'Medicine',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text('Dosage', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                          child: Text(
+                            'Dosage',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text('Duration', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                          child: Text(
+                            'Duration',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text('Route', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
+                          child: Text(
+                            'Route',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
                         SizedBox(
                           width: 40,
-                          child: Text('Qty', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary), textAlign: TextAlign.center),
+                          child: Text(
+                            'Qty',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.primary,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ],
                     ),
@@ -214,7 +306,10 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
                     final i = entry.key;
                     final item = entry.value;
                     return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       decoration: BoxDecoration(
                         border: Border(
                           top: BorderSide(color: AppColors.primaryA10),
@@ -228,35 +323,58 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
                             flex: 3,
                             child: Text(
                               item.medicineName ?? '-',
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF18324A)),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF18324A),
+                              ),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               item.dosageText ?? '-',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(
+                                  0xFF6B7D93,
+                                ).withValues(alpha: 0.60),
+                              ),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               item.duration ?? '-',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(
+                                  0xFF6B7D93,
+                                ).withValues(alpha: 0.60),
+                              ),
                             ),
                           ),
                           Expanded(
                             flex: 2,
                             child: Text(
                               item.routeName ?? '-',
-                              style: TextStyle(fontSize: 12, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Color(
+                                  0xFF6B7D93,
+                                ).withValues(alpha: 0.60),
+                              ),
                             ),
                           ),
                           SizedBox(
                             width: 40,
                             child: Text(
                               '${item.quantity}',
-                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary),
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: AppColors.primary,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -273,12 +391,17 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
             child: OutlinedButton.icon(
               onPressed: _pushEdit,
               icon: const Icon(Icons.edit_outlined, size: 16),
-              label: const Text('Edit Group', style: TextStyle(fontWeight: FontWeight.w800)),
+              label: const Text(
+                'Edit Group',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.primary,
                 side: BorderSide(color: AppColors.primaryA10, width: 1.5),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.md),
+                ),
               ),
             ),
           ),
@@ -287,4 +410,3 @@ class _MedicineGroupDetailScreenState extends State<MedicineGroupDetailScreen> {
     );
   }
 }
-

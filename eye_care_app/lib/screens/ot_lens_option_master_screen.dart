@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_lens_option_service.dart';
 import '../models/ot_inventory_models.dart';
 
@@ -15,10 +20,15 @@ class OtLensOptionMasterScreen extends StatefulWidget {
 }
 
 class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
+  final _p = PermissionService.instance;
   List<OtLensOptionItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd => _p.can(Perm.masterOtLensOptionAdd);
+  bool get _canEdit => _p.can(Perm.masterOtLensOptionEdit);
+  bool get _canDelete => _p.can(Perm.masterOtLensOptionDelete);
 
   List<OtLensOptionItem> get _filtered =>
       _query.isEmpty ? _all : _all.where((i) => i.name.toLowerCase().contains(_query.toLowerCase())).toList();
@@ -71,11 +81,11 @@ class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
       builder: (_) => _LensOptionSheet(
         item: item,
         accentColor: widget.accentColor,
-        onSave: (name) async {
+        onSave: (name, isActive) async {
           if (item == null) {
-            await OtLensOptionService.instance.create(name);
+            await OtLensOptionService.instance.create(name, isActive: isActive);
           } else {
-            await OtLensOptionService.instance.update(item.id, name);
+            await OtLensOptionService.instance.update(item.id, name, isActive: isActive);
           }
           await _load();
         },
@@ -92,7 +102,7 @@ class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         title: const Text('Lens Options', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-        actions: [IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
+        actions: [if (_canAdd) IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
       ),
       body: Column(children: [_buildSearch(), Expanded(child: _buildBody())]),
     );
@@ -114,20 +124,9 @@ class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white)),
-          ]),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     final items = _filtered;
     if (items.isEmpty) {
@@ -142,7 +141,7 @@ class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
         ),
       ]);
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -165,10 +164,10 @@ class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
                   decoration: BoxDecoration(color: item.isActive ? AppColors.green.withValues(alpha: 0.10) : const Color(0xFF7F8C8D).withValues(alpha: 0.10), borderRadius: BorderRadius.circular(6)),
                   child: Text(item.isActive ? 'Active' : 'Inactive', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: item.isActive ? AppColors.green : const Color(0xFF7F8C8D))),
                 ),
-                const SizedBox(width: 4),
-                InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
-                const SizedBox(width: 2),
-                InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
+                if (_canEdit) const SizedBox(width: 4),
+                if (_canEdit) InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
+                if (_canDelete) const SizedBox(width: 2),
+                if (_canDelete) InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
               ]),
             ),
           );
@@ -181,7 +180,7 @@ class _OtLensOptionMasterScreenState extends State<OtLensOptionMasterScreen> {
 class _LensOptionSheet extends StatefulWidget {
   final OtLensOptionItem? item;
   final Color accentColor;
-  final Future<void> Function(String name) onSave;
+  final Future<void> Function(String name, bool isActive) onSave;
 
   const _LensOptionSheet({required this.item, required this.accentColor, required this.onSave});
 
@@ -191,6 +190,7 @@ class _LensOptionSheet extends StatefulWidget {
 
 class _LensOptionSheetState extends State<_LensOptionSheet> {
   late final TextEditingController _nameCtrl;
+  late bool _isActive;
   bool _saving = false;
   String? _nameError;
 
@@ -198,6 +198,8 @@ class _LensOptionSheetState extends State<_LensOptionSheet> {
   void initState() {
     super.initState();
     _nameCtrl = TextEditingController(text: widget.item?.name ?? '');
+    // Web add form defaults Active checkbox checked.
+    _isActive = widget.item?.isActive ?? true;
   }
 
   @override
@@ -213,7 +215,7 @@ class _LensOptionSheetState extends State<_LensOptionSheet> {
 
     setState(() => _saving = true);
     try {
-      await widget.onSave(name);
+      await widget.onSave(name, _isActive);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -257,8 +259,22 @@ class _LensOptionSheetState extends State<_LensOptionSheet> {
               ),
             ),
           ),
+          // Web parity: Active checkbox on add/edit modal
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 28),
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+            child: SwitchListTile(
+              value: _isActive,
+              onChanged: (v) => setState(() => _isActive = v),
+              activeThumbColor: widget.accentColor,
+              title: const Text('Active', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkNavy)),
+              subtitle: Text(
+                _isActive ? 'Shown as available' : 'Marked inactive',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             child: Row(children: [
               Expanded(child: OutlinedButton(onPressed: _saving ? null : () => Navigator.pop(context), style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))), child: const Text('Cancel'))),
               const SizedBox(width: 12),

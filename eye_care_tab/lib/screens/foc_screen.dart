@@ -1,5 +1,10 @@
+// FOC (Free of Charge) feature disabled at the client's request — kept
+// commented out (not deleted) in case it's needed again in future, mirroring
+// how the web developer handled the same request on the web app.
+/*
+import '../utils/date_format.dart';
 import 'package:flutter/material.dart';
-import '../constants/app_breakpoints.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
@@ -7,8 +12,14 @@ import '../models/auth_models.dart';
 import '../models/foc_models.dart';
 import '../services/foc_service.dart';
 import '../services/permission_service.dart';
+import '../utils/app_dialogs.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_dialog.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/form_kit.dart';
+import '../widgets/skeleton.dart';
+import '../widgets/split_pane_scaffold.dart';
+import '../utils/currency_format.dart';
 
 /// Tablet FOC (Free of Charge) module — Pattern A (list + detail split)
 /// replacing mobile's inline-action card list. The list pane stays scannable
@@ -71,46 +82,42 @@ class _FocScreenState extends State<FocScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlg) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-          title: Text('New FOC Request', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary)),
-          content: SizedBox(
-            width: 380,
-            child: Form(
-              key: formKey,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
+        builder: (ctx, setDlg) => AppDialog(
+          size: AppDialogSize.small,
+          header: AppDialogHeader(icon: Icons.card_giftcard_rounded, title: 'New FOC Request', onClose: submitting ? null : () => Navigator.pop(ctx)),
+          body: Form(
+            key: formKey,
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+              AppFormRow(children: [
                 _dialogField(patientIdCtrl, 'Patient ID', hint: 'Enter patient ID', keyboardType: TextInputType.number, validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
-                const SizedBox(height: 12),
-                _dialogField(focFeeCtrl, 'FOC Fee (₹)', hint: '0.00', keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) {
+                _dialogField(focFeeCtrl, 'FOC Fee (${currentCurrencySymbol()})', hint: '0.00', keyboardType: const TextInputType.numberWithOptions(decimal: true), validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Required';
                   if (double.tryParse(v.trim()) == null) return 'Enter valid amount';
                   return null;
                 }),
-                const SizedBox(height: 12),
-                _dialogField(reasonCtrl, 'Reason', hint: 'Reason for waiving fee…', maxLines: 3, validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
               ]),
-            ),
+              const SizedBox(height: 14),
+              _dialogField(reasonCtrl, 'Reason', hint: 'Reason for waiving fee…', maxLines: 3, validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
+            ]),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-              onPressed: submitting
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-                      setDlg(() => submitting = true);
-                      try {
-                        await FocService.instance.createFoc(patientId: int.parse(patientIdCtrl.text.trim()), focFee: double.parse(focFeeCtrl.text.trim()), reason: reasonCtrl.text.trim());
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        _load();
-                        if (mounted) showAppSnackBar(context, 'FOC request submitted.', isSuccess: true);
-                      } catch (e) {
-                        setDlg(() => submitting = false);
-                        if (ctx.mounted) showAppSnackBar(ctx, e.toString().replaceFirst('Exception: ', ''), isError: true);
-                      }
-                    },
-              child: submitting ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Submit'),
+            AppSecondaryButton(onPressed: submitting ? null : () => Navigator.pop(ctx)),
+            AppPrimaryButton(
+              label: 'Submit',
+              loading: submitting,
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                setDlg(() => submitting = true);
+                try {
+                  await FocService.instance.createFoc(patientId: int.parse(patientIdCtrl.text.trim()), focFee: double.parse(focFeeCtrl.text.trim()), reason: reasonCtrl.text.trim());
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  _load();
+                  if (mounted) showAppSnackBar(context, 'FOC request submitted.', isSuccess: true);
+                } catch (e) {
+                  setDlg(() => submitting = false);
+                  if (ctx.mounted) showAppSnackBar(ctx, e.toString().replaceFirst('Exception: ', ''), isError: true);
+                }
+              },
             ),
           ],
         ),
@@ -131,33 +138,29 @@ class _FocScreenState extends State<FocScreen> {
     await showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDlg) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-          title: Text('Reject FOC Request', style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.red)),
-          content: SizedBox(
-            width: 380,
-            child: Form(key: formKey, child: _dialogField(reasonCtrl, 'Reason for rejection', maxLines: 3, validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null)),
-          ),
+        builder: (ctx, setDlg) => AppDialog(
+          size: AppDialogSize.small,
+          header: AppDialogHeader(icon: Icons.block_rounded, title: 'Reject FOC Request', subtitle: foc.patient?.fullName, colors: const [AppColors.redDark, AppColors.red], onClose: submitting ? null : () => Navigator.pop(ctx)),
+          body: Form(key: formKey, child: _dialogField(reasonCtrl, 'Reason for rejection', maxLines: 3, validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null)),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.red, foregroundColor: Colors.white),
-              onPressed: submitting
-                  ? null
-                  : () async {
-                      if (!formKey.currentState!.validate()) return;
-                      setDlg(() => submitting = true);
-                      try {
-                        await FocService.instance.rejectFoc(foc.id, reasonCtrl.text.trim());
-                        if (ctx.mounted) Navigator.pop(ctx);
-                        _load();
-                      } catch (e) {
-                        setDlg(() => submitting = false);
-                        if (ctx.mounted) showAppSnackBar(ctx, e.toString().replaceFirst('Exception: ', ''), isError: true);
-                        _load();
-                      }
-                    },
-              child: submitting ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Reject'),
+            AppSecondaryButton(onPressed: submitting ? null : () => Navigator.pop(ctx)),
+            AppPrimaryButton(
+              label: 'Reject',
+              color: AppColors.red,
+              loading: submitting,
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                setDlg(() => submitting = true);
+                try {
+                  await FocService.instance.rejectFoc(foc.id, reasonCtrl.text.trim());
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  _load();
+                } catch (e) {
+                  setDlg(() => submitting = false);
+                  if (ctx.mounted) showAppSnackBar(ctx, e.toString().replaceFirst('Exception: ', ''), isError: true);
+                  _load();
+                }
+              },
             ),
           ],
         ),
@@ -169,19 +172,15 @@ class _FocScreenState extends State<FocScreen> {
   // ── Accept (reception action) ──────────────────────────────────────────────
 
   Future<void> _accept(FocItem foc) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-        title: const Text('Accept FOC Request'),
-        content: Text('Accept FOC for ${foc.patient?.fullName ?? "Patient #${foc.patientId}"}?\nFee of ₹${foc.focFee.toStringAsFixed(2)} will be waived.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
-          ElevatedButton(style: ElevatedButton.styleFrom(backgroundColor: AppColors.green, foregroundColor: Colors.white), onPressed: () => Navigator.pop(ctx, true), child: const Text('Accept')),
-        ],
-      ),
+    final confirmed = await showAppConfirmDialog(
+      context,
+      title: 'Accept FOC Request',
+      message: 'Accept FOC for ${foc.patient?.fullName ?? "Patient #${foc.patientId}"}?\nFee of ${currentCurrencySymbol()}${foc.focFee.toStringAsFixed(2)} will be waived.',
+      confirmLabel: 'Accept',
+      icon: Icons.check_circle_outline_rounded,
+      color: AppColors.green,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
     try {
       await FocService.instance.acceptFoc(foc.id);
       _load();
@@ -198,7 +197,7 @@ class _FocScreenState extends State<FocScreen> {
       maxLines: maxLines ?? 1,
       keyboardType: keyboardType,
       validator: validator,
-      decoration: InputDecoration(labelText: label, hintText: hint, border: const OutlineInputBorder(), contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10)),
+      decoration: appFieldDecoration(label, hint: hint),
     );
   }
 
@@ -206,27 +205,13 @@ class _FocScreenState extends State<FocScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(builder: (context, constraints) {
-      final splitView = constraints.maxWidth >= AppBreakpoints.medium;
-      final listPane = _buildListPane();
-      final detailPane = _buildDetailPane();
-      if (!splitView) {
-        return _selectedId != null
-            ? Column(children: [
-                TextButton.icon(onPressed: () => setState(() => _selectedId = null), icon: const Icon(Icons.arrow_back_rounded, size: 18), label: const Text('Back to list')),
-                Expanded(child: detailPane),
-              ])
-            : listPane;
-      }
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: 380, child: listPane),
-          const SizedBox(width: 20),
-          Expanded(child: detailPane),
-        ],
-      );
-    });
+    return SplitPaneScaffold(
+      showDetail: _selectedId != null,
+      onBack: () => setState(() => _selectedId = null),
+      listPane: _buildListPane(),
+      detailPane: _buildDetailPane(),
+      listPaneWidth: 380,
+    );
   }
 
   // ── List pane ────────────────────────────────────────────────────────
@@ -285,7 +270,7 @@ class _FocScreenState extends State<FocScreen> {
   }
 
   Widget _buildList() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList(count: 6, itemHeight: 70);
     if (_error != null) {
       return Center(
         child: Padding(
@@ -303,14 +288,21 @@ class _FocScreenState extends State<FocScreen> {
     if (_result == null || _result!.items.isEmpty) {
       return const AppEmptyState(message: 'No FOC requests found.', icon: Icons.receipt_long_outlined);
     }
-    return ListView.separated(
+    return AppRefreshIndicator(
+      onRefresh: _load,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 6),
       itemCount: _result!.items.length,
       separatorBuilder: (_, _) => Divider(height: 1, color: AppColors.primaryA08),
       itemBuilder: (_, i) {
         final foc = _result!.items[i];
-        return _FocListTile(foc: foc, selected: foc.id == _selectedId, onTap: () => setState(() => _selectedId = foc.id));
+        return AnimatedListItem(
+          index: i,
+          child: _FocListTile(foc: foc, selected: foc.id == _selectedId, onTap: () => setState(() => _selectedId = foc.id)),
+        );
       },
+    ),
     );
   }
 
@@ -384,7 +376,7 @@ class _FocListTile extends StatelessWidget {
             Expanded(
               child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(foc.patient?.fullName ?? 'Patient #${foc.patientId}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.primary), overflow: TextOverflow.ellipsis),
-                Text('₹${foc.focFee.toStringAsFixed(2)}${foc.doctor != null ? ' · Dr. ${foc.doctor!.name}' : ''}', style: TextStyle(fontSize: 11, color: AppColors.primaryA55), overflow: TextOverflow.ellipsis),
+                Text('${currentCurrencySymbol()}${foc.focFee.toStringAsFixed(2)}${foc.doctor != null ? ' · Dr. ${foc.doctor!.name}' : ''}', style: TextStyle(fontSize: 11, color: AppColors.primaryA55), overflow: TextOverflow.ellipsis),
               ]),
             ),
             Container(
@@ -432,7 +424,7 @@ class _FocDetailView extends StatelessWidget {
                 Wrap(spacing: 8, runSpacing: 6, children: [
                   Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4), decoration: BoxDecoration(color: statusBg, borderRadius: BorderRadius.circular(AppRadius.xl)), child: Text(statusLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: statusColor))),
                   if (foc.patient != null && foc.patient!.patientCode.isNotEmpty) _chip(foc.patient!.patientCode, AppColors.primaryA10, AppColors.primary),
-                  _chip('₹${foc.focFee.toStringAsFixed(2)}', AppColors.orangeA12, AppColors.orange),
+                  _chip('${currentCurrencySymbol()}${foc.focFee.toStringAsFixed(2)}', AppColors.orangeA12, AppColors.orange),
                 ]),
               ]),
             ),
@@ -441,7 +433,7 @@ class _FocDetailView extends StatelessWidget {
           _infoCard(bg: AppColors.primaryA06, title: 'Request Details', items: [
             if (foc.doctor != null) _InfoRow(Icons.medical_services_outlined, 'Requested by', 'Dr. ${foc.doctor!.name}'),
             _InfoRow(Icons.notes_rounded, 'Reason', foc.reason),
-            _InfoRow(Icons.schedule_outlined, 'Requested on', foc.createdAt),
+            _InfoRow(Icons.schedule_outlined, 'Requested on', formatDateTimeString(foc.createdAt)),
           ]),
           if (foc.isRejected && foc.rejectedReason != null) ...[
             const SizedBox(height: 12),
@@ -451,7 +443,7 @@ class _FocDetailView extends StatelessWidget {
             const SizedBox(height: 12),
             _infoCard(bg: AppColors.green.withValues(alpha: 0.06), title: 'Acceptance', items: [
               _InfoRow(Icons.check_circle_outline_rounded, 'Accepted by', foc.acceptedByUser!.name),
-              if (foc.acceptedAt != null) _InfoRow(Icons.schedule_outlined, 'Accepted on', foc.acceptedAt!),
+              if (foc.acceptedAt != null) _InfoRow(Icons.schedule_outlined, 'Accepted on', formatDateTimeString(foc.acceptedAt)),
             ]),
           ],
           if (canAccept && foc.isPending) ...[
@@ -520,3 +512,4 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
+*/

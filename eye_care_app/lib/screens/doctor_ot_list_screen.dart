@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../models/ot_booking_models.dart';
+import '../utils/date_format.dart';
 import '../models/ot_ward_models.dart';
 import '../services/doctor_ot_list_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_pagination_bar.dart';
+import '../widgets/skeleton.dart';
+import '../utils/app_date_picker.dart';
 
 /// Doctor's own OT patient drill-down — net new (web pull 2026-08-07,
 /// "Phase 2"): two actions once a patient's ward consult is pending —
@@ -46,7 +50,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
   DateTime _startDate = DateTime.now();
   DateTime _endDate = DateTime.now();
 
-  String _fmt(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  String _fmt(DateTime d) => toIsoDate(d);
 
   @override
   void initState() {
@@ -72,7 +76,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
   }
 
   Future<void> _pickRange() async {
-    final picked = await showDateRangePicker(
+    final picked = await showAppDateRangePicker(
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now().add(const Duration(days: 365)),
@@ -153,7 +157,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
         _buildHeader(),
         Expanded(
           child: _loading
-              ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+              ? const AppSkeletonList()
               : _error != null
                   ? AppErrorState(message: _error!, onRetry: _load)
                   : _buildBody(),
@@ -185,7 +189,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
   Widget _buildBody() {
     if (_items.isEmpty) return AppEmptyState(message: 'No OT patients in this date range.', icon: Icons.local_hospital_outlined, onRefresh: _load);
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -195,7 +199,9 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
         itemBuilder: (_, i) {
           final item = _items[i];
           final pending = _isConsultPending(item);
-          return Padding(
+          return AnimatedListItem(
+            index: i,
+            child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Container(
               padding: const EdgeInsets.all(12),
@@ -243,6 +249,7 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
                   ]),
                 ],
               ]),
+            ),
             ),
           );
         },

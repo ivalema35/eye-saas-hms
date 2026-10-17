@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../services/platform_auth_service.dart';
+import '../utils/app_route.dart';
 import 'platform_home_screen.dart';
 
 class PlatformLoginScreen extends StatefulWidget {
@@ -88,16 +89,7 @@ class _PlatformLoginScreenState extends State<PlatformLoginScreen>
     if (!mounted) return;
 
     if (result.success) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (_, _, _) => PlatformHomeScreen(admin: result.admin!),
-          transitionsBuilder: (_, animation, _, child) => FadeTransition(
-            opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
-            child: child,
-          ),
-          transitionDuration: const Duration(milliseconds: 350),
-        ),
-      );
+      pushAppRouteReplacement(context, PlatformHomeScreen(admin: result.admin!));
     } else {
       setState(() { _isLoading = false; _errorMessage = result.message; });
       HapticFeedback.mediumImpact();

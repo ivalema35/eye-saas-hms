@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../constants/permissions.dart';
@@ -6,6 +7,8 @@ import '../models/ot_booking_models.dart';
 import '../services/ot_booking_service.dart';
 import '../services/permission_service.dart';
 import '../utils/app_route.dart';
+import '../utils/refreshable.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_error_state.dart';
 import 'ot_appointment_list_screen.dart';
 import 'ot_counsellor_dashboard_screen.dart';
@@ -24,7 +27,7 @@ class OtHomeDashboardScreen extends StatefulWidget {
   State<OtHomeDashboardScreen> createState() => _OtHomeDashboardScreenState();
 }
 
-class _OtHomeDashboardScreenState extends State<OtHomeDashboardScreen> {
+class _OtHomeDashboardScreenState extends State<OtHomeDashboardScreen> implements Refreshable {
   bool _loading = true;
   String? _error;
   OtReceptionistDashboardStats? _stats;
@@ -34,6 +37,9 @@ class _OtHomeDashboardScreenState extends State<OtHomeDashboardScreen> {
     super.initState();
     _load();
   }
+
+  @override
+  Future<void> refreshSilently() => _load();
 
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
@@ -56,19 +62,27 @@ class _OtHomeDashboardScreenState extends State<OtHomeDashboardScreen> {
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         title: const Text('OT Dashboard', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+            tooltip: 'Refresh',
+            onPressed: _load,
+          ),
           if (p.can(Perm.otAppointmentCreate))
             TextButton.icon(
-              onPressed: () => Navigator.of(context).push(appRoute(const OtAppointmentListScreen())),
+              onPressed: () async {
+                await Navigator.of(context).push(appRoute(const OtAppointmentListScreen()));
+                if (mounted) _load();
+              },
               icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white, size: 18),
               label: const Text('New Appointment', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
         ],
       ),
       body: _loading
-          ? Center(child: CircularProgressIndicator(color: AppColors.primary))
+          ? const AppSkeletonList()
           : _error != null
               ? AppErrorState(message: _error!, onRetry: _load)
-              : _buildBody(p),
+              : AppRefreshIndicator(onRefresh: _load, child: _buildBody(p)),
     );
   }
 
@@ -98,10 +112,16 @@ class _OtHomeDashboardScreenState extends State<OtHomeDashboardScreen> {
             const Text('OT Workspace', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.darkNavy)),
             const SizedBox(height: 12),
             if (p.can(Perm.otAppointmentView))
-              _workspaceButton('OT Appointments', Icons.event_note_rounded, () => Navigator.of(context).push(appRoute(const OtAppointmentListScreen()))),
+              _workspaceButton('OT Appointments', Icons.event_note_rounded, () async {
+                await Navigator.of(context).push(appRoute(const OtAppointmentListScreen()));
+                if (mounted) _load();
+              }),
             if (p.can(Perm.otCounsellingFill)) ...[
               const SizedBox(height: 10),
-              _workspaceButton('Counselling Queue', Icons.support_agent_rounded, () => Navigator.of(context).push(appRoute(const OtCounsellorDashboardScreen()))),
+              _workspaceButton('Counselling Queue', Icons.support_agent_rounded, () async {
+                await Navigator.of(context).push(appRoute(const OtCounsellorDashboardScreen()));
+                if (mounted) _load();
+              }),
             ],
             const SizedBox(height: 12),
             Text(

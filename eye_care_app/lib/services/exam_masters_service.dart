@@ -1,8 +1,8 @@
 ﻿import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../utils/json_parse.dart';
 import 'base_service.dart';
 import 'cache_service.dart';
 
@@ -22,9 +22,9 @@ class ExamMasterItem {
   });
 
   factory ExamMasterItem.fromJson(Map<String, dynamic> j) => ExamMasterItem(
-        id: (j['id'] as num).toInt(),
+        id: jsonInt(j['id']),
         value: (j['value'] as String?) ?? '',
-        isFavourite: j['is_favourite'] == true,
+        isFavourite: jsonBool(j['is_favourite']),
       );
 
   Map<String, dynamic> toJson() => {'id': id, 'value': value, 'is_favourite': isFavourite};
@@ -238,12 +238,7 @@ class ExamMastersService with AuthenticatedService {
           .get(uri, headers: await headers)
           .timeout(_masterTimeout);
 
-      if (resp.statusCode != 200) {
-        debugPrint('[ExamMastersService] $type → HTTP ${resp.statusCode}');
-        return [];
-      }
-
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final body = parseApiResponse(resp);
       final list = body['data'] as List? ?? [];
       return list
           .map((e) => ExamMasterItem.fromJson(e as Map<String, dynamic>))

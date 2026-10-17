@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -10,6 +11,7 @@ import '../utils/app_decorations.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_pagination_bar.dart';
 
 class PlatformAuditLogsScreen extends StatefulWidget {
@@ -229,7 +231,7 @@ class _PlatformAuditLogsScreenState extends State<PlatformAuditLogsScreen> {
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _error != null
               ? AppErrorState(message: _error!, onRetry: _load)
               : (_result?.logs.isEmpty ?? true)
@@ -238,7 +240,7 @@ class _PlatformAuditLogsScreenState extends State<PlatformAuditLogsScreen> {
                       icon: Icons.history_outlined,
                       onRefresh: _load,
                     )
-                  : RefreshIndicator(
+                  : AppRefreshIndicator(
                       color: AppColors.primary,
                       onRefresh: () => _load(page: _page),
                       child: ListView.builder(

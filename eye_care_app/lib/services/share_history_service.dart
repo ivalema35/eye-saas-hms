@@ -1,6 +1,7 @@
 ﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
+import '../models/patient_history_models.dart';
 import '../models/share_history_models.dart';
 import 'base_service.dart';
 
@@ -31,9 +32,7 @@ class ShareHistoryService with AuthenticatedService {
     final uri = Uri.parse('$_base/patients').replace(queryParameters: params);
     final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) throw Exception('Failed to load patient history: ${resp.statusCode}');
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final data = body['data'] as Map<String, dynamic>;
 
     return (
@@ -64,9 +63,7 @@ class ShareHistoryService with AuthenticatedService {
     final uri = Uri.parse('$_base/hospitals').replace(queryParameters: params);
     final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) throw Exception('Failed to load hospitals: ${resp.statusCode}');
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final data = body['data'] as Map<String, dynamic>;
 
     return (
@@ -83,9 +80,7 @@ class ShareHistoryService with AuthenticatedService {
     final uri = Uri.parse('$_base/hospitals/$hospitalId');
     final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) throw Exception('Failed to load hospital detail: ${resp.statusCode}');
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return HospitalDetail.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -95,9 +90,7 @@ class ShareHistoryService with AuthenticatedService {
     final uri = Uri.parse('$_base/connections');
     final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) throw Exception('Failed to load connections: ${resp.statusCode}');
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final data = body['data'] as Map<String, dynamic>;
 
     return ConnectionsData(
@@ -121,30 +114,21 @@ class ShareHistoryService with AuthenticatedService {
         .post(uri, headers: await headers, body: jsonEncode({'to_tenant_id': toTenantId}))
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to send request.');
-    }
+    parseApiResponse(resp);
   }
 
   Future<void> acceptRequest(int requestId) async {
     final uri = Uri.parse('$_base/requests/$requestId/accept');
     final resp = await http.post(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to accept request.');
-    }
+    parseApiResponse(resp);
   }
 
   Future<void> removeRequest(int requestId) async {
     final uri = Uri.parse('$_base/requests/$requestId');
     final resp = await http.delete(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to remove request.');
-    }
+    parseApiResponse(resp);
   }
 
   // ── Partner Patients ──────────────────────────────────────────────
@@ -171,9 +155,8 @@ class ShareHistoryService with AuthenticatedService {
     final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
 
     if (resp.statusCode == 403) throw Exception('No accepted connection with this hospital.');
-    if (resp.statusCode != 200) throw Exception('Failed to load partner patients: ${resp.statusCode}');
 
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final data = body['data'] as Map<String, dynamic>;
 
     return (
@@ -183,5 +166,18 @@ class ShareHistoryService with AuthenticatedService {
       meta: ShareHistoryMeta.fromJson(data['meta'] as Map<String, dynamic>),
       partnerName: (data['partner_hospital'] as Map<String, dynamic>?)?['name'] as String? ?? '',
     );
+  }
+
+  // ── Partner patient's own exam history (the View action) ───────────
+  // Web parity: `hospital.shared.patient.history` — this patient belongs
+  // entirely to the connected hospital's tenant, so it can't be fetched via
+  // the normal (tenant-scoped) patient-history endpoint.
+  Future<ExamHistoryData> fetchPartnerPatientHistory(String patientIds) async {
+    final uri = Uri.parse('$_base/patient-history')
+        .replace(queryParameters: {'patient_ids': patientIds});
+    final resp = await http.get(uri, headers: await headers).timeout(AppConfig.requestTimeout);
+
+    final body = parseApiResponse(resp);
+    return ExamHistoryData.fromJson(body['data'] as Map<String, dynamic>);
   }
 }

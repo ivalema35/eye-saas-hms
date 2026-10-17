@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -11,10 +12,16 @@ import '../services/platform_dashboard_service.dart';
 import '../utils/app_decorations.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/status_badge.dart';
 import 'platform_hospital_detail_screen.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformDashboardScreen extends StatefulWidget {
   final PlatformAdmin admin;
   final VoidCallback onMenuTap;
@@ -54,7 +61,7 @@ class _PlatformDashboardScreenState extends State<PlatformDashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: RefreshIndicator(
+      body: AppRefreshIndicator(
         color: AppColors.primary,
         onRefresh: _load,
         child: CustomScrollView(
@@ -75,25 +82,10 @@ class _PlatformDashboardScreenState extends State<PlatformDashboardScreen> {
               ),
             ),
             if (_loading)
-              const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+              const SliverFillRemaining(child: AppSkeletonList())
             else if (_error != null)
               SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.primaryA20),
-                      const SizedBox(height: 12),
-                      Text(_error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: _load,
-                        icon: const Icon(Icons.refresh_rounded, size: 16),
-                        label: const Text('Retry'),
-                      ),
-                    ],
-                  ),
-                ),
+                child: AppErrorState(message: _error!, onRetry: _load),
               )
             else
               SliverToBoxAdapter(child: _buildContent(_data!)),

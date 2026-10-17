@@ -1,22 +1,29 @@
+import '../utils/date_format.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../utils/app_route.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_record_card.dart';
 import '../models/auth_models.dart';
 import '../models/clinical_queue_models.dart';
 import '../models/patient_models.dart';
 import '../services/clinical_queue_service.dart';
+import '../utils/refreshable.dart';
+import '../widgets/exam/dilation_lock.dart';
 import 'primary_exam_screen.dart';
 import 'secondary_exam_screen.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../utils/app_date_picker.dart';
 
 // ── Date / string helpers ─────────────────────────────────────────────────────
 
 String _hhmm(DateTime? dt) {
   if (dt == null) return '--:--';
-  final l = dt.toLocal();
+  final l = toHospitalTime(dt);
   return '${l.hour.toString().padLeft(2, '0')}:${l.minute.toString().padLeft(2, '0')}';
 }
 
@@ -32,15 +39,6 @@ String _apiDate(DateTime dt) =>
     '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 
 String _cap(String s) => s.isEmpty ? s : s[0].toUpperCase() + s.substring(1);
-
-BoxDecoration _cardDeco() => BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(AppRadius.lg),
-      border: Border.all(color: AppColors.primaryA10),
-      boxShadow: [
-        BoxShadow(color: AppColors.primaryA06, blurRadius: 10, offset: const Offset(0, 3)),
-      ],
-    );
 
 // ── Shared 1-second ticker ────────────────────────────────────────────────────
 // A single Timer.periodic drives all _DilationCountdown widgets in this file.
@@ -82,12 +80,13 @@ class ClinicalQueueScreen extends StatefulWidget {
 }
 
 class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin
+    implements Refreshable {
 
   QueueData? _data;
   bool _loading = false;
   String? _error;
-  DateTime _filterDate = DateTime.now();
+  DateTime _filterDate = toHospitalTime(DateTime.now());
   int? _selectedDoctorId;
 
   late final TabController _tabCtrl;
@@ -116,6 +115,9 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
     super.dispose();
   }
 
+  @override
+  Future<void> refreshSilently() => _load(silent: true);
+
   Future<void> _load({bool silent = false}) async {
     if (!silent) setState(() { _loading = true; _error = null; });
     try {
@@ -135,7 +137,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
   }
 
   Future<void> _selectDate() async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: _filterDate,
       firstDate: DateTime(2024),
@@ -160,7 +162,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
   }
 
   bool get _isToday {
-    final n = DateTime.now();
+    final n = toHospitalTime(DateTime.now());
     return _filterDate.year == n.year &&
         _filterDate.month == n.month &&
         _filterDate.day == n.day;
@@ -191,6 +193,12 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
     if (result == true && mounted) _load(silent: true);
   }
 
+  // Only ever called for a patient the caller already knows is unlockable —
+  // the Secondary tab excludes still-dilating patients entirely (they live
+  // in the Dilation tab instead), and the Dilation tab's own card gates
+  // this behind its double-tap override confirmation. So this always
+  // navigates straight through, matching web's plain (non-locked) "Examine"
+  // link — no dialog here.
   Future<void> _startSecondaryExam(QueuePatient q) async {
     final result = await Navigator.push<bool>(
       context,
@@ -289,34 +297,7 @@ class _ClinicalQueueScreenState extends State<ClinicalQueueScreen>
       return const AppSkeletonList();
     }
     if (_error != null && _data == null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.wifi_off_rounded, size: 52, color: Color(0xFF6B7D93).withValues(alpha: 0.60)),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF6B7D93), fontSize: 14),
-              ),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _load,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
 
     final data = _data;
@@ -667,6 +648,7 @@ class _QueuePanel extends StatelessWidget {
                   patients: data.dilationQueue,
                   thresholds: data.thresholds,
                   onRefresh: onRefresh,
+                  onOverride: onStartSecondary,
                 ),
                 _SecondaryQueueTab(
                   patients: data.secondaryQueue,
@@ -816,7 +798,7 @@ class _PrimaryQueueTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
@@ -863,64 +845,27 @@ class _PrimaryPatientCard extends StatelessWidget {
     required this.onStart,
   });
 
+  // Migrated onto the shared AppRecordCard/AppRecordField icon-badge grid —
+  // see RECORD_CARD_UNIFICATION_PLAN.md Tier 1 §5. The live WaitPill stays
+  // outside the static field grid, in the `actions` slot, unchanged.
   @override
   Widget build(BuildContext context) {
     final p = patient;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _cardDeco(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return AppRecordCard(
+      leading: const PulseDot(color: AppColors.waitOrange),
+      title: p.fullName,
+      subtitle: 'MRD: ${p.patientCode}',
+      trailing: _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFFD94841).withValues(alpha: 0.10), textColor: Color(0xFFD94841)),
+      fields: [
+        if (p.contactNo != null && p.contactNo!.isNotEmpty) AppRecordField('Phone', p.contactNo!, icon: Icons.phone_outlined, color: RecordFieldColors.phone),
+        if (p.caseType != null) AppRecordField('Case Type', p.caseType!, icon: Icons.label_outline_rounded, color: RecordFieldColors.caseType),
+        AppRecordField('Registered', _hhmm(p.createdAt), icon: Icons.schedule_rounded, color: RecordFieldColors.date),
+      ],
+      actions: Row(
         children: [
-          // Name + Age/Gender
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const PulseDot(color: AppColors.waitOrange),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      p.fullName,
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'MRD: ${p.patientCode}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFFD94841).withValues(alpha: 0.10), textColor: Color(0xFFD94841)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          // Contact + Case type
-          Row(
-            children: [
-              if (p.contactNo != null && p.contactNo!.isNotEmpty) ...[
-                _InfoChip(icon: Icons.phone_outlined, text: p.contactNo!),
-                const SizedBox(width: 14),
-              ],
-              if (p.caseType != null)
-                Expanded(child: _InfoChip(icon: Icons.label_outline_rounded, text: p.caseType!)),
-            ],
-          ),
-          const SizedBox(height: 5),
-          _InfoChip(icon: Icons.schedule_rounded, text: 'Registered: ${_hhmm(p.createdAt)}'),
-          const SizedBox(height: 10),
-          // Wait pill + action
-          Row(
-            children: [
-              WaitPill(waitFrom: p.createdAt, label: 'R', thresholds: thresholds.r),
-              const Spacer(),
-              _StartButton(label: 'Start Primary', onTap: onStart),
-            ],
-          ),
+          WaitPill(waitFrom: p.createdAt, label: 'R', thresholds: thresholds.r),
+          const Spacer(),
+          _StartButton(label: 'Start Primary', onTap: onStart),
         ],
       ),
     );
@@ -935,16 +880,18 @@ class _DilationWaitingTab extends StatelessWidget {
   final List<QueuePatient> patients;
   final AllWaitThresholds thresholds;
   final Future<void> Function() onRefresh;
+  final void Function(QueuePatient) onOverride;
 
   const _DilationWaitingTab({
     required this.patients,
     required this.thresholds,
     required this.onRefresh,
+    required this.onOverride,
   });
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
@@ -964,7 +911,7 @@ class _DilationWaitingTab extends StatelessWidget {
                     key: ValueKey('dilation_${p.id}'),
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 10),
-                      child: _DilationPatientCard(patient: p, thresholds: thresholds),
+                      child: _DilationPatientCard(patient: p, thresholds: thresholds, onOverride: onOverride),
                     ),
                   ),
                 );
@@ -979,12 +926,25 @@ class _DilationWaitingTab extends StatelessWidget {
 class _DilationPatientCard extends StatelessWidget {
   final QueuePatient patient;
   final AllWaitThresholds thresholds;
+  final void Function(QueuePatient) onOverride;
 
   const _DilationPatientCard({
     required this.patient,
     required this.thresholds,
+    required this.onOverride,
   });
 
+  // Matches web's dilation countdown button exactly: a single tap does
+  // nothing — only a double-tap opens the override confirmation.
+  Future<void> _handleDoubleTap(BuildContext context, int? unlockMs) async {
+    final ok = await canStartSecondaryExam(context, unlockMs);
+    if (ok) onOverride(patient);
+  }
+
+  // Migrated onto the shared AppRecordCard/AppRecordField icon-badge grid —
+  // see RECORD_CARD_UNIFICATION_PLAN.md Tier 1 §5. The live double-tap
+  // countdown and WaitPills are stateful/tick every second — kept OUTSIDE
+  // the static field grid, in the `actions` slot, exactly as before.
   @override
   Widget build(BuildContext context) {
     final p       = patient;
@@ -993,65 +953,42 @@ class _DilationPatientCard extends StatelessWidget {
     final dilTime = exam?.dilationTime ?? 0;
     final unlockMs = p.unlockTimeMs;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _cardDeco(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return AppRecordCard(
+      title: p.fullName,
+      subtitle: 'MRD: ${p.patientCode}',
+      trailing: _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFFD97706).withValues(alpha: 0.10), textColor: Color(0xFFD97706)),
+      fields: [
+        AppRecordField('Primary Done', _hhmm(examAt), icon: Icons.check_circle_outline_rounded, color: Color(0xFF1F9D55)),
+        AppRecordField('Dilation', '$dilTime min', icon: Icons.timer_outlined, color: RecordFieldColors.date),
+        if (unlockMs != null)
+          AppRecordField('Unlocks', _hhmm(DateTime.fromMillisecondsSinceEpoch(unlockMs)), icon: Icons.notifications_outlined, color: RecordFieldColors.date),
+      ],
+      actions: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Name + Age/Gender
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      p.fullName,
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'MRD: ${p.patientCode}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFFD97706).withValues(alpha: 0.10), textColor: Color(0xFFD97706)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          _InfoChip(
-            icon: Icons.check_circle_outline_rounded,
-            text: 'Primary Done: ${_hhmm(examAt)}',
-            color: Color(0xFF1F9D55),
-          ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              _InfoChip(icon: Icons.timer_outlined, text: 'Dilation: $dilTime min'),
-              if (unlockMs != null) ...[
-                const SizedBox(width: 14),
-                _InfoChip(
-                  icon: Icons.notifications_outlined,
-                  text: 'Unlocks: ${_hhmm(DateTime.fromMillisecondsSinceEpoch(unlockMs))}',
-                ),
-              ],
-            ],
-          ),
-          // Live countdown
+          // Live countdown — double-tap to override (web parity: "Double
+          // click to override and proceed").
           if (unlockMs != null) ...[
-            const SizedBox(height: 10),
-            _DilationCountdown(
-              key: ValueKey('countdown_${p.id}_$unlockMs'),
-              unlockTimeMs: unlockMs,
+            GestureDetector(
+              onDoubleTap: () => _handleDoubleTap(context, unlockMs),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DilationCountdown(
+                    key: ValueKey('countdown_${p.id}_$unlockMs'),
+                    unlockTimeMs: unlockMs,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Double-tap to override and proceed',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: Color(0xFF92400E).withValues(alpha: 0.75)),
+                  ),
+                ],
+              ),
             ),
+            const SizedBox(height: 10),
           ],
-          const SizedBox(height: 10),
-          // Wait pills
           Row(
             children: [
               WaitPill(waitFrom: p.createdAt, label: 'R', thresholds: thresholds.r),
@@ -1146,7 +1083,7 @@ class _SecondaryQueueTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: onRefresh,
       color: AppColors.primary,
       child: ListView(
@@ -1193,6 +1130,8 @@ class _SecondaryPatientCard extends StatelessWidget {
     required this.onStart,
   });
 
+  // Migrated onto the shared AppRecordCard/AppRecordField icon-badge grid —
+  // see RECORD_CARD_UNIFICATION_PLAN.md Tier 1 §5.
   @override
   Widget build(BuildContext context) {
     final p        = patient;
@@ -1200,65 +1139,28 @@ class _SecondaryPatientCard extends StatelessWidget {
     final examAt   = exam?.examinedAt;
     final isDilated = p.isDilated;
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: _cardDeco(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return AppRecordCard(
+      title: p.fullName,
+      subtitle: 'MRD: ${p.patientCode}',
+      trailing: _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFF2563EB).withValues(alpha: 0.10), textColor: Color(0xFF2563EB)),
+      fields: [
+        if (p.contactNo != null && p.contactNo!.isNotEmpty) AppRecordField('Phone', p.contactNo!, icon: Icons.phone_outlined, color: RecordFieldColors.phone),
+        AppRecordField('Primary Done', _hhmm(examAt), icon: Icons.check_circle_outline_rounded, color: Color(0xFF1F9D55)),
+        AppRecordField('Findings', p.diagnosisText, icon: Icons.article_outlined, color: RecordFieldColors.caseType),
+      ],
+      actions: Row(
         children: [
-          // Name + Age/Gender
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      p.fullName,
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: AppColors.primary),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'MRD: ${p.patientCode}',
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6B7D93).withValues(alpha: 0.80)),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              _AgeGenderBadge(age: p.age, gender: p.gender, bgColor: Color(0xFF2563EB).withValues(alpha: 0.10), textColor: Color(0xFF2563EB)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (p.contactNo != null && p.contactNo!.isNotEmpty) ...[
-            _InfoChip(icon: Icons.phone_outlined, text: p.contactNo!),
-            const SizedBox(height: 5),
+          WaitPill(waitFrom: p.createdAt, label: 'R', thresholds: thresholds.r),
+          if (examAt != null) ...[
+            const SizedBox(width: 8),
+            WaitPill(
+              waitFrom: examAt,
+              label: isDilated ? 'D' : 'ND',
+              thresholds: isDilated ? thresholds.d : thresholds.nd,
+            ),
           ],
-          _InfoChip(
-            icon: Icons.check_circle_outline_rounded,
-            text: 'Primary Done: ${_hhmm(examAt)}',
-            color: Color(0xFF1F9D55),
-          ),
-          const SizedBox(height: 5),
-          _InfoChip(icon: Icons.article_outlined, text: 'Findings: ${p.diagnosisText}'),
-          const SizedBox(height: 10),
-          // Wait pills + action
-          Row(
-            children: [
-              WaitPill(waitFrom: p.createdAt, label: 'R', thresholds: thresholds.r),
-              if (examAt != null) ...[
-                const SizedBox(width: 8),
-                WaitPill(
-                  waitFrom: examAt,
-                  label: isDilated ? 'D' : 'ND',
-                  thresholds: isDilated ? thresholds.d : thresholds.nd,
-                ),
-              ],
-              const Spacer(),
-              _StartButton(label: 'Start Secondary', onTap: onStart),
-            ],
-          ),
+          const Spacer(),
+          _StartButton(label: 'Start Secondary', onTap: onStart),
         ],
       ),
     );
@@ -1440,35 +1342,6 @@ class _AgeGenderBadge extends StatelessWidget {
         '$age / ${_cap(gender)}',
         style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textColor),
       ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _InfoChip extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  final Color? color;
-
-  const _InfoChip({required this.icon, required this.text, this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    final c = color ?? Color(0xFF6B7D93);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: c),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
     );
   }
 }

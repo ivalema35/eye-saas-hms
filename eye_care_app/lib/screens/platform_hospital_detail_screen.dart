@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -9,10 +11,15 @@ import '../utils/app_decorations.dart';
 import '../utils/app_route.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
 import '../widgets/app_section_header.dart';
 import '../widgets/status_badge.dart';
 import 'platform_hospital_form_screen.dart';
 
+// Hardcoded ₹ here is intentional, not a currency-parity gap — mirrors
+// web's own deliberate INR-only SaaS/plan billing design (see
+// LOCATION_CURRENCY_PARITY_PRD.md Phase 5). Only hospital-facing screens
+// (patient billing, OT, dashboards) use the per-tenant currency.
 class PlatformHospitalDetailScreen extends StatefulWidget {
   final int tenantId;
 
@@ -158,19 +165,10 @@ class _PlatformHospitalDetailScreenState extends State<PlatformHospitalDetailScr
         ],
       ),
       body: _loading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AppSkeletonList()
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_error!, style: AppTextStyles.bodyMedium),
-                      const SizedBox(height: 12),
-                      ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded, size: 16), label: const Text('Retry')),
-                    ],
-                  ),
-                )
-              : RefreshIndicator(
+              ? AppErrorState(message: _error!, onRetry: _load)
+              : AppRefreshIndicator(
                   color: AppColors.primary,
                   onRefresh: _load,
                   child: SingleChildScrollView(
