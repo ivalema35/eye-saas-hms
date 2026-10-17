@@ -52,9 +52,19 @@ class OtAccountantController extends Controller
             $bookingsQuery->orderBy('surgery_date')->orderByDesc('id');
         }
 
+        $bookings = $bookingsQuery->get();
+
+        if (!$isHistory) {
+            // Preparing/Hold/Complicated hands the patient off to their doctor for
+            // consult (isDoctorConsultationPending()) — they belong on the doctor's
+            // Ward Management queue now, not ward's own queue, until the doctor
+            // picks an OT Assistant and sends them back as Ready for OT.
+            $bookings = $bookings->reject(fn (OtBooking $booking) => $booking->isDoctorConsultationPending())->values();
+        }
+
         return view('hospital.ot.accountant.ward', [
             'slug' => $slug,
-            'bookings' => $bookingsQuery->get(),
+            'bookings' => $bookings,
             'activeFilter' => $activeFilter,
             'fromDate' => $fromDate,
             'toDate' => $toDate,

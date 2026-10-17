@@ -48,7 +48,7 @@
                             <th>Patient Name</th>
                             <th>Phone</th>
                             <th>Status</th>
-                            <th>Dilate</th>
+                            <th>Dose</th>
                             <th>Payment</th>
                             <th class="text-end">Action</th>
                         </tr>
@@ -77,19 +77,10 @@
                                 <td>{{ $booking->patient?->contact_no ?? '-' }}</td>
                                 <td><span class="acc-badge acc-tone-{{ $statusTone }}">{{ $statusLabel }}</span></td>
                                 <td>
-                                    @php
-                                        $dilateEntry = $booking->dilationEntries
-                                            ->where('dilate', 'Yes')
-                                            ->whereNotNull('dilation_time')
-                                            ->sortByDesc('administered_at')
-                                            ->first();
-                                    @endphp
-                                    @if($dilateEntry)
-                                        @php
-                                            $dilateUnlockAt = \Carbon\Carbon::parse($dilateEntry->administered_at)->addMinutes((int) $dilateEntry->dilation_time);
-                                        @endphp
-                                        <span class="acc-badge acc-tone-amber acc-dilate-pill" data-unlock-ms="{{ $dilateUnlockAt->timestamp * 1000 }}">
-                                            <i class="bi bi-droplet-half me-1"></i><span class="acc-dilate-time">--:--</span>
+                                    @php $doseCount = $booking->dilationEntries->count(); @endphp
+                                    @if($doseCount > 0)
+                                        <span class="acc-badge acc-tone-blue">
+                                            <i class="bi bi-droplet-half me-1"></i>{{ $doseCount }}
                                         </span>
                                     @else
                                         <span class="acc-sub">-</span>
@@ -131,29 +122,3 @@
 @endforeach
 
 @include('hospital.dashboard.partials.desk-panel-assets')
-
-@push('scripts')
-    <script>
-        (function () {
-            function updateWardPanelDilateCountdowns() {
-                document.querySelectorAll('#wardPanel .acc-dilate-pill[data-unlock-ms]').forEach(function (el) {
-                    var unlockMs = parseInt(el.getAttribute('data-unlock-ms'), 10);
-                    var diff = unlockMs - Date.now();
-                    var timeEl = el.querySelector('.acc-dilate-time');
-                    if (!timeEl) return;
-                    if (diff <= 0) {
-                        timeEl.textContent = 'Ready';
-                        el.classList.remove('acc-tone-amber');
-                        el.classList.add('acc-tone-green');
-                    } else {
-                        var m = Math.floor(diff / 60000);
-                        var s = Math.floor((diff % 60000) / 1000);
-                        timeEl.textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-                    }
-                });
-            }
-            updateWardPanelDilateCountdowns();
-            setInterval(updateWardPanelDilateCountdowns, 1000);
-        })();
-    </script>
-@endpush
