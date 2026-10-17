@@ -308,8 +308,9 @@ used across the rest of the app. --}}
 
                                 {{-- No doctor / OT Assistant fields here — both are assigned automatically on
                                 save: Preparing/Hold/Complicated → the patient's OPD doctor; Ready for OT →
-                                that doctor's connected OT Assistant (set on the doctor's profile). If either
-                                can't be resolved, the error banner above explains what to fix. --}}
+                                that doctor's connected OT Assistant (set on the doctor's profile), and the
+                                booking is handed off to OT Assistant immediately in this same step. If
+                                either can't be resolved, the error banner above explains what to fix. --}}
 
                                 <div class="d-flex justify-content-end mt-3 pt-3 ot-form-actions">
                                     <button type="submit" class="hms-btn hms-btn-primary ot-save-btn px-4">
@@ -317,32 +318,6 @@ used across the rest of the app. --}}
                                     </button>
                                 </div>
                             </form>
-                        </div>
-                    </div>
-
-                    {{-- Hand-off to OT Assistant --}}
-                    <div class="card ot-premium-card border-0 mb-4">
-                        <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-4">
-                            <div>
-                                <div class="ot-handoff-title">Ready to send to OT Assistant?</div>
-                            </div>
-                            @php
-    $canSendReady = in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAYMENT_VERIFIED, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true)
-        && ($preOp?->pre_op_status ?? null) === \App\Models\Hospital\OT\OtPreOp::STATUS_READY_FOR_SURGERY
-        && !empty($booking->ot_assistant_id);
-                            @endphp
-                            @if($canSendReady)
-                                <form method="POST" action="{{ route('hospital.ot.ward.ready', ['slug' => $slug, 'booking' => $booking->id]) }}">
-                                    @csrf
-                                    <button type="submit" class="hms-btn ot-send-btn px-4">
-                                        <i class="bi bi-send-check me-1"></i> READY
-                                    </button>
-                                </form>
-                            @elseif(in_array($booking->ot_status, [\App\Models\Hospital\OT\OtBooking::STATUS_PAYMENT_VERIFIED, \App\Models\Hospital\OT\OtBooking::STATUS_IN_WARD], true))
-                                <span class="badge ot-status-badge ot-status-generic">Save Ready + OT Assistant first</span>
-                            @else
-                                <span class="badge ot-status-badge ot-status-generic text-uppercase">{{ $booking->ot_status }}</span>
-                            @endif
                         </div>
                     </div>
                 </div>

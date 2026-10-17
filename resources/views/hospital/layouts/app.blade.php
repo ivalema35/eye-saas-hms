@@ -1266,6 +1266,40 @@
                 margin-left: .35rem;
             }
 
+            .black-menu-bar .dash-tab-group {
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.12);
+                border-radius: 8px;
+                padding: 3px;
+            }
+
+            .black-menu-bar .dash-tab-btn {
+                border: none;
+                background: transparent;
+                color: #fff;
+                font-weight: 700;
+                font-size: .82rem;
+                padding: 5px 16px;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: background .15s ease, color .15s ease;
+            }
+
+            .black-menu-bar .dash-tab-btn.active {
+                background: #fff;
+                color: #1B4F72;
+            }
+
+            .black-menu-bar .dash-tp-badge {
+                background: rgba(255, 255, 255, 0.14);
+                color: #fff;
+                font-weight: 700;
+                font-size: .82rem;
+                padding: 6px 14px;
+                border-radius: 8px;
+                white-space: nowrap;
+            }
+
             @media (max-width: 768px) {
                 .hms-navbar {
                     padding: 8px 12px !important;
@@ -1588,6 +1622,19 @@
                 <i class="bi bi-clock-history"></i> <span>History</span>
             </a>
             @endhaspermission
+
+            {{-- OPD / OT dashboard tab toggle — only on the dashboard page itself, pinned to the right --}}
+            @if(request()->routeIs('hospital.dashboard'))
+            <div class="d-flex align-items-center gap-2 ms-auto">
+                <div class="dash-tab-group d-flex align-items-center">
+                    <button type="button" class="dash-tab-btn active" data-tab-target="opd">OPD</button>
+                    <button type="button" class="dash-tab-btn" data-tab-target="ot">OT</button>
+                </div>
+                <span class="dash-tp-badge" id="dashTpBadge"
+                    data-opd-count="{{ $todayPatients ?? 0 }}"
+                    data-ot-count="{{ $todayOtAppointmentsAdded ?? 0 }}">TP: {{ $todayPatients ?? 0 }}</span>
+            </div>
+            @endif
         </div>
 
     </nav>

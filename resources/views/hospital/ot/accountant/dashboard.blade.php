@@ -746,7 +746,7 @@ Appointments / Ward Management / OT Assistant / Billing design. --}}
                     'from_date' => $fromDate ?? now()->toDateString(),
                     'to_date' => $toDate ?? ($fromDate ?? now()->toDateString()),
                 ]) }}" class="ota-filter-tab {{ ($activeFilter ?? 'queue') === 'history' ? 'active' : '' }}">
-                    All
+                    Completed
                 </a>
             </div>
 
