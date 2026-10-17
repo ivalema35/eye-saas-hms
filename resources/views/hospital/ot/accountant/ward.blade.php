@@ -148,6 +148,9 @@ Appointments page design. --}}
 @endsection
 
 @push('styles')
+    {{-- _view-modal.blade.php's .ot-desk-view-modal / .ot-desk-modal-grid styling
+    lives here, not just the filter-tab CSS this page no longer uses. --}}
+    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                                     Ward Management Index — design refresh (hospital shell theme, #1B4F72).

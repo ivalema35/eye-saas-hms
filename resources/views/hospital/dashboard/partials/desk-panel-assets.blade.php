@@ -303,6 +303,201 @@
             font-weight: 700;
             color: #5D6D7E;
         }
+
+        /* Patient view-modal "Examination" status boxes (counsellor's
+        _patient-view-modal.blade.php, included from counselling-panel) —
+        mirrors hospital.ot.counsellor.dashboard's own copy of these rules so
+        the modal looks the same from the dashboard widget and the full page. */
+        .ocp-section-title {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            margin: 1.1rem 0 .6rem;
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: rgba(27, 79, 114, .7);
+        }
+
+        .ocp-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .ocp-modal {
+            --ocp-border: rgba(27, 79, 114, .12);
+        }
+
+        .ocp-modal .ocp-modal-dialog {
+            max-width: 640px;
+            margin: .75rem auto;
+        }
+
+        .ocp-modal .modal-content {
+            border: 1px solid var(--ocp-border);
+            border-radius: 14px;
+            box-shadow: 0 18px 48px rgba(27, 79, 114, .18);
+        }
+
+        .ocp-modal .modal-header {
+            padding: .8rem 1rem;
+            background: linear-gradient(135deg, #174562, #1b4f72);
+        }
+
+        .ocp-modal .modal-title {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            font-size: .98rem;
+            line-height: 1.25;
+        }
+
+        .ocp-modal .modal-title i {
+            flex: 0 0 auto;
+            color: #9ed8df;
+        }
+
+        .ocp-modal .modal-body {
+            padding: .9rem 1rem 1rem;
+            background: #f7fbfe;
+        }
+
+        .ocp-modal .ocp-section-title {
+            margin: .85rem 0 .45rem;
+            font-size: .68rem;
+        }
+
+        .ocp-modal .ocp-section-title:first-child {
+            margin-top: 0;
+        }
+
+        .ocp-modal .ocp-steps {
+            gap: .55rem;
+        }
+
+        .ocp-modal .ocp-step {
+            gap: .55rem;
+            padding: .6rem .7rem;
+            border-radius: 9px;
+        }
+
+        .ocp-modal .ocp-step-icon {
+            font-size: 1.05rem;
+        }
+
+        .ocp-modal .ocp-step-label {
+            font-size: .8rem;
+        }
+
+        .ocp-modal .ocp-step-state,
+        .ocp-modal .ocp-step-meta {
+            font-size: .7rem;
+        }
+
+        .ocp-modal .ot-desk-modal-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: .5rem;
+        }
+
+        .ocp-modal .ot-desk-modal-field {
+            min-width: 0;
+            padding: .55rem .65rem;
+            border-radius: 9px;
+        }
+
+        .ocp-modal .ot-desk-modal-label {
+            margin-bottom: .2rem;
+            font-size: .61rem;
+        }
+
+        .ocp-modal .ot-desk-modal-value {
+            font-size: .78rem;
+            line-height: 1.3;
+        }
+
+        .ocp-steps {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .75rem;
+        }
+
+        .ocp-step {
+            display: flex;
+            align-items: flex-start;
+            gap: .7rem;
+            padding: .8rem .9rem;
+            border-radius: 10px;
+            border: 1px solid;
+        }
+
+        .ocp-step.is-done {
+            background: #E7F8EF;
+            border-color: #A9E4C4;
+        }
+
+        .ocp-step.is-pending {
+            background: #FFF6DF;
+            border-color: #F0D48A;
+        }
+
+        .ocp-step-icon {
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+
+        .ocp-step.is-done .ocp-step-icon {
+            color: #1E8E5A;
+        }
+
+        .ocp-step.is-pending .ocp-step-icon {
+            color: #92660A;
+        }
+
+        .ocp-step-label {
+            font-weight: 800;
+            font-size: .9rem;
+            color: #1B4F72;
+        }
+
+        .ocp-step-state {
+            font-weight: 700;
+            font-size: .8rem;
+        }
+
+        .ocp-step.is-done .ocp-step-state {
+            color: #1E8E5A;
+        }
+
+        .ocp-step.is-pending .ocp-step-state {
+            color: #92660A;
+        }
+
+        .ocp-step-meta {
+            margin-top: 2px;
+            font-size: .76rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        @media (max-width: 575.98px) {
+            .ocp-steps {
+                grid-template-columns: 1fr;
+            }
+
+            .ocp-modal .ocp-modal-dialog {
+                margin: .5rem .75rem;
+            }
+
+            .ocp-modal .ot-desk-modal-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 380px) {
+            .ocp-modal .ot-desk-modal-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 @endpush
 
