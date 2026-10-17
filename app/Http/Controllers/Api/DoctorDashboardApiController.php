@@ -30,7 +30,7 @@ class DoctorDashboardApiController extends Controller
         if (! $isOtDoctor) {
             $viewDoctorId = (int) $request->query('view_doctor_id', 0);
             if ($viewDoctorId && $viewDoctorId !== $authUser->id) {
-                $vd = HospitalUser::whereHas('role', fn ($q) => $q->where('slug', 'doctor'))
+                $vd = HospitalUser::whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
                     ->find($viewDoctorId);
                 if ($vd) {
                     $viewingDoctor  = $vd;
@@ -46,8 +46,14 @@ class DoctorDashboardApiController extends Controller
             $primaryDone   = 0;
             $secondaryDone = 0;
         } else {
+            // Patient = this doctor's walk-ins still pending (not yet examined) —
+            // same predicate as web's $doctorAssignedPatients (a phone booking
+            // only counts once it has checked in). Total patients live in TP.
             $assignedToday = Patient::where('doctor_id', $targetDoctorId)
-                ->whereDate('appointment_date', $today)->count();
+                ->whereDate('appointment_date', $today)
+                ->whereNull('primary_done_at')
+                ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+                ->count();
 
             $primaryDone = Patient::where('doctor_id', $targetDoctorId)
                 ->whereDate('appointment_date', $today)
@@ -62,9 +68,18 @@ class DoctorDashboardApiController extends Controller
         // doctor's own stats — mirrors doctoredashboard.blade.php:756-760,
         // sourced from Hospital\DashboardController.php:89-98). Tenant-wide,
         // no doctor_id filter. See DASHBOARD_PARITY_FIX_PLAN.md Phase 3.
+        // TP badge = every patient registered today.
         $tenantTodayPatients  = Patient::whereDate('appointment_date', $today)->count();
+        // "C" = hospital-wide walk-ins still pending (web's $todayPendingWalkin).
+        $tenantTodayPendingWalkin = Patient::whereDate('appointment_date', $today)
+            ->whereNull('primary_done_at')
+            ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+            ->count();
+        // "PC" = primary done but NOT secondary (web's
+        // $todayPrimaryAwaitingSecondary) — a patient who finished both counts
+        // once, under SC.
         $tenantTodayPrimary   = Patient::whereDate('appointment_date', $today)
-            ->whereNotNull('primary_done_at')->count();
+            ->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count();
         $tenantTodaySecondary = Patient::whereDate('appointment_date', $today)
             ->whereNotNull('secondary_done_at')->count();
         // 4th pill on web's top bar (doctoredashboard.blade.php:1017,
@@ -75,15 +90,20 @@ class DoctorDashboardApiController extends Controller
             ->betweenCounsellingAndAssistant($today, $today)
             ->count();
 
-        // ── Doctor cards (all OPD doctors, skip OT Doctor) ────────────────────
+        // ── Doctor cards — same set as web: doctor + ot_doctor, active ────────
         $doctorCards = HospitalUser::with('role')
-            ->whereHas('role', fn ($q) => $q->where('slug', 'doctor'))
+            ->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))
             ->where('status', 'active')
             ->get()
             ->map(function ($doc) use ($today, $authUser) {
-                $assigned  = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)->count();
+                // Same three figures as web's doctor cards: Patient = pending
+                // walk-ins, P = primary done but not secondary, S = secondary done.
+                $assigned  = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)
+                    ->whereNull('primary_done_at')
+                    ->where(fn ($q) => $q->where('type', '!=', 'phone')->orWhereNotNull('checked_in_at'))
+                    ->count();
                 $primary   = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)
-                    ->whereNotNull('primary_done_at')->count();
+                    ->whereNotNull('primary_done_at')->whereNull('secondary_done_at')->count();
                 $secondary = Patient::where('doctor_id', $doc->id)->whereDate('appointment_date', $today)
                     ->whereNotNull('secondary_done_at')->count();
 
@@ -372,6 +392,7 @@ class DoctorDashboardApiController extends Controller
                     'secondary_done' => $secondaryDone,
                 ],
                 'tenant_today_patients'  => $tenantTodayPatients,
+                'tenant_today_pending_walkin' => $tenantTodayPendingWalkin,
                 'tenant_today_primary'   => $tenantTodayPrimary,
                 'tenant_today_secondary' => $tenantTodaySecondary,
                 'tenant_today_ot_pipeline' => $tenantTodayOtPipeline,
