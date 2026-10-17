@@ -176,11 +176,13 @@ class DashboardController extends Controller
                     OtBooking::STATUS_SURGERY_REFUSED,
                 ])->count();
             } elseif ($roleSlug === 'ward_management' && ($canSeeOtWidget || $this->perm->can('ot_ward_entry'))) {
+                // Excludes doctor-consult hand-offs (web pull 2026-10-17) — those sit
+                // on the doctor's Ward Management queue until sent back Ready for OT.
                 $wardPendingCount = OtBooking::whereIn('ot_status', [
                     OtBooking::STATUS_PAYMENT_VERIFIED,
                     OtBooking::STATUS_IN_WARD,
                     OtBooking::STATUS_DILATED,
-                ])->count();
+                ])->whereNotIn('id', OtBooking::query()->doctorConsultationPending()->select('id'))->count();
                 // Web ward history card: ready + operated + discharged.
                 $wardCompletedCount = OtBooking::whereIn('ot_status', [
                     OtBooking::STATUS_READY,

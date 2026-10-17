@@ -103,6 +103,15 @@ class OtAssistantApiController extends Controller
         $requestedAssistantId = (int) $request->query('assistant_id', 0);
         if ($user->role?->slug === 'ot_assistant' && $requestedAssistantId > 0) {
             $query->where('ot_assistant_id', $requestedAssistantId);
+        } elseif ($user->role?->slug === 'doctor') {
+            // Doctor viewing this list directly — only their own patients.
+            $query->where(function ($q) use ($assistantId) {
+                $q->where('ot_doctor_id', $assistantId)
+                    ->orWhere(function ($q2) use ($assistantId) {
+                        $q2->whereNull('ot_doctor_id')
+                            ->whereHas('patient', fn ($p) => $p->where('doctor_id', $assistantId));
+                    });
+            });
         } elseif (! $seeAll) {
             $query->where('ot_assistant_id', $assistantId);
         }
@@ -572,7 +581,22 @@ class OtAssistantApiController extends Controller
             ->with(['patient:id,first_name,middle_name,last_name,contact_no']);
 
         if (! $seeAll) {
-            $query->where('ot_assistant_id', (int) $user->id);
+            if ($user->role?->slug === 'doctor') {
+                // A doctor may Operate only their own patients — ot_doctor_id when
+                // set, else the OPD walk-in doctor (a booking that went straight to
+                // Ready for OT never had ot_doctor_id stamped). Web pull 2026-10-17
+                // (OtAssistantController::restrictToOperableBookings).
+                $doctorId = (int) $user->id;
+                $query->where(function ($q) use ($doctorId) {
+                    $q->where('ot_doctor_id', $doctorId)
+                        ->orWhere(function ($q2) use ($doctorId) {
+                            $q2->whereNull('ot_doctor_id')
+                                ->whereHas('patient', fn ($p) => $p->where('doctor_id', $doctorId));
+                        });
+                });
+            } else {
+                $query->where('ot_assistant_id', (int) $user->id);
+            }
         }
 
         return $query->find($bookingId);

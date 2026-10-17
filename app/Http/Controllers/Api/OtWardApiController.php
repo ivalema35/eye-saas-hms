@@ -88,6 +88,11 @@ class OtWardApiController extends Controller
                 OtBooking::STATUS_IN_WARD,
                 OtBooking::STATUS_DILATED,
             ]);
+            // Preparing/Hold/Complicated hands the patient off to their doctor for
+            // consult (isDoctorConsultationPending()) — they live on the doctor's
+            // Ward Management queue now, not ward's own queue, until the doctor
+            // sends them back as Ready for OT. Same rule as web (web pull 2026-10-17).
+            $query->whereNotIn('id', OtBooking::query()->doctorConsultationPending()->select('id'));
             $this->applyOtDeskDateRange($query, $fromDate, $toDate);
             $query->orderBy('surgery_date')->orderByDesc('id');
         }
@@ -255,8 +260,17 @@ class OtWardApiController extends Controller
                     ], 422);
                 }
 
-                $booking->update(['ot_assistant_id' => (int) $defaultAssistantId]);
-                $message = 'Status saved. Patient assigned to OT Assistant.';
+                $bookingUpdate = ['ot_assistant_id' => (int) $defaultAssistantId];
+
+                // Save Status now also hands the patient off to OT Assistant in one
+                // step (previously a separate READY button) — web pull 2026-10-17.
+                if (in_array($booking->ot_status, [OtBooking::STATUS_PAYMENT_VERIFIED, OtBooking::STATUS_IN_WARD], true)) {
+                    $bookingUpdate['ot_status'] = OtBooking::STATUS_READY;
+                    $bookingUpdate['attended_at'] = $booking->attended_at ?? now();
+                }
+
+                $booking->update($bookingUpdate);
+                $message = 'Status saved. Patient assigned and sent to OT Assistant.';
             } else {
                 // Preparing / Hold / Complicated → auto-assign the OPD doctor
                 // (same doctor does OT consultation) instead of a manual
@@ -360,16 +374,11 @@ class OtWardApiController extends Controller
             'dose_number' => ['required', 'integer', 'min:1', 'max:20'],
             'administered_at' => ['nullable', 'date'],
             'remarks' => ['nullable', 'string', 'max:1000'],
-            'dilate' => ['nullable', Rule::in(['Yes', 'No'])],
-            'dilation_time' => ['nullable', 'required_if:dilate,Yes', 'integer', 'min:1', 'max:180'],
         ], [
             'medicine_name.exists' => 'Select a ward medicine.',
             'eye.in' => 'Eye must match Recommend Surgery selection'
                 . (in_array((string) $booking->eye, ['RE', 'LE', 'Both'], true) ? ' (' . $booking->eye . ').' : '.'),
-            'dilation_time.required_if' => 'Enter the dilation time (minutes).',
         ]);
-
-        $dilate = $validated['dilate'] ?? null;
 
         $entry = OtDilationEntry::query()->create([
             'tenant_id' => $tenantId,
@@ -381,8 +390,6 @@ class OtWardApiController extends Controller
             'is_instilled' => true,
             'administered_by' => (int) auth('sanctum')->id(),
             'remarks' => $validated['remarks'] ?? null,
-            'dilate' => $dilate,
-            'dilation_time' => $dilate === 'Yes' ? ($validated['dilation_time'] ?? null) : null,
         ]);
 
         return response()->json([

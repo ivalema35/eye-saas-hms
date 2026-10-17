@@ -172,11 +172,11 @@ class DoctorDashboardApiController extends Controller
         // ot_doctor_id when set, else the OPD walk-in doctor.
         //  - Payment Pending: counselled / paid, awaiting payment.
         //  - Ward Management: payment verified / in ward / dilated.
-        //  - OT Assistant: handed to an OT assistant (status Ready) — the
-        //    patients this doctor assigned via Review → Assign OT Assistant.
+        //  - Ready for Surgery: this doctor's Ready-for-OT patients — the doctor can
+        //    Operate them (same Surgery Recording Form the OT Assistant uses).
         $otPaymentPendingQueue = collect();
         $otWardQueue = collect();
-        $otAssistantQueue = collect();
+        $otReadyQueue = collect();
         if ($targetDoctorId) {
             $otBookingsQuery = OtBooking::with([
                 'patient:id,patient_code,first_name,middle_name,last_name,contact_no,age,gender,location_id,doctor_id',
@@ -214,9 +214,8 @@ class DoctorDashboardApiController extends Controller
                 ->take(50)
                 ->get();
 
-            $otAssistantQueue = (clone $otBookingsQuery)
+            $otReadyQueue = (clone $otBookingsQuery)
                 ->where('ot_status', OtBooking::STATUS_READY)
-                ->whereNotNull('ot_assistant_id')
                 ->where($matchesDoctor)
                 ->orderByDesc('surgery_date')
                 ->orderByDesc('id')
@@ -388,7 +387,7 @@ class DoctorDashboardApiController extends Controller
                 // OT/PD/OC counters on the top bar and the TP badge figure.
                 'ot_payment_pending_queue' => $otPaymentPendingQueue->map($mapOtQueueItem)->values(),
                 'ot_ward_queue'            => $otWardQueue->map($mapOtQueueItem)->values(),
-                'ot_assistant_queue'       => $otAssistantQueue->map($mapOtQueueItem)->values(),
+                'ot_ready_queue'           => $otReadyQueue->map($mapOtQueueItem)->values(),
                 'today_ot_counter_pending' => $todayOtCounterPending,
                 'today_payment_complete'   => $todayPaymentComplete,
                 'today_discharged'         => $todayDischarged,
