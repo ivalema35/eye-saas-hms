@@ -220,7 +220,7 @@ used across the rest of the app. --}}
                                                 </select>
                                             </div>
                                             <div class="col-md-3 col-xl">
-                                                <label class="form-label">Estimated Power</label>
+                                                <label class="form-label">Lens Power</label>
                                                 <input type="number" step="0.01" name="estimated_power" class="form-control"
                                                     value="{{ old('estimated_power', $c->estimated_power ?? '') }}">
                                             </div>

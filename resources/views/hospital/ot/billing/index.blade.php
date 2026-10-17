@@ -39,14 +39,35 @@ Appointments / Ward Management / OT Assistant design. --}}
                             </div>
                         </div>
                     </div>
-                    @include('hospital.ot.partials.desk-filters', [
+                    <div class="otb-head-actions">
+                        <form method="GET" action="{{ route('hospital.ot.billing.index', ['slug' => $slug]) }}"
+                            class="otb-date-form">
+                            <input type="hidden" name="filter" value="{{ $activeFilter ?? 'queue' }}">
+                            @php
+                                $otbFromDate = $fromDate ?? now()->toDateString();
+                                $otbToDate = $toDate ?? $otbFromDate;
+                            @endphp
+                            <input type="text" class="form-control otb-date-input" data-hms-date-range
+                                data-start-name="from_date" data-end-name="to_date"
+                                data-start-value="{{ $otbFromDate }}" data-end-value="{{ $otbToDate }}"
+                                data-auto-submit="1" placeholder="Date range" autocomplete="off" readonly>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="otb-filter-tabs" role="group" aria-label="OT billing filter">
+                    <a href="{{ route('hospital.ot.billing.index', ['slug' => $slug, 'filter' => 'queue']) }}"
+                        class="otb-filter-tab {{ ($activeFilter ?? 'queue') === 'queue' ? 'active' : '' }}">
+                        Queue
+                    </a>
+                    <a href="{{ route('hospital.ot.billing.index', [
                         'slug' => $slug,
-                        'routeName' => 'hospital.ot.billing.index',
-                        'activeFilter' => $activeFilter ?? 'queue',
-                        'fromDate' => $fromDate ?? now()->toDateString(),
-                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
-                        'alwaysShowDateRange' => true,
-                    ])
+                        'filter' => 'history',
+                        'from_date' => $otbFromDate,
+                        'to_date' => $otbToDate,
+                    ]) }}" class="otb-filter-tab {{ $isHistory ? 'active' : '' }}">
+                        Completed
+                    </a>
                 </div>
 
                 <div class="card-body p-0">
@@ -150,7 +171,6 @@ Appointments / Ward Management / OT Assistant design. --}}
 @endsection
 
 @push('styles')
-    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                             Discharge & Invoices Index — design refresh (hospital shell theme, #1B4F72).
@@ -266,6 +286,76 @@ Appointments / Ward Management / OT Assistant design. --}}
             font-weight: 500;
             opacity: .85;
             font-size: .85rem;
+        }
+
+        .otb-head-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .otb-date-form {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+        }
+
+        .otb-date-input {
+            min-width: 250px;
+            min-height: 42px;
+            border: 0 !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, .95) !important;
+            color: var(--otb-primary) !important;
+            font-weight: 700;
+        }
+
+        .otb-filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            padding: 1rem 1.5rem;
+            background: #fff;
+            border-bottom: 1px solid var(--otb-s2-12);
+        }
+
+        .otb-filter-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: 1px solid var(--otb-s2-18);
+            border-radius: 999px;
+            padding: .55rem 1.1rem;
+            font-weight: 900;
+            font-size: .82rem;
+            color: var(--otb-primary);
+            background: #fff;
+            transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+
+        .otb-filter-tab:hover {
+            color: var(--otb-primary);
+            background: var(--otb-s2-06);
+            border-color: var(--otb-s2-24);
+        }
+
+        .otb-filter-tab.active {
+            background: var(--otb-primary);
+            border-color: var(--otb-primary);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(27, 79, 114, .20);
+        }
+
+        @media (max-width: 576px) {
+            .otb-date-input {
+                min-width: 190px;
+            }
+
+            .otb-filter-tabs {
+                padding: .85rem 1rem;
+                overflow-x: auto;
+            }
         }
 
         .ot-billing-page .otb-table-wrap {

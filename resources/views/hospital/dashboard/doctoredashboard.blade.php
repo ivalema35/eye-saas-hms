@@ -770,10 +770,10 @@
         }
 
         /* .doc-ref-bar a.doc-ref-link:hover {
-                            background: rgba(255, 255, 255, .22);
-                            color: #fff;
-                            text-decoration: underline;
-                        } */
+                                background: rgba(255, 255, 255, .22);
+                                color: #fff;
+                                text-decoration: underline;
+                            } */
 
         .doc-ref-mid {
             display: flex;
@@ -965,30 +965,7 @@
         }
 
         /* ==================== OPD / OT DASHBOARD TAB TOGGLE ==================== */
-        .dash-tab-bar {
-            display: inline-flex;
-            gap: 6px;
-            background: #eef2f6;
-            border-radius: 10px;
-            padding: 4px;
-        }
-
-        .dash-tab-btn {
-            border: none;
-            background: transparent;
-            color: #5b7385;
-            font-weight: 800;
-            font-size: 13px;
-            padding: 8px 22px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background .15s ease, color .15s ease;
-        }
-
-        .dash-tab-btn.active {
-            background: #1B4F72;
-            color: #fff;
-        }
+        /* .dash-tab-btn styling now lives in hospital.layouts.app (black-menu-bar) */
 
         .doctor-page-wrap[data-active-tab="opd"] .ot-only {
             display: none !important;
@@ -1049,11 +1026,7 @@
         )->values();
     @endphp
 
-    {{-- OPD / OT dashboard tabs — OPD is selected by default --}}
-    <div class="dash-tab-bar mb-3">
-        <button type="button" class="dash-tab-btn active" data-tab-target="opd">OPD</button>
-        <button type="button" class="dash-tab-btn" data-tab-target="ot">OT</button>
-    </div>
+    {{-- OPD / OT dashboard tabs now live in the top black menu bar (see hospital.layouts.app) --}}
 
     <div class="doc-overview-panel mb-4">
         {{-- Featured card: whichever doctor's dashboard is currently open --}}
@@ -1062,16 +1035,18 @@
                 <div class="doc-ref-bar doc-ref-bar--top opd-only" title="Hospital today">
                     <span title="Walk-ins still pending (whole hospital)">C: {{ $todayPendingWalkin ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Primary done, secondary still pending (whole hospital)">PC: {{ $todayPrimaryAwaitingSecondary ?? 0 }}</span>
+                    <span title="Primary done, secondary still pending (whole hospital)">PC:
+                        {{ $todayPrimaryAwaitingSecondary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Secondary completed today">SC: {{ $todaySecondary ?? 0 }}</span>
                 </div>
                 <div class="doc-ref-bar doc-ref-bar--top ot-only" title="Hospital today — OT">
-                    <span title="OT appointment walk-ins converted today">OT: {{ $todayOtWalkins ?? 0 }}</span>
+                    <span title="Pending at the OT appointment counter (whole hospital)">OT:
+                        {{ $todayOtCounterPending ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Patients currently pending payment">PD: {{ $todayPaymentPending ?? 0 }}</span>
+                    <span title="Payment complete (whole hospital)">PD: {{ $todayPaymentComplete ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Patients at the discharge counter">OC: {{ $todayDischargeCounter ?? 0 }}</span>
+                    <span title="Operated and discharged (whole hospital)">OC: {{ $todayDischarged ?? 0 }}</span>
                 </div>
                 <div class="doc-ref-mid">
                     <div class="doc-avatar">
@@ -1088,19 +1063,21 @@
                     </div>
                 </div>
                 <div class="doc-ref-bar doc-ref-bar--opd opd-only" title="My OPD">
-                    <span title="Walk-ins still pending for this doctor">Patient: {{ $doctorAssignedPatients ?? 0 }}</span>
+                    <span title="Walk-ins still pending for this doctor">Patient:
+                        {{ $doctorAssignedPatients ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="Primary done, secondary still pending">P: {{ $doctorPrimaryAwaitingSecondary ?? 0 }}</span>
+                    <span title="Primary done, secondary still pending">P:
+                        {{ $doctorPrimaryAwaitingSecondary ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
                     <span title="Secondary exam completed">S: {{ $doctorSecondaryDone ?? 0 }}</span>
                 </div>
                 <div class="doc-ref-bar doc-ref-bar--ot ot-only" title="OT">
-                    <span title="OT patient count (all-time, this doctor)">OT:
-                        {{ $activeOtStats->ot_total ?? 0 }}</span>
+                    <span title="Pending at the OT appointment counter (today)">OT:
+                        {{ $activeOtStats->ot_counter_pending ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="OT work still pending">Pending: {{ $activeOtStats->ot_pending ?? 0 }}</span>
+                    <span title="Payment complete (today)">PD: {{ $activeOtStats->ot_payment_complete ?? 0 }}</span>
                     <span class="doc-ref-div"></span>
-                    <span title="OT completed">OC: {{ $activeOtStats->ot_complete ?? 0 }}</span>
+                    <span title="Operated and discharged (today)">OC: {{ $activeOtStats->ot_discharged ?? 0 }}</span>
                 </div>
             </div>
         </div>
@@ -1132,11 +1109,12 @@
                                 {{ $doc->secondary_count ?? 0 }}</span>
                         </div>
                         <div class="doc-ref-btns doc-ref-btns--ot ot-only">
-                            <span class="doc-ref-btn" title="OT patient count (all-time, this doctor)">OT:
-                                {{ $docOt->ot_total ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="OT work still pending">Pending:
-                                {{ $docOt->ot_pending ?? 0 }}</span>
-                            <span class="doc-ref-btn" title="OT completed">OC: {{ $docOt->ot_complete ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Pending at the OT appointment counter (today)">OT:
+                                {{ $docOt->ot_counter_pending ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Payment complete (today)">PD:
+                                {{ $docOt->ot_payment_complete ?? 0 }}</span>
+                            <span class="doc-ref-btn" title="Operated and discharged (today)">OC:
+                                {{ $docOt->ot_discharged ?? 0 }}</span>
                         </div>
                     </a>
                 @empty
@@ -1426,7 +1404,7 @@
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
                 <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
-                    OT Pending Patients
+                    Payment Pending Patients
                 </div>
                 <div class="p-3 bg-white">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1478,19 +1456,11 @@
                                     </td>
                                     <td>
                                         @hasanypermission('exam_secondary|ot_patient_list|ot_surgery_recommend')
-                                        @if($booking->isDoctorConsultationPending())
-                                            <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId, 'queue' => 'consult']) }}"
-                                                class="btn btn-sm text-white px-3 fw-semibold"
-                                                style="background-color: #1B4F72; border-radius: 4px;">
-                                                Review
-                                            </a>
-                                        @else
-                                            <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId]) }}"
-                                                class="btn btn-sm px-3 fw-semibold"
-                                                style="background-color: #64748b; color:#fff; border-radius: 4px;">
-                                                View
-                                            </a>
-                                        @endif
+                                        <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId]) }}"
+                                            class="btn btn-sm px-3 fw-semibold"
+                                            style="background-color: #64748b; color:#fff; border-radius: 4px;">
+                                            View
+                                        </a>
                                         @endhasanypermission
                                     </td>
                                 </tr>
@@ -1513,11 +1483,11 @@
             </div>
         </div>
 
-        {{-- Right Table Panel: OT Completed Patients --}}
+        {{-- Right Table Panel: Ward Management Patients --}}
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 10px;">
                 <div class="px-3 py-2 text-white fw-bold fs-5" style="background-color: #000000; font-size: 16px;">
-                    OT Completed Patients
+                    Ward Management Patients
                 </div>
                 <div class="p-3 bg-white">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -1549,7 +1519,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($otCompletedQueue ?? [] as $i => $booking)
+                                @forelse($otWardQueue ?? [] as $i => $booking)
                                 @php
                                     $otPatient = $booking->patient;
                                     $otMeta = \App\Models\Hospital\OT\OtBooking::statusLabel($booking->ot_status);
@@ -1569,11 +1539,19 @@
                                     </td>
                                     <td>
                                         @hasanypermission('exam_secondary|ot_patient_list|ot_surgery_recommend')
-                                        <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId]) }}"
-                                            class="btn btn-sm px-3 fw-semibold"
-                                            style="background-color: #0d9488; color:#fff; border-radius: 4px;">
-                                            View
-                                        </a>
+                                        @if($booking->isDoctorConsultationPending())
+                                            <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId, 'queue' => 'consult']) }}"
+                                                class="btn btn-sm text-white px-3 fw-semibold"
+                                                style="background-color: #1B4F72; border-radius: 4px;">
+                                                Review
+                                            </a>
+                                        @else
+                                            <a href="{{ route('hospital.dashboard.doctor-ot', ['slug' => $slug, 'doctor_id' => $activeDoctorId]) }}"
+                                                class="btn btn-sm px-3 fw-semibold"
+                                                style="background-color: #0d9488; color:#fff; border-radius: 4px;">
+                                                View
+                                            </a>
+                                        @endif
                                         @endhasanypermission
                                     </td>
                                 </tr>
@@ -1664,6 +1642,7 @@
         (function () {
             // OPD / OT dashboard tab toggle
             const dashWrap = document.querySelector('.doctor-page-wrap');
+            const dashTpBadge = document.getElementById('dashTpBadge');
             document.querySelectorAll('[data-tab-target]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     const tab = btn.dataset.tabTarget;
@@ -1671,6 +1650,10 @@
                     document.querySelectorAll('.dash-tab-btn[data-tab-target]').forEach(function (b) {
                         b.classList.toggle('active', b.dataset.tabTarget === tab);
                     });
+                    if (dashTpBadge) {
+                        const count = tab === 'ot' ? dashTpBadge.dataset.otCount : dashTpBadge.dataset.opdCount;
+                        dashTpBadge.textContent = 'TP: ' + count;
+                    }
                 });
             });
         })();

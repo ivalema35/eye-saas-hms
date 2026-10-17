@@ -367,7 +367,7 @@ class OtAssistantController extends Controller
         });
 
         return redirect()
-            ->route('hospital.ot.assistant.dashboard', ['slug' => $slug])
+            ->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Surgery recorded successfully.');
     }
 

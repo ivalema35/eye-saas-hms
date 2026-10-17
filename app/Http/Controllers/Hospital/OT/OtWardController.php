@@ -162,11 +162,19 @@ class OtWardController extends Controller
                         ->with('error', 'This doctor has no active OT Assistant connected. Connect one on the doctor\'s profile (Users → Edit Doctor) before marking Ready for OT.');
                 }
 
-                $booking->update([
-                    'ot_assistant_id' => (int) $defaultAssistantId,
-                ]);
+                $bookingUpdate = ['ot_assistant_id' => (int) $defaultAssistantId];
 
-                $message = 'Status saved. Patient assigned to OT Assistant.';
+                // Save Status now also hands the patient off to OT Assistant in one
+                // step (previously a separate "READY" button) — same transition
+                // OtAccountantController::markReadyForOt used to perform.
+                if (in_array($booking->ot_status, [OtBooking::STATUS_PAYMENT_VERIFIED, OtBooking::STATUS_IN_WARD], true)) {
+                    $bookingUpdate['ot_status'] = OtBooking::STATUS_READY;
+                    $bookingUpdate['attended_at'] = $booking->attended_at ?? now();
+                }
+
+                $booking->update($bookingUpdate);
+
+                $message = 'Status saved. Patient assigned and sent to OT Assistant.';
             } else {
                 // Preparing / Hold / Complicated → auto-assign OPD doctor
                 // (same doctor does OT consultation). Clear OT Assistant.
@@ -206,6 +214,14 @@ class OtWardController extends Controller
                 'ot_status' => OtBooking::STATUS_IN_WARD,
                 'attended_at' => $booking->attended_at ?? now(),
             ]);
+        }
+
+        // Only the Patient Status form (assign_staff=1) redirects to the dashboard —
+        // the Save Vitals form stays on this ward page.
+        if ($request->boolean('assign_staff')) {
+            return redirect()
+                ->route('hospital.dashboard', ['slug' => $slug])
+                ->with('success', $message);
         }
 
         return redirect()

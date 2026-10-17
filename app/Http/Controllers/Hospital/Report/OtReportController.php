@@ -187,7 +187,7 @@ class OtReportController extends Controller
 
         $filename = 'lens_report_' . $from->toDateString() . '_to_' . $to->toDateString() . '.xlsx';
 
-        return Excel::download(new GenericArrayExport($data['detailRows'], $data['detailHeadings']), $filename);
+        return Excel::download(new GenericArrayExport($data['rows'], $data['headings']), $filename);
     }
 
     /**
@@ -212,50 +212,52 @@ class OtReportController extends Controller
     }
 
     /**
-     * @return array{summary: array{totalLensesUsed: int, totalSurgeries: int, uniquePowers: int}, powerSummary: \Illuminate\Support\Collection, detailHeadings: list<string>, detailRows: list<array<int, mixed>>}
+     * @return array{headings: list<string>, rows: list<array<int, mixed>>}
      */
     private function buildLensReportData(int $tenantId, Carbon $from, Carbon $to): array
     {
         $lensDetails = OtLensDetail::query()
             ->with([
-                'booking.patient:id,patient_code,first_name,middle_name,last_name',
-                'booking.otDoctor:id,name',
+                // Lens Category lives on ot_counselling (counselling-stage plan),
+                // not ot_lens_details — pulled via the booking relation rather than
+                // duplicating the column onto ot_lens_details.
+                'booking.counselling:id,ot_booking_id,lens_category',
                 'inventoryItem:id,lens_code,manufacturer',
             ])
             ->where('tenant_id', $tenantId)
             ->where('is_implanted', true)
             ->whereBetween('implanted_at', [$from, $to])
-            ->orderByDesc('implanted_at')
             ->get();
 
-        $summary = [
-            'totalLensesUsed' => $lensDetails->count(),
-            'totalSurgeries' => $lensDetails->pluck('ot_booking_id')->unique()->count(),
-            'uniquePowers' => $lensDetails->pluck('lens_power')->map(fn($p) => number_format((float) $p, 2))->unique()->count(),
-        ];
-
-        $powerSummary = $lensDetails
-            ->groupBy(fn(OtLensDetail $d) => number_format((float) $d->lens_power, 2))
-            ->map(fn($group, $power) => ['power' => $power, 'quantity' => $group->count()])
-            ->sortBy(fn($row) => (float) $row['power'])
+        // Grouped by the full lens configuration (Power + Category + Company +
+        // Model + Type) — Count is how many times that exact combination was
+        // implanted in the selected range.
+        $breakdown = $lensDetails
+            ->map(fn(OtLensDetail $d) => [
+                'power' => number_format((float) $d->lens_power, 2),
+                'category' => $d->booking?->counselling?->lens_category ? ucfirst($d->booking->counselling->lens_category) : '-',
+                'company' => $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
+                'model' => $d->lens_name ?: '-',
+                'type' => $d->lens_type ?: '-',
+            ])
+            ->groupBy(fn(array $row) => implode('|', $row))
+            ->map(fn($group) => [...$group->first(), 'count' => $group->count()])
+            ->sortBy(fn(array $row) => (float) $row['power'])
             ->values();
 
-        $detailHeadings = ['Surgery Date', 'Patient Name', 'MRD No.', 'Lens Power', 'Lens Name', 'Lens Company', 'Doctor'];
-        $detailRows = $lensDetails->map(fn(OtLensDetail $d) => [
-            optional($d->implanted_at)->format('d M Y') ?? '-',
-            $d->booking?->patient?->full_name ?? '-',
-            $d->booking?->patient?->patient_code ?? '-',
-            '+' . number_format((float) $d->lens_power, 2) . 'D',
-            $d->lens_name ?: '-',
-            $d->manufacturer ?: ($d->inventoryItem?->manufacturer ?? '-'),
-            $d->booking?->otDoctor?->name ?? '-',
+        $headings = ['Lens Power', 'Lens Category', 'Lens Company', 'Lens Model', 'Lens Type', 'Count'];
+        $rows = $breakdown->map(fn(array $row) => [
+            '+' . $row['power'] . 'D',
+            $row['category'],
+            $row['company'],
+            $row['model'],
+            $row['type'],
+            $row['count'],
         ])->all();
 
         return [
-            'summary' => $summary,
-            'powerSummary' => $powerSummary,
-            'detailHeadings' => $detailHeadings,
-            'detailRows' => $detailRows,
+            'headings' => $headings,
+            'rows' => $rows,
         ];
     }
 

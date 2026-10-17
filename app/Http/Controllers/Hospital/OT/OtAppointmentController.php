@@ -395,9 +395,14 @@ class OtAppointmentController extends Controller
      */
     private function buildDoctorSlotLoad(Collection $doctors, Collection $slots, string $date, ?int $excludeId = null): array
     {
+        // Only still-booked appointments — same definition as the OT appointment
+        // dashboard's pending count: booked/confirmed and not yet walked in
+        // (converted to an OPD patient). Once a patient walks in, they drop off
+        // the slot load here too.
         $query = OtAppointment::query()
             ->whereDate('appointment_date', $date)
-            ->where('status', '!=', OtAppointment::STATUS_CANCELLED)
+            ->whereIn('status', [OtAppointment::STATUS_BOOKED, OtAppointment::STATUS_CONFIRMED])
+            ->whereNull('converted_patient_id')
             ->whereNotNull('doctor_id');
 
         if ($excludeId) {

@@ -22,7 +22,7 @@ Appointments page design. --}}
             </div>
 
             <div class="ward-inner-panel">
-                <div class="ward-card-header">
+                <div class="ward-card-header d-flex justify-content-between align-items-center flex-wrap">
                     <div class="ward-title-wrap">
                         <span class="ward-title-icon" aria-hidden="true">
                             <i class="bi bi-hospital" style="font-size: 1.2rem;"></i>
@@ -37,14 +37,32 @@ Appointments page design. --}}
                             </div>
                         </div>
                     </div>
-                    @include('hospital.ot.partials.desk-filters', [
+                    <div class="ward-head-actions">
+                        <form method="GET" action="{{ route('hospital.ot.ward.index', ['slug' => $slug]) }}"
+                            class="ward-date-form">
+                            <input type="hidden" name="filter" value="{{ $activeFilter ?? 'queue' }}">
+                            <input type="text" class="form-control ward-date-input" data-hms-date-range
+                                data-start-name="from_date" data-end-name="to_date"
+                                data-start-value="{{ $fromDate ?? now()->toDateString() }}"
+                                data-end-value="{{ $toDate ?? ($fromDate ?? now()->toDateString()) }}"
+                                data-auto-submit="1" placeholder="Date range" autocomplete="off" readonly>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="ward-filter-tabs" role="group" aria-label="OT ward filter">
+                    <a href="{{ route('hospital.ot.ward.index', ['slug' => $slug, 'filter' => 'queue']) }}"
+                        class="ward-filter-tab {{ ($activeFilter ?? 'queue') === 'queue' ? 'active' : '' }}">
+                        Queue
+                    </a>
+                    <a href="{{ route('hospital.ot.ward.index', [
                         'slug' => $slug,
-                        'routeName' => 'hospital.ot.ward.index',
-                        'activeFilter' => $activeFilter ?? 'queue',
-                        'fromDate' => $fromDate ?? now()->toDateString(),
-                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
-                        'alwaysShowDateRange' => true,
-                    ])
+                        'filter' => 'history',
+                        'from_date' => $fromDate ?? now()->toDateString(),
+                        'to_date' => $toDate ?? ($fromDate ?? now()->toDateString()),
+                    ]) }}" class="ward-filter-tab {{ $isHistory ? 'active' : '' }}">
+                        Completed
+                    </a>
                 </div>
 
                 <div class="card-body p-0">
@@ -140,7 +158,6 @@ Appointments page design. --}}
 @endsection
 
 @push('styles')
-    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         /*
                                     Ward Management Index — design refresh (hospital shell theme, #1B4F72).
@@ -291,6 +308,76 @@ Appointments page design. --}}
             font-weight: 500;
             color: rgba(255, 255, 255, 0.78);
             font-size: .85rem;
+        }
+
+        .ward-head-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .ward-date-form {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+        }
+
+        .ward-date-input {
+            min-width: 250px;
+            min-height: 42px;
+            border: 0 !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, .95) !important;
+            color: var(--ward-primary) !important;
+            font-weight: 700;
+        }
+
+        .ward-filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            padding: 1rem 1.5rem;
+            background: #fff;
+            border-bottom: 1px solid var(--ward-s2-12);
+        }
+
+        .ward-filter-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: 1px solid var(--ward-s2-18);
+            border-radius: 999px;
+            padding: .55rem 1.1rem;
+            font-weight: 900;
+            font-size: .82rem;
+            color: var(--ward-primary);
+            background: #fff;
+            transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+
+        .ward-filter-tab:hover {
+            color: var(--ward-primary);
+            background: var(--ward-s2-06);
+            border-color: var(--ward-s2-24);
+        }
+
+        .ward-filter-tab.active {
+            background: var(--ward-primary);
+            border-color: var(--ward-primary);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(27, 79, 114, .20);
+        }
+
+        @media (max-width: 576px) {
+            .ward-date-input {
+                min-width: 190px;
+            }
+
+            .ward-filter-tabs {
+                padding: .85rem 1rem;
+                overflow-x: auto;
+            }
         }
 
         .ward-table-wrap {

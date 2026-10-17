@@ -437,7 +437,7 @@ class OtCounsellorController extends Controller
         $booking->update(['ot_status' => OtBooking::STATUS_COUNSELLED]);
 
         return redirect()
-            ->route('hospital.ot.counsellor.dashboard', ['slug' => $slug])
+            ->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Patient sent to Billing.');
     }
 

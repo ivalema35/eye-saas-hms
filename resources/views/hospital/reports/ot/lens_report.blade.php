@@ -63,79 +63,15 @@
         </div>
     </div>
 
-    {{-- Summary cards --}}
-    <div class="ot-lens-summary-grid mb-4">
-        <div class="ot-lens-summary-card">
-            <span class="ot-lens-summary-icon"><i class="bi bi-eyeglasses"></i></span>
-            <div>
-                <div class="ot-lens-summary-value">{{ $summary['totalLensesUsed'] }}</div>
-                <div class="ot-lens-summary-label">Total Lenses Used</div>
-            </div>
-        </div>
-        <div class="ot-lens-summary-card">
-            <span class="ot-lens-summary-icon"><i class="bi bi-scissors"></i></span>
-            <div>
-                <div class="ot-lens-summary-value">{{ $summary['totalSurgeries'] }}</div>
-                <div class="ot-lens-summary-label">Surgeries with Lens Usage</div>
-            </div>
-        </div>
-        <div class="ot-lens-summary-card">
-            <span class="ot-lens-summary-icon"><i class="bi bi-collection"></i></span>
-            <div>
-                <div class="ot-lens-summary-value">{{ $summary['uniquePowers'] }}</div>
-                <div class="ot-lens-summary-label">Unique Lens Powers Used</div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Lens Power breakdown --}}
-    <div class="card ot-premium-card border-0 mb-4">
+    {{-- Lens Power Breakdown --}}
+    <div class="card ot-premium-card border-0">
         <div class="ot-card-header">
             <div class="ot-title-wrap">
                 <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-bar-chart-steps"
                         style="font-size: 1.1rem;"></i></span>
                 <h5 class="ot-title mb-0">Lens Power Breakdown</h5>
             </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="ot-table-wrap">
-                <div class="table-responsive">
-                    <table class="table ot-premium-table align-middle mb-0" style="min-width: 320px;">
-                        <thead>
-                            <tr>
-                                <th>Lens Power</th>
-                                <th>Quantity Used</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($powerSummary as $row)
-                                <tr>
-                                    <td>+{{ $row['power'] }}D</td>
-                                    <td>{{ $row['quantity'] }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="2" class="text-center ot-empty">
-                                        <i class="bi bi-inbox me-1"></i> No lens usage for the selected range.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Detail table --}}
-    <div class="card ot-premium-card border-0">
-        <div class="ot-card-header">
-            <div class="ot-title-wrap">
-                <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-clipboard2-data"
-                        style="font-size: 1.1rem;"></i></span>
-                <h5 class="ot-title mb-0">Lens Usage Detail</h5>
-            </div>
-            <span class="badge ot-total-pill"><i class="bi bi-collection me-1"></i>{{ count($detailRows) }} rows</span>
+            <span class="badge ot-total-pill"><i class="bi bi-collection me-1"></i>{{ count($rows) }} rows</span>
         </div>
         <div class="card-body p-0">
             <div class="ot-table-wrap">
@@ -143,13 +79,13 @@
                     <table class="table ot-premium-table align-middle mb-0">
                         <thead>
                             <tr>
-                                @foreach($detailHeadings as $heading)
+                                @foreach($headings as $heading)
                                     <th>{{ $heading }}</th>
                                 @endforeach
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($detailRows as $row)
+                            @forelse($rows as $row)
                                 <tr>
                                     @foreach($row as $cell)
                                         <td>{{ $cell }}</td>
@@ -157,7 +93,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ count($detailHeadings) }}" class="text-center ot-empty">
+                                    <td colspan="{{ count($headings) }}" class="text-center ot-empty">
                                         <i class="bi bi-inbox me-1"></i> No lens usage for the selected range.
                                     </td>
                                 </tr>
@@ -494,51 +430,6 @@
             color: rgba(27, 79, 114, 0.72) !important;
             font-weight: 800;
             white-space: normal !important;
-        }
-
-        /* Summary cards */
-        .ot-lens-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.1rem;
-        }
-
-        .ot-lens-summary-card {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: rgba(255, 255, 255, 0.88);
-            border: 1px solid var(--ot-s2-12);
-            border-radius: 18px;
-            padding: 1.1rem 1.25rem;
-            box-shadow: 0 14px 30px rgba(27, 79, 114, 0.08);
-        }
-
-        .ot-lens-summary-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            background: var(--ot-s2-08);
-            color: var(--ot-secondary);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            flex: 0 0 auto;
-        }
-
-        .ot-lens-summary-value {
-            font-size: 1.6rem;
-            font-weight: 900;
-            color: var(--ot-secondary);
-            line-height: 1.1;
-        }
-
-        .ot-lens-summary-label {
-            font-size: .8rem;
-            font-weight: 700;
-            color: rgba(27, 79, 114, 0.65);
-            margin-top: .15rem;
         }
 
         @media (prefers-reduced-motion: reduce) {

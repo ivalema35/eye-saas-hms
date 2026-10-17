@@ -6,7 +6,6 @@
      Appointments / Ward Management design. --}}
 
 @push('styles')
-    @include('hospital.ot.partials.desk-filter-styles')
     <style>
         .ot-assistant-page {
             --ota2-primary: #1B4F72;
@@ -81,7 +80,109 @@
         }
 
         .ot-assistant-page .ota2-card-header {
+            background: var(--ota2-primary) !important;
             padding: 1.15rem 1.5rem !important;
+        }
+
+        .ota2-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+        }
+
+        .ota2-title-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 16px;
+            background: #ffffff;
+            color: var(--ota2-primary);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 14px 30px rgba(27, 79, 114, .22);
+        }
+
+        .ota2-title {
+            color: #ffffff !important;
+            font-weight: 900;
+            letter-spacing: -.2px;
+        }
+
+        .ota2-subtitle {
+            color: rgba(255, 255, 255, .78);
+            font-size: .84rem;
+            font-weight: 650;
+            margin-top: .15rem;
+        }
+
+        .ota2-head-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .ota2-date-form {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+        }
+
+        .ota2-date-input {
+            min-width: 250px;
+            min-height: 42px;
+            border: 0 !important;
+            border-radius: 10px !important;
+            background: rgba(255, 255, 255, .95) !important;
+            color: var(--ota2-primary) !important;
+            font-weight: 700;
+        }
+
+        .ota2-filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            padding: 1rem 1.5rem;
+            background: #fff;
+            border-bottom: 1px solid var(--ota2-s2-12);
+        }
+
+        .ota2-filter-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border: 1px solid var(--ota2-s2-18);
+            border-radius: 999px;
+            padding: .55rem 1.1rem;
+            font-weight: 900;
+            font-size: .82rem;
+            color: var(--ota2-primary);
+            background: #fff;
+            transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+        }
+
+        .ota2-filter-tab:hover {
+            color: var(--ota2-primary);
+            background: var(--ota2-s2-06);
+            border-color: var(--ota2-s2-24);
+        }
+
+        .ota2-filter-tab.active {
+            background: var(--ota2-primary);
+            border-color: var(--ota2-primary);
+            color: #fff;
+            box-shadow: 0 8px 16px rgba(27, 79, 114, .20);
+        }
+
+        @media (max-width: 576px) {
+            .ota2-date-input {
+                min-width: 190px;
+            }
+
+            .ota2-filter-tabs {
+                padding: .85rem 1rem;
+                overflow-x: auto;
+            }
         }
 
         .ot-assistant-page .ota2-table-wrap {
@@ -422,33 +523,58 @@
             </div>
 
             <div class="ota2-inner-panel">
+                @php
+                    $isHistory = ($activeFilter ?? 'queue') === 'history';
+                    $otaAssistantExtraQuery = !empty($viewingAssistant) ? ['view_assistant' => $viewingAssistant->id] : [];
+                    $otaAssistantFromDate = $fromDate ?? now()->toDateString();
+                    $otaAssistantToDate = $toDate ?? $otaAssistantFromDate;
+                @endphp
                 <div class="ota2-card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div class="ota2-title-wrap">
-            <span class="ota2-title-icon">
-                <i class="bi bi-activity fs-4"></i>
-            </span>
-            <div>
-                            @php $isHistory = ($activeFilter ?? 'queue') === 'history'; @endphp
+                    <div class="ota2-title-wrap">
+                        <span class="ota2-title-icon">
+                            <i class="bi bi-activity fs-4"></i>
+                        </span>
+                        <div>
                             <h5 class="mb-0 fw-bold ota2-title">
-                    {{ $isHistory ? 'Surgery History' : 'Surgery Queue' }}
-                </h5>
-                <div class="ota2-subtitle">
-                    {{ $isHistory
-                        ? 'Operated / discharged patients — view only.'
-                        : 'Patients ready for OT — record the surgery.' }}
+                                {{ $isHistory ? 'Surgery History' : 'Surgery Queue' }}
+                            </h5>
+                            <div class="ota2-subtitle">
+                                {{ $isHistory
+                                    ? 'Operated / discharged patients — view only.'
+                                    : 'Patients ready for OT — record the surgery.' }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ota2-head-actions">
+                        <form method="GET" action="{{ route('hospital.ot.assistant.dashboard', ['slug' => $slug]) }}"
+                            class="ota2-date-form">
+                            <input type="hidden" name="filter" value="{{ $activeFilter ?? 'queue' }}">
+                            @foreach($otaAssistantExtraQuery as $key => $value)
+                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                            @endforeach
+                            <input type="text" class="form-control ota2-date-input" data-hms-date-range
+                                data-start-name="from_date" data-end-name="to_date"
+                                data-start-value="{{ $otaAssistantFromDate }}"
+                                data-end-value="{{ $otaAssistantToDate }}"
+                                data-auto-submit="1" placeholder="Date range" autocomplete="off" readonly>
+                        </form>
+                    </div>
                 </div>
-            </div>
-        </div>
-                    @include('hospital.ot.partials.desk-filters', [
+
+                <div class="ota2-filter-tabs" role="group" aria-label="OT assistant filter">
+                    <a href="{{ route('hospital.ot.assistant.dashboard', array_merge(['slug' => $slug, 'filter' => 'queue'], $otaAssistantExtraQuery)) }}"
+                        class="ota2-filter-tab {{ ($activeFilter ?? 'queue') === 'queue' ? 'active' : '' }}">
+                        Queue
+                    </a>
+                    <a href="{{ route('hospital.ot.assistant.dashboard', array_merge([
                         'slug' => $slug,
-                        'routeName' => 'hospital.ot.assistant.dashboard',
-                        'activeFilter' => $activeFilter ?? 'queue',
-                        'fromDate' => $fromDate ?? now()->toDateString(),
-                        'toDate' => $toDate ?? ($fromDate ?? now()->toDateString()),
-                        'extraQuery' => !empty($viewingAssistant) ? ['view_assistant' => $viewingAssistant->id] : [],
-                        'alwaysShowDateRange' => true,
-                    ])
-    </div>
+                        'filter' => 'history',
+                        'from_date' => $otaAssistantFromDate,
+                        'to_date' => $otaAssistantToDate,
+                    ], $otaAssistantExtraQuery)) }}" class="ota2-filter-tab {{ $isHistory ? 'active' : '' }}">
+                        Completed
+                    </a>
+                </div>
 
     <div class="card-body p-0">
         <div class="table-responsive ota2-table-wrap">
