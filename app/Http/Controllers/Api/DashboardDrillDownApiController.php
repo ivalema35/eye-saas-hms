@@ -473,7 +473,13 @@ class DashboardDrillDownApiController extends Controller
         return response()->json(['success' => true, 'message' => 'Patient refused OT. Sent to Accounts for refund (status: surgery_refused).', 'data' => ['ot_status' => $booking->ot_status]]);
     }
 
-    /** Mirrors `DoctorOtListController::assertCanManage()`. */
+    /**
+     * Mirrors `DoctorOtListController::assertCanManage()`: like OPD exams, ANY
+     * doctor / ot_doctor / hospital admin can act on the consultation queue —
+     * not only the booking's own ot_doctor_id (a doctor reviewing another
+     * doctor's dashboard, or a booking auto-assigned to the OPD doctor, must
+     * not get "You can only act on patients assigned to you").
+     */
     private function canManageDoctorOtBooking(OtBooking $booking): bool
     {
         $user = auth('sanctum')->user();
@@ -485,12 +491,7 @@ class DashboardDrillDownApiController extends Controller
             return true;
         }
 
-        $slug = $user->role?->slug;
-        if (in_array($slug, ['hospital_admin', 'admin'], true)) {
-            return true;
-        }
-
-        return (int) $booking->ot_doctor_id === (int) $user->id;
+        return in_array($user->role?->slug, ['hospital_admin', 'admin', 'doctor', 'ot_doctor'], true);
     }
 
     // ── OT Assistant's queue drill-down ──────────────────────────────────────
