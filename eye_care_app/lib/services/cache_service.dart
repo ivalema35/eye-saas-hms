@@ -29,4 +29,12 @@ class CacheService {
       await prefs.remove(key);
     } catch (_) {}
   }
+
+  Future<void> clearSessionCaches() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final keys = prefs.getKeys().where((key) => key.startsWith('cache_'));
+      await Future.wait(keys.map(prefs.remove));
+    } catch (_) {}
+  }
 }

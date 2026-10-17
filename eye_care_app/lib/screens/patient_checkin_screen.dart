@@ -3,7 +3,12 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../utils/app_route.dart';
+import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_record_card.dart';
+import '../widgets/app_text_field.dart';
+import '../widgets/skeleton.dart';
 import 'package:flutter/services.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
@@ -11,6 +16,7 @@ import '../services/masters_service.dart';
 import '../utils/phone_rules.dart';
 import '../services/patient_service.dart';
 import 'opd_bill_screen.dart';
+import '../utils/app_date_picker.dart';
 
 class PatientCheckinScreen extends StatefulWidget {
   final UserInfo user;
@@ -86,7 +92,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
     _selectedReferrerId = p.referrerId;
     if (p.appointmentDate != null) {
       _appointmentDate =
-          DateTime.tryParse(p.appointmentDate!) ?? DateTime.now();
+          parseApiPlainDate(p.appointmentDate!) ?? DateTime.now();
     }
     _apptDateCtrl.text = _fmtDate(_appointmentDate);
   }
@@ -136,15 +142,15 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final picked = await showAppDatePicker(
       context: context,
       initialDate: _appointmentDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
-        data: Theme.of(ctx).copyWith(
-          colorScheme: ColorScheme.light(primary: AppColors.primary),
-        ),
+        data: Theme.of(
+          ctx,
+        ).copyWith(colorScheme: ColorScheme.light(primary: AppColors.primary)),
         child: child!,
       ),
     );
@@ -185,23 +191,37 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
         'referrer_id': _selectedReferrerId,
       };
 
-      final updated = await PatientService.instance
-          .checkIn(widget.patient.id, data);
+      final updated = await PatientService.instance.checkIn(
+        widget.patient.id,
+        data,
+      );
 
       if (!mounted) return;
 
-      // Navigate to OPD Bill
+      // Navigate to OPD Bill. result: true so the dashboard/patients-list
+      // push<bool> awaiter (which resolves to THIS replaced route's
+      // completion, not the new one's) sees the check-in and refreshes —
+      // otherwise it resolves with null and the list never shows this
+      // patient as checked-in until some unrelated refresh happens.
       await Navigator.pushReplacement(
         context,
-        appRoute(OpdBillScreen(
-          user: widget.user,
-          hospital: widget.hospital,
-          patient: updated,
-        )),
+        appRoute(
+          OpdBillScreen(
+            user: widget.user,
+            hospital: widget.hospital,
+            patient: updated,
+          ),
+        ),
+        result: true,
       );
     } catch (e) {
       if (mounted) {
-        showAppSnackBar(context, e.toString(), isError: true, duration: const Duration(seconds: 4));
+        showAppSnackBar(
+          context,
+          e.toString(),
+          isError: true,
+          duration: const Duration(seconds: 4),
+        );
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -219,11 +239,10 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           _buildAppBar(),
           Expanded(
             child: _mastersLoading
-                ? Center(
-                    child: CircularProgressIndicator(color: AppColors.primary))
+                ? const AppSkeletonList()
                 : _mastersError != null
-                    ? _buildError()
-                    : _buildForm(),
+                ? _buildError()
+                : _buildForm(),
           ),
         ],
       ),
@@ -247,8 +266,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           child: Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.arrow_back_rounded,
-                    color: Colors.white),
+                icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
               ),
               const SizedBox(width: 4),
@@ -259,8 +277,11 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(AppRadius.md),
                 ),
-                child: const Icon(Icons.how_to_reg_rounded,
-                    color: Colors.white, size: 22),
+                child: const Icon(
+                  Icons.how_to_reg_rounded,
+                  color: Colors.white,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -270,16 +291,18 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
                     const Text(
                       'Patient Check-In',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800),
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'MRD: ${p.patientCode}  ·  Verify details & assign case',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 11),
+                        color: Colors.white.withValues(alpha: 0.75),
+                        fontSize: 11,
+                      ),
                     ),
                   ],
                 ),
@@ -292,31 +315,23 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.wifi_off_rounded,
-                size: 48, color: AppColors.red),
-            const SizedBox(height: 12),
-            Text(_mastersError ?? 'Failed to load form data.',
-                textAlign: TextAlign.center),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _loadMasters,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style:
-                  ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      message: _mastersError ?? 'Failed to load form data.',
+      onRetry: _loadMasters,
     );
   }
 
+  // Client request (2026-10-04): redesigned onto the same card/chip language
+  // as `patient_form_screen.dart`/the OT Appointment form. Cross-checked
+  // field order against `patients/checkin.blade.php` while rebuilding this
+  // and found the same kind of drift that screen had, fixed here:
+  //  1. MRD No. was shown first, above Appointment Date; web places it
+  //     mid-row (after WhatsApp, before First Name).
+  //  2. Doctor sat BEFORE City/District/State; web's row always ends City →
+  //     District → State → Doctor.
+  //  3. Time Slot was paired with Referred By in one row AFTER Age/Gender/
+  //     Occupation; web puts Slot Time right after Doctor (before Age) and
+  //     Referred By last (after Occupation) — they were never adjacent.
   Widget _buildForm() {
     return Form(
       key: _formKey,
@@ -326,211 +341,244 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           // ── Pre-filled notice ────────────────────────────────────────
           _infoNotice(),
 
-          // ── MRD (readonly) ───────────────────────────────────────────
-          _sectionLabel('MRD Number'),
-          _readonlyField(
-            TextEditingController(text: widget.patient.patientCode),
-            'MRD No.',
-            Icons.badge_outlined,
+          AppFormCard(
+            icon: Icons.event_note_rounded,
+            title: 'Appointment Details',
+            trailing: const AppStatusPill(
+              label: 'Check-In',
+              color: AppColors.teal,
+            ),
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_sectionLabel('Appointment Date *'), _datefield()],
+              ),
+            ],
           ),
 
-          // ── Appointment Date ─────────────────────────────────────────
-          _sectionLabel('Appointment Date *'),
-          _datefield(),
-
-          // ── Contact + WhatsApp ───────────────────────────────────────
-          Row(
+          AppFormCard(
+            icon: Icons.person_outline_rounded,
+            title: 'Contact & Patient Details',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Contact No *'),
-                    _textField(
-                      _contactCtrl,
-                      'Contact number',
-                      inputType: TextInputType.phone,
-                      maxLength: 16,
-                      validator: PhoneRules.required,
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('Contact No *'),
+                        _textField(
+                          _contactCtrl,
+                          'Contact number',
+                          inputType: TextInputType.phone,
+                          maxLength: 16,
+                          validator: PhoneRules.required,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('WhatsApp No'),
-                    _textField(
-                      _whatsappCtrl,
-                      'Same if blank',
-                      inputType: TextInputType.phone,
-                      maxLength: 10,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('WhatsApp No'),
+                        _textField(
+                          _whatsappCtrl,
+                          'Same if blank',
+                          inputType: TextInputType.phone,
+                          maxLength: 10,
+                          suffixIcon: TextButton(
+                            onPressed: () => setState(
+                              () => _whatsappCtrl.text = _contactCtrl.text,
+                            ),
+                            style: TextButton.styleFrom(
+                              minimumSize: Size.zero,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Same',
+                              style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
-          ),
-
-          // ── Name ─────────────────────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('First Name *'),
-                    _textField(_firstCtrl, 'First Name', required: true),
-                  ],
-                ),
+              AppReadOnlyField(
+                label: 'MRD No.',
+                value: widget.patient.patientCode,
+                icon: Icons.badge_outlined,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Surname *'),
-                    _textField(_lastCtrl, 'Surname', required: true),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          _sectionLabel('Middle Name'),
-          _textField(_middleCtrl, 'Middle Name'),
-
-          // ── Case Type + Case Fee ─────────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Case Type *'),
-                    _caseTypeDropdown(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Case Fee (₹) *'),
-                    _caseFeeField(),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // ── Doctor ───────────────────────────────────────────────────
-          _sectionLabel('Doctor *'),
-          _doctorDropdown(),
-
-          // ── City ─────────────────────────────────────────────────────
-          _sectionLabel('City *'),
-          _locationDropdown(),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('District'),
-                    _readonlyField(_districtCtrl, 'District',
-                        Icons.location_city_outlined),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('State'),
-                    _readonlyField(
-                        _stateCtrl, 'State', Icons.map_outlined),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          // ── Age + Gender + Occupation ────────────────────────────────
-          Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Age *'),
-                    _textField(
-                      _ageCtrl,
-                      'Age',
-                      inputType: TextInputType.number,
-                      required: true,
-                      maxLength: 3,
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('First Name *'),
+                        _textField(_firstCtrl, 'First Name', required: true),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('Surname *'),
+                        _textField(_lastCtrl, 'Surname', required: true),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Gender *'),
-                    _genderDropdown(),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Occupation'),
-                    _textField(_occupationCtrl, 'Occupation'),
-                  ],
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel('Middle Name'),
+                  _textField(_middleCtrl, 'Middle Name'),
+                ],
               ),
             ],
           ),
 
-          // ── Slot + Referrer ──────────────────────────────────────────
-          Row(
+          AppFormCard(
+            icon: Icons.medical_services_outlined,
+            title: 'Case, Doctor & Location',
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Time Slot'),
-                    _slotDropdown(),
-                  ],
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('Case Type *'),
+                        _caseTypeDropdown(),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel(
+                          'Case Fee (${widget.hospital.currencySymbol}) *',
+                        ),
+                        _caseFeeField(),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _sectionLabel('Referred By'),
-                    _referrerDropdown(),
-                  ],
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_sectionLabel('City *'), _locationDropdown()],
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppReadOnlyField(
+                      label: 'District',
+                      value: _districtCtrl.text,
+                      icon: Icons.location_city_outlined,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: AppReadOnlyField(
+                      label: 'State',
+                      value: _stateCtrl.text,
+                      icon: Icons.map_outlined,
+                    ),
+                  ),
+                ],
+              ),
+              // Web parity: Doctor comes AFTER City/District/State.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_sectionLabel('Doctor *'), _doctorDropdown()],
+              ),
+              // Web parity: Slot Time is right after Doctor, before Age —
+              // not paired with Referred By after Occupation.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_sectionLabel('Time Slot'), _slotDropdown()],
               ),
             ],
           ),
 
-          const SizedBox(height: 24),
+          AppFormCard(
+            icon: Icons.notes_rounded,
+            title: 'Additional Details',
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    flex: 1,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('Age *'),
+                        _textField(
+                          _ageCtrl,
+                          'Age',
+                          inputType: TextInputType.number,
+                          required: true,
+                          maxLength: 3,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    flex: 2,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionLabel('Gender *'),
+                        AppSegmentedChips(
+                          values: const ['male', 'female', 'other'],
+                          labels: const {
+                            'male': 'Male',
+                            'female': 'Female',
+                            'other': 'Other',
+                          },
+                          selected: _selectedGender,
+                          onChanged: (v) => setState(() => _selectedGender = v),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _sectionLabel('Occupation'),
+                  _textField(_occupationCtrl, 'Occupation'),
+                ],
+              ),
+              // Web parity: Referred By is the LAST field, after Occupation.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_sectionLabel('Referred By'), _referrerDropdown()],
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 8),
           _submitButton(),
         ],
       ),
@@ -547,11 +595,16 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
         color: const Color(0xFFD6EAF8),
         borderRadius: BorderRadius.circular(10),
         border: const Border(
-            left: BorderSide(color: AppColors.blueLight, width: 4)),
+          left: BorderSide(color: AppColors.blueLight, width: 4),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, color: AppColors.blueLight, size: 18),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: AppColors.blueLight,
+            size: 18,
+          ),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(
@@ -565,37 +618,38 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   }
 
   Widget _sectionLabel(String text) => Padding(
-        padding: const EdgeInsets.only(top: 14, bottom: 5),
-        child: Text(text,
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primary)),
-      );
+    padding: const EdgeInsets.only(top: 14, bottom: 5),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: AppColors.primary,
+      ),
+    ),
+  );
 
-  InputDecoration _inputDeco(String hint,
-      {IconData? prefix, bool readOnly = false}) {
+  InputDecoration _inputDeco(
+    String hint, {
+    IconData? prefix,
+    bool readOnly = false,
+  }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle:
-          TextStyle(fontSize: 13, color: AppColors.primaryA40),
+      hintStyle: TextStyle(fontSize: 13, color: AppColors.primaryA40),
       prefixIcon: prefix != null
           ? Icon(prefix, size: 18, color: AppColors.primaryA50)
           : null,
       filled: true,
-      fillColor:
-          readOnly ? AppColors.primaryA04 : Colors.white,
-      contentPadding:
-          const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+      fillColor: readOnly ? AppColors.primaryA04 : Colors.white,
+      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide:
-            BorderSide(color: AppColors.primaryA18),
+        borderSide: BorderSide(color: AppColors.primaryA18),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide:
-            BorderSide(color: AppColors.primaryA18),
+        borderSide: BorderSide(color: AppColors.primaryA18),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
@@ -607,8 +661,7 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(11),
-        borderSide: const BorderSide(
-            color: AppColors.red, width: 1.5),
+        borderSide: const BorderSide(color: AppColors.red, width: 1.5),
       ),
     );
   }
@@ -619,35 +672,25 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
     TextInputType inputType = TextInputType.text,
     bool required = false,
     int? maxLength,
+    Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: ctrl,
       keyboardType: inputType,
       maxLength: maxLength,
-      inputFormatters:
-          inputType == TextInputType.number
-              ? [FilteringTextInputFormatter.digitsOnly]
-              : null,
-      decoration: _inputDeco(hint).copyWith(counterText: ''),
-      validator: validator ??
+      inputFormatters: inputType == TextInputType.number
+          ? [FilteringTextInputFormatter.digitsOnly]
+          : null,
+      decoration: _inputDeco(
+        hint,
+      ).copyWith(counterText: '', suffixIcon: suffixIcon),
+      validator:
+          validator ??
           (required
-              ? (v) => (v == null || v.trim().isEmpty)
-                  ? '$hint is required'
-                  : null
+              ? (v) =>
+                    (v == null || v.trim().isEmpty) ? '$hint is required' : null
               : null),
-    );
-  }
-
-  Widget _readonlyField(
-      TextEditingController ctrl, String hint, IconData icon) {
-    return TextFormField(
-      controller: ctrl,
-      readOnly: true,
-      style: TextStyle(
-          color: AppColors.primary.withValues(alpha: 0.65),
-          fontWeight: FontWeight.w500),
-      decoration: _inputDeco(hint, prefix: icon, readOnly: true),
     );
   }
 
@@ -657,11 +700,12 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       child: AbsorbPointer(
         child: TextFormField(
           controller: _apptDateCtrl,
-          decoration: _inputDeco('Pick date',
-              prefix: Icons.calendar_today_outlined),
-          validator: (v) => (v == null || v.isEmpty)
-              ? 'Appointment date required'
-              : null,
+          decoration: _inputDeco(
+            'Pick date',
+            prefix: Icons.calendar_today_outlined,
+          ),
+          validator: (v) =>
+              (v == null || v.isEmpty) ? 'Appointment date required' : null,
         ),
       ),
     );
@@ -672,8 +716,11 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       controller: _caseFeeCtrl,
       keyboardType: TextInputType.number,
       decoration: _inputDeco('0').copyWith(
-        prefixIcon: const Icon(Icons.currency_rupee_rounded,
-            size: 16, color: AppColors.green),
+        prefixIcon: const Icon(
+          Icons.currency_rupee_rounded,
+          size: 16,
+          color: AppColors.green,
+        ),
         filled: true,
         fillColor: const Color(0xFFEAFAF1),
         enabledBorder: OutlineInputBorder(
@@ -686,7 +733,9 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
         ),
       ),
       style: const TextStyle(
-          color: AppColors.green, fontWeight: FontWeight.w700),
+        color: AppColors.green,
+        fontWeight: FontWeight.w700,
+      ),
       validator: (v) {
         if (v == null || v.trim().isEmpty) return 'Fee required';
         if (double.tryParse(v.trim()) == null) return 'Invalid fee';
@@ -709,9 +758,11 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       validator: validator,
       decoration: _inputDeco(hint),
       style: TextStyle(
-          color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.w500),
-      icon: Icon(Icons.expand_more_rounded,
-          color: AppColors.primaryA60),
+        color: AppColors.primary,
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      ),
+      icon: Icon(Icons.expand_more_rounded, color: AppColors.primaryA60),
       dropdownColor: Colors.white,
       isExpanded: true,
     );
@@ -723,10 +774,12 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       value: _selectedCaseId,
       hint: 'Select Case Type',
       items: cases
-          .map((c) => DropdownMenuItem(
+          .map(
+            (c) => DropdownMenuItem(
               value: c.id,
-              child: Text(c.name,
-                  overflow: TextOverflow.ellipsis, maxLines: 1)))
+              child: Text(c.name, overflow: TextOverflow.ellipsis, maxLines: 1),
+            ),
+          )
           .toList(),
       onChanged: (v) => setState(() {
         _selectedCaseId = v;
@@ -743,10 +796,12 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       value: _selectedDoctorId,
       hint: 'Select Doctor',
       items: docs
-          .map((d) => DropdownMenuItem(
+          .map(
+            (d) => DropdownMenuItem(
               value: d.id,
-              child: Text(d.name,
-                  overflow: TextOverflow.ellipsis, maxLines: 1)))
+              child: Text(d.name, overflow: TextOverflow.ellipsis, maxLines: 1),
+            ),
+          )
           .toList(),
       onChanged: (v) => setState(() => _selectedDoctorId = v),
       validator: (v) => v == null ? 'Doctor required' : null,
@@ -759,10 +814,12 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       value: _selectedLocationId,
       hint: 'Select City',
       items: locs
-          .map((l) => DropdownMenuItem(
+          .map(
+            (l) => DropdownMenuItem(
               value: l.id,
-              child: Text(l.city,
-                  overflow: TextOverflow.ellipsis, maxLines: 1)))
+              child: Text(l.city, overflow: TextOverflow.ellipsis, maxLines: 1),
+            ),
+          )
           .toList(),
       onChanged: (v) => setState(() {
         _selectedLocationId = v;
@@ -776,29 +833,22 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
     );
   }
 
-  Widget _genderDropdown() {
-    return _buildDropdown<String>(
-      value: _selectedGender,
-      hint: 'Gender',
-      items: const [
-        DropdownMenuItem(value: 'male', child: Text('Male')),
-        DropdownMenuItem(value: 'female', child: Text('Female')),
-        DropdownMenuItem(value: 'other', child: Text('Other')),
-      ],
-      onChanged: (v) => setState(() => _selectedGender = v ?? 'male'),
-    );
-  }
-
   Widget _slotDropdown() {
     final slots = _masters?.slots ?? [];
     return _buildDropdown<int>(
       value: _selectedSlotId,
       hint: 'No Slot',
       items: slots
-          .map((s) => DropdownMenuItem(
+          .map(
+            (s) => DropdownMenuItem(
               value: s.id,
-              child: Text(s.display,
-                  overflow: TextOverflow.ellipsis, maxLines: 1)))
+              child: Text(
+                s.display,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            ),
+          )
           .toList(),
       onChanged: (v) => setState(() => _selectedSlotId = v),
     );
@@ -810,10 +860,12 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
       value: _selectedReferrerId,
       hint: 'No Referrer',
       items: refs
-          .map((r) => DropdownMenuItem(
+          .map(
+            (r) => DropdownMenuItem(
               value: r.id,
-              child: Text(r.name,
-                  overflow: TextOverflow.ellipsis, maxLines: 1)))
+              child: Text(r.name, overflow: TextOverflow.ellipsis, maxLines: 1),
+            ),
+          )
           .toList(),
       onChanged: (v) => setState(() => _selectedReferrerId = v),
     );
@@ -829,7 +881,10 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
-                    color: Colors.white, strokeWidth: 2))
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
             : const Icon(Icons.how_to_reg_rounded, size: 20),
         label: const Text(
           'Check In & Print Bill',
@@ -841,7 +896,8 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
           disabledBackgroundColor: AppColors.primaryA50,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(40)),
+            borderRadius: BorderRadius.circular(40),
+          ),
           elevation: 2,
         ),
       ),
@@ -853,6 +909,5 @@ class _PatientCheckinScreenState extends State<PatientCheckinScreen> {
   String _fmtDate(DateTime dt) =>
       '${dt.day.toString().padLeft(2, '0')}-${dt.month.toString().padLeft(2, '0')}-${dt.year}';
 
-  String _fmtDateIso(DateTime dt) =>
-      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  String _fmtDateIso(DateTime dt) => toIsoDate(dt);
 }

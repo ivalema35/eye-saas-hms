@@ -1,4 +1,8 @@
-﻿import 'dart:convert';
+// FOC (Free of Charge) feature disabled at the client's request — kept
+// commented out (not deleted) in case it's needed again in future, mirroring
+// how the web developer handled the same request on the web app.
+/*
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/foc_models.dart';
@@ -20,11 +24,7 @@ class FocService with AuthenticatedService {
         .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load FOC list: ${resp.statusCode}');
-    }
-    return FocListResult.fromJson(
-        jsonDecode(resp.body) as Map<String, dynamic>);
+    return FocListResult.fromJson(parseApiResponse(resp));
   }
 
   Future<FocItem> createFoc({
@@ -44,12 +44,7 @@ class FocService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
-
-    if (resp.statusCode != 201) {
-      throw Exception(
-          body['message'] as String? ?? 'Failed to create FOC request');
-    }
+    final body = parseApiResponse(resp);
     return FocItem.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -61,11 +56,7 @@ class FocService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(
-          body['message'] as String? ?? 'Failed to accept FOC');
-    }
+    parseApiResponse(resp);
   }
 
   Future<void> rejectFoc(int id, String rejectedReason) async {
@@ -77,10 +68,7 @@ class FocService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(
-          body['message'] as String? ?? 'Failed to reject FOC');
-    }
+    parseApiResponse(resp);
   }
 }
+*/

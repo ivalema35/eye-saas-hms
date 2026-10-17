@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../services/simple_master_service.dart';
 import '../widgets/widgets.dart';
 
@@ -13,6 +16,18 @@ class GenericMasterScreen extends StatefulWidget {
   final IconData icon;
   final bool hasFavourite;
   final bool hasSeeded;
+  final bool canAdd;
+  final bool canEdit;
+  final bool canDelete;
+  /// Master feature key (e.g. Perm.eyeExamKco). When set, add/edit/delete are
+  /// read live from PermissionService on every build instead of the frozen
+  /// flags above, so a permission refresh updates the buttons in place.
+  final String? feature;
+  /// Only the Advice master links to diagnoses on web ("Link by Diagnosis" —
+  /// see DetailMasterController::isAdviceType()) — every other detail master
+  /// (Complaint/K-C-O/H-O/Diagnosis itself/Vision Values/O.E./Fundus) has
+  /// none of this.
+  final bool isAdvice;
 
   const GenericMasterScreen({
     super.key,
@@ -22,6 +37,11 @@ class GenericMasterScreen extends StatefulWidget {
     this.icon = Icons.list_rounded,
     this.hasFavourite = false,
     this.hasSeeded = false,
+    this.canAdd = true,
+    this.canEdit = true,
+    this.canDelete = true,
+    this.feature,
+    this.isAdvice = false,
   });
 
   @override
@@ -30,9 +50,25 @@ class GenericMasterScreen extends StatefulWidget {
 
 class _GenericMasterScreenState extends State<GenericMasterScreen> {
   List<SimpleMasterItem> _all = [];
+  List<SimpleMasterItem> _diagnosisOptions = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd {
+    final f = widget.feature;
+    return f == null ? widget.canAdd : PermissionService.instance.can(Perm.add(f));
+  }
+
+  bool get _canEdit {
+    final f = widget.feature;
+    return f == null ? widget.canEdit : PermissionService.instance.can(Perm.edit(f));
+  }
+
+  bool get _canDelete {
+    final f = widget.feature;
+    return f == null ? widget.canDelete : PermissionService.instance.can(Perm.delete(f));
+  }
 
   List<SimpleMasterItem> get _filtered => _query.isEmpty
       ? _all
@@ -51,8 +87,18 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
-      final items = await SimpleMasterService.instance.fetchAll(widget.apiPath);
-      if (mounted) setState(() { _all = items; _loading = false; });
+      final futures = <Future>[
+        SimpleMasterService.instance.fetchAll(widget.apiPath),
+        if (widget.isAdvice) SimpleMasterService.instance.fetchAll('masters/detail/diagnoses'),
+      ];
+      final results = await Future.wait(futures);
+      if (mounted) {
+        setState(() {
+          _all = results[0] as List<SimpleMasterItem>;
+          if (widget.isAdvice) _diagnosisOptions = results[1] as List<SimpleMasterItem>;
+          _loading = false;
+        });
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -125,13 +171,22 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
         initialFav: item?.isFavourite ?? false,
         hasFavourite: widget.hasFavourite,
         accentColor: widget.accentColor,
-        onSave: (value, isFav) async {
+        showDiagnosisPicker: widget.isAdvice,
+        diagnosisOptions: _diagnosisOptions,
+        initialDiagnosisIds: item?.diagnoses.map((d) => d.id).toSet() ?? {},
+        onSave: (value, isFav, diagnosisIds) async {
           if (item == null) {
-            await SimpleMasterService.instance
-                .create(widget.apiPath, value, isFavourite: isFav);
+            await SimpleMasterService.instance.create(
+              widget.apiPath, value,
+              isFavourite: isFav,
+              diagnosisIds: widget.isAdvice ? diagnosisIds : null,
+            );
           } else {
-            await SimpleMasterService.instance
-                .update(widget.apiPath, item.id, value, isFavourite: isFav);
+            await SimpleMasterService.instance.update(
+              widget.apiPath, item.id, value,
+              isFavourite: isFav,
+              diagnosisIds: widget.isAdvice ? diagnosisIds : null,
+            );
           }
           await _load();
         },
@@ -167,11 +222,12 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-            tooltip: 'Add',
-            onPressed: () => _openSheet(),
-          ),
+          if (_canAdd)
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
+              tooltip: 'Add',
+              onPressed: () => _openSheet(),
+            ),
         ],
       ),
       body: Column(
@@ -215,35 +271,10 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(
-          child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-              const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSecondary)),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _load,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white),
-              ),
-            ],
-          ),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
 
     final items = _filtered;
@@ -259,7 +290,9 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
                 Text(
                   _query.isNotEmpty
                       ? 'No results for "$_query"'
-                      : 'No ${widget.title.toLowerCase()} yet.\nTap + to add one.',
+                      : (_canAdd
+                          ? 'No ${widget.title.toLowerCase()} yet.\nTap + to add one.'
+                          : 'No ${widget.title.toLowerCase()} yet.'),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                       color: AppColors.textDisabled,
@@ -273,21 +306,27 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
       );
     }
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(14, 6, 14, 100),
         itemCount: items.length,
-        itemBuilder: (_, i) => _ItemRow(
+        itemBuilder: (_, i) => AnimatedListItem(
           index: i,
-          item: items[i],
-          hasFavourite: widget.hasFavourite,
-          accentColor: widget.accentColor,
-          onEdit: () => _openSheet(item: items[i]),
-          onDelete: () => _delete(items[i]),
-          onToggleFav: () => _toggleFav(items[i]),
+          child: _ItemRow(
+            index: i,
+            item: items[i],
+            hasFavourite: widget.hasFavourite,
+            isAdvice: widget.isAdvice,
+            canEdit: _canEdit,
+            canDelete: _canDelete,
+            accentColor: widget.accentColor,
+            onEdit: () => _openSheet(item: items[i]),
+            onDelete: () => _delete(items[i]),
+            onToggleFav: () => _toggleFav(items[i]),
+          ),
         ),
       ),
     );
@@ -300,6 +339,9 @@ class _ItemRow extends StatelessWidget {
   final int index;
   final SimpleMasterItem item;
   final bool hasFavourite;
+  final bool isAdvice;
+  final bool canEdit;
+  final bool canDelete;
   final Color accentColor;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
@@ -309,6 +351,9 @@ class _ItemRow extends StatelessWidget {
     required this.index,
     required this.item,
     required this.hasFavourite,
+    this.isAdvice = false,
+    required this.canEdit,
+    required this.canDelete,
     required this.accentColor,
     required this.onEdit,
     required this.onDelete,
@@ -334,6 +379,7 @@ class _ItemRow extends StatelessWidget {
           ],
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Serial number badge
             Container(
@@ -354,19 +400,44 @@ class _ItemRow extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            // Value text
+            // Value text (+ linked-diagnosis chips, Advice master only —
+            // matches web's dynamic_index.blade.php "Diagnosis" column)
             Expanded(
-              child: Text(
-                item.value,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.darkNavy,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.value,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkNavy,
+                    ),
+                  ),
+                  if (isAdvice && item.diagnoses.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 5,
+                      runSpacing: 5,
+                      children: item.diagnoses.map((d) => Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.green.withValues(alpha: 0.10),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: AppColors.green.withValues(alpha: 0.25)),
+                        ),
+                        child: Text(
+                          d.value,
+                          style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: AppColors.green.withValues(alpha: 0.85)),
+                        ),
+                      )).toList(),
+                    ),
+                  ],
+                ],
               ),
             ),
             // Favourite toggle
-            if (hasFavourite)
+            if (hasFavourite && canEdit)
               GestureDetector(
                 onTap: onToggleFav,
                 child: Padding(
@@ -381,6 +452,19 @@ class _ItemRow extends StatelessWidget {
                         : const Color(0xFFCBD5E1),
                   ),
                 ),
+              )
+            else if (hasFavourite)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Icon(
+                  item.isFavourite
+                      ? Icons.star_rounded
+                      : Icons.star_border_rounded,
+                  size: 22,
+                  color: item.isFavourite
+                      ? AppColors.orange
+                      : const Color(0xFFCBD5E1),
+                ),
               ),
             // Seeded → lock icon, no actions
             if (item.isSeeded)
@@ -390,17 +474,19 @@ class _ItemRow extends StatelessWidget {
                     size: 18, color: AppColors.textDisabled),
               )
             else ...[
-              _Btn(
-                icon: Icons.edit_outlined,
-                color: AppColors.orange,
-                onTap: onEdit,
-              ),
-              const SizedBox(width: 2),
-              _Btn(
-                icon: Icons.delete_outline_rounded,
-                color: AppColors.red,
-                onTap: onDelete,
-              ),
+              if (canEdit)
+                _Btn(
+                  icon: Icons.edit_outlined,
+                  color: AppColors.orange,
+                  onTap: onEdit,
+                ),
+              if (canEdit && canDelete) const SizedBox(width: 2),
+              if (canDelete)
+                _Btn(
+                  icon: Icons.delete_outline_rounded,
+                  color: AppColors.red,
+                  onTap: onDelete,
+                ),
             ],
           ],
         ),
@@ -436,7 +522,11 @@ class _MasterSheet extends StatefulWidget {
   final bool initialFav;
   final bool hasFavourite;
   final Color accentColor;
-  final Future<void> Function(String value, bool isFavourite) onSave;
+  /// Advice master only — see GenericMasterScreen.isAdvice.
+  final bool showDiagnosisPicker;
+  final List<SimpleMasterItem> diagnosisOptions;
+  final Set<int> initialDiagnosisIds;
+  final Future<void> Function(String value, bool isFavourite, List<int> diagnosisIds) onSave;
 
   const _MasterSheet({
     required this.title,
@@ -444,6 +534,9 @@ class _MasterSheet extends StatefulWidget {
     required this.initialFav,
     required this.hasFavourite,
     required this.accentColor,
+    this.showDiagnosisPicker = false,
+    this.diagnosisOptions = const [],
+    this.initialDiagnosisIds = const {},
     required this.onSave,
   });
 
@@ -454,6 +547,7 @@ class _MasterSheet extends StatefulWidget {
 class _MasterSheetState extends State<_MasterSheet> {
   late final TextEditingController _ctrl;
   late bool _fav;
+  late Set<int> _diagnosisIds;
   bool _saving = false;
   String? _fieldError;
 
@@ -462,6 +556,7 @@ class _MasterSheetState extends State<_MasterSheet> {
     super.initState();
     _ctrl = TextEditingController(text: widget.initialValue);
     _fav  = widget.initialFav;
+    _diagnosisIds = {...widget.initialDiagnosisIds};
   }
 
   @override
@@ -478,7 +573,7 @@ class _MasterSheetState extends State<_MasterSheet> {
     }
     setState(() { _saving = true; _fieldError = null; });
     try {
-      await widget.onSave(v, _fav);
+      await widget.onSave(v, _fav, _diagnosisIds.toList());
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -566,6 +661,56 @@ class _MasterSheetState extends State<_MasterSheet> {
               ),
             ),
           ),
+          // Diagnosis links — Advice master only, matches web's "Diagnosis"
+          // multi-select in the same Add/Edit modal (dynamic_index.blade.php).
+          if (widget.showDiagnosisPicker)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Diagnosis',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  if (widget.diagnosisOptions.isEmpty)
+                    const Text('No diagnoses in Master Data yet.',
+                        style: TextStyle(fontSize: 12, color: AppColors.textDisabled))
+                  else
+                    Container(
+                      constraints: const BoxConstraints(maxHeight: 160),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceFill,
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: widget.diagnosisOptions.map((d) {
+                            final selected = _diagnosisIds.contains(d.id);
+                            return FilterChip(
+                              label: Text(d.value, style: const TextStyle(fontSize: 12)),
+                              selected: selected,
+                              selectedColor: widget.accentColor.withValues(alpha: 0.18),
+                              checkmarkColor: widget.accentColor,
+                              onSelected: (v) => setState(() {
+                                if (v) {
+                                  _diagnosisIds.add(d.id);
+                                } else {
+                                  _diagnosisIds.remove(d.id);
+                                }
+                              }),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
           // Favourite toggle
           if (widget.hasFavourite)
             Padding(

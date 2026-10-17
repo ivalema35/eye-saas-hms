@@ -1,5 +1,4 @@
-﻿import 'dart:convert';
-import 'package:http/http.dart' as http;
+﻿import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
 import '../models/clinical_queue_models.dart';
 import 'base_service.dart';
@@ -23,11 +22,7 @@ class ClinicalQueueService with AuthenticatedService {
         .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load queue: ${resp.statusCode}');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final data = body['data'] as Map<String, dynamic>;
 
     return QueueData(

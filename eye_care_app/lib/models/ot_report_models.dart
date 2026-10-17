@@ -23,6 +23,68 @@ List<OtReportTypeGroup> parseOtReportGroups(Map<String, dynamic> data) => data.e
         ))
     .toList();
 
+/// `GET /reports/ot/lens-report` — dedicated page (summary cards +
+/// lens-power breakdown), not the generic headings/rows `OtReportResult`.
+/// Mirrors web's `OtReportController::buildLensReportData()`.
+class OtLensReportSummary {
+  final int totalLensesUsed;
+  final int totalSurgeries;
+  final int uniquePowers;
+
+  const OtLensReportSummary({
+    required this.totalLensesUsed,
+    required this.totalSurgeries,
+    required this.uniquePowers,
+  });
+
+  factory OtLensReportSummary.fromJson(Map<String, dynamic> j) => OtLensReportSummary(
+        totalLensesUsed: (j['totalLensesUsed'] as num?)?.toInt() ?? 0,
+        totalSurgeries: (j['totalSurgeries'] as num?)?.toInt() ?? 0,
+        uniquePowers: (j['uniquePowers'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class OtLensPowerBreakdownRow {
+  final String power;
+  final int quantity;
+
+  const OtLensPowerBreakdownRow({required this.power, required this.quantity});
+
+  factory OtLensPowerBreakdownRow.fromJson(Map<String, dynamic> j) => OtLensPowerBreakdownRow(
+        power: j['power'] as String? ?? '-',
+        quantity: (j['quantity'] as num?)?.toInt() ?? 0,
+      );
+}
+
+class OtLensReportData {
+  final String from;
+  final String to;
+  final OtLensReportSummary summary;
+  final List<OtLensPowerBreakdownRow> powerSummary;
+  final List<String> detailHeadings;
+  final List<List<dynamic>> detailRows;
+
+  const OtLensReportData({
+    required this.from,
+    required this.to,
+    required this.summary,
+    required this.powerSummary,
+    required this.detailHeadings,
+    required this.detailRows,
+  });
+
+  factory OtLensReportData.fromJson(Map<String, dynamic> j) => OtLensReportData(
+        from: j['from'] as String? ?? '',
+        to: j['to'] as String? ?? '',
+        summary: OtLensReportSummary.fromJson(j['summary'] as Map<String, dynamic>? ?? const {}),
+        powerSummary: (j['power_summary'] as List? ?? [])
+            .map((e) => OtLensPowerBreakdownRow.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        detailHeadings: (j['detail_headings'] as List? ?? []).map((e) => e.toString()).toList(),
+        detailRows: (j['detail_rows'] as List? ?? []).map((r) => r as List<dynamic>).toList(),
+      );
+}
+
 /// `GET /reports/ot/{type}` result — a plain heading/rows table.
 class OtReportResult {
   final String type;
@@ -41,53 +103,5 @@ class OtReportResult {
         rows: (j['rows'] as List? ?? []).map((r) => r as List<dynamic>).toList(),
         from: j['from'] as String? ?? '',
         to: j['to'] as String? ?? '',
-      );
-}
-
-/// `GET /dashboard/ot-summary` — `ot_utilization_pct` deliberately not
-/// available (no OT-room-capacity concept in the schema, see build PRD §12
-/// gotcha), and the two `*_minutes` fields are `null` (not `0`) when there's
-/// no qualifying data in range.
-class OtDashboardSummary {
-  final String from;
-  final String to;
-  final int totalPatients;
-  final int surgeriesCompleted;
-  final double? avgWaitingTimeMinutes;
-  final double? patientTurnaroundTimeMinutes;
-  final List<OtRevenueTrendPoint> revenueTrend;
-  final int lensConsumption;
-
-  const OtDashboardSummary({
-    required this.from,
-    required this.to,
-    required this.totalPatients,
-    required this.surgeriesCompleted,
-    this.avgWaitingTimeMinutes,
-    this.patientTurnaroundTimeMinutes,
-    required this.revenueTrend,
-    required this.lensConsumption,
-  });
-
-  factory OtDashboardSummary.fromJson(Map<String, dynamic> j) => OtDashboardSummary(
-        from: j['from'] as String? ?? '',
-        to: j['to'] as String? ?? '',
-        totalPatients: j['total_patients'] as int? ?? 0,
-        surgeriesCompleted: j['surgeries_completed'] as int? ?? 0,
-        avgWaitingTimeMinutes: (j['avg_waiting_time_minutes'] as num?)?.toDouble(),
-        patientTurnaroundTimeMinutes: (j['patient_turnaround_time_minutes'] as num?)?.toDouble(),
-        revenueTrend: (j['revenue_trend'] as List? ?? []).map((e) => OtRevenueTrendPoint.fromJson(e as Map<String, dynamic>)).toList(),
-        lensConsumption: j['lens_consumption'] as int? ?? 0,
-      );
-}
-
-class OtRevenueTrendPoint {
-  final String date;
-  final double total;
-  const OtRevenueTrendPoint({required this.date, required this.total});
-
-  factory OtRevenueTrendPoint.fromJson(Map<String, dynamic> j) => OtRevenueTrendPoint(
-        date: j['date'] as String? ?? '',
-        total: (j['total'] as num?)?.toDouble() ?? 0,
       );
 }

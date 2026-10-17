@@ -38,12 +38,17 @@ dependencies:
   path_provider: ^2.1.6
   open_filex: ^4.7.0
   image_picker: ^1.1.2
+  file_picker: ^12.1.3
   fl_chart: ^0.68.0
   pdf: ^3.11.3
   printing: ^5.13.2
   signature: ^5.5.0
   package_info_plus: ^10.2.1
   dio: ^5.11.0
+  timezone: ^0.10.1
+  flutter_secure_storage: ^11.1.1
+  custom_refresh_indicator: ^4.0.2
+  flutter_svg: ^2.0.17
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +81,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/illustrations/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

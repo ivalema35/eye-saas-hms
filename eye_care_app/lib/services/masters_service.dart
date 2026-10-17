@@ -33,11 +33,7 @@ class MastersService with AuthenticatedService {
         .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load $path: ${resp.statusCode}');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return parse(body['data'] as List? ?? []);
   }
 
@@ -84,12 +80,7 @@ class MastersService with AuthenticatedService {
             }))
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 201) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] ?? 'Failed to add city.');
-    }
-
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final loc = LocationOption.fromJson(body['data'] as Map<String, dynamic>);
 
     // Append to cache

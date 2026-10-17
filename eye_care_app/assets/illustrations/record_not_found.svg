@@ -1,0 +1,65 @@
+<svg viewBox="0 0 280 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient gradientUnits="userSpaceOnUse" id="beamGrad" x1="140" x2="140" y1="62" y2="185">
+<stop offset="0%" stop-color="#adc6ff" stop-opacity="0.85"/>
+<stop offset="60%" stop-color="#ffdcc6" stop-opacity="0.45"/>
+<stop offset="100%" stop-color="#ffdcc6" stop-opacity="0.05"/>
+</linearGradient>
+<linearGradient id="numPinkGrad1" x1="0" x2="1" y1="0" y2="1">
+<stop offset="0%" stop-color="#ffb786"/>
+<stop offset="100%" stop-color="#b75b00"/>
+</linearGradient>
+<linearGradient id="numPinkGrad2" x1="0" x2="0" y1="1" y2="0">
+<stop offset="0%" stop-color="#ffdcc6"/>
+<stop offset="100%" stop-color="#ffb786"/>
+</linearGradient>
+<linearGradient gradientUnits="userSpaceOnUse" id="ufoDome" x1="140" x2="140" y1="36" y2="54">
+<stop offset="0%" stop-color="#d4e3ff"/>
+<stop offset="100%" stop-color="#64a8fe"/>
+</linearGradient>
+<linearGradient gradientUnits="userSpaceOnUse" id="ufoDisk" x1="105" x2="175" y1="50" y2="65">
+<stop offset="0%" stop-color="#0058be"/>
+<stop offset="50%" stop-color="#2170e4"/>
+<stop offset="100%" stop-color="#004395"/>
+</linearGradient>
+</defs>
+<ellipse cx="140" cy="192" fill="#d4e3ff" opacity="0.6" rx="60" ry="14"/>
+<ellipse cx="140" cy="190" fill="#d4e3ff" rx="42" ry="9"/>
+<ellipse cx="140" cy="189" fill="#2170e4" opacity="0.3" rx="24" ry="5"/>
+<g>
+<path d="M124 64 L156 64 L196 186 A56 12 0 0 1 84 186 Z" fill="url(#beamGrad)"/>
+<circle cx="132" cy="140" fill="#ffffff" opacity="0.9" r="2.5"/>
+<circle cx="148" cy="118" fill="#ffffff" opacity="0.8" r="3"/>
+<circle cx="138" cy="162" fill="#ffffff" opacity="0.7" r="2"/>
+<circle cx="152" cy="155" fill="#ffffff" opacity="0.8" r="1.5"/>
+</g>
+<g>
+<path d="M38 185 L84 185 L65 198 L24 198 Z" fill="#8cb2ea" opacity="0.45"/>
+<path d="M50 78 L66 68 L66 126 L80 126 L94 116 L94 136 L80 146 L66 146 L66 172 L50 182 Z" fill="url(#numPinkGrad1)"/>
+<path d="M50 78 L26 126 L66 126 L66 172 L50 172 L50 146 L26 146 L14 146 L40 78 Z" fill="url(#numPinkGrad2)"/>
+<path d="M38 126 L50 102 L50 126 Z" fill="#ffffff" opacity="0.7"/>
+<path d="M66 126 L82 126 L82 146 L66 146 Z" fill="url(#numPinkGrad2)"/>
+</g>
+<g>
+<path d="M198 185 L244 185 L225 198 L184 198 Z" fill="#8cb2ea" opacity="0.45"/>
+<path d="M210 78 L226 68 L226 126 L240 126 L254 116 L254 136 L240 146 L226 146 L226 172 L210 182 Z" fill="url(#numPinkGrad1)"/>
+<path d="M210 78 L186 126 L226 126 L226 172 L210 172 L210 146 L186 146 L174 146 L200 78 Z" fill="url(#numPinkGrad2)"/>
+<path d="M198 126 L210 102 L210 126 Z" fill="#ffffff" opacity="0.7"/>
+<path d="M226 126 L242 126 L242 146 L226 146 Z" fill="url(#numPinkGrad2)"/>
+</g>
+<g>
+<path d="M125 50 C125 36 155 36 155 50 Z" fill="url(#ufoDome)"/>
+<ellipse cx="137" cy="44" fill="#ffffff" opacity="0.7" rx="4" ry="2"/>
+<ellipse cx="140" cy="54" fill="url(#ufoDisk)" rx="34" ry="10"/>
+<ellipse cx="140" cy="52" fill="#64a8fe" rx="32" ry="7"/>
+<circle cx="120" cy="54" fill="#ffdcc6" r="2"/>
+<circle cx="130" cy="56" fill="#ffdcc6" r="2.2"/>
+<circle cx="140" cy="56.5" fill="#ffdcc6" r="2.5"/>
+<circle cx="150" cy="56" fill="#ffdcc6" r="2.2"/>
+<circle cx="160" cy="54" fill="#ffdcc6" r="2"/>
+<ellipse cx="140" cy="62" fill="#2170e4" rx="14" ry="4"/>
+<ellipse cx="140" cy="63" fill="#adc6ff" rx="8" ry="2"/>
+</g>
+<path d="M84 48 L87 54 L93 57 L87 60 L84 66 L81 60 L75 57 L81 54 Z" fill="#ffb786" opacity="0.8"/>
+<path d="M200 42 L202 46 L206 48 L202 50 L200 54 L198 50 L194 48 L198 46 Z" fill="#64a8fe" opacity="0.8"/>
+</svg>

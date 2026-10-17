@@ -1,9 +1,8 @@
-import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' show Color;
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 // ── Models ────────────────────────────────────────────────────────────────────
 
@@ -14,6 +13,10 @@ class UserRole {
   final String color;
   final bool isSuper;
   final bool isDoctorRole;
+  /// Backend-computed user-management category (`doctor` / `reception` /
+  /// `ot_staff`) that `UserApiController` authorizes against. Null on older
+  /// API builds.
+  final String? userCategory;
 
   const UserRole({
     required this.id,
@@ -22,6 +25,7 @@ class UserRole {
     required this.color,
     required this.isSuper,
     required this.isDoctorRole,
+    this.userCategory,
   });
 
   factory UserRole.fromJson(Map<String, dynamic> j) => UserRole(
@@ -31,6 +35,7 @@ class UserRole {
         color:        j['color'] as String? ?? '#1B4F72',
         isSuper:      j['is_super'] == true,
         isDoctorRole: j['is_doctor_role'] == true,
+        userCategory: j['user_category'] as String?,
       );
 
   // Parsed once at deserialization — not on every card build()
@@ -60,6 +65,18 @@ class HospitalUserModel {
   final int? experienceYears;
   final String? signatureUrl;
   final String? profilePhotoUrl;
+  // Doctor-only — the OT Assistant auto-assigned when Ward marks this
+  // doctor's patient "Ready for OT" (web pull 2026-10-12).
+  final int? defaultOtAssistantId;
+  final String? defaultOtAssistantName;
+  // Plain-text password — only ever present when the requesting user is a
+  // Hospital Admin (backend gates this). See
+  // USER_PASSWORD_VISIBILITY_PARITY_PLAN.md.
+  final String? originalPassword;
+  // Round-tripped as `expected_updated_at` on the next edit for
+  // optimistic-concurrency conflict detection. See
+  // ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 5.
+  final DateTime? updatedAt;
 
   const HospitalUserModel({
     required this.id,
@@ -76,6 +93,10 @@ class HospitalUserModel {
     this.experienceYears,
     this.signatureUrl,
     this.profilePhotoUrl,
+    this.defaultOtAssistantId,
+    this.defaultOtAssistantName,
+    this.originalPassword,
+    this.updatedAt,
   });
 
   factory HospitalUserModel.fromJson(Map<String, dynamic> j) => HospitalUserModel(
@@ -95,6 +116,10 @@ class HospitalUserModel {
         experienceYears: (j['experience_years'] as num?)?.toInt(),
         signatureUrl:    j['signature_url'] as String?,
         profilePhotoUrl: j['profile_photo_url'] as String?,
+        defaultOtAssistantId: (j['default_ot_assistant_id'] as num?)?.toInt(),
+        defaultOtAssistantName: (j['default_ot_assistant'] as Map<String, dynamic>?)?['name'] as String?,
+        originalPassword: j['original_password'] as String?,
+        updatedAt: j['updated_at'] != null ? DateTime.tryParse(j['updated_at'] as String) : null,
       );
 }
 
@@ -106,10 +131,20 @@ class DoctorTypeOption {
       DoctorTypeOption(value: j['value'] as String, label: j['label'] as String);
 }
 
+/// `{id, name}` option for the "Connected OT Assistant" doctor-only field.
+class OtAssistantOption {
+  final int id;
+  final String name;
+  const OtAssistantOption({required this.id, required this.name});
+  factory OtAssistantOption.fromJson(Map<String, dynamic> j) =>
+      OtAssistantOption(id: (j['id'] as num).toInt(), name: j['name'] as String? ?? '');
+}
+
 class UserFormData {
   final List<UserRole> roles;
   final List<DoctorTypeOption> doctorTypes;
-  const UserFormData({required this.roles, required this.doctorTypes});
+  final List<OtAssistantOption> otAssistants;
+  const UserFormData({required this.roles, required this.doctorTypes, this.otAssistants = const []});
 }
 
 class UserListResponse {
@@ -128,26 +163,9 @@ class UserListResponse {
 
 // ── Service ───────────────────────────────────────────────────────────────────
 
-class UserService {
+class UserService with AuthenticatedService {
   UserService._();
   static final UserService instance = UserService._();
-
-  Future<Map<String, String>> _authHeaders() async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
-  Future<Map<String, String>> _bearerHeaders() async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    };
-  }
 
   // ── List ──────────────────────────────────────────────────────────────────
 
@@ -166,13 +184,10 @@ class UserService {
         .replace(queryParameters: params);
 
     final res = await http
-        .get(uri, headers: await _authHeaders())
+        .get(uri, headers: await headers)
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load users (${res.statusCode})');
-    }
+    final body = parseApiResponse(res);
 
     final data = body['data'] as Map<String, dynamic>;
     final meta = data['meta'] as Map<String, dynamic>;
@@ -193,14 +208,11 @@ class UserService {
     final res = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/form-data'),
-          headers: await _authHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load form data');
-    }
+    final body = parseApiResponse(res);
 
     final data = body['data'] as Map<String, dynamic>;
     return UserFormData(
@@ -209,6 +221,9 @@ class UserService {
           .toList(),
       doctorTypes: (data['doctor_types'] as List)
           .map((e) => DoctorTypeOption.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      otAssistants: (data['ot_assistants'] as List? ?? [])
+          .map((e) => OtAssistantOption.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -219,14 +234,11 @@ class UserService {
     final res = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id'),
-          headers: await _authHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load user');
-    }
+    final body = parseApiResponse(res);
     return HospitalUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -244,17 +256,16 @@ class UserService {
     String? doctorPrefix,
     String? registrationNo,
     int? experienceYears,
+    int? defaultOtAssistantId,
     bool focPermission = false,
     File? signature,
     File? profilePhoto,
   }) async {
-    final token = await AuthService.instance.getStoredToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${AppConfig.hospitalApiUrl}/config/users'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+    request.headers.addAll(await headers);
 
     request.fields['name']                  = name;
     request.fields['email']                 = email;
@@ -269,6 +280,7 @@ class UserService {
     if (doctorPrefix != null) request.fields['doctor_prefix'] = doctorPrefix;
     if (registrationNo != null) request.fields['registration_no'] = registrationNo;
     if (experienceYears != null) request.fields['experience_years'] = experienceYears.toString();
+    if (defaultOtAssistantId != null) request.fields['default_ot_assistant_id'] = defaultOtAssistantId.toString();
 
     if (signature != null) {
       request.files.add(await http.MultipartFile.fromPath('signature', signature.path));
@@ -279,16 +291,7 @@ class UserService {
 
     final streamed = await request.send().timeout(AppConfig.requestTimeout);
     final res      = await http.Response.fromStream(streamed);
-    final body     = jsonDecode(res.body) as Map<String, dynamic>;
-
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        throw Exception(firstVal is List ? firstVal.first.toString() : firstVal.toString());
-      }
-      throw Exception(body['message'] ?? 'Failed to create user (${res.statusCode})');
-    }
+    final body     = parseApiResponse(res);
 
     return HospitalUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
@@ -308,19 +311,19 @@ class UserService {
     String? doctorPrefix,
     String? registrationNo,
     int? experienceYears,
+    int? defaultOtAssistantId,
     bool focPermission = false,
     File? signature,
     bool clearSignature = false,
     File? profilePhoto,
     bool clearProfilePhoto = false,
+    DateTime? expectedUpdatedAt,
   }) async {
-    final token = await AuthService.instance.getStoredToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+    request.headers.addAll(await headers);
 
     request.fields['name']           = name;
     request.fields['email']          = email;
@@ -328,6 +331,11 @@ class UserService {
     request.fields['role_id']        = roleId.toString();
     request.fields['status']         = status;
     request.fields['foc_permission'] = focPermission ? '1' : '0';
+    // Optimistic-concurrency guard — see
+    // ACCESS_CONTROL_AND_DATA_SYNC_PLAN.md Phase 5.
+    if (expectedUpdatedAt != null) {
+      request.fields['expected_updated_at'] = expectedUpdatedAt.toIso8601String();
+    }
 
     if (password != null && password.isNotEmpty) {
       request.fields['password']              = password;
@@ -338,6 +346,7 @@ class UserService {
     if (doctorPrefix != null) request.fields['doctor_prefix'] = doctorPrefix;
     if (registrationNo != null) request.fields['registration_no'] = registrationNo;
     if (experienceYears != null) request.fields['experience_years'] = experienceYears.toString();
+    if (defaultOtAssistantId != null) request.fields['default_ot_assistant_id'] = defaultOtAssistantId.toString();
 
     if (signature != null) {
       request.files.add(await http.MultipartFile.fromPath('signature', signature.path));
@@ -353,16 +362,7 @@ class UserService {
 
     final streamed = await request.send().timeout(AppConfig.requestTimeout);
     final res      = await http.Response.fromStream(streamed);
-    final body     = jsonDecode(res.body) as Map<String, dynamic>;
-
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        throw Exception(firstVal is List ? firstVal.first.toString() : firstVal.toString());
-      }
-      throw Exception(body['message'] ?? 'Failed to update user (${res.statusCode})');
-    }
+    final body     = parseApiResponse(res);
 
     return HospitalUserModel.fromJson(body['data'] as Map<String, dynamic>);
   }
@@ -373,14 +373,11 @@ class UserService {
     final res = await http
         .delete(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id'),
-          headers: await _authHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to delete user (${res.statusCode})');
-    }
+    parseApiResponse(res);
   }
 
   // ── Toggle Status ─────────────────────────────────────────────────────────
@@ -389,14 +386,11 @@ class UserService {
     final res = await http
         .patch(
           Uri.parse('${AppConfig.hospitalApiUrl}/config/users/$id/toggle-status'),
-          headers: await _bearerHeaders(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to toggle status');
-    }
+    final body = parseApiResponse(res);
     return (body['data'] as Map<String, dynamic>)['status'] as String;
   }
 }

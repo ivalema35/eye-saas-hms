@@ -1,14 +1,19 @@
 import 'dart:io';
+import '../widgets/app_error_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/auth_models.dart';
+import '../services/base_service.dart' show StaleRecordException;
+import '../services/masters_service.dart';
+import '../services/permission_service.dart';
 import '../services/user_service.dart';
 import '../constants/app_colors.dart';
 import '../utils/phone_rules.dart';
 import '../constants/app_radius.dart';
+import '../utils/rbac_gates.dart';
 import '../widgets/app_animations.dart';
-
+import '../widgets/skeleton.dart';
 
 class UserFormScreen extends StatefulWidget {
   final UserInfo user;
@@ -32,29 +37,32 @@ class _UserFormScreenState extends State<UserFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // Form controllers
-  final _nameCtrl         = TextEditingController();
-  final _emailCtrl        = TextEditingController();
-  final _contactCtrl      = TextEditingController();
-  final _passwordCtrl     = TextEditingController();
+  final _nameCtrl = TextEditingController();
+  final _emailCtrl = TextEditingController();
+  final _contactCtrl = TextEditingController();
+  final _passwordCtrl = TextEditingController();
   final _passwordConfCtrl = TextEditingController();
-  final _prefixCtrl       = TextEditingController();
-  final _regNoCtrl        = TextEditingController();
-  final _expYrsCtrl       = TextEditingController();
+  final _prefixCtrl = TextEditingController();
+  final _regNoCtrl = TextEditingController();
+  final _expYrsCtrl = TextEditingController();
 
   // State
-  String _status       = 'active';
-  String _doctorType   = 'primary';
-  bool   _focPerm      = false;
-  bool   _showPassword = false;
-  bool   _showConfirm  = false;
-  bool   _saving       = false;
-  bool   _saveSuccess  = false;
+  String _status = 'active';
+  bool _focPerm = false;
+  bool _showPassword = false;
+  bool _showConfirm = false;
+  bool _saving = false;
+  bool _saveSuccess = false;
 
   // Role
-  UserRole?          _selectedRole;
-  List<UserRole>     _roles      = [];
-  bool   _loadingForm = true;
+  UserRole? _selectedRole;
+  List<UserRole> _roles = [];
+  bool _loadingForm = true;
   String? _formError;
+
+  // Doctor-only — "Connected OT Assistant" (web pull 2026-10-12).
+  List<OtAssistantOption> _otAssistants = [];
+  int? _defaultOtAssistantId;
 
   // Image files (newly picked)
   File? _signatureFile;
@@ -62,10 +70,13 @@ class _UserFormScreenState extends State<UserFormScreen> {
   // URLs of existing images (edit mode)
   String? _existingSignatureUrl;
   String? _existingPhotoUrl;
-  bool _clearSignature   = false;
+  bool _clearSignature = false;
   bool _clearProfilePhoto = false;
 
   bool get _isDoctorRole => _selectedRole?.isDoctorRole == true;
+  // Password is shown plain/pre-filled (web parity) only for Hospital Admins —
+  // the backend only ever returns `originalPassword` to an admin viewer anyway.
+  bool get _isAdmin => PermissionService.instance.isSuper;
 
   @override
   void initState() {
@@ -92,7 +103,16 @@ class _UserFormScreenState extends State<UserFormScreen> {
       if (!mounted) return;
 
       setState(() {
-        _roles       = data.roles;
+        _roles = data.roles.where((role) {
+          if (role.isSuper) return false;
+          return RbacGates.canManageUserRole(
+            userCategory: role.userCategory,
+            slug: role.slug,
+            name: role.name,
+            verb: _isEdit ? 'edit' : 'add',
+          );
+        }).toList();
+        _otAssistants = data.otAssistants;
         _loadingForm = false;
       });
 
@@ -100,7 +120,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _formError   = e.toString().replaceFirst('Exception: ', '');
+        _formError = e.toString().replaceFirst('Exception: ', '');
         _loadingForm = false;
       });
     }
@@ -108,11 +128,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   void _fillFromEdit() {
     final u = widget.editUser!;
-    _nameCtrl.text    = u.name;
-    _emailCtrl.text   = u.email;
+    _nameCtrl.text = u.name;
+    _emailCtrl.text = u.email;
     _contactCtrl.text = u.contact;
-    _status           = u.status;
-    _focPerm          = u.focPermission;
+    _status = u.status;
+    _focPerm = u.focPermission;
 
     // Match role
     if (u.role != null) {
@@ -123,12 +143,24 @@ class _UserFormScreenState extends State<UserFormScreen> {
     }
 
     // Doctor fields
-    _doctorType        = u.doctorType ?? 'primary';
-    _prefixCtrl.text   = u.doctorPrefix ?? '';
-    _regNoCtrl.text    = u.registrationNo ?? '';
-    _expYrsCtrl.text   = u.experienceYears?.toString() ?? '';
+    _prefixCtrl.text = u.doctorPrefix ?? '';
+    _regNoCtrl.text = u.registrationNo ?? '';
+    _expYrsCtrl.text = u.experienceYears?.toString() ?? '';
     _existingSignatureUrl = u.signatureUrl;
-    _existingPhotoUrl     = u.profilePhotoUrl;
+    _existingPhotoUrl = u.profilePhotoUrl;
+    // Only pre-select if still present in the active list (e.g. not since
+    // deactivated/role-changed) — avoids DropdownButtonFormField's "exactly
+    // one matching item" assertion.
+    if (u.defaultOtAssistantId != null &&
+        _otAssistants.any((a) => a.id == u.defaultOtAssistantId)) {
+      _defaultOtAssistantId = u.defaultOtAssistantId;
+    }
+
+    // Admin viewers get the actual current password pre-filled, matching web.
+    if (_isAdmin && (u.originalPassword?.isNotEmpty ?? false)) {
+      _passwordCtrl.text = u.originalPassword!;
+      _passwordConfCtrl.text = u.originalPassword!;
+    }
 
     setState(() {});
   }
@@ -138,26 +170,30 @@ class _UserFormScreenState extends State<UserFormScreen> {
   Future<void> _pickImage(bool isSignature) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(
-      source:       ImageSource.gallery,
+      source: ImageSource.gallery,
       imageQuality: 30,
-      maxWidth:     400,
+      maxWidth: 400,
     );
     if (picked == null) return;
 
     final file = File(picked.path);
     final size = await file.length();
     if (size > 20 * 1024 && mounted) {
-      showAppSnackBar(context, 'Image must be under 20 KB. Please choose a smaller/more compressed image.');
+      showAppSnackBar(
+        context,
+        'Image must be under 20 KB. Please choose a smaller/more compressed image.',
+        isError: true,
+      );
       return;
     }
 
     setState(() {
       if (isSignature) {
-        _signatureFile   = file;
-        _clearSignature  = false;
+        _signatureFile = file;
+        _clearSignature = false;
       } else {
-        _profilePhotoFile   = file;
-        _clearProfilePhoto  = false;
+        _profilePhotoFile = file;
+        _clearProfilePhoto = false;
       }
     });
   }
@@ -167,76 +203,109 @@ class _UserFormScreenState extends State<UserFormScreen> {
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedRole == null) {
-      showAppSnackBar(context, 'Please select a role.');
+      showAppSnackBar(context, 'Please select a role.', isError: true);
       return;
     }
 
-    setState(() { _saving = true; _saveSuccess = false; });
+    setState(() {
+      _saving = true;
+      _saveSuccess = false;
+    });
 
     try {
       if (_isEdit) {
         await UserService.instance.updateUser(
           widget.editUser!.id,
-          name:                 _nameCtrl.text.trim(),
-          email:                _emailCtrl.text.trim(),
-          contact:              _contactCtrl.text.trim(),
-          roleId:               _selectedRole!.id,
-          password:             _passwordCtrl.text.isNotEmpty
-                                 ? _passwordCtrl.text
-                                 : null,
+          name: _nameCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
+          contact: _contactCtrl.text.trim(),
+          roleId: _selectedRole!.id,
+          password: _passwordCtrl.text.isNotEmpty ? _passwordCtrl.text : null,
           passwordConfirmation: _passwordCtrl.text.isNotEmpty
-                                 ? _passwordConfCtrl.text
-                                 : null,
-          status:               _status,
-          doctorType:           _isDoctorRole ? _doctorType : null,
-          doctorPrefix:         _isDoctorRole && _prefixCtrl.text.trim().isNotEmpty
-                                 ? _prefixCtrl.text.trim().toUpperCase()
-                                 : null,
-          registrationNo:       _isDoctorRole && _regNoCtrl.text.trim().isNotEmpty
-                                 ? _regNoCtrl.text.trim()
-                                 : null,
-          experienceYears:      _isDoctorRole && _expYrsCtrl.text.isNotEmpty
-                                 ? int.tryParse(_expYrsCtrl.text)
-                                 : null,
-          focPermission:        _isDoctorRole ? _focPerm : false,
-          signature:            _signatureFile,
-          clearSignature:       _clearSignature,
-          profilePhoto:         _profilePhotoFile,
-          clearProfilePhoto:    _clearProfilePhoto,
+              ? _passwordConfCtrl.text
+              : null,
+          status: _status,
+          // Web removed the Doctor Type picker from this form entirely
+          // (`_user_modal.blade.php` — the field is commented out) and its
+          // own save always sends null for it now, so this app matches that
+          // exactly rather than keeping a picker web no longer has.
+          doctorType: null,
+          doctorPrefix: _isDoctorRole && _prefixCtrl.text.trim().isNotEmpty
+              ? _prefixCtrl.text.trim().toUpperCase()
+              : null,
+          registrationNo: _isDoctorRole && _regNoCtrl.text.trim().isNotEmpty
+              ? _regNoCtrl.text.trim()
+              : null,
+          experienceYears: _isDoctorRole && _expYrsCtrl.text.isNotEmpty
+              ? int.tryParse(_expYrsCtrl.text)
+              : null,
+          defaultOtAssistantId: _isDoctorRole ? _defaultOtAssistantId : null,
+          focPermission: _isDoctorRole ? _focPerm : false,
+          signature: _signatureFile,
+          clearSignature: _clearSignature,
+          profilePhoto: _profilePhotoFile,
+          clearProfilePhoto: _clearProfilePhoto,
+          expectedUpdatedAt: widget.editUser!.updatedAt,
         );
       } else {
         await UserService.instance.createUser(
-          name:                 _nameCtrl.text.trim(),
-          email:                _emailCtrl.text.trim(),
-          contact:              _contactCtrl.text.trim(),
-          roleId:               _selectedRole!.id,
-          password:             _passwordCtrl.text,
+          name: _nameCtrl.text.trim(),
+          email: _emailCtrl.text.trim(),
+          contact: _contactCtrl.text.trim(),
+          roleId: _selectedRole!.id,
+          password: _passwordCtrl.text,
           passwordConfirmation: _passwordConfCtrl.text,
-          status:               _status,
-          doctorType:           _isDoctorRole ? _doctorType : null,
-          doctorPrefix:         _isDoctorRole && _prefixCtrl.text.trim().isNotEmpty
-                                 ? _prefixCtrl.text.trim().toUpperCase()
-                                 : null,
-          registrationNo:       _isDoctorRole && _regNoCtrl.text.trim().isNotEmpty
-                                 ? _regNoCtrl.text.trim()
-                                 : null,
-          experienceYears:      _isDoctorRole && _expYrsCtrl.text.isNotEmpty
-                                 ? int.tryParse(_expYrsCtrl.text)
-                                 : null,
-          focPermission:        _isDoctorRole ? _focPerm : false,
-          signature:            _signatureFile,
-          profilePhoto:         _profilePhotoFile,
+          status: _status,
+          // See the matching comment on `updateUser` above.
+          doctorType: null,
+          doctorPrefix: _isDoctorRole && _prefixCtrl.text.trim().isNotEmpty
+              ? _prefixCtrl.text.trim().toUpperCase()
+              : null,
+          registrationNo: _isDoctorRole && _regNoCtrl.text.trim().isNotEmpty
+              ? _regNoCtrl.text.trim()
+              : null,
+          experienceYears: _isDoctorRole && _expYrsCtrl.text.isNotEmpty
+              ? int.tryParse(_expYrsCtrl.text)
+              : null,
+          defaultOtAssistantId: _isDoctorRole ? _defaultOtAssistantId : null,
+          focPermission: _isDoctorRole ? _focPerm : false,
+          signature: _signatureFile,
+          profilePhoto: _profilePhotoFile,
         );
       }
 
+      // A doctor's name/status can change here — MastersService's in-memory
+      // doctor dropdown (Patient Add/Edit/Check-in forms) only refetches
+      // when empty, so without this it kept showing the pre-edit doctor
+      // list for the rest of the app session (fixed only by a full app
+      // restart, which resets that cache). See CacheService/MastersService
+      // for the same pattern already handled by the Case Type/Location/
+      // Referrer master screens.
+      MastersService.instance.clearCache();
+
       if (!mounted) return;
-      setState(() { _saving = false; _saveSuccess = true; });
+      setState(() {
+        _saving = false;
+        _saveSuccess = true;
+      });
       await Future.delayed(const Duration(milliseconds: 700));
       if (mounted) Navigator.pop(context, true);
+    } on StaleRecordException catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      await showStaleRecordDialog(
+        context,
+        e.humanMessage,
+        () => Navigator.of(context).pop(true),
+      );
     } catch (e) {
       if (!mounted) return;
       setState(() => _saving = false);
-      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+      showAppSnackBar(
+        context,
+        e.toString().replaceFirst('Exception: ', ''),
+        isError: true,
+      );
     }
   }
 
@@ -248,7 +317,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _RolePickerSheet(
-        roles:    _roles,
+        roles: _roles,
         selected: _selectedRole,
         onSelect: (r) {
           setState(() {
@@ -294,24 +363,39 @@ class _UserFormScreenState extends State<UserFormScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppRadius.md),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                 ),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   child: _saveSuccess
-                      ? const Icon(Icons.check_rounded,
-                          color: Colors.white, size: 18, key: ValueKey('chk'))
+                      ? const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 18,
+                          key: ValueKey('chk'),
+                        )
                       : _saving
-                          ? const SizedBox(
-                              width: 16, height: 16, key: ValueKey('spin'),
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : const Text('SAVE', key: ValueKey('txt'),
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13,
-                                letterSpacing: 0.8,
-                              )),
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          key: ValueKey('spin'),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'SAVE',
+                          key: ValueKey('txt'),
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 13,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -323,37 +407,19 @@ class _UserFormScreenState extends State<UserFormScreen> {
 
   Widget _buildBody() {
     if (_loadingForm) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
 
     if (_formError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded, size: 52, color: Colors.red.shade300),
-              const SizedBox(height: 16),
-              Text(_formError!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 14)),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () {
-                  setState(() { _loadingForm = true; _formError = null; });
-                  _loadFormData();
-                },
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary, foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-              ),
-            ],
-          ),
-        ),
+      return AppErrorState(
+        message: _formError!,
+        onRetry: () {
+          setState(() {
+            _loadingForm = true;
+            _formError = null;
+          });
+          _loadFormData();
+        },
       );
     }
 
@@ -362,11 +428,23 @@ class _UserFormScreenState extends State<UserFormScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         children: [
-          AnimatedListItem(key: const ValueKey('uf-basic'),    index: 0, child: _buildBasicInfo()),
+          AnimatedListItem(
+            key: const ValueKey('uf-basic'),
+            index: 0,
+            child: _buildBasicInfo(),
+          ),
           const SizedBox(height: 14),
-          AnimatedListItem(key: const ValueKey('uf-role'),     index: 1, child: _buildRoleStatus()),
+          AnimatedListItem(
+            key: const ValueKey('uf-role'),
+            index: 1,
+            child: _buildRoleStatus(),
+          ),
           const SizedBox(height: 14),
-          AnimatedListItem(key: const ValueKey('uf-security'), index: 2, child: _buildSecurity()),
+          AnimatedListItem(
+            key: const ValueKey('uf-security'),
+            index: 2,
+            child: _buildSecurity(),
+          ),
           const SizedBox(height: 14),
           AnimatedSize(
             duration: const Duration(milliseconds: 300),
@@ -389,32 +467,44 @@ class _UserFormScreenState extends State<UserFormScreen> {
               child: ElevatedButton(
                 onPressed: (_saving || _saveSuccess) ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _saveSuccess ? AppColors.green : AppColors.primary,
+                  backgroundColor: _saveSuccess
+                      ? AppColors.green
+                      : AppColors.primary,
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.lg)),
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                  ),
                   elevation: 0,
                 ),
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   child: _saveSuccess
-                      ? const Icon(Icons.check_rounded,
-                          color: Colors.white, size: 24, key: ValueKey('chk'))
+                      ? const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 24,
+                          key: ValueKey('chk'),
+                        )
                       : _saving
-                          ? const SizedBox(
-                              width: 20, height: 20, key: ValueKey('spin'),
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : Text(
-                              _isEdit ? 'Update User' : 'Create User',
-                              key: const ValueKey('txt'),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 15,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          key: ValueKey('spin'),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _isEdit ? 'Update User' : 'Create User',
+                          key: const ValueKey('txt'),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 15,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                 ),
               ),
             ),
@@ -436,31 +526,34 @@ class _UserFormScreenState extends State<UserFormScreen> {
         _fieldLabel('Full Name *'),
         _styledField(
           controller: _nameCtrl,
-          hint:       'Enter full name',
-          validator:  (v) => (v == null || v.trim().isEmpty) ? 'Name is required' : null,
+          hint: 'Enter full name',
+          validator: (v) =>
+              (v == null || v.trim().isEmpty) ? 'Name is required' : null,
           textCapitalization: TextCapitalization.words,
+        ),
+        const SizedBox(height: 12),
+        // Web order (`_user_modal.blade.php`): Contact comes before Email —
+        // was swapped here.
+        _fieldLabel('Contact Number'),
+        _styledField(
+          controller: _contactCtrl,
+          hint: 'Contact number (e.g. +91XXXXXXXXXX)',
+          keyboardType: TextInputType.phone,
+          maxLength: 16,
+          inputFormatters: [],
+          validator: PhoneRules.nullable,
         ),
         const SizedBox(height: 12),
         _fieldLabel('Email Address *'),
         _styledField(
-          controller:   _emailCtrl,
-          hint:         'Enter email address',
+          controller: _emailCtrl,
+          hint: 'Enter email address',
           keyboardType: TextInputType.emailAddress,
           validator: (v) {
             if (v == null || v.trim().isEmpty) return 'Email is required';
             if (!v.contains('@')) return 'Enter a valid email';
             return null;
           },
-        ),
-        const SizedBox(height: 12),
-        _fieldLabel('Contact Number'),
-        _styledField(
-          controller:   _contactCtrl,
-          hint:         'Contact number (e.g. +91XXXXXXXXXX)',
-          keyboardType: TextInputType.phone,
-          maxLength:    16,
-          inputFormatters: [],
-          validator:    PhoneRules.nullable,
         ),
       ],
     );
@@ -476,7 +569,7 @@ class _UserFormScreenState extends State<UserFormScreen> {
       ),
       children: [
         _fieldLabel('Role *'),
-        GestureDetector(
+        PressScaleWrapper(
           onTap: _pickRole,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -518,8 +611,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
                     ),
                   ),
                 ],
-                Icon(Icons.expand_more_rounded,
-                    size: 20, color: AppColors.textSecondary.withValues(alpha: 0.40)),
+                Icon(
+                  Icons.expand_more_rounded,
+                  size: 20,
+                  color: AppColors.textSecondary.withValues(alpha: 0.40),
+                ),
               ],
             ),
           ),
@@ -535,7 +631,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.shield_rounded, size: 16, color: Colors.orange.shade700),
+                Icon(
+                  Icons.shield_rounded,
+                  size: 16,
+                  color: Colors.orange.shade700,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -557,19 +657,19 @@ class _UserFormScreenState extends State<UserFormScreen> {
           children: [
             Expanded(
               child: _StatusOption(
-                label:    'Active',
+                label: 'Active',
                 isActive: true,
                 selected: _status == 'active',
-                onTap:    () => setState(() => _status = 'active'),
+                onTap: () => setState(() => _status = 'active'),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _StatusOption(
-                label:    'Inactive',
+                label: 'Inactive',
                 isActive: false,
                 selected: _status == 'inactive',
-                onTap:    () => setState(() => _status = 'inactive'),
+                onTap: () => setState(() => _status = 'inactive'),
               ),
             ),
           ],
@@ -587,23 +687,37 @@ class _UserFormScreenState extends State<UserFormScreen> {
         label: 'SECURITY',
       ),
       children: [
-        _fieldLabel(_isEdit ? 'New Password (leave blank to keep)' : 'Password *'),
+        _fieldLabel(
+          _isAdmin
+              ? 'Password *'
+              : (_isEdit ? 'New Password (leave blank to keep)' : 'Password *'),
+        ),
         TextFormField(
-          controller:  _passwordCtrl,
-          obscureText: !_showPassword,
+          controller: _passwordCtrl,
+          obscureText: _isAdmin ? false : !_showPassword,
           decoration: _fieldDeco(
-            hint: _isEdit ? 'Enter new password to change' : 'Minimum 8 characters',
-            suffix: IconButton(
-              icon: Icon(
-                _showPassword ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                size: 18,
-                color: AppColors.textSecondary.withValues(alpha: 0.50),
-              ),
-              onPressed: () => setState(() => _showPassword = !_showPassword),
-            ),
+            hint: _isAdmin
+                ? 'Minimum 8 characters'
+                : (_isEdit
+                      ? 'Enter new password to change'
+                      : 'Minimum 8 characters'),
+            suffix: _isAdmin
+                ? null
+                : IconButton(
+                    icon: Icon(
+                      _showPassword
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      size: 18,
+                      color: AppColors.textSecondary.withValues(alpha: 0.50),
+                    ),
+                    onPressed: () =>
+                        setState(() => _showPassword = !_showPassword),
+                  ),
           ),
           validator: (v) {
-            if (!_isEdit && (v == null || v.isEmpty)) return 'Password is required';
+            if ((!_isEdit || _isAdmin) && (v == null || v.isEmpty))
+              return 'Password is required';
             if (v != null && v.isNotEmpty && v.length < 8) {
               return 'Password must be at least 8 characters';
             }
@@ -611,26 +725,36 @@ class _UserFormScreenState extends State<UserFormScreen> {
           },
         ),
         const SizedBox(height: 12),
-        _fieldLabel(_isEdit ? 'Confirm New Password' : 'Confirm Password *'),
+        _fieldLabel(
+          _isAdmin
+              ? 'Confirm Password *'
+              : (_isEdit ? 'Confirm New Password' : 'Confirm Password *'),
+        ),
         TextFormField(
-          controller:  _passwordConfCtrl,
-          obscureText: !_showConfirm,
+          controller: _passwordConfCtrl,
+          obscureText: _isAdmin ? false : !_showConfirm,
           decoration: _fieldDeco(
             hint: 'Re-enter password',
-            suffix: IconButton(
-              icon: Icon(
-                _showConfirm ? Icons.visibility_off_rounded : Icons.visibility_rounded,
-                size: 18,
-                color: AppColors.textSecondary.withValues(alpha: 0.50),
-              ),
-              onPressed: () => setState(() => _showConfirm = !_showConfirm),
-            ),
+            suffix: _isAdmin
+                ? null
+                : IconButton(
+                    icon: Icon(
+                      _showConfirm
+                          ? Icons.visibility_off_rounded
+                          : Icons.visibility_rounded,
+                      size: 18,
+                      color: AppColors.textSecondary.withValues(alpha: 0.50),
+                    ),
+                    onPressed: () =>
+                        setState(() => _showConfirm = !_showConfirm),
+                  ),
           ),
           validator: (v) {
             if (_passwordCtrl.text.isNotEmpty && v != _passwordCtrl.text) {
               return 'Passwords do not match';
             }
-            if (!_isEdit && (v == null || v.isEmpty)) return 'Please confirm password';
+            if ((!_isEdit || _isAdmin) && (v == null || v.isEmpty))
+              return 'Please confirm password';
             return null;
           },
         ),
@@ -648,30 +772,6 @@ class _UserFormScreenState extends State<UserFormScreen> {
         badgeText: 'Auto-detected from role',
       ),
       children: [
-        // Doctor Type
-        _fieldLabel('Doctor Type'),
-        Row(
-          children: [
-            Expanded(
-              child: _DoctorTypeOption(
-                label:    'Primary',
-                subtitle: 'Ophthalmologist',
-                selected: _doctorType == 'primary',
-                onTap:    () => setState(() => _doctorType = 'primary'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _DoctorTypeOption(
-                label:    'Secondary',
-                subtitle: 'Optometrist',
-                selected: _doctorType == 'secondary',
-                onTap:    () => setState(() => _doctorType = 'secondary'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
         // Doctor Prefix + Registration in row
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -682,9 +782,9 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 children: [
                   _fieldLabel('Prefix (2–5 letters)'),
                   _styledField(
-                    controller:   _prefixCtrl,
-                    hint:         'e.g. DR',
-                    maxLength:    5,
+                    controller: _prefixCtrl,
+                    hint: 'e.g. DR',
+                    maxLength: 5,
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z]')),
                       _UpperCaseFormatter(),
@@ -706,10 +806,10 @@ class _UserFormScreenState extends State<UserFormScreen> {
                 children: [
                   _fieldLabel('Exp. Years'),
                   _styledField(
-                    controller:   _expYrsCtrl,
-                    hint:         '0–60',
+                    controller: _expYrsCtrl,
+                    hint: '0–60',
                     keyboardType: TextInputType.number,
-                    maxLength:    2,
+                    maxLength: 2,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     validator: (v) {
                       if (v == null || v.isEmpty) return null;
@@ -727,68 +827,108 @@ class _UserFormScreenState extends State<UserFormScreen> {
         _fieldLabel('Registration Number'),
         _styledField(
           controller: _regNoCtrl,
-          hint:       'Medical council registration no.',
+          hint: 'Medical council registration no.',
         ),
-        const SizedBox(height: 14),
-        // FOC Permission
+        const SizedBox(height: 12),
+        _fieldLabel('Connected OT Assistant'),
         Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
           decoration: BoxDecoration(
             color: const Color(0xFFF4F7FB),
             borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(color: AppColors.primaryA10),
+            border: Border.all(color: AppColors.primaryA12),
           ),
-          child: SwitchListTile(
-            title: Text(
-              'FOC Permission',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: AppColors.primary,
-              ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButtonFormField<int?>(
+              initialValue: _defaultOtAssistantId,
+              isExpanded: true,
+              decoration: const InputDecoration(border: InputBorder.none),
+              hint: const Text('None', style: TextStyle(fontSize: 14)),
+              items: [
+                const DropdownMenuItem(value: null, child: Text('None')),
+                ..._otAssistants.map(
+                  (a) => DropdownMenuItem(
+                    value: a.id,
+                    child: Text(a.name, overflow: TextOverflow.ellipsis),
+                  ),
+                ),
+              ],
+              onChanged: (v) => setState(() => _defaultOtAssistantId = v),
             ),
-            subtitle: Text(
-              'Allow this doctor to mark visits as free of charge',
-              style: TextStyle(
-                fontSize: 11,
-                color: AppColors.textSecondary.withValues(alpha: 0.75),
-              ),
-            ),
-            value:      _focPerm,
-            onChanged:  (v) => setState(() => _focPerm = v),
-            activeThumbColor: AppColors.primary,
-            dense: true,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           ),
         ),
-        const SizedBox(height: 14),
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 2),
+          child: Text(
+            'Auto-assigned when Ward marks this doctor\'s patient Ready for OT.',
+            style: TextStyle(
+              fontSize: 10.5,
+              color: AppColors.textSecondary.withValues(alpha: 0.75),
+            ),
+          ),
+        ),
+        // FOC Permission toggle disabled at client's request — see
+        // foc_screen.dart. _focPerm keeps whatever value the user already
+        // had and is still sent on save unchanged; it's just no longer
+        // settable from this form.
+        // Container(
+        //   decoration: BoxDecoration(
+        //     color: const Color(0xFFF4F7FB),
+        //     borderRadius: BorderRadius.circular(AppRadius.md),
+        //     border: Border.all(color: AppColors.primaryA10),
+        //   ),
+        //   child: SwitchListTile(
+        //     title: Text(
+        //       'FOC Permission',
+        //       style: TextStyle(
+        //         fontWeight: FontWeight.w700,
+        //         fontSize: 14,
+        //         color: AppColors.primary,
+        //       ),
+        //     ),
+        //     subtitle: Text(
+        //       'Allow this doctor to mark visits as free of charge',
+        //       style: TextStyle(
+        //         fontSize: 11,
+        //         color: AppColors.textSecondary.withValues(alpha: 0.75),
+        //       ),
+        //     ),
+        //     value:      _focPerm,
+        //     onChanged:  (v) => setState(() => _focPerm = v),
+        //     activeThumbColor: AppColors.primary,
+        //     dense: true,
+        //     contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        //   ),
+        // ),
+        // const SizedBox(height: 14),
         // Images row
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: _ImageUploadCard(
-                label:       'Profile Photo',
+                label: 'Profile Photo',
                 existingUrl: _clearProfilePhoto ? null : _existingPhotoUrl,
-                pickedFile:  _profilePhotoFile,
-                onPick:      () => _pickImage(false),
-                onClear:     () => setState(() {
-                  _profilePhotoFile   = null;
-                  _existingPhotoUrl   = null;
-                  _clearProfilePhoto  = true;
+                pickedFile: _profilePhotoFile,
+                onPick: () => _pickImage(false),
+                onClear: () => setState(() {
+                  _profilePhotoFile = null;
+                  _existingPhotoUrl = null;
+                  _clearProfilePhoto = true;
                 }),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: _ImageUploadCard(
-                label:       'Signature',
+                label: 'Signature',
                 existingUrl: _clearSignature ? null : _existingSignatureUrl,
-                pickedFile:  _signatureFile,
-                onPick:      () => _pickImage(true),
-                onClear:     () => setState(() {
-                  _signatureFile    = null;
+                pickedFile: _signatureFile,
+                onPick: () => _pickImage(true),
+                onClear: () => setState(() {
+                  _signatureFile = null;
                   _existingSignatureUrl = null;
-                  _clearSignature   = true;
+                  _clearSignature = true;
                 }),
               ),
             ),
@@ -804,7 +944,11 @@ class _UserFormScreenState extends State<UserFormScreen> {
           ),
           child: Row(
             children: [
-              Icon(Icons.info_outline_rounded, size: 14, color: Colors.amber.shade700),
+              Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Colors.amber.shade700,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -826,67 +970,68 @@ class _UserFormScreenState extends State<UserFormScreen> {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   Widget _fieldLabel(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary.withValues(alpha: 0.80),
-            letterSpacing: 0.2,
-          ),
-        ),
-      );
+    padding: const EdgeInsets.only(bottom: 6),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textSecondary.withValues(alpha: 0.80),
+        letterSpacing: 0.2,
+      ),
+    ),
+  );
 
   InputDecoration _fieldDeco({String? hint, Widget? suffix}) => InputDecoration(
-        hintText:        hint,
-        hintStyle:       TextStyle(
-          color: AppColors.textSecondary.withValues(alpha: 0.40),
-          fontSize: 13,
-        ),
-        filled:          true,
-        fillColor:       const Color(0xFFF4F7FB),
-        contentPadding:  const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        border:          OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide:   BorderSide(color: AppColors.primaryA12),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide:   BorderSide(color: AppColors.primaryA12),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide:   BorderSide(color: AppColors.primaryA50, width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide:   const BorderSide(color: Colors.red),
-        ),
-        suffixIcon:      suffix,
-      );
+    hintText: hint,
+    hintStyle: TextStyle(
+      color: AppColors.textSecondary.withValues(alpha: 0.40),
+      fontSize: 13,
+    ),
+    filled: true,
+    fillColor: const Color(0xFFF4F7FB),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: BorderSide(color: AppColors.primaryA12),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: BorderSide(color: AppColors.primaryA12),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: BorderSide(color: AppColors.primaryA50, width: 1.5),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      borderSide: const BorderSide(color: Colors.red),
+    ),
+    suffixIcon: suffix,
+  );
 
   Widget _styledField({
     required TextEditingController controller,
-    String?  hint,
+    String? hint,
     TextInputType? keyboardType,
-    int?     maxLength,
+    int? maxLength,
     List<TextInputFormatter>? inputFormatters,
-    String?  Function(String?)? validator,
+    String? Function(String?)? validator,
     TextCapitalization textCapitalization = TextCapitalization.none,
-  }) =>
-      TextFormField(
-        controller:          controller,
-        keyboardType:        keyboardType,
-        maxLength:           maxLength,
-        inputFormatters:     inputFormatters,
-        validator:           validator,
-        textCapitalization:  textCapitalization,
-        style: TextStyle(fontSize: 14, color: AppColors.primary, fontWeight: FontWeight.w600),
-        decoration: _fieldDeco(hint: hint).copyWith(
-          counterText: '',
-        ),
-      );
+  }) => TextFormField(
+    controller: controller,
+    keyboardType: keyboardType,
+    maxLength: maxLength,
+    inputFormatters: inputFormatters,
+    validator: validator,
+    textCapitalization: textCapitalization,
+    style: TextStyle(
+      fontSize: 14,
+      color: AppColors.primary,
+      fontWeight: FontWeight.w600,
+    ),
+    decoration: _fieldDeco(hint: hint).copyWith(counterText: ''),
+  );
 
   Color _parseHexColor(String hex) {
     try {
@@ -905,7 +1050,6 @@ class _SectionCard extends StatelessWidget {
   final List<Widget> children;
 
   const _SectionCard({required this.header, required this.children});
-
 
   @override
   Widget build(BuildContext context) {
@@ -944,8 +1088,11 @@ class _SectionHeader extends StatelessWidget {
   final String label;
   final String? badgeText;
 
-  const _SectionHeader({required this.icon, required this.label, this.badgeText});
-
+  const _SectionHeader({
+    required this.icon,
+    required this.label,
+    this.badgeText,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1013,7 +1160,7 @@ class _StatusOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color  = isActive ? AppColors.green : Colors.grey.shade500;
+    final color = isActive ? AppColors.green : Colors.grey.shade500;
     final bgColor = isActive ? Colors.green.shade50 : Colors.grey.shade50;
 
     return GestureDetector(
@@ -1022,11 +1169,11 @@ class _StatusOption extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color:        selected ? bgColor : Colors.white,
+          color: selected ? bgColor : Colors.white,
           borderRadius: BorderRadius.circular(AppRadius.md),
           border: Border.all(
-            color:  selected ? color : Colors.grey.shade200,
-            width:  selected ? 2 : 1,
+            color: selected ? color : Colors.grey.shade200,
+            width: selected ? 2 : 1,
           ),
         ),
         alignment: Alignment.center,
@@ -1034,7 +1181,9 @@ class _StatusOption extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
               size: 15,
               color: selected ? color : Colors.grey.shade400,
             ),
@@ -1045,67 +1194,6 @@ class _StatusOption extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
                 color: selected ? color : Colors.grey.shade500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DoctorTypeOption extends StatelessWidget {
-  final String label;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _DoctorTypeOption({
-    required this.label,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color:        selected ? AppColors.primaryA07 : Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(
-            color: selected ? AppColors.primaryA50 : Colors.grey.shade200,
-            width: selected ? 1.8 : 1,
-          ),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
-              size: 16,
-              color: selected ? AppColors.primary : Colors.grey.shade400,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 12,
-                color: selected ? AppColors.primary : Colors.grey.shade600,
-              ),
-            ),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 10,
-                color: selected
-                    ? AppColors.primaryA60
-                    : Colors.grey.shade500,
               ),
             ),
           ],
@@ -1130,8 +1218,8 @@ class _ImageUploadCard extends StatelessWidget {
     required this.onClear,
   });
 
-
-  bool get _hasImage => pickedFile != null || (existingUrl != null && existingUrl!.isNotEmpty);
+  bool get _hasImage =>
+      pickedFile != null || (existingUrl != null && existingUrl!.isNotEmpty);
 
   @override
   Widget build(BuildContext context) {
@@ -1147,7 +1235,7 @@ class _ImageUploadCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 6),
-        GestureDetector(
+        PressScaleWrapper(
           onTap: onPick,
           child: Container(
             height: 100,
@@ -1155,9 +1243,7 @@ class _ImageUploadCard extends StatelessWidget {
               color: const Color(0xFFF4F7FB),
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
-                color: _hasImage
-                    ? AppColors.primaryA30
-                    : AppColors.primaryA12,
+                color: _hasImage ? AppColors.primaryA30 : AppColors.primaryA12,
                 style: _hasImage ? BorderStyle.solid : BorderStyle.none,
               ),
             ),
@@ -1168,7 +1254,7 @@ class _ImageUploadCard extends StatelessWidget {
         if (_hasImage)
           Padding(
             padding: const EdgeInsets.only(top: 4),
-            child: GestureDetector(
+            child: PressScaleWrapper(
               onTap: onClear,
               child: Text(
                 'Remove',
@@ -1199,11 +1285,14 @@ class _ImageUploadCard extends StatelessWidget {
                 color: const Color(0x99000000),
                 borderRadius: BorderRadius.circular(AppRadius.sm),
               ),
-              child: const Text('NEW',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w800)),
+              child: const Text(
+                'NEW',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ],
@@ -1220,8 +1309,11 @@ class _ImageUploadCard extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.add_photo_alternate_rounded,
-            size: 28, color: AppColors.primaryA30),
+        Icon(
+          Icons.add_photo_alternate_rounded,
+          size: 28,
+          color: AppColors.primaryA30,
+        ),
         const SizedBox(height: 6),
         Text(
           'Tap to upload',
@@ -1254,7 +1346,6 @@ class _RolePickerSheet extends StatefulWidget {
 }
 
 class _RolePickerSheetState extends State<_RolePickerSheet> {
-
   final _searchCtrl = TextEditingController();
   List<UserRole> _filtered = [];
 
@@ -1275,8 +1366,8 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
       _filtered = v.isEmpty
           ? widget.roles
           : widget.roles
-              .where((r) => r.name.toLowerCase().contains(v.toLowerCase()))
-              .toList();
+                .where((r) => r.name.toLowerCase().contains(v.toLowerCase()))
+                .toList();
     });
   }
 
@@ -1292,8 +1383,8 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
       initialChildSize: 0.65,
-      minChildSize:     0.40,
-      maxChildSize:     0.90,
+      minChildSize: 0.40,
+      maxChildSize: 0.90,
       builder: (ctx, sc) => Container(
         decoration: const BoxDecoration(
           color: Colors.white,
@@ -1334,23 +1425,26 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: TextField(
-                controller:  _searchCtrl,
-                onChanged:   _onSearch,
-                autofocus:   true,
+                controller: _searchCtrl,
+                onChanged: _onSearch,
+                autofocus: true,
                 decoration: InputDecoration(
                   hintText: 'Search roles...',
                   hintStyle: TextStyle(
                     color: AppColors.textSecondary.withValues(alpha: 0.45),
                     fontSize: 13,
                   ),
-                  prefixIcon: Icon(Icons.search_rounded,
-                      size: 18, color: AppColors.textSecondary.withValues(alpha: 0.45)),
-                  filled:     true,
-                  fillColor:  const Color(0xFFF4F7FB),
+                  prefixIcon: Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: AppColors.textSecondary.withValues(alpha: 0.45),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFFF4F7FB),
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide:   BorderSide.none,
+                    borderSide: BorderSide.none,
                   ),
                 ),
               ),
@@ -1358,18 +1452,19 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
             const SizedBox(height: 8),
             Expanded(
               child: ListView.builder(
-                controller:  sc,
+                controller: sc,
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                itemCount:   _filtered.length,
+                itemCount: _filtered.length,
                 itemBuilder: (_, i) {
-                  final role    = _filtered[i];
-                  final color   = _parseColor(role.color);
+                  final role = _filtered[i];
+                  final color = _parseColor(role.color);
                   final isSelected = widget.selected?.id == role.id;
 
                   return ListTile(
                     onTap: () => widget.onSelect(role),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppRadius.md)),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
                     tileColor: isSelected ? AppColors.primaryA06 : null,
                     leading: Container(
                       width: 36,
@@ -1377,11 +1472,15 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
-                        border: Border.all(color: color.withValues(alpha: 0.30)),
+                        border: Border.all(
+                          color: color.withValues(alpha: 0.30),
+                        ),
                       ),
                       child: Center(
                         child: Text(
-                          role.name.isNotEmpty ? role.name[0].toUpperCase() : '?',
+                          role.name.isNotEmpty
+                              ? role.name[0].toUpperCase()
+                              : '?',
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             color: color,
@@ -1393,7 +1492,9 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                     title: Text(
                       role.name,
                       style: TextStyle(
-                        fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: isSelected
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                         color: isSelected ? AppColors.primary : Colors.black87,
                         fontSize: 14,
                       ),
@@ -1401,13 +1502,25 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
                     subtitle: Row(
                       children: [
                         if (role.isDoctorRole)
-                          _roleBadge('Doctor', Colors.blue.shade700, Colors.blue.shade50),
+                          _roleBadge(
+                            'Doctor',
+                            Colors.blue.shade700,
+                            Colors.blue.shade50,
+                          ),
                         if (role.isSuper)
-                          _roleBadge('Super Admin', Colors.orange.shade700, Colors.orange.shade50),
+                          _roleBadge(
+                            'Super Admin',
+                            Colors.orange.shade700,
+                            Colors.orange.shade50,
+                          ),
                       ],
                     ),
                     trailing: isSelected
-                        ? Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20)
+                        ? Icon(
+                            Icons.check_circle_rounded,
+                            color: AppColors.primary,
+                            size: 20,
+                          )
                         : null,
                   );
                 },
@@ -1420,21 +1533,21 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
   }
 
   Widget _roleBadge(String text, Color textColor, Color bgColor) => Container(
-        margin: const EdgeInsets.only(right: 4, top: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color:        bgColor,
-          borderRadius: BorderRadius.circular(AppRadius.xl),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 9,
-            fontWeight: FontWeight.w700,
-            color: textColor,
-          ),
-        ),
-      );
+    margin: const EdgeInsets.only(right: 4, top: 2),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    decoration: BoxDecoration(
+      color: bgColor,
+      borderRadius: BorderRadius.circular(AppRadius.xl),
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 9,
+        fontWeight: FontWeight.w700,
+        color: textColor,
+      ),
+    ),
+  );
 }
 
 // ── Text formatter ────────────────────────────────────────────────────────────
@@ -1442,6 +1555,7 @@ class _RolePickerSheetState extends State<_RolePickerSheet> {
 class _UpperCaseFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
-          TextEditingValue oldValue, TextEditingValue newValue) =>
-      newValue.copyWith(text: newValue.text.toUpperCase());
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) => newValue.copyWith(text: newValue.text.toUpperCase());
 }

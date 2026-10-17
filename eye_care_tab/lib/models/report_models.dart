@@ -109,14 +109,20 @@ class ReportFilterOption {
       );
 }
 
+/// Filter dropdown payload. `locations` is `MasterCity` rows (`{id, name}`,
+/// country-scoped to the tenant) — the old `Location`-table shape (`{id,
+/// city}`) is gone as of the backend's TASK 1.2 fix, since patient records
+/// are keyed to `MasterCity`, not the legacy `tbl_locations` table.
 class ReportFilterOptions {
   final List<ReportFilterOption> doctors;
+  final List<ReportFilterOption> assistants;
   final List<ReportFilterOption> receptionists;
   final List<ReportFilterOption> locations;
   final List<ReportFilterOption> caseTypes;
 
   const ReportFilterOptions({
     required this.doctors,
+    this.assistants = const [],
     required this.receptionists,
     required this.locations,
     required this.caseTypes,
@@ -124,10 +130,9 @@ class ReportFilterOptions {
 
   factory ReportFilterOptions.fromJson(Map<String, dynamic> j) => ReportFilterOptions(
         doctors: _parseList(j['doctors']),
+        assistants: _parseList(j['assistants']),
         receptionists: _parseList(j['receptionists']),
-        locations: (j['locations'] as List? ?? [])
-            .map((e) => ReportFilterOption.fromJson(e as Map<String, dynamic>, nameField: 'city'))
-            .toList(),
+        locations: _parseList(j['locations']),
         caseTypes: (j['case_types'] as List? ?? [])
             .map((e) => ReportFilterOption.fromJson(e as Map<String, dynamic>, nameField: 'case_type'))
             .toList(),
@@ -144,7 +149,7 @@ class ReportFilter {
   final int? doctorId;
   final int? locationId;
   final int? caseId;
-  final String? type; // 'walkin' | 'phone' | null
+  final String? type; // 'walkin' | 'phone' | null — only meaningful for the OPD landing/export screen
 
   const ReportFilter({
     this.dateRange = '',
@@ -192,4 +197,57 @@ class ReportFilter {
       type == null;
 
   static const _sentinel = Object();
+}
+
+/// `GET reports/channel-counts` — the 3 tappable channel tiles + the
+/// full-dataset walk-in collection banner on the OPD Reports landing page.
+class ReportChannelCounts {
+  final double totalCollection;
+  final int otAppointment;
+  final int walkin;
+  final int phone;
+
+  const ReportChannelCounts({
+    required this.totalCollection,
+    required this.otAppointment,
+    required this.walkin,
+    required this.phone,
+  });
+
+  factory ReportChannelCounts.fromJson(Map<String, dynamic> j) => ReportChannelCounts(
+        totalCollection: (j['total_collection'] as num?)?.toDouble() ?? 0.0,
+        otAppointment: j['ot_appointment'] as int? ?? 0,
+        walkin: j['walkin'] as int? ?? 0,
+        phone: j['phone'] as int? ?? 0,
+      );
+}
+
+/// `GET reports/channel/{channel}` — a per-channel drill-down. Bundles the
+/// full filter-form payload (doctors/assistants/receptionists/locations/case
+/// types) in one response so the channel screen needs no separate
+/// `filter-data` round trip.
+class ReportChannelResult {
+  final String channel;
+  final String label;
+  final List<ReportPatient> patients;
+  final ReportMeta meta;
+  final ReportFilterOptions filterOptions;
+
+  const ReportChannelResult({
+    required this.channel,
+    required this.label,
+    required this.patients,
+    required this.meta,
+    required this.filterOptions,
+  });
+
+  factory ReportChannelResult.fromJson(Map<String, dynamic> j) => ReportChannelResult(
+        channel: j['channel'] as String? ?? '',
+        label: j['label'] as String? ?? '',
+        patients: (j['patients'] as List? ?? [])
+            .map((e) => ReportPatient.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        meta: ReportMeta.fromJson(j['meta'] as Map<String, dynamic>? ?? {}),
+        filterOptions: ReportFilterOptions.fromJson(j),
+      );
 }

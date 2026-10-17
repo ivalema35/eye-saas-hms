@@ -2,17 +2,27 @@ import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_radius.dart';
 import '../../services/exam_masters_service.dart';
+import '../app_animations.dart';
 
 /// SPH/CYL sign-toggle grid picker (PG/ST). Content-only widget shown via
 /// `PopoverController.show`. Mobile shows this as a full-screen dialog;
 /// tablet shows it as a popover anchored to the field (PRD §8.2).
+///
+/// Grid/zero-chip taps and Clear apply immediately and close — matches
+/// web's actual JS (`secondary.blade.php`'s pgPicker: `applyVal(val);
+/// closePicker();` on chip click) exactly. Only the custom/manual text
+/// entry keeps its own explicit "Apply" button, since typing isn't itself a
+/// commit gesture the way a tap is.
 class SignGridPopover extends StatefulWidget {
   final List<ExamMasterItem> items;
   final String current;
   final void Function(String value) onApply;
   final VoidCallback onClose;
+  /// Which field this is picking for (e.g. "SPH · Right Eye · PG") — shown
+  /// in the header when set.
+  final String? title;
 
-  const SignGridPopover({super.key, required this.items, required this.current, required this.onApply, required this.onClose});
+  const SignGridPopover({super.key, required this.items, required this.current, required this.onApply, required this.onClose, this.title});
 
   @override
   State<SignGridPopover> createState() => _SignGridPopoverState();
@@ -49,7 +59,14 @@ class _SignGridPopoverState extends State<SignGridPopover> {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 8, 8),
           child: Row(children: [
-            Expanded(child: Text(_sign == '-' ? '− Negative Values' : '+ Positive Values', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary))),
+            Expanded(
+              child: Text(
+                widget.title != null
+                    ? '${widget.title}  ·  ${_sign == '-' ? '− Negative' : '+ Positive'}'
+                    : (_sign == '-' ? '− Negative Values' : '+ Positive Values'),
+                style: TextStyle(fontSize: widget.title != null ? 15 : 12, fontWeight: FontWeight.w800, color: AppColors.primary),
+              ),
+            ),
             IconButton(icon: const Icon(Icons.close_rounded, size: 16), padding: EdgeInsets.zero, constraints: const BoxConstraints(), onPressed: widget.onClose),
           ]),
         ),
@@ -60,7 +77,7 @@ class _SignGridPopoverState extends State<SignGridPopover> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: GestureDetector(
+                  child: PressScaleWrapper(
                     onTap: () => setState(() {
                       final prev = _sign;
                       _sign = s;
@@ -90,7 +107,7 @@ class _SignGridPopoverState extends State<SignGridPopover> {
                 ...gridItems.map((i) {
                   final v = '$_sign${i.value}';
                   final sel = _selected == v;
-                  return _chip(v, sel, i.isFavourite, () => setState(() => _selected = v));
+                  return _chip(v, sel, i.isFavourite, () { widget.onApply(v); widget.onClose(); });
                 }),
                 _zeroChip(),
               ],
@@ -111,17 +128,15 @@ class _SignGridPopoverState extends State<SignGridPopover> {
                 ),
               ),
               const SizedBox(width: 6),
-              GestureDetector(
+              PressScaleWrapper(
+                // Grid/zero-chip taps apply+close immediately now (see class
+                // doc comment) — this button is only for the custom/manual
+                // entry, matching web exactly.
                 onTap: () {
                   final custom = _customCtrl.text.trim();
-                  String? result;
-                  if (custom.isNotEmpty) {
-                    final stripped = (custom.startsWith('+') || custom.startsWith('-')) ? custom.substring(1) : custom;
-                    result = '$_sign$stripped';
-                  } else if (_selected.isNotEmpty) {
-                    result = _selected;
-                  }
-                  if (result != null) widget.onApply(result);
+                  if (custom.isEmpty) return;
+                  final stripped = (custom.startsWith('+') || custom.startsWith('-')) ? custom.substring(1) : custom;
+                  widget.onApply('$_sign$stripped');
                   widget.onClose();
                 },
                 child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(AppRadius.sm)), child: const Text('Apply', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.white))),
@@ -130,7 +145,7 @@ class _SignGridPopoverState extends State<SignGridPopover> {
             const SizedBox(height: 6),
             Align(
               alignment: Alignment.centerLeft,
-              child: GestureDetector(
+              child: PressScaleWrapper(
                 onTap: () { widget.onApply(''); widget.onClose(); },
                 child: Text('Clear', style: TextStyle(fontSize: 11, color: Colors.red.shade600, fontWeight: FontWeight.w600)),
               ),
@@ -142,7 +157,7 @@ class _SignGridPopoverState extends State<SignGridPopover> {
   }
 
   Widget _chip(String label, bool sel, bool fav, VoidCallback onTap) {
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: onTap,
       child: Container(
         width: 54,
@@ -156,8 +171,8 @@ class _SignGridPopoverState extends State<SignGridPopover> {
 
   Widget _zeroChip() {
     final sel = _selected == '0.00';
-    return GestureDetector(
-      onTap: () => setState(() => _selected = '0.00'),
+    return PressScaleWrapper(
+      onTap: () { widget.onApply('0.00'); widget.onClose(); },
       child: Container(
         width: 54,
         height: 32,

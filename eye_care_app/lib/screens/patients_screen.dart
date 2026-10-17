@@ -1,14 +1,21 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../utils/app_route.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/app_error_state.dart';
 import '../constants/permissions.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
+import '../services/base_service.dart' show PermissionDeniedException;
 import '../services/permission_service.dart';
 import '../services/exam_masters_service.dart';
 import '../services/patient_service.dart';
+import '../utils/date_format.dart';
+import '../utils/refreshable.dart';
+import '../widgets/exam/dilation_lock.dart';
+import '../widgets/app_record_card.dart';
 import 'opd_bill_screen.dart';
 import 'patient_checkin_screen.dart';
 import 'patient_form_screen.dart';
@@ -41,10 +48,19 @@ class PatientsScreen extends StatefulWidget {
 }
 
 class _PatientsScreenState extends State<PatientsScreen>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin
+    implements Refreshable {
   late final TabController _tabController;
   final _todayPageKey = GlobalKey<_PatientTabPageState>();
   final _allPageKey = GlobalKey<_PatientTabPageState>();
+
+  // Relays to both tab pages' own data reload — the actual list/pagination
+  // state lives in _PatientTabPageState, not here.
+  @override
+  Future<void> refreshSilently() async {
+    await _todayPageKey.currentState?.refreshSilently();
+    await _allPageKey.currentState?.refreshSilently();
+  }
 
   @override
   void initState() {
@@ -135,7 +151,13 @@ class _PatientsScreenState extends State<PatientsScreen>
         hospital: widget.hospital,
       )),
     );
-    if (result == true && mounted) {
+    // A role can be granted patient_register/patient_register_phone without
+    // patient_view (e.g. a walk-in-desk-only role) — the add above already
+    // succeeded, but refreshing the list would hit a 403 on patient_view and
+    // wipe the screen with a blocking "no permission" error, making a
+    // successful add look like it failed. Skip the refresh entirely when the
+    // user can't view the list anyway; there's nothing meaningful to reload.
+    if (result == true && mounted && PermissionService.instance.can(Perm.opdPatientView)) {
       _todayPageKey.currentState?.refresh();
       _allPageKey.currentState?.refresh();
     }
@@ -164,7 +186,8 @@ class _PatientTabPage extends StatefulWidget {
 }
 
 class _PatientTabPageState extends State<_PatientTabPage>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin
+    implements Refreshable {
   @override
   bool get wantKeepAlive => true;
 
@@ -198,13 +221,21 @@ class _PatientTabPageState extends State<_PatientTabPage>
 
   // ── Data loading ────────────────────────────────────────────────────────────
 
+  @override
+  Future<void> refreshSilently() => _goToPage(_currentPage);
+
+  String get _cacheScope => PatientService.scopeFor(
+        hospitalSlug: widget.hospital.slug,
+        userId: widget.user.id,
+      );
+
   Future<void> _goToPage(int page, {bool scrollTop = false}) async {
     if (_isLoading) return;
 
     // For initial page-1 load, show cached data instantly
     if (page == 1 && _patients.isEmpty && _search.isEmpty) {
       final cached = await PatientService.instance
-          .getCachedPatients(showAll: widget.showAll);
+          .getCachedPatients(showAll: widget.showAll, scope: _cacheScope);
       if (cached != null && mounted) {
         setState(() {
           _patients = cached.patients;
@@ -226,6 +257,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
         showAll: widget.showAll,
         search: _search,
         page: page,
+        scope: _cacheScope,
       );
       if (!mounted) return;
       setState(() {
@@ -237,6 +269,18 @@ class _PatientTabPageState extends State<_PatientTabPage>
         _scrollCtrl.animateTo(0,
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeOut);
+      }
+    } on PermissionDeniedException catch (e) {
+      // A definitive "you're not allowed" answer must never be masked by
+      // whatever stale cached list step above already rendered.
+      // See ROLES_PERMISSIONS_DEEP_AUDIT_ROUND2.md Part B.
+      if (mounted) {
+        setState(() {
+          _patients = [];
+          _stats = null;
+          _meta = null;
+          _error = e.toString();
+        });
       }
     } catch (e) {
       if (mounted && _patients.isEmpty) setState(() => _error = e.toString());
@@ -276,46 +320,11 @@ class _PatientTabPageState extends State<_PatientTabPage>
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PatientDetailSheet(patient: p, onEdit: () {
+      builder: (_) => _PatientDetailSheet(patient: p, currencySymbol: widget.hospital.currencySymbol, onEdit: () {
         Navigator.pop(context);
         _openEdit(p);
       }),
     );
-  }
-
-  Future<void> _deletePatient(Patient p) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete Patient?'),
-        content: Text(
-            'Delete ${p.fullName}? This cannot be undone.'),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel')),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFFDC3545)),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-
-    try {
-      await PatientService.instance.deletePatient(p.id);
-      if (mounted) {
-        showAppSnackBar(context, 'Patient deleted.', isSuccess: true);
-        _goToPage(_currentPage);
-      }
-    } catch (e) {
-      if (mounted) {
-        showAppSnackBar(context, e.toString(), isError: true);
-      }
-    }
   }
 
   Future<void> _openPrimaryExam(Patient p) async {
@@ -379,7 +388,7 @@ class _PatientTabPageState extends State<_PatientTabPage>
 
     return Stack(
       children: [
-        RefreshIndicator(
+        AppRefreshIndicator(
           color: AppColors.primary,
           onRefresh: () => _goToPage(1),
           child: CustomScrollView(
@@ -431,9 +440,9 @@ class _PatientTabPageState extends State<_PatientTabPage>
                   child: _PatientCard(
                     key: ValueKey(p.id),
                     patient: p,
+                    currencySymbol: widget.hospital.currencySymbol,
                     onView: () => _viewDetail(p),
                     onEdit: () => _openEdit(p),
-                    onDelete: () => _deletePatient(p),
                     onCheckIn: () => _openCheckIn(p),
                     onPrimaryExam: () => _openPrimaryExam(p),
                     onSecondaryExam: () => _openSecondaryExam(p),
@@ -572,59 +581,54 @@ class _PatientTabPageState extends State<_PatientTabPage>
     );
   }
 
+  // Compact single-row strip (was a 2x2 grid of large cards that ate
+  // roughly half the screen before any patient data was visible) — same
+  // visual language as the dashboard's own compact KPI tiles, just sized
+  // for 4-across here.
   Widget _buildStatCards() {
     final s = _stats;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  label: 'Total',
-                  value: s?.total ?? 0,
-                  color: AppColors.primary,
-                  iconBg: AppColors.primaryA12,
-                  icon: Icons.groups_rounded,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  label: 'Waiting',
-                  value: s?.waiting ?? 0,
-                  color: const Color(0xFFE67E22),
-                  iconBg: AppColors.orangeA12,
-                  icon: Icons.hourglass_top_rounded,
-                ),
-              ),
-            ],
+          Expanded(
+            child: _StatCard(
+              label: 'Total',
+              value: s?.total ?? 0,
+              color: AppColors.primary,
+              iconBg: AppColors.primaryA12,
+              icon: Icons.groups_rounded,
+            ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _StatCard(
-                  label: 'Primary',
-                  value: s?.primaryDone ?? 0,
-                  color: const Color(0xFF006497),
-                  iconBg: AppColors.blueA12,
-                  icon: Icons.assignment_turned_in_outlined,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _StatCard(
-                  label: 'Completed',
-                  value: s?.completed ?? 0,
-                  color: const Color(0xFF27AE60),
-                  iconBg: AppColors.greenA12,
-                  icon: Icons.task_alt_rounded,
-                ),
-              ),
-            ],
+          const SizedBox(width: 8),
+          Expanded(
+            child: _StatCard(
+              label: 'Waiting',
+              value: s?.waiting ?? 0,
+              color: const Color(0xFFE67E22),
+              iconBg: AppColors.orangeA12,
+              icon: Icons.hourglass_top_rounded,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _StatCard(
+              label: 'Primary',
+              value: s?.primaryDone ?? 0,
+              color: const Color(0xFF006497),
+              iconBg: AppColors.blueA12,
+              icon: Icons.assignment_turned_in_outlined,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _StatCard(
+              label: 'Completed',
+              value: s?.completed ?? 0,
+              color: const Color(0xFF27AE60),
+              iconBg: AppColors.greenA12,
+              icon: Icons.task_alt_rounded,
+            ),
           ),
         ],
       ),
@@ -713,28 +717,9 @@ class _PatientTabPageState extends State<_PatientTabPage>
   }
 
   Widget _buildError() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.wifi_off_rounded,
-                size: 48, color: Color(0xFFDC3545)),
-            const SizedBox(height: 12),
-            Text(_error ?? 'Something went wrong.',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFF666666))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () => _goToPage(_currentPage),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-            ),
-          ],
-        ),
-      ),
+    return AppErrorState(
+      message: _error ?? 'Something went wrong.',
+      onRetry: () => _goToPage(_currentPage),
     );
   }
 
@@ -760,49 +745,37 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.xl),
-        border: Border.all(
-            color: AppColors.primaryA12),
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: AppColors.primaryA12),
         boxShadow: [
           BoxShadow(
             color: AppColors.primaryA06,
-            blurRadius: 20,
-            offset: const Offset(0, 4),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-                color: iconBg, borderRadius: BorderRadius.circular(13)),
-            child: Icon(icon, color: color, size: 22),
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(9)),
+            child: Icon(icon, color: color, size: 15),
           ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(value.toString(),
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: color,
-                      height: 1.1)),
-              const SizedBox(height: 2),
-              Text(label.toUpperCase(),
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: AppColors.primaryA55)),
-            ],
-          ),
+          const SizedBox(height: 6),
+          Text(value.toString(),
+              maxLines: 1,
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: color, height: 1.1)),
+          const SizedBox(height: 2),
+          Text(label.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.3, color: AppColors.primaryA55)),
         ],
       ),
     );
@@ -813,9 +786,9 @@ class _StatCard extends StatelessWidget {
 
 class _PatientCard extends StatelessWidget {
   final Patient patient;
+  final String currencySymbol;
   final VoidCallback onView;
   final VoidCallback onEdit;
-  final VoidCallback onDelete;
   final VoidCallback onCheckIn;
   final VoidCallback onPrimaryExam;
   final VoidCallback onSecondaryExam;
@@ -825,9 +798,9 @@ class _PatientCard extends StatelessWidget {
   const _PatientCard({
     super.key,
     required this.patient,
+    required this.currencySymbol,
     required this.onView,
     required this.onEdit,
-    required this.onDelete,
     required this.onCheckIn,
     required this.onPrimaryExam,
     required this.onSecondaryExam,
@@ -836,19 +809,8 @@ class _PatientCard extends StatelessWidget {
   });
 
   // Static decorations — allocated once, shared across all card instances.
-  static final _cardDeco = BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(AppRadius.lg),
-    border: Border.all(color: AppColors.primaryA10),
-  );
   static final _avatarDeco =
       BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(10));
-  static final _mrdDeco =
-      BoxDecoration(color: AppColors.primaryA07, borderRadius: BorderRadius.circular(6));
-  static final _typeDeco = BoxDecoration(
-    border: Border.all(color: AppColors.primaryA28),
-    borderRadius: BorderRadius.circular(AppRadius.xl),
-  );
   static final _completedDeco =
       BoxDecoration(color: AppColors.tealA13, borderRadius: BorderRadius.circular(AppRadius.xl));
   static final _primaryDoneDeco =
@@ -865,85 +827,47 @@ class _PatientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = patient;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: _cardDeco,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header: avatar + name + status ─────────────────
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _avatar(p.firstName),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(p.fullName,
-                          style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primary)),
-                      const SizedBox(height: 3),
-                      Text(
-                        _subtitle(p),
-                        style: TextStyle(fontSize: 12, color: AppColors.primaryA58),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 6),
-                _statusBadge(p.status),
-              ],
-            ),
+    // Doctor/MRD/Type/Fee used to be crammed into one horizontal Row (icon,
+    // name, chip, badge, spacer, fee all fighting for space, wrapping/
+    // ellipsizing on anything but a wide phone) — moved onto the same
+    // AppRecordCard/AppRecordField icon-badge grid the OT desk screens use
+    // (RECORD_CARD_UNIFICATION_PLAN.md), so each field gets its own labeled
+    // cell instead of being squeezed into a single line.
+    final fields = <AppRecordField>[
+      if (p.doctor != null) AppRecordField('Doctor', p.doctor!.name, icon: Icons.person_outline_rounded, color: RecordFieldColors.doctor),
+      AppRecordField('MRD', p.patientCode, icon: Icons.badge_outlined, color: AppColors.primary),
+      AppRecordField('Type', p.type == 'walkin' ? 'Walk-in' : 'Phone', icon: Icons.call_outlined, color: RecordFieldColors.caseType),
+      if (p.caseFee != null) AppRecordField('Fee', '$currencySymbol${_fmt(p.caseFee!)}', icon: Icons.currency_rupee_rounded, color: RecordFieldColors.package),
+    ];
 
-            const SizedBox(height: 10),
-
-            // ── Meta: doctor + MRD + type + fee ────────────────
-            Row(
-              children: [
-                if (p.doctor != null) ...[
-                  Icon(Icons.person_outline_rounded,
-                      size: 13, color: AppColors.primaryA50),
-                  const SizedBox(width: 3),
-                  Flexible(
-                    child: Text(p.doctor!.name,
-                        style: TextStyle(fontSize: 12, color: AppColors.primaryA60),
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                _mrdChip(p.patientCode),
-                const SizedBox(width: 6),
-                _typeBadge(p.type),
-                const Spacer(),
-                if (p.caseFee != null)
-                  Text('₹${_fmt(p.caseFee!)}',
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary)),
-              ],
-            ),
-
-            const SizedBox(height: 10),
-            Container(height: 1, color: AppColors.primaryA08),
-            const SizedBox(height: 8),
-
-            // ── Actions ─────────────────────────────────────────
-            Builder(builder: (context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AppRecordCard(
+        title: p.fullName,
+        subtitle: _subtitle(p),
+        leading: _avatar(p.firstName),
+        trailing: _statusBadge(p.status),
+        fields: fields,
+        actions: Builder(builder: (context) {
               final perm          = PermissionService.instance;
               final showPrimary   = perm.can(Perm.opdExamPrimary);
               final showSecondary = perm.can(Perm.opdExamSecondary);
               final showHistory   = perm.can(Perm.opdExamHistory);
               final showPrint     = perm.can(Perm.opdBillPrint);
               final showEdit      = perm.can(Perm.opdPatientEdit);
-              final showDelete    = perm.can(Perm.opdPatientDelete);
               final showCheckIn   = perm.can(Perm.opdPatientRegister);
+
+              // Web parity (`partials/table.blade.php`): the Secondary lock and
+              // the Primary action's own "done" state are both driven by
+              // `$primary !== null` — i.e. whether a primary_examination ROW
+              // exists at all (created by the very first autosave) — not by
+              // `primary_done_at` (only set once the doctor finishes). Using
+              // `primaryDoneAt` here was stricter than web: a patient with
+              // in-progress (autosaved, not yet finished) primary data showed
+              // web's Secondary slot already unlocked while the app still
+              // showed it locked for the same patient. `primaryExamination`
+              // mirrors web's `$primary` exactly.
+              final hasPrimaryExam = p.primaryExamination != null;
 
               // Secondary exam widget — same logic, referenced twice below.
               Widget secondaryWidget() => p.unlockTimeMs != null
@@ -951,19 +875,20 @@ class _PatientCard extends StatelessWidget {
                   // only it rebuilds every second — the card itself stays stable.
                   ? _DilationTimer(
                       unlockTimeMs: p.unlockTimeMs!,
+                      onOverride: onSecondaryExam,
                       onExpired: _ActionBtn(
                         icon: Icons.remove_red_eye_outlined,
                         bg: p.secondaryDoneAt != null
                             ? AppColors.tealA10
-                            : p.primaryDoneAt == null
+                            : !hasPrimaryExam
                                 ? AppColors.greyA10
                                 : AppColors.purpleA12,
                         fg: p.secondaryDoneAt != null
                             ? AppColors.tealDark
-                            : p.primaryDoneAt == null
+                            : !hasPrimaryExam
                                 ? Colors.grey
                                 : AppColors.purple,
-                        onTap: (p.secondaryDoneAt != null || p.primaryDoneAt == null)
+                        onTap: (p.secondaryDoneAt != null || !hasPrimaryExam)
                             ? null
                             : onSecondaryExam,
                         tooltip: 'Secondary Exam',
@@ -973,15 +898,15 @@ class _PatientCard extends StatelessWidget {
                       icon: Icons.remove_red_eye_outlined,
                       bg: p.secondaryDoneAt != null
                           ? AppColors.tealA10
-                          : p.primaryDoneAt == null
+                          : !hasPrimaryExam
                               ? AppColors.greyA10
                               : AppColors.purpleA12,
                       fg: p.secondaryDoneAt != null
                           ? AppColors.tealDark
-                          : p.primaryDoneAt == null
+                          : !hasPrimaryExam
                               ? Colors.grey
                               : AppColors.purple,
-                      onTap: (p.secondaryDoneAt != null || p.primaryDoneAt == null)
+                      onTap: (p.secondaryDoneAt != null || !hasPrimaryExam)
                           ? null
                           : onSecondaryExam,
                       tooltip: 'Secondary Exam',
@@ -1001,9 +926,9 @@ class _PatientCard extends StatelessWidget {
                   if (showPrimary)
                     _ActionBtn(
                       icon: Icons.assignment_outlined,
-                      bg: p.primaryDoneAt != null ? AppColors.tealA10 : AppColors.primaryA10,
-                      fg: p.primaryDoneAt != null ? AppColors.tealDark : AppColors.primary,
-                      onTap: p.primaryDoneAt != null ? null : onPrimaryExam,
+                      bg: hasPrimaryExam ? AppColors.tealA10 : AppColors.primaryA10,
+                      fg: hasPrimaryExam ? AppColors.tealDark : AppColors.primary,
+                      onTap: hasPrimaryExam ? null : onPrimaryExam,
                       tooltip: 'Primary Exam',
                     ),
                   if (showSecondary) secondaryWidget(),
@@ -1031,14 +956,6 @@ class _PatientCard extends StatelessWidget {
                       onTap: onEdit,
                       tooltip: 'Edit',
                     ),
-                  if (showDelete)
-                    _ActionBtn(
-                      icon: Icons.delete_outline_rounded,
-                      bg: Colors.transparent,
-                      fg: AppColors.redA70,
-                      onTap: onDelete,
-                      tooltip: 'Delete',
-                    ),
                   if (showCheckIn && p.type == 'phone' && p.caseId == null) ...[
                     _vDiv,
                     _ActionBtn(
@@ -1052,8 +969,6 @@ class _PatientCard extends StatelessWidget {
                 ],
               );
             }),
-          ],
-        ),
       ),
     );
   }
@@ -1113,27 +1028,6 @@ class _PatientCard extends StatelessWidget {
     );
   }
 
-  Widget _mrdChip(String code) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: _mrdDeco,
-        child: Text(code,
-            style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w700,
-                fontFamily: 'monospace',
-                color: AppColors.primary)),
-      );
-
-  Widget _typeBadge(String type) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: _typeDeco,
-        child: Text(
-          type == 'walkin' ? 'Walk-in' : 'Phone',
-          style:
-              TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.primaryA70),
-        ),
-      );
-
   static String _fmt(double v) =>
       v == v.toInt() ? v.toInt().toString() : v.toStringAsFixed(2);
 }
@@ -1143,7 +1037,8 @@ class _PatientCard extends StatelessWidget {
 class _DilationTimer extends StatefulWidget {
   final int unlockTimeMs;
   final Widget onExpired;
-  const _DilationTimer({required this.unlockTimeMs, required this.onExpired});
+  final VoidCallback onOverride;
+  const _DilationTimer({required this.unlockTimeMs, required this.onExpired, required this.onOverride});
 
   @override
   State<_DilationTimer> createState() => _DilationTimerState();
@@ -1180,9 +1075,20 @@ class _DilationTimerState extends State<_DilationTimer> {
     super.dispose();
   }
 
+  // Web parity: single tap on the countdown does nothing — only a
+  // double-tap opens the override confirmation.
+  Future<void> _handleDoubleTap() async {
+    final ok = await canStartSecondaryExam(context, widget.unlockTimeMs);
+    if (ok) widget.onOverride();
+  }
+
   @override
-  Widget build(BuildContext context) =>
-      _expired ? widget.onExpired : _DilationBtn(timerText: _text);
+  Widget build(BuildContext context) => _expired
+      ? widget.onExpired
+      : GestureDetector(
+          onDoubleTap: _handleDoubleTap,
+          child: _DilationBtn(timerText: _text),
+        );
 }
 
 // ─── Small reusable action button ────────────────────────────────────────────
@@ -1205,7 +1111,7 @@ class _ActionBtn extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveFg = onTap == null ? fg.withValues(alpha: 0.35) : fg;
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: onTap,
       child: Container(
         width: 34,
@@ -1266,7 +1172,7 @@ class _PagArrow extends StatelessWidget {
     final color = enabled
         ? AppColors.primary
         : AppColors.primaryA22;
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: enabled ? onTap : null,
       child: Container(
         width: 30,
@@ -1295,7 +1201,7 @@ class _PagNum extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return PressScaleWrapper(
       onTap: active ? null : onTap,
       child: Container(
         constraints: const BoxConstraints(minWidth: 30),
@@ -1351,10 +1257,12 @@ class _PagDot extends StatelessWidget {
 
 class _PatientDetailSheet extends StatelessWidget {
   final Patient patient;
+  final String currencySymbol;
   final VoidCallback onEdit;
 
   const _PatientDetailSheet({
     required this.patient,
+    required this.currencySymbol,
     required this.onEdit,
   });
 
@@ -1520,7 +1428,7 @@ class _PatientDetailSheet extends StatelessWidget {
       child: Row(
         children: [
           _apptItem(Icons.calendar_today_outlined, 'Appointment',
-              p.appointmentDate ?? '—'),
+              formatDateString(p.appointmentDate)),
           _apptDiv(),
           _apptItem(Icons.person_outline_rounded, 'Doctor',
               p.doctor?.name ?? '—'),
@@ -1529,7 +1437,7 @@ class _PatientDetailSheet extends StatelessWidget {
               p.caseType?.caseType ?? '—'),
           _apptDiv(),
           _apptItem(Icons.currency_rupee_rounded, 'Fee',
-              p.caseFee != null ? '₹${p.caseFee!.toInt()}' : '—'),
+              p.caseFee != null ? '$currencySymbol${p.caseFee!.toInt()}' : '—'),
         ],
       ),
     );
@@ -1720,14 +1628,8 @@ class _PatientDetailSheet extends StatelessWidget {
     return _chip(label, bg: bg, fg: fg);
   }
 
-  String _fmtDate(DateTime? dt) {
-    if (dt == null) return '—';
-    const m = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    return '${dt.day} ${m[dt.month - 1]} ${dt.year}';
-  }
+  // Date+time (hospital-timezone-aware), matching web's `d M Y, h:i A`.
+  String _fmtDate(DateTime? dt) => dt == null ? '—' : toDisplayDateTime(dt);
 }
 
 class _InfoRow {

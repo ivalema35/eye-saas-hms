@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_refresh_indicator.dart';
 import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../utils/phone_rules.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/referrer_service.dart';
 import '../services/masters_service.dart';
 
@@ -20,10 +25,15 @@ class ReferrerMasterScreen extends StatefulWidget {
 }
 
 class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
+  final _p = PermissionService.instance;
   List<ReferrerItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
+
+  bool get _canAdd => _p.can(Perm.masterReferrerAdd);
+  bool get _canEdit => _p.can(Perm.masterReferrerEdit);
+  bool get _canDelete => _p.can(Perm.masterReferrerDelete);
 
   List<ReferrerItem> get _filtered => _query.isEmpty
       ? _all
@@ -137,11 +147,12 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
-            tooltip: 'Add',
-            onPressed: () => _openSheet(),
-          ),
+          if (_canAdd)
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white),
+              tooltip: 'Add',
+              onPressed: () => _openSheet(),
+            ),
         ],
       ),
       body: Column(
@@ -183,33 +194,10 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
 
   Widget _buildBody() {
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-              const SizedBox(height: 12),
-              Text(_error!,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Color(0xFF64748B))),
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _load,
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-              ),
-            ],
-          ),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
 
     final items = _filtered;
@@ -224,7 +212,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
             Text(
               _query.isNotEmpty
                   ? 'No results for "$_query"'
-                  : 'No referrers yet.\nTap + to add one.',
+                  : (_canAdd ? 'No referrers yet.\nTap + to add one.' : 'No referrers yet.'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                   color: Color(0xFF94A3B8),
@@ -236,7 +224,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
       ]);
     }
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -247,7 +235,9 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
           final item = items[i];
           final hasContact =
               item.contact != null && item.contact!.isNotEmpty;
-          return Padding(
+          return AnimatedListItem(
+            index: i,
+            child: Padding(
             padding: const EdgeInsets.only(bottom: 8),
             child: Container(
               padding: const EdgeInsets.fromLTRB(12, 11, 8, 11),
@@ -318,28 +308,31 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
                     const SizedBox(width: 4),
                   ],
                   // Edit
-                  InkWell(
-                    onTap: () => _openSheet(item: item),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.edit_outlined,
-                          size: 18, color: Color(0xFFE67E22)),
+                  if (_canEdit)
+                    InkWell(
+                      onTap: () => _openSheet(item: item),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.edit_outlined,
+                            size: 18, color: Color(0xFFE67E22)),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 2),
+                  if (_canDelete) const SizedBox(width: 2),
                   // Delete
-                  InkWell(
-                    onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.delete_outline_rounded,
-                          size: 18, color: AppColors.red),
+                  if (_canDelete)
+                    InkWell(
+                      onTap: () => _delete(item),
+                      borderRadius: BorderRadius.circular(AppRadius.sm),
+                      child: const Padding(
+                        padding: EdgeInsets.all(6),
+                        child: Icon(Icons.delete_outline_rounded,
+                            size: 18, color: AppColors.red),
+                      ),
                     ),
-                  ),
                 ],
               ),
+            ),
             ),
           );
         },

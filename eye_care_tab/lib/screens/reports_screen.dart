@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_breakpoints.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
@@ -9,14 +10,17 @@ import '../services/permission_service.dart';
 import '../services/report_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
+import '../widgets/skeleton.dart';
+import '../utils/currency_format.dart';
+import '../utils/refreshable.dart';
+import '../utils/app_date_picker.dart';
 
-/// Tablet Reports module — Pattern D (persistent filter panel + real
-/// DataTable) replacing mobile's card list + collapsible filter accordion.
-/// Business logic (fetch/paginate/export/date-range) ported unchanged from
-/// eye_care_app/lib/screens/reports_screen.dart. Deliberate tablet win: the
-/// filter panel stays permanently open in a left column on wide layouts
-/// (room mobile never had) instead of expand/collapse; it still collapses
-/// on narrow/stacked layouts to save vertical space.
+/// Tablet OPD Reports module — Pattern D (persistent filter panel + real
+/// DataTable). Mirrors web's redesigned landing page (a "Total Collection"
+/// banner + 3 tappable channel tiles, no filter form or list at that level)
+/// plus a per-channel drill-down view embedded in the same screen (switched
+/// internally, not pushed as a route — consistent with how this shell hosts
+/// every other content-switched module).
 class ReportsScreen extends StatefulWidget {
   final UserInfo user;
   final HospitalInfo hospital;
@@ -27,30 +31,107 @@ class ReportsScreen extends StatefulWidget {
   State<ReportsScreen> createState() => _ReportsScreenState();
 }
 
-class _ReportsScreenState extends State<ReportsScreen> {
-  ReportResult? _result;
-  ReportFilterOptions? _filterOptions;
-  bool _loading = false;
-  bool _filterOptionsLoading = false;
-  String? _error;
+enum _View { landing, channel }
 
+class _ReportsScreenState extends State<ReportsScreen> implements Refreshable {
+  _View _view = _View.landing;
+
+  @override
+  Future<void> refreshSilently() => _view == _View.landing ? _loadCounts() : _load(page: _page);
+
+  // Landing state
+  ReportChannelCounts? _counts;
+  bool _countsLoading = true;
+  String? _countsError;
+  bool _exportingLanding = false;
+
+  // Channel drill-down state
+  String? _channel;
+  String? _channelLabel;
+  ReportChannelResult? _result;
+  bool _loading = false;
+  String? _error;
   ReportFilter _filter = const ReportFilter();
   ReportFilter _pendingFilter = const ReportFilter();
   int _page = 1;
   bool _filterOpen = false;
+  bool _exportingChannel = false;
+
+  bool get _isOtAppointment => _channel == 'ot_appointment';
 
   @override
   void initState() {
     super.initState();
-    _load();
-    _loadFilterOptions();
+    _loadCounts();
   }
 
+  // ── Landing ──────────────────────────────────────────────────────────
+
+  Future<void> _loadCounts() async {
+    setState(() { _countsLoading = true; _countsError = null; });
+    try {
+      final counts = await ReportService.instance.fetchChannelCounts(const ReportFilter());
+      if (mounted) setState(() { _counts = counts; _countsLoading = false; });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _countsError = e.toString().replaceFirst('Exception: ', '');
+          _countsLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _exportLanding(String format) async {
+    setState(() => _exportingLanding = true);
+    showAppSnackBar(context, 'Preparing ${format.toUpperCase()} export…', duration: const Duration(seconds: 2));
+    try {
+      await ReportService.instance.downloadAndOpenExport(format: format, filter: const ReportFilter());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      showAppSnackBar(context, '${format == 'excel' ? 'Excel' : 'PDF'} opened successfully', isSuccess: true, duration: const Duration(seconds: 2));
+    } catch (e) {
+      if (!mounted) return;
+      showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+    } finally {
+      if (mounted) setState(() => _exportingLanding = false);
+    }
+  }
+
+  void _openChannel(String channel, String label) {
+    setState(() {
+      _view = _View.channel;
+      _channel = channel;
+      _channelLabel = label;
+      _filter = const ReportFilter();
+      _pendingFilter = const ReportFilter();
+      _page = 1;
+      _result = null;
+      _error = null;
+      _filterOpen = false;
+    });
+    _load(page: 1);
+  }
+
+  void _backToLanding() {
+    setState(() {
+      _view = _View.landing;
+      _channel = null;
+      _channelLabel = null;
+      _result = null;
+    });
+    _loadCounts();
+  }
+
+  // ── Channel drill-down ──────────────────────────────────────────────
+
   Future<void> _load({int? page}) async {
+    final channel = _channel;
+    if (channel == null) return;
     final p = page ?? _page;
     setState(() { _loading = true; _error = null; });
     try {
-      final result = await ReportService.instance.fetchReport(_filter, page: p);
+      final result = await ReportService.instance.fetchChannel(channel, _filter, page: p);
       if (mounted) setState(() { _result = result; _page = p; _loading = false; });
     } catch (e) {
       if (mounted) {
@@ -59,16 +140,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
           _loading = false;
         });
       }
-    }
-  }
-
-  Future<void> _loadFilterOptions() async {
-    setState(() => _filterOptionsLoading = true);
-    try {
-      final opts = await ReportService.instance.fetchFilterData();
-      if (mounted) setState(() { _filterOptions = opts; _filterOptionsLoading = false; });
-    } catch (_) {
-      if (mounted) setState(() => _filterOptionsLoading = false);
     }
   }
 
@@ -91,22 +162,27 @@ class _ReportsScreenState extends State<ReportsScreen> {
     _load(page: 1);
   }
 
-  Future<void> _export(String format) async {
+  Future<void> _exportChannel(String format) async {
+    final channel = _channel;
+    if (channel == null) return;
+    setState(() => _exportingChannel = true);
     showAppSnackBar(context, 'Preparing ${format.toUpperCase()} export…', duration: const Duration(seconds: 2));
     try {
-      await ReportService.instance.downloadAndOpenExport(format: format, filter: _filter);
+      await ReportService.instance.downloadAndOpenExport(format: format, filter: _filter.copyWith(type: channel));
       if (!mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       showAppSnackBar(context, '${format == 'excel' ? 'Excel' : 'PDF'} opened successfully', isSuccess: true, duration: const Duration(seconds: 2));
     } catch (e) {
       if (!mounted) return;
       showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
+    } finally {
+      if (mounted) setState(() => _exportingChannel = false);
     }
   }
 
   Future<void> _pickDateRange() async {
     final now = DateTime.now();
-    final range = await showDateRangePicker(
+    final range = await showAppDateRangePicker(
       context: context,
       firstDate: DateTime(2024),
       lastDate: now.add(const Duration(days: 1)),
@@ -155,11 +231,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return '${d.day} ${m[d.month - 1]} ${d.year}';
   }
 
-  bool get _isReceptionistSelected => _pendingFilter.receptionistId != null;
-
   @override
   Widget build(BuildContext context) {
-    if (!PermissionService.instance.can(Perm.reportsView)) {
+    if (!PermissionService.instance.can(Perm.reportsView) &&
+        !PermissionService.instance.can(Perm.opdReportsView)) {
       return Center(
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(Icons.lock_outline_rounded, size: 56, color: AppColors.primaryA25),
@@ -170,14 +245,115 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ]),
       );
     }
+    return _view == _View.landing ? _buildLanding() : _buildChannel();
+  }
+
+  // ── Landing UI ───────────────────────────────────────────────────────
+
+  Widget _buildLanding() {
+    return AppRefreshIndicator(
+      onRefresh: _loadCounts,
+      color: AppColors.primary,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(4),
+        children: [
+          Row(
+            children: [
+              Text('Patient Reports', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+              const Spacer(),
+              if (PermissionService.instance.canAny(
+                const [Perm.reportsExport, Perm.opdReportsExport],
+              )) ...[
+                IconButton(tooltip: 'Export Excel', onPressed: _exportingLanding ? null : () => _exportLanding('excel'), icon: Icon(Icons.table_chart_outlined, size: 20, color: AppColors.primary)),
+                IconButton(tooltip: 'Export PDF', onPressed: _exportingLanding ? null : () => _exportLanding('pdf'), icon: Icon(Icons.picture_as_pdf_outlined, size: 20, color: AppColors.primary)),
+              ],
+              IconButton(
+                tooltip: 'Refresh',
+                onPressed: _countsLoading ? null : _loadCounts,
+                icon: _countsLoading
+                    ? SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryA55))
+                    : Icon(Icons.refresh_rounded, size: 20, color: AppColors.primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_countsLoading && _counts == null)
+            const SizedBox(height: 200, child: AppSkeletonList(count: 2, itemHeight: 80, padding: EdgeInsets.zero))
+          else if (_countsError != null && _counts == null)
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.wifi_off_rounded, size: 48, color: AppColors.textSecondary),
+                  const SizedBox(height: 14),
+                  Text(_countsError!, style: TextStyle(color: AppColors.textSecondary, fontSize: 14)),
+                  const SizedBox(height: 14),
+                  ElevatedButton.icon(
+                    onPressed: _loadCounts,
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Retry'),
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md))),
+                  ),
+                ]),
+              ),
+            )
+          else if (_counts != null) ...[
+            _CollectionBanner(total: _counts!.totalCollection),
+            const SizedBox(height: 18),
+            LayoutBuilder(builder: (context, c) {
+              // 3 simple tiles need far less room than the Pattern-D
+              // filter-panel+DataTable layout below — use the lower
+              // `compact` threshold here instead of `medium`, otherwise
+              // real tablets (content width often ~1000-1100px once the
+              // nav rail is subtracted) never get the 3-up row and always
+              // fall back to a stacked column.
+              final wide = c.maxWidth >= AppBreakpoints.compact;
+              final tiles = [
+                _ChannelTile(
+                  icon: Icons.calendar_month_rounded,
+                  iconColor: const Color(0xFF7D3C98),
+                  label: 'OT Appointment',
+                  count: _counts!.otAppointment,
+                  onTap: () => _openChannel('ot_appointment', 'OT Appointment Patients'),
+                ),
+                _ChannelTile(
+                  icon: Icons.directions_walk_rounded,
+                  iconColor: AppColors.primary,
+                  label: 'Walk-in',
+                  count: _counts!.walkin,
+                  onTap: () => _openChannel('walkin', 'Walk-in Patients'),
+                ),
+                _ChannelTile(
+                  icon: Icons.call_rounded,
+                  iconColor: const Color(0xFF117A65),
+                  label: 'Phone Appointment',
+                  count: _counts!.phone,
+                  onTap: () => _openChannel('phone', 'Phone Appointment Patients'),
+                ),
+              ];
+              if (!wide) {
+                return Column(children: [for (final t in tiles) Padding(padding: const EdgeInsets.only(bottom: 12), child: t)]);
+              }
+              return Row(children: [for (final t in tiles) Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 6), child: t))]);
+            }),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Channel UI (Pattern D: persistent filter panel + DataTable) ───────
+
+  Widget _buildChannel() {
     return LayoutBuilder(builder: (context, c) {
       final wide = c.maxWidth >= AppBreakpoints.medium;
       final filterPanel = _FilterPanel(
         alwaysOpen: wide,
         isOpen: _filterOpen,
         filter: _pendingFilter,
-        filterOptions: _filterOptions,
-        filterOptionsLoading: _filterOptionsLoading,
+        filterOptions: _result?.filterOptions,
+        isOtAppointment: _isOtAppointment,
         onToggle: () => setState(() => _filterOpen = !_filterOpen),
         onApply: _applyFilter,
         onClear: _clearFilter,
@@ -187,31 +363,48 @@ class _ReportsScreenState extends State<ReportsScreen> {
         onDoctorChanged: (id) => setState(() => _pendingFilter = _pendingFilter.copyWith(doctorId: id)),
         onLocationChanged: (id) => setState(() => _pendingFilter = _pendingFilter.copyWith(locationId: id)),
         onCaseChanged: (id) => setState(() => _pendingFilter = _pendingFilter.copyWith(caseId: id)),
-        onTypeChanged: (t) => setState(() => _pendingFilter = _pendingFilter.copyWith(type: t)),
-        isReceptionistLocked: _isReceptionistSelected,
         displayDateRange: _displayDateRange(_pendingFilter.dateRange),
+        errorMessage: _result == null ? _error : null,
+        onRetry: () => _load(),
       );
-      final content = _buildContent();
+      final content = _buildChannelContent();
       if (!wide) {
-        return Column(children: [filterPanel, const SizedBox(height: 16), Expanded(child: content)]);
+        return Column(children: [_channelHeaderBar(), const SizedBox(height: 12), filterPanel, const SizedBox(height: 16), Expanded(child: content)]);
       }
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(width: 320, child: filterPanel),
-          const SizedBox(width: 20),
-          Expanded(child: content),
-        ],
-      );
+      return Column(children: [
+        _channelHeaderBar(),
+        const SizedBox(height: 16),
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 320, child: filterPanel),
+              const SizedBox(width: 20),
+              Expanded(child: content),
+            ],
+          ),
+        ),
+      ]);
     });
   }
 
-  Widget _buildContent() {
+  Widget _channelHeaderBar() {
+    return Row(
+      children: [
+        IconButton(
+          tooltip: 'Back to Patient Reports',
+          onPressed: _backToLanding,
+          icon: Icon(Icons.arrow_back_rounded, color: AppColors.primary),
+        ),
+        Text(_channelLabel ?? '', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+      ],
+    );
+  }
+
+  Widget _buildChannelContent() {
     final result = _result;
     return Column(
       children: [
-        _CollectionBanner(total: result?.totalCollection ?? 0.0, isLoading: _loading && result == null),
-        const SizedBox(height: 16),
         Expanded(
           child: Container(
             width: double.infinity,
@@ -244,7 +437,19 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildTableHeader(ReportResult? result) {
+  Widget _caseChip(String label) {
+    final text = label.trim();
+    if (text.isEmpty || text == '-') {
+      return const Text('-', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textSecondary));
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.full)),
+      child: Text(text, style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.primary)),
+    );
+  }
+
+  Widget _buildTableHeader(ReportChannelResult? result) {
     final p = PermissionService.instance;
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 14, 10, 14),
@@ -259,9 +464,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
             Text('Page ${result.meta.currentPage} / ${result.meta.lastPage}', style: TextStyle(fontSize: 12, color: AppColors.textSecondary, fontWeight: FontWeight.w600)),
           ],
           const Spacer(),
-          if (p.can(Perm.reportsExport)) ...[
-            IconButton(tooltip: 'Export Excel', onPressed: () => _export('excel'), icon: Icon(Icons.table_chart_outlined, size: 20, color: AppColors.primary)),
-            IconButton(tooltip: 'Export PDF', onPressed: () => _export('pdf'), icon: Icon(Icons.picture_as_pdf_outlined, size: 20, color: AppColors.primary)),
+          if (p.canAny(const [Perm.reportsExport, Perm.opdReportsExport])) ...[
+            IconButton(tooltip: 'Export Excel', onPressed: _exportingChannel ? null : () => _exportChannel('excel'), icon: Icon(Icons.table_chart_outlined, size: 20, color: AppColors.primary)),
+            IconButton(tooltip: 'Export PDF', onPressed: _exportingChannel ? null : () => _exportChannel('pdf'), icon: Icon(Icons.picture_as_pdf_outlined, size: 20, color: AppColors.primary)),
           ],
           IconButton(
             tooltip: 'Refresh',
@@ -275,9 +480,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildTableBody(ReportResult? result) {
+  Widget _buildTableBody(ReportChannelResult? result) {
     if (_loading && result == null) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList(count: 6, itemHeight: 56);
     }
     if (_error != null && result == null) {
       return Center(
@@ -299,63 +504,68 @@ class _ReportsScreenState extends State<ReportsScreen> {
       );
     }
     if (result == null || result.patients.isEmpty) {
-      return const AppEmptyState(icon: Icons.bar_chart_rounded, message: 'No records found — try adjusting your filters');
+      return const AppEmptyState(icon: Icons.bar_chart_rounded, message: 'No patients found for this channel — try adjusting your filters');
     }
+    // DataTable shrink-wraps to its own content width by default — when
+    // there are few rows/short values it leaves a large dead gap on the
+    // right instead of filling the pane. ConstrainedBox(minWidth: ...)
+    // forces it to at least fill the container, while still growing wider
+    // (and scrolling) when there are more columns than fit.
     return Scrollbar(
       child: SingleChildScrollView(
-        child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: DataTable(
-            columns: const [
-              DataColumn(label: Text('Code')),
-              DataColumn(label: Text('Name')),
-              DataColumn(label: Text('Date')),
-              DataColumn(label: Text('Age')),
-              DataColumn(label: Text('Type')),
-              DataColumn(label: Text('Doctor')),
-              DataColumn(label: Text('Case Type')),
-              DataColumn(label: Text('Receptionist')),
-              DataColumn(label: Text('Location')),
-              DataColumn(label: Text('Fee')),
-            ],
-            rows: result.patients.map((p) {
-              final isWalkin = p.typeLabel == 'Walk-in';
-              return DataRow(cells: [
-                DataCell(Text(p.patientCode)),
-                DataCell(Text(p.fullName)),
-                DataCell(Text(p.appointmentDate)),
-                DataCell(Text(p.age != null ? '${p.age}' : '-')),
-                DataCell(_TypeTag(label: p.typeLabel, isWalkin: isWalkin)),
-                DataCell(Text(p.doctorName ?? '-')),
-                DataCell(Text(p.caseTypeLabel)),
-                DataCell(Text(p.receptionistName ?? '-')),
-                DataCell(Text(p.locationCity ?? '-')),
-                DataCell(Text(isWalkin && p.caseFee > 0 ? '₹${p.caseFee.toStringAsFixed(2)}' : '-')),
-              ]);
-            }).toList(),
-          ),
-        ),
+        child: LayoutBuilder(builder: (context, constraints) {
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: constraints.maxWidth),
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.all(AppColors.primary),
+                headingTextStyle: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
+                dataTextStyle: const TextStyle(color: AppColors.textPrimary, fontSize: 14, fontWeight: FontWeight.w600),
+                headingRowHeight: 44,
+                dataRowMinHeight: 48,
+                dataRowMaxHeight: 56,
+                columnSpacing: 22,
+                horizontalMargin: 16,
+                dividerThickness: 0,
+                columns: [
+                  const DataColumn(label: Text('Code')),
+                  const DataColumn(label: Text('Name')),
+                  const DataColumn(label: Text('Date / Time')),
+                  const DataColumn(label: Text('Contact No')),
+                  const DataColumn(label: Text('Age')),
+                  DataColumn(label: Text(_isOtAppointment ? 'Assistant' : 'Doctor')),
+                  const DataColumn(label: Text('Case Type')),
+                  const DataColumn(label: Text('Receptionist')),
+                  const DataColumn(label: Text('City')),
+                  const DataColumn(label: Text('Fee')),
+                ],
+                rows: [
+                  for (var i = 0; i < result.patients.length; i++)
+                    DataRow(
+                      color: WidgetStateProperty.all(i.isEven ? Colors.white : const Color(0xFFF3F8FC)),
+                      cells: [
+                        DataCell(Text(result.patients[i].patientCode, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary))),
+                        DataCell(Text(result.patients[i].fullName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary))),
+                        DataCell(Text(result.patients[i].appointmentDate)),
+                        DataCell(Text(result.patients[i].contactNo ?? '-')),
+                        DataCell(Text(result.patients[i].age != null ? '${result.patients[i].age}' : '-')),
+                        DataCell(Text(result.patients[i].doctorName ?? '-')),
+                        DataCell(_caseChip(result.patients[i].caseTypeLabel)),
+                        DataCell(Text(result.patients[i].receptionistName ?? '-')),
+                        DataCell(Text(result.patients[i].locationCity ?? '-')),
+                        // Case fees shown for every row per web's channel.blade.php
+                        // (unconditional money() column) — not gated on walk-in type.
+                        DataCell(Text('${currentCurrencySymbol()}${result.patients[i].caseFee.toStringAsFixed(2)}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Color(0xFF0D9488)))),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
-    );
-  }
-}
-
-// ── Type tag ─────────────────────────────────────────────────────────────
-
-class _TypeTag extends StatelessWidget {
-  final String label;
-  final bool isWalkin;
-
-  const _TypeTag({required this.label, required this.isWalkin});
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isWalkin ? AppColors.green : AppColors.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.xl)),
-      child: Text(label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: color)),
     );
   }
 }
@@ -364,9 +574,8 @@ class _TypeTag extends StatelessWidget {
 
 class _CollectionBanner extends StatelessWidget {
   final double total;
-  final bool isLoading;
 
-  const _CollectionBanner({required this.total, required this.isLoading});
+  const _CollectionBanner({required this.total});
 
   @override
   Widget build(BuildContext context) {
@@ -390,16 +599,67 @@ class _CollectionBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Walk-in Collection', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
+                const Text('Total Collection (Walk-in)', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 3),
-                isLoading
-                    ? const SizedBox(width: 100, height: 22, child: LinearProgressIndicator(backgroundColor: Colors.white24, color: Colors.white))
-                    : Text('₹${total.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
+                Text('${currentCurrencySymbol()}${total.toStringAsFixed(2)}', style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
               ],
             ),
           ),
-          Text('Current page', style: TextStyle(color: Colors.white.withValues(alpha: 0.65), fontSize: 11, fontWeight: FontWeight.w600)),
         ],
+      ),
+    );
+  }
+}
+
+// ── Channel tile ────────────────────────────────────────────────────────
+
+class _ChannelTile extends StatelessWidget {
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+  final int count;
+  final VoidCallback onTap;
+
+  const _ChannelTile({required this.icon, required this.iconColor, required this.label, required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    // Container had no width constraint, so when this tile sits in a plain
+    // Column (narrow layout, no Expanded/Row around it) it shrink-wrapped to
+    // its own content width and centered — a small floating pill instead of
+    // a full-width row item. SizedBox(width: double.infinity) forces it to
+    // fill whatever the parent gives it either way.
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppRadius.lg),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.md)),
+                child: Icon(icon, color: iconColor, size: 26),
+              ),
+              const SizedBox(height: 14),
+              Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.textPrimary)),
+              const SizedBox(height: 4),
+              Text('$count', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: iconColor)),
+            ],
+          ),
+        ),
+      ),
       ),
     );
   }
@@ -412,7 +672,7 @@ class _FilterPanel extends StatelessWidget {
   final bool isOpen;
   final ReportFilter filter;
   final ReportFilterOptions? filterOptions;
-  final bool filterOptionsLoading;
+  final bool isOtAppointment;
   final VoidCallback onToggle;
   final VoidCallback onApply;
   final VoidCallback onClear;
@@ -422,16 +682,16 @@ class _FilterPanel extends StatelessWidget {
   final ValueChanged<int?> onDoctorChanged;
   final ValueChanged<int?> onLocationChanged;
   final ValueChanged<int?> onCaseChanged;
-  final ValueChanged<String?> onTypeChanged;
-  final bool isReceptionistLocked;
   final String displayDateRange;
+  final String? errorMessage;
+  final VoidCallback onRetry;
 
   const _FilterPanel({
     required this.alwaysOpen,
     required this.isOpen,
     required this.filter,
     required this.filterOptions,
-    required this.filterOptionsLoading,
+    required this.isOtAppointment,
     required this.onToggle,
     required this.onApply,
     required this.onClear,
@@ -441,9 +701,9 @@ class _FilterPanel extends StatelessWidget {
     required this.onDoctorChanged,
     required this.onLocationChanged,
     required this.onCaseChanged,
-    required this.onTypeChanged,
-    required this.isReceptionistLocked,
     required this.displayDateRange,
+    required this.errorMessage,
+    required this.onRetry,
   });
 
   int get _activeCount {
@@ -453,9 +713,40 @@ class _FilterPanel extends StatelessWidget {
     if (filter.doctorId != null) c++;
     if (filter.locationId != null) c++;
     if (filter.caseId != null) c++;
-    if (filter.type != null) c++;
     return c;
   }
+
+  // Filter options ride on the same fetch as the report data — if that
+  // fetch fails, filterOptions stays null forever and this panel used to
+  // spin indefinitely with no way out. Show the real error + a retry
+  // instead of an infinite loader.
+  Widget _buildLoading() => const AppSkeletonList(count: 4, itemHeight: 48, padding: EdgeInsets.zero);
+
+  Widget _buildError() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.error_outline_rounded, size: 28, color: AppColors.textSecondary),
+          const SizedBox(height: 10),
+          Text(
+            errorMessage ?? 'Failed to load filters',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(Icons.refresh_rounded, size: 16),
+              label: const Text('Retry'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.primary,
+                side: BorderSide(color: AppColors.primaryA10),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+          ),
+        ],
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -481,7 +772,7 @@ class _FilterPanel extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      hasActive ? 'Filters Applied' : 'Filter Report',
+                      hasActive ? 'Filters Applied' : 'Report Filters',
                       style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: hasActive ? AppColors.primary : AppColors.textPrimary),
                     ),
                   ),
@@ -503,9 +794,9 @@ class _FilterPanel extends StatelessWidget {
             Divider(height: 1, color: AppColors.primaryA10),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-              child: filterOptionsLoading
-                  ? Center(child: Padding(padding: const EdgeInsets.all(12), child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 2)))
-                  : _buildForm(),
+              child: filterOptions != null
+                  ? _buildForm()
+                  : (errorMessage != null ? _buildError() : _buildLoading()),
             ),
           ],
         ],
@@ -515,12 +806,13 @@ class _FilterPanel extends StatelessWidget {
 
   Widget _buildForm() {
     final opts = filterOptions;
+    final doctorOrAssistantOptions = isOtAppointment ? (opts?.assistants ?? []) : (opts?.doctors ?? []);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const _FilterLabel('Date Range'),
         const SizedBox(height: 6),
-        GestureDetector(
+        PressScaleWrapper(
           onTap: onPickDateRange,
           child: Container(
             width: double.infinity,
@@ -544,44 +836,17 @@ class _FilterPanel extends StatelessWidget {
         const SizedBox(height: 6),
         _DropdownField<int>(hint: 'All Receptionists', value: filter.receptionistId, items: (opts?.receptionists ?? []).map((r) => DropdownMenuItem(value: r.id, child: Text(r.name))).toList(), onChanged: onReceptionistChanged),
         const SizedBox(height: 14),
-        const _FilterLabel('Doctor'),
+        _FilterLabel(isOtAppointment ? 'Assistant' : 'Doctor'),
         const SizedBox(height: 6),
-        _DropdownField<int>(hint: 'All Doctors', value: filter.doctorId, items: (opts?.doctors ?? []).map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(), onChanged: onDoctorChanged),
+        _DropdownField<int>(hint: isOtAppointment ? 'All Assistants' : 'All Doctors', value: filter.doctorId, items: doctorOrAssistantOptions.map((d) => DropdownMenuItem(value: d.id, child: Text(d.name))).toList(), onChanged: onDoctorChanged),
         const SizedBox(height: 14),
-        Row(children: [
-          const _FilterLabel('City'),
-          if (isReceptionistLocked) ...[const SizedBox(width: 6), Icon(Icons.lock_outline_rounded, size: 13, color: AppColors.textSecondary)],
-        ]),
+        const _FilterLabel('City / Location'),
         const SizedBox(height: 6),
-        IgnorePointer(
-          ignoring: isReceptionistLocked,
-          child: Opacity(
-            opacity: isReceptionistLocked ? 0.42 : 1.0,
-            child: _DropdownField<int>(hint: 'All Cities', value: filter.locationId, items: (opts?.locations ?? []).map((l) => DropdownMenuItem(value: l.id, child: Text(l.name))).toList(), onChanged: onLocationChanged),
-          ),
-        ),
+        _DropdownField<int>(hint: 'All Cities', value: filter.locationId, items: (opts?.locations ?? []).map((l) => DropdownMenuItem(value: l.id, child: Text(l.name))).toList(), onChanged: onLocationChanged),
         const SizedBox(height: 14),
-        Row(children: [
-          const _FilterLabel('Case Type'),
-          if (isReceptionistLocked) ...[const SizedBox(width: 6), Icon(Icons.lock_outline_rounded, size: 13, color: AppColors.textSecondary)],
-        ]),
+        const _FilterLabel('Case Type'),
         const SizedBox(height: 6),
-        IgnorePointer(
-          ignoring: isReceptionistLocked,
-          child: Opacity(
-            opacity: isReceptionistLocked ? 0.42 : 1.0,
-            child: _DropdownField<int>(hint: 'All Case Types', value: filter.caseId, items: (opts?.caseTypes ?? []).map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(), onChanged: onCaseChanged),
-          ),
-        ),
-        const SizedBox(height: 14),
-        const _FilterLabel('Patient Type'),
-        const SizedBox(height: 6),
-        _DropdownField<String>(
-          hint: 'All Types',
-          value: filter.type,
-          items: const [DropdownMenuItem(value: 'walkin', child: Text('Walk-in')), DropdownMenuItem(value: 'phone', child: Text('Phone'))],
-          onChanged: onTypeChanged,
-        ),
+        _DropdownField<int>(hint: 'All Case Types', value: filter.caseId, items: (opts?.caseTypes ?? []).map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(), onChanged: onCaseChanged),
         const SizedBox(height: 18),
         Row(
           children: [
@@ -599,7 +864,7 @@ class _FilterPanel extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onApply,
                 icon: const Icon(Icons.search_rounded, size: 16),
-                label: const Text('Apply Filter'),
+                label: const Text('Generate Report'),
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(vertical: 12), elevation: 0),
               ),
             ),

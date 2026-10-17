@@ -17,10 +17,7 @@ class RolesService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load roles: ${resp.statusCode}');
-    }
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     final data = body['data'] as List? ?? [];
     return data
         .map((e) => RoleModel.fromJson(e as Map<String, dynamic>))
@@ -35,10 +32,7 @@ class RolesService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load role: ${resp.statusCode}');
-    }
-    final body = jsonDecode(resp.body) as Map<String, dynamic>;
+    final body = parseApiResponse(resp);
     return RoleModel.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -50,11 +44,7 @@ class RolesService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      throw Exception('Failed to load permissions: ${resp.statusCode}');
-    }
-    return AllPermissionsResult.fromJson(
-        jsonDecode(resp.body) as Map<String, dynamic>);
+    return AllPermissionsResult.fromJson(parseApiResponse(resp));
   }
 
   Future<void> createRole({
@@ -76,10 +66,7 @@ class RolesService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 201) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] as String? ?? 'Failed to create role');
-    }
+    parseApiResponse(resp);
   }
 
   Future<void> updateRole({
@@ -102,10 +89,7 @@ class RolesService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] as String? ?? 'Failed to update role');
-    }
+    parseApiResponse(resp);
   }
 
   Future<void> deleteRole(int id) async {
@@ -116,9 +100,6 @@ class RolesService with AuthenticatedService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    if (resp.statusCode != 200) {
-      final body = jsonDecode(resp.body) as Map<String, dynamic>;
-      throw Exception(body['message'] as String? ?? 'Failed to delete role');
-    }
+    parseApiResponse(resp);
   }
 }

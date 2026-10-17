@@ -1,15 +1,21 @@
+import '../utils/date_format.dart';
 import 'package:flutter/material.dart';
+import '../widgets/app_refresh_indicator.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
+import '../widgets/app_record_card.dart';
+import '../widgets/skeleton.dart';
 import '../models/auth_models.dart';
 import '../models/patient_models.dart';
 import '../models/share_history_models.dart';
+import '../services/patient_service.dart';
 import '../services/share_history_service.dart';
 import '../utils/app_route.dart';
 import 'patient_history_screen.dart';
+import '../utils/app_date_picker.dart';
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 
@@ -77,7 +83,7 @@ class _ShareHistoryScreenState extends State<ShareHistoryScreen>
         children: [
           _PatientHistoryTab(hospital: widget.hospital, user: widget.user),
           _HospitalHistoryTab(hospital: widget.hospital),
-          _RequestsTab(hospital: widget.hospital),
+          _RequestsTab(hospital: widget.hospital, user: widget.user),
         ],
       ),
     );
@@ -170,7 +176,7 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: () => _search(page: _page),
       color: AppColors.primary,
       child: ListView(
@@ -191,10 +197,7 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
           ),
           const SizedBox(height: 14),
           if (_loading)
-            Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ))
+            const AppSkeletonList()
           else if (_error != null)
             AppErrorState(message: _error!, onRetry: () => _search(page: _page))
           else if (_searched && _patients.isEmpty)
@@ -217,29 +220,50 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab>
     );
   }
 
-  void _onView(HistoryPatient p) {
+  // Bug fix (2026-10-05): this used to build a Patient from only the handful
+  // of fields HistoryPatient parses (id/code/name/age/contact), so the
+  // History screen's Info Grid — Doctor, Appointment Date, City, Case Type,
+  // Referred By, etc. — rendered blank even though that data already exists
+  // on the patient's real record. `fetchOne()` hits the same tenant-scoped
+  // `PatientApiController::show()` the normal Patients screen already uses,
+  // so this patient (an own-tenant patient — the partner-hospital case below
+  // is a different, not-yet-built cross-tenant flow) comes back fully
+  // populated.
+  Future<void> _onView(HistoryPatient p) async {
     if (p.isOwn) {
-      final patient = Patient(
-        id:          p.id,
-        patientCode: p.patientCode,
-        firstName:   p.firstName,
-        lastName:    p.lastName,
-        fullName:    p.fullName,
-        age:         p.age,
-        contactNo:   p.contactNo,
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
       );
-      Navigator.push(
-        context,
-        appRoute(PatientHistoryScreen(
-          user:     widget.user,
-          hospital: widget.hospital,
-          patient:  patient,
-        )),
-      );
+      try {
+        final patient = await PatientService.instance.fetchOne(p.id);
+        if (!mounted) return;
+        Navigator.pop(context);
+        Navigator.push(
+          context,
+          appRoute(PatientHistoryScreen(
+            user:     widget.user,
+            hospital: widget.hospital,
+            patient:  patient,
+          )),
+        );
+      } catch (e) {
+        if (!mounted) return;
+        Navigator.pop(context);
+        showAppSnackBar(
+          context,
+          e.toString().replaceFirst('Exception: ', ''),
+          isError: true,
+        );
+      }
     } else {
       Navigator.push(
         context,
         appRoute(_PartnerPatientsScreen(
+          user:            widget.user,
           hospital:        widget.hospital,
           partnerTenantId: p.tenantId,
           partnerName:     p.tenantName ?? 'Partner Hospital',
@@ -333,7 +357,7 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: () => _load(page: _page),
       color: AppColors.primary,
       child: ListView(
@@ -372,10 +396,7 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
           ),
           const SizedBox(height: 14),
           if (_loading)
-            Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ))
+            const AppSkeletonList()
           else if (_error != null)
             AppErrorState(message: _error!, onRetry: () => _load(page: _page))
           else if (_hospitals.isEmpty)
@@ -472,8 +493,9 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab>
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _RequestsTab extends StatefulWidget {
+  final UserInfo user;
   final HospitalInfo hospital;
-  const _RequestsTab({required this.hospital});
+  const _RequestsTab({required this.user, required this.hospital});
 
   @override
   State<_RequestsTab> createState() => _RequestsTabState();
@@ -511,7 +533,7 @@ class _RequestsTabState extends State<_RequestsTab>
     super.build(context);
 
     if (_loading) {
-      return Center(child: CircularProgressIndicator(color: AppColors.primary));
+      return const AppSkeletonList();
     }
     if (_error != null) {
       return AppErrorState(message: _error!, onRetry: _load);
@@ -519,7 +541,7 @@ class _RequestsTabState extends State<_RequestsTab>
 
     final data = _data!;
 
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       onRefresh: _load,
       color: AppColors.primary,
       child: ListView(
@@ -537,6 +559,7 @@ class _RequestsTabState extends State<_RequestsTab>
               onViewHistory: () => Navigator.push(
                 context,
                 appRoute(_PartnerPatientsScreen(
+                  user: widget.user,
                   hospital: widget.hospital,
                   partnerTenantId: c.partner.id,
                   partnerName:     c.partner.name,
@@ -574,6 +597,7 @@ class _RequestsTabState extends State<_RequestsTab>
                   ? () => Navigator.push(
                       context,
                       appRoute(_PartnerPatientsScreen(
+                        user: widget.user,
                         hospital: widget.hospital,
                         partnerTenantId: req.toTenant.id,
                         partnerName:     req.toTenant.name,
@@ -631,11 +655,13 @@ class _RequestsTabState extends State<_RequestsTab>
 // ═══════════════════════════════════════════════════════════════════════════════
 
 class _PartnerPatientsScreen extends StatefulWidget {
+  final UserInfo user;
   final HospitalInfo hospital;
   final int partnerTenantId;
   final String partnerName;
 
   const _PartnerPatientsScreen({
+    required this.user,
     required this.hospital,
     required this.partnerTenantId,
     required this.partnerName,
@@ -696,6 +722,33 @@ class _PartnerPatientsScreenState extends State<_PartnerPatientsScreen> {
     }
   }
 
+  // Bug fix (2026-10-05): web's equivalent list (`partner_history.blade.php`)
+  // has a View action per row; this one never did — the API this app calls
+  // never had a cross-tenant history endpoint for it to call. Now that
+  // `ShareHistoryService.fetchPartnerPatientHistory()` exists, wire it up
+  // the same way the own-tenant path does.
+  void _onView(HistoryPatient p) {
+    final patient = Patient(
+      id:          p.id,
+      patientCode: p.patientCode,
+      firstName:   p.firstName,
+      lastName:    p.lastName,
+      fullName:    p.fullName,
+      age:         p.age,
+      contactNo:   p.contactNo,
+    );
+    Navigator.push(
+      context,
+      appRoute(PatientHistoryScreen(
+        user:          widget.user,
+        hospital:      widget.hospital,
+        patient:       patient,
+        historyLoader: (_) =>
+            ShareHistoryService.instance.fetchPartnerPatientHistory(p.allPatientIds),
+      )),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -741,16 +794,13 @@ class _PartnerPatientsScreenState extends State<_PartnerPatientsScreen> {
           ),
           const SizedBox(height: 14),
           if (_loading)
-            Center(child: Padding(
-              padding: EdgeInsets.all(40),
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ))
+            const AppSkeletonList()
           else if (_error != null)
             AppErrorState(message: _error!, onRetry: () => _load(page: _page))
           else if (_patients.isEmpty)
             const AppEmptyState(message: 'No patient records found.')
           else ...[
-            ..._patients.map((p) => _HistoryPatientCard(patient: p, onView: null)),
+            ..._patients.map((p) => _HistoryPatientCard(patient: p, onView: () => _onView(p))),
             if (_meta != null && _meta!.lastPage > 1)
               _SimplePagination(
                 current: _meta!.currentPage,
@@ -946,7 +996,7 @@ class _DateFilterField extends StatelessWidget {
           readOnly: true,
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
           onTap: () async {
-            final picked = await showDatePicker(
+            final picked = await showAppDatePicker(
               context: context,
               initialDate: DateTime.now(),
               firstDate: DateTime(2020),
@@ -988,6 +1038,8 @@ class _DateFilterField extends StatelessWidget {
 
 // ── History Patient Card ──────────────────────────────────────────────────────
 
+// Migrated onto the shared AppRecordCard/AppRecordField icon-badge grid —
+// see RECORD_CARD_UNIFICATION_PLAN.md Tier 1 §2.
 class _HistoryPatientCard extends StatelessWidget {
   final HistoryPatient patient;
   final VoidCallback? onView;
@@ -997,70 +1049,21 @@ class _HistoryPatientCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = patient;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(AppRadius.lg),
-        border: Border.all(color: AppColors.primaryA10),
-        boxShadow: [BoxShadow(color: AppColors.primaryA06, blurRadius: 8, offset: const Offset(0, 2))],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _HospBadge(isOwn: p.isOwn, name: p.tenantName),
-                const SizedBox(width: 8),
-                Text(
-                  'MRD: ${p.patientCode}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primary,
-                    fontFamily: 'monospace',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              p.fullName,
-              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, color: AppColors.primary),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Icon(Icons.person_outline_rounded, size: 13, color: Colors.grey[400]),
-                const SizedBox(width: 4),
-                Text(
-                  p.doctorName ?? '—',
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-                Text('  ·  ', style: TextStyle(color: Colors.grey[400])),
-                Icon(Icons.calendar_today_rounded, size: 13, color: Colors.grey[400]),
-                const SizedBox(width: 4),
-                Text(
-                  _formatDate(p.appointmentDate),
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Row(
-              children: [
-                Icon(Icons.phone_outlined, size: 13, color: Colors.grey[400]),
-                const SizedBox(width: 4),
-                Text(p.contactNo, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                Text('  ·  ', style: TextStyle(color: Colors.grey[400])),
-                Text('${p.age}y', style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-              ],
-            ),
-            if (onView != null) ...[
-              const SizedBox(height: 10),
-              Align(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: AppRecordCard(
+        title: p.fullName,
+        subtitle: 'MRD: ${p.patientCode}',
+        trailing: _HospBadge(isOwn: p.isOwn, name: p.tenantName),
+        fields: [
+          AppRecordField('Doctor', p.doctorName ?? '—', icon: Icons.medical_services_outlined, color: RecordFieldColors.doctor),
+          AppRecordField('Appointment Date', _formatDate(p.appointmentDate), icon: Icons.calendar_today_outlined, color: RecordFieldColors.date),
+          AppRecordField('Phone', p.contactNo, icon: Icons.call_outlined, color: RecordFieldColors.phone),
+          AppRecordField('Age', '${p.age}y', icon: Icons.cake_outlined, color: RecordFieldColors.age),
+        ],
+        actions: onView == null
+            ? null
+            : Align(
                 alignment: Alignment.centerRight,
                 child: TextButton.icon(
                   onPressed: onView,
@@ -1074,9 +1077,6 @@ class _HistoryPatientCard extends StatelessWidget {
                   ),
                 ),
               ),
-            ],
-          ],
-        ),
       ),
     );
   }
@@ -1281,10 +1281,7 @@ class _HospitalDetailSheetState extends State<_HospitalDetailSheet> {
           const SizedBox(height: 16),
           Text(widget.hospitalName, style: TextStyle(fontWeight: FontWeight.w900, fontSize: 17, color: AppColors.primary)),
           if (_loading)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
-            )
+            const AppSkeletonList()
           else if (_error != null)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 20),
@@ -1750,13 +1747,4 @@ class _PagBtn extends StatelessWidget {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-String _formatDate(String iso) {
-  if (iso.isEmpty) return '—';
-  try {
-    final d = DateTime.parse(iso);
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return '${d.day} ${months[d.month - 1]} ${d.year}';
-  } catch (_) {
-    return iso;
-  }
-}
+String _formatDate(String iso) => iso.isEmpty ? '—' : formatDateString(iso);

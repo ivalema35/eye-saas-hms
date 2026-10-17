@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import '../widgets/app_error_state.dart';
+import '../widgets/app_refresh_indicator.dart';
+import 'package:flutter/services.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
+import '../constants/permissions.dart';
+import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
+import '../widgets/skeleton.dart';
 import '../services/ot_inventory_service.dart';
 import '../models/ot_inventory_models.dart';
 
@@ -15,13 +21,21 @@ class OtLensPowerMasterScreen extends StatefulWidget {
 }
 
 class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
+  final _p = PermissionService.instance;
   List<LensPowerItem> _all = [];
   bool _loading = false;
   String? _error;
   String _query = '';
 
-  List<LensPowerItem> get _filtered =>
-      _query.isEmpty ? _all : _all.where((i) => i.value.toLowerCase().contains(_query.toLowerCase())).toList();
+  bool get _canAdd => _p.can(Perm.masterOtLensPowerAdd);
+  bool get _canEdit => _p.can(Perm.masterOtLensPowerEdit);
+  bool get _canDelete => _p.can(Perm.masterOtLensPowerDelete);
+
+  List<LensPowerItem> get _filtered {
+    if (_query.isEmpty) return _all;
+    final q = _query.toLowerCase();
+    return _all.where((i) => i.displayLabel.toLowerCase().contains(q) || i.editText.contains(q)).toList();
+  }
 
   @override
   void initState() {
@@ -45,7 +59,7 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
         title: const Text('Delete?', style: TextStyle(fontWeight: FontWeight.w800)),
-        content: Text('Delete "${item.value}"? This cannot be undone.'),
+        content: Text('Delete "${item.displayLabel}"? This cannot be undone.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Delete', style: TextStyle(color: AppColors.red, fontWeight: FontWeight.w700))),
@@ -71,11 +85,20 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
       builder: (_) => _LensPowerSheet(
         item: item,
         accentColor: widget.accentColor,
-        onSave: (value, isFavourite) async {
+        onSave: (power, isFavourite, isActive) async {
           if (item == null) {
-            await OtInventoryService.instance.createLensPower(value, isFavourite);
+            await OtInventoryService.instance.createLensPower(
+              power,
+              isFavourite: isFavourite,
+              isActive: isActive,
+            );
           } else {
-            await OtInventoryService.instance.updateLensPower(item.id, value, isFavourite);
+            await OtInventoryService.instance.updateLensPower(
+              item.id,
+              power,
+              isFavourite: isFavourite,
+              isActive: isActive,
+            );
           }
           await _load();
         },
@@ -92,7 +115,7 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
         elevation: 0,
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         title: const Text('Lens Powers', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: -0.2)),
-        actions: [IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
+        actions: [if (_canAdd) IconButton(icon: const Icon(Icons.add_circle_outline_rounded, color: Colors.white), tooltip: 'Add', onPressed: () => _openSheet())],
       ),
       body: Column(children: [_buildSearch(), Expanded(child: _buildBody())]),
     );
@@ -114,20 +137,9 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
   }
 
   Widget _buildBody() {
-    if (_loading) return Center(child: CircularProgressIndicator(color: AppColors.primary));
+    if (_loading) return const AppSkeletonList();
     if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Icon(Icons.error_outline_rounded, size: 48, color: AppColors.red.withValues(alpha: 0.6)),
-            const SizedBox(height: 12),
-            Text(_error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF64748B))),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(onPressed: _load, icon: const Icon(Icons.refresh_rounded), label: const Text('Retry'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white)),
-          ]),
-        ),
-      );
+      return AppErrorState(message: _error!, onRetry: _load);
     }
     final items = _filtered;
     if (items.isEmpty) {
@@ -142,7 +154,7 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
         ),
       ]);
     }
-    return RefreshIndicator(
+    return AppRefreshIndicator(
       color: AppColors.primary,
       onRefresh: _load,
       child: ListView.builder(
@@ -164,10 +176,21 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
                   Container(width: 30, height: 30, alignment: Alignment.center, decoration: BoxDecoration(color: widget.accentColor.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.sm)), child: Text('${i + 1}', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: widget.accentColor))),
                   const SizedBox(width: 12),
                 ],
-                Expanded(child: Text(item.value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkNavy))),
-                InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
-                const SizedBox(width: 2),
-                InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
+                Expanded(child: Text(item.displayLabel, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkNavy))),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: (item.isActive ? AppColors.green : const Color(0xFF7F8C8D)).withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    item.isActive ? 'Active' : 'Inactive',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: item.isActive ? AppColors.green : const Color(0xFF7F8C8D)),
+                  ),
+                ),
+                if (_canEdit) InkWell(onTap: () => _openSheet(item: item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.edit_outlined, size: 18, color: Color(0xFFE67E22)))),
+                if (_canDelete) const SizedBox(width: 2),
+                if (_canDelete) InkWell(onTap: () => _delete(item), borderRadius: BorderRadius.circular(AppRadius.sm), child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red))),
               ]),
             ),
           );
@@ -180,7 +203,7 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
 class _LensPowerSheet extends StatefulWidget {
   final LensPowerItem? item;
   final Color accentColor;
-  final Future<void> Function(String value, bool isFavourite) onSave;
+  final Future<void> Function(double power, bool isFavourite, bool isActive) onSave;
 
   const _LensPowerSheet({required this.item, required this.accentColor, required this.onSave});
 
@@ -189,32 +212,49 @@ class _LensPowerSheet extends StatefulWidget {
 }
 
 class _LensPowerSheetState extends State<_LensPowerSheet> {
-  late final TextEditingController _valueCtrl;
+  late final TextEditingController _powerCtrl;
   late bool _isFavourite;
+  late bool _isActive;
   bool _saving = false;
-  String? _valueError;
+  String? _powerError;
 
   @override
   void initState() {
     super.initState();
-    _valueCtrl = TextEditingController(text: widget.item?.value ?? '');
+    _powerCtrl = TextEditingController(text: widget.item?.editText ?? '');
     _isFavourite = widget.item?.isFavourite ?? false;
+    // Web add form: Active checked by default.
+    _isActive = widget.item?.isActive ?? true;
   }
 
   @override
   void dispose() {
-    _valueCtrl.dispose();
+    _powerCtrl.dispose();
     super.dispose();
   }
 
+  double? _parsePower(String raw) {
+    final cleaned = raw.trim().replaceAll(RegExp(r'[^0-9.\-]'), '');
+    return double.tryParse(cleaned);
+  }
+
   Future<void> _save() async {
-    final value = _valueCtrl.text.trim();
-    setState(() => _valueError = value.isEmpty ? 'Power value is required' : null);
-    if (_valueError != null) return;
+    final raw = _powerCtrl.text.trim();
+    final power = _parsePower(raw);
+    setState(() {
+      _powerError = raw.isEmpty
+          ? 'Power is required'
+          : power == null
+              ? 'Enter a valid number'
+              : (power < -99.99 || power > 999.99)
+                  ? 'Must be between -99.99 and 999.99'
+                  : null;
+    });
+    if (_powerError != null) return;
 
     setState(() => _saving = true);
     try {
-      await widget.onSave(value, _isFavourite);
+      await widget.onSave(power!, _isFavourite, _isActive);
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -245,11 +285,14 @@ class _LensPowerSheetState extends State<_LensPowerSheet> {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
             child: TextFormField(
-              controller: _valueCtrl,
+              controller: _powerCtrl,
               autofocus: true,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]'))],
               decoration: InputDecoration(
-                labelText: 'Power (e.g. +10.0D) *',
-                errorText: _valueError,
+                labelText: 'Power (D) *',
+                hintText: 'e.g. 10.50',
+                errorText: _powerError,
                 filled: true,
                 fillColor: const Color(0xFFF0F6FB),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppRadius.md), borderSide: BorderSide.none),
@@ -258,14 +301,25 @@ class _LensPowerSheetState extends State<_LensPowerSheet> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 16, 0),
+            padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
             child: SwitchListTile(
               value: _isFavourite,
               onChanged: (v) => setState(() => _isFavourite = v),
               activeThumbColor: Colors.amber,
               activeTrackColor: Colors.amber.withValues(alpha: 0.4),
               title: const Text('Favourite', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkNavy)),
-              subtitle: const Text('Shown first in the lens power picker', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+              subtitle: const Text('Mark as Favourite', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+            child: SwitchListTile(
+              value: _isActive,
+              onChanged: (v) => setState(() => _isActive = v),
+              activeThumbColor: widget.accentColor,
+              title: const Text('Active', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkNavy)),
+              subtitle: Text(_isActive ? 'Shown as available' : 'Marked inactive', style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
               contentPadding: const EdgeInsets.symmetric(horizontal: 8),
             ),
           ),

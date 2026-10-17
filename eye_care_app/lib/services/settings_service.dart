@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../config/app_config.dart';
-import 'auth_service.dart';
+import 'base_service.dart';
 
 // ── Hospital Settings Data ────────────────────────────────────────────────────
 
@@ -12,6 +12,8 @@ class HospitalSettingsData {
   final String hospitalPhone;
   final String hospitalAddress;
   final String hospitalLogoUrl;
+  final String hospitalLogoNobgUrl;
+  final String logoSidebarStyle;
   // Location names
   final String hospitalCountry;
   final String hospitalState;
@@ -52,6 +54,8 @@ class HospitalSettingsData {
     required this.hospitalPhone,
     required this.hospitalAddress,
     required this.hospitalLogoUrl,
+    this.hospitalLogoNobgUrl = '',
+    this.logoSidebarStyle = 'white',
     required this.hospitalCountry,
     required this.hospitalState,
     required this.hospitalDistrict,
@@ -85,6 +89,8 @@ class HospitalSettingsData {
         hospitalPhone:       j['hospital_phone']    as String? ?? '',
         hospitalAddress:     j['hospital_address']  as String? ?? '',
         hospitalLogoUrl:     j['hospital_logo_url'] as String? ?? '',
+        hospitalLogoNobgUrl: j['hospital_logo_nobg_url'] as String? ?? '',
+        logoSidebarStyle:    j['logo_sidebar_style'] as String? ?? 'white',
         hospitalCountry:     j['hospital_country']  as String? ?? '',
         hospitalCountryId:   (j['hospital_country_id'] as num?)?.toInt(),
         hospitalState:       j['hospital_state']    as String? ?? '',
@@ -156,18 +162,9 @@ class LocationTimezone {
 
 // ── Settings Service ──────────────────────────────────────────────────────────
 
-class SettingsService {
+class SettingsService with AuthenticatedService {
   SettingsService._();
   static final SettingsService instance = SettingsService._();
-
-  Future<Map<String, String>> _headers() async {
-    final token = await AuthService.instance.getStoredToken();
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
 
   // ── Settings CRUD ───────────────────────────────────────────────────────────
 
@@ -175,14 +172,11 @@ class SettingsService {
     final res = await http
         .get(
           Uri.parse('${AppConfig.hospitalApiUrl}/settings'),
-          headers: await _headers(),
+          headers: await headers,
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Failed to load settings (${res.statusCode})');
-    }
+    final body = parseApiResponse(res);
     return HospitalSettingsData.fromJson(body['data'] as Map<String, dynamic>);
   }
 
@@ -204,6 +198,7 @@ class SettingsService {
     required int paginationLimit,
     required int defaultDilationTime,
     required Map<String, int> waitThresholds,
+    String? logoSidebarStyle,
   }) async {
     final payload = <String, dynamic>{
       'hospital_name':         hospitalName,
@@ -223,46 +218,34 @@ class SettingsService {
       'pagination_limit':      paginationLimit,
       'default_dilation_time': defaultDilationTime,
       ...waitThresholds,
+      if (logoSidebarStyle != null) 'logo_sidebar_style': logoSidebarStyle,
     };
 
     final res = await http
         .put(
           Uri.parse('${AppConfig.hospitalApiUrl}/settings'),
-          headers: await _headers(),
+          headers: await headers,
           body: jsonEncode(payload),
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        throw Exception(firstVal is List ? firstVal.first.toString() : firstVal.toString());
-      }
-      throw Exception(body['message'] ?? 'Update failed (${res.statusCode})');
-    }
+    parseApiResponse(res);
   }
 
   // ── Logo upload ─────────────────────────────────────────────────────────────
 
   Future<String> uploadLogo(File imageFile) async {
-    final token = await AuthService.instance.getStoredToken();
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('${AppConfig.hospitalApiUrl}/settings/logo'),
     );
-    request.headers['Authorization'] = 'Bearer $token';
-    request.headers['Accept'] = 'application/json';
+    request.headers.addAll(await headers);
     request.files.add(await http.MultipartFile.fromPath('logo', imageFile.path));
 
     final streamed = await request.send().timeout(AppConfig.requestTimeout);
     final res      = await http.Response.fromStream(streamed);
-    final body     = jsonDecode(res.body) as Map<String, dynamic>;
+    final body     = parseApiResponse(res);
 
-    if (res.statusCode >= 400) {
-      throw Exception(body['message'] ?? 'Logo upload failed (${res.statusCode})');
-    }
     return (body['data'] as Map<String, dynamic>)['url'] as String;
   }
 
@@ -276,7 +259,7 @@ class SettingsService {
     final res = await http
         .post(
           Uri.parse('${AppConfig.hospitalApiUrl}/settings/change-password'),
-          headers: await _headers(),
+          headers: await headers,
           body: jsonEncode({
             'current_password':          currentPassword,
             'new_password':              newPassword,
@@ -285,66 +268,48 @@ class SettingsService {
         )
         .timeout(AppConfig.requestTimeout);
 
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) {
-      final errors = body['errors'] as Map<String, dynamic>?;
-      if (errors != null && errors.isNotEmpty) {
-        final firstVal = errors.values.first;
-        throw Exception(firstVal is List ? firstVal.first.toString() : firstVal.toString());
-      }
-      throw Exception(body['message'] ?? 'Password change failed (${res.statusCode})');
-    }
+    parseApiResponse(res);
   }
 
   // ── Location cascade ────────────────────────────────────────────────────────
 
   Future<List<LocationCountry>> fetchCountries() async {
     final res = await http
-        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/countries'),
-             headers: await _headers())
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/countries'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) throw Exception(body['message'] ?? 'Failed to load countries');
+    final body = parseApiResponse(res);
     return (body['data'] as List).map((e) => LocationCountry.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<LocationItem>> fetchStates(int countryId) async {
     final res = await http
-        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/states?country_id=$countryId'),
-             headers: await _headers())
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/states?country_id=$countryId'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) throw Exception(body['message'] ?? 'Failed to load states');
+    final body = parseApiResponse(res);
     return (body['data'] as List).map((e) => LocationItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<LocationItem>> fetchDistricts(int stateId) async {
     final res = await http
-        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/districts?state_id=$stateId'),
-             headers: await _headers())
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/districts?state_id=$stateId'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) throw Exception(body['message'] ?? 'Failed to load districts');
+    final body = parseApiResponse(res);
     return (body['data'] as List).map((e) => LocationItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<LocationItem>> fetchCities(int districtId) async {
     final res = await http
-        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/cities?district_id=$districtId'),
-             headers: await _headers())
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/cities?district_id=$districtId'), headers: await headers)
         .timeout(AppConfig.requestTimeout);
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) throw Exception(body['message'] ?? 'Failed to load cities');
+    final body = parseApiResponse(res);
     return (body['data'] as List).map((e) => LocationItem.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   Future<List<LocationTimezone>> fetchTimezones() async {
     final res = await http
-        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/timezones'),
-             headers: await _headers())
+        .get(Uri.parse('${AppConfig.hospitalApiUrl}/masters/location/timezones'), headers: await headers)
         .timeout(const Duration(seconds: 20));
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    if (res.statusCode >= 400) throw Exception(body['message'] ?? 'Failed to load timezones');
+    final body = parseApiResponse(res);
     return (body['data'] as List).map((e) => LocationTimezone.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

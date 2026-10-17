@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../constants/app_colors.dart';
 import '../../constants/app_radius.dart';
 import '../../services/exam_masters_service.dart';
+import '../app_animations.dart';
 
 /// Searchable master-value picker used for Vision/Axis/NCT (plain list/grid,
 /// no favourites split) and O/E + Fundus fields (Favourites/All split with a
@@ -12,6 +13,8 @@ class MasterListPopover extends StatefulWidget {
   final String current;
   final bool showFavourites;
   final bool grid;
+  final int gridColumns;
+  final double gridAspectRatio;
   final void Function(String value) onSelect;
   final Future<bool> Function(ExamMasterItem item)? onToggleFavourite; // returns new isFavourite
   final VoidCallback onClose;
@@ -25,6 +28,8 @@ class MasterListPopover extends StatefulWidget {
     required this.onClose,
     this.showFavourites = false,
     this.grid = false,
+    this.gridColumns = 4,
+    this.gridAspectRatio = 1.3,
     this.onToggleFavourite,
   });
 
@@ -65,7 +70,7 @@ class _MasterListPopoverState extends State<MasterListPopover> {
           child: Row(children: [
             Expanded(child: Text(widget.title, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.primary))),
             if (widget.current.isNotEmpty)
-              GestureDetector(onTap: () { widget.onSelect(''); widget.onClose(); }, child: Text('Clear', style: TextStyle(fontSize: 11, color: Colors.red.shade600, fontWeight: FontWeight.w700))),
+              PressScaleWrapper(onTap: () { widget.onSelect(''); widget.onClose(); }, child: Text('Clear', style: TextStyle(fontSize: 11, color: Colors.red.shade600, fontWeight: FontWeight.w700))),
             const SizedBox(width: 4),
             IconButton(icon: const Icon(Icons.close_rounded, size: 16), padding: EdgeInsets.zero, constraints: const BoxConstraints(), onPressed: widget.onClose),
           ]),
@@ -85,7 +90,7 @@ class _MasterListPopoverState extends State<MasterListPopover> {
             ),
           ),
         ),
-        Flexible(
+        Expanded(
           child: widget.grid ? _buildGrid(filtered) : _buildList(favs, others),
         ),
       ],
@@ -97,18 +102,30 @@ class _MasterListPopoverState extends State<MasterListPopover> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
       child: GridView.builder(
-        shrinkWrap: true,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 5, mainAxisSpacing: 4, crossAxisSpacing: 4, childAspectRatio: 1.4),
+        // Client report 2026-10-14: Axis (181 values) and VN rendered as one
+        // long shrink-to-content grid that either grew far taller than the
+        // popover's own bounds or wouldn't scroll — `Expanded` above now
+        // gives this a real, finite height (the popover's remaining space
+        // after the header/search row), so `shrinkWrap: true` here would
+        // just be redundant/wrong: with a definite height already handed
+        // down, the grid fills it and scrolls internally on its own.
+        // Client request (2026-10-07): this grid mode is now actually used
+        // (Axis/VN) — was built but never wired up. 4 columns (not 5) and a
+        // 2nd line with ellipsis, since VN values vary a lot in length
+        // ("6/6" vs "HM/PL/PR inacc."), unlike the mostly-short/plain
+        // values this was first built against.
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: widget.gridColumns, mainAxisSpacing: 5, crossAxisSpacing: 5, childAspectRatio: widget.gridAspectRatio),
         itemCount: items.length,
         itemBuilder: (_, i) {
           final it = items[i];
           final sel = it.value == widget.current;
-          return GestureDetector(
+          return PressScaleWrapper(
             onTap: () { widget.onSelect(it.value); widget.onClose(); },
             child: Container(
               decoration: BoxDecoration(color: sel ? AppColors.primary : Colors.grey.shade100, borderRadius: BorderRadius.circular(6), border: Border.all(color: sel ? AppColors.primary : Colors.grey.shade300)),
               alignment: Alignment.center,
-              child: Text(it.value, style: TextStyle(fontSize: 11, fontWeight: sel ? FontWeight.w700 : FontWeight.w500, color: sel ? Colors.white : AppColors.primary)),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(it.value, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 11, fontWeight: sel ? FontWeight.w700 : FontWeight.w500, color: sel ? Colors.white : AppColors.primary)),
             ),
           );
         },
@@ -119,7 +136,6 @@ class _MasterListPopoverState extends State<MasterListPopover> {
   Widget _buildList(List<ExamMasterItem> favs, List<ExamMasterItem> others) {
     if (favs.isEmpty && others.isEmpty) return const Padding(padding: EdgeInsets.all(20), child: Center(child: Text('No results', style: TextStyle(fontSize: 12))));
     return ListView(
-      shrinkWrap: true,
       padding: const EdgeInsets.only(bottom: 8),
       children: [
         if (favs.isNotEmpty) ...[
